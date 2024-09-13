@@ -1,0 +1,25 @@
+{
+    "locales": {
+        "en-US": "English (US)",
+        "ko-KR": "Korean"
+    },
+    "themes": {
+        "light": "Light Mode",
+        "dark": "Dark Mode",
+        "system": "System Mode"
+    },
+    "common": {
+        "Next": "Next"
+    },
+    "login": {
+        "Sign in": "Sign in",
+        "Use your {app} Account": "Use your {{app}} Account",
+        "Email": "Email",
+        "Forgot email?": "Forgot email?",
+        "Create account": "Create account",
+        "Welcome": "Welcome",
+        "Password": "Password",
+        "Show password": "Show password",
+        "Forgot password?": "Forgot password?"
+    }
+}

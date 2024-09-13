@@ -1,0 +1,17 @@
+@keyframes rt-toast-slide-in {
+    from {
+        transform: translateX(calc(100% + var(--viewport-padding)));
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes rt-toast-slide-out {
+    from {
+        transform: translateX(var(--radix-toast-swipe-end-x));
+    }
+    to {
+        transform: translateX(calc(100% + var(--viewport-padding)));
+    }
+}

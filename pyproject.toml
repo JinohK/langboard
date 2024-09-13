@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "langboard"
+version = "0.1.0"
+description = ""
+authors = ["Yamon <battlecruser@yamon.io>"]
+readme = "README.md"
+packages = [{include = "langboard", from = "src/backend"}]
+include = ["src/backend/langboard/*", "src/backend/langboard/**/*"]
+
+
+[tool.poetry.scripts]
+langboard = 'langboard.cli:execute'
+
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+fastapi = "^0.112.0"
+pydantic = "^2.8.2"
+socketify = "^0.0.28"
+routes = "^2.5.1"
+python-multipart = "^0.0.9"
+sqlalchemy = "^2.0.32"
+alembic = "^1.13.2"
+sqlmodel = "^0.0.22"
+bcrypt = "^4.2.0"
+cryptocode = "^0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.11.1"
+ruff = "^0.5.5"
+pytest = "^8.3.2"
+rich = "^13.8.0"
+
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+console_output_style = "progress"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::ResourceWarning"]
+log_cli = true
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+follow_imports = "silent"
+disable_error_code = ["type-var"]
+
+
+[tool.ruff]
+line-length = 120
+exclude = ["migrations"]
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

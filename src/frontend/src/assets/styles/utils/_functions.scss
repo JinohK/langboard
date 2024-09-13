@@ -1,0 +1,49 @@
+@function str-ends-with($string, $find) {
+    @return str-length($string) >= str-length($find) AND
+        str-slice($string, (str-length($string) - str-length($find) + 1)) == $find;
+}
+
+@function str-starts-with($string, $find) {
+    @return str-slice($string, 1, str-length($find)) == $find;
+}
+
+@function assert-type($type, $value, $bNullable: false) {
+    $valueType: type-of($value);
+
+    @if $bNullable and $value == null {
+        @return true;
+    }
+
+    @if $type != 'list' and $valueType == 'list' {
+        @each $item in $value {
+            @if not assert-type($type, $item, $bNullable) {
+                @return false;
+            }
+        }
+    }
+
+    @if $type != string and $valueType == string {
+        @if str-starts-with($value, 'var(') {
+            @return true;
+        }
+    }
+
+    @if $type == number {
+        @if $valueType != number and $valueType != calculation and index($available-size-strs, $value) == null {
+            @error "#{$value} doesn't match the type: #{$type}";
+            @return false;
+        }
+    } @else if $type == color {
+        @if $valueType != color and $valueType != string {
+            @error "#{$value} doesn't match the type: #{$type}";
+            @return false;
+        }
+    } @else {
+        @if $valueType != $type {
+            @error "#{$value} doesn't match the type: #{$type}";
+            @return false;
+        }
+    }
+
+    @return true;
+}

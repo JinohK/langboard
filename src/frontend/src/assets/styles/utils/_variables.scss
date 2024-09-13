@@ -1,0 +1,54 @@
+$mobile-max-size: 480px;
+$tablet-max-size: 1024px;
+
+$available-size-strs: (
+    'auto',
+    'fit-content',
+    'max-content',
+    'min-content',
+    '-webkit-fill-available',
+    'inherit',
+    'initial',
+    'revert',
+    'revert-layer',
+    'unset'
+);
+
+$cursorList: (
+    'auto',
+    'default',
+    'none',
+    'context-menu',
+    'help',
+    'pointer',
+    'progress',
+    'wait',
+    'cell',
+    'crosshair',
+    'text',
+    'vertical-text',
+    'alias',
+    'copy',
+    'move',
+    'no-drop',
+    'not-allowed',
+    'grab',
+    'grabbing',
+    'all-scroll',
+    'col-resize',
+    'row-resize',
+    'n-resize',
+    'e-resize',
+    's-resize',
+    'w-resize',
+    'ne-resize',
+    'nw-resize',
+    'se-resize',
+    'sw-resize',
+    'ew-resize',
+    'ns-resize',
+    'nesw-resize',
+    'nwse-resize',
+    'zoom-in',
+    'zoom-out'
+);

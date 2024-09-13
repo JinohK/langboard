@@ -1,0 +1,32 @@
+from os import environ
+from os.path import dirname
+from pathlib import Path
+from importlib import metadata
+
+
+# Environment
+ENVIRONMENT = environ.get("ENVIRONMENT", "local")
+PROJECT_NAME = environ.get("PROJECT_NAME")
+PROJECT_VERSION = metadata.version(PROJECT_NAME)
+
+# Logging
+LOGGING_LEVEL = environ.get("LOGGING_LEVEL", "AUTO").upper()
+LOGGING_DIR = Path(environ.get("LOGGING_DIR", Path(dirname(__file__)) / ".." / ".." / ".." / "logs"))
+
+# Database
+MAIN_DATABASE_URL = environ.get("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
+MAIN_DATABASE_ROLE = environ.get("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(",")
+SUB_DATABASE_URL = environ.get("SUB_DATABASE_URL", MAIN_DATABASE_URL)
+SUB_DATABASE_ROLE = environ.get("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(",")
+AVAILABLE_DATABASE_ROLES = ["SELECT", "INSERT", "UPDATE", "DELETE"]
+
+for role in MAIN_DATABASE_ROLE:
+    if role in SUB_DATABASE_ROLE:
+        raise ValueError(f"Database role conflict: {role}")
+
+for role in MAIN_DATABASE_ROLE + SUB_DATABASE_ROLE:
+    if role not in AVAILABLE_DATABASE_ROLES:
+        raise ValueError(f"Invalid database role: {role}")
+
+# Directory
+BASE_DIR = Path(dirname(__file__))

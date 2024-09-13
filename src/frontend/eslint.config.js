@@ -1,0 +1,21 @@
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactRefresh from "eslint-plugin-react-refresh";
+import prettierRecommended from "eslint-plugin-prettier/recommended";
+
+const config = {
+    plugins: {
+        "react-refresh": reactRefresh,
+    },
+    rules: {
+        quotes: ["error", "double"],
+        semi: [2, "always"],
+        indent: ["error", 4, { SwitchCase: 1 }],
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/keyword-spacing": "off",
+        "@/max-len": ["error", { code: 120 }],
+        "@typescript-eslint/no-empty-function": "off",
+    },
+};
+
+export default [eslint.configs.recommended, ...tseslint.configs.recommended, prettierRecommended, config];

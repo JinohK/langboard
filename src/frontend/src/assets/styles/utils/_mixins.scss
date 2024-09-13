@@ -1,0 +1,299 @@
+@import 'variables';
+@import 'functions';
+
+@mixin -set-if-important($name, $value, $imp) {
+    $_: assert-type(string, $name);
+    $_: assert-type(bool, $imp);
+
+    @if $imp {
+        #{$name}: $value !important;
+    } @else {
+        #{$name}: $value;
+    }
+}
+
+@mixin -set-if-not-null($name, $value, $newValue: null, $imp: false) {
+    $_: assert-type(string, $name);
+
+    @if $value != null {
+        @if $newValue != null {
+            @include -set-if-important($name, $newValue, $imp);
+        } @else {
+            @include -set-if-important($name, $value, $imp);
+        }
+    }
+}
+
+@mixin -set-if-bool($name, $bool, $trueValue, $falseValue, $imp: false) {
+    $_: assert-type(string, $name);
+    $_: assert-type(bool, $bool);
+
+    @if $bool {
+        @include -set-if-important($name, $trueValue, $imp);
+    } @else {
+        @include -set-if-important($name, $falseValue, $imp);
+    }
+}
+
+@mixin flex($justify: null, $align: null, $direction: null, $inline: false, $imp: false) {
+    $_: assert-type(string, $justify, true);
+    $_: assert-type(string, $align, true);
+    $_: assert-type(string, $direction, true);
+    $_: assert-type(bool, $inline);
+
+    @include -set-if-bool(display, $inline, inline-flex, flex, $imp);
+    @include -set-if-not-null(justify-content, $justify, null, $imp);
+    @include -set-if-not-null(align-items, $align, null, $imp);
+    @include -set-if-not-null(flex-direction, $direction, null, $imp);
+}
+
+@mixin position($type, $top: null, $right: null, $bottom: null, $left: null) {
+    $_: assert-type(string, $type);
+    $_: assert-type(number, $top, true);
+    $_: assert-type(number, $right, true);
+    $_: assert-type(number, $bottom, true);
+    $_: assert-type(number, $left, true);
+
+    position: $type;
+    @include -set-if-not-null(top, $top);
+    @include -set-if-not-null(right, $right);
+    @include -set-if-not-null(bottom, $bottom);
+    @include -set-if-not-null(left, $left);
+}
+
+@mixin all-border($color, $width: 1px, $type: solid, $imp: false) {
+    $_: assert-type(color, $color, true);
+    $_: assert-type(number, $width, true);
+    $_: assert-type(string, $type, true);
+
+    @include -set-if-important(border, $width $type $color, $imp);
+}
+
+@mixin no-border($imp: false) {
+    @include -set-if-important(border, none, $imp);
+}
+
+@mixin border($top: null, $right: null, $bottom: null, $left: null, $width: 1px, $type: solid, $imp: false) {
+    $_: assert-type(color, $top, true);
+    $_: assert-type(color, $right, true);
+    $_: assert-type(color, $bottom, true);
+    $_: assert-type(color, $left, true);
+    $_: assert-type(number, $width, true);
+    $_: assert-type(string, $type, true);
+
+    @include -set-if-not-null(border-top, $top, $width $type $top, $imp);
+    @include -set-if-not-null(border-right, $right, $width $type $right, $imp);
+    @include -set-if-not-null(border-bottom, $bottom, $width $type $bottom, $imp);
+    @include -set-if-not-null(border-left, $left, $width $type $left, $imp);
+}
+
+@mixin border-style($width: null, $color: null, $radius: null, $spacing: null, $collapse: null, $style: null) {
+    $_: assert-type(number, $width, true);
+    $_: assert-type(color, $color, true);
+    $_: assert-type(number, $radius, true);
+    $_: assert-type(number, $spacing, true);
+    $_: assert-type(string, $collapse, true);
+    $_: assert-type(string, $style, true);
+
+    @include -set-if-not-null(border-width, $width);
+    @include -set-if-not-null(border-color, $color);
+    @include -set-if-not-null(border-radius, $radius);
+    @include -set-if-not-null(border-spacing, $spacing);
+    @include -set-if-not-null(border-collapse, $collapse);
+    @include -set-if-not-null(border-style, $style);
+}
+
+@mixin round($radius, $imp: false) {
+    $_: assert-type(number, $radius);
+
+    @include -set-if-important(border-radius, $radius, $imp);
+}
+
+@mixin all-padding($padding, $imp: false) {
+    $_: assert-type(number, $padding);
+
+    @include -set-if-important(padding, $padding, $imp);
+}
+
+@mixin no-padding($imp: false) {
+    @include -set-if-important(padding, 0, $imp);
+}
+
+@mixin padding($type: null, $top: null, $right: null, $bottom: null, $left: null, $imp: false) {
+    $_: assert-type(string, $type, true);
+    $_: assert-type(number, $top, true);
+    $_: assert-type(number, $right, true);
+    $_: assert-type(number, $bottom, true);
+    $_: assert-type(number, $left, true);
+
+    @if $type == null {
+        @include -set-if-not-null(padding-top, $top, null, $imp);
+        @include -set-if-not-null(padding-right, $right, null, $imp);
+        @include -set-if-not-null(padding-bottom, $bottom, null, $imp);
+        @include -set-if-not-null(padding-left, $left, null, $imp);
+    } @else {
+        @include -set-if-not-null(padding-top, #{$top}#{$type}, null, $imp);
+        @include -set-if-not-null(padding-right, #{$right}#{$type}, null, $imp);
+        @include -set-if-not-null(padding-bottom, #{$bottom}#{$type}, null, $imp);
+        @include -set-if-not-null(padding-left, #{$left}#{$type}, null, $imp);
+    }
+}
+
+@mixin all-margin($margin, $imp: false) {
+    $_: assert-type(number, $margin);
+
+    @include -set-if-important(margin, $margin, $imp);
+}
+
+@mixin no-margin($imp: false) {
+    @include -set-if-important(margin, 0, $imp);
+}
+
+@mixin margin($type: null, $top: null, $right: null, $bottom: null, $left: null, $imp: false) {
+    $_: assert-type(string, $type, true);
+    $_: assert-type(number, $top, true);
+    $_: assert-type(number, $right, true);
+    $_: assert-type(number, $bottom, true);
+    $_: assert-type(number, $left, true);
+
+    @if $type == null {
+        @include -set-if-not-null(margin-top, $top, null, $imp);
+        @include -set-if-not-null(margin-right, $right, null, $imp);
+        @include -set-if-not-null(margin-bottom, $bottom, null, $imp);
+        @include -set-if-not-null(margin-left, $left, null, $imp);
+    } @else {
+        @include -set-if-not-null(margin-top, #{$top}#{$type}, null, $imp);
+        @include -set-if-not-null(margin-right, #{$right}#{$type}, null, $imp);
+        @include -set-if-not-null(margin-bottom, #{$bottom}#{$type}, null, $imp);
+        @include -set-if-not-null(margin-left, #{$left}#{$type}, null, $imp);
+    }
+}
+
+@mixin width($size: null, $min: null, $max: null, $imp: false) {
+    $_: assert-type(number, $size, true);
+    $_: assert-type(number, $min, true);
+    $_: assert-type(number, $max, true);
+
+    @include -set-if-not-null(width, $size, null, $imp);
+    @include -set-if-not-null(min-width, $min, null, $imp);
+    @include -set-if-not-null(max-width, $max, null, $imp);
+}
+
+@mixin height($size: null, $min: null, $max: null, $imp: false) {
+    $_: assert-type(number, $size, true);
+    $_: assert-type(number, $min, true);
+    $_: assert-type(number, $max, true);
+
+    @include -set-if-not-null(height, $size, null, $imp);
+    @include -set-if-not-null(min-height, $min, null, $imp);
+    @include -set-if-not-null(max-height, $max, null, $imp);
+}
+
+@mixin box-size($width, $height, $imp: false) {
+    @include width($width, null, null, $imp);
+    @include height($height, null, null, $imp);
+}
+
+@mixin square($size, $imp: false) {
+    @include width($size, null, null, $imp);
+    @include height($size, null, null, $imp);
+}
+
+@mixin full-size($imp: false) {
+    @include width(100%, null, null, $imp);
+    @include height(100%, null, null, $imp);
+}
+
+@mixin font($size: null, $color: null, $weight: null, $line: null, $imp: false) {
+    $_: assert-type(number, $size, true);
+    $_: assert-type(color, $color, true);
+    $_: assert-type(number, $weight, true);
+    $_: assert-type(number, $line, true);
+
+    @include -set-if-not-null(font-size, $size, null, $imp);
+    @include -set-if-not-null(color, $color, null, $imp);
+    @include -set-if-not-null(font-weight, $weight, null, $imp);
+    @include -set-if-not-null(line-height, $line, null, $imp);
+}
+
+@mixin bg($type, $value: null, $position: null, $size: null, $repeat: null, $imp: false) {
+    $_: assert-type(string, $type);
+
+    @if $type == color {
+        $_: assert-type(color, $value);
+
+        @include -set-if-important(background-color, $value, $imp);
+    } @else if $type == img {
+        $_: assert-type(string, $value);
+        $_: assert-type(string, $position, true);
+        $_: assert-type(string, $size, true);
+        $_: assert-type(string, $repeat, true);
+
+        @include -set-if-important(background-image, url($value), $imp);
+        @include -set-if-not-null(background-position, $position, null, $imp);
+        @include -set-if-not-null(background-size, $size, null, $imp);
+        @include -set-if-not-null(background-repeat, $repeat, null, $imp);
+    } @else {
+        @error "Invalid background type";
+    }
+}
+
+@mixin color-with-bg($color, $bgColor, $imp: false) {
+    @include font(null, $color, null, null, $imp);
+    @include bg(color, $bgColor, null, null, null, $imp);
+}
+
+@mixin center-x($usePosition: true, $imp: false) {
+    $_: assert-type(bool, $usePosition);
+
+    @if $usePosition {
+        @include position(absolute, null, null, null, 50%);
+    } @else {
+        left: 50%;
+    }
+
+    transform: translateX(-50%);
+}
+
+@mixin center-y($usePosition: true, $imp: false) {
+    $_: assert-type(bool, $usePosition);
+
+    @if $usePosition {
+        @include position(absolute, 50%, null, null, null);
+    } @else {
+        top: 50%;
+    }
+
+    transform: translateY(-50%);
+}
+
+@mixin center-xy($usePosition: true, $imp: false) {
+    $_: assert-type(bool, $usePosition);
+
+    @if $usePosition {
+        @include position(absolute, 50%, null, null, 50%);
+    } @else {
+        top: 50%;
+        left: 50%;
+    }
+
+    transform: translate(-50%, -50%);
+}
+
+@mixin truncate($imp: false) {
+    @include -set-if-important(overflow, hidden, $imp);
+    @include -set-if-important(white-space, nowrap, $imp);
+    @include -set-if-important(text-overflow, ellipsis, $imp);
+}
+
+@mixin mobile {
+    @media (max-width: #{$mobile-max-size - 1px}) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (min-width: $mobile-max-size) and (max-width: #{$tablet-max-size - 1px}) {
+        @content;
+    }
+}
