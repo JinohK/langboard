@@ -10,7 +10,6 @@ class CheckEmailForm(BaseModel):
     @field_validator("is_token", mode="after")
     @classmethod
     def check_is_token_or_email(cls, value):
-        print(isinstance(cls, CheckEmailForm))
         if value:
             if not cls.token:
                 raise ValueError("token is required")
