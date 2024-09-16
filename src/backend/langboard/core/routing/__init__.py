@@ -2,8 +2,8 @@ from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .AppRouter import AppRouter
 from .Form import BaseFormModel, form_model, get_form_scope
 from .SocketDefaultEvent import SocketDefaultEvent
-from .SocketErrorCode import SocketErrorCode
 from .SocketRequest import SocketRequest
+from .SocketResponseCode import SocketResponseCode
 from .SocketRouter import TRouteEvents
 
 
@@ -14,7 +14,7 @@ __all__ = [
     "form_model",
     "get_form_scope",
     "SocketDefaultEvent",
-    "SocketErrorCode",
+    "SocketResponseCode",
     "SocketRequest",
     "TRouteEvents",
 ]

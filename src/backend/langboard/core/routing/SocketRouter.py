@@ -29,7 +29,7 @@ class SocketRouter:
 
             AppRouter.socket.use_path("/chat")
 
-            @AppRouter.socket.on(SocketDefaultEvent.OPEN)
+            @AppRouter.socket.on(SocketDefaultEvent.Open)
             def open(req: SocketRequest):
                 ...
 
@@ -46,7 +46,7 @@ class SocketRouter:
 
                 from ...core.routing import AppRouter, SocketDefaultEvent
 
-                @AppRouter.socket.on(SocketDefaultEvent.OPEN)
+                @AppRouter.socket.on(SocketDefaultEvent.Open)
                 def open(req: SocketRequest):
                     ...
 

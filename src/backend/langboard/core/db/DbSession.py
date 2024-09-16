@@ -61,7 +61,7 @@ class DbSession(BaseSqlBuilder):
         """
         if not obj.is_new():
             return
-        session = self._get_session(DbSessionRole.INSERT)
+        session = self._get_session(DbSessionRole.Insert)
         session.add(obj)
 
     def insert_all(self, objs: Sequence[BaseSqlModel]):
@@ -69,7 +69,7 @@ class DbSession(BaseSqlBuilder):
 
         :param objs: The objects to be inserted; must be a subclass of :class:`BaseSqlModel`.
         """
-        session = self._get_session(DbSessionRole.INSERT)
+        session = self._get_session(DbSessionRole.Insert)
         insertable_objs = [obj for obj in objs if obj.is_new()]
         session.add_all(insertable_objs)
 
@@ -80,7 +80,7 @@ class DbSession(BaseSqlBuilder):
         """
         if obj.is_new():
             return
-        session = self._get_session(DbSessionRole.UPDATE)
+        session = self._get_session(DbSessionRole.Update)
         session.add(obj)
 
     @overload
@@ -97,7 +97,7 @@ class DbSession(BaseSqlBuilder):
         """
         if obj.is_new():
             return
-        session = self._get_session(DbSessionRole.DELETE)
+        session = self._get_session(DbSessionRole.Delete)
         if purge or not isinstance(obj, SoftDeleteModel):
             session.delete(obj)
             return
@@ -186,13 +186,13 @@ class DbSession(BaseSqlBuilder):
             statement = update(statement.table).values(deleted_at=datetime.now()).where(statement.whereclause)
 
         if isinstance(statement, Insert):
-            role = DbSessionRole.INSERT
+            role = DbSessionRole.Insert
         elif isinstance(statement, Update):
-            role = DbSessionRole.UPDATE
+            role = DbSessionRole.Update
         elif isinstance(statement, Delete):
-            role = DbSessionRole.DELETE
+            role = DbSessionRole.Delete
         elif isinstance(statement, Select) or isinstance(statement, SelectOfScalar):
-            role = DbSessionRole.SELECT
+            role = DbSessionRole.Select
         else:
             raise ValueError(f"Unknown statement type: {type(statement)}")
 
@@ -231,6 +231,6 @@ class DbSession(BaseSqlBuilder):
         :param role: The role of the session to be returned.
         """
         session = self._sessions.get(role)
-        if role != DbSessionRole.SELECT:
+        if role != DbSessionRole.Select:
             self._sessions_needs_commit.add(session)
         return session
