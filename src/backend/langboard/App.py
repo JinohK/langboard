@@ -3,11 +3,11 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from socketify import AppOptions, AppListenOptions, ASGI
+from socketify import ASGI, AppListenOptions, AppOptions
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
+from .core.routing import AppExceptionHandlingRoute, AppRouter
 from .core.utils.decorators import singleton
-from .core.routing import AppRouter, AppExceptionHandlingRoute
 from .Loader import load_modules
 
 
@@ -81,13 +81,7 @@ class App:
         self._server = ASGI(
             self.api,
             options=self._ssl_options,
-            websocket={
-                "upgrade": self.ws.on_upgrade,
-                "open": self.ws.on_open,
-                "message": self.ws.on_message,
-                "close": self.ws.on_close,
-                "subscription": self.ws.on_subscription,
-            },
+            websocket=self.ws,
             websocket_options=self._ws_options.model_dump(),
             task_factory_max_items=self._task_factory_maxitems,
             lifespan=self._lifespan,

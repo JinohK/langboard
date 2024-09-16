@@ -1,8 +1,8 @@
-from os import sep
 from importlib import import_module
+from os import sep
 from types import ModuleType
 from typing import Type
-from .constants import BASE_DIR
+from .Constants import BASE_DIR
 from .core.logger import Logger
 
 

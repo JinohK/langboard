@@ -9,7 +9,7 @@ include = ["src/backend/langboard/*", "src/backend/langboard/**/*"]
 
 
 [tool.poetry.scripts]
-langboard = 'langboard.cli:execute'
+langboard = 'langboard.CLI:execute'
 
 
 [tool.poetry.dependencies]
@@ -36,6 +36,7 @@ rich = "^13.8.0"
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
+python_files = ["Test*.py"]
 console_output_style = "progress"
 filterwarnings = ["ignore::DeprecationWarning", "ignore::ResourceWarning"]
 log_cli = true
@@ -52,6 +53,17 @@ disable_error_code = ["type-var"]
 [tool.ruff]
 line-length = 120
 exclude = ["migrations"]
+lint.extend-select = ["I"]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+no-lines-before = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 
 [build-system]

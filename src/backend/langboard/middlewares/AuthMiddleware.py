@@ -1,4 +1,4 @@
-from starlette.types import ASGIApp, Scope, Send, Receive
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 class AuthMiddleware:

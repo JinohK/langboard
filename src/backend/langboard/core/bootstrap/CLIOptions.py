@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from rich import print as rprint
 from socketify import AppOptions
-from ...constants import PROJECT_NAME
+from ...Constants import PROJECT_NAME
 from .WebSocketOptions import WebSocketOptions
 
 
@@ -62,8 +62,8 @@ class CLIOptions(RunCLIOptions, ModelCLIOptions):
     version: bool = Field(default=False, description="Show version and exit", short="v")
 
     def print_version(self):
-        from pkg_resources import require
         from platform import python_implementation, python_version, system
+        from pkg_resources import require
 
         version = require(PROJECT_NAME)[0].version
         return rprint(

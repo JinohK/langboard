@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
-from ...constants import PROJECT_NAME, PROJECT_VERSION
 from rich import print as rprint
+from ...Constants import PROJECT_NAME, PROJECT_VERSION
 
 
 class CLIRichParser(ArgumentParser):
@@ -57,7 +57,7 @@ class CLIRichParser(ArgumentParser):
                 f"{help_text}", f"[{self._color_description}]{help_text}[/{self._color_description}]"
             )
 
-        for option in options + short_options:
+        for option in options.extend(short_options):
             message = message.replace(option, f"[{self._color_command}]{option}[/{self._color_command}]")
 
         for positional in positionals:

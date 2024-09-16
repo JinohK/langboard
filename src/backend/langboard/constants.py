@@ -1,7 +1,7 @@
+from importlib import metadata
 from os import environ
 from os.path import dirname
 from pathlib import Path
-from importlib import metadata
 
 
 # Environment
@@ -10,7 +10,8 @@ PROJECT_NAME = environ.get("PROJECT_NAME")
 PROJECT_VERSION = metadata.version(PROJECT_NAME)
 
 # Logging
-LOGGING_LEVEL = environ.get("LOGGING_LEVEL", "AUTO").upper()
+TERMINAL_LOGGING_LEVEL = environ.get("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
+FILE_LOGGING_LEVEL = environ.get("FILE_LOGGING_LEVEL", "AUTO").upper()
 LOGGING_DIR = Path(environ.get("LOGGING_DIR", Path(dirname(__file__)) / ".." / ".." / ".." / "logs"))
 
 # Database

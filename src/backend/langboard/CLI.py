@@ -1,9 +1,9 @@
-from os import environ
 from argparse import SUPPRESS
+from os import environ
 from rich import print as rprint
-from .core.bootstrap import CLIHelpFormatter, CLIRichParser, CLIOptions
-from .core.db import create_model
 from .App import App
+from .core.bootstrap import CLIHelpFormatter, CLIOptions, CLIRichParser
+from .core.db import create_model
 
 
 arg_parser = CLIRichParser(argument_default=SUPPRESS, formatter_class=CLIHelpFormatter)

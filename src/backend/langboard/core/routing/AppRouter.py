@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from ..utils.decorators import singleton
-from .SocketRouter import SocketRouter
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
+from .SocketRouter import SocketRouter
 
 
 @singleton

@@ -1,7 +1,7 @@
 from typing import Any
+from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
-from bcrypt import hashpw, gensalt, checkpw
-from ..core.db import SoftDeleteModel, SecretStr, SecretStrType
+from ..core.db import SecretStr, SecretStrType, SoftDeleteModel
 
 
 class User(SoftDeleteModel, table=True):

@@ -1,7 +1,7 @@
 from fastapi.responses import JSONResponse
 from sqlmodel import select
-from ...core.routing import AppRouter
 from ...core.db import DbSession, get_db_scope
+from ...core.routing import AppRouter
 from ...core.utils.Encryptor import Encryptor
 from ...models.User import User
 from .CheckEmailForm import CheckEmailForm

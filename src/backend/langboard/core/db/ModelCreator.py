@@ -1,5 +1,5 @@
 from pathlib import Path
-from ...constants import BASE_DIR
+from ...Constants import BASE_DIR
 
 
 def create_model(name: str, use_soft_delete: bool):

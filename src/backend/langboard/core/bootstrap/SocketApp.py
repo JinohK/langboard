@@ -1,8 +1,8 @@
-from inspect import iscoroutinefunction, signature
+from inspect import iscoroutinefunction
+from json import loads as json_loads
 from types import GeneratorType
 from typing import Any, Union
-from json import loads as json_loads
-from socketify import WebSocket, OpCode, Request, Response
+from socketify import OpCode, Request, Response, WebSocket
 from ..routing import AppRouter, SocketDefaultEvent, SocketErrorCode, SocketRequest, TRouteEvents
 from ..utils.decorators import thread_safe_singleton
 
@@ -10,6 +10,13 @@ from ..utils.decorators import thread_safe_singleton
 @thread_safe_singleton
 class SocketApp(dict):
     """Manages the socket application for :class:`socketify.ASGI`."""
+
+    def __init__(self):
+        self["upgrade"] = self.on_upgrade
+        self["open"] = self.on_open
+        self["message"] = self.on_message
+        self["close"] = self.on_close
+        self["subscription"] = self.on_subscription
 
     def on_upgrade(self, res: Response, req: Request, socket_context) -> None:
         path = req.get_url()
@@ -51,10 +58,10 @@ class SocketApp(dict):
 
         try:
             data = json_loads(message)
-            if not isinstance(data, dict) or "event" not in data:
+            if not isinstance(data, dict) or "event" not in data or not isinstance(data["event"], str):
                 raise Exception()
         except Exception:
-            self._send_error(ws, "Invalid data", error_code=SocketErrorCode.InvalidData)
+            self._send_error(ws, "Invalid data", error_code=SocketErrorCode.InvalidData, should_close=False)
             return
 
         event = data.pop("event")
@@ -117,7 +124,7 @@ class SocketApp(dict):
                 await event(**scopes)
             else:
                 event(**scopes)
-            
+
             for param_name, scope in params.items():
                 if not isinstance(scope, GeneratorType):
                     continue

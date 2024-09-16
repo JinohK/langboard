@@ -18,7 +18,6 @@ class SocketRouter:
     def __init__(self):
         self._mapper = Mapper()
         self._routes: dict[str, TRoutes] = {}
-        self._path: str = "/"
         self.use_path("/")
 
     def use_path(self, path: str):

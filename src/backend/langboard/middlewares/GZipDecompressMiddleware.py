@@ -1,6 +1,6 @@
-from starlette.datastructures import Headers
-from starlette.types import ASGIApp, Scope, Send, Receive, Message
 from gzip import decompress
+from starlette.datastructures import Headers
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 class GZipDecompressMiddleware:

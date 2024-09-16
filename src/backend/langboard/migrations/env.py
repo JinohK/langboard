@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from sqlmodel import SQLModel
 from alembic import context
 
-from langboard.constants import MAIN_DATABASE_URL
+from langboard.Constants import MAIN_DATABASE_URL
 from langboard.models import *
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
