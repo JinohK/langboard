@@ -1,5 +1,5 @@
 from .Singleton import singleton
-from .Staticclass import staticclass
+from .StaticClass import staticclass
 from .ThreadSafeSingleton import thread_safe_singleton
 
 
