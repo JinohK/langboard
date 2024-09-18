@@ -1,14 +1,11 @@
-from inspect import signature
-from typing import Any, Callable
+from typing import Any
 from routes import Mapper
 from ..utils.decorators import thread_safe_singleton
 from .SocketDefaultEvent import SocketDefaultEvent
-from .SocketRouterScope import SocketRouterScope, TScopeCreator
+from .SocketEvent import SocketEvent, TEvent
 
 
-TEvent = Callable[..., None]
-TRouteEvents = tuple[TEvent, dict[str, TScopeCreator]]
-TRoutes = dict[str, list[TRouteEvents]]
+TRoutes = dict[str, list[SocketEvent]]
 
 
 @thread_safe_singleton
@@ -59,12 +56,8 @@ class SocketRouter:
             self._routes[self._path][_event] = []
 
         def decorator(func: TEvent):
-            params = signature(func).parameters
-            param_creators: dict[str, TScopeCreator] = {}
-            event_detail = f"\tRoute: {_path}\n\tEvent: {_event}\n\tFunction: {func.__name__}\n"
-            for param_name in params:
-                param_creators[param_name] = SocketRouterScope(event_detail, param_name, params[param_name])
-            self._routes[self._path][_event].append((func, param_creators))
+            socket_event = SocketEvent(_path, _event, func)
+            self._routes[self._path][_event].append(socket_event)
             return func
 
         return decorator
@@ -80,7 +73,7 @@ class SocketRouter:
 
         return self._routes[route["route"]], route
 
-    def get_events(self, path: str, event: SocketDefaultEvent | str) -> list[TRouteEvents]:
+    def get_events(self, path: str, event: SocketDefaultEvent | str) -> list[SocketEvent]:
         """Gets the events for the given path and event.
 
         :param path: The path to get the events for.

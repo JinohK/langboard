@@ -1,19 +1,23 @@
 from inspect import Parameter, signature
 from types import GeneratorType
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 from fastapi.params import Depends
 from pydantic import BaseModel
-from socketify import WebSocket
 from ...Constants import PROJECT_NAME
 from ..logger import Logger
 from .SocketRequest import SocketRequest
+from .WebSocket import WebSocket
 
 
-TScopeCreator = Callable[[SocketRequest], Any | GeneratorType]
+_TModel = TypeVar("_TModel", bound=BaseModel)
+_TScopeCreator = Callable[[SocketRequest], Any | GeneratorType | Exception]
 
 
 class SocketRouterScope:
     """Creates a scope for the socket route handler to be used in :class:`socketify.SocketApp` routes."""
+
+    use_cache: bool = True
+    annotation: type
 
     def __init__(self, event_detail: str, param_name: str, parameter: Parameter):
         self._event_detail = event_detail
@@ -25,10 +29,11 @@ class SocketRouterScope:
         ):
             raise ValueError("Cannot use * or ** in the event function parameters.")
         self._default = self._parameter.default if self._parameter.default != self._parameter.empty else None
-        self._cache: Any = None
         self._logger = Logger.use(f"{PROJECT_NAME}.socket")
+        self.annotation = self._parameter.annotation
 
         if isinstance(self._default, Depends):
+            self.use_cache = self._default.use_cache
             self._create_scope = self._create_depends_scope(self._default)
         elif self._parameter.annotation is SocketRequest:
             self._create_scope = self._create_request_scope()
@@ -42,52 +47,46 @@ class SocketRouterScope:
     def __call__(self, req: SocketRequest) -> Any | GeneratorType:
         return self._create_scope(req)
 
-    def _create_depends_scope(self, default: Depends) -> TScopeCreator:
+    def _create_depends_scope(self, default: Depends) -> _TScopeCreator:
         depend_params = signature(default.dependency).parameters
-        depend_param_creators: dict[str, TScopeCreator] = {}
+        depend_param_creators: dict[str, _TScopeCreator] = {}
         for param_name in depend_params:
             depend_param_creators[param_name] = SocketRouterScope(
                 self._event_detail, param_name, depend_params[param_name]
             )
 
-        def create_scope(req: SocketRequest):
-            if self._cache:
-                return self._cache
+        def create_scope(req: SocketRequest) -> Any | GeneratorType:
             depend_scopes: dict[str, Any] = {}
             for param_name, creator in depend_param_creators.items():
                 depend_scopes[param_name] = creator(req)
 
-            scope = default.dependency(**depend_scopes)
-            if default.use_cache:
-                if isinstance(scope, GeneratorType):
-                    self._cache = scope.__next__()
-                    scope.close()
-                else:
-                    self._cache = scope
-            return scope
+            return default.dependency(**depend_scopes)
 
         return create_scope
 
-    def _create_request_scope(self) -> TScopeCreator:
-        def create_scope(req: SocketRequest):
+    def _create_request_scope(self) -> _TScopeCreator:
+        def create_scope(req: SocketRequest) -> SocketRequest:
             return req
 
         return create_scope
 
-    def _create_websocket_scope(self) -> TScopeCreator:
-        def create_scope(req: SocketRequest):
+    def _create_websocket_scope(self) -> _TScopeCreator:
+        def create_scope(req: SocketRequest) -> WebSocket:
             return req.socket
 
         return create_scope
 
-    def _create_model_scope(self, model: type[BaseModel]) -> TScopeCreator:
-        def create_scope(req: SocketRequest):
-            return model.model_validate(req.data)
+    def _create_model_scope(self, model: type[_TModel]) -> _TScopeCreator:
+        def create_scope(req: SocketRequest) -> _TModel | Exception:
+            try:
+                return model.model_validate(req.data)
+            except Exception as e:
+                return e
 
         return create_scope
 
-    def _create_data_scope(self, annotation: type) -> TScopeCreator:
-        def create_scope(req: SocketRequest):
+    def _create_data_scope(self, annotation: type) -> _TScopeCreator:
+        def create_scope(req: SocketRequest) -> Any | Exception:
             if isinstance(req.data, list):
                 return req.data
 
@@ -106,8 +105,7 @@ class SocketRouterScope:
 
             try:
                 return annotation(raw_data)
-            except Exception:
-                self._logger.error(f"Failed to parse data. Details: \n{self._event_detail}.")
-                return None
+            except Exception as e:
+                return e
 
         return create_scope

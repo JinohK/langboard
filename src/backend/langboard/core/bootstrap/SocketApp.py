@@ -1,9 +1,17 @@
-from inspect import iscoroutinefunction
 from json import loads as json_loads
-from types import GeneratorType
-from typing import Any, Union
-from socketify import OpCode, Request, Response, WebSocket
-from ..routing import AppRouter, SocketDefaultEvent, SocketRequest, SocketResponseCode, TRouteEvents
+from typing import Union
+from socketify import OpCode, Request, Response
+from socketify import WebSocket as SocketifyWebSocket
+from ..routing import (
+    AppRouter,
+    SocketDefaultEvent,
+    SocketEvent,
+    SocketRequest,
+    SocketResponse,
+    SocketResponseCode,
+    TCachedScopes,
+    WebSocket,
+)
 from ..utils.decorators import thread_safe_singleton
 
 
@@ -25,6 +33,8 @@ class SocketApp(dict):
             res.close()
             return
 
+        # TODO: Check authentication
+
         route_path = route_data.pop("route")
 
         user_data = {
@@ -39,7 +49,7 @@ class SocketApp(dict):
 
         res.upgrade(key, protocol, extensions, socket_context, user_data)
 
-    async def on_open(self, ws: WebSocket) -> None:
+    async def on_open(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
         if not AppRouter.socket.is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
@@ -50,7 +60,7 @@ class SocketApp(dict):
 
         await self._run_events(route_events, req)
 
-    async def on_message(self, ws: WebSocket, message: Union[str | bytes], _: OpCode) -> None:
+    async def on_message(self, ws: SocketifyWebSocket, message: Union[str | bytes], _: OpCode) -> None:
         user_data = ws.get_user_data()
         if not AppRouter.socket.is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
@@ -70,7 +80,7 @@ class SocketApp(dict):
 
         await self._run_events(route_events, req)
 
-    async def on_close(self, ws: WebSocket, code: int, message: Union[bytes, str] | None) -> None:
+    async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
         if not AppRouter.socket.is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
@@ -81,7 +91,18 @@ class SocketApp(dict):
 
         await self._run_events(route_events, req)
 
-    async def on_subscription(self, ws: WebSocket, topic: str, **kwargs) -> None:
+    async def on_drain(self, ws: SocketifyWebSocket) -> None:
+        user_data = ws.get_user_data()
+        if not AppRouter.socket.is_valid_user_data(user_data):
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            return
+
+        route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Drain)
+        req = self._create_request(ws, user_data["route_data"])
+
+        await self._run_events(route_events, req)
+
+    async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
         user_data = ws.get_user_data()
         if not AppRouter.socket.is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
@@ -93,43 +114,29 @@ class SocketApp(dict):
         await self._run_events(route_events, req)
 
     def _create_request(
-        self, ws: WebSocket, route_data: dict, data: dict | list | None = None, **kwargs
+        self, ws: SocketifyWebSocket, route_data: dict, data: dict | list | None = None, **kwargs
     ) -> SocketRequest:
-        req = SocketRequest(socket=ws, route_data=route_data, data=data, **kwargs)
+        socket = WebSocket(ws)
+        req = SocketRequest(socket=socket, route_data=route_data, data=data, **kwargs)
         return req
 
     def _send_error(
-        self, ws: WebSocket, message: str, error_code: SocketResponseCode, should_close: bool = True
+        self, ws: SocketifyWebSocket, message: str, error_code: SocketResponseCode, should_close: bool = True
     ) -> None:
         if should_close:
-            ws.end(error_code, {"error": message, "code": error_code.value})
+            ws.end(error_code, {"message": message, "code": error_code.value})
         else:
-            ws.send({"error": message, "code": error_code.value})
+            ws.send({"event": "error", "data": {"message": message, "code": error_code.value}})
 
-    async def _run_events(self, route_events: list[TRouteEvents], req: SocketRequest) -> None:
-        for route_event in route_events:
-            event, param_creators = route_event
+    async def _run_events(self, route_events: list[SocketEvent], req: SocketRequest) -> None:
+        cached_params: TCachedScopes = {}
 
-            params: dict[str, Any] = {}
-            for param_name in param_creators:
-                param_creator = param_creators[param_name]
-                params[param_name] = param_creator(req)
+        for event in route_events:
+            response = await event.run(cached_params, req)
 
-            scopes: dict[str, Any] = {}
-            for param_name, scope in params.items():
-                if isinstance(scope, GeneratorType):
-                    scopes[param_name] = scope.__next__()
-                else:
-                    scopes[param_name] = scope
+            if isinstance(response, Exception):
+                self._send_error(req.socket, str(response), SocketResponseCode.InvalidData)
+                return
 
-            if iscoroutinefunction(event):
-                await event(**scopes)
-            else:
-                event(**scopes)
-
-            for param_name, scope in params.items():
-                if not isinstance(scope, GeneratorType):
-                    continue
-
-                for _ in scope:
-                    pass
+            if isinstance(response, SocketResponse):
+                req.socket.send(response.data)

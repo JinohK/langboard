@@ -4,10 +4,10 @@ from typing import TypeVar
 
 __all__ = ["thread_safe_singleton"]
 
-_T = TypeVar("_T", bound=object)
+_TClass = TypeVar("_TClass", bound=object)
 
 
-def thread_safe_singleton(cls: _T) -> _T:
+def thread_safe_singleton(cls: type[_TClass]) -> type[_TClass]:
     """Converts a class into a thread-safe singleton."""
     if not hasattr(thread_safe_singleton, "__lock__"):
         setattr(thread_safe_singleton, "__lock__", Lock())

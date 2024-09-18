@@ -1,4 +1,4 @@
-from socketify import WebSocket
+from .WebSocket import WebSocket
 
 
 class SocketRequest:

@@ -3,10 +3,10 @@ from typing import TypeVar
 
 __all__ = ["singleton"]
 
-_T = TypeVar("_T", bound=object)
+_TClass = TypeVar("_TClass", bound=object)
 
 
-def singleton(cls: _T) -> _T:
+def singleton(cls: type[_TClass]) -> type[_TClass]:
     """Converts a class into a singleton."""
 
     def get_instance(**kwargs):

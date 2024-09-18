@@ -1,10 +1,10 @@
 from typing import Callable, TypeVar
 
 
-_T = TypeVar("_T", bound=object)
+_TClass = TypeVar("_TClass", bound=object)
 
 
-def staticclass(cls: _T) -> _T:
+def staticclass(cls: type[_TClass]) -> type[_TClass]:
     """Decorator to make a class static"""
 
     for name, attr in cls.__dict__.items():

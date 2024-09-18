@@ -1,8 +1,11 @@
 from abc import ABC
 from inspect import Parameter, signature
-from typing import Type
+from typing import TypeVar
 from fastapi import Depends, Form
 from pydantic import BaseModel
+
+
+_TFormModel = TypeVar("_TFormModel", bound="BaseFormModel")
 
 
 class BaseFormModel(ABC, BaseModel):
@@ -21,11 +24,11 @@ class BaseFormModel(ABC, BaseModel):
     """
 
     @staticmethod
-    def as_form():
+    def from_form() -> "BaseFormModel":
         raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
 
 
-def form_model(cls: Type[BaseFormModel]) -> Type[BaseFormModel]:
+def form_model(cls: type[_TFormModel]) -> _TFormModel:
     """Decorates to convert a Pydantic model to a FastAPI form."""
     new_parameters = []
 
@@ -40,16 +43,16 @@ def form_model(cls: Type[BaseFormModel]) -> Type[BaseFormModel]:
             )
         )
 
-    async def as_form(**data):
+    def from_form(**data) -> _TFormModel:
         return cls(**data)
 
-    sig = signature(as_form)
+    sig = signature(from_form)
     sig = sig.replace(parameters=new_parameters)
-    as_form.__signature__ = sig
-    setattr(cls, "as_form", as_form)
+    from_form.__signature__ = sig
+    setattr(cls, "from_form", from_form)
     return cls
 
 
-def get_form_scope(cls: Type[BaseFormModel]):
+def get_form_scope(cls: _TFormModel):
     """Gets the form scope for the given class."""
-    return Depends(cls.as_form, use_cache=False)
+    return Depends(cls.from_form)
