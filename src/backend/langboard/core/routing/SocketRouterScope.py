@@ -5,12 +5,13 @@ from fastapi.params import Depends
 from pydantic import BaseModel
 from ...Constants import PROJECT_NAME
 from ..logger import Logger
+from .Exception import SocketRouterScopeException
 from .SocketRequest import SocketRequest
 from .WebSocket import WebSocket
 
 
 _TModel = TypeVar("_TModel", bound=BaseModel)
-_TScopeCreator = Callable[[SocketRequest], Any | GeneratorType | Exception]
+_TScopeCreator = Callable[[SocketRequest], Any | GeneratorType | SocketRouterScopeException]
 
 
 class SocketRouterScope:
@@ -19,16 +20,17 @@ class SocketRouterScope:
     use_cache: bool = True
     annotation: type
 
-    def __init__(self, event_detail: str, param_name: str, parameter: Parameter):
-        self._event_detail = event_detail
+    def __init__(self, param_name: str, parameter: Parameter, event_details: dict[str, str]) -> None:
+        if parameter.kind == Parameter.VAR_POSITIONAL or parameter.kind == Parameter.VAR_KEYWORD:
+            raise ValueError("Cannot use * or ** in the event function parameters.")
+
+        if parameter.annotation == Parameter.empty:
+            raise TypeError(f"Parameter '{param_name}' must have a type annotation.")
+
+        self._event_details = event_details
         self._param_name = param_name
         self._parameter = parameter
-        if (
-            self._parameter.kind == self._parameter.VAR_POSITIONAL
-            or self._parameter.kind == self._parameter.VAR_KEYWORD
-        ):
-            raise ValueError("Cannot use * or ** in the event function parameters.")
-        self._default = self._parameter.default if self._parameter.default != self._parameter.empty else None
+        self._default = self._parameter.default if self._parameter.default != Parameter.empty else None
         self._logger = Logger.use(f"{PROJECT_NAME}.socket")
         self.annotation = self._parameter.annotation
 
@@ -52,7 +54,7 @@ class SocketRouterScope:
         depend_param_creators: dict[str, _TScopeCreator] = {}
         for param_name in depend_params:
             depend_param_creators[param_name] = SocketRouterScope(
-                self._event_detail, param_name, depend_params[param_name]
+                param_name, depend_params[param_name], self._event_details
             )
 
         def create_scope(req: SocketRequest) -> Any | GeneratorType:
@@ -77,35 +79,48 @@ class SocketRouterScope:
         return create_scope
 
     def _create_model_scope(self, model: type[_TModel]) -> _TScopeCreator:
-        def create_scope(req: SocketRequest) -> _TModel | Exception:
+        def create_scope(req: SocketRequest) -> _TModel | SocketRouterScopeException:
             try:
                 return model.model_validate(req.data)
             except Exception as e:
-                return e
+                return self._convert_scope_exception(e)
 
         return create_scope
 
     def _create_data_scope(self, annotation: type) -> _TScopeCreator:
-        def create_scope(req: SocketRequest) -> Any | Exception:
-            if isinstance(req.data, list):
+        def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+            if isinstance(req.data, list) and self._param_name == "data" and annotation is list:
                 return req.data
 
-            if (self._param_name == "data" or self._param_name == "route_data") and (
-                self._param_name not in getattr(req, self._param_name) and annotation is dict
+            data_dict = req.data if isinstance(req.data, dict) else {}
+
+            # if param_name is data or route_data
+            # and req.data or req.route_data doesn't have a key named param_name
+            # and parameter annotation is dict
+            # and param_name is data and req.data is a dict or param_name is route_data
+            if (
+                self._param_name in ("data", "route_data")
+                and self._param_name not in (data_dict | req.route_data)
+                and annotation is dict
+                and ((self._param_name == "data" and isinstance(req.data, dict)) or self._param_name == "route_data")
             ):
                 return getattr(req, self._param_name)
 
-            data = req.data or {}
-            if self._param_name not in data and self._param_name not in req.route_data:
+            if self._param_name not in (data_dict | req.route_data | req.from_app):
                 return None
 
-            raw_data = data.get(self._param_name, req.route_data.get(self._param_name))
+            raw_data = data_dict.get(
+                self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
+            )
             if isinstance(raw_data, annotation):
                 return raw_data
 
             try:
                 return annotation(raw_data)
             except Exception as e:
-                return e
+                return self._convert_scope_exception(e)
 
         return create_scope
+
+    def _convert_scope_exception(self, exception: Exception) -> SocketRouterScopeException:
+        return SocketRouterScopeException(param=self._param_name, exception=exception, **self._event_details)

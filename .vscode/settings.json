@@ -12,8 +12,13 @@
   "javascript.format.enable": false,
   "typescript.format.enable": false,
   "typescript.preferences.importModuleSpecifier": "non-relative",
+  "python.analysis.importFormat": "relative",
   "tailwindCSS.experimental.configFile": "./src/frontend/tailwind.config.js",
   "files.associations": {
     "*.css": "tailwindcss"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
   }
 }

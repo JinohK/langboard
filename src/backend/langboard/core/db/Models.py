@@ -17,8 +17,8 @@ class BaseSqlModel(ABC, SQLModel):
     def __repr__(self) -> str:
         return str(self)
 
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, self.__class__) and self.id is not None and self.id == other.id
+    def __eq__(self, target: object) -> bool:
+        return isinstance(target, self.__class__) and self.id is not None and self.id == target.id
 
     def is_new(self) -> bool:
         """Returns `True` if the object is new and has not been inserted into the database."""

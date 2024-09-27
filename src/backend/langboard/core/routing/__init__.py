@@ -6,6 +6,7 @@ from .SocketEvent import SocketEvent, TCachedScopes
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketResponseCode import SocketResponseCode
+from .SocketRouter import SocketRouter
 from .WebSocket import WebSocket
 
 
@@ -16,10 +17,11 @@ __all__ = [
     "form_model",
     "get_form_scope",
     "SocketDefaultEvent",
+    "SocketEvent",
     "SocketRequest",
     "SocketResponse",
     "SocketResponseCode",
-    "SocketEvent",
+    "SocketRouter",
     "TCachedScopes",
     "WebSocket",
 ]

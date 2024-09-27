@@ -1,5 +1,5 @@
 from json import loads as json_loads
-from typing import Union
+from typing import Any, Union
 from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
 from ..routing import (
@@ -12,6 +12,7 @@ from ..routing import (
     TCachedScopes,
     WebSocket,
 )
+from ..routing.Exception import SocketEventException, SocketRouterScopeException
 from ..utils.decorators import thread_safe_singleton
 
 
@@ -51,7 +52,7 @@ class SocketApp(dict):
 
     async def on_open(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
-        if not AppRouter.socket.is_valid_user_data(user_data):
+        if not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
             return
 
@@ -62,7 +63,7 @@ class SocketApp(dict):
 
     async def on_message(self, ws: SocketifyWebSocket, message: Union[str | bytes], _: OpCode) -> None:
         user_data = ws.get_user_data()
-        if not AppRouter.socket.is_valid_user_data(user_data):
+        if not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
             return
 
@@ -82,18 +83,18 @@ class SocketApp(dict):
 
     async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
-        if not AppRouter.socket.is_valid_user_data(user_data):
+        if not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
             return
 
         route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Close)
-        req = self._create_request(ws, user_data["route_data"], {"message": message}, code=code)
+        req = self._create_request(ws, user_data["route_data"], {"message": message}, from_app={"code": code})
 
         await self._run_events(route_events, req)
 
     async def on_drain(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
-        if not AppRouter.socket.is_valid_user_data(user_data):
+        if not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
             return
 
@@ -104,27 +105,51 @@ class SocketApp(dict):
 
     async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
         user_data = ws.get_user_data()
-        if not AppRouter.socket.is_valid_user_data(user_data):
+        if not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
             return
 
         route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Subscription)
-        req = self._create_request(ws, user_data["route_data"], {"topic": topic}, **kwargs)
+        req = self._create_request(ws, user_data["route_data"], {"topic": topic}, from_app=kwargs)
 
         await self._run_events(route_events, req)
 
     def _create_request(
-        self, ws: SocketifyWebSocket, route_data: dict, data: dict | list | None = None, **kwargs
+        self, ws: SocketifyWebSocket, route_data: dict, data: dict | list | None = None, from_app: dict | None = None
     ) -> SocketRequest:
         socket = WebSocket(ws)
-        req = SocketRequest(socket=socket, route_data=route_data, data=data, **kwargs)
+        req = SocketRequest(socket=socket, route_data=route_data, data=data, from_app=from_app)
         return req
 
+    def _is_valid_user_data(self, user_data: Any | None) -> bool:
+        """Checks if the given user data is valid.
+
+        :param user_data: The user data to check.
+        """
+        return (
+            user_data
+            and isinstance(user_data, dict)
+            and "path" in user_data
+            and isinstance(user_data["path"], str)
+            and "route_data" in user_data
+            and isinstance(user_data["route_data"], dict)
+            and "route_path" in user_data
+            and isinstance(user_data["route_path"], str)
+        )
+
     def _send_error(
-        self, ws: SocketifyWebSocket, message: str, error_code: SocketResponseCode, should_close: bool = True
+        self,
+        ws: SocketifyWebSocket | WebSocket,
+        message: str,
+        error_code: SocketResponseCode,
+        should_close: bool = True,
     ) -> None:
         if should_close:
             ws.end(error_code, {"message": message, "code": error_code.value})
+            return
+
+        if isinstance(ws, WebSocket):
+            ws.send(event="error", data={"message": message, "code": error_code.value})
         else:
             ws.send({"event": "error", "data": {"message": message, "code": error_code.value}})
 
@@ -134,9 +159,17 @@ class SocketApp(dict):
         for event in route_events:
             response = await event.run(cached_params, req)
 
-            if isinstance(response, Exception):
-                self._send_error(req.socket, str(response), SocketResponseCode.InvalidData)
+            if isinstance(response, SocketEventException):
+                self._send_error(
+                    req.socket, str(response.raw_exception), SocketResponseCode.ServerError, should_close=False
+                )
+                return
+
+            if isinstance(response, SocketRouterScopeException):
+                self._send_error(
+                    req.socket, str(response.raw_exception), SocketResponseCode.InvalidData, should_close=False
+                )
                 return
 
             if isinstance(response, SocketResponse):
-                req.socket.send(response.data)
+                req.socket.send(response=response)

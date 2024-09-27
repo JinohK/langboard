@@ -1,6 +1,7 @@
 from inspect import iscoroutinefunction, signature
 from types import AsyncGeneratorType, GeneratorType
 from typing import Any, Callable
+from .Exception import SocketEventException, SocketRouterScopeException
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketRouterScope import SocketRouterScope
@@ -19,17 +20,24 @@ class SocketEvent:
         self.name = event_name
         self._event = event
         params = signature(self._event).parameters
+        self._event_details = {
+            "route": route_path,
+            "event": event_name,
+            "func": event.__name__,
+        }
         self._scope_creators: dict[str, SocketRouterScope] = {}
-        event_detail = f"\tRoute: {route_path}\n\tEvent: {event_name}\n\tFunction: {event.__name__}\n"
         for scope_name in params:
-            self._scope_creators[scope_name] = SocketRouterScope(event_detail, scope_name, params[scope_name])
+            self._scope_creators[scope_name] = SocketRouterScope(scope_name, params[scope_name], self._event_details)
 
-    async def run(self, cached_scopes: TCachedScopes, req: SocketRequest) -> SocketResponse | Exception:
-        scopes = await self._create_scopes(cached_scopes, req)
-        if isinstance(scopes, Exception):
-            return scopes
-
+    async def run(
+        self, cached_scopes: TCachedScopes, req: SocketRequest
+    ) -> SocketResponse | SocketRouterScopeException | SocketEventException | None:
         try:
+            scopes = await self._create_scopes(cached_scopes, req)
+
+            if isinstance(scopes, Exception):
+                raise scopes
+
             data = {}
             for scope_name, (_, result) in scopes.items():
                 data[scope_name] = result
@@ -41,8 +49,12 @@ class SocketEvent:
 
             if isinstance(response, SocketResponse):
                 return response
-        except Exception as e:
+            else:
+                return None
+        except SocketRouterScopeException as e:
             return e
+        except Exception as e:
+            return SocketEventException(exception=e, **self._event_details)
 
     async def _create_scopes(self, cached_scopes: TCachedScopes, req: SocketRequest) -> _TScopes | Exception:
         scopes: _TScopes = {}

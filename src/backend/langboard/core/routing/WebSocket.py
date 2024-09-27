@@ -6,14 +6,8 @@ from .SocketResponse import SocketResponse
 
 class WebSocket(SocketifyWebSocket):
     def __init__(self, ws: SocketifyWebSocket):
-        self.ws = ws.ws
-        self._ptr = ws._ptr
-        self.app = ws.app
-        self._cork_handler = ws._cork_handler
-        self._for_each_topic_handler = ws._for_each_topic_handler
-        self.socket_data_id = ws.socket_data_id
-        self.socket_data = ws.socket_data
-        self.got_socket_data = ws.got_socket_data
+        for attr in ws.__dict__:
+            setattr(self, attr, ws.__dict__[attr])
 
     @overload
     def send(self, event: str, data: Any = None): ...

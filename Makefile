@@ -76,3 +76,10 @@ start_docker_prod: ## run the production environment in Docker
 
 stop_docker_prod: ## stop the production environment in Docker
 	docker compose -f ./docker/docker-compose.prod.yaml --env-file ./.env down --rmi all --volumes
+
+unit_tests: ## run unit tests
+	poetry run pytest src/backend/tests/units
+
+cov_unit_tests: ## run unit tests with coverage
+	poetry run pytest --cov=src/backend/langboard src/backend/tests/units --cov-report=html:./src/backend/coverage
+	@echo "$(GREEN)Coverage report generated in src/backend/coverage directory.$(NC)"

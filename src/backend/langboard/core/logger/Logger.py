@@ -37,6 +37,8 @@ class Logger:
         )
 
         self.main = getLogger(PROJECT_NAME)
+
+        getLogger("asyncio").setLevel(ERROR)
         getLogger("multipart").setLevel(ERROR)
 
     @overload

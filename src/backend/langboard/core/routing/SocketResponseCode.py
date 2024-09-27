@@ -2,5 +2,6 @@ from enum import Enum
 
 
 class SocketResponseCode(Enum):
-    InvalidConnection = 1000
-    InvalidData = 1001
+    ServerError = 1000
+    InvalidConnection = 1001
+    InvalidData = 1002
