@@ -7,7 +7,14 @@ TClass = TypeVar("TClass")
 
 
 class ThreadSafety:
-    def assert_thread_safety_with_test(self, cls: type[TClass], test: Callable[[TClass], None], get_value: Callable[[TClass], Any], reset: Callable[[TClass], None], expected_value: Any):
+    def assert_thread_safety_with_test(
+        self,
+        cls: type[TClass],
+        test: Callable[[TClass], None],
+        get_value: Callable[[TClass], Any],
+        reset: Callable[[TClass], None],
+        expected_value: Any,
+    ):
         _, instances = self._create_instances(cls)
 
         test(instances[0])
@@ -18,14 +25,14 @@ class ThreadSafety:
             assert get_value(instance) == get_value(instances[0]) == expected_value
 
         reset(instances[0])
-        
+
     def assert_thread_safety(self, cls: type[TClass]):
         _, instances = self._create_instances(cls)
-        
+
         for instance in instances:
             assert id(instance) == id(instances[0])
             assert instance is instances[0]
-        
+
     def _create_instances(self, cls: type[TClass]) -> tuple[list[Thread], list[TClass]]:
         threads: list[Thread] = []
         instances: list[TClass] = []

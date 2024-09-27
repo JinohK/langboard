@@ -1,5 +1,4 @@
-from os import cpu_count
-from threading import Lock, Thread
+from threading import Lock
 from langboard.core.utils.decorators import thread_safe_singleton
 from .....helpers.testing import ThreadSafety
 
@@ -42,13 +41,13 @@ class TestThreadSafeSingleton(ThreadSafety):
     def test_thread_safety(self):
         def test(instance: ThreadSafeSingleton):
             instance.increment()
-            
+
         def get_value(instance: ThreadSafeSingleton) -> int:
             return instance.get_value()
-        
+
         def reset(instance: ThreadSafeSingleton):
             instance.reset()
-            
+
         expected_value = 1
 
         self.assert_thread_safety_with_test(
