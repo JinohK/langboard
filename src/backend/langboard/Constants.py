@@ -16,16 +16,16 @@ LOGGING_DIR = Path(environ.get("LOGGING_DIR", Path(dirname(__file__)) / ".." / "
 
 # Database
 MAIN_DATABASE_URL = environ.get("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
-MAIN_DATABASE_ROLE = environ.get("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(",")
+MAIN_DATABASE_ROLE = set(environ.get("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(","))
 SUB_DATABASE_URL = environ.get("SUB_DATABASE_URL", MAIN_DATABASE_URL)
-SUB_DATABASE_ROLE = environ.get("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(",")
-AVAILABLE_DATABASE_ROLES = ["SELECT", "INSERT", "UPDATE", "DELETE"]
+SUB_DATABASE_ROLE = set(environ.get("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(","))
+AVAILABLE_DATABASE_ROLES = set(["SELECT", "INSERT", "UPDATE", "DELETE"])
 
 for role in MAIN_DATABASE_ROLE:
     if role in SUB_DATABASE_ROLE:
         raise ValueError(f"Database role conflict: {role}")
 
-for role in MAIN_DATABASE_ROLE + SUB_DATABASE_ROLE:
+for role in set([*MAIN_DATABASE_ROLE, *SUB_DATABASE_ROLE]):
     if role not in AVAILABLE_DATABASE_ROLES:
         raise ValueError(f"Invalid database role: {role}")
 

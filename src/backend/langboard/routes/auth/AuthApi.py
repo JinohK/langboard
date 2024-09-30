@@ -1,6 +1,7 @@
+from typing import Annotated
 from fastapi.responses import JSONResponse
 from sqlmodel import select
-from ...core.db import DbSession, get_db_scope
+from ...core.db import DbSession
 from ...core.routing import AppRouter
 from ...core.utils.Encryptor import Encryptor
 from ...models.User import User
@@ -8,7 +9,7 @@ from .CheckEmailForm import CheckEmailForm
 
 
 @AppRouter.api.post("/auth/check/email")
-async def check_email(form: CheckEmailForm, db: DbSession = get_db_scope()) -> JSONResponse:
+async def check_email(form: CheckEmailForm, db: Annotated[DbSession, DbSession.scope()]) -> JSONResponse:
     if form.is_token:
         decrypted_email = Encryptor.decrypt(form.token, form.login_token)
         user = db.exec(select(User).where(User.email == decrypted_email)).first()

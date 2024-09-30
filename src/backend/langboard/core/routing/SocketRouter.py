@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 from routes import Mapper
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TEvent
@@ -61,7 +61,7 @@ class SocketRouter:
             self._mapper.create_regs()
             self._routes[path] = {}
 
-    def on(self, event: SocketDefaultEvent | str):
+    def on(self, event: SocketDefaultEvent | str) -> Callable[[TEvent], TEvent]:
         """Registers a socket event for the current path.
 
         E.g.::

@@ -2,6 +2,7 @@ from abc import ABC
 from inspect import Parameter, signature
 from typing import TypeVar
 from fastapi import Depends, Form
+from fastapi.params import Depends as DependsType
 from pydantic import BaseModel
 
 
@@ -19,12 +20,20 @@ class BaseFormModel(ABC, BaseModel):
             password: str
 
         @AppRouter.api.post("/users")
-        async def create_user(user: UserForm = get_form_scope(UserForm)):
+        async def create_user(user: UserForm = UserForm.scope()):
+            ...
+
+        @AppRouter.api.post("/users")
+        async def create_user(user: Annotated[UserForm, UserForm.scope()]):
             ...
     """
 
     @staticmethod
     def from_form() -> "BaseFormModel":
+        raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
+
+    @staticmethod
+    def scope() -> DependsType:
         raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
 
 
@@ -46,13 +55,12 @@ def form_model(cls: type[_TFormModel]) -> _TFormModel:
     def from_form(**data) -> _TFormModel:
         return cls(**data)
 
+    def scope() -> DependsType:
+        return Depends(from_form)
+
     sig = signature(from_form)
     sig = sig.replace(parameters=new_parameters)
     from_form.__signature__ = sig
     setattr(cls, "from_form", from_form)
+    setattr(cls, "scope", scope)
     return cls
-
-
-def get_form_scope(cls: _TFormModel):
-    """Gets the form scope for the given class."""
-    return Depends(cls.from_form)

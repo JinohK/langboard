@@ -1,8 +1,10 @@
+from enum import Enum
 from inspect import Parameter, signature
-from types import GeneratorType
-from typing import Any, Callable, TypeVar
+from types import GeneratorType, NoneType, UnionType
+from typing import Annotated, Any, Callable, TypeVar, _LiteralGenericAlias, _UnionGenericAlias
 from fastapi.params import Depends
 from pydantic import BaseModel
+from typing_extensions import _AnnotatedAlias
 from ...Constants import PROJECT_NAME
 from ..logger import Logger
 from .Exception import SocketRouterScopeException
@@ -17,6 +19,8 @@ _TScopeCreator = Callable[[SocketRequest], Any | GeneratorType | SocketRouterSco
 class SocketRouterScope:
     """Creates a scope for the socket route handler to be used in :class:`socketify.SocketApp` routes."""
 
+    _BOOL_TRUE_VALUES = set([1, "1", "true", "True"])
+    _BOOL_FALSE_VALUES = set([0, "0", "false", "False"])
     use_cache: bool = True
     annotation: type
 
@@ -34,20 +38,135 @@ class SocketRouterScope:
         self._logger = Logger.use(f"{PROJECT_NAME}.socket")
         self.annotation = self._parameter.annotation
 
-        if isinstance(self._default, Depends):
+        if issubclass(self.annotation.__class__, _AnnotatedAlias):
+            self._create_scope = self._create_annotated_scope(self.annotation)
+        elif isinstance(self.annotation, UnionType) or isinstance(self.annotation, _UnionGenericAlias):
+            self._create_scope = self._create_union_scope(self.annotation)
+        elif isinstance(self.annotation, _LiteralGenericAlias):
+            self._create_scope = self._create_literal_scope(self.annotation)
+        elif issubclass(self.annotation, Enum):
+            self._create_scope = self._create_enum_scope(self.annotation)
+        elif isinstance(self._default, Depends):
             self.use_cache = self._default.use_cache
             self._create_scope = self._create_depends_scope(self._default)
-        elif self._parameter.annotation is SocketRequest:
+        elif self.annotation is SocketRequest:
             self._create_scope = self._create_request_scope()
-        elif self._parameter.annotation is WebSocket:
+        elif self.annotation is WebSocket:
             self._create_scope = self._create_websocket_scope()
-        elif issubclass(self._parameter.annotation, BaseModel):
-            self._create_scope = self._create_model_scope(self._parameter.annotation)
+        elif issubclass(self.annotation, BaseModel):
+            self._create_scope = self._create_model_scope(self.annotation)
         else:
-            self._create_scope = self._create_data_scope(self._parameter.annotation)
+            self._create_scope = self._create_data_scope(self.annotation)
 
     def __call__(self, req: SocketRequest) -> Any | GeneratorType:
         return self._create_scope(req)
+
+    def _create_annotated_scope(self, annotation: Annotated[..., ...]) -> _TScopeCreator:
+        arg = annotation.__args__[0]
+        metadata = annotation.__metadata__[0]
+
+        if isinstance(metadata, Depends):
+            self.use_cache = metadata.use_cache
+            return self._create_depends_scope(metadata)
+        else:
+            return SocketRouterScope(
+                self._param_name,
+                Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=arg),
+                self._event_details,
+            )
+
+    def _create_union_scope(self, annotation: UnionType | _UnionGenericAlias) -> _TScopeCreator:
+        union_type_creators: list[SocketRouterScope] = []
+        does_allow_none = NoneType in annotation.__args__
+        if Any in annotation.__args__:
+            return self._create_data_scope(Any)
+
+        for union_type in annotation.__args__:
+            if union_type is NoneType:
+                continue
+
+            creator = SocketRouterScope(
+                self._param_name,
+                Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=union_type),
+                self._event_details,
+            )
+
+            union_type_creators.append(creator)
+
+        def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+            for creator in union_type_creators:
+                scope = creator(req)
+                if isinstance(scope, creator.annotation):
+                    return scope
+
+            if does_allow_none:
+                return None
+
+            return self._convert_scope_exception(
+                TypeError(f"Parameter '{self._param_name}' must be of type {annotation.__args__}.")
+            )
+
+        return create_scope
+
+    def _create_literal_scope(self, annotation: _LiteralGenericAlias) -> _TScopeCreator:
+        args: tuple = annotation.__args__
+        does_allow_none = None in args
+
+        creators: list[SocketRouterScope] = []
+        allowed_value_types = set([int, bool, str, bytes, Enum, NoneType])
+        for arg in args:
+            if not any(isinstance(arg, value_type) for value_type in allowed_value_types):
+                type_names = ", ".join(
+                    [
+                        value_type.__name__ if value_type is not NoneType else "None"
+                        for value_type in allowed_value_types
+                    ]
+                )
+                raise TypeError(f"Literal type arguments must be a value of {type_names} but got {arg}.")
+
+            creators.append(
+                SocketRouterScope(
+                    self._param_name,
+                    Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=type(arg)),
+                    self._event_details,
+                )
+            )
+
+        def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+            for creator in creators:
+                value = creator(req)
+                if value is not None and value in args:
+                    return value
+
+            if does_allow_none:
+                return None
+
+            return self._convert_scope_exception(TypeError(f"Parameter '{self._param_name}' must be one of {args}."))
+
+        return create_scope
+
+    def _create_enum_scope(self, annotation: type[Enum]) -> _TScopeCreator:
+        enum_keys = set([enum.name for enum in annotation])
+        enum_values = set([enum.value for enum in annotation])
+
+        def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+            value = req.data.get(
+                self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
+            )
+
+            if value in enum_keys:
+                return annotation[value]
+
+            if value in enum_values:
+                return annotation(value)
+
+            return self._convert_scope_exception(
+                TypeError(
+                    f"Parameter '{self._param_name}' must be one of keys{enum_keys} or values{enum_values} but got {value}"
+                )
+            )
+
+        return create_scope
 
     def _create_depends_scope(self, default: Depends) -> _TScopeCreator:
         depend_params = signature(default.dependency).parameters
@@ -88,20 +207,22 @@ class SocketRouterScope:
         return create_scope
 
     def _create_data_scope(self, annotation: type) -> _TScopeCreator:
+        is_any = annotation is Any
+
         def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
-            if isinstance(req.data, list) and self._param_name == "data" and annotation is list:
+            if isinstance(req.data, list) and self._param_name == "data" and (is_any or annotation is list):
                 return req.data
 
             data_dict = req.data if isinstance(req.data, dict) else {}
 
             # if param_name is data or route_data
-            # and req.data or req.route_data doesn't have a key named param_name
+            # and req.data, req.route_data or req.from_app doesn't have a key named param_name
             # and parameter annotation is dict
             # and param_name is data and req.data is a dict or param_name is route_data
             if (
                 self._param_name in ("data", "route_data")
-                and self._param_name not in (data_dict | req.route_data)
-                and annotation is dict
+                and self._param_name not in (data_dict | req.route_data | req.from_app)
+                and (is_any or annotation is dict)
                 and ((self._param_name == "data" and isinstance(req.data, dict)) or self._param_name == "route_data")
             ):
                 return getattr(req, self._param_name)
@@ -112,8 +233,17 @@ class SocketRouterScope:
             raw_data = data_dict.get(
                 self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
             )
-            if isinstance(raw_data, annotation):
+
+            if is_any or isinstance(raw_data, annotation):
                 return raw_data
+
+            if annotation is bool:
+                if raw_data in SocketRouterScope._BOOL_TRUE_VALUES:
+                    return True
+                elif raw_data in SocketRouterScope._BOOL_FALSE_VALUES:
+                    return False
+                else:
+                    return None
 
             try:
                 return annotation(raw_data)

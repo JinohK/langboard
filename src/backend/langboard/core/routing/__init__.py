@@ -1,6 +1,6 @@
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .AppRouter import AppRouter
-from .Form import BaseFormModel, form_model, get_form_scope
+from .Form import BaseFormModel, form_model
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TCachedScopes
 from .SocketRequest import SocketRequest
@@ -15,7 +15,6 @@ __all__ = [
     "AppRouter",
     "BaseFormModel",
     "form_model",
-    "get_form_scope",
     "SocketDefaultEvent",
     "SocketEvent",
     "SocketRequest",

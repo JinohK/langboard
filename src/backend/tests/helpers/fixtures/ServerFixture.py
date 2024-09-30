@@ -22,6 +22,6 @@ class ServerFixture:
         return MagicMock()
 
     def _create_app_request(
-        self, websocket: MockSocketifyWebSocket, route_data: dict, data: dict, from_app: dict | None = None
+        self, websocket: MockSocketifyWebSocket, route_data: dict, data: dict | list, from_app: dict | None = None
     ) -> SocketRequest:
         return SocketRequest(WebSocket(websocket), route_data, data, from_app=from_app)

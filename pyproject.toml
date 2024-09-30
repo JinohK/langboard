@@ -54,6 +54,7 @@ omit = [
     "src/backend/langboard/core/bootstrap/CLIOptions.py",
     "src/backend/langboard/core/bootstrap/CLIRichParser.py",
     "src/backend/langboard/core/bootstrap/WebSocketOptions.py",
+    "src/backend/langboard/core/db/ModelCreator.py",
     "src/backend/langboard/core/routing/WebSocket.py",
     "src/backend/langboard/App.py",
     "src/backend/langboard/CLI.py",

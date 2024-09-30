@@ -81,5 +81,5 @@ unit_tests: ## run unit tests
 	poetry run pytest src/backend/tests/units
 
 cov_unit_tests: ## run unit tests with coverage
-	poetry run pytest --cov=src/backend/langboard src/backend/tests/units --cov-report=html:./src/backend/coverage
+	poetry run pytest -vv --cov=src/backend/langboard src/backend/tests/units --cov-report=html:./src/backend/coverage
 	@echo "$(GREEN)Coverage report generated in src/backend/coverage directory.$(NC)"

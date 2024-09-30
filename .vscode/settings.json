@@ -14,6 +14,9 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "python.analysis.importFormat": "relative",
   "tailwindCSS.experimental.configFile": "./src/frontend/tailwind.config.js",
+  "ruff.codeAction.disableRuleComment": {
+    "enable": false
+  },
   "files.associations": {
     "*.css": "tailwindcss"
   },

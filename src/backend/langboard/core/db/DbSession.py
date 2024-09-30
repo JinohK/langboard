@@ -1,5 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, Mapping, Optional, TypeVar, Union, overload
+from fastapi import Depends
+from fastapi.params import Depends as DependsType
 from sqlalchemy import Delete, Insert, Sequence, Update
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.util import EMPTY_DICT
@@ -35,7 +37,7 @@ class DbSession(BaseSqlBuilder):
         sub_session.identity_map = main_session.identity_map
 
         self._sessions: dict[DbSessionRole, Session] = {}
-        self._sessions_needs_commit: set[Session] = set()
+        self._sessions_needs_commit: list[Session] = []
 
         for role in MAIN_DATABASE_ROLE:
             self._sessions[DbSessionRole(role)] = main_session
@@ -53,6 +55,19 @@ class DbSession(BaseSqlBuilder):
             session.close()
         self._sessions.clear()
         self._sessions = None
+
+    @staticmethod
+    def scope() -> DependsType:
+        """Creates a scope for the database session to be used in :class:`fastapi.FastAPI` endpoints."""
+
+        def get_db():
+            db = DbSession()
+            try:
+                yield db
+            finally:
+                del db
+
+        return Depends(get_db)
 
     def insert(self, obj: BaseSqlModel):
         """Inserts a new object into the database if it is new.

@@ -1,6 +1,6 @@
 from inspect import Parameter, Signature
 from fastapi.params import Depends, Form
-from langboard.core.routing import BaseFormModel, form_model, get_form_scope
+from langboard.core.routing import BaseFormModel, form_model
 from pytest import mark, raises
 
 
@@ -12,15 +12,22 @@ class FakeForm(BaseFormModel):
 
 class TestForm:
     def test_throw_exception_when_form_model_is_not_decorated_with_form_model(self):
-        with raises(NotImplementedError) as e:
+        class WrongForm(BaseFormModel):
+            pass
 
-            class WrongForm(BaseFormModel):
-                pass
+        wrong_form = WrongForm()
 
-            wrong_form = WrongForm()
+        with raises(NotImplementedError) as error_from_form:
             wrong_form.from_form()
 
-        assert e.value.args[0] == "Must decorate the model class with the `form_model` decorator."
+        with raises(NotImplementedError) as error_from_scope:
+            wrong_form.scope()
+
+        assert (
+            error_from_form.value.args[0]
+            == error_from_scope.value.args[0]
+            == "Must decorate the model class with the `form_model` decorator."
+        )
 
     def test_initialization(self):
         form = FakeForm(fake="fake")
@@ -54,8 +61,8 @@ class TestForm:
         for key, value in data.items():
             assert getattr(form, key) == value
 
-    def test_get_form_scope(self):
-        scope = get_form_scope(FakeForm)
+    def test_scope(self):
+        scope = FakeForm.scope()
 
         assert isinstance(scope, Depends)
         assert scope.dependency == FakeForm.from_form
