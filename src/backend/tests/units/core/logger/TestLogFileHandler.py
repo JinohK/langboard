@@ -85,7 +85,10 @@ class TestLogFileHandler:
         assert handler._stream_path == self._log_dir / now_log_file
 
         # Change the date
-        next_date = now.replace(day=now.day + 1)
+        try:
+            next_date = now.replace(day=now.day + 1)
+        except ValueError:
+            next_date = now.replace(month=now.month + 1, day=1)
         next_log_file = "TestLogFileHandler_{:%Y-%m-%d}.log".format(next_date)
         mock_get_log_file_name.return_value = next_log_file
 

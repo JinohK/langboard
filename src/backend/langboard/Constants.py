@@ -25,9 +25,14 @@ for role in MAIN_DATABASE_ROLE:
     if role in SUB_DATABASE_ROLE:
         raise ValueError(f"Database role conflict: {role}")
 
+_added_roles = set()
 for role in set([*MAIN_DATABASE_ROLE, *SUB_DATABASE_ROLE]):
     if role not in AVAILABLE_DATABASE_ROLES:
         raise ValueError(f"Invalid database role: {role}")
+    _added_roles.add(role)
+
+if _added_roles != AVAILABLE_DATABASE_ROLES:
+    raise ValueError(f"Database roles must include all of {AVAILABLE_DATABASE_ROLES}")
 
 # Directory
 BASE_DIR = Path(dirname(__file__))

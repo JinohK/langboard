@@ -50,11 +50,13 @@ class DbSession(BaseSqlBuilder):
             _logger.warning("DbConnection is being deleted without committing.")
 
         self._sessions_needs_commit.clear()
-        self._sessions_needs_commit = None
+
         for session in self._sessions.values():
             session.close()
         self._sessions.clear()
-        self._sessions = None
+
+        del self._sessions_needs_commit
+        del self._sessions
 
     @staticmethod
     def scope() -> DependsType:
@@ -247,5 +249,5 @@ class DbSession(BaseSqlBuilder):
         """
         session = self._sessions.get(role)
         if role != DbSessionRole.Select:
-            self._sessions_needs_commit.add(session)
+            self._sessions_needs_commit.append(session)
         return session

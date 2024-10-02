@@ -116,13 +116,7 @@ class SocketRouterScope:
         allowed_value_types = set([int, bool, str, bytes, Enum, NoneType])
         for arg in args:
             if not any(isinstance(arg, value_type) for value_type in allowed_value_types):
-                type_names = ", ".join(
-                    [
-                        value_type.__name__ if value_type is not NoneType else "None"
-                        for value_type in allowed_value_types
-                    ]
-                )
-                raise TypeError(f"Literal type arguments must be a value of {type_names} but got {arg}.")
+                raise TypeError(f"Literal type arguments must be a value of {allowed_value_types} but got {arg}.")
 
             creators.append(
                 SocketRouterScope(

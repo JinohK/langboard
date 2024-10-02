@@ -28,11 +28,12 @@ class TestInstance:
 
 class LiteralScope(BaseScopeTest):
     def test_throw_exception_when_literal_type_value_is_not_allowed(self):
+        available_literal_types = set([int, bool, str, bytes, Enum, NoneType])
         model = ScopeTestModel(
             param_type=Literal[TestInstance()],
             req_data={"param": TestInstance()},
             expected_type=TypeError,
-            expected="Literal type arguments must be a value of int, None, Enum, str, bool, bytes but got TestInstance.",
+            expected=f"Literal type arguments must be a value of {available_literal_types} but got TestInstance.",
         )
 
         with raises(TypeError) as e:

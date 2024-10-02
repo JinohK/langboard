@@ -20,6 +20,9 @@ class BaseSqlModel(ABC, SQLModel):
     def __eq__(self, target: object) -> bool:
         return isinstance(target, self.__class__) and self.id is not None and self.id == target.id
 
+    def __ne__(self, target: object) -> bool:
+        return not self.__eq__(target)
+
     def is_new(self) -> bool:
         """Returns `True` if the object is new and has not been inserted into the database."""
         if not isinstance(self, BaseSqlModel):
