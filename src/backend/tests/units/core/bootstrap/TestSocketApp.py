@@ -186,7 +186,8 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
                 mock_send.called
             ), "WebSocket.send not called on on_message for valid data assertion for event exception"
             mock_send.assert_called_once_with(
-                event="error", data={"message": "Test exception", "code": SocketResponseCode.ServerError.value}
+                event="error",
+                data={"message": "Test exception", "code": SocketResponseCode.WS_1011_INTERNAL_ERROR.value},
             )
 
             mock_send.reset_mock()
@@ -203,7 +204,7 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
                 event="error",
                 data={
                     "message": "invalid literal for int() with base 10: 'test'",
-                    "code": SocketResponseCode.InvalidData.value,
+                    "code": SocketResponseCode.WS_4001_INVALID_DATA.value,
                 },
             )
 
@@ -340,8 +341,8 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
             assert socket.get_user_data.called, f"WebSocket.get_user_data not called on {name} for invalid assertion"
             socket.end.assert_called_with(
-                SocketResponseCode.InvalidConnection.value,
-                {"message": "Invalid connection", "code": SocketResponseCode.InvalidConnection.value},
+                SocketResponseCode.WS_4000_INVALID_CONNECTION.value,
+                {"message": "Invalid connection", "code": SocketResponseCode.WS_4000_INVALID_CONNECTION.value},
             )
 
             socket.reset_all()
@@ -367,7 +368,7 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
                 socket.send.assert_called_once_with(
                     {
                         "event": "error",
-                        "data": {"message": "Invalid data", "code": SocketResponseCode.InvalidData.value},
+                        "data": {"message": "Invalid data", "code": SocketResponseCode.WS_4001_INVALID_DATA.value},
                     }
                 )
 
@@ -388,8 +389,8 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
             assert socket.end.called, f"WebSocket.end not called on {name} for invalid authorization token assertion"
             socket.end.assert_called_once_with(
-                status.HTTP_401_UNAUTHORIZED,
-                {"message": "Invalid token", "code": status.HTTP_401_UNAUTHORIZED},
+                SocketResponseCode.WS_3000_UNAUTHORIZED.value,
+                {"message": "Invalid token", "code": SocketResponseCode.WS_3000_UNAUTHORIZED.value},
             )
 
             socket.reset_all()
@@ -400,8 +401,8 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
             assert socket.end.called, f"WebSocket.end not called on {name} for expired authorization token assertion"
             socket.end.assert_called_once_with(
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                {"message": "Token has expired", "code": status.HTTP_422_UNPROCESSABLE_ENTITY},
+                SocketResponseCode.WS_3001_EXPIRED_TOKEN.value,
+                {"message": "Token has expired", "code": SocketResponseCode.WS_3001_EXPIRED_TOKEN.value},
             )
 
             socket.reset_all()
@@ -412,8 +413,8 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
             assert socket.end.called, f"WebSocket.end not called on {name} for invalid user assertion"
             socket.end.assert_called_once_with(
-                SocketResponseCode.InvalidConnection.value,
-                {"message": "Invalid connection", "code": SocketResponseCode.InvalidConnection.value},
+                SocketResponseCode.WS_4000_INVALID_CONNECTION.value,
+                {"message": "Invalid connection", "code": SocketResponseCode.WS_4000_INVALID_CONNECTION.value},
             )
 
         socket.reset_all()

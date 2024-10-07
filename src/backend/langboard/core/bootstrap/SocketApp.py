@@ -67,7 +67,7 @@ class SocketApp(dict):
     async def on_open(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
         if not self._is_valid_user_data(user_data):
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         if not await self._validate_token(ws, user_data["auth_token"]):
@@ -81,7 +81,7 @@ class SocketApp(dict):
     async def on_message(self, ws: SocketifyWebSocket, message: Union[str | bytes], _: OpCode) -> None:
         user_data = ws.get_user_data()
         if not self._is_valid_user_data(user_data):
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         if not await self._validate_token(ws, user_data["auth_token"]):
@@ -92,7 +92,7 @@ class SocketApp(dict):
             if not isinstance(data, dict) or "event" not in data or not isinstance(data["event"], str):
                 raise Exception()
         except Exception:
-            self._send_error(ws, "Invalid data", error_code=SocketResponseCode.InvalidData, should_close=False)
+            self._send_error(ws, "Invalid data", error_code=SocketResponseCode.WS_4001_INVALID_DATA, should_close=False)
             return
 
         event = data.pop("event")
@@ -104,7 +104,7 @@ class SocketApp(dict):
     async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
         if not self._is_valid_user_data(user_data):
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Close)
@@ -120,7 +120,7 @@ class SocketApp(dict):
     async def on_drain(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
         if not self._is_valid_user_data(user_data):
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         if not await self._validate_token(ws, user_data["auth_token"]):
@@ -134,7 +134,7 @@ class SocketApp(dict):
     async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
         user_data = ws.get_user_data()
         if not self._is_valid_user_data(user_data):
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         if not await self._validate_token(ws, user_data["auth_token"]):
@@ -181,13 +181,13 @@ class SocketApp(dict):
         if isinstance(validation_result, User):
             return True
         elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-            self._send_error(ws, "Token has expired", error_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            self._send_error(ws, "Token has expired", error_code=SocketResponseCode.WS_3001_EXPIRED_TOKEN)
             return False
         elif validation_result == status.HTTP_401_UNAUTHORIZED:
-            self._send_error(ws, "Invalid token", error_code=status.HTTP_401_UNAUTHORIZED)
+            self._send_error(ws, "Invalid token", error_code=SocketResponseCode.WS_3000_UNAUTHORIZED)
             return False
         else:
-            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.InvalidConnection)
+            self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return False
 
     def _send_error(
@@ -222,13 +222,16 @@ class SocketApp(dict):
 
             if isinstance(response, SocketEventException):
                 self._send_error(
-                    req.socket, str(response.raw_exception), SocketResponseCode.ServerError, should_close=False
+                    req.socket,
+                    str(response.raw_exception),
+                    SocketResponseCode.WS_1011_INTERNAL_ERROR,
+                    should_close=False,
                 )
                 return
 
             if isinstance(response, SocketRouterScopeException):
                 self._send_error(
-                    req.socket, str(response.raw_exception), SocketResponseCode.InvalidData, should_close=False
+                    req.socket, str(response.raw_exception), SocketResponseCode.WS_4001_INVALID_DATA, should_close=False
                 )
                 return
 

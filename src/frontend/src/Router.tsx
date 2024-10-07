@@ -4,6 +4,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { ProtectedLoginRoute } from "@/core/routing/ProtectedLoginRoute";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import DashboardPage from "@/pages/DashboardPage";
+import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -11,35 +12,37 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const Router = () => {
     return (
         <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path={ROUTES.LOGIN}>
+            <SocketRouteWrapper>
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path={ROUTES.LOGIN}>
+                        <Route
+                            index
+                            element={
+                                <ProtectedLoginRoute>
+                                    <LoginPage />
+                                </ProtectedLoginRoute>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.LOGIN_PASSWORD}
+                            element={
+                                <ProtectedLoginRoute>
+                                    <LoginPage />
+                                </ProtectedLoginRoute>
+                            }
+                        />
+                    </Route>
                     <Route
-                        index
+                        path={ROUTES.DASHBOARD}
                         element={
-                            <ProtectedLoginRoute>
-                                <LoginPage />
-                            </ProtectedLoginRoute>
+                            <AuthGuard>
+                                <DashboardPage />
+                            </AuthGuard>
                         }
                     />
-                    <Route
-                        path={ROUTES.LOGIN_PASSWORD}
-                        element={
-                            <ProtectedLoginRoute>
-                                <LoginPage />
-                            </ProtectedLoginRoute>
-                        }
-                    />
-                </Route>
-                <Route
-                    path={ROUTES.DASHBOARD}
-                    element={
-                        <AuthGuard>
-                            <DashboardPage />
-                        </AuthGuard>
-                    }
-                />
-            </Routes>
+                </Routes>
+            </SocketRouteWrapper>
         </BrowserRouter>
     );
 };
