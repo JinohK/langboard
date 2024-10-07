@@ -5,6 +5,6 @@ export const SOCKET_URL = process.env.SOCKET_URL || "http://localhost:5381";
 export const API_URL = process.env.API_URL || "http://localhost:5381";
 
 export const APP_ACCESS_TOKEN = `access_token_${APP_SHORT_NAME}`;
-export const APP_SECRET_TOKEN = `secret_token_${APP_SHORT_NAME}`;
+export const APP_REFRESH_TOKEN = `refresh_token_${APP_SHORT_NAME}`;
 
 export const LANGUAGE_LOCALES = ["en-US"];

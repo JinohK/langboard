@@ -1,5 +1,6 @@
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .AppRouter import AppRouter
+from .BaseMiddleware import BaseMiddleware
 from .Form import BaseFormModel, form_model
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TCachedScopes
@@ -14,6 +15,7 @@ __all__ = [
     "AppExceptionHandlingRoute",
     "AppRouter",
     "BaseFormModel",
+    "BaseMiddleware",
     "form_model",
     "SocketDefaultEvent",
     "SocketEvent",

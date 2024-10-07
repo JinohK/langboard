@@ -2,12 +2,10 @@ from threading import Lock
 from typing import TypeVar
 
 
-__all__ = ["thread_safe_singleton"]
-
-_TClass = TypeVar("_TClass", bound=object)
+_TClass = TypeVar("_TClass", bound=type)
 
 
-def thread_safe_singleton(cls: type[_TClass]) -> type[_TClass]:
+def thread_safe_singleton(cls: _TClass) -> _TClass:
     """Converts a class into a thread-safe singleton."""
     if not hasattr(thread_safe_singleton, "__lock__"):
         setattr(thread_safe_singleton, "__lock__", Lock())
@@ -17,6 +15,7 @@ def thread_safe_singleton(cls: type[_TClass]) -> type[_TClass]:
             with getattr(thread_safe_singleton, "__lock__"):
                 if not hasattr(cls, "__instance__"):
                     setattr(cls, "__instance__", cls(**kwargs))
+                    cls.__new__ = get_instance
                     cls.__init__ = get_instance
         return getattr(cls, "__instance__")
 

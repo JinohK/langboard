@@ -1,11 +1,11 @@
 from typing import Callable, TypeVar
 
 
-_TClass = TypeVar("_TClass", bound=object)
+_TClass = TypeVar("_TClass", bound=type)
 
 
-def staticclass(cls: type[_TClass]) -> type[_TClass]:
-    """Decorator to make a class static"""
+def staticclass(cls: _TClass) -> _TClass:
+    """Converts a class into a static class."""
 
     for name, attr in cls.__dict__.items():
         if not isinstance(attr, Callable) or (name.startswith("__") and name.endswith("__")):

@@ -4,59 +4,78 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import EmailForm from "@/pages/LoginPage/EmailForm";
 import PasswordForm from "@/pages/LoginPage/PasswordForm";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
 import { generateToken } from "@/core/utils/StringUtils";
-import useCheckEmail from "@/controllers/auth/checkEmail";
+import useAuthEmail from "@/controllers/auth/useAuthEmail";
 
 function LoginPage(): JSX.Element {
+    const LOGIN_TOKEN_NAME = "itkl";
+    const EMAIL_TOKEN_NAME = "TKE";
+
     const navigate = useNavigate();
     const location = useLocation();
-    const [searchParams] = useSearchParams();
     const [email, setEmail] = useState("");
-    const [loginToken, setLoginToken] = useState(searchParams.get("itkl") || "");
-    const [emailToken, setEmailToken] = useState(searchParams.get("TKE") || "");
-    const redirectUrl = searchParams.get("continue");
-    const { mutate } = useCheckEmail();
+    const [form, setForm] = useState<JSX.Element>();
+    const { mutate } = useAuthEmail();
 
     useEffect(() => {
-        if (!loginToken || loginToken.length !== 64) {
+        const searchParams = new URLSearchParams(location.search);
+        const loginTokenParam = searchParams.get(LOGIN_TOKEN_NAME);
+        const emailTokenParam = searchParams.get(EMAIL_TOKEN_NAME);
+
+        if (!loginTokenParam || loginTokenParam.length !== 64) {
             const token = generateToken(64);
-            setLoginToken(token);
 
-            const params = new URLSearchParams();
-            params.append("itkl", token);
-            if (redirectUrl) {
-                params.append("continue", redirectUrl);
-            }
+            searchParams.set(LOGIN_TOKEN_NAME, token);
 
-            navigate(`${ROUTES.LOGIN}?${params.toString()}`);
+            navigate(`${ROUTES.LOGIN}?${searchParams.toString()}`, {
+                replace: true,
+            });
+
+            return;
         }
-    }, [location, loginToken]);
 
-    if (loginToken && emailToken) {
-        mutate(
-            { login_token: loginToken, is_token: true, token: emailToken },
-            {
-                onSuccess: () => {
-                    const params = new URLSearchParams();
-                    params.append("itkl", loginToken);
-                    params.append("TKE", emailToken);
-                    if (redirectUrl) {
-                        params.append("continue", redirectUrl);
-                    }
-                    navigate(`${ROUTES.LOGIN}?${params.toString()}`);
-                },
-            }
-        );
-    }
+        if (loginTokenParam && emailTokenParam) {
+            mutate(
+                { is_token: true, token: emailTokenParam, login_token: loginTokenParam },
+                {
+                    onSuccess: (data) => {
+                        if (!data.token) {
+                            throw new Error();
+                        }
 
-    const targetForm =
-        !emailToken || !email ? (
-            <EmailForm loginToken={loginToken} setEmail={setEmail} setEmailToken={setEmailToken} />
-        ) : (
-            <PasswordForm email={email} setEmail={setEmail} />
-        );
+                        if (email !== data.email) {
+                            setEmail(data.email);
+                        }
+                    },
+                    onError: () => {
+                        searchParams.delete(EMAIL_TOKEN_NAME);
+                        navigate(`${ROUTES.LOGIN}?${searchParams.toString()}`);
+                    },
+                }
+            );
+        }
+    }, [navigate, location]);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const loginTokenParam = searchParams.get(LOGIN_TOKEN_NAME) ?? "";
+        const emailTokenParam = searchParams.get(EMAIL_TOKEN_NAME);
+
+        if (loginTokenParam && emailTokenParam) {
+            setForm(
+                <PasswordForm
+                    loginToken={loginTokenParam}
+                    emailToken={emailTokenParam}
+                    email={email}
+                    setEmail={setEmail}
+                />
+            );
+        } else {
+            setForm(<EmailForm loginToken={loginTokenParam} setEmail={setEmail} />);
+        }
+    }, [location, email]);
 
     return (
         <Container
@@ -69,7 +88,7 @@ function LoginPage(): JSX.Element {
                     <Box mb="6">
                         <img src="/images/logo.png" alt="Logo" className="h-9 w-9" />
                     </Box>
-                    <Flex className="max-xs:flex-col xs:flex-wrap xs:justify-between">{targetForm}</Flex>
+                    <Flex className="max-xs:flex-col xs:flex-wrap xs:justify-between">{form}</Flex>
                 </Box>
                 <Box className="max-sm:p-4 sm:mt-2">
                     <LanguageSwitcher variant="ghost" triggerType="text" />

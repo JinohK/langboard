@@ -49,18 +49,42 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend
       - BACKEND_PORT=${BACKEND_PORT}
+      - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
+      - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
+      - LOGGING_DIR=${LOGGING_DIR}
       - MAIN_DATABASE_URL=postresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:${MASTER_POSTGRES_PORT}/${POSTGRES_DB}
       - MAIN_DATABASE_ROLE=${MAIN_DATABASE_ROLE}
       - SUB_DATABASE_URL=postresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:${REPLICA_POSTGRES_PORT}/${POSTGRES_DB}
       - SUB_DATABASE_ROLE=${SUB_DATABASE_ROLE}
-      - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
-      - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
-      - LOGGING_DIR=${LOGGING_DIR}
+      - CACHE_TYPE=redis
+      - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:${REDIS_PORT}/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - JWT_AT_EXPIRATION=${JWT_AT_EXPIRATION}
+      - JWT_RT_EXPIRATION=${JWT_RT_EXPIRATION}
     working_dir: /app
     command: pypy3 -m ${PROJECT_NAME}
     volumes:
       - ../src/backend/${PROJECT_NAME}:/app/${PROJECT_NAME}
       - ../src/backend/requirements.txt:/app/requirements.txt
+    networks:
+      - dev_net
+    restart: always
+
+  redis:
+    container_name: ${PROJECT_NAME}_redis
+    command: redis-server --port 6379 --requirepass ${REDIS_PASSWORD}
+    image: redis:latest
+    environment:
+      - REQUIREPASS=${REDIS_PASSWORD}
+      - CLIENTPORT=6379
+      - REDIS_LOG_FILE=${REDIS_LOG_FILE}
+    volumes:
+      - ./volumes/cache:/data
+      - ../logs/redis:${REDIS_LOG_FILE}
+      - ./cache/redis.conf:/usr/local/bin/redis.conf
+    ports:
+      - ${REDIS_PORT}:6379
     networks:
       - dev_net
     restart: always

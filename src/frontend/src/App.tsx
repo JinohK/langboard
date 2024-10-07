@@ -2,6 +2,7 @@ import "@/assets/styles/App.scss";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
 import ToastList from "@/components/ToastList";
 import { AuthProvider } from "@/core/providers/AuthProvider";
+import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
 import Router from "@/Router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12,10 +13,12 @@ function App() {
         <>
             <QueryClientProvider client={queryClient}>
                 <AuthProvider>
-                    <SuspenseComponent shouldWrapChildren={false}>
-                        <Router />
-                    </SuspenseComponent>
-                    <ToastList />
+                    <SocketProvider>
+                        <SuspenseComponent shouldWrapChildren={false}>
+                            <Router />
+                        </SuspenseComponent>
+                        <ToastList />
+                    </SocketProvider>
                 </AuthProvider>
             </QueryClientProvider>
         </>

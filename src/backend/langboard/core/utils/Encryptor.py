@@ -1,9 +1,10 @@
 from base64 import b64decode, b64encode
 from cryptocode import decrypt, encrypt
-from .decorators import thread_safe_singleton
+from .decorators import class_instance, thread_safe_singleton
 
 
 @thread_safe_singleton
+@class_instance
 class Encryptor:
     """Encrypts and decrypts data using a key."""
 

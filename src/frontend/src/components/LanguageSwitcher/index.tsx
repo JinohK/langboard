@@ -18,6 +18,8 @@ function LanguageSwitcher({ variant, triggerType }: ILanguageSwitcherProps): JSX
         i18n.changeLanguage(lang);
     };
 
+    const langs = i18n.languages.filter((locale) => locale !== i18n.language);
+
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
@@ -30,20 +32,19 @@ function LanguageSwitcher({ variant, triggerType }: ILanguageSwitcherProps): JSX
                     <DropdownMenu.TriggerIcon className="ml-3" />
                 </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-                {i18n.languages.map((locale) => {
-                    if (locale === i18n.language) {
-                        return null;
-                    }
 
-                    return (
-                        <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale}>
-                            <IconComponent name={`flag-${locale.split("-").pop()}`} />
-                            {t(`locales.${locale}`)}
-                        </DropdownMenu.Item>
-                    );
-                })}
-            </DropdownMenu.Content>
+            {langs.length === 0 ? null : (
+                <DropdownMenu.Content>
+                    {langs.map((locale) => {
+                        return (
+                            <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale}>
+                                <IconComponent name={`flag-${locale.split("-").pop()}`} />
+                                {t(`locales.${locale}`)}
+                            </DropdownMenu.Item>
+                        );
+                    })}
+                </DropdownMenu.Content>
+            )}
         </DropdownMenu.Root>
     );
 }

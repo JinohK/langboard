@@ -14,6 +14,8 @@ _TScopes = dict[str, (TGenerator | None, Any)]
 
 
 class SocketEvent:
+    """Socket event class."""
+
     name: str
 
     def __init__(self, route_path: str, event_name: str, event: TEvent):
@@ -32,6 +34,11 @@ class SocketEvent:
     async def run(
         self, cached_scopes: TCachedScopes, req: SocketRequest
     ) -> SocketResponse | SocketRouterScopeException | SocketEventException | None:
+        """Runs the socket event.
+
+        :param cached_scopes: The cached scopes.
+        :param req: The socket request.
+        """
         try:
             scopes = await self._create_scopes(cached_scopes, req)
 
@@ -75,11 +82,11 @@ class SocketEvent:
 
             if scope_creator.use_cache:
                 if isinstance(scope, AsyncGeneratorType):
-                    result = await scope.__anext__()
+                    result = await anext(scope)
                     cached_scopes[scope_name] = (scope, result, type(result))
                     scopes[scope_name] = (None, result)
                 elif isinstance(scope, GeneratorType):
-                    result = scope.__next__()
+                    result = next(scope)
                     cached_scopes[scope_name] = (scope, result, type(result))
                     scopes[scope_name] = (None, result)
                 else:
@@ -87,9 +94,9 @@ class SocketEvent:
                     scopes[scope_name] = (None, scope)
             else:
                 if isinstance(scope, AsyncGeneratorType):
-                    scopes[scope_name] = (scope, await scope.__anext__())
+                    scopes[scope_name] = (scope, await anext(scope))
                 elif isinstance(scope, GeneratorType):
-                    scopes[scope_name] = (scope, scope.__next__())
+                    scopes[scope_name] = (scope, next(scope))
                 else:
                     scopes[scope_name] = (None, scope)
 
@@ -105,8 +112,6 @@ class SocketEvent:
             return
 
         if isinstance(scope, AsyncGeneratorType):
-            async for _ in scope:
-                pass
+            await scope.aclose()
         else:
-            for _ in scope:
-                pass
+            scope.close()

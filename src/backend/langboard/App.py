@@ -7,6 +7,7 @@ from socketify import ASGI, AppListenOptions, AppOptions
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
 from .core.routing import AppExceptionHandlingRoute, AppRouter
+from .core.security import Auth
 from .core.utils.decorators import singleton
 from .Loader import load_modules
 
@@ -42,6 +43,8 @@ class App:
         self._init_api_middlewares()
         self._init_api_routes()
 
+        Auth.get_openai_schema(self.api)
+
     def run(self):
         self._start_server()
 
@@ -57,7 +60,8 @@ class App:
         middleware_modules = load_modules("middlewares", "Middleware")
         for module in middleware_modules.values():
             for middleware in module:
-                self.api.add_middleware(middleware)
+                if middleware.__auto_load__:
+                    self.api.add_middleware(middleware)
 
     def _init_api_routes(self):
         self.api.router.route_class = AppExceptionHandlingRoute

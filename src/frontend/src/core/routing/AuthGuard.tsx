@@ -1,4 +1,4 @@
-import { useAuth } from "@/core/providers/AuthProvider";
+import { redirectToLogin, useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 
 export interface IAuthGuardProps {
@@ -6,11 +6,12 @@ export interface IAuthGuardProps {
 }
 
 export const AuthGuard = ({ children }: IAuthGuardProps): React.ReactNode => {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, removeTokens } = useAuth();
     const isLoginPage = location.pathname.startsWith(ROUTES.LOGIN);
 
     if (!isAuthenticated() && !isLoginPage) {
-        logout();
+        removeTokens();
+        redirectToLogin();
     } else {
         return children;
     }

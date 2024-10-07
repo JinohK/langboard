@@ -1,5 +1,6 @@
 from langboard.core.utils.decorators import staticclass
 from pytest import raises
+from .....helpers.testing import AssertStaticClass
 
 
 @staticclass
@@ -16,7 +17,7 @@ class StaticClass:
         return StaticClass._value
 
 
-class TestStaticClass:
+class TestStaticClass(AssertStaticClass):
     def test_throw_exception_when_method_is_not_decorated_with_staticmethod(self):
         with raises(RuntimeError) as e:
 
@@ -29,11 +30,5 @@ class TestStaticClass:
 
         assert e.value.args[0] == "WrongMethodStaticClass.test: This method must be decorated with @staticmethod"
 
-    def test_throw_exception_when_static_class_is_instantiated(self):
-        initializes = [StaticClass, StaticClass.__new__, StaticClass.__init__]
-
-        for initialize in initializes:
-            with raises(RuntimeError) as e:
-                initialize()
-
-            assert e.value.args[0] == "StaticClass: Cannot instantiate a static class"
+    def test_throw_exception_when_instantiated(self):
+        self.assert_throw_exception_when_instantiated(StaticClass)

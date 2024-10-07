@@ -1,6 +1,8 @@
 from abc import ABC
 from langboard.core.bootstrap import SocketApp
 from langboard.core.routing import AppRouter, SocketDefaultEvent, SocketResponse
+from langboard.core.security import Auth
+from langboard.models import User
 from routes import Mapper
 from ....helpers.fixtures import ServerFixture
 
@@ -9,10 +11,15 @@ class SocketAppFixture(ABC, ServerFixture):
     @classmethod
     def setup_class(self):
         self._path = "/test_socket_app/1"
+        self._fake_user = User(
+            id=1, name="test", email="test@test.com", password="test", industry="test", purpose="test"
+        )
         self._user_data = {
             "path": self._path,
             "route_path": "/test_socket_app/{id}",
             "route_data": {"id": "1"},
+            "auth_user_id": self._fake_user.id,
+            "auth_token": Auth.authenticate(self._fake_user.id)[0],
         }
         self._event_normal = "test_event"
         self._event_exception = "test_exception"

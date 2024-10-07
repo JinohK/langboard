@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
+from pydantic import SecretStr, model_serializer
 from sqlmodel import Field, SQLModel
 
 
@@ -24,10 +25,22 @@ class BaseSqlModel(ABC, SQLModel):
         return not self.__eq__(target)
 
     def is_new(self) -> bool:
-        """Returns `True` if the object is new and has not been inserted into the database."""
+        """Checks if the object is new and has not been saved to the database."""
         if not isinstance(self, BaseSqlModel):
             return False
         return self.id is None
+
+    @model_serializer
+    def serialize(self) -> dict[str, Any]:
+        serialized = {}
+        for key in self.model_fields:
+            value = getattr(self, key)
+            if isinstance(value, datetime):
+                value = value.isoformat()
+            elif isinstance(value, SecretStr):
+                value = value.get_secret_value()
+            serialized[key] = value
+        return serialized
 
     @abstractmethod
     def _get_repr_keys(self) -> list[str]: ...

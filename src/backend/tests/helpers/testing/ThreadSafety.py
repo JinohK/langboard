@@ -3,16 +3,16 @@ from threading import Thread
 from typing import Any, Callable, TypeVar
 
 
-TClass = TypeVar("TClass")
+_TClass = TypeVar("_TClass")
 
 
 class ThreadSafety:
     def assert_thread_safety_with_test(
         self,
-        cls: type[TClass],
-        test: Callable[[TClass], None],
-        get_value: Callable[[TClass], Any],
-        reset: Callable[[TClass], None],
+        cls: type[_TClass],
+        test: Callable[[_TClass], None],
+        get_value: Callable[[_TClass], Any],
+        reset: Callable[[_TClass], None],
         expected_value: Any,
     ):
         _, instances = self._create_instances(cls)
@@ -26,16 +26,16 @@ class ThreadSafety:
 
         reset(instances[0])
 
-    def assert_thread_safety(self, cls: type[TClass]):
+    def assert_thread_safety(self, cls: type[_TClass]):
         _, instances = self._create_instances(cls)
 
         for instance in instances:
             assert id(instance) == id(instances[0])
             assert instance is instances[0]
 
-    def _create_instances(self, cls: type[TClass]) -> tuple[list[Thread], list[TClass]]:
+    def _create_instances(self, cls: type[_TClass]) -> tuple[list[Thread], list[_TClass]]:
         threads: list[Thread] = []
-        instances: list[TClass] = []
+        instances: list[_TClass] = []
 
         def append_result(target: list):
             target.append(cls())

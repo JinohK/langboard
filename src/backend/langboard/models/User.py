@@ -20,6 +20,6 @@ class User(SoftDeleteModel, table=True):
         return ["name", "email", "industry", "purpose", "affiliation", "position"]
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name == "password":
+        if name == "password" and not isinstance(value, SecretStr):
             value = SecretStr(hashpw(value.encode(), gensalt()).decode())
         super().__setattr__(name, value)

@@ -32,7 +32,7 @@ class BaseSqlBuilder(ABC):
     def build_update(self, table: _DMLTableArgument, with_deleted: bool = False) -> Update:
         statement = update(table)
         if not with_deleted and issubclass(table, SoftDeleteModel):
-            statement = statement.where(table.deleted_at is None)
+            statement = statement.where(table.deleted_at == None)  # noqa
         return statement
 
     def build_delete(self, table: _DMLTableArgument) -> Delete:
@@ -239,5 +239,5 @@ class BaseSqlBuilder(ABC):
         soft_delete_models = [entity for entity in entities if issubclass(entity, SoftDeleteModel)]
         if not with_deleted and soft_delete_models:
             for entity in soft_delete_models:
-                statement = statement.where(entity.deleted_at is None)
+                statement = statement.where(entity.deleted_at == None)  # noqa
         return statement

@@ -6,7 +6,7 @@ import SuspenseComponent from "@/components/base/SuspenseComponent";
 
 export type TIconProps = {
     name: string;
-    size?: number;
+    size?: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
     className?: string;
     iconColor?: string;
     onClick?: () => void;
@@ -16,7 +16,7 @@ export type TIconProps = {
 };
 
 const IconComponent = memo(
-    forwardRef(({ name, size = 24, className, iconColor, stroke, strokeWidth, id = "" }: TIconProps, ref) => {
+    forwardRef(({ name, size, className, iconColor, stroke, strokeWidth, id = "" }: TIconProps, ref) => {
         const [isLoading, setLoading] = useState(true);
 
         useEffect(() => {
@@ -27,12 +27,22 @@ const IconComponent = memo(
             return () => clearTimeout(timer);
         }, []);
 
+        let iconSize = "var(--default-font-size)";
+        if (size) {
+            iconSize = `var(--font-size-${size})`;
+        }
+
+        const sizeStyle = {
+            width: iconSize,
+            height: iconSize,
+        };
+
         if (name.includes("flag-")) {
             const country = name.split("flag-").pop();
 
             return (
-                <SuspenseComponent isLoading={isLoading} width={`${size}px`} height={`${size}px`}>
-                    <Flag country={country} className={className} size={size} style={{ color: iconColor }} id={id} />
+                <SuspenseComponent isLoading={isLoading} width={iconSize} height={iconSize}>
+                    <Flag country={country} className={className} id={id} style={sizeStyle} />
                 </SuspenseComponent>
             );
         }
@@ -52,12 +62,13 @@ const IconComponent = memo(
         const style = {
             strokeWidth: strokeWidth ?? 1.5,
             ...(stroke && { stroke: stroke }),
-            ...(iconColor && { color: iconColor, stroke: stroke }),
+            ...(iconColor && { color: "var(--accent-a11)", stroke: stroke }),
+            ...sizeStyle,
         };
 
         return (
-            <SuspenseComponent isLoading={isLoading} width={`${size}px`} height={`${size}px`}>
-                <TargetIcon className={className} style={style} ref={ref} id={id} size={size} />
+            <SuspenseComponent isLoading={isLoading} width={iconSize} height={iconSize}>
+                <TargetIcon className={className} style={style} ref={ref} id={id} data-accent-color={iconColor} />
             </SuspenseComponent>
         );
     })

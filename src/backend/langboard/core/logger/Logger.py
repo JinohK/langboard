@@ -1,13 +1,13 @@
 from logging import ERROR, basicConfig, getLevelNamesMapping, getLogger
 from logging import Logger as LoggingLogger
-from typing import overload
 from rich.logging import RichHandler
 from ...Constants import ENVIRONMENT, FILE_LOGGING_LEVEL, LOGGING_DIR, PROJECT_NAME, TERMINAL_LOGGING_LEVEL
-from ..utils.decorators import thread_safe_singleton
+from ..utils.decorators import class_instance, thread_safe_singleton
 from .LogFileHandler import LogFileHandler
 
 
 @thread_safe_singleton
+@class_instance
 class Logger:
     """Manages the application's logging."""
 
@@ -41,9 +41,6 @@ class Logger:
         getLogger("asyncio").setLevel(ERROR)
         getLogger("multipart").setLevel(ERROR)
 
-    @overload
-    @staticmethod
-    def use(name: str) -> LoggingLogger: ...
     def use(self, name: str) -> LoggingLogger:
         """Returns a logger with the given name."""
         if name == "main":

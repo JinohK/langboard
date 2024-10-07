@@ -1,14 +1,25 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import Cookies from "universal-cookie";
-import { APP_ACCESS_TOKEN, APP_SECRET_TOKEN } from "@/constants";
-import { ROUTES } from "@/core/routing/constants";
+import { createContext, useContext } from "react";
+import { SOCKET_URL } from "@/constants";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { redirectToLogin, useAuth } from "@/core/providers/AuthProvider";
+
+export type TEventName = "open" | "close" | "error" | (string & {});
+export interface ISocketEvent<TResponse> {
+    (data: TResponse): void;
+}
+
+interface ISocketMap {
+    socket: WebSocket;
+    events: Record<TEventName, ISocketEvent<unknown>[]>;
+}
+
+interface IConnectedSocket {
+    on: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => void;
+    send: <TRequest>(eventName: TEventName, data: TRequest) => void;
+}
 
 export interface ISocketContext {
-    accessToken: string | null;
-    secretToken: string | null;
-    isAuthenticated: () => boolean;
-    login: (accessToken: string, secretToken: string) => void;
-    logout: () => void;
+    connect: (path: string) => IConnectedSocket;
 }
 
 interface ISocketProviderProps {
@@ -16,55 +27,94 @@ interface ISocketProviderProps {
 }
 
 const initialContext = {
-    accessToken: null,
-    secretToken: null,
-    isAuthenticated: () => false,
-    login: () => {},
-    logout: () => {},
+    connect: () => ({ on: () => {}, send: () => {} }),
 };
 
 const SocketContext = createContext<ISocketContext>(initialContext);
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const cookies = new Cookies();
-    const [accessToken, setAccessToken] = useState<string | null>(cookies.get(APP_ACCESS_TOKEN) ?? null);
-    const [secretToken, setSecretToken] = useState<string | null>(cookies.get(APP_SECRET_TOKEN) ?? null);
+    const { accessToken, refreshToken, refresh, login } = useAuth();
+    const sockets: Record<string, ISocketMap> = {};
 
-    const isAuthenticated = (): boolean => {
-        return accessToken !== null && secretToken !== null;
+    const reconnect = (path: string) => {
+        sockets[path].socket = new WebSocket(`${SOCKET_URL}${path}?authorization=${accessToken}`);
     };
 
-    const login = () => {};
+    const connect = (path: string) => {
+        if (!path.startsWith("/")) {
+            path = `/${path}`;
+        }
 
-    const logout = () => {
-        setAccessToken(null);
-        setSecretToken(null);
+        function on<TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) {
+            if (sockets[path].events[eventName]?.includes(event as ISocketEvent<unknown>)) {
+                return;
+            }
 
-        location.href = ROUTES.LOGIN;
+            if (!sockets[path].events[eventName]) {
+                sockets[path].events[eventName] = [];
+            }
+
+            sockets[path].events[eventName].push(event as ISocketEvent<unknown>);
+        }
+
+        function send<TRequest>(eventName: TEventName, data: TRequest) {
+            sockets[path].socket.send(JSON.stringify({ event: eventName, data }));
+        }
+
+        if (sockets[path]) {
+            return { on, send };
+        }
+
+        sockets[path] = {
+            socket: new WebSocket(`${SOCKET_URL}${path}?authorization=${accessToken}`),
+            events: {} as Record<TEventName, ISocketEvent<unknown>[]>,
+        };
+
+        const ws = sockets[path].socket;
+
+        const runEvents = async (eventName: TEventName, data?: unknown) => {
+            const targetEvents = sockets[path].events[eventName] ?? [];
+            for (let i = 0; i < targetEvents.length; ++i) {
+                await targetEvents[i](data);
+            }
+        };
+
+        ws.onopen = async (event) => {
+            await runEvents("open", event);
+        };
+
+        ws.onmessage = async (event) => {
+            const response = JSON.parse(event.data);
+            if (!response.event) {
+                console.error("Invalid response");
+                return;
+            }
+
+            await runEvents(response.event, response.data);
+        };
+
+        ws.onclose = async (event) => {
+            switch (event.code) {
+                case EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY: {
+                    const response = await refresh();
+
+                    login(response.data.access_token, refreshToken!);
+                    return reconnect(path);
+                }
+                case EHttpStatus.HTTP_401_UNAUTHORIZED:
+                    return redirectToLogin();
+            }
+
+            await runEvents("close", { code: event.code });
+        };
+
+        return { on, send };
     };
-
-    useEffect(() => {
-        const newAccessToken = cookies.get(APP_ACCESS_TOKEN) ?? null;
-        if (newAccessToken && newAccessToken !== accessToken) {
-            setAccessToken(newAccessToken);
-        }
-    }, []);
-
-    useEffect(() => {
-        const newSecretToken = cookies.get(APP_SECRET_TOKEN) ?? null;
-        if (newSecretToken && newSecretToken !== secretToken) {
-            setSecretToken(newSecretToken);
-        }
-    }, []);
 
     return (
         <SocketContext.Provider
             value={{
-                accessToken,
-                secretToken,
-                isAuthenticated,
-                login,
-                logout,
+                connect,
             }}
         >
             {children}

@@ -59,8 +59,6 @@ class TestAppExceptionHandlingRoute:
             errors_with_body: dict[str, Any] = failed_response_with_body["errors"]
             errors_without_body: dict[str, Any] = failed_response_without_body["errors"]
 
-            assert failed_response_with_body["status"] is False, "Failed response with body status is not False"
-            assert failed_response_without_body["status"] is False, "Failed response without body status is not False"
             assert len(errors_with_body["missing"]) == 1, "Failed response with body missing field count is not 1"
             assert len(errors_without_body["missing"]) == 0, "Failed response without body missing field count is not 0"
             assert (

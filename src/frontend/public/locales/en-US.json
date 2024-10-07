@@ -11,6 +11,11 @@
     "common": {
         "Next": "Next"
     },
+    "errors": {
+        "Unknown error": "Unknown error",
+        "Internal server error": "Internal server error",
+        "Malformed request": "Malformed request"
+    },
     "login": {
         "Sign in": "Sign in",
         "Use your {app} Account": "Use your {{app}} Account",
@@ -20,6 +25,17 @@
         "Welcome": "Welcome",
         "Password": "Password",
         "Show password": "Show password",
-        "Forgot password?": "Forgot password?"
+        "Forgot password?": "Forgot password?",
+        "errors": {
+            "Couldn't find your {app} Account": "Couldn't find your {{app}} Account.",
+            "missing": {
+                "email": "Enter an email address.",
+                "password": "Enter a password."
+            },
+            "invalid": {
+                "email": "Enter a valid email address.",
+                "password": "Wrong password. Try again or click Forgot password to reset it."
+            }
+        }
     }
 }

@@ -1,23 +1,62 @@
 from typing import Annotated
+from fastapi import Header, status
 from fastapi.responses import JSONResponse
-from sqlmodel import select
+from jwt import ExpiredSignatureError
 from ...core.db import DbSession
 from ...core.routing import AppRouter
+from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
-from ...models.User import User
-from .CheckEmailForm import CheckEmailForm
+from ...models import User
+from .AuthEmail import AuthEmailForm, AuthEmailResponse
+from .Login import LoginForm, LoginResponse
+from .Refresh import RefreshResponse
 
 
-@AppRouter.api.post("/auth/check/email")
-async def check_email(form: CheckEmailForm, db: Annotated[DbSession, DbSession.scope()]) -> JSONResponse:
+@AppRouter.api.post("/auth/email", response_model=AuthEmailResponse)
+def auth_email(form: AuthEmailForm, db: DbSession = DbSession.scope()) -> JSONResponse | AuthEmailResponse:
+    query = db.build_select(User)
     if form.is_token:
         decrypted_email = Encryptor.decrypt(form.token, form.login_token)
-        user = db.exec(select(User).where(User.email == decrypted_email)).first()
+        query = query.where(User.email == decrypted_email)
     else:
-        user = db.exec(select(User).where(User.email == form.email)).first()
+        query = query.where(User.email == form.email)
+
+    user = db.exec(query).first()
 
     if not user:
-        return JSONResponse(content={"status": False})
+        return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     token = Encryptor.encrypt(user.email, form.login_token)
-    return JSONResponse(content={"status": True, "token": token})
+    return AuthEmailResponse(token=token, email=user.email)
+
+
+@AppRouter.api.post("/auth/login", response_model=LoginResponse)
+def login(form: LoginForm, db: DbSession = DbSession.scope()) -> JSONResponse | LoginResponse:
+    decrypted_email = Encryptor.decrypt(form.email_token, form.login_token)
+    user = db.exec(db.build_select(User).where(User.email == decrypted_email)).first()
+
+    if not user:
+        return JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    if not user.check_password(form.password):
+        return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    access_token, refresh_token = Auth.authenticate(user.id)
+
+    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+@AppRouter.api.post("/auth/refresh", response_model=RefreshResponse)
+def refresh(refresh_token: Annotated[str, Header()]) -> JSONResponse | RefreshResponse:
+    try:
+        new_access_token = Auth.refresh(refresh_token)
+        user = Auth.get_user_by_token(new_access_token)
+
+        if not user:
+            raise Exception()
+    except ExpiredSignatureError:
+        return JSONResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    except Exception:
+        return JSONResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return RefreshResponse(access_token=new_access_token)

@@ -5,19 +5,19 @@ from ..mocks import MockSocketifyRequest, MockSocketifyResponse, MockSocketifyWe
 
 
 class ServerFixture:
-    @fixture(scope="class")
+    @fixture(scope="class", autouse=True)
     def _mock_request(self) -> MockSocketifyRequest:
         return MockSocketifyRequest()
 
-    @fixture(scope="class")
+    @fixture(scope="class", autouse=True)
     def _mock_response(self) -> MockSocketifyResponse:
         return MockSocketifyResponse()
 
-    @fixture(scope="class")
+    @fixture(scope="class", autouse=True)
     def _mock_socketify_websocket(self) -> MockSocketifyWebSocket:
         return MockSocketifyWebSocket()
 
-    @fixture(scope="class")
+    @fixture(scope="class", autouse=True)
     def _mock_context(self) -> MagicMock:
         return MagicMock()
 

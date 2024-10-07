@@ -1,18 +1,13 @@
 from gzip import decompress
 from starlette.datastructures import Headers
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from starlette.types import Message
+from ..core.routing import BaseMiddleware
 
 
-class GZipDecompressMiddleware:
+class GZipDecompressMiddleware(BaseMiddleware):
     """Decompresses the request body if it is compressed with GZip."""
 
-    def __init__(
-        self,
-        app: ASGIApp,
-    ) -> None:
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+    async def __call__(self, scope, receive, send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return

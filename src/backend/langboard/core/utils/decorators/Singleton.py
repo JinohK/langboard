@@ -1,17 +1,16 @@
 from typing import TypeVar
 
 
-__all__ = ["singleton"]
-
-_TClass = TypeVar("_TClass", bound=object)
+_TClass = TypeVar("_TClass", bound=type)
 
 
-def singleton(cls: type[_TClass]) -> type[_TClass]:
+def singleton(cls: _TClass) -> _TClass:
     """Converts a class into a singleton."""
 
     def get_instance(**kwargs):
         if not hasattr(cls, "__instance__"):
             setattr(cls, "__instance__", cls(**kwargs))
+            cls.__init__ = get_instance
             cls.__init__ = get_instance
         return getattr(cls, "__instance__")
 

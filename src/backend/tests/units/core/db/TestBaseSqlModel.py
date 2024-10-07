@@ -1,5 +1,8 @@
-from langboard.core.db.Models import BaseSqlModel
+from datetime import datetime
+from langboard.core.db import BaseSqlModel, SecretStrType
+from pydantic import SecretStr
 from pytest import raises
+from sqlmodel import Field
 
 
 class TestDbModel(BaseSqlModel):
@@ -10,6 +13,15 @@ class TestDbModel(BaseSqlModel):
 
     def _get_repr_keys(self) -> list[str]:
         return ["id", "test1", "test2", "test3"]
+
+
+class TestSerializeModel(BaseSqlModel):
+    __test__ = False
+    test1: datetime
+    test2: SecretStr = Field(nullable=False, sa_type=SecretStrType())
+
+    def _get_repr_keys(self) -> list[str]:
+        return ["id", "test1", "test2"]
 
 
 class TestBaseSqlModel:
@@ -25,6 +37,17 @@ class TestBaseSqlModel:
             e.value.args[0]
             == "Can't instantiate abstract class Test without an implementation for abstract method '_get_repr_keys'"
         )
+
+    def test_is_new(self):
+        test = TestDbModel(test1="test1", test2="test2", test3="test3")
+
+        assert not TestDbModel.is_new(self)
+
+        assert test.is_new()
+
+        test.id = 1
+
+        assert not test.is_new()
 
     def test_str(self):
         test = TestDbModel(test1="test1", test2="test2", test3="test3")
@@ -57,3 +80,11 @@ class TestBaseSqlModel:
         model2.id = 1
 
         assert model1 == model2
+
+    def test_serialize(self):
+        model = TestSerializeModel(test1=datetime.now(), test2="secret")
+
+        serialized = model.model_dump()
+
+        assert serialized["test1"] == model.test1.isoformat()
+        assert serialized["test2"] == model.test2.get_secret_value()

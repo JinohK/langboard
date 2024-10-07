@@ -1,10 +1,11 @@
 from fastapi import APIRouter
-from ..utils.decorators import thread_safe_singleton
+from ..utils.decorators import class_instance, thread_safe_singleton
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketRouter import SocketRouter
 
 
 @thread_safe_singleton
+@class_instance
 class AppRouter:
     """Manages the application's all routers.
 

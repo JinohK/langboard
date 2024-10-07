@@ -17,18 +17,17 @@ interface ICheckEmailFormWithEmail extends IBaseCheckEmailForm {
 }
 
 interface ICheckEmailResponse {
-    status: boolean;
     token: string;
+    email: string;
 }
 
 export type TCheckEmailForm = ICheckEmailFormWithToken | ICheckEmailFormWithEmail;
 
-const useCheckEmail = (options?: TMutationOptions<TCheckEmailForm, ICheckEmailResponse>) => {
+const useAuthEmail = (options?: TMutationOptions<TCheckEmailForm, ICheckEmailResponse>) => {
     const { mutate } = useQueryMutation();
 
     const checkEmail = async (params: TCheckEmailForm) => {
-        params.is_token = true;
-        const res = await api.post(API_ROUTES.CHECK_EMAIL, params);
+        const res = await api.post(API_ROUTES.AUTH_EMAIL, params);
 
         return res.data;
     };
@@ -41,4 +40,4 @@ const useCheckEmail = (options?: TMutationOptions<TCheckEmailForm, ICheckEmailRe
     return result;
 };
 
-export default useCheckEmail;
+export default useAuthEmail;
