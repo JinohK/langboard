@@ -1,11 +1,11 @@
-import { Button, ButtonProps, DropdownMenu } from "@radix-ui/themes";
+import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
 import { useTheme } from "next-themes";
-import IconComponent from "@/components/base/IconComponent";
 import { useTranslation } from "react-i18next";
 
 export interface IThemeSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
+    hideTriggerIcon?: boolean;
 }
 
 const themes: Record<string, string> = {
@@ -14,27 +14,31 @@ const themes: Record<string, string> = {
     system: "contrast",
 };
 
-function ThemeSwitcher({ variant, triggerType }: IThemeSwitcherProps): JSX.Element {
+function ThemeSwitcher({ variant, triggerType, hideTriggerIcon }: IThemeSwitcherProps): JSX.Element {
     const { theme, setTheme } = useTheme();
     const [t] = useTranslation();
 
     return (
         <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                <Button variant={variant ?? "soft"} data-as-block>
+            <DropdownMenu.Trigger asChild>
+                <Button variant={variant ?? "default"} className="inline-flex">
                     {triggerType === "text" ? (
                         t(`themes.${theme ?? "system"}`)
                     ) : (
-                        <IconComponent name={themes[theme ?? "system"]} />
+                        <IconComponent icon={themes[theme ?? "system"]} />
                     )}
-                    <DropdownMenu.TriggerIcon className="ml-3" />
+                    {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
                 {Object.keys(themes).map((mode) => {
                     return (
-                        <DropdownMenu.Item onClick={() => setTheme(mode.toLowerCase())} key={mode}>
-                            <IconComponent name={themes[mode]} />
+                        <DropdownMenu.Item
+                            onClick={() => setTheme(mode.toLowerCase())}
+                            key={mode}
+                            className="cursor-pointer"
+                        >
+                            <IconComponent icon={themes[mode]} className="mr-2" />
                             {t(`themes.${mode}`)}
                         </DropdownMenu.Item>
                     );

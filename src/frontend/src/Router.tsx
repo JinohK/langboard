@@ -1,13 +1,13 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { lazy } from "react";
 import { ROUTES } from "@/core/routing/constants";
-import { ProtectedLoginRoute } from "@/core/routing/ProtectedLoginRoute";
+import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import DashboardPage from "@/pages/DashboardPage";
 import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
+const SignInPage = lazy(() => import("./pages/SignInPage"));
 
 const Router = () => {
     return (
@@ -15,21 +15,21 @@ const Router = () => {
             <SocketRouteWrapper>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path={ROUTES.LOGIN}>
+                    <Route path={ROUTES.SIGN_IN}>
                         <Route
                             index
                             element={
-                                <ProtectedLoginRoute>
-                                    <LoginPage />
-                                </ProtectedLoginRoute>
+                                <ProtectedAuthRoute>
+                                    <SignInPage />
+                                </ProtectedAuthRoute>
                             }
                         />
                         <Route
-                            path={ROUTES.LOGIN_PASSWORD}
+                            path={ROUTES.SIGN_IN_PASSWORD}
                             element={
-                                <ProtectedLoginRoute>
-                                    <LoginPage />
-                                </ProtectedLoginRoute>
+                                <ProtectedAuthRoute>
+                                    <SignInPage />
+                                </ProtectedAuthRoute>
                             }
                         />
                     </Route>

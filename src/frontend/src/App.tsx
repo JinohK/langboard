@@ -1,6 +1,5 @@
 import "@/assets/styles/App.scss";
-import SuspenseComponent from "@/components/base/SuspenseComponent";
-import ToastList from "@/components/ToastList";
+import { SuspenseComponent, Toast } from "@/components/base";
 import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
@@ -17,7 +16,7 @@ function App() {
                         <SuspenseComponent shouldWrapChildren={false}>
                             <Router />
                         </SuspenseComponent>
-                        <ToastList />
+                        <Toast.Area richColors />
                     </SocketProvider>
                 </AuthProvider>
             </QueryClientProvider>

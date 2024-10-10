@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect } from "react";
 import { SOCKET_URL } from "@/constants";
-import { redirectToLogin, useAuth } from "@/core/providers/AuthProvider";
+import { redirectToSignIn, useAuth } from "@/core/providers/AuthProvider";
 import { useLocation } from "react-router-dom";
 import { create } from "zustand";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
@@ -41,7 +41,7 @@ const useSockets = create<{ sockets: Record<string, ISocketMap> }>(() => ({
 }));
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { accessToken, refreshToken, refresh, login } = useAuth();
+    const { accessToken, refreshToken, refresh, signIn } = useAuth();
     const { sockets } = useSockets();
 
     const reconnect = (path: string) => {
@@ -106,11 +106,11 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                 case ESocketStatus.WS_3001_EXPIRED_TOKEN: {
                     const response = await refresh();
 
-                    login(response.data.access_token, refreshToken!);
+                    signIn(response.data.access_token, refreshToken!);
                     return reconnect(path);
                 }
                 case ESocketStatus.WS_3000_UNAUTHORIZED:
-                    return redirectToLogin();
+                    return redirectToSignIn();
             }
 
             await runEvents("close", { code: event.code });

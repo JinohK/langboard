@@ -16,7 +16,7 @@
         "Internal server error": "Internal server error",
         "Malformed request": "Malformed request"
     },
-    "login": {
+    "signIn": {
         "Sign in": "Sign in",
         "Use your {app} Account": "Use your {{app}} Account",
         "Email": "Email",

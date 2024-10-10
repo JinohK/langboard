@@ -7,16 +7,14 @@ from ...core.routing import AppRouter
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
 from ...models import User
-from .AuthEmail import AuthEmailForm, AuthEmailResponse
-from .Login import LoginForm, LoginResponse
-from .Refresh import RefreshResponse
+from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
 
 
 @AppRouter.api.post("/auth/email", response_model=AuthEmailResponse)
 def auth_email(form: AuthEmailForm, db: DbSession = DbSession.scope()) -> JSONResponse | AuthEmailResponse:
     query = db.build_select(User)
     if form.is_token:
-        decrypted_email = Encryptor.decrypt(form.token, form.login_token)
+        decrypted_email = Encryptor.decrypt(form.token, form.sign_token)
         query = query.where(User.email == decrypted_email)
     else:
         query = query.where(User.email == form.email)
@@ -26,13 +24,13 @@ def auth_email(form: AuthEmailForm, db: DbSession = DbSession.scope()) -> JSONRe
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    token = Encryptor.encrypt(user.email, form.login_token)
+    token = Encryptor.encrypt(user.email, form.sign_token)
     return AuthEmailResponse(token=token, email=user.email)
 
 
-@AppRouter.api.post("/auth/login", response_model=LoginResponse)
-def login(form: LoginForm, db: DbSession = DbSession.scope()) -> JSONResponse | LoginResponse:
-    decrypted_email = Encryptor.decrypt(form.email_token, form.login_token)
+@AppRouter.api.post("/auth/signin", response_model=SignInResponse)
+def sign_in(form: SignInForm, db: DbSession = DbSession.scope()) -> JSONResponse | SignInResponse:
+    decrypted_email = Encryptor.decrypt(form.email_token, form.sign_token)
     user = db.exec(db.build_select(User).where(User.email == decrypted_email)).first()
 
     if not user:
@@ -43,7 +41,7 @@ def login(form: LoginForm, db: DbSession = DbSession.scope()) -> JSONResponse | 
 
     access_token, refresh_token = Auth.authenticate(user.id)
 
-    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
+    return SignInResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @AppRouter.api.post("/auth/refresh", response_model=RefreshResponse)

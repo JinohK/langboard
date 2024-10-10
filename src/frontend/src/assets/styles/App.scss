@@ -1,9 +1,2 @@
 @import 'animations';
 @import 'utils/mixins';
-
-.rt-variant-ghost[data-as-block] {
-    @include height(var(--base-button-height), $imp: true);
-    @include flex(center, center, $inline: true, $imp: true);
-    @include no-margin(true);
-    box-sizing: border-box !important;
-}

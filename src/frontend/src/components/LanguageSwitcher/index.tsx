@@ -1,13 +1,13 @@
-import { Button, ButtonProps, DropdownMenu } from "@radix-ui/themes";
-import IconComponent from "@/components/base/IconComponent";
+import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
 export interface ILanguageSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
+    hideTriggerIcon?: boolean;
 }
 
-function LanguageSwitcher({ variant, triggerType }: ILanguageSwitcherProps): JSX.Element {
+function LanguageSwitcher({ variant, triggerType, hideTriggerIcon }: ILanguageSwitcherProps): JSX.Element {
     const [t, i18n] = useTranslation();
 
     const changeLanguageHandler = (lang: string) => {
@@ -22,14 +22,14 @@ function LanguageSwitcher({ variant, triggerType }: ILanguageSwitcherProps): JSX
 
     return (
         <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                <Button variant={variant ?? "soft"} data-as-block>
+            <DropdownMenu.Trigger asChild>
+                <Button variant={variant ?? "default"} className="inline-flex">
                     {triggerType === "text" ? (
                         t(`locales.${i18n.language}`)
                     ) : (
-                        <IconComponent name={`flag-${i18n.language.split("-").pop()}`} />
+                        <IconComponent icon={`flag-${i18n.language.split("-").pop()}`} />
                     )}
-                    <DropdownMenu.TriggerIcon className="ml-3" />
+                    {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>
             </DropdownMenu.Trigger>
 
@@ -37,8 +37,12 @@ function LanguageSwitcher({ variant, triggerType }: ILanguageSwitcherProps): JSX
                 <DropdownMenu.Content>
                     {langs.map((locale) => {
                         return (
-                            <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale}>
-                                <IconComponent name={`flag-${locale.split("-").pop()}`} />
+                            <DropdownMenu.Item
+                                onClick={() => changeLanguageHandler(locale)}
+                                key={locale}
+                                className="cursor-pointer"
+                            >
+                                <IconComponent icon={`flag-${locale.split("-").pop()}`} className="mr-2" />
                                 {t(`locales.${locale}`)}
                             </DropdownMenu.Item>
                         );

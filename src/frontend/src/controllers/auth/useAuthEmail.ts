@@ -3,7 +3,7 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
 interface IBaseCheckEmailForm {
-    login_token: string;
+    sign_token: string;
 }
 
 interface ICheckEmailFormWithToken extends IBaseCheckEmailForm {

@@ -15,7 +15,7 @@ export interface IAuthContext {
     accessToken: string | null;
     refreshToken: string | null;
     isAuthenticated: () => boolean;
-    login: (accessToken: string, refreshToken: string) => void;
+    signIn: (accessToken: string, refreshToken: string) => void;
     removeTokens: () => void;
     logout: () => void;
     refresh: () => Promise<AxiosResponse<IRefreshResponse> | never>;
@@ -29,7 +29,7 @@ const initialContext = {
     accessToken: null,
     refreshToken: null,
     isAuthenticated: () => false,
-    login: () => {},
+    signIn: () => {},
     removeTokens: () => {},
     logout: () => {},
     refresh: async () => Promise.reject(),
@@ -37,11 +37,11 @@ const initialContext = {
 
 const AuthContext = createContext<IAuthContext>(initialContext);
 
-export const redirectToLogin = () => {
+export const redirectToSignIn = () => {
     const searchParams = new URLSearchParams();
     searchParams.set(REDIRECT_QUERY_NAME, window.location.href);
 
-    location.href = `${ROUTES.LOGIN}?${searchParams.toString()}`;
+    location.href = `${ROUTES.SIGN_IN}?${searchParams.toString()}`;
 };
 
 export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode => {
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         return accessToken !== null && refreshToken !== null;
     };
 
-    const login = (accessToken: string, refreshToken: string) => {
+    const signIn = (accessToken: string, refreshToken: string) => {
         setAccessToken(accessToken);
         setRefreshToken(refreshToken);
 
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     const logout = () => {
         removeTokens();
-        location.href = ROUTES.LOGIN;
+        location.href = ROUTES.SIGN_IN;
     };
 
     const refresh = async (): Promise<AxiosResponse<IRefreshResponse>> => {
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
             return response;
         } catch {
             removeTokens();
-            redirectToLogin();
+            redirectToSignIn();
             return Promise.reject();
         }
     };
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
             switch (error.status) {
                 case EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY: {
                     if (isRefresh) {
-                        return redirectToLogin();
+                        return redirectToSignIn();
                     }
 
                     const response = await refresh();
@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                     return api(error.config!);
                 }
                 case EHttpStatus.HTTP_401_UNAUTHORIZED:
-                    return redirectToLogin();
+                    return redirectToSignIn();
             }
         }
     );
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 accessToken,
                 refreshToken,
                 isAuthenticated,
-                login,
+                signIn,
                 removeTokens,
                 logout,
                 refresh,

@@ -1,6 +1,6 @@
 const RAW_API_ROUTES = {
     AUTH_EMAIL: "/auth/email",
-    LOGIN: "/auth/login",
+    SIGN_IN: "/auth/signin",
     REFRESH: "/auth/refresh",
 };
 

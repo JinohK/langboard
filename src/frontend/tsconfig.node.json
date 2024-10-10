@@ -8,9 +8,9 @@
     "strict": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["*"],
+      "@/*": ["./src/*"]
     },
-    "baseUrl": "src"
+    "baseUrl": "."
   },
   "include": [ "vite.config.ts" ]
 }

@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import dns from "dns";
 import fs from "fs";
 import svgr from "vite-plugin-svgr";
+import path from "path";
 
 dns.setDefaultResultOrder("verbatim");
 
@@ -21,6 +22,11 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [react(), tsconfigPaths(), svgr()],
+        resolve: {
+            alias: {
+                "@": path.resolve(__dirname, "./src"),
+            },
+        },
         define: {
             "process.env.PROJECT_NAME": JSON.stringify(process.env.PROJECT_NAME),
             "process.env.SOCKET_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.SOCKET_URL),

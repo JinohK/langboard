@@ -1,7 +1,7 @@
 const RAW_ROUTES = {
-    LOGIN: "/login",
-    LOGIN_PASSWORD: "/login/pwd",
-    AFTER_LOGIN: "/dashboard",
+    SIGN_IN: "/auth/signin",
+    SIGN_IN_PASSWORD: "/auth/signin/pwd",
+    AFTER_SIGN_IN: "/dashboard",
     DASHBOARD: "/dashboard",
 };
 
