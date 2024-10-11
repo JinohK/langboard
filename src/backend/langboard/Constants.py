@@ -13,6 +13,10 @@ def _get_env(name: str, default: Any = None) -> Any | str:
 # Directory
 BASE_DIR = Path(dirname(__file__))
 
+# URL
+HOST = _get_env("BACKEND_HOST", "localhost")
+PORT = int(_get_env("BACKEND_PORT", "5381"))
+
 # Environment
 ENVIRONMENT = _get_env("ENVIRONMENT", "local")
 PROJECT_NAME = _get_env("PROJECT_NAME")
@@ -56,3 +60,10 @@ JWT_SECRET_KEY = _get_env("JWT_SECRET_KEY", f"{PROJECT_NAME}_secret_key")
 JWT_ALGORITHM = _get_env("JWT_ALGORITHM", "HS256")
 JWT_AT_EXPIRATION = int(_get_env("JWT_AT_EXPIRATION", 60 * 60 * 3))  # 3 hours for default
 JWT_RT_EXPIRATION = int(_get_env("JWT_RT_EXPIRATION", 30))  # 30 days for default
+
+# Storage
+LOCAL_STORAGE_DIR = Path(_get_env("LOCAL_STORAGE_DIR", BASE_DIR / ".." / ".." / ".." / "uploads"))
+S3_ACCESS_KEY_ID = _get_env("S3_ACCESS_KEY_ID")
+S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
+S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
+S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)

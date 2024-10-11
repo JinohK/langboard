@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, cast
 from routes import Mapper
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TEvent
@@ -92,7 +92,7 @@ class SocketRouter:
 
         :param path: The path to get the route and route data for.
         """
-        route: dict[str, Any] | None = self._mapper.match(path)
+        route: dict[str, Any] | None = cast(dict, self._mapper.match(path))
         if not route or not isinstance(route, dict) or "route" not in route:
             return None, None
 
@@ -146,8 +146,8 @@ class SocketRouter:
             return
 
         checkable_path = self._create_checkable_path(path)
-        route: dict[str, Any] = self._mapper.match(checkable_path) or {}
-        sub_route: dict[str, Any] = router._mapper.match(checkable_path) or {}
+        route: dict[str, Any] = cast(dict, self._mapper.match(checkable_path) or {})
+        sub_route: dict[str, Any] = cast(dict, router._mapper.match(checkable_path) or {})
 
         if not route or not isinstance(route, dict) or "route" not in route:
             return

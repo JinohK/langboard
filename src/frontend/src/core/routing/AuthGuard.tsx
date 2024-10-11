@@ -1,4 +1,5 @@
-import { redirectToSignIn, useAuth } from "@/core/providers/AuthProvider";
+import { redirectToSignIn } from "@/core/helpers/AuthHelper";
+import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 
 export interface IAuthGuardProps {

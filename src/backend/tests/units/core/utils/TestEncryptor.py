@@ -43,6 +43,21 @@ class TestEncryptor:
     def test_decrypt(
         self, mock_cryptocode_decrypt: Mock, mock_b64decode: Mock, data: str, key: str, encrypted_data: str
     ):
+        # Test if the decrypted data is None
+        mock_b64decode.return_value = b64decode(encrypted_data.encode())
+        mock_cryptocode_decrypt.return_value = None
+
+        expected_result = Encryptor.decrypt(encrypted_data, key)
+
+        mock_b64decode.assert_called_once_with(encrypted_data.encode())
+        mock_cryptocode_decrypt.assert_called_once_with(mock_b64decode.return_value.decode(), key)
+
+        assert expected_result == ""
+
+        mock_b64decode.reset_mock()
+        mock_cryptocode_decrypt.reset_mock()
+
+        # Test if the decrypted data is valid
         mock_b64decode.return_value = b64decode(encrypted_data.encode())
         mock_cryptocode_decrypt.return_value = decrypt(mock_b64decode.return_value.decode(), key)
 

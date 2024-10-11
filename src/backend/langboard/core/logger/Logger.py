@@ -6,8 +6,8 @@ from ..utils.decorators import class_instance, thread_safe_singleton
 from .LogFileHandler import LogFileHandler
 
 
+@class_instance()
 @thread_safe_singleton
-@class_instance
 class Logger:
     """Manages the application's logging."""
 
@@ -46,6 +46,3 @@ class Logger:
         if name == "main":
             return self.main
         return getLogger(name)
-
-
-Logger = Logger()

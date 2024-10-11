@@ -85,12 +85,12 @@ class TestSocketRouter:
             route, route_data = router.get_route(test_path)
 
             assert route == router._routes[path]
-            assert "route" in route_data
-            assert route_data["route"] == path
+            assert "route" in route_data  # type: ignore
+            assert route_data["route"] == path  # type: ignore
 
             if reg_name is not None:
-                assert reg_name in route_data
-                assert route_data[reg_name] == reg_expected
+                assert reg_name in route_data  # type: ignore
+                assert route_data[reg_name] == reg_expected  # type: ignore
 
     def test_get_events(self):
         router = SocketRouter()

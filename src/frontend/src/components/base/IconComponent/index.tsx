@@ -16,12 +16,13 @@ import { icons } from "lucide-react";
 import Flag from "react-flagkit";
 import { cn } from "@/core/utils/ComponentUtils";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
+import { heightSizeMap, TDimensionSize, widthSizeMap } from "@/core/utils/SizeMap";
 
 type SVGAttributes = Partial<SVGProps<SVGSVGElement>>;
 type ElementAttributes = RefAttributes<SVGSVGElement> & SVGAttributes;
 interface IIconProps extends ElementAttributes {
     icon: string;
-    size?: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12" | "14";
+    size?: TDimensionSize;
 }
 type TIconProps = ForwardRefExoticComponent<IIconProps & RefAttributes<SVGSVGElement>>;
 
@@ -29,6 +30,10 @@ const IconComponent = memo(
     forwardRef<ElementRef<TIconProps>, ComponentPropsWithoutRef<TIconProps>>(
         ({ icon, size, className, stroke, strokeWidth, id, ...props }, ref) => {
             const [isLoading, setIsLoading] = useState(true);
+
+            if (size) {
+                className = cn(widthSizeMap[size], heightSizeMap[size], className ?? "");
+            }
 
             useEffect(() => {
                 let timer: NodeJS.Timeout;
@@ -53,10 +58,6 @@ const IconComponent = memo(
                     }
                 };
             }, []);
-
-            if (size) {
-                className = cn(`w-${size} h-${size}`, className ?? "");
-            }
 
             if (icon.includes("flag-")) {
                 const country = icon.split("flag-").pop();

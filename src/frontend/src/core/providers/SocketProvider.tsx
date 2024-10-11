@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect } from "react";
 import { SOCKET_URL } from "@/constants";
-import { redirectToSignIn, useAuth } from "@/core/providers/AuthProvider";
+import { useAuth } from "@/core/providers/AuthProvider";
 import { useLocation } from "react-router-dom";
 import { create } from "zustand";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
+import { redirectToSignIn } from "@/core/helpers/AuthHelper";
+import { refresh } from "@/core/helpers/Api";
 
 export type TEventName = "open" | "close" | "error" | (string & {});
 export interface ISocketEvent<TResponse> {
@@ -41,11 +43,11 @@ const useSockets = create<{ sockets: Record<string, ISocketMap> }>(() => ({
 }));
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { accessToken, refreshToken, refresh, signIn } = useAuth();
+    const { getAccessToken, getRefreshToken, signIn } = useAuth();
     const { sockets } = useSockets();
 
     const reconnect = (path: string) => {
-        sockets[path].socket = new WebSocket(`${SOCKET_URL}${path}?authorization=${accessToken}`);
+        sockets[path].socket = new WebSocket(`${SOCKET_URL}${path}?authorization=${getAccessToken()}`);
     };
 
     const connect = (path: string) => {
@@ -74,7 +76,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         }
 
         sockets[path] = {
-            socket: new WebSocket(`${SOCKET_URL}${path}?authorization=${accessToken}`),
+            socket: new WebSocket(`${SOCKET_URL}${path}?authorization=${getAccessToken()}`),
             events: {} as Record<TEventName, ISocketEvent<unknown>[]>,
         };
 
@@ -104,9 +106,9 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         socketMap.socket.onclose = async (event) => {
             switch (event.code) {
                 case ESocketStatus.WS_3001_EXPIRED_TOKEN: {
-                    const response = await refresh();
+                    const token = await refresh();
 
-                    signIn(response.data.access_token, refreshToken!);
+                    signIn(token, getRefreshToken()!);
                     return reconnect(path);
                 }
                 case ESocketStatus.WS_3000_UNAUTHORIZED:

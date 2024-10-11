@@ -1,7 +1,7 @@
 from argparse import SUPPRESS
-from os import environ
 from rich import print as rprint
 from .App import App
+from .Constants import HOST, PORT
 from .core.bootstrap import CLIHelpFormatter, CLIOptions, CLIRichParser
 from .core.db import create_model
 
@@ -17,22 +17,26 @@ for field_name, field in CLIOptions.model_fields.items():
         "default": field.default,
     }
 
-    if "is_command" in (field.json_schema_extra or {}) and field.json_schema_extra["is_command"]:
+    extra = field.json_schema_extra or {}
+    if callable(extra):
+        extra = {}
+
+    if "is_command" in extra and extra["is_command"]:
         arg_setting.pop("required")
         names.append(field_name)
-        if "nargs" in (field.json_schema_extra or {}):
-            arg_setting["nargs"] = field.json_schema_extra["nargs"]
-        if "metavar" in (field.json_schema_extra or {}):
-            arg_setting["metavar"] = field.json_schema_extra["metavar"]
+        if "nargs" in extra:
+            arg_setting["nargs"] = extra["nargs"]
+        if "metavar" in extra:
+            arg_setting["metavar"] = extra["metavar"]
     else:
-        if "short" in (field.json_schema_extra or {}):
-            short_name = field.json_schema_extra["short"]
+        if "short" in extra:
+            short_name = extra["short"]
             names.append(f"-{short_name}")
 
         names.append(f"--{field_name}")
 
-    if "group" in (field.json_schema_extra or {}):
-        group_name = field.json_schema_extra["group"]
+    if "group" in extra:
+        group_name = extra["group"]
         group = groups.get(group_name)
         if not group:
             group = arg_parser.add_argument_group(f"{group_name} options")
@@ -55,7 +59,6 @@ def execute():
         arg_parser.print_help()
         return
 
-    #
     if args.version:
         return args.print_version()
 
@@ -71,16 +74,13 @@ def execute():
         if workers < 1:
             workers = 1
 
-        host = environ.get("BACKEND_HOST", "localhost")
-        port = int(environ.get("BACKEND_PORT", "5381"))
-
         ssl_options = args.create_ssl_options() if args.ssl_keyfile else None
 
         websocket_options = args.create_websocket_options()
 
         app = App(
-            host=host,
-            port=port,
+            host=HOST,
+            port=PORT,
             uds=args.uds,
             lifespan=args.lifespan,
             ssl_options=ssl_options,

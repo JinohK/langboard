@@ -1,15 +1,16 @@
 from logging import INFO
-from typing import Optional
+from typing import Optional, cast
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from socketify import ASGI, AppListenOptions, AppOptions
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
-from .core.routing import AppExceptionHandlingRoute, AppRouter
+from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
 from .core.security import Auth
 from .core.utils.decorators import singleton
 from .Loader import load_modules
+from .middlewares.AuthMiddleware import AuthMiddleware
 
 
 @singleton
@@ -49,15 +50,17 @@ class App:
         self._start_server()
 
     def _init_api_middlewares(self):
+        origins = ["*"]
+        self.api.add_middleware(AuthMiddleware, routes=self.api.routes)
+        self.api.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
         self.api.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=origins,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        self.api.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
-        middleware_modules = load_modules("middlewares", "Middleware")
+        middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware)
         for module in middleware_modules.values():
             for middleware in module:
                 if middleware.__auto_load__:
@@ -85,8 +88,8 @@ class App:
         self._server = ASGI(
             self.api,
             options=self._ssl_options,
-            websocket=self.ws,
-            websocket_options=self._ws_options.model_dump(),
+            websocket=cast(bool, self.ws),
+            websocket_options=self._ws_options.model_dump() if self._ws_options else None,
             task_factory_max_items=self._task_factory_maxitems,
             lifespan=self._lifespan,
         ).listen(listen_options, listen_log)

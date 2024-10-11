@@ -108,6 +108,8 @@ class TestAppExceptionHandlingRoute:
                 elif content_type == "text/plain":
                     raw_body = body
 
+                assert raw_body is not None, "Raw body is None"
+
                 return {"type": "http.request", "body": raw_body.encode()}
 
             return Request(scope=scope, receive=receive)

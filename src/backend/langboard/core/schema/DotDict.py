@@ -1,11 +1,11 @@
-from typing import Literal, MutableMapping, TypeVar, Union, overload
+from typing import Literal, TypeVar, Union, overload
 
 
 _TKey = TypeVar("_TKey")
 _TValue = TypeVar("_TValue")
 
 
-class DotDict(dict[_TKey, _TValue], MutableMapping[_TKey, _TValue]):
+class DotDict(dict[_TKey, _TValue]):
     """A dictionary that allows attribute access to its keys.
 
     E.g.::
@@ -26,12 +26,12 @@ class DotDict(dict[_TKey, _TValue], MutableMapping[_TKey, _TValue]):
         value = self[attr]
         if isinstance(value, dict) and not isinstance(value, DotDict):
             value = DotDict(value)
-            self[attr] = value
-        return value
+            self[attr] = value  # type: ignore
+        return value  # type: ignore
 
     def __setattr__(self, key: _TKey, value: _TValue) -> None:
         if isinstance(value, dict) and not isinstance(value, DotDict):
-            value = DotDict(value)
+            value = DotDict(value)  # type: ignore
         self[key] = value
 
     def __delattr__(self, key: _TKey):
@@ -82,7 +82,7 @@ class DotDict(dict[_TKey, _TValue], MutableMapping[_TKey, _TValue]):
     def copy(self, as_dict: bool = False) -> Union["DotDict[_TKey, _TValue]", dict[_TKey, _TValue]]:
         new_dict = super().copy()
         if "__orig_class__" in new_dict:
-            new_dict.pop("__orig_class__")
+            new_dict.pop("__orig_class__")  # type: ignore
         if as_dict:
             return new_dict
         else:

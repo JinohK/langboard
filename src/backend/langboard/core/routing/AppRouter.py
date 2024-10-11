@@ -4,8 +4,8 @@ from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketRouter import SocketRouter
 
 
+@class_instance()
 @thread_safe_singleton
-@class_instance
 class AppRouter:
     """Manages the application's all routers.
 
@@ -20,6 +20,3 @@ class AppRouter:
     def __init__(self):
         self.api = APIRouter(route_class=AppExceptionHandlingRoute)
         self.socket = SocketRouter()
-
-
-AppRouter = AppRouter()

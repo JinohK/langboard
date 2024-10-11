@@ -1,13 +1,13 @@
 from inspect import iscoroutinefunction, signature
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 from .Exception import SocketEventException, SocketRouterScopeException
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketRouterScope import SocketRouterScope
 
 
-TEvent = Callable[..., SocketResponse | None]
+TEvent = Callable[..., SocketResponse | None | Coroutine[Any, Any, SocketResponse | None]]
 TGenerator = GeneratorType | AsyncGeneratorType
 TCachedScopes = dict[str, (TGenerator | None, Any, type)]
 _TScopes = dict[str, (TGenerator | None, Any)]
@@ -71,7 +71,7 @@ class SocketEvent:
             if scope_name in cached_scopes:
                 _, result, annotation = cached_scopes[scope_name]
                 if scope_creator.annotation == annotation:
-                    scopes[scope_name] = (None, result)
+                    scopes[scope_name] = (None, result)  # type: ignore
                     continue
 
             scope = scope_creator(req)
@@ -83,29 +83,29 @@ class SocketEvent:
             if scope_creator.use_cache:
                 if isinstance(scope, AsyncGeneratorType):
                     result = await anext(scope)
-                    cached_scopes[scope_name] = (scope, result, type(result))
-                    scopes[scope_name] = (None, result)
+                    cached_scopes[scope_name] = (scope, result, type(result))  # type: ignore
+                    scopes[scope_name] = (None, result)  # type: ignore
                 elif isinstance(scope, GeneratorType):
                     result = next(scope)
-                    cached_scopes[scope_name] = (scope, result, type(result))
-                    scopes[scope_name] = (None, result)
+                    cached_scopes[scope_name] = (scope, result, type(result))  # type: ignore
+                    scopes[scope_name] = (None, result)  # type: ignore
                 else:
-                    cached_scopes[scope_name] = (None, scope, scope_creator.annotation)
-                    scopes[scope_name] = (None, scope)
+                    cached_scopes[scope_name] = (None, scope, scope_creator.annotation)  # type: ignore
+                    scopes[scope_name] = (None, scope)  # type: ignore
             else:
                 if isinstance(scope, AsyncGeneratorType):
-                    scopes[scope_name] = (scope, await anext(scope))
+                    scopes[scope_name] = (scope, await anext(scope))  # type: ignore
                 elif isinstance(scope, GeneratorType):
-                    scopes[scope_name] = (scope, next(scope))
+                    scopes[scope_name] = (scope, next(scope))  # type: ignore
                 else:
-                    scopes[scope_name] = (None, scope)
+                    scopes[scope_name] = (None, scope)  # type: ignore
 
         await self._finish_generators(scopes)
         return scopes
 
     async def _finish_generators(self, scopes: _TScopes):
         for generator, _ in scopes.values():
-            await self._finish_generator(generator)
+            await self._finish_generator(generator)  # type: ignore
 
     async def _finish_generator(self, scope: GeneratorType | AsyncGeneratorType | None):
         if not scope:

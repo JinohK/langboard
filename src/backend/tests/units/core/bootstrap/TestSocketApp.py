@@ -45,17 +45,38 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
         _mock_request.get_header.side_effect = lambda key: headers.get(key)
 
+        # Test if get_url returns None
+        _mock_request.get_url.return_value = None
+        await self._socket_app.on_upgrade(_mock_response, _mock_request, _mock_context)
+
+        _mock_response.upgrade.assert_not_called()
+        _mock_response.send.assert_called_once_with(status=status.HTTP_404_NOT_FOUND, end_connection=True)
+
+        _mock_response.send.reset_mock()
+
         # Test if the route isn't found
         _mock_request.get_url.return_value = "/test_socket_app"
         await self._socket_app.on_upgrade(_mock_response, _mock_request, _mock_context)
 
         _mock_response.upgrade.assert_not_called()
-        _mock_response.send.assert_called_once_with(status=404, end_connection=True)
+        _mock_response.send.assert_called_once_with(status=status.HTTP_404_NOT_FOUND, end_connection=True)
 
         _mock_response.send.reset_mock()
 
         # Test if the route is found
         _mock_request.get_url.return_value = self._path
+
+        # Test if get_queries returns None
+        _mock_request.get_queries.return_value = None
+        await self._socket_app.on_upgrade(_mock_response, _mock_request, _mock_context)
+
+        _mock_response.upgrade.assert_not_called()
+        _mock_response.send.assert_called_once_with(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
+
+        _mock_request.get_queries.reset_mock()
+        _mock_response.send.reset_mock()
+
+        _mock_request.get_queries.return_value = {}
 
         with patch("langboard.core.security.Auth.Auth.validate") as mock_validate:
             # Test if the authorization token is invalid
@@ -313,7 +334,6 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
                 not _mock_socketify_websocket.end.called
             ), "WebSocket.end called on on_subscription for valid user data assertion"
 
-    @classmethod
     async def _assert_invalid_connection(
         self, socket: MockSocketifyWebSocket, name: str, callback: Callable[[], Awaitable]
     ):
@@ -347,7 +367,6 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
             socket.reset_all()
 
-    @classmethod
     async def _assert_invalid_data(self, socket: MockSocketifyWebSocket):
         invalid_data_strs = [
             None,
@@ -374,7 +393,6 @@ class TestSocketApp(SocketAppFixture, ThreadSafety):
 
                 socket.reset_all()
 
-    @classmethod
     async def _assert_authorization_failures(
         self, socket: MockSocketifyWebSocket, name: str, callback: Callable[[], Awaitable]
     ):

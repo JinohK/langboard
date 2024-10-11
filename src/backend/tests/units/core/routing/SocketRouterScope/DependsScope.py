@@ -22,7 +22,6 @@ class DependsScope(BaseScopeTest):
                 param_name="num1",
                 param_type=int,
                 param_default=DependsFunc(plus),
-                expected_type=Generator,
                 expected=7,
                 is_async_generator=False,
             ),
@@ -30,15 +29,30 @@ class DependsScope(BaseScopeTest):
                 param_name="num2",
                 param_type=int,
                 param_default=DependsFunc(plus_async),
-                expected_type=AsyncGenerator,
                 expected=7,
                 is_async_generator=True,
+            ),
+            ScopeTestModel(
+                param_name="num1",
+                param_type=int,
+                param_default=DependsFunc(),
+                expected=1,
+            ),
+            ScopeTestModel(
+                param_name="num2",
+                param_type=int,
+                param_default=DependsFunc(),
+                expected=6,
             ),
         ]
 
         for model in models:
             scope = model.create_scope(self._event_details)
             result = scope(request)
+
+            if model.is_async_generator is None:
+                assert result == model.expected
+                continue
 
             if model.is_async_generator:
                 assert isinstance(result, AsyncGenerator)

@@ -1,3 +1,4 @@
+from typing import Any
 from langboard.core.schema import DotDict
 from pytest import mark, raises
 
@@ -47,7 +48,7 @@ class TestDotDict:
         assert e.value.args[0] == "'DotDict' object has no attribute 'key2'"
 
     def test_str_and_repr(self):
-        data = DotDict[str, int]({"key": 1, "dict_key": {"key": 2}})
+        data = DotDict[str, Any]({"key": 1, "dict_key": {"key": 2}})
 
         expected = "{'key': 1, 'dict_key': {'key': 2}}"
 
@@ -55,15 +56,15 @@ class TestDotDict:
         assert repr(data) == expected
 
     def test_eq(self):
-        data = DotDict[str, int]({"key": 1, "dict_key": {"key": 2}})
+        data = DotDict[str, Any]({"key": 1, "dict_key": {"key": 2}})
         equals = [
-            DotDict[str, int]({"key": 1, "dict_key": {"key": 2}}),
+            DotDict[str, Any]({"key": 1, "dict_key": {"key": 2}}),
             {"key": 1, "dict_key": {"key": 2}},
         ]
 
         unequals = [
             DotDict[str, int]({"key": 1}),
-            DotDict[str, int]({"key": 1, "dict_key": {"key": 3}}),
+            DotDict[str, Any]({"key": 1, "dict_key": {"key": 3}}),
             {"key": 1},
             {"key": 1, "dict_key": {"key": 3}},
             123,
@@ -77,7 +78,7 @@ class TestDotDict:
             assert data != unequal
 
     def test_copy(self):
-        data = DotDict[str, int]({"key": 1, "dict_key": {"key": 2}})
+        data = DotDict[str, Any]({"key": 1, "dict_key": {"key": 2}})
 
         # Copy as DotDict
         copied = data.copy()

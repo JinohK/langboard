@@ -9,10 +9,8 @@ from langboard.core.utils.String import concat
 
 
 class TestLogFileHandler:
-    @classmethod
-    def setup_class(self):
-        self._levels = getLevelNamesMapping()
-        self._log_dir = Path(dirname(__file__)) / ".." / ".." / ".." / "logs"
+    _levels = getLevelNamesMapping()
+    _log_dir = Path(dirname(__file__)) / ".." / ".." / ".." / "logs"
 
     def test_initialization(self):
         for level_name in self._levels:
@@ -60,6 +58,8 @@ class TestLogFileHandler:
                 assert log_file.exists(), f"{log_file} does not exist"
                 assert log_file.read_text() == concat("\n".join(lines), "\n"), "log file content is not as expected"
 
+            assert handler._stream is not None
+
             handler._stream.close()
             del handler
 
@@ -82,6 +82,7 @@ class TestLogFileHandler:
         handler.emit(log_record)
         now_stream = handler._stream
 
+        assert now_stream is not None
         assert handler._stream_path == self._log_dir / now_log_file
 
         # Change the date
@@ -95,6 +96,7 @@ class TestLogFileHandler:
         handler.emit(log_record)
         next_stream = handler._stream
 
+        assert next_stream is not None
         assert handler._stream_path != self._log_dir / now_log_file
         assert handler._stream_path == self._log_dir / next_log_file
         assert now_stream.closed, "now_stream is not closed"

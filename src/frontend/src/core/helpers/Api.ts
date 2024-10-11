@@ -1,6 +1,12 @@
-import { API_URL } from "@/constants";
-import axios from "axios";
+import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+import { API_ROUTES } from "@/controllers/constants";
+import { redirectToSignIn } from "@/core/helpers/AuthHelper";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 import pako from "pako";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -19,3 +25,75 @@ export const api = axios.create({
         }
     }),
 });
+
+export const refresh = async (): Promise<string | never> => {
+    try {
+        const refreshToken = cookies.get(APP_REFRESH_TOKEN);
+
+        const response = await api.post(API_ROUTES.REFRESH, undefined, {
+            headers: {
+                "Refresh-Token": refreshToken,
+            },
+        });
+
+        if (response.status !== EHttpStatus.HTTP_200_OK) {
+            redirectToSignIn();
+            throw new Error("Failed to refresh token");
+        }
+
+        cookies.set(APP_ACCESS_TOKEN, response.data.access_token, { path: "/" });
+        return response.data.access_token;
+    } catch (e) {
+        redirectToSignIn();
+        return Promise.reject();
+    }
+};
+
+api.interceptors.request.use(
+    async (config) => {
+        const cookies = new Cookies();
+        const accessToken = cookies.get(APP_ACCESS_TOKEN);
+
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error),
+    {
+        runWhen: (config) => {
+            return !config.url?.endsWith(API_ROUTES.REFRESH);
+        },
+    }
+);
+
+api.interceptors.response.use(
+    (value) => value,
+    async (error) => {
+        if (!isAxiosError(error)) {
+            return error;
+        }
+
+        const originalConfig: AxiosRequestConfig = error.config!;
+        switch (error.status) {
+            case EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY: {
+                const token = await refresh();
+
+                originalConfig.headers!.Authorization = `Bearer ${token}`;
+
+                return await api(originalConfig);
+            }
+            case EHttpStatus.HTTP_401_UNAUTHORIZED:
+                redirectToSignIn();
+                return error;
+            default:
+                return error;
+        }
+    },
+    {
+        runWhen: (config) => {
+            return !config.url?.endsWith(API_ROUTES.REFRESH);
+        },
+    }
+);

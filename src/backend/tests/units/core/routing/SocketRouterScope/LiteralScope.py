@@ -39,7 +39,7 @@ class LiteralScope(BaseScopeTest):
         with raises(TypeError) as e:
             SocketRouterScope(model.param_name, model.create_parameter(), self._event_details)
 
-        assert isinstance(e.value, model.expected_type)
+        assert isinstance(e.value, model.expected_type)  # type: ignore
         assert e.value.args[0] == model.expected
 
     def test_literal_scope(self):
@@ -76,7 +76,7 @@ class LiteralScope(BaseScopeTest):
         for model in models:
             for i in range(len(model.req_temp_data)):
                 req_temp_data = model.req_temp_data[i]
-                expected_type = model.expected_type[i]
+                expected_type = model.expected_type[i]  # type: ignore
                 expected = model.expected[i]
 
                 model.req_data = {"param": req_temp_data}

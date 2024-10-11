@@ -9,8 +9,8 @@ from .RedisCache import RedisCache
 _TCastReturn = TypeVar("_TCastReturn")
 
 
+@class_instance()
 @singleton
-@class_instance
 class Cache(BaseCache):
     def __init__(self):
         if CACHE_TYPE == "redis":
@@ -37,6 +37,3 @@ class Cache(BaseCache):
 
     async def clear(self) -> None:
         await self._cache.clear()
-
-
-Cache = Cache()

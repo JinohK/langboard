@@ -6,49 +6,66 @@ from .WebSocketOptions import WebSocketOptions
 
 
 class RunCLIOptions(BaseModel):
-    uds: str = Field(default=None, description="Bind to a UNIX domain socket", group="run")
-    workers: int = Field(default=1, description="Number of workers to run", group="run")
-    lifespan: bool = Field(default=True, description="Lifespan implementation", short="lfsp", group="run")
-    ws_deflate: bool = Field(default=False, description="Enable permessage-deflate extension", short="wd", group="run")
-    ws_max_size: int = Field(default=16777216, description="Max size message in bytes", short="wms", group="run")
-    ws_auto_ping: bool = Field(default=True, description="Send ping automatically", short="wap", group="run")
-    ws_idle_timeout: int = Field(default=20, description="Idle timeout", short="wit", group="run")
+    uds: str = Field(default=None, description="Bind to a UNIX domain socket", group="run")  # type: ignore
+    workers: int = Field(default=1, description="Number of workers to run", group="run")  # type: ignore
+    lifespan: bool = Field(default=True, description="Lifespan implementation", short="lfsp", group="run")  # type: ignore
+    ws_deflate: bool = Field(default=False, description="Enable permessage-deflate extension", short="wd", group="run")  # type: ignore
+    ws_max_size: int = Field(default=16777216, description="Max size message in bytes", short="wms", group="run")  # type: ignore
+    ws_auto_ping: bool = Field(default=True, description="Send ping automatically", short="wap", group="run")  # type: ignore
+    ws_idle_timeout: int = Field(default=20, description="Idle timeout", short="wit", group="run")  # type: ignore
     ws_reset_idle_on_send: bool = Field(
-        default=True, description="Reset idle timeout on send", short="wris", group="run"
+        default=True,
+        description="Reset idle timeout on send",
+        short="wris",  # type: ignore
+        group="run",  # type: ignore
     )
     ws_per_message_deflate: bool = Field(
-        default=False, description="Per-message-deflate compression", short="wpmd", group="run"
+        default=False,
+        description="Per-message-deflate compression",
+        short="wpmd",  # type: ignore
+        group="run",  # type: ignore
     )
     ws_max_lifetime: int = Field(
-        default=0, description="Maximum socket lifetime in seconds before forced closure", short="wml", group="run"
+        default=0,
+        description="Maximum socket lifetime in seconds before forced closure",
+        short="wml",  # type: ignore
+        group="run",  # type: ignore
     )
     ws_max_backpressure: int = Field(
-        default=16777216, description="Maximum backpressure in bytes", short="wmb", group="run"
+        default=16777216,
+        description="Maximum backpressure in bytes",
+        short="wmb",  # type: ignore
+        group="run",  # type: ignore
     )
     ws_close_on_backpressure_limit: bool = Field(
-        default=False, description="Close connections that hits maximum backpressure", short="wcobl", group="run"
+        default=False,
+        description="Close connections that hits maximum backpressure",
+        short="wcobl",  # type: ignore
+        group="run",  # type: ignore
     )
-    ssl_keyfile: str = Field(default=None, description="SSL key file", short="ssl-key", group="run")
-    ssl_certfile: str = Field(default=None, description="SSL certificate file", short="ssl-cert", group="run")
-    ssl_keyfile_pass: str = Field(default=None, description="SSL keyfile password", short="ssl-pass", group="run")
-    ssl_ca_certs: str = Field(default=None, description="CA certificates file", short="ssl-ca", group="run")
+    ssl_keyfile: str = Field(default=None, description="SSL key file", short="ssl-key", group="run")  # type: ignore
+    ssl_certfile: str = Field(default=None, description="SSL certificate file", short="ssl-cert", group="run")  # type: ignore
+    ssl_keyfile_pass: str = Field(default=None, description="SSL keyfile password", short="ssl-pass", group="run")  # type: ignore
+    ssl_ca_certs: str = Field(default=None, description="CA certificates file", short="ssl-ca", group="run")  # type: ignore
     ssl_ciphers: str = Field(
-        default=None, description="Ciphers to use (see stdlib ssl module's) (default: TLSv1)", group="run"
+        default=None,
+        description="Ciphers to use (see stdlib ssl module's) (default: TLSv1)",
+        group="run",  # type: ignore
     )
-    task_factory_maxitems: int = Field(default=100000, description="Task factory max items", group="run")
+    task_factory_maxitems: int = Field(default=100000, description="Task factory max items", group="run")  # type: ignore
 
 
 class ModelCLIOptions(BaseModel):
-    soft_delete: bool = Field(default=False, description="Use soft delete feature", short="sdel", group="model")
+    soft_delete: bool = Field(default=False, description="Use soft delete feature", short="sdel", group="model")  # type: ignore
 
 
 class CLIOptions(RunCLIOptions, ModelCLIOptions):
     command: str = Field(
         default=None,
         description="Command",
-        is_command=True,
-        nargs="+",
-        metavar={
+        is_command=True,  # type: ignore
+        nargs="+",  # type: ignore
+        metavar={  # type: ignore
             "run": {
                 "help": "Run the server",
                 "type": bool,
@@ -59,7 +76,7 @@ class CLIOptions(RunCLIOptions, ModelCLIOptions):
             },
         },
     )
-    version: bool = Field(default=False, description="Show version and exit", short="v")
+    version: bool = Field(default=False, description="Show version and exit", short="v")  # type: ignore
 
     def print_version(self):
         from platform import python_implementation, python_version, system

@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar
+from typing import Callable, Generic, TypeVar
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .BaseFilter import BaseFilter
 
@@ -6,9 +6,9 @@ from .BaseFilter import BaseFilter
 _TMethod = TypeVar("_TMethod", bound=Callable)
 
 
+@class_instance()
 @thread_safe_singleton
-@class_instance
-class AuthFilter(BaseFilter):
+class AuthFilter(BaseFilter, Generic[_TMethod]):
     def add(self, data: _TMethod) -> _TMethod:
         """Adds a method to be filtered in :class:`AuthMiddleware`.
 
@@ -21,6 +21,3 @@ class AuthFilter(BaseFilter):
 
     def exists(self, data: _TMethod) -> bool:
         return data in self._filtered
-
-
-AuthFilter = AuthFilter()

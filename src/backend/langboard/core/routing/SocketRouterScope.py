@@ -1,7 +1,7 @@
 from enum import Enum
 from inspect import Parameter, signature
 from types import GeneratorType, NoneType, UnionType
-from typing import Annotated, Any, Callable, TypeVar, _LiteralGenericAlias, _UnionGenericAlias
+from typing import Annotated, Any, Callable, TypeVar, _LiteralGenericAlias, _UnionGenericAlias  # type: ignore
 from fastapi.params import Depends
 from pydantic import BaseModel
 from typing_extensions import _AnnotatedAlias
@@ -40,15 +40,15 @@ class SocketRouterScope:
 
         if issubclass(self.annotation.__class__, _AnnotatedAlias):
             self._create_scope = self._create_annotated_scope(self.annotation)
+        elif isinstance(self._default, Depends):
+            self.use_cache = self._default.use_cache
+            self._create_scope = self._create_depends_scope(self._default)
         elif isinstance(self.annotation, UnionType) or isinstance(self.annotation, _UnionGenericAlias):
             self._create_scope = self._create_union_scope(self.annotation)
         elif isinstance(self.annotation, _LiteralGenericAlias):
             self._create_scope = self._create_literal_scope(self.annotation)
         elif issubclass(self.annotation, Enum):
             self._create_scope = self._create_enum_scope(self.annotation)
-        elif isinstance(self._default, Depends):
-            self.use_cache = self._default.use_cache
-            self._create_scope = self._create_depends_scope(self._default)
         elif self.annotation is SocketRequest:
             self._create_scope = self._create_request_scope()
         elif self.annotation is WebSocket:
@@ -67,6 +67,12 @@ class SocketRouterScope:
 
         if isinstance(metadata, Depends):
             self.use_cache = metadata.use_cache
+            if metadata.dependency is None:
+                return SocketRouterScope(
+                    self._param_name,
+                    Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=arg),
+                    self._event_details,
+                )
             return self._create_depends_scope(metadata)
         else:
             return SocketRouterScope(
@@ -144,6 +150,11 @@ class SocketRouterScope:
         enum_values = set([enum.value for enum in annotation])
 
         def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+            if not isinstance(req.data, dict):
+                return self._convert_scope_exception(
+                    TypeError(f"Parameter '{self._param_name}' must be a dict but got {req.data}")
+                )
+
             value = req.data.get(
                 self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
             )
@@ -163,7 +174,15 @@ class SocketRouterScope:
         return create_scope
 
     def _create_depends_scope(self, default: Depends) -> _TScopeCreator:
-        depend_params = signature(default.dependency).parameters
+        if default.dependency is None:
+            return SocketRouterScope(
+                self._param_name,
+                Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=self.annotation),
+                self._event_details,
+            )
+
+        dependency = default.dependency
+        depend_params = signature(dependency).parameters
         depend_param_creators: dict[str, _TScopeCreator] = {}
         for param_name in depend_params:
             depend_param_creators[param_name] = SocketRouterScope(
@@ -175,7 +194,7 @@ class SocketRouterScope:
             for param_name, creator in depend_param_creators.items():
                 depend_scopes[param_name] = creator(req)
 
-            return default.dependency(**depend_scopes)
+            return dependency(**depend_scopes)
 
         return create_scope
 
@@ -200,7 +219,7 @@ class SocketRouterScope:
 
         return create_scope
 
-    def _create_data_scope(self, annotation: type) -> _TScopeCreator:
+    def _create_data_scope(self, annotation: Any | type) -> _TScopeCreator:
         is_any = annotation is Any
 
         def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:

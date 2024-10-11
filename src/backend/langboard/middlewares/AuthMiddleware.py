@@ -1,9 +1,11 @@
-from fastapi import HTTPException, status
+from fastapi import status
+from fastapi.responses import JSONResponse
 from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute, Match
 from starlette.types import ASGIApp
 from ..core.filter import AuthFilter
+from ..core.routing import AppExceptionHandlingRoute
 from ..core.security import Auth
 from ..models import User
 
@@ -29,6 +31,9 @@ class AuthMiddleware(AuthenticationMiddleware):
         routes: list[BaseRoute] = self._routes
         should_filter = False
         for route in routes:
+            if not isinstance(route, AppExceptionHandlingRoute):
+                continue
+
             matches, _ = route.matches(scope)
             if matches == Match.FULL:
                 if AuthFilter.exists(route.endpoint):
@@ -42,8 +47,12 @@ class AuthMiddleware(AuthenticationMiddleware):
             if isinstance(validation_result, User):
                 scope["user"] = validation_result
             elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Expired token")
+                response = JSONResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                await response(scope, receive, send)
+                return
             else:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+                response = JSONResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                await response(scope, receive, send)
+                return
 
         await self.app(scope, receive, send)

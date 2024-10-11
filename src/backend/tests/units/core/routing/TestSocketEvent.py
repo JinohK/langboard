@@ -161,7 +161,7 @@ class TestSocketEvent(ServerFixture):
             ("scope_generator_async", AsyncGenerator, 1),
             ("scope_generator_sync", Generator, 2),
             ("scope_not_generator", None, 3),
-        ]
+        ]  # type: ignore
 
         not_cached_scope_names = [
             "not_cached_scope_generator_async",
@@ -179,7 +179,7 @@ class TestSocketEvent(ServerFixture):
                 if annotation is None:
                     assert cached_scopes[name][0] is None
                 else:
-                    assert isinstance(cached_scopes[name][0], annotation)
+                    assert isinstance(cached_scopes[name][0], annotation)  # type: ignore
                 assert cached_scopes[name][1] == value
                 assert cached_scopes[name][2] is int
 
@@ -188,10 +188,10 @@ class TestSocketEvent(ServerFixture):
 
     @mark.asyncio
     async def test_run_with_response(self, _mock_socketify_websocket: MockSocketifyWebSocket):
-        async def route_event_async(scope: int) -> SocketRequest:
+        async def route_event_async(scope: int) -> SocketResponse:
             return SocketResponse(event="test_response_event", data={"scope": scope})
 
-        def route_event_sync(scope: int) -> SocketRequest:
+        def route_event_sync(scope: int) -> SocketResponse:
             return SocketResponse(event="test_response_event", data={"scope": scope})
 
         socket = WebSocket(_mock_socketify_websocket)

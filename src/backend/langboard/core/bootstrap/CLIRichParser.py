@@ -31,7 +31,7 @@ class CLIRichParser(ArgumentParser):
             else:
                 if action.metavar:
                     for metavar in action.metavar:
-                        help_texts.append(action.metavar[metavar]["help"])
+                        help_texts.append(action.metavar[metavar]["help"])  # type: ignore
                         positionals.append(metavar)
                 else:
                     if action.help:
@@ -57,7 +57,7 @@ class CLIRichParser(ArgumentParser):
                 f"{help_text}", f"[{self._color_description}]{help_text}[/{self._color_description}]"
             )
 
-        for option in options.extend(short_options):
+        for option in options.extend(short_options):  # type: ignore
             message = message.replace(option, f"[{self._color_command}]{option}[/{self._color_command}]")
 
         for positional in positionals:

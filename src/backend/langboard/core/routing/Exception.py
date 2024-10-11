@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from traceback import format_exc
-from typing import TypeVar
+from typing import Generic, TypeVar
 from pydantic import ValidationError
 from ..utils.String import concat
 
@@ -8,9 +8,7 @@ from ..utils.String import concat
 _TException = TypeVar("_TException", bound=Exception)
 
 
-class EventBaseSocketException(ABC, Exception):
-    raw_exception: _TException
-
+class EventBaseSocketException(ABC, Exception, Generic[_TException]):
     def __init__(self, route: str, event: str, func: str, exception: _TException) -> None:
         self._route = route
         self._event = event
@@ -33,7 +31,7 @@ class SocketEventException(EventBaseSocketException):
         return concat("\t", "\n\t".join(messages), "\n")
 
 
-class SocketRouterScopeException(EventBaseSocketException):
+class SocketRouterScopeException(EventBaseSocketException[_TException], Generic[_TException]):
     raw_exception: _TException
 
     def __init__(self, route: str, event: str, func: str, param: str, exception: _TException) -> None:

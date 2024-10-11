@@ -26,7 +26,7 @@ class InMemoryCache(BaseCache):
 
     async def set(self, key: str, value: Any, ttl: int = 0) -> None:
         await self._expire()
-        expiry = (datetime.now() + timedelta(seconds=ttl)).timestamp()
+        expiry = int((datetime.now() + timedelta(seconds=ttl)).timestamp())
         casted_value = await self._cast_set(value)
         self._cache[key] = (casted_value, expiry)
 
@@ -40,5 +40,5 @@ class InMemoryCache(BaseCache):
 
     async def _expire(self) -> None:
         for key, (_, ttl) in self._cache.items():
-            if ttl <= datetime.now().timestamp():
+            if ttl <= int(datetime.now().timestamp()):
                 del self._cache[key]

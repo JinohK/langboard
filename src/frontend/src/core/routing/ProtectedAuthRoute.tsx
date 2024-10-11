@@ -1,3 +1,4 @@
+import { REDIRECT_QUERY_NAME } from "@/controllers/constants";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { Navigate, useSearchParams } from "react-router-dom";
@@ -9,11 +10,11 @@ export interface IProtectedAuthRouteProps {
 export const ProtectedAuthRoute = ({ children }: IProtectedAuthRouteProps): React.ReactNode => {
     const { isAuthenticated } = useAuth();
     const [searchParams] = useSearchParams();
-    const redirectUrl = searchParams.get("continue");
+    const redirectUrl = searchParams.get(REDIRECT_QUERY_NAME);
 
     if (isAuthenticated()) {
         if (redirectUrl) {
-            return <Navigate to={redirectUrl} />;
+            location.href = redirectUrl;
         } else {
             return <Navigate to={ROUTES.AFTER_SIGN_IN} />;
         }

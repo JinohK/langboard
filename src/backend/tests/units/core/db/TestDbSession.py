@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generator
+from typing import Generator, cast
 from unittest.mock import MagicMock, patch
 from fastapi.params import Depends
 from langboard.Constants import MAIN_DATABASE_ROLE, SUB_DATABASE_ROLE
@@ -60,7 +60,11 @@ class TestDbSession:
 
         assert isinstance(scope, Depends)
 
-        generator = scope.dependency()
+        dependency = scope.dependency
+
+        assert callable(dependency)
+
+        generator = dependency()
 
         assert isinstance(generator, Generator)
 
@@ -143,7 +147,7 @@ class TestDbSession:
             session.delete.reset_mock()
             session.add.reset_mock()
 
-            db_session.delete(model, purge=True)
+            db_session.delete(cast(SoftDeleteModel, model), purge=True)
 
             assert session in db_session._sessions_needs_commit
             session.delete.assert_called_once_with(model)

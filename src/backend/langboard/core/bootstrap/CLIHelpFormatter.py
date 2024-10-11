@@ -107,7 +107,7 @@ class CLIHelpFormatter(HelpFormatter):
         fake_action_arg = None
         if action.metavar:
             if self._is_fake_action(action):
-                fake_action_arg = action.metavar["arg"]
+                fake_action_arg = action.metavar["arg"]  # type: ignore
                 action.metavar = None
 
         action_header = self._format_action_invocation(action)
@@ -182,15 +182,15 @@ class CLIHelpFormatter(HelpFormatter):
         return help
 
     def _create_fake_action(self, action: Action, action_name: str):
-        metadata = action.metavar[action_name]
+        metadata = action.metavar[action_name]  # type: ignore
         new_action_args = {
             "option_strings": [],
             "dest": action_name,
-            "type": metadata["type"],
-            "help": metadata["help"],
+            "type": metadata["type"],  # type: ignore
+            "help": metadata["help"],  # type: ignore
         }
 
-        if metadata["type"] is str:
+        if metadata["type"] is str:  # type: ignore
             new_action_args["metavar"] = {
                 "is_fake": True,
                 "arg": action_name.replace("-", "_").upper(),
@@ -199,4 +199,4 @@ class CLIHelpFormatter(HelpFormatter):
         return _StoreAction(**new_action_args)
 
     def _is_fake_action(self, action: Action) -> bool:
-        return action.metavar and "is_fake" in action.metavar and action.metavar["is_fake"]
+        return action.metavar and "is_fake" in action.metavar and action.metavar["is_fake"]  # type: ignore

@@ -2,6 +2,7 @@ const RAW_API_ROUTES = {
     AUTH_EMAIL: "/auth/email",
     SIGN_IN: "/auth/signin",
     REFRESH: "/auth/refresh",
+    ABOUT_ME: "/auth/me",
 };
 
 const RAW_SOCKET_ROUTES = {};

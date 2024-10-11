@@ -1,3 +1,4 @@
+export * as Accordion from "./Accordion";
 export * as Avatar from "./Avatar";
 export { type BadgeProps, default as Badge, BadgeVariants } from "./Badge";
 export { type ButtonProps, default as Button, ButtonVariants } from "./Button";

@@ -31,8 +31,8 @@ class BaseSqlBuilder(ABC):
 
     def build_update(self, table: _DMLTableArgument, with_deleted: bool = False) -> Update:
         statement = update(table)
-        if not with_deleted and issubclass(table, SoftDeleteModel):
-            statement = statement.where(table.deleted_at == None)  # noqa
+        if not with_deleted and (isinstance(table, type) and issubclass(table, SoftDeleteModel)):
+            statement = statement.where(table.deleted_at == None)  # type: ignore # noqa
         return statement
 
     def build_delete(self, table: _DMLTableArgument) -> Delete:
@@ -234,9 +234,11 @@ class BaseSqlBuilder(ABC):
         entity3: _TScalar_3,
         with_deleted: bool = False,
     ) -> Select[Tuple[_TScalar_0, _TScalar_1, _TScalar_2, _TScalar_3]]: ...
-    def build_select(self, *entities: _DMLTableArgument, with_deleted: bool = False) -> SelectOfScalar:
-        statement = select(*entities)
-        soft_delete_models = [entity for entity in entities if issubclass(entity, SoftDeleteModel)]
+    def build_select(self, *entities: _DMLTableArgument, with_deleted: bool = False) -> SelectOfScalar:  # type: ignore
+        statement = select(*entities)  # type: ignore
+        soft_delete_models = [
+            entity for entity in entities if isinstance(entity, type) and issubclass(entity, SoftDeleteModel)
+        ]
         if not with_deleted and soft_delete_models:
             for entity in soft_delete_models:
                 statement = statement.where(entity.deleted_at == None)  # noqa

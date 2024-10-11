@@ -37,7 +37,7 @@ class BaseFormModel(ABC, BaseModel):
         raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
 
 
-def form_model(cls: _TFormModel) -> _TFormModel:
+def form_model(cls: type[_TFormModel]) -> type[_TFormModel]:
     """Decorates to convert a Pydantic model to a FastAPI form."""
     new_parameters = []
 

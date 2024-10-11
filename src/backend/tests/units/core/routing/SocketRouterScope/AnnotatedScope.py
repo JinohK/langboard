@@ -34,6 +34,12 @@ class AnnotatedScope(BaseScopeTest):
             ),
             ScopeTestModel(
                 param_name="arg",
+                param_type=Annotated[str, DependsFunc()],
+                expected_type=str,
+                expected="test",
+            ),
+            ScopeTestModel(
+                param_name="arg",
                 param_type=Annotated[str, "This metadata will be ignored"],
                 expected_type=str,
                 expected="test",
@@ -53,5 +59,5 @@ class AnnotatedScope(BaseScopeTest):
                 assert next(result) == model.expected
                 result.close()
             else:
-                assert isinstance(result, model.expected_type)
+                assert isinstance(result, model.expected_type)  # type: ignore
                 assert result == model.expected

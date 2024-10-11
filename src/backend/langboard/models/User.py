@@ -1,17 +1,19 @@
 from typing import Any
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
-from ..core.db import SecretStr, SecretStrType, SoftDeleteModel
+from ..core.db import ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
+from ..core.storage import FileModel
 
 
 class User(SoftDeleteModel, table=True):
     name: str = Field(nullable=False)
     email: str = Field(nullable=False)
-    password: SecretStr = Field(nullable=False, sa_type=SecretStrType())
+    password: SecretStr = Field(nullable=False, sa_type=SecretStrType)
     industry: str = Field(nullable=False)
     purpose: str = Field(nullable=False)
-    affiliation: str | None = Field(nullable=True)
-    position: str | None = Field(nullable=True)
+    affiliation: str | None = Field(default=None, nullable=True)
+    position: str | None = Field(default=None, nullable=True)
+    avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
 
     def check_password(self, password: str) -> bool:
         return checkpw(password.encode(), self.password.get_secret_value().encode())

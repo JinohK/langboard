@@ -1,5 +1,5 @@
 from typing import Any, Self, overload
-from socketify import OpCode
+from socketify import OpCode, SendStatus
 from socketify import WebSocket as SocketifyWebSocket
 from .SocketResponse import SocketResponse
 
@@ -17,18 +17,19 @@ class WebSocket(SocketifyWebSocket):
     def send(self, event: str, data: Any = None, compress: bool = False, fin: bool = True): ...
     @overload
     def send(self, response: SocketResponse, compress: bool = False, fin: bool = True): ...
-    def send(
+    def send(  # type: ignore
         self,
         response: SocketResponse | None = None,
         event: str | None = None,
         data: Any = None,
         compress: bool = False,
         fin: bool = True,
-    ) -> Self | None:
-        if not response and not event:
+    ) -> Self | SendStatus | None:
+        if event:
+            response_model = SocketResponse(event=event, data=data)
+        elif response is not None:
+            response_model = response
+        else:
             return self
 
-        if event:
-            response = SocketResponse(event=event, data=data)
-
-        return super().send(response.model_dump(), opcode=OpCode.TEXT, compress=compress, fin=fin)
+        return super().send(response_model.model_dump(), opcode=OpCode.TEXT, compress=compress, fin=fin)

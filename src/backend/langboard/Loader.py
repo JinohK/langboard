@@ -1,12 +1,14 @@
 from importlib import import_module
 from os import sep
 from types import ModuleType
-from typing import Type
+from typing import Type, TypeVar
 from .Constants import BASE_DIR
 from .core.logger import Logger
 
 
 logger = Logger.main
+
+_TBase = TypeVar("_TBase", bound=Type)
 
 
 def get_exports(namespace: str, module: ModuleType) -> list[Type]:
@@ -18,7 +20,7 @@ def get_exports(namespace: str, module: ModuleType) -> list[Type]:
     return exports_within_module
 
 
-def load_modules(dir_path: str, file_pattern: str) -> dict[str, list[Type]]:
+def load_modules(dir_path: str, file_pattern: str, base_type: _TBase = Type) -> dict[str, list[_TBase]]:
     """Loads modules from a directory."""
     target_dir = BASE_DIR / dir_path
     modules = {}

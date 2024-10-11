@@ -9,6 +9,7 @@ export interface ILayoutProps {
 }
 
 function Layout({ children, headerNavs, sidebarNavs }: ILayoutProps) {
+    const main = <main className="p-4 md:p-6 lg:p-8">{children}</main>;
     return (
         <div className="flex min-h-screen w-full flex-col">
             {headerNavs && <Header navs={headerNavs} />}
@@ -18,8 +19,7 @@ function Layout({ children, headerNavs, sidebarNavs }: ILayoutProps) {
                     headerNavs ? "grid md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]" : ""
                 )}
             >
-                {sidebarNavs && <Sidebar navs={sidebarNavs} />}
-                <main className="p-4 md:p-6 lg:p-8">{children}</main>
+                {sidebarNavs ? <Sidebar navs={sidebarNavs} main={main} /> : main}
             </div>
         </div>
     );

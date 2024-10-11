@@ -16,7 +16,7 @@ from ...models import User
 from ..caching import Cache
 from ..db import DbSession
 from ..filter import AuthFilter
-from ..routing import SocketRequest
+from ..routing import AppExceptionHandlingRoute, SocketRequest
 from ..utils.decorators import staticclass
 from ..utils.Encryptor import Encryptor
 
@@ -61,14 +61,14 @@ class Auth:
         """Creates a scope for the user to be used in :class:`fastapi.FastAPI` endpoints."""
         if where == "api":
 
-            def get_user(req: Request) -> User | None:
+            def get_user(req: Request) -> User | None:  # type: ignore
                 return req.user
 
         elif where == "socket":
 
             async def get_user(req: SocketRequest) -> User | None:
                 user = await Auth.get_user_by_id(req.from_app["auth_user_id"])
-                return user
+                return user  # type: ignore
 
         else:
             raise ValueError("Auth.scope must be called with either 'api' or 'socket'")
@@ -88,6 +88,8 @@ class Auth:
         """
         try:
             payload = jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            if int(payload["exp"]) <= timegm(datetime.now().utctimetuple()):
+                raise ExpiredSignatureError("Signature has expired")
         except ExpiredSignatureError as e:
             return e
         except Exception:
@@ -103,7 +105,7 @@ class Auth:
         return await Auth.get_user_by_id(user_id)
 
     @staticmethod
-    async def get_user_by_id(user_id: int) -> User | None:
+    async def get_user_by_id(user_id: int) -> User | InvalidTokenError | None:
         """Gets the user from the given ID.
 
         If the user is cached, it will return the cached user.
@@ -135,7 +137,7 @@ class Auth:
             return None
 
     @staticmethod
-    async def validate(queries_headers: dict | Headers) -> User | Literal[401, 422]:
+    async def validate(queries_headers: dict[Any, Any] | Headers) -> User | Literal[401, 422]:
         """Validates the given headers or queries and returns the user if the token is valid.
 
         :param headers: The headers to validate.
@@ -193,6 +195,8 @@ class Auth:
         openapi_schema["components"]["securitySchemes"]["BearerAuth"] = auth_schema
 
         for route in app.routes:
+            if not isinstance(route, AppExceptionHandlingRoute):
+                continue
             if AuthFilter.exists(route.endpoint):
                 path = openapi_schema["paths"][route.path]
                 for method in route.methods:

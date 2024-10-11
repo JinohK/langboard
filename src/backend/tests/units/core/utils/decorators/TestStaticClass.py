@@ -23,7 +23,7 @@ class TestStaticClass(AssertStaticClass):
 
             @staticclass
             class WrongMethodStaticClass:
-                def test():
+                def test():  # type: ignore
                     pass
 
             WrongMethodStaticClass.test()

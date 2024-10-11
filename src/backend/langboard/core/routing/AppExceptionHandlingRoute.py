@@ -18,7 +18,7 @@ class AppExceptionHandlingRoute(APIRoute):
             try:
                 return await original_route_handler(request)
             except RequestValidationError as e:
-                errors: dict[str, list] = {}
+                errors: dict[str, dict] = {}
                 raw_errors = e.errors()
                 for raw_error in raw_errors:
                     error_type = raw_error["type"]

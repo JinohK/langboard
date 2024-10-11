@@ -108,7 +108,7 @@ class TestSocketRouterScope(AnnotatedScope, DataScope, DependsScope, EnumScope, 
             assert scope._event_details == self._event_details
             assert scope._param_name == param.name
             assert scope._parameter == param
-            assert isinstance(scope._default, model.expected_default_type)
+            assert isinstance(scope._default, model.expected_default_type)  # type: ignore
             assert scope._default == model.expected_default
             assert scope.use_cache == model.does_use_cache
             assert scope.annotation == model.param_type

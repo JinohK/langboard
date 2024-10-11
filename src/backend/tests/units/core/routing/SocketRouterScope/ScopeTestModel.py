@@ -33,7 +33,7 @@ class ScopeTestModel(BaseModel):
         strs = [
             "Init Model:",
             "\t ScopeTestModel(",
-            *[f"\t\t{key}={self[key]}" for key in self.model_fields_set],
+            *[f"\t\t{key}={self[key]}" for key in self.model_fields_set],  # type: ignore
             "\t)",
             "Test Case:",
         ]
@@ -42,7 +42,7 @@ class ScopeTestModel(BaseModel):
 
         for name, prefix in contexts:
             values = [
-                f"\t\t{self._make_repr_name(key, prefix)}: {self[key]}"
+                f"\t\t{self._make_repr_name(key, prefix)}: {self[key]}"  # type: ignore
                 for key in self.model_fields_set
                 if key.startswith(prefix)
             ]

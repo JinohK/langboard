@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import cast
 from langboard.core.db import BaseSqlModel, SecretStrType
 from pydantic import SecretStr
 from pytest import raises
@@ -18,7 +19,7 @@ class TestDbModel(BaseSqlModel):
 class TestSerializeModel(BaseSqlModel):
     __test__ = False
     test1: datetime
-    test2: SecretStr = Field(nullable=False, sa_type=SecretStrType())
+    test2: SecretStr = Field(nullable=False, sa_type=SecretStrType)
 
     def _get_repr_keys(self) -> list[str]:
         return ["id", "test1", "test2"]
@@ -31,7 +32,7 @@ class TestBaseSqlModel:
             class Test(BaseSqlModel):
                 pass
 
-            Test()
+            Test()  # type: ignore
 
         assert (
             e.value.args[0]
@@ -41,12 +42,16 @@ class TestBaseSqlModel:
     def test_is_new(self):
         test = TestDbModel(test1="test1", test2="test2", test3="test3")
 
-        assert not TestDbModel.is_new(self)
+        assert not TestDbModel.is_new(cast(TestDbModel, self))
 
+        assert BaseSqlModel.is_new(test)
+        assert TestDbModel.is_new(test)
         assert test.is_new()
 
         test.id = 1
 
+        assert not BaseSqlModel.is_new(test)
+        assert not TestDbModel.is_new(test)
         assert not test.is_new()
 
     def test_str(self):
@@ -82,7 +87,7 @@ class TestBaseSqlModel:
         assert model1 == model2
 
     def test_serialize(self):
-        model = TestSerializeModel(test1=datetime.now(), test2="secret")
+        model = TestSerializeModel(test1=datetime.now(), test2="secret")  # type: ignore
 
         serialized = model.model_dump()
 

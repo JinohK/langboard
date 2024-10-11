@@ -112,7 +112,7 @@ class UnionScope(BaseScopeTest):
         for model in models:
             for i in range(len(model.param_type)):
                 param_type = model.param_type[i]
-                expected_type = model.expected_type[i]
+                expected_type = model.expected_type[i]  # type: ignore
                 expected = model.expected[i]
 
                 bit_or_union_type = None

@@ -195,3 +195,4 @@ dist-ssr
 docker/volumes
 src/backend/requirements.txt
 *.db
+uploads

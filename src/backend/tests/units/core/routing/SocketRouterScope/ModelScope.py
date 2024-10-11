@@ -42,12 +42,12 @@ class ModelScope(BaseScopeTest):
 
         for model in models:
             scope = model.create_scope(self._event_details)
-            request = self._create_app_request(_mock_socketify_websocket, {}, model.req_data)
+            request = self._create_app_request(_mock_socketify_websocket, {}, model.req_data)  # type: ignore
             result = scope(request)
 
             if model.is_exception:
                 assert isinstance(result, SocketRouterScopeException)
-                assert isinstance(result.raw_exception, model.expected_type)
+                assert isinstance(result.raw_exception, model.expected_type)  # type: ignore
 
                 errors = result.raw_exception.errors()
 
@@ -56,6 +56,6 @@ class ModelScope(BaseScopeTest):
                     for key, value in expected.items():
                         assert errors[i][key] == value
             else:
-                assert isinstance(result, model.expected_type)
+                assert isinstance(result, model.expected_type)  # type: ignore
                 assert isinstance(result, TestModel)
                 assert result.model_dump() == model.expected

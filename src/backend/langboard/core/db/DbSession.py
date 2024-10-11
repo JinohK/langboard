@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Mapping, Optional, TypeVar, Union, overload
+from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
 from fastapi import Depends
 from fastapi.params import Depends as DependsType
 from sqlalchemy import Delete, Insert, Sequence, Update
@@ -81,7 +81,7 @@ class DbSession(BaseSqlBuilder):
         session = self._get_session(DbSessionRole.Insert)
         session.add(obj)
 
-    def insert_all(self, objs: Sequence[BaseSqlModel]):
+    def insert_all(self, objs: Iterable[BaseSqlModel]):
         """Inserts new objects into the database if they are new.
 
         :param objs: The objects to be inserted; must be a subclass of :class:`BaseSqlModel`.
@@ -166,7 +166,7 @@ class DbSession(BaseSqlBuilder):
         _add_event: Optional[Any] = None,
         purge: bool = False,
     ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
-    def exec(
+    def exec(  # type: ignore
         self,
         statement: Union[
             Select[_TSelectParam],
@@ -197,10 +197,13 @@ class DbSession(BaseSqlBuilder):
         """
         if (
             isinstance(statement, Delete)
-            and issubclass(statement.table.entity_namespace, SoftDeleteModel)
+            and (
+                isinstance(statement.table.entity_namespace, type)
+                and issubclass(statement.table.entity_namespace, SoftDeleteModel)
+            )
             and not purge
         ):
-            statement = update(statement.table).values(deleted_at=datetime.now()).where(statement.whereclause)
+            statement = update(statement.table).values(deleted_at=datetime.now()).where(statement.whereclause)  # type: ignore
 
         if isinstance(statement, Insert):
             role = DbSessionRole.Insert
@@ -247,7 +250,7 @@ class DbSession(BaseSqlBuilder):
 
         :param role: The role of the session to be returned.
         """
-        session = self._sessions.get(role)
+        session = self._sessions[role]
         if role != DbSessionRole.Select:
             self._sessions_needs_commit.append(session)
         return session

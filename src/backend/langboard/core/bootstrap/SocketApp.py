@@ -1,5 +1,5 @@
 from json import loads as json_loads
-from typing import Any, Union
+from typing import Any, Union, cast
 from fastapi import status
 from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
@@ -32,12 +32,21 @@ class SocketApp(dict):
 
     async def on_upgrade(self, res: Response, req: Request, socket_context) -> None:
         path = req.get_url()
+        if not isinstance(path, str):
+            res.send(status=status.HTTP_404_NOT_FOUND, end_connection=True)
+            return
+
         route, route_data = AppRouter.socket.get_route(path)
         if not route:
             res.send(status=status.HTTP_404_NOT_FOUND, end_connection=True)
             return
+        route_data = cast(dict, route_data)
 
         queries = req.get_queries()
+        if queries is None:
+            res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
+            return
+
         validation_result = await Auth.validate(queries)
         if isinstance(validation_result, User):
             pass
@@ -66,7 +75,7 @@ class SocketApp(dict):
 
     async def on_open(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
-        if not self._is_valid_user_data(user_data):
+        if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
@@ -78,9 +87,9 @@ class SocketApp(dict):
 
         await self._run_events(route_events, req)
 
-    async def on_message(self, ws: SocketifyWebSocket, message: Union[str | bytes], _: OpCode) -> None:
+    async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, _: OpCode) -> None:
         user_data = ws.get_user_data()
-        if not self._is_valid_user_data(user_data):
+        if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
@@ -103,7 +112,7 @@ class SocketApp(dict):
 
     async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
-        if not self._is_valid_user_data(user_data):
+        if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
@@ -119,7 +128,7 @@ class SocketApp(dict):
 
     async def on_drain(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
-        if not self._is_valid_user_data(user_data):
+        if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
@@ -133,7 +142,7 @@ class SocketApp(dict):
 
     async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
         user_data = ws.get_user_data()
-        if not self._is_valid_user_data(user_data):
+        if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
@@ -156,8 +165,7 @@ class SocketApp(dict):
         :param user_data: The user data to check.
         """
         return (
-            user_data
-            and isinstance(user_data, dict)
+            isinstance(user_data, dict)
             and "path" in user_data
             and isinstance(user_data["path"], str)
             and "route_data" in user_data

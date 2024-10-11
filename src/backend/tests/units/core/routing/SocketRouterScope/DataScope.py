@@ -180,8 +180,8 @@ class DataScope(BaseScopeTest):
 
             if model.is_exception:
                 assert isinstance(result, SocketRouterScopeException), str(model)
-                assert str(result).count(f"{model.expected_type.__name__}: {model.expected}") == 1, str(model)
+                assert str(result).count(f"{model.expected_type.__name__}: {model.expected}") == 1, str(model)  # type: ignore
                 assert str(result.raw_exception) == model.expected, str(model)
             else:
-                assert isinstance(result, model.expected_type), str(model)
+                assert isinstance(result, model.expected_type), str(model)  # type: ignore
                 assert result == model.expected, str(model)
