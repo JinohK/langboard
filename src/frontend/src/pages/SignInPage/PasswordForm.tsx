@@ -122,6 +122,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformP
                             className="w-full"
                             placeholder={t("signIn.Password")}
                             autoFocus
+                            autoComplete="password"
                             disabled={isValidating}
                         />
                     </Form.Control>

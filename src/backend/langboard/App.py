@@ -10,7 +10,7 @@ from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
 from .core.security import Auth
 from .core.utils.decorators import singleton
 from .Loader import load_modules
-from .middlewares.AuthMiddleware import AuthMiddleware
+from .middlewares import AuthMiddleware, RoleMiddleware
 
 
 @singleton
@@ -52,6 +52,7 @@ class App:
     def _init_api_middlewares(self):
         origins = ["*"]
         self.api.add_middleware(AuthMiddleware, routes=self.api.routes)
+        self.api.add_middleware(RoleMiddleware, routes=self.api.routes)
         self.api.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
         self.api.add_middleware(
             CORSMiddleware,

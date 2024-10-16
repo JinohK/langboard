@@ -40,6 +40,8 @@ class Logger:
 
         getLogger("asyncio").setLevel(ERROR)
         getLogger("multipart").setLevel(ERROR)
+        getLogger("aiosqlite").setLevel(ERROR)
+        getLogger("asyncpg").setLevel(ERROR)
 
     def use(self, name: str) -> LoggingLogger:
         """Returns a logger with the given name."""

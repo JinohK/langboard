@@ -1,6 +1,10 @@
 import {
+    InfiniteData,
     QueryClient,
+    QueryFunction,
     QueryKey,
+    useInfiniteQuery,
+    UseInfiniteQueryOptions,
     useMutation,
     UseMutationOptions,
     UseMutationResult,
@@ -15,6 +19,10 @@ export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError =
     TError,
     TData
 >;
+export type TInfiniteQueryOptions<TQueryFnData, TPageParam = unknown, TError = Error> = Partial<
+    UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData>, TQueryFnData, QueryKey, TPageParam>
+>;
+export type TQueryFunction<TQueryFnData = unknown, TData = TQueryFnData> = QueryFunction<TQueryFnData, QueryKey, TData>;
 export type TMutationOptions<
     TVariables = unknown,
     TData = unknown,
@@ -32,6 +40,63 @@ export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) =>
             {
                 queryKey,
                 queryFn,
+                ...options,
+            },
+            queryClient
+        );
+    }
+
+    function infiniteQuery<TQueryFnData, TPageParam = unknown, TQueryKey extends QueryKey = QueryKey, TError = Error>(
+        queryKey: UseInfiniteQueryOptions<
+            TQueryFnData,
+            TError,
+            InfiniteData<TQueryFnData>,
+            TQueryFnData,
+            TQueryKey,
+            TPageParam
+        >["queryKey"],
+        queryFn: UseInfiniteQueryOptions<
+            TQueryFnData,
+            TError,
+            InfiniteData<TQueryFnData>,
+            TQueryFnData,
+            TQueryKey,
+            TPageParam
+        >["queryFn"],
+        nextPageParam: UseInfiniteQueryOptions<
+            TQueryFnData,
+            TError,
+            InfiniteData<TQueryFnData>,
+            TQueryFnData,
+            TQueryKey,
+            TPageParam
+        >["getNextPageParam"],
+        initialPageParam: UseInfiniteQueryOptions<
+            TQueryFnData,
+            TError,
+            InfiniteData<TQueryFnData>,
+            TQueryFnData,
+            TQueryKey,
+            TPageParam
+        >["initialPageParam"],
+        options: Omit<
+            UseInfiniteQueryOptions<
+                TQueryFnData,
+                TError,
+                InfiniteData<TQueryFnData>,
+                TQueryFnData,
+                TQueryKey,
+                TPageParam
+            >,
+            "queryFn" | "queryKey" | "getNextPageParam" | "initialPageParam"
+        > = {}
+    ) {
+        return useInfiniteQuery(
+            {
+                queryKey,
+                queryFn,
+                getNextPageParam: nextPageParam,
+                initialPageParam,
                 ...options,
             },
             queryClient
@@ -59,5 +124,5 @@ export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) =>
         );
     }
 
-    return { query, mutate, queryClient };
+    return { query, infiniteQuery, mutate, queryClient };
 };

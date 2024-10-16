@@ -1,0 +1,17 @@
+from enum import Enum
+from sqlmodel import Field
+from .BaseRoleModel import BaseRoleModel
+
+
+class {class_name}RoleAction(Enum):
+    Read = "read"
+    Write = "write"
+    Update = "update"
+    Delete = "delete"
+
+class {class_name}Role(BaseRoleModel, table=True):
+    
+
+    @staticmethod
+    def get_default_actions() -> list[Enum]:
+        return [{class_name}RoleAction.Read]

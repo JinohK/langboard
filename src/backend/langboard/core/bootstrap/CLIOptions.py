@@ -71,7 +71,15 @@ class CLIOptions(RunCLIOptions, ModelCLIOptions):
                 "type": bool,
             },
             "model": {
-                "help": "Model to create",
+                "help": "Model to create (If you give snake_case or camelCase, it will convert to PascalCase)",
+                "type": str,
+            },
+            "service": {
+                "help": "Service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Service' suffix)",
+                "type": str,
+            },
+            "role": {
+                "help": "Role's model and service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Role' suffix)",
                 "type": str,
             },
         },

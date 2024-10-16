@@ -1,24 +1,25 @@
 from datetime import datetime
 from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
 from fastapi import Depends
-from fastapi.params import Depends as DependsType
 from sqlalchemy import Delete, Insert, Sequence, Update
 from sqlalchemy.engine.result import ScalarResult, TupleResult
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.util import EMPTY_DICT
-from sqlmodel import Session, create_engine, update
+from sqlmodel import update
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.base import Executable
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROLE, SUB_DATABASE_URL
 from ..logger import Logger
 from .BaseSqlBuilder import BaseSqlBuilder
+from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
-from .Role import DbSessionRole
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
-_main_engine = create_engine(MAIN_DATABASE_URL)
-_sub_engine = create_engine(SUB_DATABASE_URL)
+_main_engine = create_async_engine(MAIN_DATABASE_URL)
+_sub_engine = create_async_engine(SUB_DATABASE_URL)
 
 _logger = Logger.use("DbConnection")
 
@@ -30,14 +31,11 @@ class DbSession(BaseSqlBuilder):
     """
 
     def __init__(self):
-        main_session = Session(_main_engine)
-        sub_session = Session(_sub_engine)
+        main_session = AsyncSession(_main_engine)
+        sub_session = AsyncSession(_sub_engine)
 
-        # Share the identity map between the main and sub sessions for consistency.
-        sub_session.identity_map = main_session.identity_map
-
-        self._sessions: dict[DbSessionRole, Session] = {}
-        self._sessions_needs_commit: list[Session] = []
+        self._sessions: dict[DbSessionRole, AsyncSession] = {}
+        self._sessions_needs_commit: list[AsyncSession] = []
 
         for role in MAIN_DATABASE_ROLE:
             self._sessions[DbSessionRole(role)] = main_session
@@ -45,29 +43,33 @@ class DbSession(BaseSqlBuilder):
         for role in SUB_DATABASE_ROLE:
             self._sessions[DbSessionRole(role)] = sub_session
 
-    def __del__(self):
+    async def close(self):
         if self.should_commit():
-            _logger.warning("DbConnection is being deleted without committing.")
+            _logger.warning("DbConnection is being closed without committing.")
 
         self._sessions_needs_commit.clear()
 
+        await self.rollback()
         for session in self._sessions.values():
-            session.close()
+            if session.is_active:
+                await session.close()
         self._sessions.clear()
 
-        del self._sessions_needs_commit
-        del self._sessions
+    @staticmethod
+    def get_main_engine() -> AsyncEngine:
+        """Returns the main database engine."""
+        return _main_engine
 
     @staticmethod
-    def scope() -> DependsType:
+    def scope() -> "DbSession":
         """Creates a scope for the database session to be used in :class:`fastapi.FastAPI` endpoints."""
 
-        def get_db():
+        async def get_db():
             db = DbSession()
             try:
                 yield db
             finally:
-                del db
+                await db.close()
 
         return Depends(get_db)
 
@@ -90,7 +92,7 @@ class DbSession(BaseSqlBuilder):
         insertable_objs = [obj for obj in objs if obj.is_new()]
         session.add_all(insertable_objs)
 
-    def update(self, obj: BaseSqlModel):
+    async def update(self, obj: BaseSqlModel):
         """Updates an object in the database if it is not new.
 
         :param obj: The object to be updated; must be a subclass of :class:`BaseSqlModel`.
@@ -98,13 +100,14 @@ class DbSession(BaseSqlBuilder):
         if obj.is_new():
             return
         session = self._get_session(DbSessionRole.Update)
+        obj = await session.merge(obj)
         session.add(obj)
 
     @overload
-    def delete(self, obj: BaseSqlModel): ...
+    async def delete(self, obj: BaseSqlModel): ...
     @overload
-    def delete(self, obj: SoftDeleteModel, purge: bool = False): ...
-    def delete(self, obj: BaseSqlModel, purge: bool = False):
+    async def delete(self, obj: SoftDeleteModel, purge: bool = False): ...
+    async def delete(self, obj: BaseSqlModel, purge: bool = False):
         """Deletes an object from the database if it is not new.
 
         If the object is a subclass of :class:`SoftDeleteModel`, it will be soft-deleted by default.
@@ -115,14 +118,15 @@ class DbSession(BaseSqlBuilder):
         if obj.is_new():
             return
         session = self._get_session(DbSessionRole.Delete)
+        await session.merge(obj)
         if purge or not isinstance(obj, SoftDeleteModel):
-            session.delete(obj)
+            await session.delete(obj)
             return
         obj.deleted_at = datetime.now()
         session.add(obj)
 
     @overload
-    def exec(
+    async def exec(
         self,
         statement: Union[Select[_TSelectParam], SelectOfScalar[_TSelectParam]],
         *,
@@ -133,7 +137,7 @@ class DbSession(BaseSqlBuilder):
         _add_event: Optional[Any] = None,
     ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
     @overload
-    def exec(
+    async def exec(
         self,
         statement: Insert[_TSelectParam],
         *,
@@ -142,9 +146,9 @@ class DbSession(BaseSqlBuilder):
         bind_arguments: Optional[Dict[str, Any]] = None,
         _parent_execute_state: Optional[Any] = None,
         _add_event: Optional[Any] = None,
-    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
+    ) -> int: ...
     @overload
-    def exec(
+    async def exec(
         self,
         statement: Update[_TSelectParam],
         *,
@@ -153,9 +157,9 @@ class DbSession(BaseSqlBuilder):
         bind_arguments: Optional[Dict[str, Any]] = None,
         _parent_execute_state: Optional[Any] = None,
         _add_event: Optional[Any] = None,
-    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
+    ) -> int: ...
     @overload
-    def exec(
+    async def exec(
         self,
         statement: Delete[_TSelectParam],
         *,
@@ -165,8 +169,8 @@ class DbSession(BaseSqlBuilder):
         _parent_execute_state: Optional[Any] = None,
         _add_event: Optional[Any] = None,
         purge: bool = False,
-    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
-    def exec(  # type: ignore
+    ) -> int: ...
+    async def exec(  # type: ignore
         self,
         statement: Union[
             Select[_TSelectParam],
@@ -180,7 +184,7 @@ class DbSession(BaseSqlBuilder):
         _parent_execute_state: Optional[Any] = None,
         _add_event: Optional[Any] = None,
         purge: bool = False,
-    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]:
+    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]] | int:
         """Executes a statement on the database.
 
         If the statement is a :class:`Delete` and the table is a subclass of :class:`SoftDeleteModel`,
@@ -205,6 +209,7 @@ class DbSession(BaseSqlBuilder):
         ):
             statement = update(statement.table).values(deleted_at=datetime.now()).where(statement.whereclause)  # type: ignore
 
+        should_return_count = not isinstance(statement, Select) and not isinstance(statement, SelectOfScalar)
         if isinstance(statement, Insert):
             role = DbSessionRole.Insert
         elif isinstance(statement, Update):
@@ -227,25 +232,28 @@ class DbSession(BaseSqlBuilder):
             "_add_event": _add_event,
         }
 
-        return session.exec(**args)
+        result = await session.exec(**args)
+        if should_return_count:
+            return result.rowcount
+        return result
 
     def should_commit(self) -> bool:
         """Returns `True` if there are any sessions that need to be committed."""
         return len(self._sessions_needs_commit) > 0
 
-    def commit(self) -> None:
+    async def commit(self) -> None:
         """Commits all sessions that need to be committed."""
         for session in self._sessions_needs_commit:
-            session.commit()
+            await session.commit()
         self._sessions_needs_commit.clear()
 
-    def rollback(self) -> None:
+    async def rollback(self) -> None:
         """Rolls back all sessions that need to be rolled back."""
         for session in self._sessions_needs_commit:
-            session.rollback()
+            await session.rollback()
         self._sessions_needs_commit.clear()
 
-    def _get_session(self, role: DbSessionRole) -> Session:
+    def _get_session(self, role: DbSessionRole) -> AsyncSession:
         """Returns the session for the given role.
 
         :param role: The role of the session to be returned.

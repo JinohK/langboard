@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 from fastapi.params import Depends
 from langboard.Constants import MAIN_DATABASE_ROLE, SUB_DATABASE_ROLE
 from langboard.core.db import DbSession
+from langboard.core.db.DbSessionRole import DbSessionRole
 from langboard.core.db.Models import BaseSqlModel, SoftDeleteModel
-from langboard.core.db.Role import DbSessionRole
 from pytest import mark
 from sqlmodel import Session
 

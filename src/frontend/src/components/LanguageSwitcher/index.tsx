@@ -1,13 +1,20 @@
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
+import { classNames } from "@/core/utils/ComponentUtils";
 import { useTranslation } from "react-i18next";
 
 export interface ILanguageSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
+    buttonClassNames?: string;
     hideTriggerIcon?: boolean;
 }
 
-function LanguageSwitcher({ variant, triggerType, hideTriggerIcon }: ILanguageSwitcherProps): JSX.Element {
+function LanguageSwitcher({
+    variant,
+    triggerType,
+    buttonClassNames,
+    hideTriggerIcon,
+}: ILanguageSwitcherProps): JSX.Element {
     const [t, i18n] = useTranslation();
 
     const changeLanguageHandler = (lang: string) => {
@@ -23,7 +30,11 @@ function LanguageSwitcher({ variant, triggerType, hideTriggerIcon }: ILanguageSw
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button variant={variant ?? "default"} className="inline-flex">
+                <Button
+                    variant={variant ?? "default"}
+                    className={classNames("inline-flex", buttonClassNames)}
+                    title={t("locales.title")}
+                >
                     {triggerType === "text" ? (
                         t(`locales.${i18n.language}`)
                     ) : (

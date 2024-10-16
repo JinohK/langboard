@@ -1,9 +1,11 @@
 {
     "locales": {
+        "title": "Locales",
         "en-US": "English (US)",
         "ko-KR": "Korean"
     },
     "themes": {
+        "title": "Themes",
         "light": "Light Mode",
         "dark": "Dark Mode",
         "system": "System Mode"
@@ -37,5 +39,10 @@
                 "password": "Wrong password. Try again or click Forgot password to reset it."
             }
         }
+    },
+    "myAccount": {
+        "My Account": "My Account",
+        "Settings": "Settings",
+        "Sign out": "Sign out"
     }
 }

@@ -1,0 +1,7 @@
+from ..BaseService import BaseService
+
+
+class {class_name}Service(BaseService):
+    @staticmethod
+    def name() -> str:
+        return "{snake_name}"

@@ -5,7 +5,6 @@ from json import loads as json_loads
 from typing import Any, Literal
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.openapi.utils import get_openapi
-from fastapi.params import Depends as DependsType
 from jwt import ExpiredSignatureError, InvalidTokenError
 from jwt import decode as jwt_decode
 from jwt import encode as jwt_encode
@@ -57,7 +56,7 @@ class Auth:
         return access_token
 
     @staticmethod
-    def scope(where: Literal["api", "socket"]) -> DependsType:
+    def scope(where: Literal["api", "socket"]) -> User:
         """Creates a scope for the user to be used in :class:`fastapi.FastAPI` endpoints."""
         if where == "api":
 
@@ -124,8 +123,9 @@ class Auth:
 
         try:
             session = DbSession()
-            user = session.exec(session.build_select(User).where(User.id == user_id)).first()
-            del session
+            result = await session.exec(session.query("select").table(User).where(User.id == user_id))
+            user = result.first()
+            await session.close()
 
             if not user:
                 return InvalidTokenError("Invalid token")

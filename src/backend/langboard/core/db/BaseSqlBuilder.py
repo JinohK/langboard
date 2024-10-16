@@ -1,21 +1,6 @@
 from abc import ABC
-from typing import Tuple, overload
-from sqlalchemy import Delete, Insert, Update
-from sqlalchemy.sql._typing import _DMLTableArgument
-from sqlmodel import delete, insert, select, update
-from sqlmodel.sql._expression_select_gen import (
-    _T0,
-    _T1,
-    _T2,
-    _T3,
-    _TCCA,
-    _TScalar_0,
-    _TScalar_1,
-    _TScalar_2,
-    _TScalar_3,
-)
-from sqlmodel.sql.expression import Select, SelectOfScalar
-from .Models import SoftDeleteModel
+from typing import Literal, overload
+from .queries import DeleteQuery, InsertQuery, SelectQuery, UpdateQuery
 
 
 class BaseSqlBuilder(ABC):
@@ -26,220 +11,22 @@ class BaseSqlBuilder(ABC):
     The :meth:`delete` function applies the functionality when executing the statement.
     """
 
-    def build_insert(self, table: _DMLTableArgument) -> Insert:
-        return insert(table)
-
-    def build_update(self, table: _DMLTableArgument, with_deleted: bool = False) -> Update:
-        statement = update(table)
-        if not with_deleted and (isinstance(table, type) and issubclass(table, SoftDeleteModel)):
-            statement = statement.where(table.deleted_at == None)  # type: ignore # noqa
-        return statement
-
-    def build_delete(self, table: _DMLTableArgument) -> Delete:
-        return delete(table)
-
     @overload
-    def build_select(self, entity0: _TCCA[_T0], with_deleted: bool = False) -> SelectOfScalar[_T0]: ...
+    def query(self, query_type: Literal["insert"]) -> InsertQuery: ...
     @overload
-    def build_select(self, entity0: _TScalar_0, with_deleted: bool = False) -> SelectOfScalar[_TScalar_0]: ...
+    def query(self, query_type: Literal["update"]) -> UpdateQuery: ...
     @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TCCA[_T1], with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _T1]]: ...
+    def query(self, query_type: Literal["delete"]) -> DeleteQuery: ...
     @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TScalar_1, with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _TScalar_1]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TCCA[_T1], with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _T1]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TScalar_1, with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TCCA[_T1], entity2: _TCCA[_T2], with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _T1, _T2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TCCA[_T1], entity2: _TScalar_2, with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _T1, _TScalar_2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TScalar_1, entity2: _TCCA[_T2], with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _TScalar_1, _T2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TCCA[_T0], entity1: _TScalar_1, entity2: _TScalar_2, with_deleted: bool = False
-    ) -> Select[Tuple[_T0, _TScalar_1, _TScalar_2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TCCA[_T1], entity2: _TCCA[_T2], with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _T1, _T2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TCCA[_T1], entity2: _TScalar_2, with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _T1, _TScalar_2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TScalar_1, entity2: _TCCA[_T2], with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _T2]]: ...
-    @overload
-    def build_select(
-        self, entity0: _TScalar_0, entity1: _TScalar_1, entity2: _TScalar_2, with_deleted: bool = False
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _TScalar_2]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TCCA[_T1],
-        entity2: _TCCA[_T2],
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _T1, _T2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TCCA[_T1],
-        entity2: _TCCA[_T2],
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _T1, _T2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TCCA[_T1],
-        entity2: _TScalar_2,
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _T1, _TScalar_2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TCCA[_T1],
-        entity2: _TScalar_2,
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _T1, _TScalar_2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TScalar_1,
-        entity2: _TCCA[_T2],
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _TScalar_1, _T2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TScalar_1,
-        entity2: _TCCA[_T2],
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _TScalar_1, _T2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TScalar_1,
-        entity2: _TScalar_2,
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _TScalar_1, _TScalar_2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TCCA[_T0],
-        entity1: _TScalar_1,
-        entity2: _TScalar_2,
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_T0, _TScalar_1, _TScalar_2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TCCA[_T1],
-        entity2: _TCCA[_T2],
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _T1, _T2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TCCA[_T1],
-        entity2: _TCCA[_T2],
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _T1, _T2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TCCA[_T1],
-        entity2: _TScalar_2,
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _T1, _TScalar_2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TCCA[_T1],
-        entity2: _TScalar_2,
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _T1, _TScalar_2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TScalar_1,
-        entity2: _TCCA[_T2],
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _T2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TScalar_1,
-        entity2: _TCCA[_T2],
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _T2, _TScalar_3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TScalar_1,
-        entity2: _TScalar_2,
-        entity3: _TCCA[_T3],
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _TScalar_2, _T3]]: ...
-    @overload
-    def build_select(
-        self,
-        entity0: _TScalar_0,
-        entity1: _TScalar_1,
-        entity2: _TScalar_2,
-        entity3: _TScalar_3,
-        with_deleted: bool = False,
-    ) -> Select[Tuple[_TScalar_0, _TScalar_1, _TScalar_2, _TScalar_3]]: ...
-    def build_select(self, *entities: _DMLTableArgument, with_deleted: bool = False) -> SelectOfScalar:  # type: ignore
-        statement = select(*entities)  # type: ignore
-        soft_delete_models = [
-            entity for entity in entities if isinstance(entity, type) and issubclass(entity, SoftDeleteModel)
-        ]
-        if not with_deleted and soft_delete_models:
-            for entity in soft_delete_models:
-                statement = statement.where(entity.deleted_at == None)  # noqa
-        return statement
+    def query(self, query_type: Literal["select"]) -> SelectQuery: ...
+    def query(self, query_type: Literal["insert", "update", "delete", "select"]):
+        if query_type == "insert":
+            return InsertQuery()
+        elif query_type == "update":
+            return UpdateQuery()
+        elif query_type == "delete":
+            return DeleteQuery()
+        elif query_type == "select":
+            return SelectQuery()
+        else:
+            raise ValueError(f"Invalid query type: {query_type}")

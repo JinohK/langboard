@@ -7,17 +7,12 @@ class BaseFilter(ABC):
         self._filtered: set[Any] = set()
 
     @abstractmethod
-    def add(self, data: Any) -> Any:
+    def add(self, *args, **kwargs) -> Any:
         """Adds a data to be filtered.
 
         You can use as a decorator.
-
-        :param data: Data to be filtered
         """
 
     @abstractmethod
-    def exists(self, data: Any) -> bool:
-        """Checks if a data is in the filter.
-
-        :param data: Data to be checked
-        """
+    def exists(self, *args, **kwargs) -> bool:
+        """Checks if a data is in the filter."""

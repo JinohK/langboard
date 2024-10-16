@@ -2,25 +2,23 @@ from typing import Annotated
 from fastapi import Header, status
 from fastapi.responses import JSONResponse
 from jwt import ExpiredSignatureError
-from ...core.db import DbSession
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
 from ...models import User
+from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
 
 
 @AppRouter.api.post("/auth/email", response_model=AuthEmailResponse)
-def auth_email(form: AuthEmailForm, db: DbSession = DbSession.scope()) -> JSONResponse | AuthEmailResponse:  # type: ignore
-    query = db.build_select(User)
+async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) -> JSONResponse | AuthEmailResponse:
     if form.is_token:
-        decrypted_email = Encryptor.decrypt(form.token, form.sign_token)  # type: ignore
-        query = query.where(User.email == decrypted_email)
+        email = Encryptor.decrypt(form.token, form.sign_token)  # type: ignore
     else:
-        query = query.where(User.email == form.email)
+        email = form.email
 
-    user = db.exec(query).first()
+    user = await service.user.get_user_by_email(email)
 
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -30,9 +28,9 @@ def auth_email(form: AuthEmailForm, db: DbSession = DbSession.scope()) -> JSONRe
 
 
 @AppRouter.api.post("/auth/signin", response_model=SignInResponse)
-def sign_in(form: SignInForm, db: DbSession = DbSession.scope()) -> JSONResponse | SignInResponse:  # type: ignore
+async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JSONResponse | SignInResponse:
     decrypted_email = Encryptor.decrypt(form.email_token, form.sign_token)
-    user = db.exec(db.build_select(User).where(User.email == decrypted_email)).first()
+    user = await service.user.get_user_by_email(decrypted_email)
 
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
@@ -63,10 +61,13 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JSONResponse | Ref
 
 @AppRouter.api.get("/auth/me")
 @AuthFilter.add
-def about_me(user: User = Auth.scope("api")) -> User:  # type: ignore
+def about_me(user: User = Auth.scope("api")) -> JSONResponse:
     response = user.model_dump()
     response.pop("password")
     response.pop("deleted_at")
     response.pop("updated_at")
 
-    return JSONResponse(content={"user": response})  # type: ignore
+    if user.avatar:
+        response["avatar"] = user.avatar.path
+
+    return JSONResponse(content={"user": response})

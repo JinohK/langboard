@@ -1,8 +1,14 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 from pydantic import SecretStr, model_serializer
+from sqlalchemy.orm import declared_attr
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
+from ..utils.String import pascal_to_snake
+
+
+_TColumnType = TypeVar("_TColumnType")
 
 
 class BaseSqlModel(ABC, SQLModel):
@@ -10,7 +16,13 @@ class BaseSqlModel(ABC, SQLModel):
 
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.now, nullable=False)
+    updated_at: datetime = Field(
+        default_factory=datetime.now, nullable=False, sa_column_kwargs={"onupdate": datetime.now}
+    )
+
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return pascal_to_snake(cls.__name__)
 
     def __str__(self) -> str:
         return self._repr(self._get_repr_keys())
@@ -23,6 +35,45 @@ class BaseSqlModel(ABC, SQLModel):
 
     def __ne__(self, target: object) -> bool:
         return not self.__eq__(target)
+
+    @classmethod
+    def column(cls, name: str, _: type[_TColumnType] | None = None) -> InstrumentedAttribute[_TColumnType]:
+        """Cast a column to :class:`sqlalchemy.orm.attributes.InstrumentedAttribute`.
+
+        E.g.::
+
+            ModelClass.column("column_name")
+            User.column("id")
+            ModelClass.column("column_name", int)
+            User.column("id", int | None)
+
+        :param name: The column name existing in the model.
+        :param _: The type of the column. If provided, it will be assigned to :class:`sqlalchemy.orm.attributes.InstrumentedAttribute`.
+        """
+        if not isinstance(cls, type) or not issubclass(cls, BaseSqlModel):  # type: ignore
+            return None  # type: ignore
+        column = getattr(cls, name, None)
+        if column is None:
+            raise ValueError(f"Column {name} not found in {cls.__name__}")
+        if not isinstance(column, InstrumentedAttribute):
+            raise ValueError(f'Must use {cls.__name__}.column("{name}")')
+        return column
+
+    @classmethod
+    def expr(cls, name: str) -> str:
+        """Get the column expression from a model column.
+
+        E.g.::
+
+            ModelClass.expr("column_name")
+            User.expr("id")
+
+        :param name: The column name existing in the model.
+        """
+        column = cls.column(name)
+        if column is None:
+            return name
+        return str(column.expression)
 
     def is_new(self) -> bool:
         """Checks if the object is new and has not been saved to the database."""
@@ -43,19 +94,25 @@ class BaseSqlModel(ABC, SQLModel):
         return serialized
 
     @abstractmethod
-    def _get_repr_keys(self) -> list[str]: ...
+    def _get_repr_keys(self) -> list[str | tuple[str, str]]: ...
 
-    def _repr(self, representable_keys: list[str]) -> str:
+    def _repr(self, representable_keys: list[str | tuple[str, str]]) -> str:
         chunks = []
         if not self.is_new():
             chunks.append(f"id={self.id}")
 
-        for key in representable_keys:
+        for representable in representable_keys:
+            if isinstance(representable, tuple):
+                key, repr_key = representable
+            else:
+                key = repr_key = representable
+
             if key == "id":
                 continue
+
             value = getattr(self, key)
             if value is not None:
-                chunks.append(f"{key}={value}")
+                chunks.append(f"{repr_key}={value}")
 
         info = ", ".join(chunks)
         return f"{self.__class__.__name__}({info})"

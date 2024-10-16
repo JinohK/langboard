@@ -28,7 +28,7 @@ FILE_LOGGING_LEVEL = _get_env("FILE_LOGGING_LEVEL", "AUTO").upper()
 LOGGING_DIR = Path(_get_env("LOGGING_DIR", BASE_DIR / ".." / ".." / ".." / "logs" / "backend"))
 
 # Database
-MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
+MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
 MAIN_DATABASE_ROLE = set(_get_env("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(","))
 SUB_DATABASE_URL = _get_env("SUB_DATABASE_URL", MAIN_DATABASE_URL)
 SUB_DATABASE_ROLE = set(_get_env("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(","))

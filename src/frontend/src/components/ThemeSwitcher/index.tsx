@@ -1,10 +1,12 @@
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
+import { classNames } from "@/core/utils/ComponentUtils";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 
 export interface IThemeSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
+    buttonClassNames?: string;
     hideTriggerIcon?: boolean;
 }
 
@@ -14,14 +16,18 @@ const themes: Record<string, string> = {
     system: "contrast",
 };
 
-function ThemeSwitcher({ variant, triggerType, hideTriggerIcon }: IThemeSwitcherProps): JSX.Element {
+function ThemeSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon }: IThemeSwitcherProps): JSX.Element {
     const { theme, setTheme } = useTheme();
     const [t] = useTranslation();
 
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button variant={variant ?? "default"} className="inline-flex">
+                <Button
+                    variant={variant ?? "default"}
+                    className={classNames("inline-flex", buttonClassNames)}
+                    title={t("themes.title")}
+                >
                     {triggerType === "text" ? (
                         t(`themes.${theme ?? "system"}`)
                     ) : (

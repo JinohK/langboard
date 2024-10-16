@@ -102,7 +102,13 @@ function EmailForm({ signToken, setEmail }: IEmailFormProps): JSX.Element {
             <Form.Root className="max-xs:mt-11 xs:w-1/2" onSubmit={submitEmail}>
                 <Form.Field name="email">
                     <Form.Control asChild>
-                        <Input className="w-full" placeholder={t("signIn.Email")} autoFocus disabled={isValidating} />
+                        <Input
+                            className="w-full"
+                            placeholder={t("signIn.Email")}
+                            autoFocus
+                            autoComplete="email"
+                            disabled={isValidating}
+                        />
                     </Form.Control>
                     {error && (
                         <Form.Message>

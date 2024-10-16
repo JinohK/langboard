@@ -1,0 +1,9 @@
+from sqlmodel import Field
+from ..core.db import {base_class}
+
+
+class {class_name}({base_class}, table=True):
+    
+
+    def _get_repr_keys(self) -> list[str | tuple[str, str]]:
+        return []

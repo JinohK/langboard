@@ -2,6 +2,8 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/core/utils/ComponentUtils";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { Tooltip } from "@/components/base";
 
 export const ButtonVariants = cva(
     // eslint-disable-next-line @/max-len
@@ -34,12 +36,25 @@ export interface ButtonProps
     extends React.ButtonHTMLAttributes<HTMLButtonElement>,
         VariantProps<typeof ButtonVariants> {
     asChild?: boolean;
+    titleSide?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["side"];
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant, size, asChild = false, ...props }, ref) => {
+    ({ className, variant, size, title, titleSide, asChild = false, ...props }, ref) => {
         const Comp = asChild ? Slot : "button";
-        return <Comp className={cn(ButtonVariants({ variant, size, className }))} ref={ref} {...props} />;
+        const btn = <Comp className={cn(ButtonVariants({ variant, size, className }))} ref={ref} {...props} />;
+        if (!title) {
+            return btn;
+        } else {
+            return (
+                <Tooltip.Provider delayDuration={400}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
+                        <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>
+                    </Tooltip.Root>
+                </Tooltip.Provider>
+            );
+        }
     }
 );
 Button.displayName = "Button";

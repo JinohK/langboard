@@ -14,8 +14,8 @@ class CLIRichParser(ArgumentParser):
         if not message or not message.startswith("usage:"):
             return
 
-        options = []
-        short_options = []
+        options: list[str] = []
+        short_options: list[str] = []
         positionals = []
         help_texts = []
 
@@ -57,7 +57,8 @@ class CLIRichParser(ArgumentParser):
                 f"{help_text}", f"[{self._color_description}]{help_text}[/{self._color_description}]"
             )
 
-        for option in options.extend(short_options):  # type: ignore
+        options.extend(short_options)
+        for option in options:
             message = message.replace(option, f"[{self._color_command}]{option}[/{self._color_command}]")
 
         for positional in positionals:

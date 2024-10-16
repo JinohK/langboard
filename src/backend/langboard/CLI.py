@@ -3,7 +3,7 @@ from rich import print as rprint
 from .App import App
 from .Constants import HOST, PORT
 from .core.bootstrap import CLIHelpFormatter, CLIOptions, CLIRichParser
-from .core.db import create_model
+from .core.bootstrap.creators import create_model, create_role, create_service
 
 
 arg_parser = CLIRichParser(argument_default=SUPPRESS, formatter_class=CLIHelpFormatter)
@@ -52,9 +52,29 @@ for field_name, field in CLIOptions.model_fields.items():
     group.add_argument(*names, **arg_setting)
 
 
+def create_cli(commands: list[str], args: CLIOptions) -> bool:
+    if ["model", "service", "role"].count(commands[0]) == 0:
+        return False
+
+    if len(commands) < 2:
+        arg_parser.print_help()
+        exit(1)
+
+    if commands[0] == "model":
+        create_model(commands[1], args.soft_delete)
+        return True
+    elif commands[0] == "service":
+        create_service(commands[1])
+        return True
+    elif commands[0] == "role":
+        create_role(commands[1])
+        return True
+    return False
+
+
 def execute():
     args, _ = arg_parser.parse_known_args(namespace=CLIOptions())
-    commands = args.command or []
+    commands: str | list[str] = args.command or []
     if not commands or commands.count("help") > 0:
         arg_parser.print_help()
         return
@@ -62,11 +82,7 @@ def execute():
     if args.version:
         return args.print_version()
 
-    elif commands[0] == "model":
-        if len(commands) < 2:
-            arg_parser.print_help()
-            return
-        create_model(commands[1], args.soft_delete)
+    elif isinstance(commands, list) and create_cli(commands, args):
         return
 
     elif commands[0] == "run":

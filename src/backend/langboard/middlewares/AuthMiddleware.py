@@ -2,15 +2,14 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
-from starlette.routing import BaseRoute, Match
+from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
-from ..core.filter import AuthFilter
-from ..core.routing import AppExceptionHandlingRoute
+from ..core.filter import AuthFilter, FilterMiddleware
 from ..core.security import Auth
 from ..models import User
 
 
-class AuthMiddleware(AuthenticationMiddleware):
+class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
     """Checks if the user is authenticated and has the correct permissions."""
 
     __auto_load__ = False
@@ -19,26 +18,15 @@ class AuthMiddleware(AuthenticationMiddleware):
         self,
         app: ASGIApp,
         routes: list[BaseRoute],
-    ) -> None:
-        self.app = app
-        self._routes = routes
+    ):
+        FilterMiddleware.__init__(self, app, routes, AuthFilter)
 
     async def __call__(self, scope, receive, send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
-        routes: list[BaseRoute] = self._routes
-        should_filter = False
-        for route in routes:
-            if not isinstance(route, AppExceptionHandlingRoute):
-                continue
-
-            matches, _ = route.matches(scope)
-            if matches == Match.FULL:
-                if AuthFilter.exists(route.endpoint):
-                    should_filter = True
-                break
+        should_filter, _ = self.should_filter(scope)
 
         if should_filter:
             headers = Headers(scope=scope)

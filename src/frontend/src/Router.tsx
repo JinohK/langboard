@@ -3,11 +3,12 @@ import { lazy } from "react";
 import { ROUTES } from "@/core/routing/constants";
 import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
 import { AuthGuard } from "@/core/routing/AuthGuard";
-import DashboardPage from "@/pages/DashboardPage";
 import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SignInPage = lazy(() => import("./pages/SignInPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const SettingPage = lazy(() => import("./pages/SettingPage"));
 
 const Router = () => {
     return (
@@ -41,6 +42,16 @@ const Router = () => {
                             </AuthGuard>
                         }
                     />
+                    <Route path={ROUTES.SETTINGS}>
+                        <Route
+                            index
+                            element={
+                                <AuthGuard>
+                                    <SettingPage />
+                                </AuthGuard>
+                            }
+                        />
+                    </Route>
                 </Routes>
             </SocketRouteWrapper>
         </BrowserRouter>

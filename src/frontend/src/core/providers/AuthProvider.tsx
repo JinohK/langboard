@@ -13,7 +13,7 @@ export interface IAuthUser {
     purpose: string;
     affiliation?: string;
     position?: string;
-    avatar?: unknown;
+    avatar?: string;
 }
 
 export interface IAuthContext {
@@ -22,7 +22,7 @@ export interface IAuthContext {
     isAuthenticated: () => boolean;
     signIn: (accessToken: string, refreshToken: string) => void;
     removeTokens: () => void;
-    logout: () => void;
+    signOut: () => void;
     aboutMe: () => Promise<IAuthUser>;
 }
 
@@ -36,7 +36,7 @@ const initialContext = {
     isAuthenticated: () => false,
     signIn: () => {},
     removeTokens: () => {},
-    logout: () => {},
+    signOut: () => {},
     aboutMe: async () => Promise.reject(),
 };
 
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         cookies.set(APP_REFRESH_TOKEN, refreshToken, { path: "/" });
     };
 
-    const logout = () => {
+    const signOut = () => {
         removeTokens();
         location.href = ROUTES.SIGN_IN;
     };
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 isAuthenticated,
                 signIn,
                 removeTokens,
-                logout,
+                signOut,
                 aboutMe,
             }}
         >

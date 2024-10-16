@@ -18,7 +18,7 @@ class User(SoftDeleteModel, table=True):
     def check_password(self, password: str) -> bool:
         return checkpw(password.encode(), self.password.get_secret_value().encode())
 
-    def _get_repr_keys(self) -> list[str]:
+    def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["name", "email", "industry", "purpose", "affiliation", "position"]
 
     def __setattr__(self, name: str, value: Any) -> None:
