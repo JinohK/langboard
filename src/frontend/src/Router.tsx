@@ -1,58 +1,41 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { lazy } from "react";
-import { ROUTES } from "@/core/routing/constants";
-import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
-import { AuthGuard } from "@/core/routing/AuthGuard";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
+import { ROUTES } from "@/core/routing/constants";
+import { useEffect, useState } from "react";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { Progress } from "@/components/base";
 
-const HomePage = lazy(() => import("./pages/HomePage"));
-const SignInPage = lazy(() => import("./pages/SignInPage"));
-const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const SettingPage = lazy(() => import("./pages/SettingPage"));
+const modules = import.meta.glob<boolean, string, { default: () => JSX.Element }>("./pages/**/Route.tsx");
+const pages = Object.values(modules);
 
 const Router = () => {
+    const [routes, setRoutes] = useState<JSX.Element[]>([]);
+
+    useEffect(() => {
+        const loadRoutes = async () => {
+            const newRoutes = await Promise.all(
+                pages.map(async (importPage) => {
+                    const Page = (await importPage()).default;
+                    return Page();
+                })
+            );
+
+            newRoutes.push(<Route key="route-notfound" path="*" element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} />} />);
+
+            setRoutes(newRoutes);
+        };
+
+        loadRoutes();
+    }, []);
+
+    if (routes.length === 0) {
+        return <Progress indeterminate height="1" />;
+    }
+
     return (
         <BrowserRouter>
             <SocketRouteWrapper>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path={ROUTES.SIGN_IN}>
-                        <Route
-                            index
-                            element={
-                                <ProtectedAuthRoute>
-                                    <SignInPage />
-                                </ProtectedAuthRoute>
-                            }
-                        />
-                        <Route
-                            path={ROUTES.SIGN_IN_PASSWORD}
-                            element={
-                                <ProtectedAuthRoute>
-                                    <SignInPage />
-                                </ProtectedAuthRoute>
-                            }
-                        />
-                    </Route>
-                    <Route
-                        path={ROUTES.DASHBOARD}
-                        element={
-                            <AuthGuard>
-                                <DashboardPage />
-                            </AuthGuard>
-                        }
-                    />
-                    <Route path={ROUTES.SETTINGS}>
-                        <Route
-                            index
-                            element={
-                                <AuthGuard>
-                                    <SettingPage />
-                                </AuthGuard>
-                            }
-                        />
-                    </Route>
-                </Routes>
+                <Routes>{routes}</Routes>
             </SocketRouteWrapper>
         </BrowserRouter>
     );

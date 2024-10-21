@@ -33,7 +33,7 @@ class BaseFormModel(ABC, BaseModel):
         raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
 
     @staticmethod
-    def scope() -> DependsType:
+    def scope():
         raise NotImplementedError("Must decorate the model class with the `form_model` decorator.")
 
 

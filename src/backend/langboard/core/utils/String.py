@@ -23,18 +23,37 @@ def capitalize_all_words(string: str) -> str:
     return " ".join(word.capitalize() for word in string.split(" "))
 
 
-def create_short_unique_id(length: int) -> str:
-    DIGIT_FIRST_ASCII = ord("0")
-    DIGIT_LAST_ASCII = ord("9")
-    LOWERCASE_FIRST_ASCII = ord("a")
-    LOWERCASE_LAST_ASCII = ord("z")
-    UPPERCASE_FIRST_ASCII = ord("A")
-    UPPERCASE_LAST_ASCII = ord("Z")
+def generate_random_string(length: int) -> str:
+    """Generates a random string.
 
+    Args:
+        length (int): The length of the string to generate.
+
+    Returns:
+        str: The generated string.
+    """
+    chars = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    return "".join(chars[randint(0, len(chars) - 1)] for _ in range(length))
+
+
+def make_fullname(first_name: str, last_name: str) -> str:
+    """Creates a full name from the first and last name.
+
+    Args:
+        first_name (str): The first name.
+        last_name (str): The last name.
+
+    Returns:
+        str: The full name.
+    """
+    return f"{first_name} {last_name}"
+
+
+def create_short_unique_id(length: int) -> str:
     ascii_ranges = [
-        (DIGIT_FIRST_ASCII, DIGIT_LAST_ASCII),
-        (LOWERCASE_FIRST_ASCII, LOWERCASE_LAST_ASCII),
-        (UPPERCASE_FIRST_ASCII, UPPERCASE_LAST_ASCII),
+        (ord("0"), ord("9")),
+        (ord("a"), ord("z")),
+        (ord("A"), ord("Z")),
     ]
 
     unique_chars: list[str] = []

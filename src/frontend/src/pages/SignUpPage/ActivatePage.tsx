@@ -1,0 +1,79 @@
+import { Button, Toast } from "@/components/base";
+import { FormOnlyLayout } from "@/components/Layout";
+import useActivateUser from "@/controllers/signup/useActivateUser";
+import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/signup/useSignUp";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { ROUTES } from "@/core/routing/constants";
+import { isAxiosError } from "axios";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+
+function ActivatePage(): JSX.Element {
+    const [t] = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { mutate } = useActivateUser();
+    const [description, setDescription] = useState<JSX.Element | null>(null);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const token = searchParams.get(SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME);
+
+        if (!token) {
+            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+            return;
+        }
+
+        mutate(
+            { signup_token: token },
+            {
+                onSuccess: () => {
+                    setDescription(
+                        <>
+                            <h2 className="text-center text-2xl font-normal xs:text-3xl">{t("signUp.activate.Welcome to {app}!")}</h2>
+                            <p className="mt-8 text-sm xs:text-base">
+                                {t("signUp.activate.Your account is now active and ready to go!")}&nbsp;
+                                {t("signUp.activate.Dive in and discover all the amazing features we have in store for you.")}
+                            </p>
+                            <p className="mt-4 text-sm xs:text-base">
+                                {t("signUp.activate.Simply sign in with your email and password to get started.")}
+                            </p>
+                            <div className="mt-8 flex justify-center">
+                                <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>{t("signIn.Sign in")}</Button>
+                            </div>
+                        </>
+                    );
+                },
+                onError: (error) => {
+                    if (!isAxiosError(error)) {
+                        console.error(error);
+                        Toast.Add.error(t("errors.Unknown error"));
+                        return;
+                    }
+
+                    switch (error.response?.status) {
+                        case EHttpStatus.HTTP_404_NOT_FOUND:
+                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                            return;
+                        case EHttpStatus.HTTP_409_CONFLICT:
+                            Toast.Add.error(t("signUp.errors.Account already activated. Please sign in."));
+                            navigate(ROUTES.SIGN_IN.EMAIL);
+                            return;
+                        default:
+                            Toast.Add.error(t("errors.Internal server error"));
+                            return;
+                    }
+                },
+            }
+        );
+    }, []);
+
+    return (
+        <FormOnlyLayout size="sm" useLogo>
+            {description}
+        </FormOnlyLayout>
+    );
+}
+
+export default ActivatePage;

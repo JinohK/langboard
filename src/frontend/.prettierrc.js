@@ -5,7 +5,7 @@ const config = {
     semi: true,
     tabWidth: 4,
     trailingComma: "es5",
-    printWidth: 120,
+    printWidth: 150,
 };
 
 export default config;

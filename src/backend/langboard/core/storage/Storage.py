@@ -1,4 +1,5 @@
-from typing import BinaryIO
+from typing import BinaryIO, overload
+from starlette.datastructures import UploadFile
 from ..utils.decorators import class_instance, singleton
 from .BaseStorage import BaseStorage
 from .FileModel import FileModel
@@ -24,8 +25,18 @@ class Storage:
         storage = self._storages[storage_type]
         return storage.get(storage_name, filename)
 
-    def upload(self, file: BinaryIO, storage_name: StorageName) -> FileModel | None:
-        if not file.name:
+    @overload
+    def upload(self, file: UploadFile, storage_name: StorageName) -> FileModel | None: ...
+    @overload
+    def upload(self, file: BinaryIO, storage_name: StorageName) -> FileModel | None: ...
+    def upload(self, file: UploadFile | BinaryIO, storage_name: StorageName) -> FileModel | None:
+        if isinstance(file, UploadFile):
+            filename = file.filename
+            file = file.file
+        else:
+            filename = file.name
+
+        if not filename:
             return None
 
         for storage_type, storage in self._storages.items():
@@ -33,9 +44,9 @@ class Storage:
                 continue
 
             if storage.is_connectable():
-                return storage.upload(file, storage_name)
+                return storage.upload(file, filename, storage_name)
 
-        return self._storages[LocalStorage.storage_type].upload(file, storage_name)
+        return self._storages[LocalStorage.storage_type].upload(file, filename, storage_name)
 
     def delete(self, file_model: FileModel) -> bool:
         if file_model.storage_type not in self._storages:

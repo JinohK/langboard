@@ -17,7 +17,7 @@ const useSignIn = (options?: TMutationOptions<ISignInForm, ISignInResponse>) => 
     const { mutate } = useQueryMutation();
 
     const signIn = async (params: ISignInForm) => {
-        const res = await api.post(API_ROUTES.SIGN_IN, params);
+        const res = await api.post(API_ROUTES.AUTH.SIGN_IN, params);
 
         return res.data;
     };

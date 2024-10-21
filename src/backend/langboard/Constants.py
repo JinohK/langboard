@@ -56,6 +56,7 @@ if CACHE_TYPE not in _AVAILABLE_CACHE_TYPES:
     raise ValueError(f"Invalid cache type: {CACHE_TYPE}. Must be one of {_AVAILABLE_CACHE_TYPES}")
 
 # Security
+COMMON_SECRET_KEY = _get_env("COMMON_SECRET_KEY", f"{PROJECT_NAME}_common_key")
 JWT_SECRET_KEY = _get_env("JWT_SECRET_KEY", f"{PROJECT_NAME}_secret_key")
 JWT_ALGORITHM = _get_env("JWT_ALGORITHM", "HS256")
 JWT_AT_EXPIRATION = int(_get_env("JWT_AT_EXPIRATION", 60 * 60 * 3))  # 3 hours for default

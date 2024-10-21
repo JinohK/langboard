@@ -46,6 +46,6 @@ class InMemoryCache(BaseCache):
 
     async def _expire(self) -> None:
         with self._lock:
-            for key, (_, ttl) in self._cache.items():
+            for key, (_, ttl) in self._cache.copy().items():
                 if ttl <= int(datetime.now().timestamp()):
                     del self._cache[key]

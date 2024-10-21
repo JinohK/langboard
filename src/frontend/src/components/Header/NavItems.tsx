@@ -1,21 +1,15 @@
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
-import { classNames, cn } from "@/core/utils/ComponentUtils";
+import { cn } from "@/core/utils/ComponentUtils";
 import { THeaderNavItemsProps } from "@/components/Header/types";
 import { useTranslation } from "react-i18next";
+import { makeReactKey } from "@/core/utils/StringUtils";
 
-function NavItems({
-    isMobile,
-    navs,
-    setIsOpen,
-    activatedClass,
-    deactivatedClass,
-    shardClass,
-}: THeaderNavItemsProps): JSX.Element[] {
+function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass, shardClass }: THeaderNavItemsProps): JSX.Element[] {
     const [t] = useTranslation();
 
     return navs.map((item) => {
         let itemComponent;
-        const key = item.name.replace(/(\.|\s)/g, "-");
+        const key = makeReactKey(item.name);
         if (item.subNavs) {
             const subProps: THeaderNavItemsProps = {
                 isMobile: isMobile as false,
@@ -32,11 +26,7 @@ function NavItems({
                     <Accordion.Root type="single" collapsible key={key}>
                         <Accordion.Item value={key} className="border-b-0">
                             <Accordion.Trigger
-                                className={classNames(
-                                    "py-2",
-                                    item.active ? activatedClass : deactivatedClass,
-                                    shardClass
-                                )}
+                                className={cn("py-2", item.active ? activatedClass : deactivatedClass, shardClass)}
                                 disabled={subProps.navs.length === 0}
                             >
                                 {t(item.name)}
@@ -52,10 +42,7 @@ function NavItems({
                 itemComponent = (
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
-                            <NavigationMenu.Trigger
-                                data-active={item.active ? true : null}
-                                disabled={subProps.navs.length === 0}
-                            >
+                            <NavigationMenu.Trigger data-active={item.active ? true : null} disabled={subProps.navs.length === 0}>
                                 {t(item.name)}
                             </NavigationMenu.Trigger>
                         </DropdownMenu.Trigger>
@@ -98,11 +85,7 @@ function NavItems({
                 );
             } else {
                 itemComponent = (
-                    <NavigationMenu.Link
-                        data-active={item.active ? true : null}
-                        aria-current={ariaCurrent}
-                        {...navProps}
-                    >
+                    <NavigationMenu.Link data-active={item.active ? true : null} aria-current={ariaCurrent} onClick={item.onClick} {...navProps}>
                         {t(item.name)}
                     </NavigationMenu.Link>
                 );

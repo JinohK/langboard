@@ -151,9 +151,7 @@ Label.displayName = ContextMenuPrimitive.Label.displayName;
 const Separator = React.forwardRef<
     React.ElementRef<typeof ContextMenuPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-    <ContextMenuPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />
-));
+>(({ className, ...props }, ref) => <ContextMenuPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />);
 Separator.displayName = ContextMenuPrimitive.Separator.displayName;
 
 const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
@@ -161,20 +159,4 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 };
 Shortcut.displayName = "ContextMenuShortcut";
 
-export {
-    Root,
-    Trigger,
-    Content,
-    Item,
-    CheckboxItem,
-    RadioItem,
-    Label,
-    Separator,
-    Shortcut,
-    Group,
-    Portal,
-    Sub,
-    SubContent,
-    SubTrigger,
-    RadioGroup,
-};
+export { Root, Trigger, Content, Item, CheckboxItem, RadioItem, Label, Separator, Shortcut, Group, Portal, Sub, SubContent, SubTrigger, RadioGroup };

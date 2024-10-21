@@ -1,27 +1,22 @@
 import { IconComponent, Tooltip } from "@/components/base";
 import { ISidebarNavItemsProps } from "@/components/Sidebar/types";
-import { classNames } from "@/core/utils/ComponentUtils";
+import { cn } from "@/core/utils/ComponentUtils";
+import { makeReactKey } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
 
 function NavItems({ isCollapsed, navs }: ISidebarNavItemsProps): JSX.Element[] {
     const [t] = useTranslation();
 
     return navs.map((item) => {
-        const key = item.name.replace(/(\.|\s)/g, "-");
-        const componentClasses = classNames(
+        const key = makeReactKey(item.name);
+        const componentClasses = cn(
             item.current ? "bg-muted text-primary" : "text-muted-foreground",
             "flex cursor-pointer items-center gap-3 rounded-lg py-2 text-base transition-all hover:text-primary",
             isCollapsed ? "" : "px-3"
         );
 
         const sharedComponent = (
-            <a
-                key={key}
-                href={item.href}
-                onClick={item.onClick}
-                aria-current={item.current ? "page" : undefined}
-                className={componentClasses}
-            >
+            <a key={key} href={item.href} onClick={item.onClick} aria-current={item.current ? "page" : undefined} className={componentClasses}>
                 <IconComponent icon={item.icon} size={isCollapsed ? "9" : "5"} strokeWidth={isCollapsed ? "1" : "2"} />
                 {isCollapsed ? "" : t(item.name)}
             </a>

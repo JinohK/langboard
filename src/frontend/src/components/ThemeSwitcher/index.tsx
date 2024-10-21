@@ -1,5 +1,5 @@
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
-import { classNames } from "@/core/utils/ComponentUtils";
+import { cn } from "@/core/utils/ComponentUtils";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 
@@ -23,27 +23,15 @@ function ThemeSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button
-                    variant={variant ?? "default"}
-                    className={classNames("inline-flex", buttonClassNames)}
-                    title={t("themes.title")}
-                >
-                    {triggerType === "text" ? (
-                        t(`themes.${theme ?? "system"}`)
-                    ) : (
-                        <IconComponent icon={themes[theme ?? "system"]} />
-                    )}
+                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("themes.title")}>
+                    {triggerType === "text" ? t(`themes.${theme ?? "system"}`) : <IconComponent icon={themes[theme ?? "system"]} />}
                     {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
                 {Object.keys(themes).map((mode) => {
                     return (
-                        <DropdownMenu.Item
-                            onClick={() => setTheme(mode.toLowerCase())}
-                            key={mode}
-                            className="cursor-pointer"
-                        >
+                        <DropdownMenu.Item onClick={() => setTheme(mode.toLowerCase())} key={mode} className="cursor-pointer">
                             <IconComponent icon={themes[mode]} className="mr-2" />
                             {t(`themes.${mode}`)}
                         </DropdownMenu.Item>

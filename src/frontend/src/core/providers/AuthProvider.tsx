@@ -4,16 +4,13 @@ import { ROUTES } from "@/core/routing/constants";
 import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
+import { IUser } from "@/core/types";
 
-export interface IAuthUser {
-    id: number;
-    name: string;
-    email: string;
+export interface IAuthUser extends IUser {
     industry: string;
     purpose: string;
     affiliation?: string;
     position?: string;
-    avatar?: string;
 }
 
 export interface IAuthContext {
@@ -69,11 +66,11 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     const signOut = () => {
         removeTokens();
-        location.href = ROUTES.SIGN_IN;
+        location.href = ROUTES.SIGN_IN.EMAIL;
     };
 
     const aboutMe = async () => {
-        const response = await api.get(API_ROUTES.ABOUT_ME, {
+        const response = await api.get(API_ROUTES.AUTH.ABOUT_ME, {
             headers: {
                 Authorization: `Bearer ${getAccessToken()}`,
             },

@@ -8,12 +8,9 @@ import { cn } from "@/core/utils/ComponentUtils";
 
 const Root = AccordionPrimitive.Root;
 
-const Item = React.forwardRef<
-    React.ElementRef<typeof AccordionPrimitive.Item>,
-    React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
->(({ className, ...props }, ref) => (
-    <AccordionPrimitive.Item ref={ref} className={cn("border-b", className)} {...props} />
-));
+const Item = React.forwardRef<React.ElementRef<typeof AccordionPrimitive.Item>, React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>>(
+    ({ className, ...props }, ref) => <AccordionPrimitive.Item ref={ref} className={cn("border-b", className)} {...props} />
+);
 Item.displayName = "AccordionItem";
 
 const Trigger = React.forwardRef<

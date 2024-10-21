@@ -4,7 +4,7 @@ from ...logger import Logger
 from ...utils.String import concat, pascal_to_snake, snake_to_pascal
 
 
-_logger = Logger.use("creators")
+_logger = Logger.use("cli")
 
 
 def make_name(name: str, remove_ends: str | None = None) -> str:
@@ -24,7 +24,7 @@ def get_template_path(file_name: str) -> Path:
 
 
 def format_template(file_name: str, formats: dict[str, str]) -> str:
-    template_path = get_template_path(file_name)
+    template_path = get_template_path(f"{file_name}.py")
     return template_path.read_text().format_map(formats)
 
 

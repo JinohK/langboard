@@ -18,21 +18,21 @@ class LocalStorage(BaseStorage):
         with open(file_path, "rb") as f:
             return f.read()
 
-    def upload(self, file: BinaryIO, storage_name: StorageName) -> FileModel | None:
-        if not file.name:
+    def upload(self, file: BinaryIO, filename: str, storage_name: StorageName) -> FileModel | None:
+        if not filename:
             return None
 
         storage_path = LOCAL_STORAGE_DIR / storage_name.value
         storage_path.mkdir(parents=True, exist_ok=True)
 
-        new_filename = get_random_filename(file.name)
+        new_filename = get_random_filename(filename)
         with open(storage_path / new_filename, "wb") as f:
             f.write(file.read())
 
         return FileModel(
             storage_type=LocalStorage.storage_type,
             storage_name=storage_name.value,
-            original_filename=file.name,
+            original_filename=filename,
             filename=new_filename,
             path=f"/file/{self._encrypt_storage_type(LocalStorage.storage_type)}/{storage_name.value}/{new_filename}",
         )

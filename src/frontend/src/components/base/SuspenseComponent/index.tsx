@@ -14,9 +14,7 @@ function SuspenseComponent({ children, className, width, height, shouldWrapChild
 
     return (
         <>
-            <Suspense fallback={<Skeleton style={{ width, height }} className={className} />}>
-                {wrappedChildren}
-            </Suspense>
+            <Suspense fallback={<Skeleton style={{ width, height }} className={className} />}>{wrappedChildren}</Suspense>
         </>
     );
 }

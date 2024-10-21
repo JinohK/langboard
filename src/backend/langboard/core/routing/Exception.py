@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from traceback import format_exc
-from typing import Generic, TypeVar
-from pydantic import ValidationError
+from typing import Generic, Literal, TypeVar
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError
 from ..utils.String import concat
 
 
@@ -51,5 +52,27 @@ class SocketRouterScopeException(EventBaseSocketException[_TException], Generic[
         return concat("\t", "\n\t".join(messages), "\n")
 
 
-def MissingException(loc: str, inputs: dict = {}) -> ValidationError:
-    return ValidationError.from_exception_data("Field required", [{"type": "missing", "loc": (loc,), "input": inputs}])
+def MissingException(loc: Literal["body", "query", "path", "header"], field: str, inputs: dict = {}) -> ValidationError:
+    return ValidationError.from_exception_data(
+        "Field required", [{"type": "missing", "loc": (loc, field), "input": inputs}]
+    )
+
+
+class InvalidError(BaseModel):
+    loc: Literal["body", "query", "path", "header"]
+    field: str
+    inputs: dict = {}
+
+
+def InvalidException(*errors: InvalidError) -> RequestValidationError:
+    return RequestValidationError(
+        errors=[
+            {
+                "type": "value_error",
+                "loc": (error.loc, error.field),
+                "input": error.inputs,
+                "ctx": {"error": ValueError("Invalid value")},
+            }
+            for error in errors
+        ],
+    )

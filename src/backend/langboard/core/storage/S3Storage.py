@@ -22,12 +22,12 @@ class S3Storage(BaseStorage):
         except Exception:
             return None
 
-    def upload(self, file: BinaryIO, storage_name: StorageName) -> FileModel | None:
-        if not file.name:
+    def upload(self, file: BinaryIO, filename: str, storage_name: StorageName) -> FileModel | None:
+        if not filename:
             return None
 
         try:
-            new_filename = get_random_filename(file.name)
+            new_filename = get_random_filename(filename)
             s3_client = self._connect_client()
             s3_client.upload_fileobj(Fileobj=file, Bucket=S3_BUCKET_NAME, Key=f"{storage_name}/{new_filename}")
             s3_client.close()
@@ -35,7 +35,7 @@ class S3Storage(BaseStorage):
             return FileModel(
                 storage_type=S3Storage.storage_type,
                 storage_name=storage_name.value,
-                original_filename=file.name,
+                original_filename=filename,
                 filename=new_filename,
                 path=f"/file/{self._encrypt_storage_type(S3Storage.storage_type)}/{storage_name.value}/{new_filename}",
             )

@@ -16,7 +16,7 @@ class BaseStorage(ABC):
         """
 
     @abstractmethod
-    def upload(self, file: BinaryIO, storage_name: StorageName) -> FileModel | None:
+    def upload(self, file: BinaryIO, filename: str, storage_name: StorageName) -> FileModel | None:
         """Upload a file to the storage and return the FileModel object.
 
         :param file: The :class:`BinaryIO` object to upload.

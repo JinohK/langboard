@@ -14,21 +14,17 @@ import {
     UseQueryResult,
 } from "@tanstack/react-query";
 
-export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError = Error> = UseQueryOptions<
-    TQueryFnData,
-    TError,
-    TData
->;
+export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError = Error> = UseQueryOptions<TQueryFnData, TError, TData>;
 export type TInfiniteQueryOptions<TQueryFnData, TPageParam = unknown, TError = Error> = Partial<
     UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData>, TQueryFnData, QueryKey, TPageParam>
 >;
 export type TQueryFunction<TQueryFnData = unknown, TData = TQueryFnData> = QueryFunction<TQueryFnData, QueryKey, TData>;
-export type TMutationOptions<
-    TVariables = unknown,
-    TData = unknown,
-    TContext = unknown,
-    TError = Error,
-> = UseMutationOptions<TData, TError, TVariables, TContext>;
+export type TMutationOptions<TVariables = unknown, TData = unknown, TContext = unknown, TError = Error> = UseMutationOptions<
+    TData,
+    TError,
+    TVariables,
+    TContext
+>;
 
 export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) => {
     function query<TQueryFnData = unknown, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TError = Error>(
@@ -47,22 +43,8 @@ export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) =>
     }
 
     function infiniteQuery<TQueryFnData, TPageParam = unknown, TQueryKey extends QueryKey = QueryKey, TError = Error>(
-        queryKey: UseInfiniteQueryOptions<
-            TQueryFnData,
-            TError,
-            InfiniteData<TQueryFnData>,
-            TQueryFnData,
-            TQueryKey,
-            TPageParam
-        >["queryKey"],
-        queryFn: UseInfiniteQueryOptions<
-            TQueryFnData,
-            TError,
-            InfiniteData<TQueryFnData>,
-            TQueryFnData,
-            TQueryKey,
-            TPageParam
-        >["queryFn"],
+        queryKey: UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData>, TQueryFnData, TQueryKey, TPageParam>["queryKey"],
+        queryFn: UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData>, TQueryFnData, TQueryKey, TPageParam>["queryFn"],
         nextPageParam: UseInfiniteQueryOptions<
             TQueryFnData,
             TError,
@@ -80,14 +62,7 @@ export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) =>
             TPageParam
         >["initialPageParam"],
         options: Omit<
-            UseInfiniteQueryOptions<
-                TQueryFnData,
-                TError,
-                InfiniteData<TQueryFnData>,
-                TQueryFnData,
-                TQueryKey,
-                TPageParam
-            >,
+            UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData>, TQueryFnData, TQueryKey, TPageParam>,
             "queryFn" | "queryKey" | "getNextPageParam" | "initialPageParam"
         > = {}
     ) {

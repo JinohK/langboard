@@ -1,7 +1,7 @@
 import { Button, IconComponent } from "@/components/base";
 import NavItems from "@/components/Sidebar/NavItems";
 import { ISidebarProps } from "@/components/Sidebar/types";
-import { classNames, cn } from "@/core/utils/ComponentUtils";
+import { cn } from "@/core/utils/ComponentUtils";
 import { useState } from "react";
 
 function Sidebar({ navs, main }: ISidebarProps) {
@@ -13,7 +13,8 @@ function Sidebar({ navs, main }: ISidebarProps) {
         <>
             <div
                 className={cn(
-                    classNames("hidden md:grid", sharedClassNames),
+                    "hidden md:grid",
+                    sharedClassNames,
                     isCollapsed ? "grid-cols-[56px_1fr]" : "md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]"
                 )}
             >
@@ -37,7 +38,7 @@ function Sidebar({ navs, main }: ISidebarProps) {
                 </div>
                 {main}
             </div>
-            <div className={classNames("md:hidden", sharedClassNames)}>{main}</div>
+            <div className={cn("md:hidden", sharedClassNames)}>{main}</div>
         </>
     );
 }

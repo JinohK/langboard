@@ -1,34 +1,34 @@
 import { useEffect, useState } from "react";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
 import EmailForm from "@/pages/SignInPage/EmailForm";
 import PasswordForm from "@/pages/SignInPage/PasswordForm";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
 import { generateToken } from "@/core/utils/StringUtils";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
+import { createTwoSidedSizeClassNames, FormOnlyLayout } from "@/components/Layout";
+import { cn } from "@/core/utils/ComponentUtils";
+import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
 
 function SignInPage(): JSX.Element {
-    const SIGN_IN_TOKEN_NAME = "itkl";
-    const EMAIL_TOKEN_NAME = "TKE";
-
     const navigate = useNavigate();
     const location = useLocation();
     const [email, setEmail] = useState("");
     const [form, setForm] = useState<JSX.Element>();
     const { mutate } = useAuthEmail();
 
+    const { wrapper: wrapperClassName, width: widthClassName } = createTwoSidedSizeClassNames("sm");
+
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_NAME);
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_NAME);
+        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME);
+        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
 
-        if (!signTokenParam || signTokenParam.length !== 64) {
-            const token = generateToken(64);
+        if (!signTokenParam || signTokenParam.length !== SIGN_IN_TOKEN_LENGTH) {
+            const token = generateToken(SIGN_IN_TOKEN_LENGTH);
 
-            searchParams.set(SIGN_IN_TOKEN_NAME, token);
+            searchParams.set(SIGN_IN_TOKEN_QUERY_NAME, token);
 
-            navigate(`${ROUTES.SIGN_IN}?${searchParams.toString()}`, {
+            navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
                 replace: true,
             });
 
@@ -36,6 +36,11 @@ function SignInPage(): JSX.Element {
         }
 
         if (signTokenParam && emailTokenParam) {
+            if (location.pathname !== ROUTES.SIGN_IN.PASSWORD) {
+                navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { replace: true });
+                return;
+            }
+
             mutate(
                 { is_token: true, token: emailTokenParam, sign_token: signTokenParam },
                 {
@@ -49,8 +54,8 @@ function SignInPage(): JSX.Element {
                         }
                     },
                     onError: () => {
-                        searchParams.delete(EMAIL_TOKEN_NAME);
-                        navigate(`${ROUTES.SIGN_IN}?${searchParams.toString()}`);
+                        searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+                        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
                     },
                 }
             );
@@ -59,41 +64,23 @@ function SignInPage(): JSX.Element {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_NAME) ?? "";
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_NAME);
+        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME) ?? "";
+        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
 
         if (signTokenParam && emailTokenParam) {
             setForm(
-                <PasswordForm
-                    signToken={signTokenParam}
-                    emailToken={emailTokenParam}
-                    email={email}
-                    setEmail={setEmail}
-                />
+                <PasswordForm signToken={signTokenParam} emailToken={emailTokenParam} email={email} setEmail={setEmail} className={widthClassName} />
             );
         } else {
             setEmail("");
-            setForm(<EmailForm signToken={signTokenParam} setEmail={setEmail} />);
+            setForm(<EmailForm signToken={signTokenParam} setEmail={setEmail} className={widthClassName} />);
         }
     }, [location, email]);
 
     return (
-        <div className="flex h-screen min-h-screen flex-col items-center justify-center xs:h-auto">
-            <div className="w-full max-w-screen-sm">
-                <div className="flex flex-col max-xs:h-full max-xs:justify-between">
-                    <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
-                        <div className="mb-6">
-                            <img src="/images/logo.png" alt="Logo" className="h-9 w-9" />
-                        </div>
-                        <div className="flex max-xs:flex-col xs:flex-wrap xs:justify-between">{form}</div>
-                    </div>
-                    <div className="max-sm:p-4 sm:mt-2">
-                        <LanguageSwitcher variant="ghost" triggerType="text" />
-                        <ThemeSwitcher variant="ghost" triggerType="text" />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <FormOnlyLayout size="default" useLogo>
+            <div className={cn("flex", wrapperClassName)}>{form}</div>
+        </FormOnlyLayout>
     );
 }
 

@@ -8,7 +8,7 @@ export interface IAuthGuardProps {
 
 export const AuthGuard = ({ children }: IAuthGuardProps): React.ReactNode => {
     const { isAuthenticated, removeTokens } = useAuth();
-    const isSignInPage = location.pathname.startsWith(ROUTES.SIGN_IN);
+    const isSignInPage = location.pathname.startsWith(ROUTES.SIGN_IN.EMAIL);
 
     if (!isAuthenticated() && !isSignInPage) {
         removeTokens();

@@ -23,10 +23,7 @@ export interface IGetProjectsResponse {
     total: number;
 }
 
-const useGetProjects = (
-    params: IGetProjectsForm,
-    options?: TInfiniteQueryOptions<IGetProjectsResponse, IGetProjectsForm>
-) => {
+const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOptions<IGetProjectsResponse, IGetProjectsForm>) => {
     const { infiniteQuery } = useQueryMutation();
 
     const getProjects: TQueryFunction<IGetProjectsResponse, IGetProjectsForm> = async ({ pageParam }) => {

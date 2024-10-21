@@ -17,6 +17,7 @@ from .Models import BaseSqlModel, SoftDeleteModel
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
+_TModel = TypeVar("_TModel", bound=BaseSqlModel)
 
 _main_engine = create_async_engine(MAIN_DATABASE_URL)
 _sub_engine = create_async_engine(SUB_DATABASE_URL)
@@ -31,8 +32,8 @@ class DbSession(BaseSqlBuilder):
     """
 
     def __init__(self):
-        main_session = AsyncSession(_main_engine)
-        sub_session = AsyncSession(_sub_engine)
+        main_session = AsyncSession(_main_engine, expire_on_commit=False)
+        sub_session = AsyncSession(_sub_engine, expire_on_commit=False)
 
         self._sessions: dict[DbSessionRole, AsyncSession] = {}
         self._sessions_needs_commit: list[AsyncSession] = []
@@ -245,6 +246,7 @@ class DbSession(BaseSqlBuilder):
         """Commits all sessions that need to be committed."""
         for session in self._sessions_needs_commit:
             await session.commit()
+
         self._sessions_needs_commit.clear()
 
     async def rollback(self) -> None:

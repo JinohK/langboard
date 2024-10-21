@@ -27,7 +27,7 @@ const useAuthEmail = (options?: TMutationOptions<TCheckEmailForm, ICheckEmailRes
     const { mutate } = useQueryMutation();
 
     const checkEmail = async (params: TCheckEmailForm) => {
-        const res = await api.post(API_ROUTES.AUTH_EMAIL, params);
+        const res = await api.post(API_ROUTES.AUTH.EMAIL, params);
 
         return res.data;
     };

@@ -1,9 +1,31 @@
-const RAW_ROUTES = {
-    SIGN_IN: "/auth/signin",
-    SIGN_IN_PASSWORD: "/auth/signin/pwd",
-    AFTER_SIGN_IN: "/dashboard",
-    DASHBOARD: "/dashboard",
-    SETTINGS: "/settings",
-};
+import EHttpStatus from "@/core/helpers/EHttpStatus";
 
-export const ROUTES = RAW_ROUTES as Readonly<Record<keyof typeof RAW_ROUTES, string>>;
+export const ROUTES = {
+    SIGN_IN: {
+        EMAIL: "/auth/signin",
+        PASSWORD: "/auth/signin/pwd",
+    },
+    SIGN_UP: {
+        MAIN: "/auth/signup",
+        REQUIRED: "/auth/signup/required",
+        ADDITIONAL: "/auth/signup/additional",
+        OPTIONAL: "/auth/signup/optional",
+        OVERVIEW: "/auth/signup/overview",
+        COMPLETE: "/auth/signup/complete",
+        ACTIVATE: "/auth/signup/activate",
+    },
+    ACCOUNT_RECOVERY: {
+        NAME: "/auth/recovery",
+        RESET: "/auth/recovery/reset",
+    },
+    AFTER_SIGN_IN: "/dashboard",
+    DASHBOARD: {
+        MAIN: "/dashboard",
+        OUTLINES: "/dashboard/outlines",
+        TRACKING: "/dashboard/tracking",
+    },
+    SETTINGS: "/settings",
+    ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
+} as const;
+
+export const REDIRECT_QUERY_NAME = "continue";

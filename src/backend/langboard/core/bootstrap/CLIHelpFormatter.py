@@ -15,6 +15,7 @@ class CLIHelpFormatter(HelpFormatter):
         prog = "%(prog)s" % dict(prog=self._prog)
 
         # split optionals from positionals
+        usage_only = None
         optionals = []
         positionals = []
         for action in actions:
@@ -26,15 +27,28 @@ class CLIHelpFormatter(HelpFormatter):
                 positionals.append(action)
                 continue
 
+            if isinstance(action.metavar, dict) and "show_usage_only" in action.metavar:
+                usage_only = action
+                continue
+
             for metavar in action.metavar:
                 new_action = self._create_fake_action(action, metavar)
                 new_action.metavar = None
                 positionals.append(new_action)
 
+        if usage_only:
+            if usage_only.metavar["positional_name"]:  # type: ignore
+                usage_only_text = f"{usage_only.metavar["command_name"]} <{usage_only.metavar["positional_name"]}>"  # type: ignore
+            else:
+                usage_only_text = usage_only.metavar["command_name"]  # type: ignore
+        else:
+            usage_only_text = ""
+
         # build full usage string
         format = self._format_actions_usage
-        action_usage = format(optionals + positionals, groups)
-        usage = " ".join([s for s in [prog, action_usage] if s])
+        positional_usage = "|".join(format(positionals, groups).split(" "))
+        action_usage = format(optionals, groups)
+        usage = " ".join([s for s in [prog, usage_only_text, positional_usage, action_usage] if s])
 
         # wrap the usage parts if it's too long
         text_width = self._width - self._current_indent
@@ -42,11 +56,14 @@ class CLIHelpFormatter(HelpFormatter):
             # break usage into wrappable parts
             part_regexp = r"\(.*?\)+(?=\s|$)|" r"\[.*?\]+(?=\s|$)|" r"\S+"
             opt_usage = format(optionals, groups)
-            pos_usage = "|".join(format(positionals, groups).split(" ")) + " <args>"
+            pos_usage = "|".join(format(positionals, groups).split(" "))
             opt_parts = findall(part_regexp, opt_usage)
             pos_parts = findall(part_regexp, pos_usage)
             assert " ".join(opt_parts) == opt_usage
-            assert " ".join(pos_parts) == pos_usage
+            assert " ".join(pos_parts).replace("<args>", "").strip() == pos_usage.strip()
+
+            if usage_only:
+                pos_parts = [f"<{usage_only.metavar["command_name"]}>"]  # type: ignore
 
             # helper for wrapping lines
             def get_lines(parts, indent, prefix=None):
@@ -71,11 +88,10 @@ class CLIHelpFormatter(HelpFormatter):
                 return lines
 
             # if prog is short, follow it with optionals or positionals
-            if len(prefix) + len(prog) <= 0.75 * text_width:
-                indent = " " * (len(prefix) + len(prog) + 1)
+            if len(prefix) + len(prog) + len(usage_only_text) <= 0.75 * text_width:
+                indent = " " * (len(prefix) + len(prog) + len(usage_only_text) + 2)
                 if opt_parts:
-                    lines = get_lines([prog] + opt_parts, indent, prefix)
-                    lines.extend(get_lines(pos_parts, indent))
+                    lines = get_lines([prog] + pos_parts + opt_parts, indent, prefix)
                 elif pos_parts:
                     lines = get_lines([prog] + pos_parts, indent, prefix)
                 else:
@@ -84,12 +100,12 @@ class CLIHelpFormatter(HelpFormatter):
             # if prog is long, put it on its own line
             else:
                 indent = " " * len(prefix)
-                parts = opt_parts + pos_parts
+                parts = pos_parts + opt_parts
                 lines = get_lines(parts, indent)
                 if len(lines) > 1:
                     lines = []
-                    lines.extend(get_lines(opt_parts, indent))
                     lines.extend(get_lines(pos_parts, indent))
+                    lines.extend(get_lines(opt_parts, indent))
                 lines = [prog] + lines
 
             # join lines into usage
@@ -99,16 +115,21 @@ class CLIHelpFormatter(HelpFormatter):
         return "%s%s\n\n" % (prefix, usage)
 
     def _format_action(self, action):
+        if action.metavar and "show_usage_only" in action.metavar:
+            return ""
+
         # determine the required width and the entry label
-        help_position = self._action_max_length + 2
+        if action.metavar and self._is_fake_action(action) and "arg" in action.metavar:  # type: ignore
+            help_position = self._action_max_length + 18
+        else:
+            help_position = self._action_max_length + 20
         help_width = max(self._width - help_position, 11)
         action_width = help_position - self._current_indent - 2
 
         fake_action_arg = None
-        if action.metavar:
-            if self._is_fake_action(action):
-                fake_action_arg = action.metavar["arg"]  # type: ignore
-                action.metavar = None
+        if action.metavar and self._is_fake_action(action):
+            fake_action_arg = action.metavar["arg"]  # type: ignore
+            action.metavar = None
 
         action_header = self._format_action_invocation(action)
 
@@ -193,7 +214,7 @@ class CLIHelpFormatter(HelpFormatter):
         if metadata["type"] is str:  # type: ignore
             new_action_args["metavar"] = {
                 "is_fake": True,
-                "arg": action_name.replace("-", "_").upper(),
+                "arg": f"<{metadata["positional_name"]}>",  # type: ignore
             }
 
         return _StoreAction(**new_action_args)

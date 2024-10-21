@@ -1,4 +1,4 @@
-export const SIGN_IN_TOKEN_NAME = "itkl";
-export const EMAIL_TOKEN_NAME = "TKE";
+export const SIGN_IN_TOKEN_QUERY_NAME = "itkl";
+export const EMAIL_TOKEN_QUERY_NAME = "TKE";
 
-export const EMAIL_REGEX = /.+@.+\..+/;
+export const SIGN_IN_TOKEN_LENGTH = 64;

@@ -1,14 +1,22 @@
-const RAW_API_ROUTES = {
-    AUTH_EMAIL: "/auth/email",
-    SIGN_IN: "/auth/signin",
-    REFRESH: "/auth/refresh",
-    ABOUT_ME: "/auth/me",
+export const API_ROUTES = {
+    AUTH: {
+        EMAIL: "/auth/email",
+        SIGN_IN: "/auth/signin",
+        REFRESH: "/auth/refresh",
+        ABOUT_ME: "/auth/me",
+        RECOVERY: {
+            SEND_LINK: "/auth/recovery/send",
+            VALIDATE: "/auth/recovery/validate",
+            RESET: "/auth/recovery/reset",
+        },
+        SIGN_UP: {
+            SEND_LINK: "/auth/signup",
+            ACTIVATE: "/auth/signup/activate",
+            EXISTS_EMAIL: "/auth/signup/exist/email",
+            RESEND_LINK: "/auth/signup/resend",
+        },
+    },
     DASHBOARD_PROJECTS: "/dashboard/projects",
-};
+} as const;
 
-const RAW_SOCKET_ROUTES = {};
-
-export const API_ROUTES = RAW_API_ROUTES as Readonly<Record<keyof typeof RAW_API_ROUTES, string>>;
-export const SOCKET_ROUTES = RAW_SOCKET_ROUTES as Readonly<Record<keyof typeof RAW_SOCKET_ROUTES, string>>;
-
-export const REDIRECT_QUERY_NAME = "continue";
+export const SOCKET_ROUTES = {} as const;

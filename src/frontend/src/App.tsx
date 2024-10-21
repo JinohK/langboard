@@ -1,4 +1,3 @@
-import "@/assets/styles/App.scss";
 import { SuspenseComponent, Toast } from "@/components/base";
 import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";

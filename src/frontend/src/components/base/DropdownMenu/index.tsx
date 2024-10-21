@@ -143,20 +143,14 @@ const Label = React.forwardRef<
         inset?: boolean;
     }
 >(({ className, inset, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label
-        ref={ref}
-        className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)}
-        {...props}
-    />
+    <DropdownMenuPrimitive.Label ref={ref} className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)} {...props} />
 ));
 Label.displayName = DropdownMenuPrimitive.Label.displayName;
 
 const Separator = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} {...props} />
-));
+>(({ className, ...props }, ref) => <DropdownMenuPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} {...props} />);
 Separator.displayName = DropdownMenuPrimitive.Separator.displayName;
 
 const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
@@ -164,20 +158,4 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 };
 Shortcut.displayName = "DropdownMenuShortcut";
 
-export {
-    Root,
-    Trigger,
-    Content,
-    Item,
-    CheckboxItem,
-    RadioItem,
-    Label,
-    Separator,
-    Shortcut,
-    Group,
-    Portal,
-    Sub,
-    SubContent,
-    SubTrigger,
-    RadioGroup,
-};
+export { Root, Trigger, Content, Item, CheckboxItem, RadioItem, Label, Separator, Shortcut, Group, Portal, Sub, SubContent, SubTrigger, RadioGroup };

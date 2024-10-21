@@ -1,48 +1,148 @@
 {
-    "locales": {
-        "title": "Locales",
-        "en-US": "English (US)",
-        "ko-KR": "Korean"
+  "locales": {
+    "title": "Locales",
+    "en-US": "English (US)",
+    "ko-KR": "Korean"
+  },
+  "themes": {
+    "title": "Themes",
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "system": "System Mode"
+  },
+  "common": {
+    "Back": "Back",
+    "Next": "Next",
+    "Skip": "Skip",
+    "Back to Sign In": "Back to Sign In"
+  },
+  "errors": {
+    "Unknown error": "Unknown error",
+    "Internal server error": "Internal server error",
+    "Malformed request": "Malformed request",
+    "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later."
+  },
+  "signIn": {
+    "Sign in": "Sign in",
+    "Use your {app} Account": "Use your {{app}} Account",
+    "Email": "Email",
+    "Create account": "Create account",
+    "Welcome": "Welcome",
+    "Password": "Password",
+    "Show password": "Show password",
+    "Forgot password?": "Forgot password?",
+    "errors": {
+      "Couldn't find your {app} Account": "Couldn't find your {{app}} Account.",
+      "missing": {
+        "email": "Enter an email address.",
+        "password": "Enter a password."
+      },
+      "invalid": {
+        "email": "Enter a valid email address.",
+        "password": "Wrong password. Try again or click Forgot password to reset it."
+      }
+    }
+  },
+  "signUp": {
+    "Sign up": "Sign up",
+    "Already have an account?": "Already have an account?",
+    "Email": "Email",
+    "First Name": "First Name",
+    "Last Name": "Last Name",
+    "Password": "Password",
+    "Confirm password": "Confirm password",
+    "Industry": "What industry are you in?",
+    "Purpose": "What is your purpose for using {{app}}?",
+    "Affiliation": "What organization are you affiliated with?",
+    "Position": "What is your position in your organization?",
+    "industries": { },
+    "purposes": { },
+    "Other": "Other",
+    "overview": {
+      "email": "Email",
+      "industry": "Industry",
+      "purpose": "Purpose",
+      "affiliation": "Affiliation",
+      "position": "Position"
     },
-    "themes": {
-        "title": "Themes",
-        "light": "Light Mode",
-        "dark": "Dark Mode",
-        "system": "System Mode"
+    "complete": {
+      "One More Step to Sign Up": "One More Step to Sign Up",
+      "We have sent you an email to verify your email address.": "We have sent you an email to verify your email address.",
+      "Please check your inbox and click on the link to complete your sign up.": "Please check your inbox and click on the link to complete your sign up.",
+      "If you don't see the email, check junk, spam, social, or other folders.": "If you don't see the email, check junk, spam, social, or other folders.",
+      "Haven't received the email?": "Haven't received the email?",
+      "Email has been resent.": "Email has been resent.",
+      "Resend": "Resend"
     },
-    "common": {
-        "Next": "Next"
+    "activate": {
+      "Welcome to {app}!": "Welcome to {{app}}!",
+      "Your account is now active and ready to go!": "Your account is now active and ready to go!",
+      "Dive in and discover all the amazing features we have in store for you.": "Dive in and discover all the amazing features we have in store for you.",
+      "Simply sign in with your email and password to get started.": "Simply sign in with your email and password to get started."
     },
     "errors": {
-        "Unknown error": "Unknown error",
-        "Internal server error": "Internal server error",
-        "Malformed request": "Malformed request"
-    },
-    "signIn": {
-        "Sign in": "Sign in",
-        "Use your {app} Account": "Use your {{app}} Account",
-        "Email": "Email",
-        "Forgot email?": "Forgot email?",
-        "Create account": "Create account",
-        "Welcome": "Welcome",
-        "Password": "Password",
-        "Show password": "Show password",
-        "Forgot password?": "Forgot password?",
-        "errors": {
-            "Couldn't find your {app} Account": "Couldn't find your {{app}} Account.",
-            "missing": {
-                "email": "Enter an email address.",
-                "password": "Enter a password."
-            },
-            "invalid": {
-                "email": "Enter a valid email address.",
-                "password": "Wrong password. Try again or click Forgot password to reset it."
-            }
-        }
-    },
-    "myAccount": {
-        "My Account": "My Account",
-        "Settings": "Settings",
-        "Sign out": "Sign out"
+      "missing": {
+        "email": "Enter an email address.",
+        "firstname": "Enter your first name.",
+        "lastname": "Enter your last name.",
+        "password": "Enter a password.",
+        "password-confirm": "Enter a password confirmation.",
+        "industry": "Select an industry.",
+        "industry-other": "Enter an industry.",
+        "purpose": "Select a purpose.",
+        "purpose-other": "Enter a purpose."
+      },
+      "invalid": {
+        "email": "Enter a valid email address.",
+        "email-exists": "Email already exists. Try another one.",
+        "password": "Passwords do not match."
+      },
+      "Account already activated. Please sign in.": "Account already activated. Please sign in."
     }
+  },
+  "accountRecovery": {
+    "Password recovery": "Password recovery",
+    "Please enter your name to verify your account.": "Please enter your name to verify your account.",
+    "Password Reset Link Sent": "Password Reset Link Sent",
+    "A password reset link has been successfully sent to your registered email address.": "A password reset link has been successfully sent to your registered email address.",
+    "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.": "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.",
+    "If you do not receive the email within a few minutes, please try again or contact support for assistance.": "If you do not receive the email within a few minutes, please try again or contact support for assistance.",
+    "Please enter your new password.": "Please enter your new password.",
+    "First Name": "First Name",
+    "Last Name": "Last Name",
+    "Resend Link": "Resend Link",
+    "Resent link successfully.": "Resent link successfully.",
+    "Password Reset Successful": "Password Reset Successful",
+    "Your password has been successfully reset.": "Your password has been successfully reset.",
+    "You can now sign in with your new password.": "You can now sign in with your new password.",
+    "New password": "New password",
+    "Confirm new password": "Confirm new password",
+    "errors": {
+      "missing": {
+        "firstname": "Enter your first name.",
+        "lastname": "Enter your last name.",
+        "password": "Enter a new password.",
+        "confirmPassword": "Enter a password confirmation."
+      },
+      "invalid": {
+        "name": "Wrong name. Try again.",
+        "confirmPassword": "Wrong password confirmation. Try again."
+      }
+    }
+  },
+  "myAccount": {
+    "My Account": "My Account",
+    "Settings": "Settings",
+    "Sign out": "Sign out"
+  },
+  "dashboard": {
+    "Starred Projects": "Starred Projects",
+    "Recent Projects": "Recent Projects",
+    "Unstarred Projects": "Unstarred Projects",
+    "Projects": "Projects",
+    "Outlines": "Outlines",
+    "Starred": "Starred",
+    "Tracking": "Tracking",
+    "Create New Project": "Create New Project"
+  }
 }

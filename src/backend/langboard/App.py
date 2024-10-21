@@ -28,6 +28,7 @@ class App:
         ws_options: Optional[WebSocketOptions] = None,
         workers: int = 1,
         task_factory_maxitems: int = 100000,
+        is_restarting: bool = False,
     ):
         self.api = FastAPI(debug=True)
         self.ws = SocketApp()
@@ -41,6 +42,7 @@ class App:
         self._ws_options = ws_options
         self._workers = workers
         self._task_factory_maxitems = task_factory_maxitems
+        self._is_restarting = is_restarting
         self._init_api_middlewares()
         self._init_api_routes()
 
@@ -61,7 +63,7 @@ class App:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware)
+        middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware, not self._is_restarting)
         for module in middleware_modules.values():
             for middleware in module:
                 if middleware.__auto_load__:
@@ -69,8 +71,8 @@ class App:
 
     def _init_api_routes(self):
         self.api.router.route_class = AppExceptionHandlingRoute
-        load_modules("routes", "Api")
-        load_modules("routes", "Socket")
+        load_modules("routes", "Api", log=not self._is_restarting)
+        load_modules("routes", "Socket", log=not self._is_restarting)
         self.api.include_router(AppRouter.api)
 
     def _start_server(self):
@@ -80,7 +82,9 @@ class App:
             listen_options = AppListenOptions(port=self._port, host=self._host)
 
         def listen_log(config):
-            if self._uds:
+            if self._is_restarting:
+                msg = "Server restarted successfully."
+            elif self._uds:
                 msg = f"Listening on {config.domain} {'https' if self._ssl_options else 'http'}://localhost"
             else:
                 msg = f"Listening on {'https' if self._ssl_options else 'http'}://{config.host if config.host and len(config.host) > 1 else 'localhost' }:{config.port}"

@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { createFilter, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import dotenv from "dotenv";
@@ -8,6 +8,24 @@ import svgr from "vite-plugin-svgr";
 import path from "path";
 
 dns.setDefaultResultOrder("verbatim");
+
+const removeUseClient = () => {
+    const filter = createFilter(/.*\.(js|ts|jsx|tsx)$/);
+
+    return {
+        name: "remove-use-client",
+
+        transform(code: string, id: string) {
+            if (!filter(id)) {
+                return null;
+            }
+
+            const newCode = code.replace(/['"]use client['"];\s*/g, "");
+
+            return { code: newCode, map: null };
+        },
+    };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -20,22 +38,29 @@ export default defineConfig(({ mode }) => {
 
     const BACKEND_SERVER = `http://localhost:${process.env.BACKEND_PORT}`;
 
+    let watchOptions = null;
+    if (process.argv.includes("--watch") || process.argv.includes("-w")) {
+        watchOptions = {
+            exclude: ["**/node_modules/**", "**/.git/**"],
+        };
+    }
+
     return {
-        plugins: [react(), tsconfigPaths(), svgr()],
+        plugins: [react(), tsconfigPaths(), svgr(), removeUseClient()],
         resolve: {
             alias: {
                 "@": path.resolve(__dirname, "./src"),
             },
         },
         define: {
+            "process.env.IS_PRODUCTION": JSON.stringify(mode === "production"),
             "process.env.PROJECT_NAME": JSON.stringify(process.env.PROJECT_NAME),
             "process.env.SOCKET_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.SOCKET_URL),
             "process.env.API_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.API_URL),
         },
         build: {
-            watch: {
-                exclude: ["**/node_modules/**", "**/.git/**"],
-            },
+            watch: watchOptions,
+            chunkSizeWarningLimit: 2000,
         },
         server: {
             host: true,

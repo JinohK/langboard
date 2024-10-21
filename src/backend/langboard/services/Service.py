@@ -30,3 +30,7 @@ class Service(ServiceFactory):
     @property
     def role(self):
         return self._create_or_get_service(factory.RoleService)
+
+    @property
+    def email(self):
+        return self._create_or_get_service(factory.EmailService)

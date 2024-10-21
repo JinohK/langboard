@@ -1,4 +1,4 @@
-import { Button, Form, Checkbox, Input, Label } from "@/components/base";
+import { Button, Form, Checkbox, Input, Label, Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import useSignIn from "@/controllers/auth/useSignIn";
@@ -7,18 +7,19 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IconComponent } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ROUTES } from "@/core/routing/constants";
-import { REDIRECT_QUERY_NAME } from "@/controllers/constants";
-import { EMAIL_TOKEN_NAME } from "@/pages/SignInPage/constants";
+import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
+import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export interface IPasswordformProps {
     signToken: string;
     emailToken: string;
     email: string;
     setEmail: (email: string) => void;
+    className: string;
 }
 
-function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformProps): JSX.Element {
+function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPasswordformProps): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
@@ -34,16 +35,14 @@ function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformP
 
         setIsValidating(true);
 
-        if (!(event.target instanceof HTMLFormElement)) {
-            setIsValidating(false);
-            return;
-        }
-
-        const password = event.target.password.value;
+        const backToEmailBtn = document.querySelector<HTMLButtonElement>("#back-to-email-btn")!;
+        const passwordInput = event.currentTarget.password;
+        const password = passwordInput.value;
 
         if (!password) {
             setError("signIn.errors.missing.password");
             setIsValidating(false);
+            passwordInput.focus();
             return;
         }
 
@@ -65,22 +64,25 @@ function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformP
                 onError: (error) => {
                     if (!isAxiosError(error)) {
                         console.error(error);
-                        setError("errors.Unknown error");
+                        Toast.Add.error(t("errors.Unknown error"));
                         return;
                     }
 
                     switch (error.status) {
                         case EHttpStatus.HTTP_400_BAD_REQUEST:
                             setError("signIn.errors.missing.password");
+                            passwordInput.focus();
                             return;
                         case EHttpStatus.HTTP_403_FORBIDDEN:
                             setError("errors.Malformed request");
+                            backToEmailBtn.focus();
                             return;
                         case EHttpStatus.HTTP_404_NOT_FOUND:
                             setError("signIn.errors.invalid.password");
+                            passwordInput.focus();
                             return;
                         default:
-                            setError("errors.Internal server error");
+                            Toast.Add.error(t("errors.Internal server error"));
                             return;
                     }
                 },
@@ -95,26 +97,34 @@ function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformP
         setIsValidating(false);
         setEmail("");
         const searchParams = new URLSearchParams(location.search);
-        searchParams.delete(EMAIL_TOKEN_NAME);
-        navigate(`${ROUTES.SIGN_IN}?${searchParams.toString()}`);
+        searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
+    };
+
+    const toFindPassword = () => {
+        const searchParams = new URLSearchParams(location.search);
+
+        navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`, { state: { email } });
     };
 
     return (
         <>
-            <div className="xs:w-1/2">
-                <h2 className="font-normal">{t("signIn.Welcome")}</h2>
+            <div className={className}>
+                <h2 className="text-4xl font-normal">{t("signIn.Welcome")}</h2>
                 <Button
                     type="button"
+                    id="back-to-email-btn"
                     variant="outline"
                     size="sm"
                     className="mt-4"
                     onClick={backToEmail}
+                    title="Sign in with another email"
                     disabled={isValidating}
                 >
                     {email}
                 </Button>
             </div>
-            <Form.Root className="max-xs:mt-11 xs:w-1/2" onSubmit={submitPassword}>
+            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={submitPassword}>
                 <Form.Field name="password">
                     <Form.Control asChild>
                         <Input
@@ -140,15 +150,11 @@ function PasswordForm({ signToken, emailToken, email, setEmail }: IPasswordformP
                     {t("signIn.Show password")}
                 </Label>
                 <div className="mt-8 flex items-center gap-8 max-xs:justify-between xs:justify-end">
-                    <Button type="button" variant="ghost" disabled={isValidating}>
+                    <Button type="button" variant="ghost" disabled={isValidating} onClick={toFindPassword}>
                         {t("signIn.Forgot password?")}
                     </Button>
                     <Button type="submit" disabled={isValidating}>
-                        {isValidating ? (
-                            <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" />
-                        ) : (
-                            t("common.Next")
-                        )}
+                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
                     </Button>
                 </div>
             </Form.Root>

@@ -14,11 +14,9 @@ from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInFor
 @AppRouter.api.post("/auth/email", response_model=AuthEmailResponse)
 async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) -> JSONResponse | AuthEmailResponse:
     if form.is_token:
-        email = Encryptor.decrypt(form.token, form.sign_token)  # type: ignore
+        user = await service.user.get_user_by_token(form.token, form.sign_token)
     else:
-        email = form.email
-
-    user = await service.user.get_user_by_email(email)
+        user = await service.user.get_user_by_email(form.email)
 
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -29,8 +27,7 @@ async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) ->
 
 @AppRouter.api.post("/auth/signin", response_model=SignInResponse)
 async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JSONResponse | SignInResponse:
-    decrypted_email = Encryptor.decrypt(form.email_token, form.sign_token)
-    user = await service.user.get_user_by_email(decrypted_email)
+    user = await service.user.get_user_by_token(form.email_token, form.sign_token)
 
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
@@ -61,7 +58,7 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JSONResponse | Ref
 
 @AppRouter.api.get("/auth/me")
 @AuthFilter.add
-def about_me(user: User = Auth.scope("api")) -> JSONResponse:
+async def about_me(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JSONResponse:
     response = user.model_dump()
     response.pop("password")
     response.pop("deleted_at")
@@ -69,5 +66,7 @@ def about_me(user: User = Auth.scope("api")) -> JSONResponse:
 
     if user.avatar:
         response["avatar"] = user.avatar.path
+
+    response["groups"] = await service.user.get_user_group_names(user)
 
     return JSONResponse(content={"user": response})

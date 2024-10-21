@@ -1,12 +1,20 @@
-from .AuthEmail import AuthEmailForm, AuthEmailResponse
+from .Recovery import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
 from .Refresh import RefreshResponse
-from .SignIn import SignInForm, SignInResponse
+from .SignIn import AuthEmailForm, AuthEmailResponse, SignInForm, SignInResponse
+from .SignUp import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
 
 
 __all__ = [
+    "ActivateUserForm",
     "AuthEmailForm",
     "AuthEmailResponse",
+    "CheckEmailForm",
+    "RefreshResponse",
+    "ResetPasswordForm",
+    "SendResetLinkForm",
     "SignInForm",
     "SignInResponse",
-    "RefreshResponse",
+    "SignUpForm",
+    "ResendLinkForm",
+    "ValidateTokenForm",
 ]

@@ -13,7 +13,7 @@ const config = {
         indent: ["error", 4, { SwitchCase: 1 }],
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/keyword-spacing": "off",
-        "@/max-len": ["error", { code: 120 }],
+        "@/max-len": ["error", { code: 150 }],
         "@typescript-eslint/no-empty-function": "off",
     },
 };

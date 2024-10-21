@@ -20,7 +20,9 @@ def get_exports(namespace: str, module: ModuleType) -> list[Type]:
     return exports_within_module
 
 
-def load_modules(dir_path: str, file_pattern: str, base_type: _TBase = Type) -> dict[str, list[_TBase]]:
+def load_modules(
+    dir_path: str, file_pattern: str, base_type: _TBase = Type, log: bool = True
+) -> dict[str, list[_TBase]]:
     """Loads modules from a directory."""
     target_dir = BASE_DIR / dir_path
     modules = {}
@@ -29,9 +31,9 @@ def load_modules(dir_path: str, file_pattern: str, base_type: _TBase = Type) -> 
             continue
         namespaces = []
         for namespace in filepath.parts[::-1][1:]:
-            namespaces.insert(0, namespace)
-            if namespace == dir_path:
+            if namespace == __name__.split(".")[0]:
                 break
+            namespaces.insert(0, namespace)
         namespaces.insert(0, __name__.split(".")[0])
         namespaces.append(filepath.stem)
         namespace = ".".join(namespaces)
@@ -39,5 +41,6 @@ def load_modules(dir_path: str, file_pattern: str, base_type: _TBase = Type) -> 
         module = import_module(namespace)
         exports = get_exports(namespace, module)
         modules[namespace] = exports
-    logger.info(f"Loaded [b green]{file_pattern}[/] modules in [b green]{dir_path}[/]")
+    if log:
+        logger.info(f"Loaded [b green]{file_pattern}[/] modules in [b green]{dir_path}[/]")
     return modules

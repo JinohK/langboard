@@ -1,27 +1,41 @@
+from datetime import datetime
 from typing import Any
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
 from ..core.db import ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
 from ..core.storage import FileModel
+from ..core.utils.String import generate_random_string
 
 
 class User(SoftDeleteModel, table=True):
-    name: str = Field(nullable=False)
+    firstname: str = Field(nullable=False)
+    lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)
+    username: str = Field(default=f"user-{generate_random_string(8)}", nullable=False)
     password: SecretStr = Field(nullable=False, sa_type=SecretStrType)
     industry: str = Field(nullable=False)
     purpose: str = Field(nullable=False)
     affiliation: str | None = Field(default=None, nullable=True)
     position: str | None = Field(default=None, nullable=True)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
+    activated_at: datetime | None = Field(default=None, nullable=True)
 
     def check_password(self, password: str) -> bool:
         return checkpw(password.encode(), self.password.get_secret_value().encode())
+
+    def set_password(self, password: str) -> None:
+        self.password = self.__create_password(password)
+
+    def get_fullname(self) -> str:
+        return f"{self.firstname} {self.lastname}"
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["name", "email", "industry", "purpose", "affiliation", "position"]
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "password" and not isinstance(value, SecretStr):
-            value = SecretStr(hashpw(value.encode(), gensalt()).decode())
+            value = self.__create_password(value)
         super().__setattr__(name, value)
+
+    def __create_password(self, password: str) -> SecretStr:
+        return SecretStr(hashpw(password.encode(), gensalt()).decode())

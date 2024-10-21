@@ -1,12 +1,15 @@
 import tailwindForms from "@tailwindcss/forms";
 import tailwindTypography from "@tailwindcss/typography";
 import tailwindAnimate from "tailwindcss-animate";
+import { withTV } from "tailwind-variants/transformer";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
     content: ["./index.html", "./src/**/*.{js,ts,tsx,jsx}"],
     darkMode: ["class"],
-    important: true,
+    experimental: {
+        optimizeUniversalDefaults: true,
+    },
     theme: {
         extend: {
             colors: {
@@ -58,10 +61,21 @@ const config = {
                     from: { height: "var(--radix-accordion-content-height)" },
                     to: { height: "0" },
                 },
+                "caret-blink": {
+                    "0%,70%,100%": { opacity: "1" },
+                    "20%,50%": { opacity: "0" },
+                },
+                progress: {
+                    "0%": { transform: "translateX(0) scaleX(0)" },
+                    "40%": { transform: "translateX(0) scaleX(0.2)" },
+                    "100%": { transform: "translateX(100%) scaleX(0.2)" },
+                },
             },
             animation: {
-                "accordion-down": "accordion-down 0.2s ease-out",
-                "accordion-up": "accordion-up 0.2s ease-out",
+                "accordion-down": "accordion-down 0.3s ease-out",
+                "accordion-up": "accordion-up 0.3s ease-out",
+                "caret-blink": "caret-blink 1.25s ease-out infinite",
+                progress: "progress 3s infinite linear",
             },
         },
         screens: {
@@ -81,4 +95,4 @@ const config = {
     ],
 };
 
-export default config;
+export default withTV(config);

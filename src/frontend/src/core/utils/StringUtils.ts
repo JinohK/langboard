@@ -7,7 +7,7 @@ export const makeTitleCase = (str: string): string => {
 export const generateToken = (n: number): string => {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let token = "";
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; ++i) {
         token += chars[Math.floor(Math.random() * chars.length)];
     }
 
@@ -26,4 +26,12 @@ export const createShortUID = (): string => {
     return "xxxx-xxxx-xxxx-xxxx".replace(/x/g, () => {
         return ((Math.random() * 16) | 0).toString(16);
     });
+};
+
+export const createNameInitials = (firstname: string, lastname: string): string => {
+    return `${makeTitleCase(firstname.charAt(0))}${makeTitleCase(lastname.charAt(0))}`;
+};
+
+export const makeReactKey = (name: string): string => {
+    return name.replace(/(\.|\s)/g, "-");
 };

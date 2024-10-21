@@ -30,7 +30,7 @@ export const refresh = async (): Promise<string | never> => {
     try {
         const refreshToken = cookies.get(APP_REFRESH_TOKEN);
 
-        const response = await api.post(API_ROUTES.REFRESH, undefined, {
+        const response = await api.post(API_ROUTES.AUTH.REFRESH, undefined, {
             headers: {
                 "Refresh-Token": refreshToken,
             },
@@ -63,7 +63,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error),
     {
         runWhen: (config) => {
-            return !config.url?.endsWith(API_ROUTES.REFRESH);
+            return !config.url?.endsWith(API_ROUTES.AUTH.REFRESH);
         },
     }
 );
@@ -72,7 +72,7 @@ api.interceptors.response.use(
     (value) => value,
     async (error) => {
         if (!isAxiosError(error)) {
-            return error;
+            throw error;
         }
 
         const originalConfig: AxiosRequestConfig = error.config!;
@@ -86,14 +86,14 @@ api.interceptors.response.use(
             }
             case EHttpStatus.HTTP_401_UNAUTHORIZED:
                 redirectToSignIn();
-                return error;
+                throw error;
             default:
-                return error;
+                throw error;
         }
     },
     {
         runWhen: (config) => {
-            return !config.url?.endsWith(API_ROUTES.REFRESH);
+            return !config.url?.endsWith(API_ROUTES.AUTH.REFRESH);
         },
     }
 );
