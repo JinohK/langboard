@@ -1,15 +1,23 @@
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 
 const DashboardPage = lazy(() => import("./index"));
 
 function DashboardRoute() {
     return (
-        <Route path={ROUTES.DASHBOARD.MAIN} key="route-dashboard">
+        <Route path={ROUTES.DASHBOARD.ROUTE} key="route-dashboard">
             <Route
                 index
+                element={
+                    <AuthGuard>
+                        <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.DASHBOARD.PROJECTS.ALL}
                 element={
                     <AuthGuard>
                         <DashboardPage />
@@ -17,7 +25,31 @@ function DashboardRoute() {
                 }
             />
             <Route
-                path={ROUTES.DASHBOARD.OUTLINES}
+                path={ROUTES.DASHBOARD.PROJECTS.STARRED}
+                element={
+                    <AuthGuard>
+                        <DashboardPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.DASHBOARD.PROJECTS.RECENT}
+                element={
+                    <AuthGuard>
+                        <DashboardPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.DASHBOARD.PROJECTS.UNSTARRED}
+                element={
+                    <AuthGuard>
+                        <DashboardPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.DASHBOARD.TASKS}
                 element={
                     <AuthGuard>
                         <DashboardPage />

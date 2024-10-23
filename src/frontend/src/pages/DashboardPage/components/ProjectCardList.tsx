@@ -1,55 +1,80 @@
-import { Accordion } from "@/components/base";
-import { IProject } from "@/controllers/dashboard/useGetProjects";
+import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUID, makeReactKey } from "@/core/utils/StringUtils";
+import { createShortUID } from "@/core/utils/StringUtils";
 import ProjectCard from "@/pages/DashboardPage/components/ProjectCard";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 
-interface IBaseProjectCardListProps {
-    isMobile?: boolean;
-    isSkeleton?: boolean;
-    count?: number;
-    title: string;
-    projects?: IProject[];
+export interface IProjectCardListProps {
+    projects: IDashboardProject[];
     className?: string;
+    hasMore: boolean;
+    refetchAllStarred: () => Promise<unknown>;
+    refetchProjects: () => Promise<unknown>;
+    fetchNextPage: () => Promise<unknown>;
 }
 
-interface ISkeletonProjectCardListProps extends IBaseProjectCardListProps {
-    isSkeleton: true;
-    count: number;
-}
+function ProjectCardList({
+    projects,
+    className,
+    hasMore,
+    refetchAllStarred,
+    refetchProjects,
+    fetchNextPage,
+}: IProjectCardListProps): JSX.Element | null {
+    const [projectCards, setProjectCards] = useState<JSX.Element[]>([]);
+    const skeletonCards = [];
 
-export type TProjectCardListProps = IBaseProjectCardListProps | ISkeletonProjectCardListProps;
-
-function ProjectCardList({ isMobile, isSkeleton, count, title, projects, className }: TProjectCardListProps): JSX.Element | null {
-    const [t] = useTranslation();
-
-    if (!projects?.length && !isSkeleton) {
-        return null;
+    for (let i = 0; i < 4; ++i) {
+        skeletonCards.push(<ProjectCard isSkeleton={true} key={createShortUID()} />);
     }
 
-    const projectCards = projects?.map((project) => <ProjectCard project={project} key={project.uid} />) ?? [];
-    if (isSkeleton && count) {
-        for (let i = 0; i < count; ++i) {
-            projectCards.push(<ProjectCard isSkeleton={true} key={createShortUID()} />);
+    useEffect(() => {
+        const newProjectCards: JSX.Element[] = [];
+        for (let i = 0; i < projects.length; ++i) {
+            const project = projects[i];
+            newProjectCards.push(
+                <ProjectCard project={project} key={project.uid} refetchAllStarred={refetchAllStarred} refetchProjects={refetchProjects} />
+            );
         }
-    }
 
-    if (isMobile) {
-        return (
-            <Accordion.Item value={makeReactKey(title)} className={cn("border-b-0", className)}>
-                <Accordion.Trigger>{t(title)}</Accordion.Trigger>
-                <Accordion.Content className="flex flex-col gap-3">{projectCards}</Accordion.Content>
-            </Accordion.Item>
-        );
-    } else {
-        return (
-            <div className="mt-[calc(theme(spacing.2)_-_theme(spacing.3))] md:mt-4">
-                {isSkeleton && count ? null : <h3 className="font-semibold md:mb-2 md:text-lg lg:mb-4 lg:text-2xl">{t(title)}</h3>}
-                <div className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4", className)}>{projectCards}</div>
-            </div>
-        );
-    }
+        setProjectCards(newProjectCards);
+    }, [projects]);
+
+    const nextPage = () =>
+        new Promise((resolve) => {
+            setTimeout(async () => {
+                const result = await fetchNextPage();
+                resolve(result);
+            }, 2500);
+        });
+
+    return (
+        <>
+            <InfiniteScroll
+                scrollableTarget="main"
+                next={nextPage}
+                hasMore={hasMore}
+                scrollThreshold={0.9}
+                loader={
+                    <div className="mt-4">
+                        <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-4">{skeletonCards}</div>
+                        <div className="hidden gap-4 sm:grid sm:grid-cols-2 md:hidden lg:grid-cols-4">
+                            {skeletonCards[0]}
+                            {skeletonCards[1]}
+                        </div>
+                        <div className="grid gap-4 sm:hidden sm:grid-cols-2 lg:grid-cols-4">{skeletonCards[0]}</div>
+                    </div>
+                }
+                dataLength={projects.length}
+                className={cn("!overflow-y-hidden", className)}
+            >
+                <div className="mt-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{projectCards}</div>
+                </div>
+            </InfiniteScroll>
+        </>
+    );
 }
 
 export default ProjectCardList;

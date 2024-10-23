@@ -6,7 +6,7 @@ export const ROUTES = {
         PASSWORD: "/auth/signin/pwd",
     },
     SIGN_UP: {
-        MAIN: "/auth/signup",
+        ROUTE: "/auth/signup",
         REQUIRED: "/auth/signup/required",
         ADDITIONAL: "/auth/signup/additional",
         OPTIONAL: "/auth/signup/optional",
@@ -19,9 +19,20 @@ export const ROUTES = {
         RESET: "/auth/recovery/reset",
     },
     AFTER_SIGN_IN: "/dashboard",
+    BOARD: {
+        ROUTE: "/board",
+        MAIN: (uid: string) => `/board/${uid}`,
+    },
     DASHBOARD: {
-        MAIN: "/dashboard",
-        OUTLINES: "/dashboard/outlines",
+        ROUTE: "/dashboard",
+        PROJECTS: {
+            ROUTE: "/dashboard/projects",
+            ALL: "/dashboard/projects/all",
+            STARRED: "/dashboard/projects/starred",
+            RECENT: "/dashboard/projects/recent",
+            UNSTARRED: "/dashboard/projects/unstarred",
+        },
+        TASKS: "/dashboard/tasks",
         TRACKING: "/dashboard/tracking",
     },
     SETTINGS: "/settings",

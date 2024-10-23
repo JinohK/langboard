@@ -13,10 +13,10 @@ class ProjectService(BaseService):
     def name() -> str:
         return "project"
 
-    async def dashboard_list(
-        self, user: User, list_type: Literal["starred", "recent", "unstarred"] | str, pagination: Pagination
+    async def get_dashboard_list(
+        self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str, pagination: Pagination
     ) -> tuple[list[dict[str, Any]], int]:
-        if list_type not in ["starred", "recent", "unstarred"]:
+        if list_type not in ["all", "starred", "recent", "unstarred"]:
             return [], 0
 
         sql_query = (
@@ -83,10 +83,10 @@ class ProjectService(BaseService):
 
         return dict_projects, total
 
-    async def toggle_star(self, user: User, uid: str) -> bool:
+    async def toggle_star(self, user: User, uid: str, commit: bool = True) -> bool:
         result = await self._db.exec(
             self._db.query("select")
-            .columns(Project.id, ProjectAssignedUser.starred, with_deleted=False)
+            .columns(ProjectAssignedUser.starred, Project.id)
             .join(
                 ProjectAssignedUser,
                 Project.id == ProjectAssignedUser.project_id,  # type: ignore
@@ -95,7 +95,7 @@ class ProjectService(BaseService):
             .where(ProjectAssignedUser.user_id == user.id)
             .limit(1)
         )
-        project_id, starred = result.first() or (None, None)
+        starred, project_id = result.first() or (None, None)
 
         if project_id is None:
             return False
@@ -103,11 +103,34 @@ class ProjectService(BaseService):
         result = await self._db.exec(
             self._db.query("update")
             .table(ProjectAssignedUser)
-            .values(starred=starred)
+            .values(starred=not starred)
             .where((ProjectAssignedUser.project_id == project_id) & (ProjectAssignedUser.user_id == user.id))
         )
 
+        if commit:
+            await self._db.commit()
+
         return result > 0
+
+    async def create(
+        self, user: User, title: str, description: str | None = None, project_type: str = "Other"
+    ) -> Project | None:
+        if not user.id or not title:
+            return None
+
+        project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
+        self._db.insert(project)
+        await self._db.commit()
+
+        assigned_user = ProjectAssignedUser(project_id=cast(int, project.id), user_id=user.id)
+        self._db.insert(assigned_user)
+
+        role_service = self._get_service(RoleService)
+        await role_service.project.grant_all(user_id=user.id, project_id=cast(int, project.id))
+
+        await self._db.commit()
+
+        return project
 
     @overload
     async def assign_user(
@@ -146,6 +169,8 @@ class ProjectService(BaseService):
             return
 
         assigned_user = ProjectAssignedUser(project_id=project_id, user_id=user_id)
+        self._db.insert(assigned_user)
+
         role_service = self._get_service(RoleService)
 
         if grant_actions:
@@ -153,7 +178,6 @@ class ProjectService(BaseService):
         else:
             await role_service.project.grant_default(user_id=user_id, project_id=project_id)
 
-        self._db.insert(assigned_user)
         if commit:
             await self._db.commit()
 
@@ -191,8 +215,12 @@ class ProjectService(BaseService):
 
         query = (
             self._db.query("select")
-            .tables(User, GroupAssignedUser)
-            .outerjoin(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
+            .tables(User, ProjectAssignedUser)
+            .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
+            .outerjoin(
+                ProjectAssignedUser,
+                (User.id == ProjectAssignedUser.user_id) & (ProjectAssignedUser.project_id == project_id),  # type: ignore
+            )
             .where(GroupAssignedUser.group_id == group_id)
         )
 
@@ -226,6 +254,17 @@ class ProjectService(BaseService):
 
         if not project_id or not user_id:
             raise ValueError("Project or user not found")
+
+        if not isinstance(project, Project):
+            result = await self._db.exec(
+                self._db.query("select").column(Project.owner_id).where(Project.id == project_id)
+            )
+            owner_id = result.first()
+        else:
+            owner_id = project.owner_id
+
+        if not owner_id or owner_id == user_id:
+            return
 
         role_service = self._get_service(RoleService)
         role_class = role_service.project._model_class
@@ -274,13 +313,12 @@ class ProjectService(BaseService):
         role_service = self._get_service(RoleService)
         role_class = role_service.project._model_class
 
-        await role_service.project.withdraw(group_id=group_id, project_id=project_id)
-
         result = await self._db.exec(
             self._db.query("select")
             .columns(ProjectAssignedUser.id, role_class.id)
             .join(User, ProjectAssignedUser.user_id == User.id)  # type: ignore
             .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
+            .join(Project, (ProjectAssignedUser.project_id == Project.id) & (Project.owner_id != User.id))  # type: ignore
             .outerjoin(
                 role_class,
                 (role_class.user_id == User.id) & (role_class.project_id == ProjectAssignedUser.project_id),  # type: ignore
@@ -295,6 +333,8 @@ class ProjectService(BaseService):
             for assigned_user_id, role_id in results
             if assigned_user_id is not None and role_id is None
         ]
+
+        await role_service.project.withdraw(group_id=group_id, project_id=project_id)
 
         if not assigned_user_ids:
             if commit:

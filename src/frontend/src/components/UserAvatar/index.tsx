@@ -14,9 +14,10 @@ export interface IUserAvatarProps {
     children: React.ReactNode;
     align?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
+    className?: string;
 }
 
-function Root({ user, children, align, avatarSize }: IUserAvatarProps): JSX.Element {
+function Root({ user, children, align, avatarSize, className }: IUserAvatarProps): JSX.Element {
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
 
@@ -39,7 +40,7 @@ function Root({ user, children, align, avatarSize }: IUserAvatarProps): JSX.Elem
             <HoverCard.Trigger asChild>
                 <Avatar.Root
                     size={avatarSize}
-                    className={cn("relative cursor-pointer", avatarAfterPseudoClassNames)}
+                    className={cn("relative cursor-pointer", className, avatarAfterPseudoClassNames)}
                     onClick={() => setIsOpened(!isOpened)}
                 >
                     <Avatar.Image src={`${API_URL}${user.avatar}`} />

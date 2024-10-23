@@ -76,7 +76,7 @@ api.interceptors.response.use(
         }
 
         const originalConfig: AxiosRequestConfig = error.config!;
-        switch (error.status) {
+        switch (error.response?.status) {
             case EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY: {
                 const token = await refresh();
 

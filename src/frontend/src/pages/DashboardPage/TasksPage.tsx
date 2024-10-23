@@ -3,9 +3,9 @@ import { createShortUID } from "@/core/utils/StringUtils";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-function OutlinesPage(): JSX.Element {
-    // TODO: Outline, Implemnting the table
-    const [outlines, setOutlines] = useState<
+function TasksPage(): JSX.Element {
+    // TODO: Task, Implemnting the table
+    const [tasks, setTasks] = useState<
         {
             name: string;
             status: string;
@@ -17,17 +17,17 @@ function OutlinesPage(): JSX.Element {
     const createTasks = () => {
         const status = ["Request", "Preparation", "Development", "Testing", "Deployment", "Completed"];
         for (let i = 0; i < 30; ++i) {
-            outlines.push({
+            tasks.push({
                 name: `Task ${createShortUID()}`,
                 status: status[Math.floor(Math.random() * status.length)],
                 startedAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))),
                 timeTaken: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
             });
         }
-        setOutlines([...outlines]);
+        setTasks([...tasks]);
     };
 
-    if (outlines.length === 0) {
+    if (tasks.length === 0) {
         createTasks();
     }
 
@@ -64,8 +64,8 @@ function OutlinesPage(): JSX.Element {
                     <IconComponent icon="loader" className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
             }
-            dataLength={outlines.length}
-            className="overflow-y-hidden"
+            dataLength={tasks.length}
+            className="!overflow-y-hidden"
         >
             <Table.Root>
                 <Table.Header>
@@ -78,7 +78,7 @@ function OutlinesPage(): JSX.Element {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {outlines.map((task, index) => (
+                    {tasks.map((task, index) => (
                         <Table.Row key={task.name}>
                             {createCell(false, (index + 1).toString(), "max-w-0 truncate text-center")}
                             {createCell(false, task.name, "max-w-0 truncate text-left")}
@@ -102,4 +102,4 @@ function OutlinesPage(): JSX.Element {
     );
 }
 
-export default OutlinesPage;
+export default TasksPage;

@@ -2,24 +2,22 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { TInfiniteQueryOptions, TQueryFunction, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { IProject } from "@/core/types";
 import { isAxiosError } from "axios";
 
-interface IGetProjectsForm {
-    listType: "starred" | "recent" | "unstarred";
+export interface IGetProjectsForm {
+    listType: "all" | "starred" | "recent" | "unstarred";
     page: number;
     limit: number;
 }
 
-export interface IProject {
-    uid: string;
+export interface IDashboardProject extends IProject {
     starred: boolean;
-    title: string;
-    project_type: string;
     group_names: string[];
 }
 
 export interface IGetProjectsResponse {
-    projects: IProject[];
+    projects: IDashboardProject[];
     total: number;
 }
 
@@ -28,7 +26,7 @@ const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOption
 
     const getProjects: TQueryFunction<IGetProjectsResponse, IGetProjectsForm> = async ({ pageParam }) => {
         try {
-            const res = await api.get(`${API_ROUTES.DASHBOARD_PROJECTS}/${pageParam.listType}`, {
+            const res = await api.get(`${API_ROUTES.DASHBOARD.PROJECTS}/${pageParam.listType}`, {
                 params: {
                     page: pageParam.page,
                     limit: pageParam.limit,
@@ -52,7 +50,7 @@ const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOption
     delete options?.initialPageParam;
 
     const result = infiniteQuery<IGetProjectsResponse, IGetProjectsForm>(
-        [`get-projects-${params.listType}`],
+        [`get-dashboard-projects-${params.listType}`],
         getProjects,
         (lastPage, allPages, lastPageParam, allPageParams) => {
             if (nextPageParam) {

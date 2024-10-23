@@ -68,7 +68,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                         return;
                     }
 
-                    switch (error.status) {
+                    switch (error.response?.status) {
                         case EHttpStatus.HTTP_400_BAD_REQUEST:
                             setError("signIn.errors.missing.password");
                             passwordInput.focus();

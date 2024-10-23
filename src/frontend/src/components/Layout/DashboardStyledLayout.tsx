@@ -12,7 +12,7 @@ export interface IDashboardStyledLayoutProps {
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, IDashboardStyledLayoutProps>(({ children, headerNavs, sidebarNavs, ...props }, ref) => {
     const main = (
-        <main id="main" className="relative overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main id="main" className="relative h-full overflow-y-auto p-4 md:p-6 lg:p-8">
             {children}
         </main>
     );
@@ -20,7 +20,7 @@ const DashboardStyledLayout = forwardRef<HTMLDivElement, IDashboardStyledLayoutP
     return (
         <div className="flex min-h-screen w-full flex-col" ref={ref} {...props}>
             {headerNavs && <Header navs={headerNavs} />}
-            <div className="min-h-[calc(100vh_-_theme(spacing.16))] w-full overflow-y-auto" id="mobile-main">
+            <div className="min-h-[calc(100vh_-_theme(spacing.16))] w-full overflow-y-auto">
                 {sidebarNavs ? <Sidebar navs={sidebarNavs} main={main} /> : main}
             </div>
         </div>

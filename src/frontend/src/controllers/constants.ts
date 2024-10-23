@@ -16,7 +16,12 @@ export const API_ROUTES = {
             RESEND_LINK: "/auth/signup/resend",
         },
     },
-    DASHBOARD_PROJECTS: "/dashboard/projects",
+    DASHBOARD: {
+        ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",
+        PROJECTS: "/dashboard/projects",
+        TOGGLE_STAR_PROJECT: "/dashboard/projects/{uid}/star",
+        CREATE_PROJECT: "/dashboard/projects/new",
+    },
 } as const;
 
 export const SOCKET_ROUTES = {} as const;

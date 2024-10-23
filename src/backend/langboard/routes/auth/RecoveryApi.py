@@ -10,7 +10,7 @@ from .scopes import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
 
 @AppRouter.api.post("/auth/recovery/send")
 async def send_link(form: SendResetLinkForm, service: Service = Service.scope()) -> JSONResponse:
-    user = await service.user.get_user_by_token(form.email_token, form.sign_token)
+    user = await service.user.get_by_token(form.email_token, form.sign_token)
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

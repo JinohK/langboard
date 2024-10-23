@@ -14,6 +14,10 @@
     "Back": "Back",
     "Next": "Next",
     "Skip": "Skip",
+    "Close": "Close",
+    "Cancel": "Cancel",
+    "Create": "Create",
+    "Other": "Other",
     "Back to Sign In": "Back to Sign In"
   },
   "errors": {
@@ -57,7 +61,6 @@
     "Position": "What is your position in your organization?",
     "industries": { },
     "purposes": { },
-    "Other": "Other",
     "overview": {
       "email": "Email",
       "industry": "Industry",
@@ -136,13 +139,36 @@
     "Sign out": "Sign out"
   },
   "dashboard": {
-    "Starred Projects": "Starred Projects",
-    "Recent Projects": "Recent Projects",
-    "Unstarred Projects": "Unstarred Projects",
     "Projects": "Projects",
-    "Outlines": "Outlines",
+    "tabs": {
+        "all": "All",
+        "starred": "Starred",
+        "recent": "Recent",
+        "unstarred": "Unstarred"
+    },
+    "Star this project": "Star this project",
+    "Unstar this project": "Unstar this project",
+
+    "Tasks": "Tasks",
     "Starred": "Starred",
     "Tracking": "Tracking",
-    "Create New Project": "Create New Project"
+
+    "Create New Project": "Create New Project",
+    "My Activity": "My Activity",
+
+    "errors": {
+      "Project not found": "Project not found"
+    }
+  },
+  "project": {
+    "Title": "Project Title",
+    "Description": "Project Description",
+    "Type": "Project Type",
+    "types": { },
+    "errors": {
+      "missing": {
+        "title": "Enter a title."
+      }
+    }
   }
 }

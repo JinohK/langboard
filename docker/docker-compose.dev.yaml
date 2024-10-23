@@ -44,6 +44,8 @@ services:
     container_name: ${PROJECT_NAME}_backend
     build:
       context: ../src/backend
+    deploy:
+      replicas: ${BACKEND_REPLICAS:-1}
     environment:
       - ENVIRONMENT=development
       - PROJECT_NAME=${PROJECT_NAME}
@@ -69,7 +71,7 @@ services:
       - S3_REGION_NAME=${S3_REGION_NAME}
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     working_dir: /app
-    command: pypy3 -m ${PROJECT_NAME}
+    command: pypy3 -m ${PROJECT_NAME} run -w
     volumes:
       - ../src/backend/${PROJECT_NAME}:/app/${PROJECT_NAME}
       - ../src/backend/requirements.txt:/app/requirements.txt

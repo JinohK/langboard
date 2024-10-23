@@ -7,9 +7,10 @@ export interface ILanguageSwitcherProps {
     triggerType?: "icon" | "text";
     buttonClassNames?: string;
     hideTriggerIcon?: boolean;
+    size?: ButtonProps["size"];
 }
 
-function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon }: ILanguageSwitcherProps): JSX.Element {
+function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon, size = "default" }: ILanguageSwitcherProps): JSX.Element {
     const [t, i18n] = useTranslation();
 
     const changeLanguageHandler = (lang: string) => {
@@ -25,7 +26,7 @@ function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerI
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("locales.title")}>
+                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("locales.title")} size={size}>
                     {triggerType === "text" ? t(`locales.${i18n.language}`) : <IconComponent icon={`flag-${i18n.language.split("-").pop()}`} />}
                     {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>

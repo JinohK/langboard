@@ -9,7 +9,7 @@ from .scopes import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
 
 @AppRouter.api.post("/auth/signup/exist/email")
 async def exist_email(form: CheckEmailForm, service: Service = Service.scope()) -> JSONResponse:
-    user = await service.user.get_user_by_email(form.email)
+    user = await service.user.get_by_email(form.email)
     return JSONResponse(content={"exists": user is not None})
 
 
@@ -17,7 +17,7 @@ async def exist_email(form: CheckEmailForm, service: Service = Service.scope()) 
 async def signup(
     form: SignUpForm = SignUpForm.scope(), avatar: UploadFile | None = File(None), service: Service = Service.scope()
 ) -> JSONResponse:
-    user = await service.user.get_user_by_email(form.email)
+    user = await service.user.get_by_email(form.email)
     if user:
         return JSONResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
@@ -38,7 +38,7 @@ async def signup(
 
 @AppRouter.api.post("/auth/signup/resend")
 async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) -> JSONResponse:
-    user = await service.user.get_user_by_email(form.email)
+    user = await service.user.get_by_email(form.email)
     if not user:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

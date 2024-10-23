@@ -1,106 +1,88 @@
-import { Accordion } from "@/components/base";
-import useGetProjects, { IProject } from "@/controllers/dashboard/useGetProjects";
+import { Tabs } from "@/components/base";
+import useGetProjects, { IDashboardProject, IGetProjectsForm, IGetProjectsResponse } from "@/controllers/dashboard/useGetProjects";
 import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
-import InfiniteScroll from "react-infinite-scroll-component";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useReducer } from "react";
 import { makeReactKey } from "@/core/utils/StringUtils";
+import { InfiniteData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/core/routing/constants";
 
-function ProjectPage(): JSX.Element {
-    const UNSTARRED_PROJECTS_LIMIT = 16;
-    const [isScrolling, setIsScrolling] = useState(false);
-    const [isUnstarredOpened, setIsUnstarredOpened] = useState(false);
-    const { data: starred } = useGetProjects({ listType: "starred", page: 1, limit: 4 });
-    const { data: recent } = useGetProjects({ listType: "recent", page: 1, limit: 4 });
+interface IProjectPageProps {
+    currentTab: IGetProjectsForm["listType"];
+    refetchAllStarred: () => Promise<unknown>;
+}
+
+const MAX_PROJECTS_PER_PAGE = 16;
+const TABS: IGetProjectsForm["listType"][] = ["all", "starred", "recent", "unstarred"];
+const cachedProjectQueries: Record<
+    IGetProjectsForm["listType"],
+    { params: IGetProjectsForm; data: InfiniteData<IGetProjectsResponse, IGetProjectsForm> }
+> = {
+    all: { params: { listType: "all", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
+    starred: { params: { listType: "starred", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
+    recent: { params: { listType: "recent", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
+    unstarred: { params: { listType: "unstarred", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
+};
+
+const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps): JSX.Element => {
+    const [t] = useTranslation();
+    const navigate = useNavigate();
+    const currentProjectQuery = cachedProjectQueries[currentTab];
     const {
-        data: unstarred,
-        fetchNextPage: unstarredNextPage,
-        hasNextPage: unstarredHasMore,
-        isFetchingNextPage: unstarredIsFetchingNextPage,
-    } = useGetProjects(
-        {
-            listType: "unstarred",
-            page: 1,
-            limit: UNSTARRED_PROJECTS_LIMIT,
+        data: rawProjects,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        refetch,
+    } = useGetProjects(currentProjectQuery.params, {
+        getNextPageParam: (lastPage, _, lastPageParam) => {
+            if (lastPage.total >= lastPageParam.page * lastPageParam.limit) {
+                return {
+                    ...lastPageParam,
+                    page: lastPageParam.page + 1,
+                };
+            } else {
+                return undefined;
+            }
         },
-        {
-            getNextPageParam: (lastPage, _, lastPageParam) => {
-                if (lastPage.total >= lastPageParam.page * lastPageParam.limit) {
-                    return {
-                        ...lastPageParam,
-                        page: lastPageParam.page + 1,
-                    };
-                } else {
-                    return undefined;
-                }
-            },
-        }
-    );
-
-    const [unstarredProjects, setUnstarredProjects] = useState<IProject[]>([]);
+    });
+    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+    const projects: IDashboardProject[] = currentProjectQuery.data.pages.flatMap((page) => page.projects);
 
     useEffect(() => {
-        const newUnstarredProjects = [];
-        for (let i = 0; i < (unstarred?.pages.length ?? 0); ++i) {
-            newUnstarredProjects.push(...(unstarred?.pages[i].projects ?? []));
+        if (rawProjects) {
+            currentProjectQuery.data = rawProjects;
+            projects.splice(0);
+            projects.push(...currentProjectQuery.data.pages.flatMap((page) => page.projects));
+            forceUpdate();
         }
-
-        setUnstarredProjects(newUnstarredProjects);
-    }, [unstarred]);
-
-    const unstarredNextPageFn = () =>
-        new Promise((resolve) => {
-            if (isScrolling || unstarredIsFetchingNextPage) {
-                return resolve(undefined);
-            }
-
-            setIsScrolling(true);
-            setTimeout(async () => {
-                const pageResult = await unstarredNextPage();
-                setIsScrolling(false);
-                resolve(pageResult);
-            }, 2500);
-        });
+    }, [rawProjects]);
 
     return (
-        <>
-            <div className="hidden flex-col md:flex md:gap-5 lg:gap-7">
-                <ProjectCardList title="dashboard.Starred Projects" projects={starred?.pages.at(-1)?.projects} />
-                <ProjectCardList title="dashboard.Recent Projects" projects={recent?.pages.at(-1)?.projects} />
-                <InfiniteScroll
-                    scrollableTarget="main"
-                    next={unstarredNextPageFn}
-                    hasMore={unstarredHasMore && !unstarredIsFetchingNextPage}
-                    scrollThreshold={0.9}
-                    loader={<ProjectCardList className={isScrolling ? "" : "hidden"} isSkeleton count={UNSTARRED_PROJECTS_LIMIT / 2} title="" />}
-                    dataLength={unstarredProjects.length}
-                    className="!overflow-y-hidden"
-                >
-                    <ProjectCardList title="dashboard.Unstarred Projects" projects={unstarredProjects} />
-                </InfiniteScroll>
-            </div>
-            <Accordion.Root
-                type="single"
-                collapsible
-                className="md:hidden"
-                onValueChange={(value) => setIsUnstarredOpened(value === makeReactKey("dashboard.Unstarred Projects"))}
-            >
-                <ProjectCardList isMobile title="dashboard.Starred Projects" projects={starred?.pages.at(-1)?.projects} />
-                <ProjectCardList isMobile title="dashboard.Recent Projects" projects={recent?.pages.at(-1)?.projects} />
-                <InfiniteScroll
-                    scrollableTarget="mobile-main"
-                    next={unstarredNextPageFn}
-                    hasMore={unstarredHasMore && !unstarredIsFetchingNextPage && !isScrolling && isUnstarredOpened}
-                    scrollThreshold={0.9}
-                    loader={null}
-                    dataLength={unstarredProjects.length}
-                    className="!overflow-y-hidden"
-                >
-                    <ProjectCardList isMobile title="dashboard.Unstarred Projects" projects={unstarredProjects} />
-                    <ProjectCardList className={isScrolling ? "" : "hidden"} isSkeleton count={1} title="" />
-                </InfiniteScroll>
-            </Accordion.Root>
-        </>
+        <Tabs.Root value={currentTab}>
+            <Tabs.List className="grid w-full grid-cols-4">
+                {TABS.map((tab) => (
+                    <Tabs.Trigger
+                        value={tab}
+                        key={makeReactKey(`dashboard.tabs.${tab}`)}
+                        onClick={() => navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as "ALL" | "STARRED" | "RECENT" | "UNSTARRED"])}
+                    >
+                        {t(`dashboard.tabs.${tab}`)}
+                    </Tabs.Trigger>
+                ))}
+            </Tabs.List>
+            <Tabs.Content value={currentTab}>
+                <ProjectCardList
+                    projects={projects}
+                    hasMore={hasNextPage && !isFetchingNextPage}
+                    refetchAllStarred={refetchAllStarred}
+                    refetchProjects={refetch}
+                    fetchNextPage={fetchNextPage}
+                />
+            </Tabs.Content>
+        </Tabs.Root>
     );
-}
+});
 
 export default ProjectPage;

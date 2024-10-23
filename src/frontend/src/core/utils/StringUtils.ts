@@ -35,3 +35,9 @@ export const createNameInitials = (firstname: string, lastname: string): string 
 export const makeReactKey = (name: string): string => {
     return name.replace(/(\.|\s)/g, "-");
 };
+
+export const format = (str: string, map: Record<string, string>): string => {
+    return str.replace(/{(\w+)}/g, (match, key) => {
+        return map[key] || match;
+    });
+};

@@ -36,7 +36,7 @@ function Header({ navs }: IHeaderProps) {
     }, []);
 
     const toDashboard = () => {
-        navigate(ROUTES.DASHBOARD.MAIN);
+        navigate(ROUTES.DASHBOARD.ROUTE);
     };
 
     const separator = <Separator className="h-5" orientation="vertical" />;
@@ -85,7 +85,15 @@ function Header({ navs }: IHeaderProps) {
                 {isAuthenticated() && user ? (
                     <>
                         {separator}
-                        <UserAvatar.Root user={user} align="end">
+                        <UserAvatar.Root
+                            user={user}
+                            align="end"
+                            avatarSize={{
+                                initial: "sm",
+                                md: "default",
+                            }}
+                            className="mx-1"
+                        >
                             <UserAvatar.List>
                                 <UserAvatar.ListLabel>{t("myAccount.My Account")}</UserAvatar.ListLabel>
                                 <UserAvatar.ListSeparator />

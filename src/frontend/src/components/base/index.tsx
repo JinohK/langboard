@@ -27,5 +27,7 @@ export { default as Skeleton } from "./Skeleton";
 export { default as SuspenseComponent } from "./SuspenseComponent";
 export { default as Switch } from "./Switch";
 export * as Table from "./Table";
+export * as Tabs from "./Tabs";
+export { default as Textarea } from "./Textarea";
 export * as Toast from "./Toast";
 export * as Tooltip from "./Tooltip";

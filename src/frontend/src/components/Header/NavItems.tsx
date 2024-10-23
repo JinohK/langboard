@@ -47,7 +47,7 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
                             </NavigationMenu.Trigger>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
-                            <ul>
+                            <ul className="max-h-80 overflow-y-auto">
                                 <NavItems {...subProps} />
                             </ul>
                         </DropdownMenu.Content>

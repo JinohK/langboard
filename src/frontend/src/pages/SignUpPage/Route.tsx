@@ -10,7 +10,7 @@ const ActivatePage = lazy(() => import("./ActivatePage"));
 function SignUpRoute() {
     const searchParams = new URLSearchParams(location.search);
     return (
-        <Route path={ROUTES.SIGN_UP.MAIN} key="route-sign-up">
+        <Route path={ROUTES.SIGN_UP.ROUTE} key="route-sign-up">
             <Route
                 index
                 element={

@@ -5,10 +5,10 @@ import InfiniteScroll from "react-infinite-scroll-component";
 
 function TrackingPage(): JSX.Element {
     // TODO: Task, Implemnting the table
-    const [tasks, setTasks] = useState<
+    const [subtasks, setSubtasks] = useState<
         {
-            outline: string;
             task: string;
+            subtask: string;
             status: string;
             startedAt: Date;
             timeTaken: string;
@@ -18,18 +18,18 @@ function TrackingPage(): JSX.Element {
     const createTasks = () => {
         const status = ["Request", "Preparation", "Development", "Testing", "Deployment", "Completed"];
         for (let i = 0; i < 30; ++i) {
-            tasks.push({
-                outline: `Outline ${createShortUID()}`,
+            subtasks.push({
                 task: `Task ${createShortUID()}`,
+                subtask: `Subask ${createShortUID()}`,
                 status: status[Math.floor(Math.random() * status.length)],
                 startedAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))),
                 timeTaken: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
             });
         }
-        setTasks([...tasks]);
+        setSubtasks([...subtasks]);
     };
 
-    if (tasks.length === 0) {
+    if (subtasks.length === 0) {
         createTasks();
     }
 
@@ -66,14 +66,14 @@ function TrackingPage(): JSX.Element {
                     <IconComponent icon="loader" className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
             }
-            dataLength={tasks.length}
-            className="overflow-y-hidden"
+            dataLength={subtasks.length}
+            className="!overflow-y-hidden"
         >
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
                         {createCell(true, "ID", "w-1/12 text-center")}
-                        {createCell(true, "Outline", "w-1/5 text-center")}
+                        {createCell(true, "Task", "w-1/5 text-center")}
                         {createCell(true, "Task", "w-1/5 text-center")}
                         {createCell(true, "Status", "w-1/6 text-center")}
                         {createCell(true, "Started at", "w-1/6 text-center")}
@@ -81,11 +81,11 @@ function TrackingPage(): JSX.Element {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {tasks.map((task, index) => (
-                        <Table.Row key={task.outline}>
+                    {subtasks.map((task, index) => (
+                        <Table.Row key={task.task}>
                             {createCell(false, (index + 1).toString(), "max-w-0 truncate text-center")}
-                            {createCell(false, task.outline, "max-w-0 truncate text-center")}
                             {createCell(false, task.task, "max-w-0 truncate text-center")}
+                            {createCell(false, task.subtask, "max-w-0 truncate text-center")}
                             {createCell(false, task.status, "max-w-0 truncate text-center")}
                             {createCell(
                                 false,

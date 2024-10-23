@@ -4,28 +4,42 @@ import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { ROUTES } from "@/core/routing/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
-import OutlinesPage from "@/pages/DashboardPage/OutlinesPage";
+import TasksPage from "@/pages/DashboardPage/TasksPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
+import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
+import { useState } from "react";
+import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredProjects";
 
 function DashboardPage(): JSX.Element {
     const navigate = useNavigate();
     const location = useLocation();
+    const [projectFormopened, setProjectFormOpened] = useState(false);
+    const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
+
     const headerNavs: Record<string, IHeaderNavItem> = {
-        [ROUTES.DASHBOARD.MAIN]: {
+        [ROUTES.DASHBOARD.ROUTE]: {
             name: "dashboard.Projects",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.MAIN);
+                navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
-        [ROUTES.DASHBOARD.OUTLINES]: {
-            name: "dashboard.Outlines",
+        [ROUTES.DASHBOARD.TASKS]: {
+            name: "dashboard.Tasks",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.OUTLINES);
+                navigate(ROUTES.DASHBOARD.TASKS);
             },
         },
         starred: {
             name: "dashboard.Starred",
-            subNavs: [],
+            subNavs:
+                allStarredProjects?.projects.map((project) => {
+                    return {
+                        name: project.title,
+                        onClick: () => {
+                            // TODO: Task, Implementing navigation to project
+                        },
+                    };
+                }) ?? [],
         },
         [ROUTES.DASHBOARD.TRACKING]: {
             name: "dashboard.Tracking",
@@ -39,33 +53,53 @@ function DashboardPage(): JSX.Element {
         {
             icon: "plus",
             name: "dashboard.Create New Project",
+            onClick: () => {
+                setProjectFormOpened(true);
+            },
+        },
+        {
+            icon: "history",
+            name: "dashboard.My Activity",
+            onClick: () => {
+                // TODO: Activity, Implementing navigation to activity
+            },
         },
     ];
 
-    let pathname: string = location.pathname;
-    if (!headerNavs[pathname]) {
-        pathname = ROUTES.DASHBOARD.MAIN;
-    }
+    const pathname: string = location.pathname;
 
-    headerNavs[pathname].active = true;
+    if (pathname.startsWith(ROUTES.DASHBOARD.PROJECTS.ROUTE)) {
+        headerNavs[ROUTES.DASHBOARD.ROUTE].active = true;
+    } else {
+        headerNavs[pathname].active = true;
+    }
 
     let pageContent;
     switch (pathname) {
-        case ROUTES.DASHBOARD.OUTLINES:
-            pageContent = <OutlinesPage />;
+        case ROUTES.DASHBOARD.TASKS:
+            pageContent = <TasksPage />;
             break;
         case ROUTES.DASHBOARD.TRACKING:
             pageContent = <TrackingPage />;
             break;
-        case ROUTES.DASHBOARD.MAIN:
-        default:
-            pageContent = <ProjectPage />;
+        case ROUTES.DASHBOARD.PROJECTS.ALL:
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" />;
+            break;
+        case ROUTES.DASHBOARD.PROJECTS.STARRED:
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" />;
+            break;
+        case ROUTES.DASHBOARD.PROJECTS.RECENT:
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" />;
+            break;
+        case ROUTES.DASHBOARD.PROJECTS.UNSTARRED:
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" />;
             break;
     }
 
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs}>
             {pageContent}
+            <CreateProjectFormDialog opened={projectFormopened} setOpened={setProjectFormOpened} />
         </DashboardStyledLayout>
     );
 }

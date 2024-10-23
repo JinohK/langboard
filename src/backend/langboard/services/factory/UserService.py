@@ -3,12 +3,13 @@ from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
 from urllib.parse import urlparse
+from sqlmodel import desc
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.storage import FileModel
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Group, GroupAssignedUser, User
+from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, User
 from ..BaseService import BaseService
 
 
@@ -20,20 +21,20 @@ class UserService(BaseService):
     def create_cache_name(self, cache_type: str, email: str) -> str:
         return f"{cache_type}:{email}"
 
-    async def get_user_by_id(self, user_id: int | None) -> User | None:
+    async def get_by_id(self, user_id: int | None) -> User | None:
         return await self.__get_user("id", user_id)
 
-    async def get_user_by_email(self, email: str | None) -> User | None:
+    async def get_by_email(self, email: str | None) -> User | None:
         return await self.__get_user("email", email)
 
-    async def get_user_by_token(self, token: str | None, key: str | None) -> User | None:
+    async def get_by_token(self, token: str | None, key: str | None) -> User | None:
         if not token or not key:
             return None
         email = Encryptor.decrypt(token, key)
-        user = await self.get_user_by_email(email)
+        user = await self.get_by_email(email)
         return user
 
-    async def get_user_group_names(self, user: User) -> list[str]:
+    async def get_assigned_group_names(self, user: User) -> list[str]:
         if not user or user.is_new():
             return []
 
@@ -47,6 +48,36 @@ class UserService(BaseService):
         group_names = result.all()
 
         return [group_name for group_name in group_names]
+
+    async def get_assigned_starred_projects(self, user: User) -> list[dict[str, str]]:
+        if not user or user.is_new():
+            return []
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .columns(
+                Project.uid,
+                Project.title,
+                Project.project_type,
+            )
+            .join(ProjectAssignedUser, ProjectAssignedUser.project_id == Project.id)  # type: ignore
+            .where(ProjectAssignedUser.user_id == user.id)
+            .where(ProjectAssignedUser.starred == True)  # noqa
+            .order_by(desc(ProjectAssignedUser.last_viewed_at), desc(Project.updated_at), desc(Project.id))
+        )
+        raw_projects = result.all()
+
+        projects = []
+
+        for uid, title, project_type in raw_projects:
+            projects.append(
+                {
+                    "uid": uid,
+                    "title": title,
+                    "project_type": project_type,
+                }
+            )
+        return projects
 
     async def create_token_url(self, user: User, cache_key: str, url: str, token_query_name: str) -> str:
         token = generate_random_string(32)
@@ -77,7 +108,7 @@ class UserService(BaseService):
         except Exception:
             return None, None
 
-        user = await self.get_user_by_id(token_info["id"])
+        user = await self.get_by_id(token_info["id"])
         if not user:
             return None, None
 

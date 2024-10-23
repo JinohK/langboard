@@ -8,6 +8,7 @@ export interface IThemeSwitcherProps {
     triggerType?: "icon" | "text";
     buttonClassNames?: string;
     hideTriggerIcon?: boolean;
+    size?: ButtonProps["size"];
 }
 
 const themes: Record<string, string> = {
@@ -16,14 +17,14 @@ const themes: Record<string, string> = {
     system: "contrast",
 };
 
-function ThemeSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon }: IThemeSwitcherProps): JSX.Element {
+function ThemeSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon, size = "default" }: IThemeSwitcherProps): JSX.Element {
     const { theme, setTheme } = useTheme();
     const [t] = useTranslation();
 
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("themes.title")}>
+                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("themes.title")} size={size}>
                     {triggerType === "text" ? t(`themes.${theme ?? "system"}`) : <IconComponent icon={themes[theme ?? "system"]} />}
                     {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>

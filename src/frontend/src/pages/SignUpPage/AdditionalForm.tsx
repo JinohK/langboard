@@ -57,7 +57,7 @@ function AdditionalForm({ values, validateForm, nextStep }: ISignUpFormProps): J
                                 {t(`signUp.industries.${industry}`)}
                             </Select.Item>
                         ))}
-                        <Select.Item value="Other">{t("signUp.Other")}</Select.Item>
+                        <Select.Item value="Other">{t("common.Other")}</Select.Item>
                     </Select.Content>
                 </Select.Root>
                 {isIndustryOther && (
