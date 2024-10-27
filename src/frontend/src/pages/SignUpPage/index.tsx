@@ -9,8 +9,8 @@ import RequiredForm from "@/pages/SignUpPage/RequiredForm";
 import Overview from "@/pages/SignUpPage/Overview";
 import { Button } from "@/components/base";
 import { EMAIL_REGEX } from "@/constants";
-import ErrorMessage from "@/pages/SignUpPage/ErrorMessage";
 import AdditionalForm from "@/pages/SignUpPage/AdditionalForm";
+import FormErrorMessage from "@/components/FormErrorMessage";
 
 function SignUpPage(): JSX.Element {
     const [t] = useTranslation();
@@ -78,12 +78,14 @@ function SignUpPage(): JSX.Element {
             form[inputName] = value;
 
             if (!value) {
-                newErrors[inputName] = <ErrorMessage error={`signUp.errors.missing.${inputName}${isSelectedOther ? "-other" : ""}`} />;
+                newErrors[inputName] = (
+                    <FormErrorMessage error={`signUp.errors.missing.${inputName}${isSelectedOther ? "-other" : ""}`} icon="circle-alert" />
+                );
                 if (!focusElement) {
                     focusElement = input;
                 }
             } else if (inputName === "email" && !EMAIL_REGEX.test(value)) {
-                newErrors.email = <ErrorMessage error="signUp.errors.invalid.email" />;
+                newErrors.email = <FormErrorMessage error="signUp.errors.invalid.email" icon="circle-alert" />;
                 if (!focusElement) {
                     focusElement = input;
                 }

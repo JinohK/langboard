@@ -1,4 +1,4 @@
-import { SuspenseComponent, Toast } from "@/components/base";
+import { Toast } from "@/components/base";
 import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
@@ -8,18 +8,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 function App() {
     const queryClient = new QueryClient();
     return (
-        <>
-            <QueryClientProvider client={queryClient}>
-                <AuthProvider>
-                    <SocketProvider>
-                        <SuspenseComponent shouldWrapChildren={false}>
-                            <Router />
-                        </SuspenseComponent>
-                        <Toast.Area richColors />
-                    </SocketProvider>
-                </AuthProvider>
-            </QueryClientProvider>
-        </>
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                <SocketProvider>
+                    <Router />
+                    <Toast.Area richColors />
+                </SocketProvider>
+            </AuthProvider>
+        </QueryClientProvider>
     );
 }
 

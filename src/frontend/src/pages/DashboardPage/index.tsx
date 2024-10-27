@@ -36,7 +36,7 @@ function DashboardPage(): JSX.Element {
                     return {
                         name: project.title,
                         onClick: () => {
-                            // TODO: Task, Implementing navigation to project
+                            navigate(ROUTES.BOARD.MAIN(project.uid));
                         },
                     };
                 }) ?? [],

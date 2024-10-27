@@ -7,14 +7,13 @@ from ...models import User
 from ..routing import (
     AppRouter,
     SocketDefaultEvent,
-    SocketEvent,
     SocketRequest,
     SocketResponse,
     SocketResponseCode,
     TCachedScopes,
     WebSocket,
 )
-from ..routing.Exception import SocketEventException, SocketRouterScopeException
+from ..routing.Exception import SocketEventException, SocketRouterScopeException, SocketStatusCodeException
 from ..security import Auth
 from ..utils.decorators import thread_safe_singleton
 
@@ -59,12 +58,15 @@ class SocketApp(dict):
 
         route_path = route_data.pop("route")
 
+        auth_token = queries.get("Authorization", queries.get("authorization", None))
+        auth_token = auth_token[0] if isinstance(auth_token, list) else auth_token
+
         user_data = {
             "path": path,
             "route_path": route_path,
             "route_data": route_data,
             "auth_user_id": validation_result.id,
-            "auth_token": queries.get("Authorization", queries.get("authorization", None)),
+            "auth_token": auth_token,
         }
 
         key = req.get_header("sec-websocket-key")
@@ -82,10 +84,9 @@ class SocketApp(dict):
         if not await self._validate_token(ws, user_data["auth_token"]):
             return
 
-        route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Open)
-        req = self._create_request(ws, user_data["route_data"], from_app={"auth_user_id": user_data["auth_user_id"]})
+        req = self._create_request(ws, user_data)
 
-        await self._run_events(route_events, req)
+        await self._run_events(user_data["route_path"], SocketDefaultEvent.Open, req)
 
     async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, _: OpCode) -> None:
         user_data = ws.get_user_data()
@@ -105,10 +106,9 @@ class SocketApp(dict):
             return
 
         event = data.pop("event")
-        route_events = AppRouter.socket.get_events(user_data["route_path"], event)
-        req = self._create_request(ws, user_data["route_data"], data)
+        req = self._create_request(ws, user_data, data.get("data", data))
 
-        await self._run_events(route_events, req)
+        await self._run_events(user_data["route_path"], event, req)
 
     async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
@@ -116,15 +116,14 @@ class SocketApp(dict):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
-        route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Close)
         req = self._create_request(
             ws,
-            user_data["route_data"],
+            user_data,
             {"message": message},
-            from_app={"auth_user_id": user_data["auth_user_id"], "code": code},
+            from_app={"code": code},
         )
 
-        await self._run_events(route_events, req)
+        await self._run_events(user_data["route_path"], SocketDefaultEvent.Close, req)
 
     async def on_drain(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
@@ -135,10 +134,9 @@ class SocketApp(dict):
         if not await self._validate_token(ws, user_data["auth_token"]):
             return
 
-        route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Drain)
-        req = self._create_request(ws, user_data["route_data"], from_app={"auth_user_id": user_data["auth_user_id"]})
+        req = self._create_request(ws, user_data)
 
-        await self._run_events(route_events, req)
+        await self._run_events(user_data["route_path"], SocketDefaultEvent.Drain, req)
 
     async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
         user_data = ws.get_user_data()
@@ -149,15 +147,14 @@ class SocketApp(dict):
         if not await self._validate_token(ws, user_data["auth_token"]):
             return
 
-        route_events = AppRouter.socket.get_events(user_data["route_path"], SocketDefaultEvent.Subscription)
         req = self._create_request(
             ws,
-            user_data["route_data"],
+            user_data,
             {"topic": topic},
-            from_app={"auth_user_id": user_data["auth_user_id"], **kwargs},
+            from_app=kwargs,
         )
 
-        await self._run_events(route_events, req)
+        await self._run_events(user_data["route_path"], SocketDefaultEvent.Subscription, req)
 
     def _is_valid_user_data(self, user_data: Any | None) -> bool:
         """Checks if the given user data is valid.
@@ -211,22 +208,40 @@ class SocketApp(dict):
             return
 
         if isinstance(ws, WebSocket):
-            ws.send(event="error", data={"message": message, "code": _error_code})
+            ws.send("error", {"message": message, "code": _error_code})
         else:
             ws.send({"event": "error", "data": {"message": message, "code": _error_code}})
 
     def _create_request(
-        self, ws: SocketifyWebSocket, route_data: dict, data: dict | list | None = None, from_app: dict | None = None
+        self, ws: SocketifyWebSocket, user_data: dict, data: dict | list | None = None, from_app: dict | None = None
     ) -> SocketRequest:
         socket = WebSocket(ws)
-        req = SocketRequest(socket=socket, route_data=route_data, data=data, from_app=from_app)
+        req = SocketRequest(
+            socket=socket,
+            route_data=user_data["route_data"],
+            data=data,
+            from_app={
+                **(from_app or {}),
+                "auth_user_id": user_data["auth_user_id"],
+            },
+        )
         return req
 
-    async def _run_events(self, route_events: list[SocketEvent], req: SocketRequest) -> None:
+    async def _run_events(self, route_path: str, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
+        route_events = await AppRouter.socket.get_events(route_path, event_name)
         cached_params: TCachedScopes = {}
 
         for event in route_events:
             response = await event.run(cached_params, req)
+
+            if isinstance(response, SocketStatusCodeException):
+                self._send_error(
+                    req.socket,
+                    response.message,
+                    response.code,
+                    should_close=False,
+                )
+                return
 
             if isinstance(response, SocketEventException):
                 self._send_error(
@@ -244,4 +259,7 @@ class SocketApp(dict):
                 return
 
             if isinstance(response, SocketResponse):
-                req.socket.send(response=response)
+                req.socket.send(response)
+
+        for event in route_events:
+            await event.finish_generators()

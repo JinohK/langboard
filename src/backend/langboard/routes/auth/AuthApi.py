@@ -30,7 +30,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JSONR
     user = await service.user.get_by_token(form.email_token, form.sign_token)
 
     if not user:
-        return JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+        return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     if not user.check_password(form.password):
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

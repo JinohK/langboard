@@ -34,7 +34,7 @@ const SubTrigger = React.forwardRef<
         {...props}
     >
         {children}
-        <IconComponent icon="chevron-right" className="ml-auto h-4 w-4" />
+        <IconComponent icon="chevron-right" size="4" className="ml-auto" />
     </DropdownMenuPrimitive.SubTrigger>
 ));
 

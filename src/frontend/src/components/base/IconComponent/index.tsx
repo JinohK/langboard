@@ -1,69 +1,58 @@
-import {
-    ComponentPropsWithoutRef,
-    ElementRef,
-    ElementType,
-    forwardRef,
-    ForwardRefExoticComponent,
-    lazy,
-    memo,
-    RefAttributes,
-    SVGProps,
-    useEffect,
-    useState,
-} from "react";
+import { ComponentPropsWithoutRef, ElementRef, ElementType, forwardRef, ForwardRefExoticComponent, lazy, memo, RefAttributes, SVGProps } from "react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import { icons } from "lucide-react";
 import Flag from "react-flagkit";
 import { cn } from "@/core/utils/ComponentUtils";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
-import { heightSizeMap, TDimensionSize, widthSizeMap } from "@/core/utils/SizeMap";
+import { tv, VariantProps } from "tailwind-variants";
+
+export const IconVariants = tv(
+    {
+        variants: {
+            size: {
+                "1": "h-1 w-1",
+                "2": "h-2 w-2",
+                "3": "h-3 w-3",
+                "4": "h-4 w-4",
+                "5": "h-5 w-5",
+                "6": "h-6 w-6",
+                "7": "h-7 w-7",
+                "8": "h-8 w-8",
+                "9": "h-9 w-9",
+                "10": "h-10 w-10",
+                "11": "h-11 w-11",
+                "12": "h-12 w-12",
+                "14": "h-14 w-14",
+            },
+        },
+        defaultVariants: {
+            size: undefined,
+        },
+    },
+    {
+        responsiveVariants: true,
+    }
+);
 
 type SVGAttributes = Partial<SVGProps<SVGSVGElement>>;
 type ElementAttributes = RefAttributes<SVGSVGElement> & SVGAttributes;
-interface IIconProps extends ElementAttributes {
+interface IIconProps extends ElementAttributes, VariantProps<typeof IconVariants> {
     icon: string;
-    size?: TDimensionSize;
 }
 type TIconProps = ForwardRefExoticComponent<IIconProps & RefAttributes<SVGSVGElement>>;
 
 const IconComponent = memo(
     forwardRef<ElementRef<TIconProps>, ComponentPropsWithoutRef<TIconProps>>(({ icon, size, className, stroke, strokeWidth, id, ...props }, ref) => {
-        const [isLoading, setIsLoading] = useState(true);
-
         if (size) {
-            className = cn(widthSizeMap[size], heightSizeMap[size], className ?? "");
+            className = cn(IconVariants({ size }), className ?? "");
         }
-
-        useEffect(() => {
-            let timer: NodeJS.Timeout;
-
-            const checkLoading = () => {
-                if (!isLoading) {
-                    return;
-                }
-
-                if (timer) {
-                    clearTimeout(timer);
-                }
-
-                timer = setTimeout(checkLoading, 30);
-            };
-
-            checkLoading();
-
-            return () => {
-                if (timer) {
-                    clearTimeout(timer);
-                }
-            };
-        }, []);
 
         if (icon.includes("flag-")) {
             const country = icon.split("flag-").pop();
 
             return (
                 <SuspenseComponent className={className}>
-                    <Flag country={country} className={className} id={id} onLoad={() => setIsLoading(false)} onError={() => setIsLoading(false)} />
+                    <Flag country={country} className={className} id={id} />
                 </SuspenseComponent>
             );
         }
@@ -87,15 +76,7 @@ const IconComponent = memo(
 
         return (
             <SuspenseComponent className={className}>
-                <TargetIcon
-                    className={className}
-                    style={style}
-                    ref={ref}
-                    id={id}
-                    onLoad={() => setIsLoading(false)}
-                    onError={() => setIsLoading(false)}
-                    {...props}
-                />
+                <TargetIcon className={className} style={style} ref={ref} id={id} {...props} />
             </SuspenseComponent>
         );
     })

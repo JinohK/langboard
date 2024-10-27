@@ -34,3 +34,7 @@ class Service(ServiceFactory):
     @property
     def email(self):
         return self._create_or_get_service(factory.EmailService)
+
+    @property
+    def chat_history(self):
+        return self._create_or_get_service(factory.ChatHistoryService)

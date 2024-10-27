@@ -1,5 +1,5 @@
 from calendar import timegm
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, Literal
@@ -15,7 +15,9 @@ from ...models import User
 from ..caching import Cache
 from ..db import DbSession
 from ..filter import AuthFilter
-from ..routing import AppExceptionHandlingRoute, SocketRequest
+from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
+from ..routing.SocketRequest import SocketRequest
+from ..utils.DateTime import now
 from ..utils.decorators import staticclass
 from ..utils.Encryptor import Encryptor
 
@@ -47,9 +49,9 @@ class Auth:
             expiry = int(payload["exp"])
         except Exception:
             raise InvalidTokenError("Invalid token")
-        now = datetime.now(tz=timezone.utc).timestamp()
+        current = now().timestamp()
 
-        if expiry <= now:
+        if expiry <= current:
             raise ExpiredSignatureError("Signature has expired")
 
         access_token = Auth._create_access_token(payload["sub"])
@@ -87,7 +89,7 @@ class Auth:
         """
         try:
             payload = jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            if int(payload["exp"]) <= timegm(datetime.now().utctimetuple()):
+            if int(payload["exp"]) <= timegm(now().utctimetuple()):
                 raise ExpiredSignatureError("Signature has expired")
         except ExpiredSignatureError as e:
             return e
@@ -209,12 +211,12 @@ class Auth:
 
     @staticmethod
     def _create_access_token(user_id: int) -> str:
-        expiry = datetime.now() + timedelta(seconds=JWT_AT_EXPIRATION)
+        expiry = now() + timedelta(seconds=JWT_AT_EXPIRATION)
         payload = {"sub": user_id, "exp": expiry}
         return jwt_encode(payload=payload, key=JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     @staticmethod
     def _create_refresh_token(user_id: int) -> str:
-        expiry = datetime.now() + timedelta(days=JWT_RT_EXPIRATION)
+        expiry = now() + timedelta(days=JWT_RT_EXPIRATION)
         payload = {"sub": user_id, "exp": timegm(expiry.utctimetuple())}
         return Encryptor.encrypt(json_dumps(payload), JWT_SECRET_KEY)

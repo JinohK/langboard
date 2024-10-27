@@ -109,7 +109,7 @@ function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm
                     {t("common.Skip")}
                 </Button>
                 <Button type="submit" disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                 </Button>
             </div>
         </Form.Root>

@@ -22,6 +22,26 @@ export const API_ROUTES = {
         TOGGLE_STAR_PROJECT: "/dashboard/projects/{uid}/star",
         CREATE_PROJECT: "/dashboard/projects/new",
     },
+    BOARD: {
+        IS_AVAILABLE: "/board/{uid}/available",
+        CHAT_MESSAGES: "/board/{uid}/chat",
+        CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
+    },
 } as const;
 
-export const SOCKET_ROUTES = {} as const;
+export const SOCKET_ROUTES = {
+    BOARD: (uid: string) => `/board/${uid}`,
+} as const;
+
+export const SOCKET_SERVER_EVENTS = {
+    BOARD: {
+        CHAT_SENT: "chat:sent",
+        CHAT_STREAM: "chat:stream",
+    },
+} as const;
+
+export const SOCKET_CLIENT_EVENTS = {
+    BOARD: {
+        CHAT_SEND: "chat:send",
+    },
+} as const;

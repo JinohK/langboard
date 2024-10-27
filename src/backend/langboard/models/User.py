@@ -30,7 +30,7 @@ class User(SoftDeleteModel, table=True):
         return f"{self.firstname} {self.lastname}"
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["name", "email", "industry", "purpose", "affiliation", "position"]
+        return ["firstname", "lastname", "email", "industry", "purpose", "affiliation", "position"]
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "password" and not isinstance(value, SecretStr):

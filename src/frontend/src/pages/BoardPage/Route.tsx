@@ -9,9 +9,9 @@ const BoardPage = lazy(() => import("./index"));
 function BoardRoute() {
     return (
         <Route path={ROUTES.BOARD.ROUTE} key="route-board">
-            <Route index element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} />} />
+            <Route index element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />} />
             <Route
-                path={ROUTES.BOARD.MAIN("*")}
+                path={ROUTES.BOARD.MAIN(":uid")}
                 element={
                     <AuthGuard>
                         <BoardPage />

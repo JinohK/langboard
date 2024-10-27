@@ -1,15 +1,16 @@
-import { Button, Form, Input, Toast } from "@/components/base";
+import { Button, Form, Input } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { EMAIL_REGEX } from "@/constants";
 import { ROUTES } from "@/core/routing/constants";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
 import { useState } from "react";
-import { isAxiosError } from "axios";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IconComponent } from "@/components/base";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import FormErrorMessage from "@/components/FormErrorMessage";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -65,25 +66,18 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
-
-                    switch (error.response?.status) {
-                        case EHttpStatus.HTTP_400_BAD_REQUEST:
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
                             setError("signIn.errors.missing.email");
                             emailInput.focus();
-                            return;
-                        case EHttpStatus.HTTP_404_NOT_FOUND:
+                        },
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             setError("signIn.errors.Couldn't find your {app} Account");
                             emailInput.focus();
-                            return;
-                        default:
-                            Toast.Add.error(t("errors.Internal server error"));
-                            return;
-                    }
+                        },
+                    });
+
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsValidating(false);
@@ -103,14 +97,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     <Form.Control asChild>
                         <Input className="w-full" placeholder={t("signIn.Email")} autoFocus autoComplete="email" disabled={isValidating} />
                     </Form.Control>
-                    {error && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(error)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {error && <FormErrorMessage error={error} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">
                     <Button
@@ -122,7 +109,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                         {t("signIn.Create account")}
                     </Button>
                     <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
                 </div>
             </Form.Root>

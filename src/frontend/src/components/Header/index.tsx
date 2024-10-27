@@ -1,6 +1,5 @@
-import { Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button, NavigationMenu, Separator, Sheet } from "@/components/base";
+import { Button, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { IAuthUser, useAuth } from "@/core/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { IHeaderProps } from "@/components/Header/types";
@@ -19,14 +18,14 @@ function Header({ navs }: IHeaderProps) {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const getUserInfo = async () => {
-            if (!isAuthenticated()) {
-                return;
-            }
+        if (user || !isAuthenticated()) {
+            return;
+        }
 
+        const getUserInfo = async () => {
             try {
-                const user = await aboutMe();
-                setUser(user);
+                const me = await aboutMe();
+                setUser(me);
             } catch {
                 return;
             }
@@ -36,7 +35,7 @@ function Header({ navs }: IHeaderProps) {
     }, []);
 
     const toDashboard = () => {
-        navigate(ROUTES.DASHBOARD.ROUTE);
+        navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
     };
 
     const separator = <Separator className="h-5" orientation="vertical" />;
@@ -58,7 +57,7 @@ function Header({ navs }: IHeaderProps) {
                 <Sheet.Description hidden />
                 <Sheet.Trigger asChild>
                     <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                        <Menu className="h-5 w-5" />
+                        <IconComponent icon="menu" size="5" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
                 </Sheet.Trigger>

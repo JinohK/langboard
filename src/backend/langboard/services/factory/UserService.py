@@ -1,4 +1,3 @@
-from datetime import datetime
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
@@ -7,6 +6,7 @@ from sqlmodel import desc
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.storage import FileModel
+from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, User
@@ -49,7 +49,7 @@ class UserService(BaseService):
 
         return [group_name for group_name in group_names]
 
-    async def get_assigned_starred_projects(self, user: User) -> list[dict[str, str]]:
+    async def get_starred_projects(self, user: User) -> list[dict[str, str]]:
         if not user or user.is_new():
             return []
 
@@ -125,7 +125,7 @@ class UserService(BaseService):
         return user, cache_key
 
     async def activate_user(self, user: User, commit: bool = True) -> None:
-        user.activated_at = datetime.now()
+        user.activated_at = now()
         await self._db.update(user)
         if commit:
             await self._db.commit()

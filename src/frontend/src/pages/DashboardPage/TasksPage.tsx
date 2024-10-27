@@ -1,8 +1,9 @@
 import { IconComponent, Table, Tooltip } from "@/components/base";
-import { createShortUID } from "@/core/utils/StringUtils";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import { useState } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import InfiniteScroll from "react-infinite-scroller";
 
+let curPage = 1;
 function TasksPage(): JSX.Element {
     // TODO: Task, Implemnting the table
     const [tasks, setTasks] = useState<
@@ -18,7 +19,7 @@ function TasksPage(): JSX.Element {
         const status = ["Request", "Preparation", "Development", "Testing", "Deployment", "Completed"];
         for (let i = 0; i < 30; ++i) {
             tasks.push({
-                name: `Task ${createShortUID()}`,
+                name: `Task ${createShortUUID()}`,
                 status: status[Math.floor(Math.random() * status.length)],
                 startedAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))),
                 timeTaken: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
@@ -31,13 +32,19 @@ function TasksPage(): JSX.Element {
         createTasks();
     }
 
-    const next = () =>
+    const next = (page: number) => {
+        if (page - curPage > 1) {
+            return;
+        }
+
         new Promise((resolve) => {
             setTimeout(() => {
+                curPage = page;
                 createTasks();
                 resolve(undefined);
             }, 3500);
         });
+    };
 
     const createCell = (isHead: boolean, value: string, className: string) => {
         const Comp = isHead ? Table.Head : Table.Cell;
@@ -55,17 +62,19 @@ function TasksPage(): JSX.Element {
 
     return (
         <InfiniteScroll
-            scrollableTarget="main"
-            next={next}
+            getScrollParent={() => document.getElementById("main")}
+            loadMore={next}
             hasMore={true}
-            scrollThreshold={0.9}
+            threshold={43}
             loader={
-                <div className="mt-6 flex justify-center">
-                    <IconComponent icon="loader" className="h-8 w-8 animate-spin text-gray-500" />
+                <div className="mt-6 flex justify-center" key={createShortUUID()}>
+                    <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
                 </div>
             }
-            dataLength={tasks.length}
+            initialLoad={false}
             className="!overflow-y-hidden"
+            useWindow={false}
+            pageStart={1}
         >
             <Table.Root>
                 <Table.Header>

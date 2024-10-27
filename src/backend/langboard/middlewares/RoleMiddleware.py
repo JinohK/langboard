@@ -17,7 +17,7 @@ class RoleMiddleware(FilterMiddleware):
         app: ASGIApp,
         routes: list[BaseRoute],
     ) -> None:
-        super().__init__(app, routes, RoleFilter)
+        FilterMiddleware.__init__(self, app, routes, RoleFilter)
 
     async def __call__(self, scope, receive, send) -> None:
         if scope["type"] != "http":
@@ -38,10 +38,11 @@ class RoleMiddleware(FilterMiddleware):
                 await response(scope, receive, send)
                 return
 
-            role_model, actions = RoleFilter.get_filtered(child_scope["endpoint"])
+            role_model, actions, role_finder = RoleFilter.get_filtered(child_scope["endpoint"])
             role = Role(role_model)
 
-            is_authorized = await role.is_authorized(user.id, child_scope["path_params"], actions)
+            is_authorized = await role.is_authorized(user.id, child_scope["path_params"], actions, role_finder)
+            await role.close()
             if not is_authorized:
                 response = JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
                 await response(scope, receive, send)

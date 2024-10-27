@@ -9,9 +9,24 @@ export interface ISidebarNavItem {
 export interface ISidebarProps {
     navs: ISidebarNavItem[];
     main: React.ReactNode;
+    floatingIcon?: string;
+    floatingTitle?: string;
 }
 
-export interface ISidebarNavItemsProps {
-    isCollapsed: boolean;
+interface IBaseSidebarNavItemsProps {
+    isCollapsed?: boolean;
+    isFloating?: boolean;
     navs: ISidebarNavItem[];
 }
+
+interface ICollapsableSidebarNavItemsProps extends IBaseSidebarNavItemsProps {
+    isCollapsed: boolean;
+    isFloating?: undefined;
+}
+
+interface IFloatingSidebarNavItemsProps extends IBaseSidebarNavItemsProps {
+    isCollapsed?: undefined;
+    isFloating: true;
+}
+
+export type TSidebarNavItemsProps = ICollapsableSidebarNavItemsProps | IFloatingSidebarNavItemsProps;

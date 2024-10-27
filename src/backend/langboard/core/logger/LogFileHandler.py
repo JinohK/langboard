@@ -1,9 +1,9 @@
-from datetime import datetime
 from logging import NOTSET, Handler, LogRecord
 from pathlib import Path
 from typing import Optional, TextIO
 from rich.text import Text
 from ...Constants import LOGGING_DIR
+from ..utils.DateTime import now
 from ..utils.String import concat
 
 
@@ -36,4 +36,4 @@ class LogFileHandler(Handler):
         pass
 
     def _get_log_file_name(self):
-        return "{:%Y-%m-%d}.log".format(datetime.now())
+        return "{:%Y-%m-%d}.log".format(now())

@@ -1,7 +1,8 @@
 from typing import Literal, overload
 from starlette.routing import BaseRoute, Match
 from starlette.types import ASGIApp, Scope
-from ..routing import AppExceptionHandlingRoute, BaseMiddleware
+from ..routing import AppExceptionHandlingRoute
+from ..routing.BaseMiddleware import BaseMiddleware
 from .BaseFilter import BaseFilter
 
 
@@ -14,7 +15,7 @@ class FilterMiddleware(BaseMiddleware):
         routes: list[BaseRoute],
         filter: BaseFilter,
     ):
-        self.app = app
+        super().__init__(app)
         self._routes = routes
         self._filter = filter
 

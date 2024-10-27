@@ -2,11 +2,13 @@ import { Button, Card, IconComponent, Skeleton, Toast, Tooltip } from "@/compone
 import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import useToggleStarProject from "@/controllers/dashboard/useToggleStarProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUID } from "@/core/utils/StringUtils";
-import { isAxiosError } from "axios";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 interface IBaseProjectCardListProps {
     isSkeleton?: boolean;
@@ -30,13 +32,17 @@ export type TProjectCardProps = IProjectCardProps | ISkeletonProjectCardListProp
 
 const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProjects }: TProjectCardProps): JSX.Element => {
     const [t] = useTranslation();
+    const navigate = useNavigate();
     const { mutate } = useToggleStarProject();
     const [isUpdating, setIsUpdating] = useState(false);
 
-    const toggleStar = () => {
+    const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {
         if (!project) {
             return;
         }
+
+        event.preventDefault();
+        event.stopPropagation();
 
         setIsUpdating(true);
 
@@ -53,24 +59,27 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
                     await Promise.all([refetchAllStarred(), refetchProjects()]);
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                            Toast.Add.error(t("dashboard.errors.Project not found"));
+                        },
+                    });
 
-                    if (error.response?.status === EHttpStatus.HTTP_404_NOT_FOUND) {
-                        Toast.Add.error(t("dashboard.errors.Project not found"));
-                        return;
-                    }
-
-                    Toast.Add.error(t("errors.Internal server error"));
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsUpdating(false);
                 },
             }
         );
+    };
+
+    const toBoard = () => {
+        if (!project) {
+            return;
+        }
+
+        navigate(ROUTES.BOARD.MAIN(project.uid));
     };
 
     let cardClassNames = "cursor-pointer";
@@ -95,7 +104,7 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
         groupNames = project!.group_names.length ? project!.group_names.join(", ") : <>&nbsp;</>;
         title = project!.title;
         starBtn = (
-            <Tooltip.Provider delayDuration={400} key={createShortUID()}>
+            <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild>
                         <Button
@@ -106,7 +115,7 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
                             disabled={isUpdating}
                         >
                             {isUpdating ? (
-                                <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" />
+                                <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
                             ) : (
                                 <IconComponent icon="star" />
                             )}
@@ -155,10 +164,10 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
     }
 
     return (
-        <Card.Root className={cardClassNames}>
+        <Card.Root className={cardClassNames} onClick={toBoard}>
             <Card.Header className="relative block pt-5">
-                <Card.Title className="text-sm text-gray-500">{groupNames}</Card.Title>
-                <Card.Title>{title}</Card.Title>
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">{groupNames}</Card.Title>
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
                 {starBtn}
             </Card.Header>
             <Card.Content></Card.Content>
@@ -166,14 +175,14 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
                 {tasks.map((task) => {
                     if (isSkeleton) {
                         return (
-                            <div className="flex min-w-5 flex-col items-center gap-0.5" key={createShortUID()}>
+                            <div className="flex min-w-5 flex-col items-center gap-0.5" key={createShortUUID()}>
                                 {task.subtasks}
                                 {task.color}
                             </div>
                         );
                     } else {
                         return (
-                            <Tooltip.Provider delayDuration={400} key={createShortUID()}>
+                            <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
                                 <Tooltip.Root>
                                     <Tooltip.Trigger asChild>
                                         <div className="flex min-w-5 flex-col gap-0.5 text-center">

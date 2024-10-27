@@ -10,26 +10,40 @@ class WebSocket(SocketifyWebSocket):
             setattr(self, attr, ws.__dict__[attr])
 
     @overload
-    def send(self, event: str, data: Any = None): ...
+    def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
     @overload
-    def send(self, response: SocketResponse): ...
-    @overload
-    def send(self, event: str, data: Any = None, compress: bool = False, fin: bool = True): ...
-    @overload
-    def send(self, response: SocketResponse, compress: bool = False, fin: bool = True): ...
+    def send(self, event_response: SocketResponse, compress: bool = False, fin: bool = True): ...
     def send(  # type: ignore
         self,
-        response: SocketResponse | None = None,
-        event: str | None = None,
+        event_response: SocketResponse | str,
         data: Any = None,
         compress: bool = False,
         fin: bool = True,
     ) -> Self | SendStatus | None:
-        if event:
-            response_model = SocketResponse(event=event, data=data)
-        elif response is not None:
-            response_model = response
+        if isinstance(event_response, str):
+            response_model = SocketResponse(event=event_response, data=data)
+        elif isinstance(event_response, SocketResponse):
+            response_model = event_response
         else:
             return self
 
-        return super().send(response_model.model_dump(), opcode=OpCode.TEXT, compress=compress, fin=fin)
+        return super().send(response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress, fin=fin)
+
+    def stream(self, event: str):
+        class _WebSocketStream:
+            def __init__(self, ws: WebSocket):
+                self.__ws = ws
+
+            def start(self, data: Any = None, compress: bool = False):
+                self.__ws.send(f"{event}:start", data, compress=compress)
+                return self
+
+            def buffer(self, data: Any = None, compress: bool = False):
+                self.__ws.send(f"{event}:buffer", data, compress=compress)
+                return self
+
+            def end(self, data: Any = None, compress: bool = False):
+                self.__ws.send(f"{event}:end", data, compress=compress)
+                return self
+
+        return _WebSocketStream(self)

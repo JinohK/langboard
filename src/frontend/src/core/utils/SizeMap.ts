@@ -32,3 +32,11 @@ export const heightSizeMap: Record<TDimensionSize, string> = {
     "12": "h-12",
     "14": "h-14",
 };
+
+export const screenSizeMap: Record<TScreenSize, number> = {
+    xs: 520,
+    sm: 768,
+    md: 1024,
+    lg: 1280,
+    xl: 1640,
+};

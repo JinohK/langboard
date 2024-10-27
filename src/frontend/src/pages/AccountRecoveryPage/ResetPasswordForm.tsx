@@ -1,10 +1,11 @@
-import { Button, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Button, Form, IconComponent, Input } from "@/components/base";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import useRecoveryPassword from "@/controllers/recovery/useRecoveryPassword";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
-import { isAxiosError } from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -64,30 +65,22 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                     navigate(location, { state: { isTwoSidedView: false } });
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
-
-                    switch (error.response?.status) {
-                        case EHttpStatus.HTTP_404_NOT_FOUND:
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
+                            setErrors(["accountRecovery.errors.missing.password", null]);
+                        },
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             backToSignin();
-                            return;
-                        case EHttpStatus.HTTP_410_GONE: {
+                        },
+                        [EHttpStatus.HTTP_410_GONE]: () => {
                             const searchParams = new URLSearchParams(location.search);
                             searchParams.delete(RECOVERY_TOKEN_QUERY_NAME);
 
                             navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`);
-                            return;
-                        }
-                        case EHttpStatus.HTTP_400_BAD_REQUEST:
-                            setErrors(["accountRecovery.errors.missing.password", null]);
-                            return;
-                        default:
-                            Toast.Add.error(t("errors.Internal server error"));
-                            return;
-                    }
+                        },
+                    });
+
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsValidating(false);
@@ -132,14 +125,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                             onClick={() => setShouldShowPasswords([!shouldShowPw, shouldShowConfirmPw])}
                         />
                     </div>
-                    {pwError && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(pwError)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {pwError && <FormErrorMessage error={pwError} icon="circle-alert" />}
                 </Form.Field>
                 <Form.Field name="new-password-confirm" className="mt-3">
                     <div className="relative">
@@ -157,18 +143,11 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                             onClick={() => setShouldShowPasswords([shouldShowPw, !shouldShowConfirmPw])}
                         />
                     </div>
-                    {confirmPwError && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(confirmPwError)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {confirmPwError && <FormErrorMessage error={confirmPwError} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                     <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
                 </div>
             </Form.Root>

@@ -1,20 +1,41 @@
 import { Suspense } from "react";
 import Skeleton from "@/components/base/Skeleton";
+import Progress from "@/components/base/Progress";
 
-interface ISuspenseComponentProps {
+interface IBaseSuspenseComponentProps {
     children: React.ReactNode;
     className?: string;
     width?: string;
     height?: string;
     shouldWrapChildren?: boolean;
+    isPage?: boolean;
 }
 
-function SuspenseComponent({ children, className, width, height, shouldWrapChildren }: ISuspenseComponentProps) {
+interface IElementSuspenseComponentProps extends IBaseSuspenseComponentProps {
+    className?: string;
+    width?: string;
+    height?: string;
+    shouldWrapChildren?: boolean;
+    isPage?: undefined;
+}
+
+interface IPageSuspenseComponentProps extends IBaseSuspenseComponentProps {
+    className?: undefined;
+    width?: undefined;
+    height?: undefined;
+    shouldWrapChildren?: boolean;
+    isPage: boolean;
+}
+
+type TElementSuspenseComponentProps = IElementSuspenseComponentProps | IPageSuspenseComponentProps;
+
+function SuspenseComponent({ children, className, width, height, shouldWrapChildren, isPage }: TElementSuspenseComponentProps) {
     const wrappedChildren = shouldWrapChildren ? <div>{children}</div> : children;
+    const fallback = isPage ? <Progress indeterminate height="1" /> : <Skeleton style={{ width, height }} className={className} />;
 
     return (
         <>
-            <Suspense fallback={<Skeleton style={{ width, height }} className={className} />}>{wrappedChildren}</Suspense>
+            <Suspense fallback={fallback}>{wrappedChildren}</Suspense>
         </>
     );
 }

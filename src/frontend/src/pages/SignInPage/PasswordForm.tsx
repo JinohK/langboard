@@ -1,8 +1,7 @@
-import { Button, Form, Checkbox, Input, Label, Toast } from "@/components/base";
+import { Button, Form, Checkbox, Input, Label } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import useSignIn from "@/controllers/auth/useSignIn";
-import { isAxiosError } from "axios";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IconComponent } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -10,6 +9,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import FormErrorMessage from "@/components/FormErrorMessage";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -35,7 +36,6 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
 
         setIsValidating(true);
 
-        const backToEmailBtn = document.querySelector<HTMLButtonElement>("#back-to-email-btn")!;
         const passwordInput = event.currentTarget.password;
         const password = passwordInput.value;
 
@@ -62,29 +62,18 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     navigate(decodeURIComponent(redirectUrl));
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
-
-                    switch (error.response?.status) {
-                        case EHttpStatus.HTTP_400_BAD_REQUEST:
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
                             setError("signIn.errors.missing.password");
                             passwordInput.focus();
-                            return;
-                        case EHttpStatus.HTTP_403_FORBIDDEN:
-                            setError("errors.Malformed request");
-                            backToEmailBtn.focus();
-                            return;
-                        case EHttpStatus.HTTP_404_NOT_FOUND:
+                        },
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             setError("signIn.errors.invalid.password");
                             passwordInput.focus();
-                            return;
-                        default:
-                            Toast.Add.error(t("errors.Internal server error"));
-                            return;
-                    }
+                        },
+                    });
+
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsValidating(false);
@@ -136,14 +125,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                             disabled={isValidating}
                         />
                     </Form.Control>
-                    {error && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(error)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {error && <FormErrorMessage error={error} icon="circle-alert" />}
                 </Form.Field>
                 <Label className="mt-3 flex cursor-pointer select-none gap-2">
                     <Checkbox onClick={() => setShouldShowPassword((prev) => !prev)} disabled={isValidating} />
@@ -154,7 +136,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                         {t("signIn.Forgot password?")}
                     </Button>
                     <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
                 </div>
             </Form.Root>

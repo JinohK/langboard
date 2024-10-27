@@ -3,8 +3,8 @@ import { FormOnlyLayout } from "@/components/Layout";
 import useActivateUser from "@/controllers/signup/useActivateUser";
 import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/signup/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
-import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -46,24 +46,17 @@ function ActivatePage(): JSX.Element {
                     );
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
-
-                    switch (error.response?.status) {
-                        case EHttpStatus.HTTP_404_NOT_FOUND:
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
-                            return;
-                        case EHttpStatus.HTTP_409_CONFLICT:
+                        },
+                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
                             Toast.Add.error(t("signUp.errors.Account already activated. Please sign in."));
                             navigate(ROUTES.SIGN_IN.EMAIL);
-                            return;
-                        default:
-                            Toast.Add.error(t("errors.Internal server error"));
-                            return;
-                    }
+                        },
+                    });
+
+                    handle(error);
                 },
             }
         );

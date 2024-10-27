@@ -1,10 +1,10 @@
-from typing import Any, Callable, cast
+from typing import Any, Callable, Coroutine, cast
 from routes import Mapper
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TEvent
 
 
-TRoutes = dict[str, list[SocketEvent]]
+TRoutes = dict[str, list[Coroutine[Any, Any, SocketEvent]]]
 
 
 class SocketRouter:
@@ -81,7 +81,7 @@ class SocketRouter:
             self._routes[self._path][_event] = []
 
         def decorator(func: TEvent):
-            socket_event = SocketEvent(_path, _event, func)
+            socket_event = SocketEvent(_path, _event, func).init()
             self._routes[self._path][_event].append(socket_event)
             return func
 
@@ -98,7 +98,7 @@ class SocketRouter:
 
         return self._routes[route["route"]], route
 
-    def get_events(self, path: str, event: SocketDefaultEvent | str) -> list[SocketEvent]:
+    async def get_events(self, path: str, event: SocketDefaultEvent | str) -> list[SocketEvent]:
         """Gets the events for the given path and event.
 
         :param path: The path to get the events for.
@@ -107,13 +107,18 @@ class SocketRouter:
         _event = event.value if isinstance(event, SocketDefaultEvent) else event
 
         if path in self._routes:
-            return self._routes[path].get(_event, [])
+            events = self._routes[path].get(_event, [])
+        else:
+            route, _ = self.get_route(path)
+            if not route:
+                return []
+            events = route.get(_event, [])
 
-        route, _ = self.get_route(path)
-        if not route:
-            return []
+        for i in range(len(events)):
+            if isinstance(events[i], Coroutine):
+                events[i] = await events[i]  # type: ignore
 
-        return route.get(_event, [])
+        return cast(list[SocketEvent], events)
 
     def merge(self, router: "SocketRouter") -> None:
         """Merges a router with the current socket router.

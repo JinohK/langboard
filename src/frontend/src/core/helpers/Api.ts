@@ -2,7 +2,8 @@ import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import axios, { AxiosRequestConfig, isAxiosError } from "axios";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
 import Cookies from "universal-cookie";
 
@@ -71,25 +72,27 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (value) => value,
     async (error) => {
-        if (!isAxiosError(error)) {
-            throw error;
-        }
-
-        const originalConfig: AxiosRequestConfig = error.config!;
-        switch (error.response?.status) {
-            case EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY: {
-                const token = await refresh();
-
-                originalConfig.headers!.Authorization = `Bearer ${token}`;
-
-                return await api(originalConfig);
-            }
-            case EHttpStatus.HTTP_401_UNAUTHORIZED:
+        const { handleAsync } = setupApiErrorHandler({
+            nonApiError: (e) => {
+                throw e;
+            },
+            wildcardError: (e) => {
+                throw e;
+            },
+            [EHttpStatus.HTTP_401_UNAUTHORIZED]: (e) => {
                 redirectToSignIn();
-                throw error;
-            default:
-                throw error;
-        }
+                throw e;
+            },
+            [EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY]: async (e) => {
+                const originalConfig: AxiosRequestConfig = e.config!;
+                const token = await refresh();
+                originalConfig.headers!.Authorization = `Bearer ${token}`;
+                return await api(originalConfig);
+            },
+        });
+
+        const result = await handleAsync(error);
+        return result;
     },
     {
         runWhen: (config) => {

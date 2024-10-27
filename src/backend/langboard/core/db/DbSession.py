@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
 from fastapi import Depends
 from sqlalchemy import Delete, Insert, Sequence, Update
@@ -11,13 +10,13 @@ from sqlmodel.sql.base import Executable
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROLE, SUB_DATABASE_URL
 from ..logger import Logger
+from ..utils.DateTime import now
 from .BaseSqlBuilder import BaseSqlBuilder
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
-_TModel = TypeVar("_TModel", bound=BaseSqlModel)
 
 _main_engine = create_async_engine(MAIN_DATABASE_URL)
 _sub_engine = create_async_engine(SUB_DATABASE_URL)
@@ -47,8 +46,6 @@ class DbSession(BaseSqlBuilder):
     async def close(self):
         if self.should_commit():
             _logger.warning("DbConnection is being closed without committing.")
-
-        self._sessions_needs_commit.clear()
 
         await self.rollback()
         for session in self._sessions.values():
@@ -123,7 +120,7 @@ class DbSession(BaseSqlBuilder):
         if purge or not isinstance(obj, SoftDeleteModel):
             await session.delete(obj)
             return
-        obj.deleted_at = datetime.now()
+        obj.deleted_at = now()
         session.add(obj)
 
     @overload
@@ -208,7 +205,7 @@ class DbSession(BaseSqlBuilder):
             )
             and not purge
         ):
-            statement = update(statement.table).values(deleted_at=datetime.now()).where(statement.whereclause)  # type: ignore
+            statement = update(statement.table).values(deleted_at=now()).where(statement.whereclause)  # type: ignore
 
         should_return_count = not isinstance(statement, Select) and not isinstance(statement, SelectOfScalar)
         if isinstance(statement, Insert):
@@ -252,7 +249,8 @@ class DbSession(BaseSqlBuilder):
     async def rollback(self) -> None:
         """Rolls back all sessions that need to be rolled back."""
         for session in self._sessions_needs_commit:
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
         self._sessions_needs_commit.clear()
 
     def _get_session(self, role: DbSessionRole) -> AsyncSession:

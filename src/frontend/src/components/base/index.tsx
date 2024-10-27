@@ -10,6 +10,8 @@ export * as ContextMenu from "./ContextMenu";
 export * as Dialog from "./Dialog";
 export * as Drawer from "./Drawer";
 export * as DropdownMenu from "./DropdownMenu";
+export * as FloatingButton from "./FloatingButton";
+export * as FloatingInput from "./FloatingInput";
 export * as Form from "./Form";
 export * as HoverCard from "./HoverCard";
 export { default as IconComponent } from "./IconComponent";

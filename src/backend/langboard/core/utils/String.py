@@ -1,6 +1,6 @@
-from datetime import datetime
 from os import urandom
 from random import randint, shuffle
+from .DateTime import now
 
 
 def concat(*strs: str) -> str:
@@ -69,7 +69,7 @@ def create_short_unique_id(length: int) -> str:
 def get_random_filename(file_name: str | None) -> str:
     extension = file_name.split(".")[-1] if file_name else ""
 
-    return concat(str(int(datetime.now().timestamp())), urandom(10).hex(), ".", extension)
+    return concat(str(int(now().timestamp())), urandom(10).hex(), ".", extension)
 
 
 def pascal_to_snake(pascal_str: str):

@@ -3,13 +3,13 @@ import { initReactI18next } from "react-i18next";
 import Backend from "i18next-http-backend";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { APP_NAME, IS_PRODUCTION, LANGUAGE_LOCALES } from "@/constants";
-import { makeTitleCase } from "@/core/utils/StringUtils";
+import { StringCase } from "@/core/utils/StringUtils";
 
 i18n.use(Backend)
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-        debug: !IS_PRODUCTION,
+        debug: !IS_PRODUCTION && false,
         fallbackLng: LANGUAGE_LOCALES,
         load: "currentOnly",
         keySeparator: ".",
@@ -18,7 +18,7 @@ i18n.use(Backend)
         interpolation: {
             escapeValue: false,
             defaultVariables: {
-                app: makeTitleCase(APP_NAME),
+                app: new StringCase(APP_NAME).toPascal(),
             },
         },
 
@@ -27,8 +27,7 @@ i18n.use(Backend)
         },
 
         detection: {
-            order: ["querystring", "localStorage", "navigator"],
-            lookupQuerystring: "lang",
+            order: ["localStorage", "navigator"],
             lookupLocalStorage: "lang",
             caches: ["localStorage"],
             convertDetectedLanguage: (lng) => {

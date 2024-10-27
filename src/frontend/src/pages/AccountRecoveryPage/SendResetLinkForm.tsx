@@ -1,8 +1,9 @@
 import { Button, Form, IconComponent, Input, Toast } from "@/components/base";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import useSendResetLink, { TSendResetLinkForm } from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler, { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
-import { AxiosError, isAxiosError } from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,18 +22,13 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
     const { mutate } = useSendResetLink();
     const [isValidating, setIsValidating] = useState(false);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sendLink = (form: TSendResetLinkForm, successCallback: () => void, errorCallback: (error: AxiosError<any, any>) => void) =>
+    const sendLink = (form: TSendResetLinkForm, successCallback: () => void, errorMap: IApiErrorHandlerMap) =>
         mutate(form, {
             onSuccess: successCallback,
             onError: (error) => {
-                if (!isAxiosError(error)) {
-                    console.error(error);
-                    Toast.Add.error(t("errors.Unknown error"));
-                    return;
-                }
+                const { handle } = setupApiErrorHandler(errorMap);
 
-                errorCallback(error);
+                handle(error);
             },
             onSettled: () => {
                 setIsValidating(false);
@@ -76,24 +72,18 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
             () => {
                 navigate(location, { state: { isTwoSidedView: false } });
             },
-            (error) => {
-                switch (error.response?.status) {
-                    case EHttpStatus.HTTP_404_NOT_FOUND:
-                        backToSignin();
-                        return;
-                    case EHttpStatus.HTTP_400_BAD_REQUEST: {
-                        const errorType = error.response.data?.errors.value_error ? "invalid" : "missing";
-                        setErrors(["", `accountRecovery.errors.${errorType}.name`]);
-                        lastnameInput.focus();
-                        return;
-                    }
-                    case EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE:
-                        Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                        return;
-                    default:
-                        Toast.Add.error(t("errors.Internal server error"));
-                        return;
-                }
+            {
+                [EHttpStatus.HTTP_400_BAD_REQUEST]: (error) => {
+                    const errorType = error.response?.data?.errors.value_error ? "invalid" : "missing";
+                    setErrors(["", `accountRecovery.errors.${errorType}.name`]);
+                    lastnameInput.focus();
+                },
+                [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                    backToSignin();
+                },
+                [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
+                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                },
             }
         );
     };
@@ -106,18 +96,13 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
             () => {
                 Toast.Add.success(t("accountRecovery.Resent link successfully."));
             },
-            (error) => {
-                switch (error.response?.status) {
-                    case EHttpStatus.HTTP_404_NOT_FOUND:
-                        backToSignin();
-                        return;
-                    case EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE:
-                        Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                        return;
-                    default:
-                        Toast.Add.error(t("errors.Internal server error"));
-                        return;
-                }
+            {
+                [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                    backToSignin();
+                },
+                [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
+                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                },
             }
         );
     };
@@ -154,31 +139,17 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
                     <Form.Control asChild>
                         <Input type="text" className="w-full" placeholder={t("accountRecovery.First Name")} autoFocus disabled={isValidating} />
                     </Form.Control>
-                    {firstnameError && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(firstnameError)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {firstnameError && <FormErrorMessage error={firstnameError} icon="circle-alert" />}
                 </Form.Field>
                 <Form.Field name="lastname" className="mt-3">
                     <Form.Control asChild>
                         <Input type="text" className="w-full" placeholder={t("accountRecovery.Last Name")} autoFocus disabled={isValidating} />
                     </Form.Control>
-                    {lastnameError && (
-                        <Form.Message>
-                            <div className="mt-1 flex items-center gap-1">
-                                <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                <span className="text-sm text-red-500">{t(lastnameError)}</span>
-                            </div>
-                        </Form.Message>
-                    )}
+                    {lastnameError && <FormErrorMessage error={lastnameError} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                     <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
                 </div>
             </Form.Root>

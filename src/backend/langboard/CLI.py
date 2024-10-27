@@ -2,6 +2,7 @@ from logging import INFO
 from multiprocessing import Process, cpu_count
 from os import sep
 from typing import cast
+from sqlalchemy.orm import close_all_sessions
 from .App import App
 from .Constants import HOST, PORT
 from .core.bootstrap import Commander
@@ -40,6 +41,7 @@ def _run_app_wrapper(options: RunCommandOptions, is_restarting: bool = False) ->
 
 
 def _close_processes(processes: list[Process]):
+    close_all_sessions()
     for process in processes:
         process.terminate()
         process.kill()

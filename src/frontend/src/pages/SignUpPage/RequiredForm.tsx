@@ -1,12 +1,12 @@
-import { Button, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Button, Form, IconComponent, Input } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpForm } from "@/controllers/signup/useSignUp";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSignUpExistsEmail from "@/controllers/signup/useSignUpExistsEmail";
-import { isAxiosError } from "axios";
-import ErrorMessage from "@/pages/SignUpPage/ErrorMessage";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import FormErrorMessage from "@/components/FormErrorMessage";
 
 function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
@@ -29,7 +29,7 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
         }
 
         if (form.password !== form["password-confirm"]) {
-            newErrors["password-confirm"] = <ErrorMessage error="signUp.errors.invalid.password-confirm" />;
+            newErrors["password-confirm"] = <FormErrorMessage error="signUp.errors.invalid.password-confirm" icon="circle-alert" />;
             setValidation(false);
             formInputs["password-confirm"].focus();
             setErrors(newErrors);
@@ -41,7 +41,7 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
             {
                 onSuccess: (data) => {
                     if (data.exists) {
-                        setErrors({ email: <ErrorMessage error="signUp.errors.invalid.email-exists" /> });
+                        setErrors({ email: <FormErrorMessage error="signUp.errors.invalid.email-exists" icon="circle-alert" /> });
                         formInputs.email.focus();
                         return;
                     }
@@ -49,13 +49,9 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
                     nextStep(form as unknown as ISignUpForm, ROUTES.SIGN_UP.ADDITIONAL);
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
+                    const { handle } = setupApiErrorHandler({});
 
-                    Toast.Add.error(t("errors.Internal server error"));
+                    handle(error);
                 },
                 onSettled: () => {
                     setValidation(false);
@@ -147,7 +143,7 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
             </Form.Field>
             <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                 <Button type="submit" disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("common.Next")}
+                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                 </Button>
             </div>
         </Form.Root>

@@ -5,6 +5,7 @@ from pydantic import SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
+from ..utils.DateTime import now
 from ..utils.String import pascal_to_snake
 
 
@@ -15,10 +16,8 @@ class BaseSqlModel(ABC, SQLModel):
     """Bases for all SQL models in the application inherited from :class:`SQLModel`."""
 
     id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.now, nullable=False)
-    updated_at: datetime = Field(
-        default_factory=datetime.now, nullable=False, sa_column_kwargs={"onupdate": datetime.now}
-    )
+    created_at: datetime = Field(default_factory=now, nullable=False)
+    updated_at: datetime = Field(default_factory=now, nullable=False, sa_column_kwargs={"onupdate": now})
 
     @declared_attr.directive
     def __tablename__(cls) -> str:

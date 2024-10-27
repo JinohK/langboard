@@ -1,11 +1,12 @@
 import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUID } from "@/core/utils/StringUtils";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import ProjectCard from "@/pages/DashboardPage/components/ProjectCard";
 import { useEffect, useState } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import InfiniteScroll from "react-infinite-scroller";
 
 export interface IProjectCardListProps {
+    curPage: number;
     projects: IDashboardProject[];
     className?: string;
     hasMore: boolean;
@@ -15,6 +16,7 @@ export interface IProjectCardListProps {
 }
 
 function ProjectCardList({
+    curPage,
     projects,
     className,
     hasMore,
@@ -26,7 +28,7 @@ function ProjectCardList({
     const skeletonCards = [];
 
     for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<ProjectCard isSkeleton={true} key={createShortUID()} />);
+        skeletonCards.push(<ProjectCard isSkeleton={true} key={createShortUUID()} />);
     }
 
     useEffect(() => {
@@ -41,23 +43,28 @@ function ProjectCardList({
         setProjectCards(newProjectCards);
     }, [projects]);
 
-    const nextPage = () =>
+    const nextPage = (page: number) => {
+        if (page - curPage > 1) {
+            return;
+        }
+
         new Promise((resolve) => {
             setTimeout(async () => {
                 const result = await fetchNextPage();
                 resolve(result);
             }, 2500);
         });
+    };
 
     return (
         <>
             <InfiniteScroll
-                scrollableTarget="main"
-                next={nextPage}
+                getScrollParent={() => document.getElementById("main")}
+                loadMore={nextPage}
                 hasMore={hasMore}
-                scrollThreshold={0.9}
+                threshold={140}
                 loader={
-                    <div className="mt-4">
+                    <div className="mt-4" key={createShortUUID()}>
                         <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-4">{skeletonCards}</div>
                         <div className="hidden gap-4 sm:grid sm:grid-cols-2 md:hidden lg:grid-cols-4">
                             {skeletonCards[0]}
@@ -66,8 +73,10 @@ function ProjectCardList({
                         <div className="grid gap-4 sm:hidden sm:grid-cols-2 lg:grid-cols-4">{skeletonCards[0]}</div>
                     </div>
                 }
-                dataLength={projects.length}
+                initialLoad={false}
                 className={cn("!overflow-y-hidden", className)}
+                useWindow={false}
+                pageStart={1}
             >
                 <div className="mt-4">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{projectCards}</div>

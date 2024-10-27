@@ -4,6 +4,7 @@ from typing import Generic, Literal, TypeVar
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
 from ..utils.String import concat
+from .SocketResponseCode import SocketResponseCode
 
 
 _TException = TypeVar("_TException", bound=Exception)
@@ -19,6 +20,14 @@ class EventBaseSocketException(ABC, Exception, Generic[_TException]):
 
     @abstractmethod
     def __str__(self) -> str: ...
+
+
+class SocketStatusCodeException(Exception):
+    code: SocketResponseCode
+
+    def __init__(self, code: SocketResponseCode, message: str = "") -> None:
+        self.code = code
+        self.message = message
 
 
 class SocketEventException(EventBaseSocketException):

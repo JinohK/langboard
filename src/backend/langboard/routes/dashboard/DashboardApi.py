@@ -15,7 +15,7 @@ async def get_starred_projects(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JSONResponse:
-    projects = await service.user.get_assigned_starred_projects(user)
+    projects = await service.user.get_starred_projects(user)
 
     return JSONResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
 

@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from threading import Lock
 from typing import Any, Callable, TypeVar, overload
+from ..utils.DateTime import now
 from .BaseCache import BaseCache
 
 
@@ -30,7 +31,7 @@ class InMemoryCache(BaseCache):
     async def set(self, key: str, value: Any, ttl: int = 0) -> None:
         await self._expire()
         with self._lock:
-            expiry = int((datetime.now() + timedelta(seconds=ttl)).timestamp())
+            expiry = int((now() + timedelta(seconds=ttl)).timestamp())
             casted_value = await self._cast_set(value)
             self._cache[key] = (casted_value, expiry)
 
@@ -47,5 +48,5 @@ class InMemoryCache(BaseCache):
     async def _expire(self) -> None:
         with self._lock:
             for key, (_, ttl) in self._cache.copy().items():
-                if ttl <= int(datetime.now().timestamp()):
+                if ttl <= int(now().timestamp()):
                     del self._cache[key]

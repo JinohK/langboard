@@ -5,6 +5,7 @@ import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { IUser } from "@/core/types";
+import { useQueryMutation } from "@/core/helpers/QueryMutation";
 
 export interface IAuthUser extends IUser {
     industry: string;
@@ -41,6 +42,7 @@ const AuthContext = createContext<IAuthContext>(initialContext);
 
 export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode => {
     const cookies = new Cookies();
+    const { queryClient } = useQueryMutation();
 
     const getAccessToken = (): string | null => {
         return cookies.get(APP_ACCESS_TOKEN) ?? null;
@@ -66,15 +68,34 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     const signOut = () => {
         removeTokens();
+        queryClient.clear();
         location.href = ROUTES.SIGN_IN.EMAIL;
     };
 
     const aboutMe = async () => {
+        const cachedData = sessionStorage.getItem("about-me");
+        if (cachedData) {
+            const { expiresAt, user } = JSON.parse(cachedData);
+            if (expiresAt > Date.now()) {
+                return user;
+            }
+
+            sessionStorage.removeItem("about-me");
+        }
+
         const response = await api.get(API_ROUTES.AUTH.ABOUT_ME, {
             headers: {
                 Authorization: `Bearer ${getAccessToken()}`,
             },
         });
+
+        sessionStorage.setItem(
+            "about-me",
+            JSON.stringify({
+                user: response.data.user,
+                expiresAt: Date.now() + 1000 * 60 * 5,
+            })
+        );
 
         return response.data.user;
     };

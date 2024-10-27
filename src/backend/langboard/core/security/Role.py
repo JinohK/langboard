@@ -2,6 +2,7 @@ from typing import Any, TypeVar
 from ...models import GroupAssignedUser
 from ...models.BaseRoleModel import ALL_GRANTED, BaseRoleModel
 from ..db import DbSession
+from ..filter.RoleFilter import _RoleFinderFunc
 
 
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
@@ -15,11 +16,23 @@ class Role:
         else:
             self._db = DbSession()
 
-    async def is_authorized(self, user_id: int, path_params: dict[str, Any], actions: list[str]) -> bool:
+    async def close(self) -> None:
+        await self._db.close()
+
+    async def is_authorized(
+        self,
+        user_id: int,
+        path_params: dict[str, Any],
+        actions: list[str],
+        role_finder: _RoleFinderFunc | None,
+    ) -> bool:
         query = self._db.query("select").column(self._model_class.actions).where(self._model_class.user_id == user_id)
 
-        for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
-            query = query.where(self._model_class[column_name] == path_params[column_name])
+        if not role_finder:
+            for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
+                query = query.where(self._model_class[column_name] == path_params[column_name])
+        else:
+            query = role_finder(query, path_params)
 
         result = await self._db.exec(query)
         granted_actions = result.first()
@@ -33,8 +46,11 @@ class Role:
                 .where(GroupAssignedUser.user_id == user_id)
             )
 
-            for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
-                query = query.where(self._model_class[column_name] == path_params[column_name])
+            if not role_finder:
+                for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
+                    query = query.where(self._model_class[column_name] == path_params[column_name])
+            else:
+                query = role_finder(query, path_params)
 
             result = await self._db.exec(query)
             granted_actions = result.first()

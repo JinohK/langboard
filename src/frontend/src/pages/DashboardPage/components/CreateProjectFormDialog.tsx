@@ -1,8 +1,9 @@
-import { Button, Dialog, Form, IconComponent, Input, Select, Textarea, Toast } from "@/components/base";
+import { Button, Dialog, Form, Input, Select, Textarea } from "@/components/base";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import useCreateProject from "@/controllers/dashboard/useCreateProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
-import { isAxiosError } from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -46,19 +47,14 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     navigate(ROUTES.BOARD.MAIN(data.project_uid));
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
+                            setTitleError(t("project.errors.missing.title"));
+                            titleInput.focus();
+                        },
+                    });
 
-                    if (error.response?.status === EHttpStatus.HTTP_400_BAD_REQUEST) {
-                        setTitleError(t("project.errors.missing.title"));
-                        titleInput.focus();
-                        return;
-                    }
-
-                    Toast.Add.error(t("errors.Internal server error"));
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsValidating(false);
@@ -78,14 +74,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                         <Form.Control asChild>
                             <Input className="mt-4 w-full" placeholder={t("project.Title")} autoFocus autoComplete="off" disabled={isValidating} />
                         </Form.Control>
-                        {titleError && (
-                            <Form.Message>
-                                <div className="mt-1 flex items-center gap-1">
-                                    <IconComponent icon="circle-alert" className="text-red-500" size="4" />
-                                    <span className="text-sm text-red-500">{t(titleError)}</span>
-                                </div>
-                            </Form.Message>
-                        )}
+                        {titleError && <FormErrorMessage error={titleError} icon="circle-alert" />}
                     </Form.Field>
                     <Form.Field name="project-description">
                         <Form.Control asChild>

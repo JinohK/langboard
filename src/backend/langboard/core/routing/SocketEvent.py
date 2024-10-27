@@ -1,16 +1,18 @@
 from inspect import iscoroutinefunction, signature
-from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Callable, Coroutine
-from .Exception import SocketEventException, SocketRouterScopeException
+from types import AsyncGeneratorType
+from typing import Any, Callable, Coroutine, Self
+from ..filter import RoleFilter
+from ..security import Role
+from .Exception import SocketEventException, SocketRouterScopeException, SocketStatusCodeException
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
-from .SocketRouterScope import SocketRouterScope
+from .SocketResponseCode import SocketResponseCode
+from .SocketRouterScope import SocketRouterScope, TGenerator
 
 
 TEvent = Callable[..., SocketResponse | None | Coroutine[Any, Any, SocketResponse | None]]
-TGenerator = GeneratorType | AsyncGeneratorType
-TCachedScopes = dict[str, (TGenerator | None, Any, type)]
-_TScopes = dict[str, (TGenerator | None, Any)]
+TCachedScopes = dict[str, (Any, type)]
+_TScopes = dict[str, Any]
 
 
 class SocketEvent:
@@ -21,24 +23,40 @@ class SocketEvent:
     def __init__(self, route_path: str, event_name: str, event: TEvent):
         self.name = event_name
         self._event = event
-        params = signature(self._event).parameters
         self._event_details = {
             "route": route_path,
             "event": event_name,
             "func": event.__name__,
         }
+
+    async def init(self) -> "Self":
+        params = signature(self._event).parameters
         self._scope_creators: dict[str, SocketRouterScope] = {}
+        self._generators: list[tuple[bool, TGenerator]] = []
         for scope_name in params:
-            self._scope_creators[scope_name] = SocketRouterScope(scope_name, params[scope_name], self._event_details)
+            self._scope_creators[scope_name] = await SocketRouterScope(
+                self._generators, scope_name, params[scope_name], self._event_details
+            ).init()
+        return self
 
     async def run(
         self, cached_scopes: TCachedScopes, req: SocketRequest
-    ) -> SocketResponse | SocketRouterScopeException | SocketEventException | None:
+    ) -> SocketResponse | SocketRouterScopeException | SocketStatusCodeException | SocketEventException | None:
         """Runs the socket event.
 
         :param cached_scopes: The cached scopes.
         :param req: The socket request.
         """
+
+        if RoleFilter.exists(self._event):
+            model_class, actions, role_finder = RoleFilter.get_filtered(self._event)
+            role = Role(model_class)
+
+            is_authorized = await role.is_authorized(req.from_app["auth_user_id"], req.route_data, actions, role_finder)
+            await role.close()
+            if not is_authorized:
+                return SocketStatusCodeException(code=SocketResponseCode.WS_3003_FORBIDDEN, message="Forbidden")
+
         try:
             scopes = await self._create_scopes(cached_scopes, req)
 
@@ -46,7 +64,7 @@ class SocketEvent:
                 raise scopes
 
             data = {}
-            for scope_name, (_, result) in scopes.items():
+            for scope_name, result in scopes.items():
                 data[scope_name] = result
 
             if iscoroutinefunction(self._event):
@@ -63,55 +81,46 @@ class SocketEvent:
         except Exception as e:
             return SocketEventException(exception=e, **self._event_details)
 
+    async def finish_generators(self, finish_cached_scopes: bool | None = None):
+        for cached, generator in self._generators:
+            if finish_cached_scopes is None:
+                await self._finish_generator(generator)
+                continue
+
+            if cached == finish_cached_scopes:
+                await self._finish_generator(generator)
+
     async def _create_scopes(self, cached_scopes: TCachedScopes, req: SocketRequest) -> _TScopes | Exception:
         scopes: _TScopes = {}
         for scope_name in self._scope_creators:
             scope_creator = self._scope_creators[scope_name]
 
             if scope_name in cached_scopes:
-                _, result, annotation = cached_scopes[scope_name]
+                result, annotation = cached_scopes[scope_name]
                 if scope_creator.annotation == annotation:
-                    scopes[scope_name] = (None, result)  # type: ignore
+                    scopes[scope_name] = result
                     continue
 
-            scope = scope_creator(req)
+            scope = await scope_creator(req)
 
             if isinstance(scope, Exception):
-                await self._finish_generators(scopes)
+                await self.finish_generators()
                 return scope
 
             if scope_creator.use_cache:
-                if isinstance(scope, AsyncGeneratorType):
-                    result = await anext(scope)
-                    cached_scopes[scope_name] = (scope, result, type(result))  # type: ignore
-                    scopes[scope_name] = (None, result)  # type: ignore
-                elif isinstance(scope, GeneratorType):
-                    result = next(scope)
-                    cached_scopes[scope_name] = (scope, result, type(result))  # type: ignore
-                    scopes[scope_name] = (None, result)  # type: ignore
-                else:
-                    cached_scopes[scope_name] = (None, scope, scope_creator.annotation)  # type: ignore
-                    scopes[scope_name] = (None, scope)  # type: ignore
-            else:
-                if isinstance(scope, AsyncGeneratorType):
-                    scopes[scope_name] = (scope, await anext(scope))  # type: ignore
-                elif isinstance(scope, GeneratorType):
-                    scopes[scope_name] = (scope, next(scope))  # type: ignore
-                else:
-                    scopes[scope_name] = (None, scope)  # type: ignore
+                cached_scopes[scope_name] = (scope, scope_creator.annotation)
+            scopes[scope_name] = scope
 
-        await self._finish_generators(scopes)
+        await self.finish_generators(finish_cached_scopes=False)
         return scopes
 
-    async def _finish_generators(self, scopes: _TScopes):
-        for generator, _ in scopes.values():
-            await self._finish_generator(generator)  # type: ignore
-
-    async def _finish_generator(self, scope: GeneratorType | AsyncGeneratorType | None):
+    async def _finish_generator(self, scope: TGenerator | None):
         if not scope:
             return
 
         if isinstance(scope, AsyncGeneratorType):
-            await scope.aclose()
+            async for _ in scope:
+                pass
         else:
-            scope.close()
+            for _ in scope:
+                pass

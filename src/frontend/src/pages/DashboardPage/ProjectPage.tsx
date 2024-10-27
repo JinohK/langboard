@@ -33,7 +33,6 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps):
         data: rawProjects,
         fetchNextPage,
         hasNextPage,
-        isFetchingNextPage,
         refetch,
     } = useGetProjects(currentProjectQuery.params, {
         getNextPageParam: (lastPage, _, lastPageParam) => {
@@ -73,13 +72,18 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps):
                 ))}
             </Tabs.List>
             <Tabs.Content value={currentTab}>
-                <ProjectCardList
-                    projects={projects}
-                    hasMore={hasNextPage && !isFetchingNextPage}
-                    refetchAllStarred={refetchAllStarred}
-                    refetchProjects={refetch}
-                    fetchNextPage={fetchNextPage}
-                />
+                {projects.length === 0 ? (
+                    <h2 className="pb-3 text-center text-lg text-accent-foreground">{t("dashboard.No projects found")}</h2>
+                ) : (
+                    <ProjectCardList
+                        curPage={currentProjectQuery.data.pageParams.length}
+                        projects={projects}
+                        hasMore={hasNextPage}
+                        refetchAllStarred={refetchAllStarred}
+                        refetchProjects={refetch}
+                        fetchNextPage={fetchNextPage}
+                    />
+                )}
             </Tabs.Content>
         </Tabs.Root>
     );

@@ -1,10 +1,10 @@
 import { Avatar, Button, Card, IconComponent, Toast } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/signup/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { isAxiosError } from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -37,24 +37,17 @@ function Overview({ values, nextStep }: Omit<ISignUpFormProps, "validateForm">):
                     navigate(`${ROUTES.SIGN_UP.COMPLETE}?${searchParams.toString()}`, { state: { email: values.email } });
                 },
                 onError: (error) => {
-                    if (!isAxiosError(error)) {
-                        console.error(error);
-                        Toast.Add.error(t("errors.Unknown error"));
-                        return;
-                    }
-
-                    switch (error.response?.status) {
-                        case EHttpStatus.HTTP_409_CONFLICT:
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
                             Toast.Add.error(t("signUp.errors.invalid.email-exists"));
                             nextStep(values, ROUTES.SIGN_UP.REQUIRED);
-                            return;
-                        case EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE:
+                        },
+                        [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
                             Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                            return;
-                        default:
-                            Toast.Add.error(t("errors.Internal server error"));
-                            return;
-                    }
+                        },
+                    });
+
+                    handle(error);
                 },
                 onSettled: () => {
                     setIsValidating(false);
@@ -100,7 +93,7 @@ function Overview({ values, nextStep }: Omit<ISignUpFormProps, "validateForm">):
                     {t("common.Back")}
                 </Button>
                 <Button type="button" onClick={handleSubmit} disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth={3} className="animate-spin" /> : t("signUp.Sign up")}
+                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("signUp.Sign up")}
                 </Button>
             </div>
         </>

@@ -1,3 +1,4 @@
+from .ChatHistory import ChatHistory
 from .Group import Group
 from .GroupAssignedUser import GroupAssignedUser
 from .Project import Project
@@ -7,6 +8,7 @@ from .User import User
 
 
 __all__ = [
+    "ChatHistory",
     "Group",
     "GroupAssignedUser",
     "Project",
