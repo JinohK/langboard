@@ -33,11 +33,7 @@ function SuspenseComponent({ children, className, width, height, shouldWrapChild
     const wrappedChildren = shouldWrapChildren ? <div>{children}</div> : children;
     const fallback = isPage ? <Progress indeterminate height="1" /> : <Skeleton style={{ width, height }} className={className} />;
 
-    return (
-        <>
-            <Suspense fallback={fallback}>{wrappedChildren}</Suspense>
-        </>
-    );
+    return <Suspense fallback={fallback}>{wrappedChildren}</Suspense>;
 }
 
 export default SuspenseComponent;

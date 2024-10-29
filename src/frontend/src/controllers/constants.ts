@@ -35,6 +35,7 @@ export const SOCKET_ROUTES = {
 
 export const SOCKET_SERVER_EVENTS = {
     BOARD: {
+        IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SENT: "chat:sent",
         CHAT_STREAM: "chat:stream",
     },
@@ -42,6 +43,7 @@ export const SOCKET_SERVER_EVENTS = {
 
 export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
+        IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SEND: "chat:send",
     },
 } as const;

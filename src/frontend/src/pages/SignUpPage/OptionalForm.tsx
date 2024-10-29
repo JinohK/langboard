@@ -1,15 +1,37 @@
-import { Avatar, Button, Form, IconComponent, Input, Label } from "@/components/base";
+import { Avatar, Button, Form, IconComponent, Input } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useDropzone } from "react-dropzone";
 
 function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm">): JSX.Element {
     const { t } = useTranslation();
     const dataTransfer = new DataTransfer();
     const [isValidating, setIsValidating] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState<string | undefined>((values as unknown as Record<string, string>).avatarUrl ?? undefined);
+    const handleUpload = useCallback((files: File[] | FileList | null) => {
+        if (!files || !files.length) {
+            setAvatarUrl(undefined);
+            dataTransfer.items.clear();
+            return;
+        }
+
+        const file = files[0];
+        dataTransfer.items.add(file);
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setAvatarUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    }, []);
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        accept: { "image/*": [] },
+        onDrop: handleUpload,
+        onFileDialogCancel: () => handleUpload(null),
+    });
 
     if (values.avatar) {
         if (!dataTransfer.items.length) {
@@ -47,36 +69,25 @@ function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm
         nextStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
     };
 
-    const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.currentTarget.files;
-        if (!files || !files.length) {
-            setAvatarUrl(undefined);
-            dataTransfer.items.clear();
-            return;
-        }
-
-        const file = files[0];
-        dataTransfer.items.add(file);
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            setAvatarUrl(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-    };
-
     return (
         <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={submitForm}>
-            <Form.Field name="avatar" className="flex justify-center">
-                <Label className="flex cursor-pointer justify-center">
-                    <Avatar.Root className="h-20 w-20">
-                        <Avatar.Image src={avatarUrl} alt="" />
-                        <Avatar.Fallback className="text-4xl">{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
-                    </Avatar.Root>
-                    <Form.Control asChild>
-                        <Input className="hidden" type="file" accept="image/*" onChange={handleUpload} disabled={isValidating} />
-                    </Form.Control>
-                </Label>
+            <Form.Field
+                className="relative flex cursor-pointer justify-center transition-all duration-200 hover:opacity-80"
+                {...getRootProps({ name: "avatar" })}
+            >
+                {isDragActive && (
+                    // eslint-disable-next-line @/max-len
+                    <div className="absolute left-0 top-0 z-50 flex h-full w-full items-center justify-center border-2 border-dashed border-primary bg-background">
+                        {t("signUp.Drop your avatar here")}
+                    </div>
+                )}
+                <Avatar.Root className="h-20 w-20">
+                    <Avatar.Image src={avatarUrl} alt="" />
+                    <Avatar.Fallback className="text-4xl">{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
+                </Avatar.Root>
+                <Form.Control asChild>
+                    <Input className="hidden" disabled={isValidating} {...getInputProps()} />
+                </Form.Control>
             </Form.Field>
             <Form.Field name="affiliation">
                 <Form.Control asChild>

@@ -2,13 +2,12 @@ import { IconComponent } from "@/components/base";
 import { createShortUUID, StringCase } from "@/core/utils/StringUtils";
 import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer, Virtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/core/utils/ComponentUtils";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 
 export interface IVirtualInfiniteListProps<T> {
     status: "pending" | "error" | "success";
-    listName: string;
     items: T[];
     scrollable: () => HTMLElement | null;
     fetchNextPage: () => Promise<unknown>;
@@ -22,6 +21,7 @@ export interface IVirtualInfiniteListProps<T> {
     isReverse?: boolean;
     gap?: number;
     noItemsElement?: JSX.Element;
+    virtualizerRef?: React.MutableRefObject<Virtualizer<HTMLElement, Element> | null>;
 }
 
 const measureElementHeight = (list: HTMLElement, className: string | undefined, element: JSX.Element) => {
@@ -53,14 +53,13 @@ const measureElementHeight = (list: HTMLElement, className: string | undefined, 
 
     const height = root.firstElementChild!.clientHeight;
 
-    // document.body.removeChild(root);
+    document.body.removeChild(root);
 
     return height;
 };
 
 function VirtualInfiniteList<T>({
     status,
-    listName,
     items,
     scrollable,
     fetchNextPage,
@@ -73,6 +72,7 @@ function VirtualInfiniteList<T>({
     className,
     gap = 0,
     noItemsElement,
+    virtualizerRef,
 }: IVirtualInfiniteListProps<T>) {
     const isLoading = useRef(false);
     const loader = useRef(
@@ -96,6 +96,10 @@ function VirtualInfiniteList<T>({
         },
         overscan,
     });
+
+    if (virtualizerRef) {
+        virtualizerRef.current = virtualizer;
+    }
 
     useEffect(() => {
         virtualizer.measure();
@@ -178,7 +182,13 @@ function VirtualInfiniteList<T>({
                         };
 
                         return (
-                            <div className={cn("absolute left-0 top-0 w-full", itemClassName)} style={style} key={`${listName}-${row.index}`}>
+                            <div
+                                className={cn("absolute left-0 top-0 w-full", itemClassName)}
+                                style={style}
+                                key={row.key}
+                                data-index={row.index}
+                                ref={virtualizer.measureElement}
+                            >
                                 {isLoader && hasNextPage ? loader.current : createItem(item)}
                             </div>
                         );

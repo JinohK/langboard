@@ -145,7 +145,7 @@ function ResizableSidebar({
                     {floatingFullScreen && <FloatingButton.CloseButton />}
                     {isMobile && children}
                 </FloatingButton.Content>
-                <FloatingButton.Button icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+                <FloatingButton.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
             </FloatingButton.Root>
         </>
     );

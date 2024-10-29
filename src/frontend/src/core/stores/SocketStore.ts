@@ -49,7 +49,7 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         if (map.socket.readyState !== WebSocket.OPEN) {
-            map.sendingQueueTimeout = setTimeout(() => sendQueue(map), 100);
+            map.sendingQueueTimeout = setTimeout(() => sendQueue(map), 300);
             return;
         }
 
@@ -67,7 +67,7 @@ const useSocketStore = create<ISocketStore>(() => {
 
         if (map.socket.readyState !== WebSocket.OPEN) {
             map.sendingQueue.push(json);
-            sendQueue(map);
+            map.sendingQueueTimeout = setTimeout(() => sendQueue(map), 300);
             return true;
         }
 

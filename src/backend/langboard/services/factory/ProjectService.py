@@ -59,7 +59,7 @@ class ProjectService(BaseService):
                 )
                 .outerjoin(
                     Group,
-                    ProjectRole.group_id == Group.id,  # type: ignore
+                    (ProjectRole.group_id == Group.id) & (Group.deleted_at == None),  # type: ignore # noqa
                 )
                 .group_by(Project.column("id"))
             ),
@@ -316,9 +316,14 @@ class ProjectService(BaseService):
         result = await self._db.exec(
             self._db.query("select")
             .columns(ProjectAssignedUser.id, role_class.id)
-            .join(User, ProjectAssignedUser.user_id == User.id)  # type: ignore
+            .join(User, (ProjectAssignedUser.user_id == User.id) & (User.deleted_at == None))  # type: ignore # noqa
             .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
-            .join(Project, (ProjectAssignedUser.project_id == Project.id) & (Project.owner_id != User.id))  # type: ignore
+            .join(
+                Project,
+                (ProjectAssignedUser.project_id == Project.id)
+                & (Project.owner_id != User.id)  # type: ignore
+                & (User.deleted_at == None),  # noqa
+            )
             .outerjoin(
                 role_class,
                 (role_class.user_id == User.id) & (role_class.project_id == ProjectAssignedUser.project_id),  # type: ignore

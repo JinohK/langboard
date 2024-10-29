@@ -1,13 +1,11 @@
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import ChatMessage, { IChatMessageProps } from "@/pages/BoardPage/components/ChatMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { renderToStaticMarkup } from "react-dom/server";
 import useGetProjectChatMessages from "@/controllers/board/useGetProjectChatMessages";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import VirtualInfiniteList from "@/components/VirtualInfiniteList";
 import { useTranslation } from "react-i18next";
+import { Virtualizer } from "@tanstack/react-virtual";
 
 export interface IConversationProps {
     uid: string;
@@ -17,11 +15,11 @@ export interface IConversationProps {
 }
 
 const params = { project_uid: "", page: 1, limit: 20, current_date: new Date() };
-const prevElements: Record<string, Element[]> = {};
 
 function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) {
     const [t] = useTranslation();
     const conversationRef = useRef<HTMLDivElement>(null);
+    const virtualizerRef = useRef<Virtualizer<HTMLElement, Element> | null>(null);
     params.project_uid = uid;
     params.current_date = new Date();
     const {
@@ -78,33 +76,12 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
 
         streamChat.message = data.message;
 
-        const target = document.getElementById(`chat-${streamChat.uid}`)!;
-        const content = target.querySelector(".chat-content")!;
-
-        if (!prevElements[streamChat.uid]) {
-            prevElements[streamChat.uid] = Array.from(content.children);
-        }
-
-        const markdown = <Markdown remarkPlugins={[remarkGfm]}>{streamChat.message}</Markdown>;
-        const html = renderToStaticMarkup(markdown);
-        content.innerHTML = html;
+        setMessages((prev) => [...prev]);
     }, []);
     const endCallback = useCallback((data: { uid: string }) => {
         if (!streamChat || streamChat.uid !== data.uid) {
             return;
         }
-
-        Object.entries(prevElements).forEach(([key, value]) => {
-            delete prevElements[key];
-            const target = document.getElementById(`chat-${key}`);
-            if (!target) {
-                return;
-            }
-
-            const content = target.querySelector(".chat-content")!;
-            content.innerHTML = "";
-            content.append(...value);
-        });
 
         setMessages((prev) => [...prev]);
 
@@ -153,7 +130,6 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
         <div className="h-[calc(100%_-_theme(spacing.28))] overflow-y-auto" ref={conversationRef}>
             <VirtualInfiniteList
                 status={status}
-                listName="chat"
                 items={messages}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
@@ -166,6 +142,7 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
                 className="chat-list md:p-2"
                 itemClassName="md:p-2"
                 noItemsElement={<h2 className="pb-3 text-center text-sm text-accent-foreground">{t("project.Ask anything to {app} AI!")}</h2>}
+                virtualizerRef={virtualizerRef}
             />
         </div>
     );

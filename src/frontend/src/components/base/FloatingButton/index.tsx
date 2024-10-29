@@ -20,7 +20,7 @@ const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>
 });
 Content.displayName = "FloatingButton.Content";
 
-interface IFloatingButtonProps extends ButtonProps {
+interface IFloatingButtonTriggerProps extends ButtonProps {
     icon: string;
 }
 
@@ -39,9 +39,9 @@ const setFloating = (event: React.MouseEvent<HTMLButtonElement>) => {
     }
 };
 
-const Button = forwardRef<HTMLButtonElement, IFloatingButtonProps>(({ icon, children, className, ...props }, ref) => (
+const Trigger = forwardRef<HTMLButtonElement, IFloatingButtonTriggerProps>(({ icon, children, className, ...props }, ref) => (
     <BaseButton
-        className={cn("floating-btn h-14 w-14 rounded-full transition-transform duration-300 ease-in-out sm:h-16 sm:w-16", className)}
+        className={cn("floating-trigger h-14 w-14 rounded-full transition-transform duration-300 ease-in-out sm:h-16 sm:w-16", className)}
         onClick={setFloating}
         {...props}
         ref={ref}
@@ -49,7 +49,7 @@ const Button = forwardRef<HTMLButtonElement, IFloatingButtonProps>(({ icon, chil
         <IconComponent icon={icon} size="8" />
     </BaseButton>
 ));
-Button.displayName = "FloatingButton.Button";
+Trigger.displayName = "FloatingButton.Trigger";
 
 const CloseButton = forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, variant = "ghost", ...props }, ref) => (
     <BaseButton
@@ -71,7 +71,7 @@ interface IFloatingRootProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, className, fullScreen = false, ...props }, ref) => {
     let hasContent = false;
-    let hasButton = false;
+    let hasTrigger = false;
     Children.forEach(children, (child) => {
         if (child === null) {
             return;
@@ -81,8 +81,8 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
             throw new Error(`${Root.displayName} children must be valid React elements`);
         }
 
-        if (child.type === Button) {
-            hasButton = true;
+        if (child.type === Trigger) {
+            hasTrigger = true;
         }
 
         if (child.type !== Content) {
@@ -113,8 +113,8 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
         }
     });
 
-    if (!hasContent || !hasButton) {
-        throw new Error(`${Root.displayName} must have a ${Content.displayName} and a ${Button.displayName}`);
+    if (!hasContent || !hasTrigger) {
+        throw new Error(`${Root.displayName} must have a ${Content.displayName} and a ${Trigger.displayName}`);
     }
 
     let fullScreenClassNames;
@@ -126,7 +126,7 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
             "[&>.floating-content>.floating-close-btn]:data-[expanded=true]:flex",
             "[&>.floating-content>.floating-close-btn]:data-[expanded=true]:opacity-100",
             "[&>.floating-content]:data-[expanded=true]:translate-x-0",
-            "[&>.floating-btn]:data-[expanded=true]:opacity-0"
+            "[&>.floating-trigger]:data-[expanded=true]:opacity-0"
         );
     } else {
         fullScreenClassNames = cn(
@@ -140,7 +140,7 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
                 "floating-wrapper fixed bottom-2 left-2 z-50 inline-block md:hidden",
                 "[&>.floating-content]:data-[expanded=true]:-translate-y-0 [&>.floating-content]:data-[expanded=true]:scale-x-100",
                 "[&>.floating-content>*]:data-[expanded=true]:opacity-100 [&>.floating-content]:data-[expanded=true]:opacity-90",
-                "[&>.floating-btn]:data-[expanded=true]:rotate-45",
+                "[&>.floating-trigger]:data-[expanded=true]:rotate-45",
                 fullScreenClassNames,
                 className
             )}
@@ -153,4 +153,4 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
 });
 Root.displayName = "FloatingButton.Root";
 
-export { Root, Content, Button, CloseButton };
+export { Root, Content, Trigger, CloseButton };

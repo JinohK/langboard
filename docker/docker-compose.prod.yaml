@@ -19,6 +19,27 @@ services:
       - prod_net
     restart: always
 
+  frontend:
+    container_name: ${PROJECT_NAME}_frontend
+    build:
+      context: ../src/frontend
+    environment:
+      - ENVIRONMENT=development
+      - PROJECT_NAME=${PROJECT_NAME}
+      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
+      - SOCKET_URL=${SOCKET_URL}
+      - API_URL=${API_URL}
+    working_dir: /app
+    command: yarn build -w
+    volumes:
+      - ../src/frontend/src:/app/src
+      - ../src/frontend/vite.config.ts:/app/vite.config.ts
+      - ../src/frontend/tailwind.config.js:/app/tailwind.config.js
+      - ../src/frontend/postcss.config.js:/app/postcss.config.js
+    networks:
+      - prod_net
+    restart: always
+
   backend:
     container_name: ${PROJECT_NAME}_backend
     build:
@@ -33,9 +54,9 @@ services:
       - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
       - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
       - LOGGING_DIR=${LOGGING_DIR}
-      - MAIN_DATABASE_URL=postresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:${MASTER_POSTGRES_PORT}/${POSTGRES_DB}
+      - MAIN_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:${MASTER_POSTGRES_PORT}/${POSTGRES_DB}
       - MAIN_DATABASE_ROLE=${MAIN_DATABASE_ROLE}
-      - SUB_DATABASE_URL=postresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:${REPLICA_POSTGRES_PORT}/${POSTGRES_DB}
+      - SUB_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:${REPLICA_POSTGRES_PORT}/${POSTGRES_DB}
       - SUB_DATABASE_ROLE=${SUB_DATABASE_ROLE}
       - CACHE_TYPE=redis
       - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:${REDIS_PORT}/0
@@ -49,11 +70,12 @@ services:
       - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
       - S3_REGION_NAME=${S3_REGION_NAME}
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - LANGFLOW_URL=${LANGFLOW_URL}
+      - LANGFLOW_API_KEY=${LANGFLOW_API_KEY}
     working_dir: /app
-    command: pypy3 -m ${PROJECT_NAME} run -w
+    command: ${PROJECT_NAME} run -w
     volumes:
-      - ../src/backend/${PROJECT_NAME}:/app/${PROJECT_NAME}
-      - ../src/backend/requirements.txt:/app/requirements.txt
+      - ../src/backend/${PROJECT_NAME}:/app/src/backend/${PROJECT_NAME}
     networks:
       - prod_net
     restart: always
@@ -65,10 +87,10 @@ services:
     environment:
       - REQUIREPASS=${REDIS_PASSWORD}
       - CLIENTPORT=6379
-      - REDIS_LOG_FILE=${REDIS_LOG_FILE}
+      - REDIS_LOG_FILE=/${REDIS_LOG_FILE}
     volumes:
       - ./volumes/cache:/data
-      - ../logs/redis:${REDIS_LOG_FILE}
+      - ../logs/redis/redis.log:/${REDIS_LOG_FILE}
       - ./cache/redis.conf:/usr/local/bin/redis.conf
     ports:
       - ${REDIS_PORT}:6379

@@ -42,7 +42,7 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                 <FloatingButton.Content>
                     <NavItems isFloating navs={navs} />
                 </FloatingButton.Content>
-                <FloatingButton.Button icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+                <FloatingButton.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
             </FloatingButton.Root>
         </>
     );

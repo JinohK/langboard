@@ -1,13 +1,13 @@
 import { Progress, Toast } from "@/components/base";
 import { DashboardStyledLayout } from "@/components/Layout";
 import useProjectAvailable from "@/controllers/board/useProjectAvailable";
-import { SOCKET_ROUTES } from "@/controllers/constants";
+import { SOCKET_CLIENT_EVENTS, SOCKET_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IConnectedSocket, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/ChatSidebar";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -19,8 +19,18 @@ function BoardPage(): JSX.Element {
     const { connect, closeAll } = useSocket();
     const [socket, setSocket] = useState<IConnectedSocket | null>(null);
     const [isConnectable, setIsConnectable] = useState(false);
+    const [isChatAvailable, setIsChatAvailable] = useState(false);
     const params = useParams();
     const uid = params.uid;
+    const isChatAvailableCallback = useCallback((data: { available: boolean }) => {
+        setIsChatAvailable(data.available);
+    }, []);
+    const chatErrorCallback = useCallback(() => {
+        Toast.Add.error(t("errors.Internal server error"));
+        closeAll();
+        setIsChatAvailable(false);
+        setSocket(null);
+    }, []);
 
     if (!uid) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
@@ -52,11 +62,18 @@ function BoardPage(): JSX.Element {
             return;
         }
 
-        const socket = connect(SOCKET_ROUTES.BOARD(uid));
+        const curSocket = connect(SOCKET_ROUTES.BOARD(uid));
 
-        setSocket(socket);
+        curSocket.on(SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE, isChatAvailableCallback);
+        curSocket.on("error", chatErrorCallback);
+
+        setSocket(curSocket);
+
+        curSocket.send(SOCKET_CLIENT_EVENTS.BOARD.IS_CHAT_AVAILABLE, {});
 
         return () => {
+            curSocket.off(SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE, isChatAvailableCallback);
+            curSocket.off("error", chatErrorCallback);
             closeAll();
             setSocket(null);
         };
@@ -76,7 +93,7 @@ function BoardPage(): JSX.Element {
     };
 
     return (
-        <DashboardStyledLayout headerNavs={[]} resizableSidebar={resizableSidebar}>
+        <DashboardStyledLayout headerNavs={[]} resizableSidebar={isChatAvailable ? resizableSidebar : undefined}>
             <div>board</div>
         </DashboardStyledLayout>
     );

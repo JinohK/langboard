@@ -38,3 +38,7 @@ class Service(ServiceFactory):
     @property
     def chat_history(self):
         return self._create_or_get_service(factory.ChatHistoryService)
+
+    @property
+    def bot(self):
+        return self._create_or_get_service(factory.BotService)

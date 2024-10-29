@@ -35,15 +35,21 @@ class WebSocket(SocketifyWebSocket):
                 self.__ws = ws
 
             def start(self, data: Any = None, compress: bool = False):
+                if not self.__ws:
+                    return self
                 self.__ws.send(f"{event}:start", data, compress=compress)
                 return self
 
             def buffer(self, data: Any = None, compress: bool = False):
+                if not self.__ws:
+                    return self
                 self.__ws.send(f"{event}:buffer", data, compress=compress)
                 return self
 
             def end(self, data: Any = None, compress: bool = False):
+                if not self.__ws:
+                    return
                 self.__ws.send(f"{event}:end", data, compress=compress)
-                return self
+                self.__ws = None
 
         return _WebSocketStream(self)

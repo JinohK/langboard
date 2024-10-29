@@ -1,3 +1,4 @@
+from sqlalchemy import TEXT, Column
 from sqlmodel import Field
 from ..core.db import SoftDeleteModel
 from ..core.utils.String import create_short_unique_id
@@ -8,7 +9,7 @@ class Project(SoftDeleteModel, table=True):
     uid: str = Field(default_factory=lambda: create_short_unique_id(10), unique=True, nullable=False)
     owner_id: int = Field(foreign_key=User.expr("id"), nullable=False)
     title: str = Field(nullable=False)
-    description: str | None = Field(default=None, nullable=True)
+    description: str | None = Field(default=None, sa_column=Column(type_=TEXT))
     project_type: str = Field(default="Other", nullable=False)
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

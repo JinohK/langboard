@@ -60,6 +60,7 @@
     "Purpose": "What is your purpose for using {{app}}?",
     "Affiliation": "What organization are you affiliated with?",
     "Position": "What is your position in your organization?",
+    "Drop your avatar here": "Drop your avatar here",
     "industries": { },
     "purposes": { },
     "overview": {
