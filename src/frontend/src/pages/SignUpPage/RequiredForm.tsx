@@ -1,4 +1,4 @@
-import { Button, Form, IconComponent, Input } from "@/components/base";
+import { Button, Floating, Form, IconComponent } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpForm } from "@/controllers/signup/useSignUp";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
@@ -65,54 +65,47 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
     return (
         <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={submitForm}>
             <Form.Field name="email">
-                <Form.Control asChild>
-                    <Input
-                        className="w-full"
-                        placeholder={t("signUp.Email")}
-                        autoFocus
-                        autoComplete="email"
-                        disabled={isValidating}
-                        defaultValue={values.email ?? ""}
-                    />
-                </Form.Control>
+                <Floating.LabelInput
+                    label={t("signUp.Email")}
+                    isFormControl
+                    autoFocus
+                    autoComplete="email"
+                    disabled={isValidating}
+                    defaultValue={values.email ?? ""}
+                />
                 {errors.email}
             </Form.Field>
             <Form.Field name="firstname">
-                <Form.Control asChild>
-                    <Input
-                        className="w-full"
-                        placeholder={t("signUp.First Name")}
-                        autoComplete="firstname"
-                        disabled={isValidating}
-                        defaultValue={values.firstname ?? ""}
-                    />
-                </Form.Control>
+                <Floating.LabelInput
+                    label={t("signUp.First Name")}
+                    isFormControl
+                    autoComplete="firstname"
+                    disabled={isValidating}
+                    defaultValue={values.firstname ?? ""}
+                />
                 {errors.firstname}
             </Form.Field>
             <Form.Field name="lastname">
-                <Form.Control asChild>
-                    <Input
-                        className="w-full"
-                        placeholder={t("signUp.Last Name")}
-                        autoComplete="lastname"
-                        disabled={isValidating}
-                        defaultValue={values.lastname ?? ""}
-                    />
-                </Form.Control>
+                <Floating.LabelInput
+                    label={t("signUp.Last Name")}
+                    isFormControl
+                    autoComplete="lastname"
+                    disabled={isValidating}
+                    defaultValue={values.lastname ?? ""}
+                />
                 {errors.lastname}
             </Form.Field>
             <Form.Field name="password">
                 <div className="relative">
-                    <Form.Control asChild>
-                        <Input
-                            type={shouldShowPw ? "text" : "password"}
-                            className="w-full pr-10"
-                            placeholder={t("signUp.Password")}
-                            autoComplete="off"
-                            disabled={isValidating}
-                            defaultValue={values.password ?? ""}
-                        />
-                    </Form.Control>
+                    <Floating.LabelInput
+                        type={shouldShowPw ? "text" : "password"}
+                        label={t("signUp.Password")}
+                        isFormControl
+                        className="pr-10"
+                        autoComplete="off"
+                        disabled={isValidating}
+                        defaultValue={values.password ?? ""}
+                    />
                     <IconComponent
                         icon={shouldShowPw ? "eye-off" : "eye"}
                         className={showIconClassName}
@@ -123,16 +116,15 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
             </Form.Field>
             <Form.Field name="password-confirm">
                 <div className="relative">
-                    <Form.Control asChild>
-                        <Input
-                            type={shouldShowConfirmPw ? "text" : "password"}
-                            className="w-full pr-10"
-                            placeholder={t("signUp.Confirm password")}
-                            autoComplete="off"
-                            disabled={isValidating}
-                            defaultValue={values.password ?? ""}
-                        />
-                    </Form.Control>
+                    <Floating.LabelInput
+                        type={shouldShowConfirmPw ? "text" : "password"}
+                        label={t("signUp.Confirm password")}
+                        isFormControl
+                        className="pr-10"
+                        autoComplete="off"
+                        disabled={isValidating}
+                        defaultValue={values.password ?? ""}
+                    />
                     <IconComponent
                         icon={shouldShowConfirmPw ? "eye-off" : "eye"}
                         className={showIconClassName}

@@ -7,7 +7,18 @@ const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>
     return (
         <div
             className={cn(
-                "floating-content z-10 flex scale-x-0 flex-col items-center opacity-0",
+                "group-data-[fullscreen=false]/floating:absolute group-data-[fullscreen=false]/floating:bottom-16",
+                "group-data-[fullscreen=false]/floating:w-full group-data-[fullscreen=false]/floating:gap-1.5",
+                "sm:group-data-[fullscreen=false]/floating:mb-2",
+                "group-data-[fullscreen=true]/floating:fixed",
+                "group-data-[fullscreen=true]/floating:left-0 group-data-[fullscreen=true]/floating:top-0",
+                "group-data-[fullscreen=true]/floating:h-screen group-data-[fullscreen=true]/floating:w-screen",
+                "group-[:is([data-fullscreen='true'][data-expanded='true'])]/floating:translate-x-0",
+                "group-data-[fullscreen=true]/floating:-translate-x-full",
+                "group-data-[fullscreen=true]/floating:bg-background",
+                "group-data-[expanded=true]/floating:-translate-y-0 group-data-[expanded=true]/floating:scale-x-100",
+                "group-data-[expanded=true]/floating:opacity-90 [&>*]:group-data-[expanded=true]/floating:opacity-100",
+                "z-10 flex scale-x-0 flex-col items-center opacity-0",
                 "w-sc translate-y-full transition-all duration-300 ease-out",
                 className
             )}
@@ -41,7 +52,12 @@ const setFloating = (event: React.MouseEvent<HTMLButtonElement>) => {
 
 const Trigger = forwardRef<HTMLButtonElement, IFloatingButtonTriggerProps>(({ icon, children, className, ...props }, ref) => (
     <BaseButton
-        className={cn("floating-trigger h-14 w-14 rounded-full transition-transform duration-300 ease-in-out sm:h-16 sm:w-16", className)}
+        className={cn(
+            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:opacity-0",
+            "group-data-[expanded=true]/floating:rotate-45",
+            "h-14 w-14 rounded-full transition-transform duration-300 ease-in-out sm:h-16 sm:w-16",
+            className
+        )}
         onClick={setFloating}
         {...props}
         ref={ref}
@@ -53,7 +69,12 @@ Trigger.displayName = "FloatingButton.Trigger";
 
 const CloseButton = forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, variant = "ghost", ...props }, ref) => (
     <BaseButton
-        className={cn("floating-close-btn absolute right-2 top-2 z-50 hidden h-8 w-8 p-0 opacity-0", className)}
+        className={cn(
+            "absolute right-2 top-2 z-50 hidden h-8 w-8 p-0 opacity-0",
+            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:flex",
+            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:opacity-100",
+            className
+        )}
         onClick={setFloating}
         variant={variant}
         {...props}
@@ -117,33 +138,11 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
         throw new Error(`${Root.displayName} must have a ${Content.displayName} and a ${Trigger.displayName}`);
     }
 
-    let fullScreenClassNames;
-    if (fullScreen) {
-        fullScreenClassNames = cn(
-            "[&>.floating-content]:fixed [&>.floating-content]:left-0 [&>.floating-content]:top-0",
-            "[&>.floating-content]:h-screen [&>.floating-content]:w-screen [&>.floating-content]:bg-background",
-            "[&>.floating-content]:-translate-x-full",
-            "[&>.floating-content>.floating-close-btn]:data-[expanded=true]:flex",
-            "[&>.floating-content>.floating-close-btn]:data-[expanded=true]:opacity-100",
-            "[&>.floating-content]:data-[expanded=true]:translate-x-0",
-            "[&>.floating-trigger]:data-[expanded=true]:opacity-0"
-        );
-    } else {
-        fullScreenClassNames = cn(
-            "[&>.floating-content]:absolute [&>.floating-content]:bottom-16",
-            "[&>.floating-content]:w-full [&>.floating-content]:gap-1.5 [&>.floating-content]:sm:mb-2"
-        );
-    }
     return (
         <div
-            className={cn(
-                "floating-wrapper fixed bottom-2 left-2 z-50 inline-block md:hidden",
-                "[&>.floating-content]:data-[expanded=true]:-translate-y-0 [&>.floating-content]:data-[expanded=true]:scale-x-100",
-                "[&>.floating-content>*]:data-[expanded=true]:opacity-100 [&>.floating-content]:data-[expanded=true]:opacity-90",
-                "[&>.floating-trigger]:data-[expanded=true]:rotate-45",
-                fullScreenClassNames,
-                className
-            )}
+            className={cn("floating-wrapper group/floating fixed bottom-2 left-2 z-50 inline-block md:hidden", className)}
+            data-fullscreen={fullScreen}
+            data-expanded={false}
             {...props}
             ref={ref}
         >

@@ -1,4 +1,4 @@
-import { Button, FloatingButton, IconComponent } from "@/components/base";
+import { Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { screenSizeMap } from "@/core/utils/SizeMap";
@@ -108,16 +108,18 @@ function ResizableSidebar({
         <>
             <div className="block h-[calc(100vh_-_theme(spacing.16))] w-full transition-all duration-200 ease-in-out md:flex">
                 <div
-                    className={cn(
-                        "relative hidden h-full w-full border-r md:block",
-                        "transition-all data-[resizing=true]:transition-none",
-                        "[&>.collapser]:data-[resizing=true]:hidden [&>aside]:data-[collapsed=true]:hidden"
-                    )}
+                    className="group/sidebar relative hidden h-full w-full border-r transition-all data-[resizing=true]:transition-none md:block"
                     style={{ maxWidth: `${initialWidth}px` }}
                     data-collapsed={isCollapsed ? "true" : "false"}
                     id={sidebarId}
                 >
-                    <aside className="sticky z-50 flex h-full w-full flex-col items-start text-sm font-medium">{!isMobile && children}</aside>
+                    <aside
+                        className={cn(
+                            "sticky z-50 flex h-full w-full flex-col items-start text-sm font-medium group-data-[collapsed=true]/sidebar:hidden"
+                        )}
+                    >
+                        {!isMobile && children}
+                    </aside>
 
                     <div
                         className={cn(
@@ -133,20 +135,23 @@ function ResizableSidebar({
                             setCollapsedAttr(!isCollapsed, undefined, isCollapsed ? initialWidth : undefined);
                             setIsCollapsed(!isCollapsed);
                         }}
-                        className="collapser absolute right-[-1.2rem] top-1/2 z-50 h-10 w-10 -translate-y-1/2 transform rounded-full p-0"
+                        className={cn(
+                            "absolute right-[-1.2rem] top-1/2 z-50 h-10 w-10 -translate-y-1/2 transform rounded-full p-0",
+                            "group-data-[resizing=true]/sidebar:hidden"
+                        )}
                     >
                         <IconComponent icon={isCollapsed ? "chevron-right" : "chevron-left"} size="8" />
                     </Button>
                 </div>
                 {main}
             </div>
-            <FloatingButton.Root fullScreen={floatingFullScreen}>
-                <FloatingButton.Content>
-                    {floatingFullScreen && <FloatingButton.CloseButton />}
+            <Floating.Button.Root fullScreen={floatingFullScreen}>
+                <Floating.Button.Content>
+                    {floatingFullScreen && <Floating.Button.CloseButton />}
                     {isMobile && children}
-                </FloatingButton.Content>
-                <FloatingButton.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
-            </FloatingButton.Root>
+                </Floating.Button.Content>
+                <Floating.Button.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+            </Floating.Button.Root>
         </>
     );
 }

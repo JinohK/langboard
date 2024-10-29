@@ -60,6 +60,7 @@
     "Purpose": "What is your purpose for using {{app}}?",
     "Affiliation": "What organization are you affiliated with?",
     "Position": "What is your position in your organization?",
+    "Upload your avatar": "Upload your avatar",
     "Drop your avatar here": "Drop your avatar here",
     "industries": { },
     "purposes": { },
@@ -138,15 +139,17 @@
   "myAccount": {
     "My Account": "My Account",
     "Settings": "Settings",
+    "Change password": "Change password",
+    "Edit profile": "Edit profile",
     "Sign out": "Sign out"
   },
   "dashboard": {
     "Projects": "Projects",
     "tabs": {
-        "all": "All",
-        "starred": "Starred",
-        "recent": "Recent",
-        "unstarred": "Unstarred"
+      "all": "All",
+      "starred": "Starred",
+      "recent": "Recent",
+      "unstarred": "Unstarred"
     },
     "Star this project": "Star this project",
     "Unstar this project": "Unstar this project",
@@ -168,6 +171,7 @@
     "Description": "Project Description",
     "Type": "Project Type",
     "Chat with AI": "Chat with AI",
+    "Clear chat": "Clear chat",
     "Ask anything to {app} AI!": "Ask anything to {{app}} AI!",
     "Enter a message": "Enter a message",
     "Send a message": "Send a message",

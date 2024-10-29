@@ -13,7 +13,7 @@ import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredPr
 function DashboardPage(): JSX.Element {
     const navigate = useNavigate();
     const location = useLocation();
-    const [projectFormopened, setProjectFormOpened] = useState(false);
+    const [projectFormOpened, setProjectFormOpened] = useState(false);
     const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
 
     const headerNavs: Record<string, IHeaderNavItem> = {
@@ -99,7 +99,7 @@ function DashboardPage(): JSX.Element {
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs}>
             {pageContent}
-            <CreateProjectFormDialog opened={projectFormopened} setOpened={setProjectFormOpened} />
+            <CreateProjectFormDialog opened={projectFormOpened} setOpened={setProjectFormOpened} />
         </DashboardStyledLayout>
     );
 }

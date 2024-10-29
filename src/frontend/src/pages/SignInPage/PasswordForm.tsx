@@ -1,4 +1,4 @@
-import { Button, Form, Checkbox, Input, Label } from "@/components/base";
+import { Button, Form, Checkbox, Label, Floating } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import useSignIn from "@/controllers/auth/useSignIn";
@@ -115,16 +115,14 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
             </div>
             <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={submitPassword}>
                 <Form.Field name="password">
-                    <Form.Control asChild>
-                        <Input
-                            type={shouldShowPassword ? "text" : "password"}
-                            className="w-full"
-                            placeholder={t("signIn.Password")}
-                            autoFocus
-                            autoComplete="password"
-                            disabled={isValidating}
-                        />
-                    </Form.Control>
+                    <Floating.LabelInput
+                        type={shouldShowPassword ? "text" : "password"}
+                        label={t("signIn.Password")}
+                        isFormControl
+                        autoFocus
+                        autoComplete="password"
+                        disabled={isValidating}
+                    />
                     {error && <FormErrorMessage error={error} icon="circle-alert" />}
                 </Form.Field>
                 <Label className="mt-3 flex cursor-pointer select-none gap-2">

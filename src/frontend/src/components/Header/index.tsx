@@ -96,12 +96,12 @@ function Header({ navs }: IHeaderProps) {
                             <UserAvatar.List>
                                 <UserAvatar.ListLabel>{t("myAccount.My Account")}</UserAvatar.ListLabel>
                                 <UserAvatar.ListSeparator />
-                                <UserAvatar.ListItem className="cursor-pointer">
-                                    <a onClick={() => navigate(ROUTES.SETTINGS)}>{t("myAccount.Settings")}</a>
+                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate(ROUTES.SETTINGS.EDIT_PROFILE)}>
+                                    {t("myAccount.Settings")}
                                 </UserAvatar.ListItem>
                                 <UserAvatar.ListSeparator />
-                                <UserAvatar.ListItem className="cursor-pointer">
-                                    <a onClick={() => signOut()}>{t("myAccount.Sign out")}</a>
+                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => signOut()}>
+                                    {t("myAccount.Sign out")}
                                 </UserAvatar.ListItem>
                                 <UserAvatar.ListSeparator />
                             </UserAvatar.List>

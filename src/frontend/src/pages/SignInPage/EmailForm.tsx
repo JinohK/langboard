@@ -1,4 +1,4 @@
-import { Button, Form, Input } from "@/components/base";
+import { Button, Floating, Form } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { EMAIL_REGEX } from "@/constants";
@@ -94,9 +94,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
             </div>
             <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={submitEmail}>
                 <Form.Field name="email">
-                    <Form.Control asChild>
-                        <Input className="w-full" placeholder={t("signIn.Email")} autoFocus autoComplete="email" disabled={isValidating} />
-                    </Form.Control>
+                    <Floating.LabelInput label={t("signIn.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
                     {error && <FormErrorMessage error={error} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">

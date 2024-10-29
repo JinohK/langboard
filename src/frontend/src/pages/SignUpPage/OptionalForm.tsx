@@ -1,4 +1,4 @@
-import { Avatar, Button, Form, IconComponent, Input } from "@/components/base";
+import { Avatar, Button, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
@@ -81,10 +81,17 @@ function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm
                         {t("signUp.Drop your avatar here")}
                     </div>
                 )}
-                <Avatar.Root className="h-20 w-20">
-                    <Avatar.Image src={avatarUrl} alt="" />
-                    <Avatar.Fallback className="text-4xl">{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
-                </Avatar.Root>
+                <Tooltip.Provider delayDuration={400}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <Avatar.Root className="h-20 w-20">
+                                <Avatar.Image src={avatarUrl} alt="" />
+                                <Avatar.Fallback className="text-4xl">{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
+                            </Avatar.Root>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>{t("signUp.Upload your avatar")}</Tooltip.Content>
+                    </Tooltip.Root>
+                </Tooltip.Provider>
                 <Form.Control asChild>
                     <Input className="hidden" disabled={isValidating} {...getInputProps()} />
                 </Form.Control>

@@ -38,14 +38,15 @@ class RoleMiddleware(FilterMiddleware):
                 await response(scope, receive, send)
                 return
 
-            role_model, actions, role_finder = RoleFilter.get_filtered(child_scope["endpoint"])
-            role = Role(role_model)
+            if not user.is_admin:
+                role_model, actions, role_finder = RoleFilter.get_filtered(child_scope["endpoint"])
+                role = Role(role_model)
 
-            is_authorized = await role.is_authorized(user.id, child_scope["path_params"], actions, role_finder)
-            await role.close()
-            if not is_authorized:
-                response = JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-                await response(scope, receive, send)
-                return
+                is_authorized = await role.is_authorized(user.id, child_scope["path_params"], actions, role_finder)
+                await role.close()
+                if not is_authorized:
+                    response = JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+                    await response(scope, receive, send)
+                    return
 
         await self.app(scope, receive, send)

@@ -1,4 +1,4 @@
-import { Button, Dialog, Form, Input, Select, Textarea } from "@/components/base";
+import { Button, Dialog, Floating, Form, Select } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useCreateProject from "@/controllers/dashboard/useCreateProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -71,22 +71,25 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                         <Dialog.Title>{t("dashboard.Create New Project")}</Dialog.Title>
                     </Dialog.Header>
                     <Form.Field name="project-title">
-                        <Form.Control asChild>
-                            <Input className="mt-4 w-full" placeholder={t("project.Title")} autoFocus autoComplete="off" disabled={isValidating} />
-                        </Form.Control>
+                        <Floating.LabelInput
+                            label={t("project.Title")}
+                            isFormControl
+                            autoFocus
+                            autoComplete="off"
+                            className="mt-4"
+                            disabled={isValidating}
+                        />
                         {titleError && <FormErrorMessage error={titleError} icon="circle-alert" />}
                     </Form.Field>
                     <Form.Field name="project-description">
-                        <Form.Control asChild>
-                            <Textarea
-                                className="mt-4 w-full"
-                                placeholder={t("project.Description")}
-                                autoFocus
-                                autoComplete="off"
-                                resize="none"
-                                disabled={isValidating}
-                            />
-                        </Form.Control>
+                        <Floating.LabelTextarea
+                            label={t("project.Description")}
+                            isFormControl
+                            autoComplete="off"
+                            className="mt-4"
+                            resize="none"
+                            disabled={isValidating}
+                        />
                     </Form.Field>
                     <Form.Field name="project-type">
                         <Select.Root name="project-type" autoComplete="off" disabled={isValidating}>

@@ -71,7 +71,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
     return (
         <div className="flex h-full w-full flex-col">
             <div className="relative h-16">
-                <div className="flex h-full items-center justify-center text-lg">{t("project.Chat with AI")}</div>
+                <div className="flex h-full items-center justify-center truncate text-nowrap text-lg">{t("project.Chat with AI")}</div>
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
                         <Button
@@ -88,7 +88,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                             onClick={clearChat}
                         >
                             <IconComponent icon="trash-2" size="4" strokeWidth="2" />
-                            Clear chat
+                            {t("project.Clear chat")}
                         </DropdownMenu.Item>
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>

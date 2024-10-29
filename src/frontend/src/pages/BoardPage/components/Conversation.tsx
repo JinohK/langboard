@@ -141,7 +141,9 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
                 gap={5}
                 className="chat-list md:p-2"
                 itemClassName="md:p-2"
-                noItemsElement={<h2 className="pb-3 text-center text-sm text-accent-foreground">{t("project.Ask anything to {app} AI!")}</h2>}
+                noItemsElement={
+                    <h2 className="truncate text-nowrap pb-3 text-center text-sm text-accent-foreground">{t("project.Ask anything to {app} AI!")}</h2>
+                }
                 virtualizerRef={virtualizerRef}
             />
         </div>

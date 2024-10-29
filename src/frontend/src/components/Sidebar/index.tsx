@@ -1,4 +1,4 @@
-import { Button, FloatingButton, IconComponent } from "@/components/base";
+import { Button, Floating, IconComponent } from "@/components/base";
 import NavItems from "@/components/Sidebar/NavItems";
 import { ISidebarProps } from "@/components/Sidebar/types";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -13,19 +13,22 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
         <>
             <div
                 className={cn(
-                    "block md:grid",
+                    "group/sidebar block md:grid",
                     "h-[calc(100vh_-_theme(spacing.16))] w-full transition-all duration-200 ease-in-out",
-                    isCollapsed ? "grid-cols-[56px_1fr]" : "md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]"
+                    "data-[collapsed=true]:grid-cols-[56px_1fr]",
+                    "md:data-[collapsed=false]:grid-cols-[220px_1fr] lg:data-[collapsed=false]:grid-cols-[280px_1fr]"
                 )}
+                data-collapsed={isCollapsed}
             >
                 <div className="relative hidden h-full w-full md:block">
                     <aside
                         className={cn(
                             "sticky z-50 flex h-full w-full flex-col items-start border-r text-sm font-medium",
-                            isCollapsed ? "p-1 lg:p-2" : "p-2 lg:p-3"
+                            "group-data-[collapsed=true]/sidebar:p-1 lg:group-data-[collapsed=true]/sidebar:p-2",
+                            "group-data-[collapsed=false]/sidebar:p-2 lg:group-data-[collapsed=false]/sidebar:p-3"
                         )}
                     >
-                        <NavItems isCollapsed={isCollapsed} navs={navs} />
+                        <NavItems navs={navs} />
                     </aside>
 
                     <Button
@@ -38,12 +41,12 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                 </div>
                 {main}
             </div>
-            <FloatingButton.Root>
-                <FloatingButton.Content>
+            <Floating.Button.Root>
+                <Floating.Button.Content>
                     <NavItems isFloating navs={navs} />
-                </FloatingButton.Content>
-                <FloatingButton.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
-            </FloatingButton.Root>
+                </Floating.Button.Content>
+                <Floating.Button.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+            </Floating.Button.Root>
         </>
     );
 }

@@ -1,4 +1,4 @@
-import { Button, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Button, Floating, Form, IconComponent, Toast } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useSendResetLink, { TSendResetLinkForm } from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -136,15 +136,11 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
         return (
             <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit}>
                 <Form.Field name="firstname">
-                    <Form.Control asChild>
-                        <Input type="text" className="w-full" placeholder={t("accountRecovery.First Name")} autoFocus disabled={isValidating} />
-                    </Form.Control>
+                    <Floating.LabelInput label={t("accountRecovery.First Name")} isFormControl autoFocus disabled={isValidating} />
                     {firstnameError && <FormErrorMessage error={firstnameError} icon="circle-alert" />}
                 </Form.Field>
                 <Form.Field name="lastname" className="mt-3">
-                    <Form.Control asChild>
-                        <Input type="text" className="w-full" placeholder={t("accountRecovery.Last Name")} autoFocus disabled={isValidating} />
-                    </Form.Control>
+                    <Floating.LabelInput label={t("accountRecovery.Last Name")} isFormControl disabled={isValidating} />
                     {lastnameError && <FormErrorMessage error={lastnameError} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">

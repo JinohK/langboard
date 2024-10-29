@@ -70,7 +70,7 @@ const IconComponent = memo(
         }
 
         const style = {
-            strokeWidth: strokeWidth ?? 1.5,
+            strokeWidth: strokeWidth,
             ...(stroke && { stroke: stroke }),
         };
 

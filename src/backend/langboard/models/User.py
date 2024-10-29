@@ -17,6 +17,7 @@ class User(SoftDeleteModel, table=True):
     purpose: str = Field(nullable=False)
     affiliation: str | None = Field(default=None, nullable=True)
     position: str | None = Field(default=None, nullable=True)
+    is_admin: bool = Field(default=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
     activated_at: datetime | None = Field(default=None, nullable=True)
 
@@ -30,7 +31,7 @@ class User(SoftDeleteModel, table=True):
         return f"{self.firstname} {self.lastname}"
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["firstname", "lastname", "email", "industry", "purpose", "affiliation", "position"]
+        return ["firstname", "lastname", "email", "industry", "purpose", "affiliation", "position", "is_admin"]
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "password" and not isinstance(value, SecretStr):

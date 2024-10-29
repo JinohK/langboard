@@ -35,7 +35,11 @@ export const ROUTES = {
         TASKS: "/dashboard/tasks",
         TRACKING: "/dashboard/tracking",
     },
-    SETTINGS: "/settings",
+    SETTINGS: {
+        ROUTE: "/settings",
+        EDIT_PROFILE: "/settings/profile",
+        CHANGE_PASSWORD: "/settings/password",
+    },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
 } as const;
 

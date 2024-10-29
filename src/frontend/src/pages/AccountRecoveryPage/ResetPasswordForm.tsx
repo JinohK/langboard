@@ -1,4 +1,4 @@
-import { Button, Form, IconComponent, Input } from "@/components/base";
+import { Button, Floating, Form, IconComponent } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useRecoveryPassword from "@/controllers/recovery/useRecoveryPassword";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
@@ -110,15 +110,14 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
             <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit}>
                 <Form.Field name="new-password">
                     <div className="relative">
-                        <Form.Control asChild>
-                            <Input
-                                type={shouldShowPw ? "text" : "password"}
-                                className="w-full pr-10"
-                                placeholder={t("accountRecovery.New password")}
-                                autoFocus
-                                disabled={isValidating}
-                            />
-                        </Form.Control>
+                        <Floating.LabelInput
+                            type={shouldShowPw ? "text" : "password"}
+                            label={t("accountRecovery.New password")}
+                            isFormControl
+                            autoFocus
+                            className="pr-10"
+                            disabled={isValidating}
+                        />
                         <IconComponent
                             icon={shouldShowPw ? "eye-off" : "eye"}
                             className={showIconClassName}
@@ -129,14 +128,13 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                 </Form.Field>
                 <Form.Field name="new-password-confirm" className="mt-3">
                     <div className="relative">
-                        <Form.Control asChild>
-                            <Input
-                                type={shouldShowConfirmPw ? "text" : "password"}
-                                className="w-full pr-10"
-                                placeholder={t("accountRecovery.Confirm new password")}
-                                disabled={isValidating}
-                            />
-                        </Form.Control>
+                        <Floating.LabelInput
+                            type={shouldShowConfirmPw ? "text" : "password"}
+                            label={t("accountRecovery.Confirm new password")}
+                            isFormControl
+                            className="pr-10"
+                            disabled={isValidating}
+                        />
                         <IconComponent
                             icon={shouldShowConfirmPw ? "eye-off" : "eye"}
                             className={showIconClassName}

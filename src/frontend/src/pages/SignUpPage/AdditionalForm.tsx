@@ -1,4 +1,4 @@
-import { Button, Form, IconComponent, Input, Select } from "@/components/base";
+import { Button, Floating, Form, IconComponent, Select } from "@/components/base";
 import { ISignUpForm } from "@/controllers/signup/useSignUp";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
 import { useState } from "react";
@@ -21,8 +21,9 @@ function AdditionalForm({ values, validateForm, nextStep }: ISignUpFormProps): J
 
         const { form, newErrors, focusElement, setValidation } = validateForm(event.currentTarget, setIsValidating);
 
+        setValidation(false);
+
         if (focusElement) {
-            setValidation(false);
             setErrors(newErrors);
             if (focusElement instanceof RadioNodeList) {
                 (focusElement[1] as HTMLInputElement).focus();
@@ -61,15 +62,14 @@ function AdditionalForm({ values, validateForm, nextStep }: ISignUpFormProps): J
                     </Select.Content>
                 </Select.Root>
                 {isIndustryOther && (
-                    <Form.Control asChild>
-                        <Input
-                            className="mt-2"
-                            autoComplete="industry"
-                            disabled={isValidating}
-                            placeholder={t("signUp.Industry")}
-                            defaultValue={values.industry && !industries.includes(values.industry) ? values.industry : undefined}
-                        />
-                    </Form.Control>
+                    <Floating.LabelInput
+                        label={t("signUp.Industry")}
+                        isFormControl
+                        className="mt-2"
+                        autoComplete="industry"
+                        disabled={isValidating}
+                        defaultValue={values.industry && !industries.includes(values.industry) ? values.industry : undefined}
+                    />
                 )}
                 {errors.industry}
             </Form.Field>
@@ -97,15 +97,14 @@ function AdditionalForm({ values, validateForm, nextStep }: ISignUpFormProps): J
                     </Select.Content>
                 </Select.Root>
                 {isPurposeOther && (
-                    <Form.Control asChild>
-                        <Input
-                            className="mt-2"
-                            disabled={isValidating}
-                            name="purpose"
-                            placeholder={t("signUp.Purpose")}
-                            defaultValue={values.purpose && !purposes.includes(values.purpose) ? values.purpose : undefined}
-                        />
-                    </Form.Control>
+                    <Floating.LabelInput
+                        label={t("signUp.Purpose")}
+                        isFormControl
+                        className="mt-2"
+                        autoComplete="purpose"
+                        disabled={isValidating}
+                        defaultValue={values.purpose && !purposes.includes(values.purpose) ? values.purpose : undefined}
+                    />
                 )}
                 {errors.purpose}
             </Form.Field>
