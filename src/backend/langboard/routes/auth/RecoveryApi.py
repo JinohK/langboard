@@ -45,12 +45,12 @@ async def validate_recovery_token(form: ValidateTokenForm, service: Service = Se
 
 
 @AppRouter.api.post("/auth/recovery/reset")
-async def reset_password(form: ResetPasswordForm, service: Service = Service.scope()) -> JSONResponse:
+async def change_password(form: ResetPasswordForm, service: Service = Service.scope()) -> JSONResponse:
     user, cache_key = await service.user.validate_token_from_url("recovery", form.recovery_token)
     if not user or not cache_key:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await service.user.reset_password(user, form.password)
+    await service.user.change_password(user, form.password)
 
     await Cache.delete(cache_key)
 

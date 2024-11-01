@@ -1,18 +1,18 @@
 import { Button, Floating, Form, IconComponent } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useSignUpExistsEmail from "@/controllers/signup/useSignUpExistsEmail";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useForm from "@/core/hooks/form/useForm";
 import { setInitialErrorsWithFocusingElement } from "@/pages/SignUpPage/utils";
 import TypeUtils from "@/core/utils/TypeUtils";
+import PasswordInput from "@/components/PasswordInput";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
-    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[bool, bool]>([false, false]);
     const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusElementRef } = useForm({
         errorLangPrefix: "signUp.errors",
         schema: {
@@ -49,8 +49,6 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
         setInitialErrorsWithFocusingElement(["email", "firstname", "lastname", "password"], initialErrorsRef, setErrors, formRef);
     }, []);
 
-    const showIconClassName = "absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer [&:not(:hover)]:text-gray-600 transition-all";
-
     return (
         <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
             <Form.Field name="email">
@@ -84,44 +82,22 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 />
                 {errors.lastname && <FormErrorMessage error={errors.lastname} icon="circle-alert" />}
             </Form.Field>
-            <Form.Field name="password">
-                <div className="relative">
-                    <Floating.LabelInput
-                        type={shouldShowPw ? "text" : "password"}
-                        label={t("user.Password")}
-                        isFormControl
-                        className="pr-10"
-                        autoComplete="off"
-                        disabled={isValidating}
-                        defaultValue={values.password ?? ""}
-                    />
-                    <IconComponent
-                        icon={shouldShowPw ? "eye-off" : "eye"}
-                        className={showIconClassName}
-                        onClick={() => setShouldShowPasswords([!shouldShowPw, shouldShowConfirmPw])}
-                    />
-                </div>
-                {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
-            </Form.Field>
-            <Form.Field name="password-confirm">
-                <div className="relative">
-                    <Floating.LabelInput
-                        type={shouldShowConfirmPw ? "text" : "password"}
-                        label={t("signUp.Confirm password")}
-                        isFormControl
-                        className="pr-10"
-                        autoComplete="off"
-                        disabled={isValidating}
-                        defaultValue={values.password ?? ""}
-                    />
-                    <IconComponent
-                        icon={shouldShowConfirmPw ? "eye-off" : "eye"}
-                        className={showIconClassName}
-                        onClick={() => setShouldShowPasswords([shouldShowPw, !shouldShowConfirmPw])}
-                    />
-                </div>
-                {errors["password-confirm"] && <FormErrorMessage error={errors["password-confirm"]} icon="circle-alert" />}
-            </Form.Field>
+            <PasswordInput
+                name="password"
+                label={t("user.Password")}
+                isFormControl
+                isValidating={isValidating}
+                defaultValue={values.password}
+                error={errors.password}
+            />
+            <PasswordInput
+                name="password-confirm"
+                label={t("signUp.Confirm password")}
+                isFormControl
+                isValidating={isValidating}
+                defaultValue={values.password}
+                error={errors["password-confirm"]}
+            />
             <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                 <Button type="submit" disabled={isValidating}>
                     {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}

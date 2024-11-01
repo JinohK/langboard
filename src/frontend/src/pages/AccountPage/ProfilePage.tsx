@@ -36,7 +36,7 @@ function ProfilePage(): JSX.Element {
         mutateOnSuccess: (data) => {
             updatedUser();
             const toastId = Toast.Add.success(t("myAccount.Profile updated successfully."), {
-                action: createRevertToastButton(data.revert_key, () => toastId),
+                actions: [createRevertToastButton(data.revert_key, () => toastId)],
             });
         },
         mutateOnSettled: () => {

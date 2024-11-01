@@ -1,12 +1,11 @@
-import { Button, Floating, Form, IconComponent } from "@/components/base";
-import FormErrorMessage from "@/components/FormErrorMessage";
+import { Button, Form, IconComponent } from "@/components/base";
+import PasswordInput from "@/components/PasswordInput";
 import useRecoveryPassword from "@/controllers/recovery/useRecoveryPassword";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -19,7 +18,6 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
-    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[bool, bool]>([false, false]);
     const { mutate } = useRecoveryPassword();
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "accountRecovery.errors",
@@ -46,8 +44,6 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
         useDefaultBadRequestHandler: true,
     });
 
-    const showIconClassName = "absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer [&:not(:hover)]:text-gray-600 transition-all";
-
     if (!(location.state?.isTwoSidedView ?? true)) {
         const buttons = (
             <Button type="button" onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>
@@ -65,41 +61,22 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
     } else {
         return (
             <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
-                <Form.Field name="password">
-                    <div className="relative">
-                        <Floating.LabelInput
-                            type={shouldShowPw ? "text" : "password"}
-                            label={t("accountRecovery.New password")}
-                            isFormControl
-                            autoFocus
-                            className="pr-10"
-                            disabled={isValidating}
-                        />
-                        <IconComponent
-                            icon={shouldShowPw ? "eye-off" : "eye"}
-                            className={showIconClassName}
-                            onClick={() => setShouldShowPasswords([!shouldShowPw, shouldShowConfirmPw])}
-                        />
-                    </div>
-                    {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
-                </Form.Field>
-                <Form.Field name="password-confirm" className="mt-3">
-                    <div className="relative">
-                        <Floating.LabelInput
-                            type={shouldShowConfirmPw ? "text" : "password"}
-                            label={t("accountRecovery.Confirm new password")}
-                            isFormControl
-                            className="pr-10"
-                            disabled={isValidating}
-                        />
-                        <IconComponent
-                            icon={shouldShowConfirmPw ? "eye-off" : "eye"}
-                            className={showIconClassName}
-                            onClick={() => setShouldShowPasswords([shouldShowPw, !shouldShowConfirmPw])}
-                        />
-                    </div>
-                    {errors["password-confirm"] && <FormErrorMessage error={errors["password-confirm"]} icon="circle-alert" />}
-                </Form.Field>
+                <PasswordInput
+                    name="password"
+                    label={t("user.New password")}
+                    isFormControl
+                    autoFocus
+                    isValidating={isValidating}
+                    error={errors.password}
+                />
+                <PasswordInput
+                    name="password-confirm"
+                    label={t("user.Confirm new password")}
+                    className="mt-3"
+                    isFormControl
+                    isValidating={isValidating}
+                    error={errors["password-confirm"]}
+                />
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                     <Button type="submit" disabled={isValidating}>
                         {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}

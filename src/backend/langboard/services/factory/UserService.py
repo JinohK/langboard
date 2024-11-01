@@ -132,7 +132,7 @@ class UserService(BaseService):
         await self._db.update(user)
         await self._db.commit()
 
-    async def reset_password(self, user: User, password: str) -> None:
+    async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
         await self._db.update(user)
         await self._db.commit()

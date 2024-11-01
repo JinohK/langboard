@@ -18,7 +18,7 @@
     "Close": "Close",
     "Cancel": "Cancel",
     "Undo": "Undo",
-    "Reverting": "Reverting",
+    "Reverting...": "Reverting...",
     "Create": "Create",
     "Other": "Other",
     "Actions": "Actions",
@@ -27,12 +27,16 @@
   "errors": {
     "Unknown error": "Unknown error",
     "Internal server error": "Internal server error",
+    "Network error": "Network error",
     "Malformed request": "Malformed request",
     "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later."
   },
   "user": {
     "Email": "Email",
     "Password": "Password",
+    "Current password": "Current password",
+    "New password": "New password",
+    "Confirm new password": "Confirm new password",
     "Username": "Username",
     "First Name": "First Name",
     "Last Name": "Last Name",
@@ -123,8 +127,6 @@
     "Password Reset Successful": "Password Reset Successful",
     "Your password has been successfully reset.": "Your password has been successfully reset.",
     "You can now sign in with your new password.": "You can now sign in with your new password.",
-    "New password": "New password",
-    "Confirm new password": "Confirm new password",
     "errors": {
       "missing": {
         "firstname": "Enter your first name.",
@@ -143,10 +145,18 @@
     "Sign out": "Sign out",
     "Profile": "Profile",
     "Profile updated successfully.": "Profile updated successfully.",
+    "Password updated successfully.": "Password updated successfully.",
     "errors": {
       "missing": {
         "firstname": "Enter your first name.",
-        "lastname": "Enter your last name."
+        "lastname": "Enter your last name.",
+        "current_password": "Enter your current password.",
+        "new_password": "Enter a new password.",
+        "password-confirm": "Enter a new password confirmation."
+      },
+      "invalid": {
+        "current_password": "Wrong current password. Try again.",
+        "password-confirm": "Wrong password confirmation. Try again."
       }
     }
   },

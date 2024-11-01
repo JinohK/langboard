@@ -33,7 +33,14 @@ const setupApiErrorHandler = (map: IApiErrorHandlerMap) => {
                 return () => map.wildcardError!(error, error.response?.data.errors);
             } else {
                 return () => {
-                    Toast.Add.error(t("errors.Internal server error"));
+                    let messageKey: string;
+                    if (error.code === AxiosError.ERR_NETWORK) {
+                        messageKey = "errors.Network error";
+                    } else {
+                        messageKey = "errors.Internal server error";
+                    }
+
+                    Toast.Add.error(t(messageKey));
                 };
             }
         }

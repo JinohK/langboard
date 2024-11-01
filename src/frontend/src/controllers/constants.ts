@@ -18,6 +18,7 @@ export const API_ROUTES = {
     },
     ACCOUNT: {
         UPDATE_PROFILE: "/account/profile",
+        CHANGE_PASSWORD: "/account/password",
     },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",

@@ -8,3 +8,9 @@ class UpdateProfileForm(BaseFormModel):
     affiliation: str | None = None
     position: str | None = None
     delete_avatar: bool = False
+
+
+@form_model
+class ChangePasswordForm(BaseFormModel):
+    current_password: str
+    new_password: str

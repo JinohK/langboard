@@ -15,8 +15,6 @@ interface IUpdateProfileResponse {
     revert_key: string;
 }
 
-export const SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME = "sAVk";
-
 const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOptions<IUpdateProfileForm, IUpdateProfileResponse>) => {
     const { mutate } = useQueryMutation();
     const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.UPDATE_PROFILE, revertCallback);
