@@ -1,7 +1,7 @@
-interface IProject {
+export interface Interface {
     uid: string;
     title: string;
     project_type: string;
 }
 
-export default IProject;
+export const TYPES = ["SI", "SW"];

@@ -7,15 +7,15 @@ interface IBaseSuspenseComponentProps {
     className?: string;
     width?: string;
     height?: string;
-    shouldWrapChildren?: boolean;
-    isPage?: boolean;
+    shouldWrapChildren?: bool;
+    isPage?: bool;
 }
 
 interface IElementSuspenseComponentProps extends IBaseSuspenseComponentProps {
     className?: string;
     width?: string;
     height?: string;
-    shouldWrapChildren?: boolean;
+    shouldWrapChildren?: bool;
     isPage?: undefined;
 }
 
@@ -23,8 +23,8 @@ interface IPageSuspenseComponentProps extends IBaseSuspenseComponentProps {
     className?: undefined;
     width?: undefined;
     height?: undefined;
-    shouldWrapChildren?: boolean;
-    isPage: boolean;
+    shouldWrapChildren?: bool;
+    isPage: bool;
 }
 
 type TElementSuspenseComponentProps = IElementSuspenseComponentProps | IPageSuspenseComponentProps;

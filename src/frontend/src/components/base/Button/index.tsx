@@ -36,7 +36,7 @@ export const ButtonVariants = tv(
 );
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof ButtonVariants> {
-    asChild?: boolean;
+    asChild?: bool;
     titleSide?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["side"];
 }
 

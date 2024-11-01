@@ -12,13 +12,13 @@ export interface IVirtualInfiniteListProps<T> {
     scrollable: () => HTMLElement | null;
     fetchNextPage: () => Promise<unknown>;
     createItem: (item: T) => JSX.Element;
-    hasNextPage: boolean;
-    isFetchingNextPage: boolean;
-    horizontal?: boolean;
+    hasNextPage: bool;
+    isFetchingNextPage: bool;
+    horizontal?: bool;
     overscan?: number;
     itemClassName?: string;
     className?: string;
-    isReverse?: boolean;
+    isReverse?: bool;
     gap?: number;
     noItemsElement?: JSX.Element;
     virtualizerRef?: React.MutableRefObject<Virtualizer<HTMLElement, Element> | null>;

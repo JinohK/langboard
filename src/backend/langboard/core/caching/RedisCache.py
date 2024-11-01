@@ -28,7 +28,8 @@ class RedisCache(BaseCache):
         self._cache.set(key, casted_value, ex=ttl if ttl > 0 else None)
 
     async def delete(self, key: str) -> None:
-        self._cache.delete(key)
+        if self._cache.exists(key):
+            self._cache.delete(key)
 
     async def clear(self) -> None:
         self._cache.flushdb()

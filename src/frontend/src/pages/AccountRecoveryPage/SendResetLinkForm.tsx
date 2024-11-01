@@ -1,10 +1,10 @@
 import { Button, Floating, Form, IconComponent, Toast } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import useSendResetLink, { TSendResetLinkForm } from "@/controllers/recovery/useSendResetLink";
+import useSendResetLink from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler, { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
+import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
-import { useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -18,94 +18,42 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
     const [t, i18n] = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const [[firstnameError, lastnameError], setErrors] = useState<[string, string]>(["", ""]);
     const { mutate } = useSendResetLink();
-    const [isValidating, setIsValidating] = useState(false);
-
-    const sendLink = (form: TSendResetLinkForm, successCallback: () => void, errorMap: IApiErrorHandlerMap) =>
-        mutate(form, {
-            onSuccess: successCallback,
-            onError: (error) => {
-                const { handle } = setupApiErrorHandler(errorMap);
-
-                handle(error);
-            },
-            onSettled: () => {
-                setIsValidating(false);
-            },
-        });
-
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const firstnameInput = event.currentTarget.firstname;
-        const firstname = firstnameInput.value;
-        const lastnameInput = event.currentTarget.lastname;
-        const lastname = lastnameInput.value;
-
-        const errors: [string, string] = ["", ""];
-
-        if (!firstname) {
-            errors[0] = "accountRecovery.errors.missing.firstname";
-        }
-
-        if (!lastname) {
-            errors[1] = "accountRecovery.errors.missing.lastname";
-        }
-
-        if (errors[0] || errors[1]) {
-            setErrors(errors);
-            setIsValidating(false);
-            if (errors[0]) {
-                firstnameInput.focus();
+    const isResendRef = useRef(false);
+    const { errors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "accountRecovery.errors",
+        schema: () => ({
+            firstname: { required: !isResendRef.current },
+            lastname: { required: !isResendRef.current },
+        }),
+        beforeHandleSubmit: () => {
+            isResendRef.current = !(location.state?.isTwoSidedView ?? true);
+        },
+        predefineValues: () => {
+            if (isResendRef.current) {
+                return { sign_token: signToken, email_token: emailToken, is_resend: true, lang: i18n.language };
             } else {
-                lastnameInput.focus();
+                return { sign_token: signToken, email_token: emailToken, lang: i18n.language };
             }
-            return;
-        }
-
-        sendLink(
-            { sign_token: signToken, email_token: emailToken, firstname, lastname, lang: i18n.language },
-            () => {
-                navigate(location, { state: { isTwoSidedView: false } });
-            },
-            {
-                [EHttpStatus.HTTP_400_BAD_REQUEST]: (error) => {
-                    const errorType = error.response?.data?.errors.value_error ? "invalid" : "missing";
-                    setErrors(["", `accountRecovery.errors.${errorType}.name`]);
-                    lastnameInput.focus();
-                },
-                [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                    backToSignin();
-                },
-                [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                },
-            }
-        );
-    };
-
-    const handleResend = () => {
-        setIsValidating(true);
-
-        sendLink(
-            { sign_token: signToken, email_token: emailToken, is_resend: true, lang: i18n.language },
-            () => {
+        },
+        mutate,
+        mutateOnSuccess: () => {
+            if (isResendRef.current) {
                 Toast.Add.success(t("accountRecovery.Resent link successfully."));
-            },
-            {
-                [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                    backToSignin();
-                },
-                [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                },
+            } else {
+                navigate(location, { state: { isTwoSidedView: false } });
             }
-        );
-    };
+        },
+        apiErrorHandlers: {
+            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                backToSignin();
+            },
+            [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
+                Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+            },
+        },
+        useDefaultBadRequestHandler: true,
+    });
 
     if (!(location.state?.isTwoSidedView ?? true)) {
         const buttons = (
@@ -113,7 +61,7 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
                 <Button type="button" onClick={backToSignin}>
                     {t("common.Back to Sign In")}
                 </Button>
-                <Button type="button" onClick={handleResend}>
+                <Button type="button" onClick={() => handleSubmit({})}>
                     {t("accountRecovery.Resend Link")}
                 </Button>
             </>
@@ -134,14 +82,14 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
         );
     } else {
         return (
-            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit}>
+            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="firstname">
-                    <Floating.LabelInput label={t("accountRecovery.First Name")} isFormControl autoFocus disabled={isValidating} />
-                    {firstnameError && <FormErrorMessage error={firstnameError} icon="circle-alert" />}
+                    <Floating.LabelInput label={t("user.First Name")} isFormControl autoFocus disabled={isValidating} />
+                    {errors.firstname && <FormErrorMessage error={errors.firstname} icon="circle-alert" />}
                 </Form.Field>
                 <Form.Field name="lastname" className="mt-3">
-                    <Floating.LabelInput label={t("accountRecovery.Last Name")} isFormControl disabled={isValidating} />
-                    {lastnameError && <FormErrorMessage error={lastnameError} icon="circle-alert" />}
+                    <Floating.LabelInput label={t("user.Last Name")} isFormControl disabled={isValidating} />
+                    {errors.lastname && <FormErrorMessage error={errors.lastname} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                     <Button type="submit" disabled={isValidating}>

@@ -1,106 +1,70 @@
-import { Avatar, Button, Form, IconComponent, Input, Tooltip } from "@/components/base";
+import { Button, Form, IconComponent, Input } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { useCallback, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useDropzone } from "react-dropzone";
+import AvatarUploader from "@/components/AvatarUploader";
+import useForm from "@/core/hooks/form/useForm";
+import { setInitialErrorsWithFocusingElement } from "@/pages/SignUpPage/utils";
 
-function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm">): JSX.Element {
+function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
-    const dataTransfer = new DataTransfer();
-    const [isValidating, setIsValidating] = useState(false);
-    const [avatarUrl, setAvatarUrl] = useState<string | undefined>((values as unknown as Record<string, string>).avatarUrl ?? undefined);
-    const handleUpload = useCallback((files: File[] | FileList | null) => {
-        if (!files || !files.length) {
-            setAvatarUrl(undefined);
-            dataTransfer.items.clear();
-            return;
-        }
+    const dataTransferRef = useRef(new DataTransfer());
+    const avatarUrlRef = useRef<string | undefined>((values as unknown as Record<string, string>).avatarUrl ?? undefined);
+    const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Record<string, unknown>>({
+        errorLangPrefix: "signUp.errors",
+        schema: {
+            avatar: { mimeType: "image/*" },
+            affiliation: {},
+            position: {},
+        },
+        inputRefs: {
+            avatar: dataTransferRef,
+        },
+        successCallback: (data) => {
+            const newValues = {
+                ...values,
+                ...data,
+                avatar: dataTransferRef.current.files[0],
+                avatarUrl: avatarUrlRef.current,
+            };
 
-        const file = files[0];
-        dataTransfer.items.add(file);
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            setAvatarUrl(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-    }, []);
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        accept: { "image/*": [] },
-        onDrop: handleUpload,
-        onFileDialogCancel: () => handleUpload(null),
+            moveStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
+        },
     });
 
-    if (values.avatar) {
-        if (!dataTransfer.items.length) {
-            dataTransfer.items.add(values.avatar);
-        }
+    useEffect(() => {
+        setInitialErrorsWithFocusingElement(["avatar", "affiliation", "position"], initialErrorsRef, setErrors, formRef);
+    }, []);
 
-        if (!avatarUrl) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setAvatarUrl(reader.result as string);
-            };
-            reader.readAsDataURL(values.avatar);
+    if (values.avatar) {
+        if (!dataTransferRef.current.items.length) {
+            dataTransferRef.current.items.add(values.avatar);
         }
     }
 
     const skipStep = () => {
         const newValues = { ...values };
-        nextStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
-    };
-
-    const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const newValues = {
-            ...values,
-            avatar: dataTransfer?.files[0],
-            avatarUrl,
-            affiliation: event.currentTarget.affiliation.value,
-            position: event.currentTarget.position.value,
-        };
-
-        nextStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
+        moveStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
     };
 
     return (
-        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={submitForm}>
-            <Form.Field
-                className="relative flex cursor-pointer justify-center transition-all duration-200 hover:opacity-80"
-                {...getRootProps({ name: "avatar" })}
-            >
-                {isDragActive && (
-                    // eslint-disable-next-line @/max-len
-                    <div className="absolute left-0 top-0 z-50 flex h-full w-full items-center justify-center border-2 border-dashed border-primary bg-background">
-                        {t("signUp.Drop your avatar here")}
-                    </div>
-                )}
-                <Tooltip.Provider delayDuration={400}>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <Avatar.Root className="h-20 w-20">
-                                <Avatar.Image src={avatarUrl} alt="" />
-                                <Avatar.Fallback className="text-4xl">{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
-                            </Avatar.Root>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>{t("signUp.Upload your avatar")}</Tooltip.Content>
-                    </Tooltip.Root>
-                </Tooltip.Provider>
-                <Form.Control asChild>
-                    <Input className="hidden" disabled={isValidating} {...getInputProps()} />
-                </Form.Control>
-            </Form.Field>
+        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+            <AvatarUploader
+                userInitials={createNameInitials(values.firstname, values.lastname)}
+                initialAvatarUrl={(values as unknown as Record<string, string>).avatarUrl ?? undefined}
+                dataTransferRef={dataTransferRef}
+                avatarUrlRef={avatarUrlRef}
+                errorMessage={errors.avatar}
+                isValidating={isValidating}
+                avatarSize="3xl"
+            />
             <Form.Field name="affiliation">
                 <Form.Control asChild>
                     <Input
                         className="w-full"
-                        placeholder={t("signUp.Affiliation")}
+                        placeholder={t("user.What organization are you affiliated with?")}
                         autoFocus
                         autoComplete="affiliation"
                         defaultValue={values.affiliation ?? ""}
@@ -112,7 +76,7 @@ function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm
                 <Form.Control asChild>
                     <Input
                         className="w-full"
-                        placeholder={t("signUp.Position")}
+                        placeholder={t("user.What is your position in your organization?")}
                         autoComplete="position"
                         defaultValue={values.position ?? ""}
                         disabled={isValidating}
@@ -120,7 +84,7 @@ function OptionalForm({ values, nextStep }: Omit<ISignUpFormProps, "validateForm
                 </Form.Control>
             </Form.Field>
             <div className="mt-16 flex items-center gap-6 max-xs:justify-between xs:justify-end xs:gap-8">
-                <Button type="button" variant="outline" onClick={() => nextStep(values, ROUTES.SIGN_UP.ADDITIONAL)} disabled={isValidating}>
+                <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.ADDITIONAL)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
                 <Button type="button" variant="ghost" onClick={skipStep} disabled={isValidating}>

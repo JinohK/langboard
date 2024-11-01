@@ -14,7 +14,7 @@ export interface IChatMessage {
     uid: string;
     icon?: string;
     message: string;
-    isReceived: boolean;
+    isReceived: bool;
 }
 
 export interface IGetProjectChatMessagesResponse {

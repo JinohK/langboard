@@ -44,7 +44,7 @@ Trigger.displayName = MenubarPrimitive.Trigger.displayName;
 const SubTrigger = React.forwardRef<
     React.ElementRef<typeof MenubarPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubTrigger> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, children, ...props }, ref) => (
     <MenubarPrimitive.SubTrigger
@@ -99,7 +99,7 @@ Content.displayName = MenubarPrimitive.Content.displayName;
 const Item = React.forwardRef<
     React.ElementRef<typeof MenubarPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Item> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <MenubarPrimitive.Item
@@ -162,7 +162,7 @@ RadioItem.displayName = MenubarPrimitive.RadioItem.displayName;
 const Label = React.forwardRef<
     React.ElementRef<typeof MenubarPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Label> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <MenubarPrimitive.Label ref={ref} className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)} {...props} />

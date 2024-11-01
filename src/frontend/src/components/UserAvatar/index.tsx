@@ -1,16 +1,15 @@
 /* eslint-disable @/max-len */
 import { Avatar, Card, HoverCard, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
-import { API_URL } from "@/constants";
-import { IUser } from "@/core/types";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { forwardRef, useState } from "react";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { generateRandomColor } from "@/core/utils/ColorUtils";
+import { User } from "@/core/models";
 
 export interface IUserAvatarProps {
-    user: IUser;
+    user: User.Interface;
     children: React.ReactNode;
     align?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
@@ -22,7 +21,7 @@ function Root({ user, children, align, avatarSize, className }: IUserAvatarProps
     const initials = createNameInitials(user.firstname, user.lastname);
 
     const avatarAfterPseudoClassNames = cn(
-        "after:transition-all after:block after:z-[-1] after:h-full after:w-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
+        "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
         "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45"
     );
 
@@ -43,7 +42,7 @@ function Root({ user, children, align, avatarSize, className }: IUserAvatarProps
                     className={cn("relative cursor-pointer", className, avatarAfterPseudoClassNames)}
                     onClick={() => setIsOpened(!isOpened)}
                 >
-                    <Avatar.Image src={`${API_URL}${user.avatar}`} />
+                    <Avatar.Image src={user.avatar} />
                     <Avatar.Fallback className={avatarClassNames} style={styles}>
                         {initials}
                     </Avatar.Fallback>
@@ -54,7 +53,7 @@ function Root({ user, children, align, avatarSize, className }: IUserAvatarProps
                     <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">
-                            <Avatar.Image src={`${API_URL}${user.avatar}`} />
+                            <Avatar.Image src={user.avatar} />
                             <Avatar.Fallback className={avatarClassNames} style={styles}>
                                 {initials}
                             </Avatar.Fallback>

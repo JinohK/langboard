@@ -16,6 +16,9 @@ export const API_ROUTES = {
             RESEND_LINK: "/auth/signup/resend",
         },
     },
+    ACCOUNT: {
+        UPDATE_PROFILE: "/account/profile",
+    },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",
         PROJECTS: "/dashboard/projects",
@@ -27,6 +30,7 @@ export const API_ROUTES = {
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
     },
+    REVERT: (path: string) => `/revert/${path}`,
 } as const;
 
 export const SOCKET_ROUTES = {

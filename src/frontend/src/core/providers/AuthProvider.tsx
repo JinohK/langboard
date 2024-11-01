@@ -1,13 +1,13 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useReducer, useRef } from "react";
 import Cookies from "universal-cookie";
 import { ROUTES } from "@/core/routing/constants";
-import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
-import { IUser } from "@/core/types";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
+import { User } from "@/core/models";
 
-export interface IAuthUser extends IUser {
+export interface IAuthUser extends User.Interface {
     industry: string;
     purpose: string;
     affiliation?: string;
@@ -17,11 +17,12 @@ export interface IAuthUser extends IUser {
 export interface IAuthContext {
     getAccessToken: () => string | null;
     getRefreshToken: () => string | null;
-    isAuthenticated: () => boolean;
+    isAuthenticated: () => bool;
     signIn: (accessToken: string, refreshToken: string) => void;
+    updatedUser: () => void;
     removeTokens: () => void;
     signOut: () => void;
-    aboutMe: () => Promise<IAuthUser>;
+    aboutMe: () => IAuthUser | null;
 }
 
 interface IAuthProviderProps {
@@ -33,9 +34,10 @@ const initialContext = {
     getRefreshToken: () => null,
     isAuthenticated: () => false,
     signIn: () => {},
+    updatedUser: () => {},
     removeTokens: () => {},
     signOut: () => {},
-    aboutMe: async () => Promise.reject(),
+    aboutMe: () => null,
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
@@ -43,6 +45,8 @@ const AuthContext = createContext<IAuthContext>(initialContext);
 export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode => {
     const cookies = new Cookies();
     const { queryClient } = useQueryMutation();
+    const user = useRef<IAuthUser | null>(null);
+    const [updated, update] = useReducer((x) => x + 1, 0);
 
     const getAccessToken = (): string | null => {
         return cookies.get(APP_ACCESS_TOKEN) ?? null;
@@ -52,8 +56,58 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         return cookies.get(APP_REFRESH_TOKEN) ?? null;
     };
 
-    const isAuthenticated = (): boolean => {
+    const isAuthenticated = (): bool => {
         return getAccessToken() !== null && getRefreshToken() !== null;
+    };
+
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            if (user.current) {
+                user.current = null;
+            }
+            return;
+        }
+
+        const getUser = async () => {
+            const cachedData = sessionStorage.getItem("about-me");
+            if (cachedData) {
+                const { expiresAt, user: cachedUser } = JSON.parse(cachedData);
+                if (expiresAt > Date.now()) {
+                    user.current = cachedUser;
+                    return;
+                }
+
+                sessionStorage.removeItem("about-me");
+                user.current = null;
+            }
+
+            const response = await api.get(API_ROUTES.AUTH.ABOUT_ME, {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+
+            if (response.data.user.avatar) {
+                response.data.user.avatar = `${API_URL}${response.data.user.avatar}`;
+            }
+
+            sessionStorage.setItem(
+                "about-me",
+                JSON.stringify({
+                    user: response.data.user,
+                    expiresAt: Date.now() + 1000 * 60 * 5,
+                })
+            );
+
+            user.current = response.data.user;
+            return;
+        };
+
+        getUser();
+    }, [updated]);
+
+    const updatedUser = () => {
+        update();
     };
 
     const removeTokens = () => {
@@ -64,40 +118,19 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     const signIn = (accessToken: string, refreshToken: string) => {
         cookies.set(APP_ACCESS_TOKEN, accessToken, { path: "/" });
         cookies.set(APP_REFRESH_TOKEN, refreshToken, { path: "/" });
+        update();
     };
 
     const signOut = () => {
+        user.current = null;
+        sessionStorage.removeItem("about-me");
         removeTokens();
         queryClient.clear();
         location.href = ROUTES.SIGN_IN.EMAIL;
     };
 
-    const aboutMe = async () => {
-        const cachedData = sessionStorage.getItem("about-me");
-        if (cachedData) {
-            const { expiresAt, user } = JSON.parse(cachedData);
-            if (expiresAt > Date.now()) {
-                return user;
-            }
-
-            sessionStorage.removeItem("about-me");
-        }
-
-        const response = await api.get(API_ROUTES.AUTH.ABOUT_ME, {
-            headers: {
-                Authorization: `Bearer ${getAccessToken()}`,
-            },
-        });
-
-        sessionStorage.setItem(
-            "about-me",
-            JSON.stringify({
-                user: response.data.user,
-                expiresAt: Date.now() + 1000 * 60 * 5,
-            })
-        );
-
-        return response.data.user;
+    const aboutMe = () => {
+        return user.current;
     };
 
     return (
@@ -107,6 +140,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 getRefreshToken,
                 isAuthenticated,
                 signIn,
+                updatedUser,
                 removeTokens,
                 signOut,
                 aboutMe,

@@ -3,7 +3,7 @@ export interface IHeaderNavItem {
     subNavs?: Omit<IHeaderNavItem, "subNavs">[];
     href?: string;
     onClick?: () => void;
-    active?: boolean;
+    active?: bool;
 }
 
 export interface IHeaderProps {
@@ -11,9 +11,9 @@ export interface IHeaderProps {
 }
 
 interface IBaseHeaderNavItemsProps {
-    isMobile?: boolean;
+    isMobile?: bool;
     navs: IHeaderProps["navs"];
-    setIsOpen?: (value: boolean) => void;
+    setIsOpen?: (value: bool) => void;
     activatedClass?: string;
     deactivatedClass?: string;
     shardClass?: string;
@@ -21,7 +21,7 @@ interface IBaseHeaderNavItemsProps {
 
 interface IMobileHeaderNavItemsProps extends IBaseHeaderNavItemsProps {
     isMobile: true;
-    setIsOpen: (value: boolean) => void;
+    setIsOpen: (value: bool) => void;
     activatedClass: string;
     deactivatedClass: string;
     shardClass: string;

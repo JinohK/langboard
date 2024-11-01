@@ -15,7 +15,7 @@ export interface ISocketMap {
 interface ISocketStore {
     getSocket: (path: string) => ISocketMap;
     setSocket: (path: string, socket: WebSocket) => void;
-    send: (path: string, json: string) => boolean;
+    send: (path: string, json: string) => bool;
     close: (path: string) => void;
     closeAll: () => void;
 }

@@ -5,7 +5,7 @@ import { forwardRef } from "react";
 
 interface IBaseFormOnlyLayoutProps {
     size?: "default" | "sm" | "lg";
-    useLogo?: boolean;
+    useLogo?: bool;
 }
 
 interface ITwoSidedFormOnlyLayoutProps extends IBaseFormOnlyLayoutProps {
@@ -79,7 +79,7 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
                         <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
                             {useLogo && (
                                 <div className="mb-6">
-                                    <img src="/images/logo.png" alt="Logo" className="h-9 w-9" />
+                                    <img src="/images/logo.png" alt="Logo" className="size-9" />
                                 </div>
                             )}
                             {content}

@@ -10,11 +10,11 @@ export interface IResizableSidebarProps {
     main: React.ReactNode;
     children: React.ReactNode;
     initialWidth: number;
-    defaultCollapsed?: boolean;
+    defaultCollapsed?: bool;
     collapsableWidth?: number;
     floatingIcon?: string;
     floatingTitle?: string;
-    floatingFullScreen?: boolean;
+    floatingFullScreen?: bool;
 }
 
 function ResizableSidebar({
@@ -52,7 +52,7 @@ function ResizableSidebar({
     }, []);
 
     const sidebarId = `resizable-sidebar-${createShortUUID()}`;
-    const setCollapsedAttr = (collapsed: boolean, sidebar?: HTMLElement, widthSize?: number) => {
+    const setCollapsedAttr = (collapsed: bool, sidebar?: HTMLElement, widthSize?: number) => {
         sidebar = sidebar ?? document.getElementById(sidebarId)!;
         if (!widthSize) {
             if (collapsed) {
@@ -108,14 +108,14 @@ function ResizableSidebar({
         <>
             <div className="block h-[calc(100vh_-_theme(spacing.16))] w-full transition-all duration-200 ease-in-out md:flex">
                 <div
-                    className="group/sidebar relative hidden h-full w-full border-r transition-all data-[resizing=true]:transition-none md:block"
+                    className="group/sidebar relative hidden size-full border-r transition-all data-[resizing=true]:transition-none md:block"
                     style={{ maxWidth: `${initialWidth}px` }}
                     data-collapsed={isCollapsed ? "true" : "false"}
                     id={sidebarId}
                 >
                     <aside
                         className={cn(
-                            "sticky z-50 flex h-full w-full flex-col items-start text-sm font-medium group-data-[collapsed=true]/sidebar:hidden"
+                            "sticky z-50 flex size-full flex-col items-start text-sm font-medium group-data-[collapsed=true]/sidebar:hidden"
                         )}
                     >
                         {!isMobile && children}
@@ -136,7 +136,7 @@ function ResizableSidebar({
                             setIsCollapsed(!isCollapsed);
                         }}
                         className={cn(
-                            "absolute right-[-1.2rem] top-1/2 z-50 h-10 w-10 -translate-y-1/2 transform rounded-full p-0",
+                            "absolute right-[-1.2rem] top-1/2 z-50 size-10 -translate-y-1/2 transform rounded-full p-0",
                             "group-data-[resizing=true]/sidebar:hidden"
                         )}
                     >

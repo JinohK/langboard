@@ -7,7 +7,7 @@ export interface ISignUpExistsEmailForm {
 }
 
 interface ISignUpExistsEmailResponse {
-    exists: boolean;
+    exists: bool;
 }
 
 const useSignUpExistsEmail = (options?: TMutationOptions<ISignUpExistsEmailForm, ISignUpExistsEmailResponse>) => {

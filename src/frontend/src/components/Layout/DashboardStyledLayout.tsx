@@ -30,7 +30,7 @@ export type TDashboardStyledLayoutProps =
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
     ({ children, headerNavs, sidebarNavs, resizableSidebar, ...props }, ref) => {
         const main = (
-            <main id="main" className="relative h-full w-full overflow-y-auto p-4 md:p-6 lg:p-8">
+            <main id="main" className="relative size-full overflow-y-auto p-4 md:p-6 lg:p-8">
                 {children}
             </main>
         );

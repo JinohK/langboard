@@ -27,4 +27,13 @@
   "python.analysis.typeCheckingMode": "basic",
   "python.languageServer": "Pylance",
   "python.analysis.typeEvaluation.enableTypeIgnoreComments": true,
+  "[json]": {
+    "editor.indentSize": 2
+  },
+  "[jsonc]": {
+    "editor.indentSize": 2
+  },
+  "[jsonl]": {
+    "editor.indentSize": 2
+  }
 }

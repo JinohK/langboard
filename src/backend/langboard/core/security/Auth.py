@@ -139,6 +139,20 @@ class Auth:
             return None
 
     @staticmethod
+    async def reset_user(user: User) -> None:
+        """Resets the user cache.
+
+        :param user: The user to reset.
+        """
+        if user.is_new():
+            return
+
+        cache_key = f"auth-user-{user.id}"
+        await Cache.delete(cache_key)
+
+        await Cache.set(cache_key, user, 60 * 5)
+
+    @staticmethod
     async def validate(queries_headers: dict[Any, Any] | Headers) -> User | Literal[401, 422]:
         """Validates the given headers or queries and returns the user if the token is valid.
 
@@ -200,7 +214,15 @@ class Auth:
             if not isinstance(route, AppExceptionHandlingRoute):
                 continue
             if AuthFilter.exists(route.endpoint):
-                path = openapi_schema["paths"][route.path]
+                if route.path.count(":") > 0:
+                    route_path = route.path.split("/")
+                    for i, part in enumerate(route_path):
+                        if part.count(":") > 0:
+                            route_path[i] = part.split(":")[0] + "}"
+                    route_path = "/".join(route_path)
+                else:
+                    route_path = route.path
+                path = openapi_schema["paths"][route_path]
                 for method in route.methods:
                     path_method = path[method.lower()]
                     path_method["security"] = [{"BearerAuth": []}]

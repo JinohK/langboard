@@ -13,9 +13,12 @@
   "common": {
     "Back": "Back",
     "Next": "Next",
+    "Save": "Save",
     "Skip": "Skip",
     "Close": "Close",
     "Cancel": "Cancel",
+    "Undo": "Undo",
+    "Reverting": "Reverting",
     "Create": "Create",
     "Other": "Other",
     "Actions": "Actions",
@@ -27,13 +30,32 @@
     "Malformed request": "Malformed request",
     "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later."
   },
+  "user": {
+    "Email": "Email",
+    "Password": "Password",
+    "Username": "Username",
+    "First Name": "First Name",
+    "Last Name": "Last Name",
+    "Industry": "Industry",
+    "What industry are you in?": "What industry are you in?",
+    "Purpose": "Purpose",
+    "What is your purpose for using {app}?": "What is your purpose for using {{app}}?",
+    "Affiliation": "Affiliation",
+    "What organization are you affiliated with?": "What organization are you affiliated with?",
+    "Position": "Position",
+    "What is your position in your organization?": "What is your position in your organization?",
+    "Upload avatar": "Upload avatar",
+    "Revert avatar": "Revert avatar",
+    "Delete avatar": "Delete avatar",
+    "Drop avatar here": "Drop avatar here",
+    "industries": { },
+    "purposes": { }
+  },
   "signIn": {
     "Sign in": "Sign in",
     "Use your {app} Account": "Use your {{app}} Account",
-    "Email": "Email",
     "Create account": "Create account",
     "Welcome": "Welcome",
-    "Password": "Password",
     "Show password": "Show password",
     "Forgot password?": "Forgot password?",
     "errors": {
@@ -51,26 +73,7 @@
   "signUp": {
     "Sign up": "Sign up",
     "Already have an account?": "Already have an account?",
-    "Email": "Email",
-    "First Name": "First Name",
-    "Last Name": "Last Name",
-    "Password": "Password",
     "Confirm password": "Confirm password",
-    "Industry": "What industry are you in?",
-    "Purpose": "What is your purpose for using {{app}}?",
-    "Affiliation": "What organization are you affiliated with?",
-    "Position": "What is your position in your organization?",
-    "Upload your avatar": "Upload your avatar",
-    "Drop your avatar here": "Drop your avatar here",
-    "industries": { },
-    "purposes": { },
-    "overview": {
-      "email": "Email",
-      "industry": "Industry",
-      "purpose": "Purpose",
-      "affiliation": "Affiliation",
-      "position": "Position"
-    },
     "complete": {
       "One More Step to Sign Up": "One More Step to Sign Up",
       "We have sent you an email to verify your email address.": "We have sent you an email to verify your email address.",
@@ -101,7 +104,8 @@
       "invalid": {
         "email": "Enter a valid email address.",
         "email-exists": "Email already exists. Try another one.",
-        "password": "Passwords do not match."
+        "password": "Passwords do not match.",
+        "avatar": "Only image files are allowed."
       },
       "Account already activated. Please sign in.": "Account already activated. Please sign in."
     }
@@ -114,8 +118,6 @@
     "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.": "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.",
     "If you do not receive the email within a few minutes, please try again or contact support for assistance.": "If you do not receive the email within a few minutes, please try again or contact support for assistance.",
     "Please enter your new password.": "Please enter your new password.",
-    "First Name": "First Name",
-    "Last Name": "Last Name",
     "Resend Link": "Resend Link",
     "Resent link successfully.": "Resent link successfully.",
     "Password Reset Successful": "Password Reset Successful",
@@ -128,20 +130,25 @@
         "firstname": "Enter your first name.",
         "lastname": "Enter your last name.",
         "password": "Enter a new password.",
-        "confirmPassword": "Enter a password confirmation."
+        "password-confirm": "Enter a password confirmation."
       },
       "invalid": {
         "name": "Wrong name. Try again.",
-        "confirmPassword": "Wrong password confirmation. Try again."
+        "password-confirm": "Wrong password confirmation. Try again."
       }
     }
   },
   "myAccount": {
     "My Account": "My Account",
-    "Settings": "Settings",
-    "Change password": "Change password",
-    "Edit profile": "Edit profile",
-    "Sign out": "Sign out"
+    "Sign out": "Sign out",
+    "Profile": "Profile",
+    "Profile updated successfully.": "Profile updated successfully.",
+    "errors": {
+      "missing": {
+        "firstname": "Enter your first name.",
+        "lastname": "Enter your last name."
+      }
+    }
   },
   "dashboard": {
     "Projects": "Projects",

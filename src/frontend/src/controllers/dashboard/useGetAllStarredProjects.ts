@@ -1,10 +1,10 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { IProject } from "@/core/types";
+import { Project } from "@/core/models";
 
 export interface IGetAllStarredProjectsResponse {
-    projects: IProject[];
+    projects: Project.Interface[];
     total: number;
 }
 

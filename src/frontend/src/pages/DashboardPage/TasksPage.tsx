@@ -46,7 +46,7 @@ function TasksPage(): JSX.Element {
         });
     };
 
-    const createCell = (isHead: boolean, value: string, className: string) => {
+    const createCell = (isHead: bool, value: string, className: string) => {
         const Comp = isHead ? Table.Head : Table.Cell;
         return (
             <Comp className={className}>

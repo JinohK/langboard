@@ -69,7 +69,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
     };
 
     return (
-        <div className="flex h-full w-full flex-col">
+        <div className="flex size-full flex-col">
             <div className="relative h-16">
                 <div className="flex h-full items-center justify-center truncate text-nowrap text-lg">{t("project.Chat with AI")}</div>
                 <DropdownMenu.Root>
@@ -104,7 +104,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                     type="submit"
                     variant="default"
                     size="icon"
-                    className="mr-1 h-10 w-10"
+                    className="mr-1 size-10"
                     title={t("project.Send a message")}
                     titleSide="top"
                     ref={buttonRef}

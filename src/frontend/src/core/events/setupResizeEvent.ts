@@ -1,7 +1,7 @@
 import { MutableRefObject } from "react";
 
 interface ICreateResizeEventProps {
-    resizingRef: MutableRefObject<boolean>;
+    resizingRef: MutableRefObject<bool>;
     doneCallback: () => void;
     timer?: number;
 }

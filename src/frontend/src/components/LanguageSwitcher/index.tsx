@@ -6,7 +6,7 @@ export interface ILanguageSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
     buttonClassNames?: string;
-    hideTriggerIcon?: boolean;
+    hideTriggerIcon?: bool;
     size?: ButtonProps["size"];
 }
 

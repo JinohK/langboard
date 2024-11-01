@@ -3,6 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import TypeUtils from "@/core/utils/TypeUtils";
 import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
 import Cookies from "universal-cookie";
@@ -17,7 +18,7 @@ export const api = axios.create({
             : [axios.defaults.transformRequest]
         : []
     ).concat((data, headers) => {
-        if (typeof data === "string" && data.length > 1024) {
+        if (TypeUtils.isString(data) && data.length > 1024) {
             headers["Content-Encoding"] = "gzip";
             return pako.gzip(data);
         } else {

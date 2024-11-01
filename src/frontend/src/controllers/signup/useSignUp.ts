@@ -1,10 +1,10 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
-import { IUser } from "@/core/types";
 
-export interface ISignUpForm extends Omit<IUser, "id" | "username" | "avatar" | "groups"> {
+export interface ISignUpForm extends Omit<User.Interface, "id" | "username" | "avatar" | "groups"> {
     password: string;
     industry: string;
     purpose: string;

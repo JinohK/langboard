@@ -2,7 +2,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { TInfiniteQueryOptions, TQueryFunction, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { IProject } from "@/core/types";
+import { Project } from "@/core/models";
 import { isAxiosError } from "axios";
 
 export interface IGetProjectsForm {
@@ -11,8 +11,8 @@ export interface IGetProjectsForm {
     limit: number;
 }
 
-export interface IDashboardProject extends IProject {
-    starred: boolean;
+export interface IDashboardProject extends Project.Interface {
+    starred: bool;
     group_names: string[];
 }
 

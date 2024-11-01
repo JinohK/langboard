@@ -6,7 +6,7 @@ import { ROUTES } from "@/core/routing/constants";
 interface IBaseResetLinkForm {
     sign_token: string;
     email_token: string;
-    is_resend?: boolean;
+    is_resend?: bool;
     firstname?: string;
     lastname?: string;
     lang?: string;

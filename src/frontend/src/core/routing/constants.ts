@@ -19,6 +19,12 @@ export const ROUTES = {
         RESET: "/auth/recovery/reset",
     },
     AFTER_SIGN_IN: "/dashboard",
+    ACCOUNT: {
+        ROUTE: "/account",
+        PROFILE: "/account/profile",
+        EMAIL: "/account/email",
+        PASSWORD: "/account/password",
+    },
     BOARD: {
         ROUTE: "/board",
         MAIN: (uid: string) => `/board/${uid}`,
@@ -34,11 +40,6 @@ export const ROUTES = {
         },
         TASKS: "/dashboard/tasks",
         TRACKING: "/dashboard/tracking",
-    },
-    SETTINGS: {
-        ROUTE: "/settings",
-        EDIT_PROFILE: "/settings/profile",
-        CHANGE_PASSWORD: "/settings/password",
     },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
 } as const;

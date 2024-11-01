@@ -5,6 +5,7 @@ from .GroupAssignedUser import GroupAssignedUser
 from .Project import Project
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectRole import ProjectRole
+from .RevertableRecord import RevertableRecord
 from .User import User
 
 
@@ -16,5 +17,6 @@ __all__ = [
     "Project",
     "ProjectAssignedUser",
     "ProjectRole",
+    "RevertableRecord",
     "User",
 ]

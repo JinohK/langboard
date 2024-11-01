@@ -21,7 +21,7 @@ const RadioGroup = ContextMenuPrimitive.RadioGroup;
 const SubTrigger = React.forwardRef<
     React.ElementRef<typeof ContextMenuPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, children, ...props }, ref) => (
     <ContextMenuPrimitive.SubTrigger
@@ -74,7 +74,7 @@ Content.displayName = ContextMenuPrimitive.Content.displayName;
 const Item = React.forwardRef<
     React.ElementRef<typeof ContextMenuPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <ContextMenuPrimitive.Item
@@ -137,7 +137,7 @@ RadioItem.displayName = ContextMenuPrimitive.RadioItem.displayName;
 const Label = React.forwardRef<
     React.ElementRef<typeof ContextMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Label> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <ContextMenuPrimitive.Label

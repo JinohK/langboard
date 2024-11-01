@@ -7,7 +7,7 @@ export interface IThemeSwitcherProps {
     variant?: ButtonProps["variant"];
     triggerType?: "icon" | "text";
     buttonClassNames?: string;
-    hideTriggerIcon?: boolean;
+    hideTriggerIcon?: bool;
     size?: ButtonProps["size"];
 }
 

@@ -7,9 +7,7 @@ import * as Form from "@/components/base/Form";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TextareaProps extends BaseTextareaProps {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => {
@@ -23,7 +21,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
 Textarea.displayName = "FloatingTextarea";
 
 interface ILabelProps {
-    isTextarea?: boolean;
+    isTextarea?: bool;
 }
 
 const Label = React.forwardRef<React.ElementRef<typeof BaseLabel>, React.ComponentPropsWithoutRef<typeof BaseLabel> & ILabelProps>(
@@ -44,7 +42,7 @@ const Label = React.forwardRef<React.ElementRef<typeof BaseLabel>, React.Compone
 );
 Label.displayName = "FloatingLabel";
 
-type LabelInputProps = InputProps & { label: string; isFormControl?: boolean };
+type LabelInputProps = InputProps & { label: string; isFormControl?: bool };
 
 const LabelInput = React.forwardRef<React.ElementRef<typeof Input>, React.PropsWithoutRef<LabelInputProps>>(
     ({ label, isFormControl, id, ...props }, ref) => {
@@ -67,7 +65,7 @@ const LabelInput = React.forwardRef<React.ElementRef<typeof Input>, React.PropsW
 );
 LabelInput.displayName = "FloatingLabelInput";
 
-type LabelTextareaProps = BaseTextareaProps & { label: string; isFormControl?: boolean };
+type LabelTextareaProps = BaseTextareaProps & { label: string; isFormControl?: bool };
 
 const LabelTextarea = React.forwardRef<React.ElementRef<typeof Textarea>, React.PropsWithoutRef<LabelTextareaProps>>(
     ({ label, isFormControl, id, ...props }, ref) => {

@@ -87,7 +87,7 @@ CloseButton.displayName = "FloatingButton.CloseButton";
 
 interface IFloatingRootProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
-    fullScreen?: boolean;
+    fullScreen?: bool;
 }
 
 const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, className, fullScreen = false, ...props }, ref) => {

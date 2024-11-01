@@ -9,7 +9,7 @@ export interface IProjectCardListProps {
     curPage: number;
     projects: IDashboardProject[];
     className?: string;
-    hasMore: boolean;
+    hasMore: bool;
     refetchAllStarred: () => Promise<unknown>;
     refetchProjects: () => Promise<unknown>;
     fetchNextPage: () => Promise<unknown>;

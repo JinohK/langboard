@@ -10,11 +10,12 @@ const config = {
     rules: {
         quotes: ["error", "double"],
         semi: [2, "always"],
-        indent: ["error", 4, { SwitchCase: 1 }],
+        indent: ["off"],
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/keyword-spacing": "off",
         "@/max-len": ["error", { code: 150 }],
         "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-empty-object-type": "off",
     },
 };
 

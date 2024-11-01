@@ -1,76 +1,43 @@
 import { Button, Dialog, Floating, Form, Select } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useCreateProject from "@/controllers/dashboard/useCreateProject";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useForm from "@/core/hooks/form/useForm";
+import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 export interface ICreateProjectFormDialogProps {
-    opened: boolean;
-    setOpened: (opened: boolean) => void;
+    opened: bool;
+    setOpened: (opened: bool) => void;
 }
 
 function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialogProps): JSX.Element {
     const [t] = useTranslation();
     const navigate = useNavigate();
     const { mutate } = useCreateProject();
-    const [titleError, setTitleError] = useState<string | null>(null);
-    const [isValidating, setIsValidating] = useState(false);
-
-    const types = ["SI", "SW"];
-
-    const submit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const titleInput = event.currentTarget["project-title"];
-        const title = titleInput.value.trim();
-        const description = event.currentTarget["project-description"].value.trim();
-        const type = event.currentTarget["project-type"].value;
-
-        if (!title) {
-            setTitleError(t("project.errors.missing.title"));
-            setIsValidating(false);
-            titleInput.focus();
-            return;
-        }
-
-        mutate(
-            { title, description, project_type: type },
-            {
-                onSuccess: (data) => {
-                    navigate(ROUTES.BOARD.MAIN(data.project_uid));
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                            setTitleError(t("project.errors.missing.title"));
-                            titleInput.focus();
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setIsValidating(false);
-                },
-            }
-        );
-    };
+    const { errors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "project.errors",
+        schema: {
+            title: { required: true },
+            description: {},
+            project_type: {},
+        },
+        mutate,
+        mutateOnSuccess: (data) => {
+            navigate(ROUTES.BOARD.MAIN(data.project_uid));
+        },
+        useDefaultBadRequestHandler: true,
+    });
 
     return (
         <Dialog.Root open={opened} onOpenChange={setOpened}>
             <Dialog.Content className="sm:max-w-md">
-                <Form.Root onSubmit={submit}>
+                <Form.Root onSubmit={handleSubmit} ref={formRef}>
                     <Dialog.Header>
                         <Dialog.Title>{t("dashboard.Create New Project")}</Dialog.Title>
                     </Dialog.Header>
-                    <Form.Field name="project-title">
+                    <Form.Field name="title">
                         <Floating.LabelInput
                             label={t("project.Title")}
                             isFormControl
@@ -79,9 +46,9 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                             className="mt-4"
                             disabled={isValidating}
                         />
-                        {titleError && <FormErrorMessage error={titleError} icon="circle-alert" />}
+                        {errors.title && <FormErrorMessage error={errors.title} icon="circle-alert" />}
                     </Form.Field>
-                    <Form.Field name="project-description">
+                    <Form.Field name="description">
                         <Floating.LabelTextarea
                             label={t("project.Description")}
                             isFormControl
@@ -91,13 +58,13 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                             disabled={isValidating}
                         />
                     </Form.Field>
-                    <Form.Field name="project-type">
-                        <Select.Root name="project-type" autoComplete="off" disabled={isValidating}>
+                    <Form.Field name="project_type">
+                        <Select.Root name="project_type" autoComplete="off" disabled={isValidating}>
                             <Select.Trigger className="mt-4 w-full">
                                 <Select.Value placeholder={t("project.Type")} />
                             </Select.Trigger>
                             <Select.Content>
-                                {types.map((type) => (
+                                {Project.TYPES.map((type) => (
                                     <Select.Item key={type} value={type}>
                                         {t(`project.types.${type}`)}
                                     </Select.Item>

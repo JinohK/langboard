@@ -21,7 +21,7 @@ const RadioGroup = DropdownMenuPrimitive.RadioGroup;
 const SubTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, children, ...props }, ref) => (
     <DropdownMenuPrimitive.SubTrigger
@@ -77,7 +77,7 @@ Content.displayName = DropdownMenuPrimitive.Content.displayName;
 const Item = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <DropdownMenuPrimitive.Item
@@ -140,7 +140,7 @@ RadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;
 const Label = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
-        inset?: boolean;
+        inset?: bool;
     }
 >(({ className, inset, ...props }, ref) => (
     <DropdownMenuPrimitive.Label ref={ref} className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)} {...props} />

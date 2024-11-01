@@ -3,32 +3,40 @@ import { ROUTES } from "@/core/routing/constants";
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 
-const SettingPage = lazy(() => import("./index"));
+const AccountPage = lazy(() => import("./index"));
 
-function SettingRoute() {
+function AccountRoute() {
     return (
-        <Route path={ROUTES.SETTINGS.ROUTE} key="route-settings">
+        <Route path={ROUTES.ACCOUNT.ROUTE} key="route-account">
             <Route
                 index
                 element={
                     <AuthGuard>
-                        <Navigate to={ROUTES.SETTINGS.EDIT_PROFILE} />
+                        <Navigate to={ROUTES.ACCOUNT.PROFILE} />
                     </AuthGuard>
                 }
             />
             <Route
-                path={ROUTES.SETTINGS.EDIT_PROFILE}
+                path={ROUTES.ACCOUNT.PROFILE}
                 element={
                     <AuthGuard>
-                        <SettingPage />
+                        <AccountPage />
                     </AuthGuard>
                 }
             />
             <Route
-                path={ROUTES.SETTINGS.CHANGE_PASSWORD}
+                path={ROUTES.ACCOUNT.EMAIL}
                 element={
                     <AuthGuard>
-                        <SettingPage />
+                        <AccountPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.ACCOUNT.PASSWORD}
+                element={
+                    <AuthGuard>
+                        <AccountPage />
                     </AuthGuard>
                 }
             />
@@ -36,4 +44,4 @@ function SettingRoute() {
     );
 }
 
-export default SettingRoute;
+export default AccountRoute;

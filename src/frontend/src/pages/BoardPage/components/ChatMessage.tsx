@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 export interface IChatMessageProps extends IChatMessage {
-    isWaiting?: boolean;
+    isWaiting?: bool;
     className?: string;
 }
 
@@ -25,9 +25,9 @@ function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, classN
                 {isWaiting && !message ? (
                     <div className="flex justify-center space-x-1">
                         <span className="sr-only">Loading...</span>
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.3s]"></div>
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.15s]"></div>
-                        <div className="h-3 w-3 animate-bounce rounded-full bg-secondary"></div>
+                        <div className="size-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.3s]"></div>
+                        <div className="size-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.15s]"></div>
+                        <div className="size-3 animate-bounce rounded-full bg-secondary"></div>
                     </div>
                 ) : (
                     <Markdown remarkPlugins={[[remarkGfm, { singleTilde: false }]]}>{message}</Markdown>

@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 interface IBaseProjectCardListProps {
-    isSkeleton?: boolean;
+    isSkeleton?: bool;
     project?: IDashboardProject;
     refetchAllStarred?: () => Promise<unknown>;
     refetchProjects?: () => Promise<unknown>;
@@ -91,7 +91,7 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
         cardClassNames = "border-transparent shadow-transparent";
         groupNames = <Skeleton className="inline-block h-3.5 w-1/2" />;
         title = <Skeleton className="inline-block h-4 w-3/4" />;
-        starBtn = <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block h-9 w-9 rounded-md" />;
+        starBtn = <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block size-9 rounded-md" />;
         tasks = [];
         for (let i = 0; i < 6; ++i) {
             tasks.push({

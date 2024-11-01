@@ -7,13 +7,16 @@ import { tv, type VariantProps } from "tailwind-variants";
 
 export const AvatarVariants = tv(
     {
-        base: "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
+        base: "relative flex shrink-0 overflow-hidden rounded-full",
         variants: {
             size: {
-                default: "h-10 w-10 text-base",
-                sm: "h-8 w-8 text-xs",
-                lg: "h-14 w-14 text-2xl",
-                "2xl": "h-20 w-20 text-3xl",
+                default: "size-10 text-base",
+                sm: "size-8 text-xs",
+                lg: "size-14 text-2xl",
+                "2xl": "size-20 text-3xl",
+                "3xl": "size-28 text-4xl",
+                "4xl": "size-36 text-5xl",
+                "5xl": "size-48 text-6xl",
             },
         },
         defaultVariants: {

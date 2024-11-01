@@ -14,19 +14,19 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
 }
 
 export interface IConnectedSocket {
-    isConnected: () => boolean;
+    isConnected: () => bool;
     reconnect: () => IConnectedSocket;
-    on: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: boolean };
-    off: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: boolean };
-    send: <TRequest>(eventName: TEventName, data: TRequest) => { isConnected: boolean };
+    on: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: bool };
+    off: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: bool };
+    send: <TRequest>(eventName: TEventName, data: TRequest) => { isConnected: bool };
     stream: <TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown>(
         eventName: TEventName,
         callbacks: IStreamCallbackMap<TStartResponse, TBufferResponse, TEndResponse>
-    ) => { isConnected: boolean };
+    ) => { isConnected: bool };
     streamOff: <TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown>(
         eventName: TEventName,
         callbacks: IStreamCallbackMap<TStartResponse, TBufferResponse, TEndResponse>
-    ) => { isConnected: boolean };
+    ) => { isConnected: bool };
 }
 
 export interface ISocketContext {

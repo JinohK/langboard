@@ -1,105 +1,94 @@
 import { Button, Floating, Form, IconComponent } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
-import { ISignUpForm } from "@/controllers/signup/useSignUp";
 import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSignUpExistsEmail from "@/controllers/signup/useSignUpExistsEmail";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import useForm from "@/core/hooks/form/useForm";
+import { setInitialErrorsWithFocusingElement } from "@/pages/SignUpPage/utils";
+import TypeUtils from "@/core/utils/TypeUtils";
 
-function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX.Element {
+function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
-    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[boolean, boolean]>([false, false]);
-    const [isValidating, setIsValidating] = useState(false);
-    const [errors, setErrors] = useState<Partial<Record<keyof ISignUpForm | "password-confirm", JSX.Element | null>>>({});
-
-    const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const { form, formInputs, newErrors, focusElement, setValidation } = validateForm(event.currentTarget, setIsValidating);
-
-        if (focusElement) {
-            setValidation(false);
-            setErrors(newErrors);
-            focusElement.focus();
-            return;
-        }
-
-        if (form.password !== form["password-confirm"]) {
-            newErrors["password-confirm"] = <FormErrorMessage error="signUp.errors.invalid.password-confirm" icon="circle-alert" />;
-            setValidation(false);
-            formInputs["password-confirm"].focus();
-            setErrors(newErrors);
-            return;
-        }
-
-        existsEmailMutate(
-            { email: form.email! },
-            {
-                onSuccess: (data) => {
-                    if (data.exists) {
-                        setErrors({ email: <FormErrorMessage error="signUp.errors.invalid.email-exists" icon="circle-alert" /> });
-                        formInputs.email.focus();
-                        return;
-                    }
-
-                    nextStep(form as unknown as ISignUpForm, ROUTES.SIGN_UP.ADDITIONAL);
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({});
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setValidation(false);
-                },
+    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[bool, bool]>([false, false]);
+    const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusElementRef } = useForm({
+        errorLangPrefix: "signUp.errors",
+        schema: {
+            email: { required: true, email: true },
+            firstname: { required: true },
+            lastname: { required: true },
+            password: { required: true },
+            "password-confirm": { required: true, sameWith: "password" },
+        },
+        mutate: existsEmailMutate,
+        mutateOnSuccess: (data) => {
+            if (data.exists) {
+                setErrors({ email: "signUp.errors.invalid.email-exists" });
+                if (TypeUtils.isElement(focusElementRef.current)) {
+                    focusElementRef.current.focus();
+                } else if (TypeUtils.isString(focusElementRef.current)) {
+                    formRef.current?.[focusElementRef.current]?.focus();
+                }
+                return;
             }
-        );
-    };
+
+            moveStep(
+                {
+                    ...values,
+                    ...formDataRef.current,
+                },
+                ROUTES.SIGN_UP.ADDITIONAL
+            );
+        },
+        useDefaultBadRequestHandler: true,
+    });
+
+    useEffect(() => {
+        setInitialErrorsWithFocusingElement(["email", "firstname", "lastname", "password"], initialErrorsRef, setErrors, formRef);
+    }, []);
 
     const showIconClassName = "absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer [&:not(:hover)]:text-gray-600 transition-all";
 
     return (
-        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={submitForm}>
+        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
             <Form.Field name="email">
                 <Floating.LabelInput
-                    label={t("signUp.Email")}
+                    label={t("user.Email")}
                     isFormControl
                     autoFocus
                     autoComplete="email"
                     disabled={isValidating}
                     defaultValue={values.email ?? ""}
                 />
-                {errors.email}
+                {errors.email && <FormErrorMessage error={errors.email} icon="circle-alert" />}
             </Form.Field>
             <Form.Field name="firstname">
                 <Floating.LabelInput
-                    label={t("signUp.First Name")}
+                    label={t("user.First Name")}
                     isFormControl
                     autoComplete="firstname"
                     disabled={isValidating}
                     defaultValue={values.firstname ?? ""}
                 />
-                {errors.firstname}
+                {errors.firstname && <FormErrorMessage error={errors.firstname} icon="circle-alert" />}
             </Form.Field>
             <Form.Field name="lastname">
                 <Floating.LabelInput
-                    label={t("signUp.Last Name")}
+                    label={t("user.Last Name")}
                     isFormControl
                     autoComplete="lastname"
                     disabled={isValidating}
                     defaultValue={values.lastname ?? ""}
                 />
-                {errors.lastname}
+                {errors.lastname && <FormErrorMessage error={errors.lastname} icon="circle-alert" />}
             </Form.Field>
             <Form.Field name="password">
                 <div className="relative">
                     <Floating.LabelInput
                         type={shouldShowPw ? "text" : "password"}
-                        label={t("signUp.Password")}
+                        label={t("user.Password")}
                         isFormControl
                         className="pr-10"
                         autoComplete="off"
@@ -112,7 +101,7 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
                         onClick={() => setShouldShowPasswords([!shouldShowPw, shouldShowConfirmPw])}
                     />
                 </div>
-                {errors.password}
+                {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
             </Form.Field>
             <Form.Field name="password-confirm">
                 <div className="relative">
@@ -131,7 +120,7 @@ function RequiredForm({ values, validateForm, nextStep }: ISignUpFormProps): JSX
                         onClick={() => setShouldShowPasswords([shouldShowPw, !shouldShowConfirmPw])}
                     />
                 </div>
-                {errors["password-confirm"]}
+                {errors["password-confirm"] && <FormErrorMessage error={errors["password-confirm"]} icon="circle-alert" />}
             </Form.Field>
             <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                 <Button type="submit" disabled={isValidating}>

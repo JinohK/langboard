@@ -3,10 +3,14 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AxiosError, isAxiosError } from "axios";
 import { t } from "i18next";
 
+export type TResponseErrors = Record<string, Record<string, string[] | undefined> | undefined> | undefined;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface IApiErrorHandlerMap extends Partial<Record<EHttpStatus, (error: AxiosError<any, any>) => unknown | Promise<unknown>>> {
+type TAxiosErrorCallback = (error: AxiosError<any, any>, responseErrors: TResponseErrors) => unknown | Promise<unknown>;
+
+export interface IApiErrorHandlerMap extends Partial<Record<EHttpStatus, TAxiosErrorCallback>> {
     nonApiError?: (error: unknown) => unknown | Promise<unknown>;
-    wildcardError?: (error: unknown) => unknown | Promise<unknown>;
+    wildcardError?: TAxiosErrorCallback;
 }
 
 const setupApiErrorHandler = (map: IApiErrorHandlerMap) => {
@@ -26,7 +30,7 @@ const setupApiErrorHandler = (map: IApiErrorHandlerMap) => {
         const handler = map[status as EHttpStatus];
         if (!handler) {
             if (map.wildcardError) {
-                return () => map.wildcardError!(error);
+                return () => map.wildcardError!(error, error.response?.data.errors);
             } else {
                 return () => {
                     Toast.Add.error(t("errors.Internal server error"));
@@ -34,7 +38,7 @@ const setupApiErrorHandler = (map: IApiErrorHandlerMap) => {
             }
         }
 
-        return () => handler(error);
+        return () => handler(error, error.response?.data.errors);
     };
 
     const handle = <T>(error: T) => {

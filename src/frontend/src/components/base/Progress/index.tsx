@@ -6,7 +6,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { heightSizeMap, TDimensionSize } from "@/core/utils/SizeMap";
 
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
-    indeterminate?: boolean;
+    indeterminate?: bool;
     height?: TDimensionSize;
 }
 

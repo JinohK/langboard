@@ -2,6 +2,7 @@ import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { TSidebarNavItemsProps } from "@/components/Sidebar/types";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
+import TypeUtils from "@/core/utils/TypeUtils";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +19,7 @@ const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element
         );
 
         let comp;
-        if (typeof isFloating === "boolean") {
+        if (TypeUtils.isBool(isFloating)) {
             comp = (
                 <a
                     key={key}
@@ -28,10 +29,7 @@ const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element
                     className={ButtonVariants({
                         variant: "secondary",
                         size: "icon",
-                        className: cn(
-                            item.current ? "bg-muted text-primary" : "",
-                            "h-12 w-12 cursor-pointer rounded-full opacity-50 sm:h-14 sm:w-14"
-                        ),
+                        className: cn(item.current ? "bg-muted text-primary" : "", "size-12 cursor-pointer rounded-full opacity-50 sm:size-14"),
                     })}
                 >
                     <IconComponent icon={item.icon} size="6" strokeWidth="2" />

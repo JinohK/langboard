@@ -42,3 +42,7 @@ class Service(ServiceFactory):
     @property
     def bot(self):
         return self._create_or_get_service(factory.BotService)
+
+    @property
+    def revert(self):
+        return self._create_or_get_service(factory.RevertService)

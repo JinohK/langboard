@@ -5,12 +5,15 @@ from urllib.parse import urlparse
 from sqlmodel import desc
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
+from ...core.security import Auth
 from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, User
+from ...models.RevertableRecord import RevertType
 from ..BaseService import BaseService
+from .RevertService import RevertService
 
 
 class UserService(BaseService):
@@ -124,26 +127,32 @@ class UserService(BaseService):
 
         return user, cache_key
 
-    async def activate_user(self, user: User, commit: bool = True) -> None:
+    async def activate_user(self, user: User) -> None:
         user.activated_at = now()
         await self._db.update(user)
-        if commit:
-            await self._db.commit()
+        await self._db.commit()
 
-    async def reset_password(self, user: User, password: str, commit: bool = True) -> None:
+    async def reset_password(self, user: User, password: str) -> None:
         user.set_password(password)
         await self._db.update(user)
-        if commit:
-            await self._db.commit()
+        await self._db.commit()
 
-    async def create_user(self, form: dict, avatar: FileModel | None = None, commit: bool = True) -> User:
+    async def create_user(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
         user.avatar = avatar
 
         self._db.insert(user)
-        if commit:
-            await self._db.commit()
+        await self._db.commit()
         return user
+
+    async def update_user(self, user: User, form: dict) -> str:
+        for key, value in form.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+
+        revert_key = await self._get_service(RevertService).record(user, RevertType.Update, ["avatar"])
+        await Auth.reset_user(user)
+        return revert_key
 
     async def __get_user(self, column: str, value: Any) -> User | None:
         if not value:

@@ -1,0 +1,161 @@
+"use client";
+
+import type { PropsWithChildren } from "react";
+import React, { useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { tv, VariantProps } from "tailwind-variants";
+import { cn } from "@/core/utils/ComponentUtils";
+import { ButtonProps } from "@/components/base/Button";
+import IconComponent from "@/components/base/IconComponent";
+import { Tooltip } from "@/components/base";
+
+export interface DockProps extends VariantProps<typeof DockVariants> {
+    className?: string;
+    magnification?: number;
+    distance?: number;
+    direction?: "top" | "middle" | "bottom";
+    children: React.ReactNode;
+}
+
+const DEFAULT_MAGNIFICATION = 60;
+const DEFAULT_DISTANCE = 140;
+
+const DockVariants = tv(
+    {
+        // eslint-disable-next-line @/max-len
+        base: "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-6 max-md:mt-4 flex w-max gap-2 rounded-2xl border p-2 backdrop-blur-md",
+        variants: {
+            size: {
+                xs: "h-8",
+                sm: "h-12",
+                md: "h-14",
+                lg: "h-16",
+                xl: "h-20",
+            },
+        },
+        defaultVariants: {
+            size: "md",
+        },
+    },
+    {
+        responsiveVariants: true,
+    }
+);
+
+const Root = React.forwardRef<HTMLDivElement, DockProps>(
+    ({ className, children, size, magnification = DEFAULT_MAGNIFICATION, distance = DEFAULT_DISTANCE, direction = "bottom", ...props }, ref) => {
+        const mouseX = useMotionValue(Infinity);
+
+        const renderChildren = () => {
+            return React.Children.map(children, (child) => {
+                if (React.isValidElement(child) && (child.type === Icon || child.type === IconButton)) {
+                    if (child.type === IconButton) {
+                        return React.cloneElement(child, {
+                            ...child.props,
+                            dockIconProps: {
+                                ...child.props.dockIconProps,
+                                mouseX,
+                                magnification,
+                                distance,
+                            },
+                        });
+                    }
+
+                    return React.cloneElement(child, {
+                        ...child.props,
+                        mouseX,
+                        magnification,
+                        distance,
+                    });
+                }
+                return child;
+            });
+        };
+
+        return (
+            <motion.div
+                ref={ref}
+                onMouseMove={(e) => mouseX.set(e.pageX)}
+                onMouseLeave={() => mouseX.set(Infinity)}
+                {...props}
+                className={cn(
+                    DockVariants({ size }),
+                    direction === "top" ? "items-start" : "",
+                    direction === "middle" ? "items-center" : "",
+                    direction === "bottom" ? "items-end" : "",
+                    className
+                )}
+            >
+                {renderChildren()}
+            </motion.div>
+        );
+    }
+);
+
+Root.displayName = "Dock";
+
+export interface DockIconProps {
+    magnification?: number;
+    distance?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mouseX?: any;
+    className?: string;
+    children?: React.ReactNode;
+    props?: PropsWithChildren;
+}
+
+function Icon({ magnification = DEFAULT_MAGNIFICATION, distance = DEFAULT_DISTANCE, mouseX, className, children, ...props }: DockIconProps) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    const distanceCalc = useTransform(mouseX, (val: number) => {
+        const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
+
+        return val - bounds.x - bounds.width / 2;
+    });
+
+    const widthSync = useTransform(distanceCalc, [-distance, 0, distance], [40, magnification, 40]);
+
+    const width = useSpring(widthSync, {
+        mass: 0.1,
+        stiffness: 150,
+        damping: 12,
+    });
+
+    return (
+        <motion.div
+            ref={ref}
+            style={{ width }}
+            className={cn("flex aspect-square cursor-pointer items-center justify-center rounded-full", className)}
+            {...props}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+Icon.displayName = "DockIcon";
+
+export interface IDockIconButtonProps extends Pick<ButtonProps, "title" | "titleSide"> {
+    buttonProps: Omit<ButtonProps, "children" | "title" | "titleSide">;
+    dockIconProps: Omit<DockIconProps, "children" | "props">;
+    icon: string;
+}
+
+function IconButton({ buttonProps, dockIconProps, icon, title, titleSide }: IDockIconButtonProps) {
+    let iconComp = <IconComponent icon={icon} className="size-full" />;
+    if (title) {
+        iconComp = (
+            <Tooltip.Provider delayDuration={400} disableHoverableContent>
+                <Tooltip.Root>
+                    <Tooltip.Trigger {...buttonProps}>{iconComp}</Tooltip.Trigger>
+                    <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>
+                </Tooltip.Root>
+            </Tooltip.Provider>
+        );
+    } else {
+        iconComp = <button {...buttonProps}>{iconComp}</button>;
+    }
+    return <Icon {...dockIconProps}>{iconComp}</Icon>;
+}
+
+export { Root, Icon, IconButton, DockVariants };

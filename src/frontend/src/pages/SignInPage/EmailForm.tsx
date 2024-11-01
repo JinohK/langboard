@@ -1,16 +1,14 @@
 import { Button, Floating, Form } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { EMAIL_REGEX } from "@/constants";
 import { ROUTES } from "@/core/routing/constants";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
-import { useState } from "react";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IconComponent } from "@/components/base";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import useForm from "@/core/hooks/form/useForm";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -22,69 +20,37 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
     const [t] = useTranslation();
     const navigate = useNavigate();
     const { mutate } = useAuthEmail();
-    const [error, setError] = useState("");
-    const [isValidating, setIsValidating] = useState(false);
-
-    const submitEmail = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const emailInput = event.currentTarget.email;
-        const email = emailInput.value;
-
-        if (!email) {
-            setError("signIn.errors.missing.email");
-            setIsValidating(false);
-            emailInput.focus();
-            return;
-        }
-
-        if (!EMAIL_REGEX.test(email)) {
-            setError("signIn.errors.invalid.email");
-            setIsValidating(false);
-            emailInput.focus();
-            return;
-        }
-
-        mutate(
-            { is_token: false, email: email, sign_token: signToken },
-            {
-                onSuccess: (data) => {
-                    if (!data.token) {
-                        setError("signIn.errors.Couldn't find your {app} Account");
-                        return;
-                    }
-
-                    setEmail(email);
-
-                    const searchParams = new URLSearchParams();
-                    searchParams.append(SIGN_IN_TOKEN_QUERY_NAME, signToken);
-                    searchParams.append(EMAIL_TOKEN_QUERY_NAME, data.token);
-
-                    navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                            setError("signIn.errors.missing.email");
-                            emailInput.focus();
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            setError("signIn.errors.Couldn't find your {app} Account");
-                            emailInput.focus();
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setIsValidating(false);
-                },
+    const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "signIn.errors",
+        schema: {
+            email: { required: true, email: true },
+        },
+        predefineValues: { is_token: false, sign_token: signToken },
+        mutate,
+        mutateOnSuccess: (data) => {
+            if (!data.token) {
+                setErrors({ email: "signIn.errors.Couldn't find your {app} Account" });
+                return;
             }
-        );
-    };
+
+            setEmail(formRef.current!.email.value);
+
+            const searchParams = new URLSearchParams();
+            searchParams.append(SIGN_IN_TOKEN_QUERY_NAME, signToken);
+            searchParams.append(EMAIL_TOKEN_QUERY_NAME, data.token);
+
+            navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
+        },
+        apiErrorHandlers: {
+            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                setErrors({ email: "signIn.errors.Couldn't find your {app} Account" });
+                setTimeout(() => {
+                    formRef.current!.email.focus();
+                }, 0);
+            },
+        },
+        useDefaultBadRequestHandler: true,
+    });
 
     return (
         <>
@@ -92,10 +58,10 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                 <h2 className="text-4xl font-normal">{t("signIn.Sign in")}</h2>
                 <div className="mt-4 text-base">{t("signIn.Use your {app} Account")}</div>
             </div>
-            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={submitEmail}>
+            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="email">
-                    <Floating.LabelInput label={t("signIn.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
-                    {error && <FormErrorMessage error={error} icon="circle-alert" />}
+                    <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
+                    {errors.email && <FormErrorMessage error={errors.email} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">
                     <Button

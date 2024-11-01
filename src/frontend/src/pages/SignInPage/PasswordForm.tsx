@@ -9,8 +9,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import useForm from "@/core/hooks/form/useForm";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -25,65 +25,41 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
     const location = useLocation();
     const navigate = useNavigate();
     const [shouldShowPassword, setShouldShowPassword] = useState(false);
-    const [error, setError] = useState("");
     const { mutate } = useSignIn();
     const { signIn } = useAuth();
-    const [isValidating, setIsValidating] = useState(false);
-
-    const submitPassword = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const passwordInput = event.currentTarget.password;
-        const password = passwordInput.value;
-
-        if (!password) {
-            setError("signIn.errors.missing.password");
-            setIsValidating(false);
-            passwordInput.focus();
-            return;
-        }
-
-        const searchParams = new URLSearchParams(location.search);
-        const redirectUrl = searchParams.get(REDIRECT_QUERY_NAME) ?? ROUTES.AFTER_SIGN_IN;
-
-        mutate(
-            { sign_token: signToken, email_token: emailToken, password },
-            {
-                onSuccess: (data) => {
-                    if (!data.access_token || !data.refresh_token) {
-                        setError("signIn.errors.Couldn't find your {app} Account");
-                        return;
-                    }
-
-                    signIn(data.access_token, data.refresh_token);
-                    navigate(decodeURIComponent(redirectUrl));
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                            setError("signIn.errors.missing.password");
-                            passwordInput.focus();
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            setError("signIn.errors.invalid.password");
-                            passwordInput.focus();
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setIsValidating(false);
-                },
+    const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "signIn.errors",
+        schema: {
+            password: { required: true },
+        },
+        predefineValues: { sign_token: signToken, email_token: emailToken },
+        mutate,
+        mutateOnSuccess: (data) => {
+            if (!data.access_token || !data.refresh_token) {
+                setErrors({ password: "signIn.errors.Couldn't find your {app} Account" });
+                setTimeout(() => {
+                    formRef.current!.password.focus();
+                }, 0);
+                return;
             }
-        );
-    };
+
+            const searchParams = new URLSearchParams(location.search);
+            const redirectUrl = searchParams.get(REDIRECT_QUERY_NAME) ?? ROUTES.AFTER_SIGN_IN;
+            signIn(data.access_token, data.refresh_token);
+            navigate(decodeURIComponent(redirectUrl));
+        },
+        apiErrorHandlers: {
+            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                setErrors({ password: "signIn.errors.invalid.password" });
+                setTimeout(() => {
+                    formRef.current!.password.focus();
+                }, 0);
+            },
+        },
+        useDefaultBadRequestHandler: true,
+    });
 
     const backToEmail = () => {
-        setIsValidating(false);
         setEmail("");
         const searchParams = new URLSearchParams(location.search);
         searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
@@ -113,17 +89,17 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     {email}
                 </Button>
             </div>
-            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={submitPassword}>
+            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="password">
                     <Floating.LabelInput
                         type={shouldShowPassword ? "text" : "password"}
-                        label={t("signIn.Password")}
+                        label={t("user.Password")}
                         isFormControl
                         autoFocus
                         autoComplete="password"
                         disabled={isValidating}
                     />
-                    {error && <FormErrorMessage error={error} icon="circle-alert" />}
+                    {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
                 </Form.Field>
                 <Label className="mt-3 flex cursor-pointer select-none gap-2">
                     <Checkbox onClick={() => setShouldShowPassword((prev) => !prev)} disabled={isValidating} />

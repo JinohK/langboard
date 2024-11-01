@@ -113,6 +113,9 @@ class BaseSqlModel(ABC, SQLModel):
             if value is not None:
                 chunks.append(f"{repr_key}={value}")
 
+        if hasattr(self, "deleted_at") and getattr(self, "deleted_at") is not None:
+            chunks.append(f"deleted_at={getattr(self, "deleted_at")}")
+
         info = ", ".join(chunks)
         return f"{self.__class__.__name__}({info})"
 

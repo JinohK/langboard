@@ -98,7 +98,10 @@ class DbSession(BaseSqlBuilder):
         if obj.is_new():
             return
         session = self._get_session(DbSessionRole.Update)
-        obj = await session.merge(obj)
+        try:
+            obj = await session.merge(obj)
+        except Exception:
+            pass
         session.add(obj)
 
     @overload
@@ -116,7 +119,7 @@ class DbSession(BaseSqlBuilder):
         if obj.is_new():
             return
         session = self._get_session(DbSessionRole.Delete)
-        await session.merge(obj)
+        obj = await session.merge(obj)
         if purge or not isinstance(obj, SoftDeleteModel):
             await session.delete(obj)
             return
@@ -126,14 +129,25 @@ class DbSession(BaseSqlBuilder):
     @overload
     async def exec(
         self,
-        statement: Union[Select[_TSelectParam], SelectOfScalar[_TSelectParam]],
+        statement: SelectOfScalar[_TSelectParam],
         *,
         params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
         execution_options: Mapping[str, Any] = EMPTY_DICT,
         bind_arguments: Optional[Dict[str, Any]] = None,
         _parent_execute_state: Optional[Any] = None,
         _add_event: Optional[Any] = None,
-    ) -> Union[TupleResult[_TSelectParam], ScalarResult[_TSelectParam]]: ...
+    ) -> ScalarResult[_TSelectParam]: ...
+    @overload
+    async def exec(
+        self,
+        statement: Select[_TSelectParam],
+        *,
+        params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
+        execution_options: Mapping[str, Any] = EMPTY_DICT,
+        bind_arguments: Optional[Dict[str, Any]] = None,
+        _parent_execute_state: Optional[Any] = None,
+        _add_event: Optional[Any] = None,
+    ) -> TupleResult[_TSelectParam]: ...
     @overload
     async def exec(
         self,

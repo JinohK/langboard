@@ -20,10 +20,10 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                 )}
                 data-collapsed={isCollapsed}
             >
-                <div className="relative hidden h-full w-full md:block">
+                <div className="relative hidden size-full md:block">
                     <aside
                         className={cn(
-                            "sticky z-50 flex h-full w-full flex-col items-start border-r text-sm font-medium",
+                            "sticky z-50 flex size-full flex-col items-start border-r text-sm font-medium",
                             "group-data-[collapsed=true]/sidebar:p-1 lg:group-data-[collapsed=true]/sidebar:p-2",
                             "group-data-[collapsed=false]/sidebar:p-2 lg:group-data-[collapsed=false]/sidebar:p-3"
                         )}
@@ -34,7 +34,7 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                     <Button
                         variant="secondary"
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="absolute right-[-1.2rem] top-1/2 z-50 h-10 w-10 -translate-y-1/2 transform rounded-full p-0"
+                        className="absolute right-[-1.2rem] top-1/2 z-50 size-10 -translate-y-1/2 transform rounded-full p-0"
                     >
                         <IconComponent icon={isCollapsed ? "chevron-right" : "chevron-left"} size="8" />
                     </Button>

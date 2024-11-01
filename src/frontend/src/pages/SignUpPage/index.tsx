@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormOnlyLayout } from "@/components/Layout";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -8,22 +8,24 @@ import OptionalForm from "@/pages/SignUpPage/OptionalForm";
 import RequiredForm from "@/pages/SignUpPage/RequiredForm";
 import Overview from "@/pages/SignUpPage/Overview";
 import { Button } from "@/components/base";
-import { EMAIL_REGEX } from "@/constants";
 import AdditionalForm from "@/pages/SignUpPage/AdditionalForm";
-import FormErrorMessage from "@/components/FormErrorMessage";
 
 function SignUpPage(): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const [form, setForm] = useState<JSX.Element>();
+    const initialErrorsRef = useRef<Record<string, string>>({});
     const values = location.state ?? {};
 
-    const nextStep = (newValues: Partial<ISignUpForm>, nextUrl: string) => {
+    const moveStep = (newValues: Partial<ISignUpForm>, nextUrl: string, initialErrors?: Record<string, string>) => {
         const searchParams = new URLSearchParams(location.search);
 
         delete (newValues as Record<string, unknown>)["password-confirm"];
         location.state = { ...location.state, ...newValues };
+        if (initialErrors) {
+            initialErrorsRef.current = initialErrors;
+        }
         navigate(location, { replace: true, state: location.state });
         navigate(`${nextUrl}?${searchParams.toString()}`, { state: location.state });
     };
@@ -33,80 +35,12 @@ function SignUpPage(): JSX.Element {
         navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
     };
 
-    const validateForm = (formElement: HTMLFormElement, setIsValidating: (isValidating: boolean) => void) => {
-        const backToEmailBtn = document.querySelector<HTMLButtonElement>("#back-to-sign-in-btn")!;
-
-        const setValidation = (isValidating: boolean) => {
-            setIsValidating(isValidating);
-            backToEmailBtn.disabled = isValidating;
-        };
-
-        setValidation(true);
-
-        const inputNames: (keyof ISignUpForm | "password-confirm")[] = [
-            "email",
-            "firstname",
-            "lastname",
-            "password",
-            "password-confirm",
-            "industry",
-            "purpose",
-        ];
-
-        const form: Partial<Record<keyof ISignUpForm | "password-confirm", string>> = {};
-        const formInputs: Partial<Record<keyof ISignUpForm | "password-confirm", HTMLInputElement>> = {};
-        const newErrors: Partial<Record<keyof ISignUpForm | "password-confirm", JSX.Element | null>> = {};
-        let focusElement: HTMLInputElement | null = null;
-
-        for (let i = 0; i < inputNames.length; ++i) {
-            const inputName = inputNames[i];
-            const input = formElement[inputName];
-
-            if (!input) {
-                continue;
-            }
-
-            const isSelectedOther = formElement[inputName] instanceof RadioNodeList;
-            let value = formElement[inputName].value;
-            if (isSelectedOther) {
-                if (formElement[inputName][0] instanceof HTMLSelectElement) {
-                    value = (formElement[inputName][1] as HTMLInputElement).value;
-                }
-            }
-
-            formInputs[inputName] = input;
-            form[inputName] = value;
-
-            if (!value) {
-                newErrors[inputName] = (
-                    <FormErrorMessage error={`signUp.errors.missing.${inputName}${isSelectedOther ? "-other" : ""}`} icon="circle-alert" />
-                );
-                if (!focusElement) {
-                    focusElement = input;
-                }
-            } else if (inputName === "email" && !EMAIL_REGEX.test(value)) {
-                newErrors.email = <FormErrorMessage error="signUp.errors.invalid.email" icon="circle-alert" />;
-                if (!focusElement) {
-                    focusElement = input;
-                }
-            }
-        }
-
-        return {
-            form: form as Record<keyof ISignUpForm | "password-confirm", string>,
-            formInputs: formInputs as Required<typeof formInputs>,
-            newErrors,
-            focusElement,
-            setValidation,
-        };
-    };
-
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
 
         switch (location.pathname) {
             case ROUTES.SIGN_UP.REQUIRED:
-                setForm(<RequiredForm values={values} validateForm={validateForm} nextStep={nextStep} />);
+                setForm(<RequiredForm values={values} moveStep={moveStep} initialErrorsRef={initialErrorsRef} />);
                 break;
             case ROUTES.SIGN_UP.ADDITIONAL: {
                 const inputNames: (keyof ISignUpForm)[] = ["email", "firstname", "lastname", "password"];
@@ -116,7 +50,7 @@ function SignUpPage(): JSX.Element {
                         return;
                     }
                 }
-                setForm(<AdditionalForm values={values} validateForm={validateForm} nextStep={nextStep} />);
+                setForm(<AdditionalForm values={values} moveStep={moveStep} initialErrorsRef={initialErrorsRef} />);
                 break;
             }
             case ROUTES.SIGN_UP.OPTIONAL: {
@@ -127,7 +61,7 @@ function SignUpPage(): JSX.Element {
                         return;
                     }
                 }
-                setForm(<OptionalForm values={values} nextStep={nextStep} />);
+                setForm(<OptionalForm values={values} moveStep={moveStep} initialErrorsRef={initialErrorsRef} />);
                 break;
             }
             case ROUTES.SIGN_UP.OVERVIEW: {
@@ -138,7 +72,7 @@ function SignUpPage(): JSX.Element {
                         return;
                     }
                 }
-                setForm(<Overview values={values} nextStep={nextStep} />);
+                setForm(<Overview values={values} moveStep={moveStep} />);
                 break;
             }
         }

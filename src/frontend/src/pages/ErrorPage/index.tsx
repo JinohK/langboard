@@ -1,5 +1,6 @@
 import { Separator } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
 
 function ErrorPage(): JSX.Element {
@@ -9,7 +10,7 @@ function ErrorPage(): JSX.Element {
         errorCode = EHttpStatus.HTTP_404_NOT_FOUND;
     }
 
-    if (typeof errorCode !== "number") {
+    if (!TypeUtils.isNumber(errorCode)) {
         errorCode = EHttpStatus[errorCode as keyof typeof EHttpStatus];
     }
 

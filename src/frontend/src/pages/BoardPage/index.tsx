@@ -22,7 +22,7 @@ function BoardPage(): JSX.Element {
     const [isChatAvailable, setIsChatAvailable] = useState(false);
     const params = useParams();
     const uid = params.uid;
-    const isChatAvailableCallback = useCallback((data: { available: boolean }) => {
+    const isChatAvailableCallback = useCallback((data: { available: bool }) => {
         setIsChatAvailable(data.available);
     }, []);
     const chatErrorCallback = useCallback(() => {

@@ -1,4 +1,4 @@
-interface IUser {
+export interface Interface {
     id: number;
     firstname: string;
     lastname: string;
@@ -8,4 +8,5 @@ interface IUser {
     groups?: string[];
 }
 
-export default IUser;
+export const INDUSTRIES: string[] = ["Industry 1"];
+export const PURPOSES: string[] = ["Purpose 1"];

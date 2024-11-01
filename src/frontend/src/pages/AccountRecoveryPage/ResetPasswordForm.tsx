@@ -3,7 +3,7 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import useRecoveryPassword from "@/controllers/recovery/useRecoveryPassword";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
 import { useState } from "react";
@@ -19,75 +19,32 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
-    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[boolean, boolean]>([false, false]);
+    const [[shouldShowPw, shouldShowConfirmPw], setShouldShowPasswords] = useState<[bool, bool]>([false, false]);
     const { mutate } = useRecoveryPassword();
-    const [[pwError, confirmPwError], setErrors] = useState<[string | null, string | null]>([null, null]);
-    const [isValidating, setIsValidating] = useState(false);
+    const { errors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "accountRecovery.errors",
+        schema: {
+            password: { required: true },
+            "password-confirm": { required: true, sameWith: "password" },
+        },
+        predefineValues: { recovery_token: recoveryToken },
+        mutate,
+        mutateOnSuccess: () => {
+            navigate(location, { state: { isTwoSidedView: false } });
+        },
+        apiErrorHandlers: {
+            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                backToSignin();
+            },
+            [EHttpStatus.HTTP_410_GONE]: () => {
+                const searchParams = new URLSearchParams(location.search);
+                searchParams.delete(RECOVERY_TOKEN_QUERY_NAME);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsValidating(true);
-
-        const passwordInput = event.currentTarget["new-password"];
-        const confirmPasswordInput = event.currentTarget["new-password-confirm"];
-        const password = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-
-        const errors: [string | null, string | null] = [
-            !password ? "accountRecovery.errors.missing.password" : null,
-            !confirmPassword ? "accountRecovery.errors.missing.confirmPassword" : null,
-        ];
-
-        if (errors[0] || errors[1]) {
-            setErrors(errors);
-            setIsValidating(false);
-            if (errors[0]) {
-                passwordInput.focus();
-            } else {
-                confirmPasswordInput.focus();
-            }
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setErrors([null, "accountRecovery.errors.invalid.confirmPassword"]);
-            setIsValidating(false);
-            confirmPasswordInput.focus();
-            return;
-        }
-
-        mutate(
-            { recovery_token: recoveryToken, password },
-            {
-                onSuccess: () => {
-                    navigate(location, { state: { isTwoSidedView: false } });
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                            setErrors(["accountRecovery.errors.missing.password", null]);
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            backToSignin();
-                        },
-                        [EHttpStatus.HTTP_410_GONE]: () => {
-                            const searchParams = new URLSearchParams(location.search);
-                            searchParams.delete(RECOVERY_TOKEN_QUERY_NAME);
-
-                            navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`);
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setIsValidating(false);
-                },
-            }
-        );
-    };
+                navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`);
+            },
+        },
+        useDefaultBadRequestHandler: true,
+    });
 
     const showIconClassName = "absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer [&:not(:hover)]:text-gray-600 transition-all";
 
@@ -107,8 +64,8 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
         );
     } else {
         return (
-            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit}>
-                <Form.Field name="new-password">
+            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+                <Form.Field name="password">
                     <div className="relative">
                         <Floating.LabelInput
                             type={shouldShowPw ? "text" : "password"}
@@ -124,9 +81,9 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                             onClick={() => setShouldShowPasswords([!shouldShowPw, shouldShowConfirmPw])}
                         />
                     </div>
-                    {pwError && <FormErrorMessage error={pwError} icon="circle-alert" />}
+                    {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
                 </Form.Field>
-                <Form.Field name="new-password-confirm" className="mt-3">
+                <Form.Field name="password-confirm" className="mt-3">
                     <div className="relative">
                         <Floating.LabelInput
                             type={shouldShowConfirmPw ? "text" : "password"}
@@ -141,7 +98,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                             onClick={() => setShouldShowPasswords([shouldShowPw, !shouldShowConfirmPw])}
                         />
                     </div>
-                    {confirmPwError && <FormErrorMessage error={confirmPwError} icon="circle-alert" />}
+                    {errors["password-confirm"] && <FormErrorMessage error={errors["password-confirm"]} icon="circle-alert" />}
                 </Form.Field>
                 <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
                     <Button type="submit" disabled={isValidating}>
