@@ -12,7 +12,7 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
     volumes:
-      - ./server/prod.conf.template:/etc/nginx/templates/default.conf.template
+      - ./server/conf.template:/etc/nginx/templates/default.conf.template
       - ./server/nginx.conf:/etc/nginx/nginx.conf
       - ../src/frontend/dist:/usr/share/nginx/html
     networks:

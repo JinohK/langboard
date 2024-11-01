@@ -35,5 +35,8 @@
   },
   "[jsonl]": {
     "editor.indentSize": 2
+  },
+  "[yaml]": {
+    "editor.indentSize": 2
   }
 }
