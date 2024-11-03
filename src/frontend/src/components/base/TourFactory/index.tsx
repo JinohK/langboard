@@ -35,18 +35,10 @@ function TourFactory<T extends string>(order: T[]) {
         nodes: new Map(),
         show: false,
         current: 0,
-        next: () => {
-            console.log("empty");
-        },
-        previous: () => {
-            console.log("empty");
-        },
-        close: () => {
-            console.log("empty");
-        },
-        open: () => {
-            console.log("empty");
-        },
+        next: () => {},
+        previous: () => {},
+        close: () => {},
+        open: () => {},
     });
 
     function TourPortal() {

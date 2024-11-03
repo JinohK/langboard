@@ -1,8 +1,8 @@
+from ...core.ai import BotRunner, BotType
 from ...core.filter import RoleFilter
 from ...core.routing import AppRouter, SocketResponse, WebSocket
 from ...core.security import Auth
 from ...models import ProjectRole, User
-from ...models.Bot import BotType
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .RoleFinder import project_role_finder
@@ -13,8 +13,9 @@ AppRouter.socket.use_path("/board/{project_uid}")
 
 @AppRouter.socket.on("chat:available")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-async def is_chat_available(service: Service = Service.scope()):
-    is_available, bot_name = await service.bot.is_available(BotType.ProjectChat)
+async def is_chat_available():
+    is_available = await BotRunner.is_available(BotType.ProjectChat)
+    bot_name = BotRunner.get_bot_name(BotType.ProjectChat)
     return SocketResponse(event="chat:available", data={"available": is_available, "bot_name": bot_name})
 
 
@@ -23,8 +24,8 @@ async def is_chat_available(service: Service = Service.scope()):
 async def project_chat(
     ws: WebSocket, project_uid: str, message: str, user: User = Auth.scope("socket"), service: Service = Service.scope()
 ):
-    stream = await service.bot.send_chat(BotType.ProjectChat, message, use_stream=True)
-    if not stream:
+    stream_or_str = await BotRunner.run(BotType.ProjectChat, {"message": message})
+    if not stream_or_str:
         return SocketResponse(event="chat:available", data={"available": False})
 
     user_message = await service.chat_history.create("project", message, filterable=project_uid, sender_id=user.id)
@@ -34,10 +35,14 @@ async def project_chat(
 
     ws_stream = ws.stream("chat:stream")
     ws_stream.start(data={"uid": ai_message.uid})
-    async for chunk_dict in stream:
-        if "chunk" not in chunk_dict:
-            continue
-        ai_message.message = f"{ai_message.message}{chunk_dict["chunk"]}"
+    if isinstance(stream_or_str, str):
+        ai_message.message = stream_or_str
         ws_stream.buffer(data={"uid": ai_message.uid, "message": ai_message.message})
+    else:
+        async for chunk in stream_or_str:
+            if not chunk:
+                continue
+            ai_message.message = f"{ai_message.message}{chunk}"
+            ws_stream.buffer(data={"uid": ai_message.uid, "message": ai_message.message})
     await service.chat_history.update(ai_message)
     ws_stream.end(data={"uid": ai_message.uid, "message": ai_message.message})

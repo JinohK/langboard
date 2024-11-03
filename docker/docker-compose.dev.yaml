@@ -34,9 +34,11 @@ services:
     command: yarn build -w
     volumes:
       - ../src/frontend/src:/app/src
+      - ../src/frontend/dist:/app/dist:rw
       - ../src/frontend/vite.config.ts:/app/vite.config.ts
       - ../src/frontend/tailwind.config.js:/app/tailwind.config.js
       - ../src/frontend/postcss.config.js:/app/postcss.config.js
+      - ../.env:/app/.env
     networks:
       - dev_net
     restart: always
@@ -55,9 +57,9 @@ services:
       - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
       - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
       - LOGGING_DIR=${LOGGING_DIR}
-      - MAIN_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:${MASTER_POSTGRES_PORT}/${POSTGRES_DB}
+      - MAIN_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:5432/${POSTGRES_DB}
       - MAIN_DATABASE_ROLE=${MAIN_DATABASE_ROLE}
-      - SUB_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:${REPLICA_POSTGRES_PORT}/${POSTGRES_DB}
+      - SUB_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:5432/${POSTGRES_DB}
       - SUB_DATABASE_ROLE=${SUB_DATABASE_ROLE}
       - CACHE_TYPE=redis
       - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:${REDIS_PORT}/0
@@ -77,6 +79,12 @@ services:
     command: ${PROJECT_NAME} run -w
     volumes:
       - ../src/backend/${PROJECT_NAME}:/app/src/backend/${PROJECT_NAME}
+      - ../pyproject.toml:/app/pyproject.toml
+      - ../poetry.lock:/app/poetry.lock
+      - ../README.md:/app/README.md
+      - ../alembic.ini:/app/alembic.ini
+    depends_on:
+      - db
     networks:
       - dev_net
     restart: always
@@ -91,7 +99,7 @@ services:
       - REDIS_LOG_FILE=/${REDIS_LOG_FILE}
     volumes:
       - ./volumes/cache:/data
-      - ../logs/redis/redis.log:/${REDIS_LOG_FILE}
+      - ./volumes/logs/redis/redis.log:/${REDIS_LOG_FILE}
       - ./cache/redis.conf:/usr/local/bin/redis.conf
     ports:
       - ${REDIS_PORT}:6379
@@ -100,44 +108,41 @@ services:
     restart: always
 
   db:
-    image: postgres:latest
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db
     ports:
       - ${MASTER_POSTGRES_PORT}:5432
     environment:
-      - POSTGRES_LOG_HOSTNAME=true
-      - POSTGRES_REPLICATION_MODE=master
-      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
-      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
-      - POSTGRES_USERNAME=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DATABASE=${POSTGRES_DB}
-      - TZ=UTC
-      - PGTZ=UTC
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+      - POSTGRESQL_USERNAME=${POSTGRES_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRES_DB}
+      - POSTGRESQL_LOG_TIMEZONE=UTC
+      - POSTGRESQL_TIMEZONE=UTC
     volumes:
-      - ./volumes/db:/var/lib/postgresql/data:Z
+      - ./volumes/db:/bitnami/postgresql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - dev_net
     restart: always
 
   db-replica:
-    image: postgres:latest
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_replica
     ports:
       - ${REPLICA_POSTGRES_PORT}:5432
     environment:
-      - POSTGRES_LOG_HOSTNAME=true
-      - POSTGRES_REPLICATION_MODE=slave
-      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
-      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
-      - POSTGRES_MASTER_HOST=${PROJECT_NAME}_db
-      - POSTGRES_MASTER_PORT_NUMBER=${MASTER_POSTGRES_PORT}
-      - POSTGRES_USERNAME=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DATABASE=${POSTGRES_DB}
-      - TZ=UTC
-      - PGTZ=UTC
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=${PROJECT_NAME}_db
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=${POSTGRES_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_LOG_TIMEZONE=UTC
+      - POSTGRESQL_TIMEZONE=UTC
     networks:
       - dev_net
     depends_on:
@@ -145,22 +150,20 @@ services:
     restart: always
 
   db-backup:
-    image: postgres:latest
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_backup
     environment:
-      - POSTGRES_LOG_HOSTNAME=true
-      - POSTGRES_REPLICATION_MODE=backup
-      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
-      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
-      - POSTGRES_MASTER_HOST=${PROJECT_NAME}_db
-      - POSTGRES_MASTER_PORT_NUMBER=${MASTER_POSTGRES_PORT}
-      - POSTGRES_USERNAME=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DATABASE=${POSTGRES_DB}
-      - TZ=UTC
-      - PGTZ=UTC
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=${PROJECT_NAME}_db
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=${POSTGRES_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_LOG_TIMEZONE=UTC
+      - POSTGRESQL_TIMEZONE=UTC
     volumes:
-      - ./volumes/db_backup:/backup:Z
+      - ./volumes/db_backup:/backup
       - ./db/backup.sh:/docker-entrypoint-initdb.d/backup.sh
     networks:
       - dev_net

@@ -192,7 +192,11 @@ dist-ssr
 
 *.tsbuildinfo
 
+local
+
 docker/volumes
-src/backend/requirements.txt
 *.db
 uploads
+
+**/bots/*
+!**/bots/.gitkeep

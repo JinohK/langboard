@@ -10,6 +10,7 @@ _TTemplateNames = Literal["recovery", "signup"]
 class EmailService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "email"
 
     async def send_template(self, lang: str, to: str, template_name: _TTemplateNames, formats: dict[str, str]) -> bool:

@@ -103,3 +103,19 @@ def create_service_py(name: str, code: str, is_role: bool) -> None:
         f.close()
 
     _logger.info(f"Updated service imports: {main_service}")
+
+
+def create_bot_py(name: str, code: str) -> None:
+    target_dir = BASE_DIR / "bots"
+    save_path = target_dir / f"{name}Bot.py"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    if save_path.exists():
+        raise FileExistsError(f"Bot already exists: {name}")
+
+    with open(save_path, "w") as f:
+        f.write(code)
+        f.close()
+
+    _logger.info(f"Created bot: {name}")

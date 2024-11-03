@@ -22,7 +22,7 @@ async def signup(
         return JSONResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
     file_model = Storage.upload(avatar, StorageName.Avatar) if avatar else None
-    user = await service.user.create_user(form.model_dump(), avatar=file_model)
+    user = await service.user.create(form.model_dump(), avatar=file_model)
 
     cache_key = service.user.create_cache_name("signup", user.email)
 
@@ -60,7 +60,7 @@ async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) 
 
 
 @AppRouter.api.post("/auth/signup/activate")
-async def activate_user(form: ActivateUserForm, service: Service = Service.scope()) -> JSONResponse:
+async def activate(form: ActivateUserForm, service: Service = Service.scope()) -> JSONResponse:
     user, cache_key = await service.user.validate_token_from_url("signup", form.signup_token)
     if not user or not cache_key:
         return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -68,7 +68,7 @@ async def activate_user(form: ActivateUserForm, service: Service = Service.scope
     if user.activated_at:
         return JSONResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
-    await service.user.activate_user(user)
+    await service.user.activate(user)
 
     await Cache.delete(cache_key)
 

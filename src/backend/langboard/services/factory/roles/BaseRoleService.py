@@ -18,10 +18,6 @@ class _Method(Protocol, Generic[_TParams, _TReturn]):
 
 
 class BaseRoleService(ABC, Generic[_TRoleModel]):
-    def __init__(self, db: DbSession, model_class: type[_TRoleModel]):
-        self._db = db
-        self._model_class = model_class
-
     @staticmethod
     def class_filterable_wrapper(
         cls_: Callable[Concatenate[Any, Any, Any, Any, Any, Any, _TParams], Any],
@@ -99,6 +95,10 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             return inner  # type: ignore
 
         return spec_decorator
+
+    def __init__(self, db: DbSession, model_class: type[_TRoleModel]):
+        self._db = db
+        self._model_class = model_class
 
     async def get_roles(self, **kwargs) -> Sequence[_TRoleModel]:
         """Get roles by filtering with the given parameters.

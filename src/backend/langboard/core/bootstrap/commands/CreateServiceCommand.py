@@ -1,6 +1,6 @@
 from ...utils.String import pascal_to_snake
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .utils import create_service_py, format_template, make_name
+from .CommandUtils import create_service_py, format_template, make_name
 
 
 class CreateServiceCommandOptions(BaseCommandOptions):
@@ -23,6 +23,10 @@ class CreateServiceCommand(BaseCommand):
     @property
     def description(self) -> str:
         return "Service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Service' suffix)"
+
+    @property
+    def choices(self) -> list[str] | None:
+        return None
 
     @property
     def store_type(self) -> type[bool] | type[str]:

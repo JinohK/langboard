@@ -1,11 +1,13 @@
 import asyncio
 from logging.config import fileConfig
+from typing import Any
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 from alembic import context
+from alembic.autogenerate.api import AutogenContext
 
 from langboard.Constants import MAIN_DATABASE_URL
 from langboard.models import * # type: ignore
@@ -31,6 +33,19 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+def render_item(type_: str, obj: Any, autogen_context: AutogenContext):
+    """Apply custom rendering for selected items."""
+    if type_ == 'type' and isinstance(obj, object):
+        if obj.__class__.__name__ == "SecretStrType":
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import SecretStrType")
+            return "SecretStrType"
+        elif obj.__class__.__name__ == "_ModelColumnType":
+            model_type_class: type = obj._model_type_class # type: ignore
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import ModelColumnType")
+            autogen_context.imports.add(f"from {model_type_class.__module__} import {model_type_class.__name__}")
+            return f"ModelColumnType({model_type_class.__name__})"
+
+    return False
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -50,6 +65,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_item=render_item,
     )
 
     with context.begin_transaction():
@@ -57,7 +73,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata, 
+        render_item=render_item,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

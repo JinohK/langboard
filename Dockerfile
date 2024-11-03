@@ -18,6 +18,6 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --git https://github
 RUN poetry --version
 
 COPY ./src/backend ./src/backend
-COPY pyproject.toml poetry.lock README.md ./
+COPY pyproject.toml poetry.lock README.md alembic.ini ./
 
 RUN poetry install

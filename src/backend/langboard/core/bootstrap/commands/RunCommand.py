@@ -88,6 +88,10 @@ class RunCommand(BaseCommand):
         return "Run the server"
 
     @property
+    def choices(self) -> list[str] | None:
+        return None
+
+    @property
     def store_type(self) -> type[bool] | type[str]:
         return bool
 

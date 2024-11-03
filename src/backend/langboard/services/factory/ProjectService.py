@@ -5,12 +5,14 @@ from sqlmodel.sql.expression import Select
 from ...core.schema import Pagination
 from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, ProjectRole, User
 from ..BaseService import BaseService
+from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
 
 
 class ProjectService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "project"
 
     async def get_dashboard_list(
@@ -131,6 +133,30 @@ class ProjectService(BaseService):
         await self._db.commit()
 
         return project
+
+    @overload
+    async def update(self, project: Project, form: dict) -> str: ...
+    @overload
+    async def update(self, project: Project, form: dict, from_bot: Literal[False]) -> str: ...
+    @overload
+    async def update(self, project: int, form: dict, from_bot: Literal[True]) -> None: ...
+    async def update(self, project: Project | int, form: dict, from_bot: bool = False) -> str | None:
+        if "id" in form:
+            form.pop("id")
+
+        if from_bot:
+            await self._db.exec(
+                self._db.query("update").table(Project).values(form).where(Project.id == cast(int, project))  # type: ignore
+            )
+            await self._db.commit()
+            return
+
+        for key, value in form.items():
+            if hasattr(project, key):
+                setattr(project, key, value)
+
+        revert_key = await self._get_service(RevertService).record(cast(Project, project), RevertType.Update)
+        return revert_key
 
     @overload
     async def assign_user(

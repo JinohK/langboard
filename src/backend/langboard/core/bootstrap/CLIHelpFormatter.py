@@ -1,6 +1,7 @@
 from argparse import OPTIONAL, SUPPRESS, ZERO_OR_MORE, Action, HelpFormatter, _StoreAction
 from gettext import gettext
 from re import findall
+from .CLIRichParser import COLOR_DESCRIPTION
 
 
 class CLIHelpFormatter(HelpFormatter):
@@ -129,6 +130,15 @@ class CLIHelpFormatter(HelpFormatter):
         fake_action_arg = None
         if action.metavar and self._is_fake_action(action):
             fake_action_arg = action.metavar["arg"]  # type: ignore
+            if "choices_description" in action.metavar:  # type: ignore
+                choices = action.metavar["choices_description"]  # type: ignore
+                if isinstance(choices, list):
+                    if not action.help:
+                        action.help = ""
+                    choices_str = ", ".join([str(choice) for choice in choices])
+                    if not choices_str:
+                        choices_str = "None"
+                    action.help += f" Choices: [/{COLOR_DESCRIPTION}]{choices_str}[{COLOR_DESCRIPTION}]"
             action.metavar = None
 
         action_header = self._format_action_invocation(action)
@@ -191,7 +201,7 @@ class CLIHelpFormatter(HelpFormatter):
         prevent duplicates or cases where it wouldn't make sense to the end
         user.
         """
-        help = action.help
+        help = f"[{COLOR_DESCRIPTION}]{action.help}[/{COLOR_DESCRIPTION}]"
         if help is None:
             help = ""
 
@@ -216,6 +226,9 @@ class CLIHelpFormatter(HelpFormatter):
                 "is_fake": True,
                 "arg": f"<{metadata["positional_name"]}>",  # type: ignore
             }
+
+            if "choices_description" in metadata:
+                new_action_args["metavar"]["choices_description"] = metadata["choices_description"]  # type: ignore
 
         return _StoreAction(**new_action_args)
 

@@ -5,9 +5,6 @@ from .ServiceFactory import ServiceFactory
 
 
 class Service(ServiceFactory):
-    def close(self):
-        self._serivces.clear()
-
     @staticmethod
     def scope() -> "Service":
         async def create_factory(db: DbSession = DbSession.scope()):
@@ -18,6 +15,9 @@ class Service(ServiceFactory):
                 service.close()
 
         return Depends(create_factory)
+
+    def close(self):
+        self._serivces.clear()
 
     @property
     def user(self):
@@ -38,10 +38,6 @@ class Service(ServiceFactory):
     @property
     def chat_history(self):
         return self._create_or_get_service(factory.ChatHistoryService)
-
-    @property
-    def bot(self):
-        return self._create_or_get_service(factory.BotService)
 
     @property
     def revert(self):

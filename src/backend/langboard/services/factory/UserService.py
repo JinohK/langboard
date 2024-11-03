@@ -19,16 +19,17 @@ from .RevertService import RevertService
 class UserService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "user"
 
     def create_cache_name(self, cache_type: str, email: str) -> str:
         return f"{cache_type}:{email}"
 
     async def get_by_id(self, user_id: int | None) -> User | None:
-        return await self.__get_user("id", user_id)
+        return await self.__get("id", user_id)
 
     async def get_by_email(self, email: str | None) -> User | None:
-        return await self.__get_user("email", email)
+        return await self.__get("email", email)
 
     async def get_by_token(self, token: str | None, key: str | None) -> User | None:
         if not token or not key:
@@ -127,7 +128,7 @@ class UserService(BaseService):
 
         return user, cache_key
 
-    async def activate_user(self, user: User) -> None:
+    async def activate(self, user: User) -> None:
         user.activated_at = now()
         await self._db.update(user)
         await self._db.commit()
@@ -137,7 +138,7 @@ class UserService(BaseService):
         await self._db.update(user)
         await self._db.commit()
 
-    async def create_user(self, form: dict, avatar: FileModel | None = None) -> User:
+    async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
         user.avatar = avatar
 
@@ -145,8 +146,11 @@ class UserService(BaseService):
         await self._db.commit()
         return user
 
-    async def update_user(self, user: User, form: dict) -> str:
+    async def update(self, user: User, form: dict) -> str:
         for key, value in form.items():
+            if key == "id":
+                continue
+
             if hasattr(user, key):
                 setattr(user, key, value)
 
@@ -154,7 +158,7 @@ class UserService(BaseService):
         await Auth.reset_user(user)
         return revert_key
 
-    async def __get_user(self, column: str, value: Any) -> User | None:
+    async def __get(self, column: str, value: Any) -> User | None:
         if not value:
             return None
         result = await self._db.exec(self._db.query("select").table(User).where(User.column(column) == value))

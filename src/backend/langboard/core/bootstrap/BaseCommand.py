@@ -33,6 +33,14 @@ class BaseCommand(ABC, Generic[_TOption]):
 
     @property
     @abstractmethod
+    def choices(self) -> list[str] | None: ...
+
+    @property
+    def choices_description(self) -> list[str] | None:
+        return self.choices
+
+    @property
+    @abstractmethod
     def store_type(self) -> type[bool] | type[str]: ...
 
     @abstractmethod

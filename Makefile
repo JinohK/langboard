@@ -63,6 +63,7 @@ init: check_tools clean_python_cache clean_yarn_cache ## initialize the project
 	@echo "$(GREEN)All requirements are installed.$(NC)"
 
 start_docker_dev: ## run the development environment in Docker
+	cd src/frontend && yarn run build
 	docker compose -f ./docker/docker-compose.dev.yaml --env-file ./.env up -d --build
 
 stop_docker_dev: ## stop the development environment in Docker

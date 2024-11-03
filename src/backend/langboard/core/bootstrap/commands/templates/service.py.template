@@ -4,4 +4,5 @@ from ..BaseService import BaseService
 class {class_name}Service(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "{snake_name}"

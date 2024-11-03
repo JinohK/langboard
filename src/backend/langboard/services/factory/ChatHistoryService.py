@@ -9,6 +9,7 @@ from ..BaseService import BaseService
 class ChatHistoryService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "chat_history"
 
     async def get_list(

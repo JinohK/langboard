@@ -1,5 +1,6 @@
 from fastapi import Depends, status
 from fastapi.responses import JSONResponse
+from ...core.ai import BotType, QueueBot, QueueBotModel
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter
 from ...core.schema import Pagination
@@ -48,6 +49,16 @@ async def create_project(
     project = await service.project.create(user, form.title, form.description, form.project_type)
     if not project:
         return JSONResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    QueueBot.add(
+        QueueBotModel(
+            bot_type=BotType.Project,
+            bot_data={"title": project.title, "description": project.description, "project_type": project.project_type},
+            service_name="project",
+            service_method="update",
+            params={"project": project.id, "ai_description": "{output}", "from_bot": True},
+        )
+    )
 
     return JSONResponse(content={"project_uid": project.uid}, status_code=status.HTTP_201_CREATED)
 

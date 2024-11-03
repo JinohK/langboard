@@ -31,33 +31,28 @@ class Commander:
 
         args = [arg for arg in argv[1:] if arg != command_name and arg != value]
 
-        if args.count("help") > 0 or value == "help":
+        if args.count("help") > 0 or value == "help" or (command.store_type is str and not value):
             arg_parser.add_argument(
                 *[command_name],
                 metavar={
                     "show_usage_only": True,
                     "command_name": command_name,
                     "positional_name": command.positional_name,
+                    "choices_description": command.choices_description,
+                    "help": command.description,
                 },  # type: ignore
             )
             arg_parser.print_help()
-            exit(0)
-
-        if command.store_type is str and not value:
-            arg_parser.add_argument(
-                *[command_name],
-                metavar={
-                    "show_usage_only": True,
-                    "command_name": command_name,
-                    "positional_name": command.positional_name,
-                },  # type: ignore
-            )
-            arg_parser.print_help()
-            exit(1)
+            exit(command.store_type is str and not value)
 
         options, _ = arg_parser.parse_known_args(args=args, namespace=command.option_class())
 
         if command.store_type is str:
+            if isinstance(command.choices, list) and value not in command.choices:
+                rprint(
+                    f"Invalid value [red]'{value}'[/] for '{command_name}', must be one of {command.choices_description}"
+                )
+                exit(1)
             command.execute(value, options)
         else:
             command.execute(options)
@@ -106,6 +101,8 @@ class Commander:
             metavar[command.command] = {
                 "help": command.description,
                 "type": command.store_type,
+                "choices": command.choices,
+                "choices_description": command.choices_description,
                 "positional_name": command.positional_name,
             }
 
@@ -138,6 +135,8 @@ class Commander:
                     arg_setting["nargs"] = extra["nargs"]
                 if "metavar" in extra:
                     arg_setting["metavar"] = extra["metavar"]
+                    if "choices" in extra:
+                        arg_setting["choices"] = extra["choices"]
             else:
                 if "short" in extra:
                     short_name = extra["short"]

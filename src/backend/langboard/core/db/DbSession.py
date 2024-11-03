@@ -43,16 +43,6 @@ class DbSession(BaseSqlBuilder):
         for role in SUB_DATABASE_ROLE:
             self._sessions[DbSessionRole(role)] = sub_session
 
-    async def close(self):
-        if self.should_commit():
-            _logger.warning("DbConnection is being closed without committing.")
-
-        await self.rollback()
-        for session in self._sessions.values():
-            if session.is_active:
-                await session.close()
-        self._sessions.clear()
-
     @staticmethod
     def get_main_engine() -> AsyncEngine:
         """Returns the main database engine."""
@@ -70,6 +60,16 @@ class DbSession(BaseSqlBuilder):
                 await db.close()
 
         return Depends(get_db)
+
+    async def close(self):
+        if self.should_commit():
+            _logger.warning("DbConnection is being closed without committing.")
+
+        await self.rollback()
+        for session in self._sessions.values():
+            if session.is_active:
+                await session.close()
+        self._sessions.clear()
 
     def insert(self, obj: BaseSqlModel):
         """Inserts a new object into the database if it is new.
@@ -151,7 +151,7 @@ class DbSession(BaseSqlBuilder):
     @overload
     async def exec(
         self,
-        statement: Insert[_TSelectParam],
+        statement: Insert | Insert[_TSelectParam],
         *,
         params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
         execution_options: Mapping[str, Any] = EMPTY_DICT,
@@ -162,7 +162,7 @@ class DbSession(BaseSqlBuilder):
     @overload
     async def exec(
         self,
-        statement: Update[_TSelectParam],
+        statement: Update | Update[_TSelectParam],
         *,
         params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
         execution_options: Mapping[str, Any] = EMPTY_DICT,
@@ -173,7 +173,7 @@ class DbSession(BaseSqlBuilder):
     @overload
     async def exec(
         self,
-        statement: Delete[_TSelectParam],
+        statement: Delete | Delete[_TSelectParam],
         *,
         params: Optional[Union[Mapping[str, Any], Sequence[Mapping[str, Any]]]] = None,
         execution_options: Mapping[str, Any] = EMPTY_DICT,

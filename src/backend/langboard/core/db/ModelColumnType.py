@@ -8,9 +8,10 @@ TModelColumn = TypeVar("TModelColumn", bound=BaseModel)
 
 
 def ModelColumnType(_model_type: type[TModelColumn]):
-    class _ModelColumnType(TypeDecorator):
+    class _ModelColumnType(TypeDecorator[_model_type]):
         impl = JSON
         cache_ok = True
+        _model_type_class = _model_type
 
         def process_bind_param(self, value: TModelColumn | None, dialect) -> str | None:
             if value is None:

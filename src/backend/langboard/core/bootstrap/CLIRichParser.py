@@ -3,14 +3,15 @@ from rich import print as rprint
 from ...Constants import PROJECT_NAME, PROJECT_VERSION
 
 
-class CLIRichParser(ArgumentParser):
-    _color_base = "not white bold"
-    _color_positional_name = "dim"
-    _color_group = "color(138)"
-    _color_command = "color(153) bold"
-    _color_description = "color(144)"
-    _color_prog = "cyan bold"
+COLOR_BASE = "not white bold"
+COLOR_POSITIONAL_NAME = "dim"
+COLOR_GROUP = "color(138)"
+COLOR_COMMAND = "color(153) bold"
+COLOR_DESCRIPTION = "color(144)"
+COLOR_PROG = "cyan bold"
 
+
+class CLIRichParser(ArgumentParser):
     def _print_message(self, message, file=None):
         if not message or not message.startswith("usage:"):
             return
@@ -36,7 +37,6 @@ class CLIRichParser(ArgumentParser):
                         usage_only = action
                     else:
                         for metavar in action.metavar:
-                            help_texts.append(action.metavar[metavar]["help"])  # type: ignore
                             if (
                                 "positional_name" in action.metavar[metavar]  # type: ignore
                                 and action.metavar[metavar]["positional_name"]  # type: ignore
@@ -44,32 +44,30 @@ class CLIRichParser(ArgumentParser):
                                 positionals.append(f"{metavar} <{action.metavar[metavar]["positional_name"]}>")  # type: ignore
                             positionals.append(metavar)
                 else:
-                    if action.help:
-                        help_texts.append(action.help)
                     positionals.append(action.dest)
 
         for positional in positionals:
             message = message.replace(
-                f"{positional} options:", f"[{self._color_group}]{positional.upper()} OPTIONS[/{self._color_group}]:"
+                f"{positional} options:", f"[{COLOR_GROUP}]{positional.upper()} OPTIONS[/{COLOR_GROUP}]:"
             )
 
+        options_str = f"[{COLOR_GROUP}]OPTIONS[/{COLOR_GROUP}]:"
+
         message = (
-            f"{PROJECT_NAME} [{self._color_prog}]v{PROJECT_VERSION}[/{self._color_prog}]\n\n{message}".replace(
-                "usage:", f"[{self._color_group}]USAGE[/{self._color_group}]:"
+            f"{PROJECT_NAME} [{COLOR_PROG}]v{PROJECT_VERSION}[/{COLOR_PROG}]\n\n{message}".replace(
+                "usage:", f"[{COLOR_GROUP}]USAGE[/{COLOR_GROUP}]:"
             )
-            .replace("positional arguments:", f"[{self._color_group}]COMMANDS[/{self._color_group}]:")
-            .replace("options:", f"[{self._color_group}]OPTIONS[/{self._color_group}]:")
-            .replace(PROJECT_NAME, f"[{self._color_prog}]{PROJECT_NAME}[/{self._color_prog}]")
+            .replace("positional arguments:", f"[{COLOR_GROUP}]COMMANDS[/{COLOR_GROUP}]:")
+            .replace("options:", options_str)
+            .replace(PROJECT_NAME, f"[{COLOR_PROG}]{PROJECT_NAME}[/{COLOR_PROG}]")
         )
 
         for help_text in help_texts:
-            message = message.replace(
-                f"{help_text}", f"[{self._color_description}]{help_text}[/{self._color_description}]"
-            )
+            message = message.replace(f"{help_text}", f"[{COLOR_DESCRIPTION}]{help_text}[/{COLOR_DESCRIPTION}]")
 
         options.extend(short_options)
         for option in options:
-            message = message.replace(option, f"[{self._color_command}]{option}[/{self._color_command}]")
+            message = message.replace(option, f"[{COLOR_COMMAND}]{option}[/{COLOR_COMMAND}]")
 
         for positional in positionals:
             if "<" in positional and ">" in positional:
@@ -78,25 +76,86 @@ class CLIRichParser(ArgumentParser):
                 pos2 = " ".join(pos[1:]).replace("<", "＜").replace(">", "＞")
                 message = message.replace(
                     positional,
-                    f"[{self._color_command}]{pos1}[/{self._color_command}] [{self._color_positional_name}]{pos2}[/{self._color_positional_name}]",
+                    f"[{COLOR_COMMAND}]{pos1}[/{COLOR_COMMAND}] [{COLOR_POSITIONAL_NAME}]{pos2}[/{COLOR_POSITIONAL_NAME}]",
                 )
             else:
                 message = (
-                    message.replace(
-                        f"  {positional} ", f"  [{self._color_command}]{positional}[/{self._color_command}] "
-                    )
-                    .replace(f"|{positional}", f"|[{self._color_command}]{positional}[/{self._color_command}]")
-                    .replace(f"{positional}|", f"[{self._color_command}]{positional}[/{self._color_command}]|")
+                    message.replace(f"  {positional} ", f"  [{COLOR_COMMAND}]{positional}[/{COLOR_COMMAND}] ")
+                    .replace(f"|{positional}", f"|[{COLOR_COMMAND}]{positional}[/{COLOR_COMMAND}]")
+                    .replace(f"{positional}|", f"[{COLOR_COMMAND}]{positional}[/{COLOR_COMMAND}]|")
                 )
 
         if usage_only:
             message = message.replace(
                 f"{usage_only.metavar["command_name"]} <{usage_only.metavar["positional_name"]}>",  # type: ignore
-                f"[{self._color_command}]{usage_only.metavar["command_name"]}[/{self._color_command}] ＜[{self._color_positional_name}]{usage_only.metavar["positional_name"]}[/{self._color_positional_name}]＞",  # type: ignore
+                f"[{COLOR_COMMAND}]{usage_only.metavar["command_name"]}[/{COLOR_COMMAND}] ＜[{COLOR_POSITIONAL_NAME}]{usage_only.metavar["positional_name"]}[/{COLOR_POSITIONAL_NAME}]＞",  # type: ignore
             ).replace(
                 f"<{usage_only.metavar["command_name"]}>",  # type: ignore
-                f"[{self._color_command}]{usage_only.metavar["command_name"]}[/{self._color_command}]",  # type: ignore
+                f"[{COLOR_COMMAND}]{usage_only.metavar["command_name"]}[/{COLOR_COMMAND}]",  # type: ignore
             )  # type: ignore
 
-        message = f"[{self._color_base}]{message.strip()}[/{self._color_base}]"
+            lines = message.split("\n")
+            start_index = lines.index(options_str) if options_str in lines else -1
+            if start_index == -1:
+                is_usage = False
+                for i in range(len(lines)):
+                    line = lines[i]
+                    if line.startswith(f"[{COLOR_GROUP}]USAGE[/{COLOR_GROUP}]:"):
+                        is_usage = True
+                        continue
+                    if is_usage and not line:
+                        start_index = i + 2
+                        break
+
+            description = action.metavar["help"]  # type: ignore
+            text_width = self._get_formatter()._width - self._get_formatter()._current_indent
+
+            description_lines = []
+            description_chunks = description.split()
+
+            while description_chunks:
+                line = " "
+                last_index = 0
+                for i in range(len(description_chunks)):
+                    chunk = description_chunks[i]
+                    if len(line) + len(chunk) + 1 > text_width:
+                        break
+                    last_index = i
+                    line = f"{line} {chunk}"
+                description_chunks = description_chunks[last_index + 1 :]
+                description_lines.append(line)
+
+            if "choices_description" in action.metavar:  # type: ignore
+                choices = action.metavar["choices_description"]  # type: ignore
+                if isinstance(choices, list):
+                    description_lines.extend(["", f"[{COLOR_GROUP}]CHOICES[/{COLOR_GROUP}]:"])
+                    description_lines.append(
+                        "".join(
+                            [
+                                f"[/{COLOR_DESCRIPTION}]",
+                                "\n".join([f"  - {choice}" for choice in choices] if choices else ["  None"]),
+                                f"[{COLOR_DESCRIPTION}]",
+                            ]
+                        )
+                    )
+
+            description_lines = "\n".join(description_lines)
+
+            if start_index == -1:
+                lines.extend(["", f"[{COLOR_GROUP}]DESCRIPTION[/{COLOR_GROUP}]:"])
+                lines.extend(description_lines)
+            else:
+                if len(lines) - 1 < start_index:
+                    for _ in range(start_index - len(lines) + 1):
+                        lines.append("")
+                lines = [
+                    *lines[:start_index],
+                    f"[{COLOR_GROUP}]DESCRIPTION[/{COLOR_GROUP}]:",
+                    f"[{COLOR_DESCRIPTION}]{description_lines}[/{COLOR_DESCRIPTION}]",
+                    "",
+                    *lines[start_index:],
+                ]
+            message = "\n".join(lines)
+
+        message = f"[{COLOR_BASE}]{message.strip()}[/{COLOR_BASE}]"
         rprint(message)

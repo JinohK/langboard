@@ -8,6 +8,10 @@ from .StorageName import StorageName
 class BaseStorage(ABC):
     storage_type = ""
 
+    @staticmethod
+    def decrypt_storage_type(storage_type: str) -> str:
+        return Encryptor.decrypt(storage_type, "storage_type")
+
     @abstractmethod
     def get(self, storage_name: str, filename: str) -> bytes | None:
         """Get a file from the storage and return the bytes.
@@ -32,10 +36,6 @@ class BaseStorage(ABC):
     @abstractmethod
     def is_connectable(self) -> bool:
         """Check if the storage is connectable."""
-
-    @staticmethod
-    def decrypt_storage_type(storage_type: str) -> str:
-        return Encryptor.decrypt(storage_type, "storage_type")
 
     def _encrypt_storage_type(self, storage_type: str) -> str:
         return Encryptor.encrypt(storage_type, "storage_type")

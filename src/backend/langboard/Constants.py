@@ -12,6 +12,7 @@ def _get_env(name: str, default: Any = None) -> Any | str:
 
 # Directory
 BASE_DIR = Path(dirname(__file__))
+DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local"
 
 # URL
 HOST = _get_env("BACKEND_HOST", "localhost")
@@ -25,7 +26,7 @@ PROJECT_VERSION = metadata.version(PROJECT_NAME)
 # Logging
 TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
 FILE_LOGGING_LEVEL = _get_env("FILE_LOGGING_LEVEL", "AUTO").upper()
-LOGGING_DIR = Path(_get_env("LOGGING_DIR", BASE_DIR / ".." / ".." / ".." / "logs" / "backend"))
+LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
@@ -63,12 +64,14 @@ JWT_AT_EXPIRATION = int(_get_env("JWT_AT_EXPIRATION", 60 * 60 * 3))  # 3 hours f
 JWT_RT_EXPIRATION = int(_get_env("JWT_RT_EXPIRATION", 30))  # 30 days for default
 
 # Storage
-LOCAL_STORAGE_DIR = Path(_get_env("LOCAL_STORAGE_DIR", BASE_DIR / ".." / ".." / ".." / "uploads"))
+LOCAL_STORAGE_DIR = Path(_get_env("LOCAL_STORAGE_DIR", DATA_DIR / "uploads"))
 S3_ACCESS_KEY_ID = _get_env("S3_ACCESS_KEY_ID")
 S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
 S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
 S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
 
-# Langflow
+# Bot
+QUEUE_BOT_DIR = Path(_get_env("QUEUE_BOT_DIR", DATA_DIR / "bot" / "queue"))
 LANGFLOW_URL = _get_env("LANGFLOW_URL")
 LANGFLOW_API_KEY = _get_env("LANGFLOW_API_KEY")
+OPENAI_API_KEY = _get_env("OPENAI_API_KEY")

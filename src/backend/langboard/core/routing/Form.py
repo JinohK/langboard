@@ -20,11 +20,11 @@ class BaseFormModel(ABC, BaseModel):
             password: str
 
         @AppRouter.api.post("/users")
-        async def create_user(user: UserForm = UserForm.scope()):
+        async def create(user: UserForm = UserForm.scope()):
             ...
 
         @AppRouter.api.post("/users")
-        async def create_user(user: Annotated[UserForm, UserForm.scope()]):
+        async def create(user: Annotated[UserForm, UserForm.scope()]):
             ...
     """
 

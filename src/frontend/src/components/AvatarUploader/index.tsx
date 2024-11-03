@@ -44,7 +44,6 @@ function AvatarUploader({
                 }
                 setAvatarUrl(initialAvatarUrl);
             } else {
-                console.log("avatarUrlRef", avatarUrlRef);
                 if (avatarUrlRef) {
                     avatarUrlRef.current = undefined;
                 }

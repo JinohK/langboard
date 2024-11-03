@@ -11,6 +11,7 @@ _TRoleService = TypeVar("_TRoleService", bound=BaseRoleService)
 class RoleService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "role"
 
     def __init__(self, get_service: Callable, db: DbSession):

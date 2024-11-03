@@ -13,6 +13,7 @@ from ..BaseService import BaseService
 class RevertService(BaseService):
     @staticmethod
     def name() -> str:
+        """DO NOT EDIT THIS METHOD"""
         return "revert"
 
     async def revert(self, revert_key: str) -> bool:
@@ -40,7 +41,6 @@ class RevertService(BaseService):
                     .values({"deleted_at": None})
                     .where(column("id") == record.target_id)
                 )
-                print(sql_query)
             else:
                 columns = [column(column_name) for column_name in record.column_values.keys()]
                 sql_query = insert(table(record.table_name, *columns)).values(record.column_values)

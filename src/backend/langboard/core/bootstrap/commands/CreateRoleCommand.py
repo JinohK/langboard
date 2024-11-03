@@ -1,5 +1,5 @@
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .utils import create_model_py, create_service_py, format_template, make_name
+from .CommandUtils import create_model_py, create_service_py, format_template, make_name
 
 
 class CreateRoleCommandOptions(BaseCommandOptions):
@@ -22,6 +22,10 @@ class CreateRoleCommand(BaseCommand):
     @property
     def description(self) -> str:
         return "Role's model and service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Role' suffix)"
+
+    @property
+    def choices(self) -> list[str] | None:
+        return None
 
     @property
     def store_type(self) -> type[bool] | type[str]:

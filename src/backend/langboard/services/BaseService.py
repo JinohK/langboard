@@ -9,13 +9,13 @@ _TService = TypeVar("_TService", bound="BaseService", infer_variance=True)
 
 
 class BaseService(ABC):
-    def __init__(self, get_service: Callable, db: DbSession):
-        self._raw_get_service = get_service
-        self._db = db
-
     @staticmethod
     @abstractmethod
     def name() -> str: ...
+
+    def __init__(self, get_service: Callable, db: DbSession):
+        self._raw_get_service = get_service
+        self._db = db
 
     def _get_service(self, service: type[_TService]) -> _TService:
         """This method is from :class:`ServiceFactory`.

@@ -23,7 +23,7 @@ async def update_profile(
     if file_model:
         form_dict["avatar"] = file_model
 
-    revert_key = await service.user.update_user(user, form_dict)
+    revert_key = await service.user.update(user, form_dict)
 
     return JSONResponse(content={"revert_key": revert_key})
 

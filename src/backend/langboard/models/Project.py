@@ -10,6 +10,7 @@ class Project(SoftDeleteModel, table=True):
     owner_id: int = Field(foreign_key=User.expr("id"), nullable=False)
     title: str = Field(nullable=False)
     description: str | None = Field(default=None, sa_column=Column(type_=TEXT))
+    ai_description: str | None = Field(default=None, sa_column=Column(type_=TEXT))
     project_type: str = Field(default="Other", nullable=False)
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

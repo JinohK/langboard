@@ -4,7 +4,7 @@ import { ROUTES } from "@/core/routing/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { SuspenseComponent } from "@/components/base";
 
-const modules = import.meta.glob<bool, string, { default: () => JSX.Element }>("./pages/**/Route.tsx");
+const modules = import.meta.glob<{ default: () => JSX.Element }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);
 
 const loadRoutes = async () => {

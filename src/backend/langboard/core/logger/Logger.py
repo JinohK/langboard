@@ -45,6 +45,7 @@ class Logger:
         getLogger("httpx").setLevel(ERROR)
         getLogger("httpcore.connection").setLevel(ERROR)
         getLogger("httpcore.http11").setLevel(ERROR)
+        getLogger("watchdog.observers.inotify_buffer").setLevel(ERROR)
 
     def use(self, name: str) -> LoggingLogger:
         """Returns a logger with the given name."""

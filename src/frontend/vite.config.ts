@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => {
     const isLocal = mode !== "production" && process.env.ENVIRONMENT !== "development";
     if (fs.existsSync("../../.env")) {
         dotenv.config({ path: "../../.env" });
+    } else if (fs.existsSync("./.env")) {
+        dotenv.config();
     }
 
     const PORT = Number(process.env.FRONTEND_PORT) || 5173;

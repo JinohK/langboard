@@ -43,6 +43,7 @@ class App:
         self._workers = workers
         self._task_factory_maxitems = task_factory_maxitems
         self._is_restarting = is_restarting
+        load_modules("bots", "Bot", log=not self._is_restarting)
         self._init_api_middlewares()
         self._init_api_routes()
 
