@@ -1,13 +1,13 @@
-import { AutoComplete, Button, Form, IconComponent, Input } from "@/components/base";
-import { ISignUpFormProps } from "@/pages/SignUpPage/types";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ROUTES } from "@/core/routing/constants";
-import { User } from "@/core/models";
-import useForm from "@/core/hooks/form/useForm";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { ISignUpForm } from "@/controllers/signup/useSignUp";
-import { setInitialErrorsWithFocusingElement } from "@/pages/SignUpPage/utils";
+import { AutoComplete, Button, Form, IconComponent, Input } from "@/components/base";
+import { ISignUpForm } from "@/controllers/auth/useSignUp";
+import useForm from "@/core/hooks/form/useForm";
+import { User } from "@/core/models";
+import { ROUTES } from "@/core/routing/constants";
+import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
+import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
 function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();

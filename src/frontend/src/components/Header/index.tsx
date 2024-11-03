@@ -1,14 +1,15 @@
-import { useNavigate } from "react-router-dom";
-import { Button, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
-import { useAuth } from "@/core/providers/AuthProvider";
 import { useState } from "react";
-import { IHeaderProps } from "@/components/Header/types";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import NavItems from "@/components/Header/NavItems";
-import { ROUTES } from "@/core/routing/constants";
+import { IHeaderProps } from "@/components/Header/types";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import { useTranslation } from "react-i18next";
 import UserAvatar from "@/components/UserAvatar";
+import { Button, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
+import { useAuth } from "@/core/providers/AuthProvider";
+import { ROUTES } from "@/core/routing/constants";
+import CachedImage from "@/components/CachedImage";
 
 function Header({ navs }: IHeaderProps) {
     const { isAuthenticated, aboutMe, signOut } = useAuth();
@@ -26,7 +27,7 @@ function Header({ navs }: IHeaderProps) {
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
             <div className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
                 <a onClick={toDashboard} className="flex size-6 cursor-pointer items-center gap-2 text-lg font-semibold md:text-base">
-                    <img src="/images/logo.png" alt="Logo" className="size-full" />
+                    <CachedImage src="/images/logo.png" alt="Logo" size="full" />
                 </a>
                 {navs.length > 0 && (
                     <NavigationMenu.Root>
@@ -49,7 +50,7 @@ function Header({ navs }: IHeaderProps) {
                     <Sheet.Content side="left">
                         <nav className="grid gap-2 text-lg font-medium">
                             <a onClick={toDashboard} className="mb-4 flex cursor-pointer items-center gap-2 text-lg font-semibold">
-                                <img src="/images/logo.png" alt="Logo" className="size-6" />
+                                <CachedImage src="/images/logo.png" alt="Logo" size="6" />
                             </a>
                             <NavItems
                                 isMobile

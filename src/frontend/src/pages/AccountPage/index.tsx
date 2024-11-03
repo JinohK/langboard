@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -7,7 +8,6 @@ import { ROUTES } from "@/core/routing/constants";
 import EmailPage from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
-import { useLocation, useNavigate } from "react-router-dom";
 
 function AccountPage(): JSX.Element {
     const { isAuthenticated } = useAuth();

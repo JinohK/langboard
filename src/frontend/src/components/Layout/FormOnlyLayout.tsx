@@ -1,7 +1,8 @@
+import { forwardRef } from "react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { cn } from "@/core/utils/ComponentUtils";
-import { forwardRef } from "react";
+import CachedImage from "@/components/CachedImage";
 
 interface IBaseFormOnlyLayoutProps {
     size?: "default" | "sm" | "lg";
@@ -79,7 +80,7 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
                         <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
                             {useLogo && (
                                 <div className="mb-6">
-                                    <img src="/images/logo.png" alt="Logo" className="size-9" />
+                                    <CachedImage src="/images/logo.png" alt="Logo" size="9" />
                                 </div>
                             )}
                             {content}

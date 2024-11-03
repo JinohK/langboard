@@ -1,7 +1,7 @@
-import { Toast } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AxiosError, isAxiosError } from "axios";
 import { t } from "i18next";
+import { Toast } from "@/components/base";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
 
 export type TResponseErrors = Record<string, Record<string, string[] | undefined> | undefined> | undefined;
 

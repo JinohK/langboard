@@ -1,10 +1,12 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = SelectPrimitive.Root;
 
@@ -116,4 +118,4 @@ const Separator = React.forwardRef<
 >(({ className, ...props }, ref) => <SelectPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} {...props} />);
 Separator.displayName = SelectPrimitive.Separator.displayName;
 
-export { Root, Group, Value, Trigger, Content, Label, Item, Separator, ScrollUpButton, ScrollDownButton };
+export { Content, Group, Item, Label, Root, ScrollDownButton, ScrollUpButton, Separator, Trigger, Value };

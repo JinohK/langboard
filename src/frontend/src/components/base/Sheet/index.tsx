@@ -1,11 +1,13 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
+import * as React from "react";
 import { tv, type VariantProps } from "tailwind-variants";
-import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = SheetPrimitive.Root;
 
@@ -88,4 +90,4 @@ const Description = React.forwardRef<
 >(({ className, ...props }, ref) => <SheetPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />);
 Description.displayName = SheetPrimitive.Description.displayName;
 
-export { Root, Portal, Overlay, Trigger, Close, Content, Header, Footer, Title, Description };
+export { Close, Content, Description, Footer, Header, Overlay, Portal, Root, Title, Trigger };

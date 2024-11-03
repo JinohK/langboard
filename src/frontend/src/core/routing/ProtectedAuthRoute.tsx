@@ -1,6 +1,6 @@
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
-import { Navigate, useSearchParams } from "react-router-dom";
 
 export interface IProtectedAuthRouteProps {
     children: React.ReactNode;

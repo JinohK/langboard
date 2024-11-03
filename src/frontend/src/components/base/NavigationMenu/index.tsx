@@ -1,9 +1,9 @@
 /* eslint-disable @/max-len */
-import * as React from "react";
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
+import * as React from "react";
 import { tv } from "tailwind-variants";
-import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
 
 const Root = React.forwardRef<
     React.ElementRef<typeof NavigationMenuPrimitive.Root>,
@@ -101,4 +101,4 @@ const Indicator = React.forwardRef<
 ));
 Indicator.displayName = NavigationMenuPrimitive.Indicator.displayName;
 
-export { TriggerStyle, Root, List, Item, Content, Trigger, Link, Indicator, Viewport };
+export { Content, Indicator, Item, Link, List, Root, Trigger, TriggerStyle, Viewport };

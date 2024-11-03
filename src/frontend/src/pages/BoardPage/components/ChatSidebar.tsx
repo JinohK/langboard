@@ -1,15 +1,15 @@
-import { Button, DropdownMenu, Form, IconComponent, Input, Toast } from "@/components/base";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
-import { useTranslation } from "react-i18next";
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
-import Conversation from "@/pages/BoardPage/components/Conversation";
-import useClearProjectChatMessages from "@/controllers/board/useClearProjectChatMessages";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/core/routing/constants";
-import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { Button, DropdownMenu, Form, IconComponent, Input, Toast } from "@/components/base";
+import useClearProjectChatMessages from "@/controllers/board/useClearProjectChatMessages";
+import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { useQueryMutation } from "@/core/helpers/QueryMutation";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { IConnectedSocket } from "@/core/providers/SocketProvider";
+import { ROUTES } from "@/core/routing/constants";
+import Conversation from "@/pages/BoardPage/components/Conversation";
 
 export interface IChatSidebarProps {
     uid: string;

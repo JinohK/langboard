@@ -1,12 +1,12 @@
-import { Button, Floating, Form, IconComponent, Toast } from "@/components/base";
-import FormErrorMessage from "@/components/FormErrorMessage";
-import useSendResetLink from "@/controllers/recovery/useSendResetLink";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import useForm from "@/core/hooks/form/useForm";
-import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
+import FormErrorMessage from "@/components/FormErrorMessage";
+import { Button, Floating, Form, IconComponent, Toast } from "@/components/base";
+import useSendResetLink from "@/controllers/auth/useSendResetLink";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import useForm from "@/core/hooks/form/useForm";
+import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
 
 export interface ISendResetLinkFormProps {
     signToken: string;

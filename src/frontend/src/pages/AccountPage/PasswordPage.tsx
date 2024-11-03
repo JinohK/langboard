@@ -1,9 +1,9 @@
-import { Button, Form, IconComponent, Toast } from "@/components/base";
+import { useTranslation } from "react-i18next";
 import PasswordInput from "@/components/PasswordInput";
+import { Button, Form, IconComponent, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { useTranslation } from "react-i18next";
 
 function PasswordPage(): JSX.Element {
     const { updatedUser } = useAuth();

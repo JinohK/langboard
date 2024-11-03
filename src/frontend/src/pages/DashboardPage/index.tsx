@@ -1,14 +1,14 @@
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
+import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredProjects";
 import { ROUTES } from "@/core/routing/constants";
-import { useLocation, useNavigate } from "react-router-dom";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import TasksPage from "@/pages/DashboardPage/TasksPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
 import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
-import { useState } from "react";
-import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredProjects";
 
 function DashboardPage(): JSX.Element {
     const navigate = useNavigate();

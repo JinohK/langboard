@@ -1,6 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useTranslation } from "react-i18next";
 
 export interface ILanguageSwitcherProps {
     variant?: ButtonProps["variant"];

@@ -1,8 +1,8 @@
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { IconComponent } from "@/components/base";
 import { IChatMessage } from "@/controllers/board/useGetProjectChatMessages";
 import { cn } from "@/core/utils/ComponentUtils";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 export interface IChatMessageProps extends IChatMessage {
     isWaiting?: bool;

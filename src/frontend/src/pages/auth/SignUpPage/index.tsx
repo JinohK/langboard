@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormOnlyLayout } from "@/components/Layout";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ROUTES } from "@/core/routing/constants";
-import { ISignUpForm } from "@/controllers/signup/useSignUp";
-import OptionalForm from "@/pages/SignUpPage/OptionalForm";
-import RequiredForm from "@/pages/SignUpPage/RequiredForm";
-import Overview from "@/pages/SignUpPage/Overview";
+import { FormOnlyLayout } from "@/components/Layout";
 import { Button } from "@/components/base";
-import AdditionalForm from "@/pages/SignUpPage/AdditionalForm";
+import { ISignUpForm } from "@/controllers/auth/useSignUp";
+import { ROUTES } from "@/core/routing/constants";
+import AdditionalForm from "@/pages/auth/SignUpPage/AdditionalForm";
+import OptionalForm from "@/pages/auth/SignUpPage/OptionalForm";
+import Overview from "@/pages/auth/SignUpPage/Overview";
+import RequiredForm from "@/pages/auth/SignUpPage/RequiredForm";
 
 function SignUpPage(): JSX.Element {
     const [t] = useTranslation();

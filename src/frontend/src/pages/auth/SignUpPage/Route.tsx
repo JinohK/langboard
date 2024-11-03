@@ -1,7 +1,7 @@
-import { ROUTES } from "@/core/routing/constants";
-import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
+import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
+import { ROUTES } from "@/core/routing/constants";
 
 const SignUpPage = lazy(() => import("./index"));
 const CompletePage = lazy(() => import("./CompletePage"));

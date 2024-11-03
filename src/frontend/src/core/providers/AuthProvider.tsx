@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from "react";
 import Cookies from "universal-cookie";
-import { ROUTES } from "@/core/routing/constants";
 import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
+import { ROUTES } from "@/core/routing/constants";
 
 export interface IAuthUser extends User.Interface {
     industry: string;

@@ -1,12 +1,12 @@
-import { Button, Toast } from "@/components/base";
-import { FormOnlyLayout } from "@/components/Layout";
-import useResendSignUpLink from "@/controllers/signup/useResendSignUpLink";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FormOnlyLayout } from "@/components/Layout";
+import { Button, Toast } from "@/components/base";
+import useResendSignUpLink from "@/controllers/auth/useResendSignUpLink";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ROUTES } from "@/core/routing/constants";
 
 function CompletePage(): JSX.Element {
     const [t, i18n] = useTranslation();

@@ -42,7 +42,7 @@ format: ## run code formatters
 	cd src/frontend && yarn run format
 
 lint: ## run linters
-	poetry run mypy ./src/backend
+	poetry run ruff check .
 	cd src/frontend && yarn run lint
 
 install_backend: ## install the backend dependencies

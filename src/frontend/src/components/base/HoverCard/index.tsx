@@ -1,9 +1,11 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
+import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = HoverCardPrimitive.Root;
 
@@ -26,4 +28,4 @@ const Content = React.forwardRef<
 ));
 Content.displayName = HoverCardPrimitive.Content.displayName;
 
-export { Root, Trigger, Content };
+export { Content, Root, Trigger };

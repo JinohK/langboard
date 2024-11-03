@@ -1,9 +1,9 @@
+import { forwardRef } from "react";
 import Header from "@/components/Header";
 import { IHeaderNavItem } from "@/components/Header/types";
 import ResizableSidebar, { IResizableSidebarProps } from "@/components/ResizableSidebar";
 import Sidebar from "@/components/Sidebar";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
-import { forwardRef } from "react";
 
 interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;

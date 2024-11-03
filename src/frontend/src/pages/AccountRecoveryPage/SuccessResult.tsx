@@ -1,6 +1,6 @@
+import { Children } from "react";
 import { IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { Children } from "react";
 
 interface ISuccessResultProps {
     title: string;

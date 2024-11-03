@@ -1,10 +1,12 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as MenubarPrimitive from "@radix-ui/react-menubar";
-import { cn } from "@/core/utils/ComponentUtils";
+import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Menu = MenubarPrimitive.Menu;
 
@@ -181,20 +183,20 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 Shortcut.displayname = "MenubarShortcut";
 
 export {
-    Root,
-    Menu,
-    Trigger,
-    Content,
-    Item,
-    Separator,
-    Label,
     CheckboxItem,
+    Content,
+    Group,
+    Item,
+    Label,
+    Menu,
+    Portal,
     RadioGroup,
     RadioItem,
-    Portal,
+    Root,
+    Separator,
+    Shortcut,
+    Sub,
     SubContent,
     SubTrigger,
-    Group,
-    Sub,
-    Shortcut,
+    Trigger,
 };

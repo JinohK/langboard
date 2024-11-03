@@ -1,10 +1,10 @@
-import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
+import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { TSidebarNavItemsProps } from "@/components/Sidebar/types";
+import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { memo } from "react";
-import { useTranslation } from "react-i18next";
 
 const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element[] => {
     const [t] = useTranslation();

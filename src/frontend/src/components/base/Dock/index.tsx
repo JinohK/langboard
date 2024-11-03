@@ -1,13 +1,13 @@
 "use client";
 
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import type { PropsWithChildren } from "react";
 import React, { useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { tv, VariantProps } from "tailwind-variants";
-import { cn } from "@/core/utils/ComponentUtils";
+import { Tooltip } from "@/components/base";
 import { ButtonProps } from "@/components/base/Button";
 import IconComponent from "@/components/base/IconComponent";
-import { Tooltip } from "@/components/base";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export interface DockProps extends VariantProps<typeof DockVariants> {
     className?: string;
@@ -158,4 +158,4 @@ function IconButton({ buttonProps, dockIconProps, icon, title, titleSide }: IDoc
     return <Icon {...dockIconProps}>{iconComp}</Icon>;
 }
 
-export { Root, Icon, IconButton, DockVariants };
+export { DockVariants, Icon, IconButton, Root };

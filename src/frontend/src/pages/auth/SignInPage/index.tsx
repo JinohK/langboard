@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import EmailForm from "@/pages/SignInPage/EmailForm";
-import PasswordForm from "@/pages/SignInPage/PasswordForm";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ROUTES } from "@/core/routing/constants";
-import { generateToken } from "@/core/utils/StringUtils";
-import useAuthEmail from "@/controllers/auth/useAuthEmail";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createTwoSidedSizeClassNames, FormOnlyLayout } from "@/components/Layout";
+import useAuthEmail from "@/controllers/auth/useAuthEmail";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
+import { generateToken } from "@/core/utils/StringUtils";
+import EmailForm from "@/pages/auth/SignInPage/EmailForm";
+import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
+import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 
 function SignInPage(): JSX.Element {
     const navigate = useNavigate();

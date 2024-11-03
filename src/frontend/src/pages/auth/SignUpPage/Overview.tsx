@@ -1,13 +1,13 @@
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, Button, Card, IconComponent, Toast } from "@/components/base";
-import useSignUp, { ISignUpForm } from "@/controllers/signup/useSignUp";
+import useSignUp, { ISignUpForm } from "@/controllers/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials, StringCase } from "@/core/utils/StringUtils";
-import { ISignUpFormProps } from "@/pages/SignUpPage/types";
-import { useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];

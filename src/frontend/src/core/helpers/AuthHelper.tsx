@@ -1,5 +1,5 @@
-import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { Navigate } from "react-router-dom";
+import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 
 export const redirectToSignIn = () => {
     const searchParams = new URLSearchParams();

@@ -1,10 +1,12 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "@/core/utils/ComponentUtils";
+import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = DialogPrimitive.Root;
 
@@ -74,4 +76,4 @@ const Description = React.forwardRef<
 >(({ className, ...props }, ref) => <DialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />);
 Description.displayName = DialogPrimitive.Description.displayName;
 
-export { Root, Portal, Overlay, Close, Trigger, Content, Header, Footer, Title, Description };
+export { Close, Content, Description, Footer, Header, Overlay, Portal, Root, Title, Trigger };

@@ -1,9 +1,9 @@
+import { useEffect, useState } from "react";
+import InfiniteScroll from "react-infinite-scroller";
 import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import ProjectCard from "@/pages/DashboardPage/components/ProjectCard";
-import { useEffect, useState } from "react";
-import InfiniteScroll from "react-infinite-scroller";
 
 export interface IProjectCardListProps {
     curPage: number;

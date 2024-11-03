@@ -1,7 +1,7 @@
+import { useTranslation } from "react-i18next";
+import { THeaderNavItemsProps } from "@/components/Header/types";
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { THeaderNavItemsProps } from "@/components/Header/types";
-import { useTranslation } from "react-i18next";
 import { makeReactKey } from "@/core/utils/StringUtils";
 
 function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass, shardClass }: THeaderNavItemsProps): JSX.Element[] {

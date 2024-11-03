@@ -1,14 +1,14 @@
-import { Button, Floating, Form, IconComponent } from "@/components/base";
-import { ROUTES } from "@/core/routing/constants";
-import { ISignUpFormProps } from "@/pages/SignUpPage/types";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import useSignUpExistsEmail from "@/controllers/signup/useSignUpExistsEmail";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import useForm from "@/core/hooks/form/useForm";
-import { setInitialErrorsWithFocusingElement } from "@/pages/SignUpPage/utils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import PasswordInput from "@/components/PasswordInput";
+import { Button, Floating, Form, IconComponent } from "@/components/base";
+import useSignUpExistsEmail from "@/controllers/auth/useSignUpExistsEmail";
+import useForm from "@/core/hooks/form/useForm";
+import { ROUTES } from "@/core/routing/constants";
+import TypeUtils from "@/core/utils/TypeUtils";
+import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
+import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();

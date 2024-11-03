@@ -1,10 +1,12 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { cn } from "@/core/utils/ComponentUtils";
+import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = DropdownMenuPrimitive.Root;
 
@@ -158,4 +160,4 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 };
 Shortcut.displayName = "DropdownMenuShortcut";
 
-export { Root, Trigger, Content, Item, CheckboxItem, RadioItem, Label, Separator, Shortcut, Group, Portal, Sub, SubContent, SubTrigger, RadioGroup };
+export { CheckboxItem, Content, Group, Item, Label, Portal, RadioGroup, RadioItem, Root, Separator, Shortcut, Sub, SubContent, SubTrigger, Trigger };

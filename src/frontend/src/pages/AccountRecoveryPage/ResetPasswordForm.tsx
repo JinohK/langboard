@@ -1,13 +1,13 @@
-import { Button, Form, IconComponent } from "@/components/base";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import PasswordInput from "@/components/PasswordInput";
-import useRecoveryPassword from "@/controllers/recovery/useRecoveryPassword";
-import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
+import { Button, Form, IconComponent } from "@/components/base";
+import useRecoveryPassword from "@/controllers/auth/useRecoveryPassword";
+import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
-import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;

@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect } from "react";
-import { SOCKET_URL } from "@/constants";
-import { useAuth } from "@/core/providers/AuthProvider";
 import { useLocation } from "react-router-dom";
-import ESocketStatus from "@/core/helpers/ESocketStatus";
-import { redirectToSignIn } from "@/core/helpers/AuthHelper";
+import { SOCKET_URL } from "@/constants";
 import { refresh } from "@/core/helpers/Api";
+import { redirectToSignIn } from "@/core/helpers/AuthHelper";
+import ESocketStatus from "@/core/helpers/ESocketStatus";
+import { useAuth } from "@/core/providers/AuthProvider";
 import useSocketStore, { ISocketEvent, TEventName } from "@/core/stores/SocketStore";
 
 export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown> {

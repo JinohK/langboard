@@ -1,4 +1,4 @@
-import { ISignUpForm } from "@/controllers/signup/useSignUp";
+import { ISignUpForm } from "@/controllers/auth/useSignUp";
 
 export interface ISignUpFormProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

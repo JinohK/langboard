@@ -1,10 +1,10 @@
-import { Avatar, Dock, Form, IconComponent, Input, Tooltip } from "@/components/base";
-import { AvatarVariants } from "@/components/base/Avatar";
-import FormErrorMessage from "@/components/FormErrorMessage";
 import { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { VariantProps } from "tailwind-variants";
+import FormErrorMessage from "@/components/FormErrorMessage";
+import { Avatar, Dock, Form, IconComponent, Input, Tooltip } from "@/components/base";
+import { AvatarVariants } from "@/components/base/Avatar";
 
 export interface IAvatarUploaderProps {
     name?: string;

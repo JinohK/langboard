@@ -1,9 +1,11 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = PopoverPrimitive.Root;
 
@@ -27,4 +29,4 @@ const Content = React.forwardRef<React.ElementRef<typeof PopoverPrimitive.Conten
 );
 Content.displayName = PopoverPrimitive.Content.displayName;
 
-export { Root, Trigger, Content };
+export { Content, Root, Trigger };

@@ -1,5 +1,8 @@
-import { Progress, Toast } from "@/components/base";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { DashboardStyledLayout } from "@/components/Layout";
+import { Progress, Toast } from "@/components/base";
 import useProjectAvailable from "@/controllers/board/useProjectAvailable";
 import { SOCKET_CLIENT_EVENTS, SOCKET_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -7,9 +10,6 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IConnectedSocket, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/ChatSidebar";
-import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 
 function BoardPage(): JSX.Element {
     const [t] = useTranslation();

@@ -1,12 +1,12 @@
-import { Tabs } from "@/components/base";
-import useGetProjects, { IDashboardProject, IGetProjectsForm, IGetProjectsResponse } from "@/controllers/dashboard/useGetProjects";
-import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
-import { memo, useEffect, useReducer } from "react";
-import { makeReactKey } from "@/core/utils/StringUtils";
 import { InfiniteData } from "@tanstack/react-query";
+import { memo, useEffect, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { Tabs } from "@/components/base";
+import useGetProjects, { IDashboardProject, IGetProjectsForm, IGetProjectsResponse } from "@/controllers/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
+import { makeReactKey } from "@/core/utils/StringUtils";
+import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
 
 interface IProjectPageProps {
     currentTab: IGetProjectsForm["listType"];

@@ -1,8 +1,8 @@
 import { Await, BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { SuspenseComponent } from "@/components/base";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { SuspenseComponent } from "@/components/base";
 
 const modules = import.meta.glob<{ default: () => JSX.Element }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);

@@ -1,5 +1,5 @@
+import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/auth/useSignUp";
 import { API_ROUTES } from "@/controllers/constants";
-import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/signup/useSignUp";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ROUTES } from "@/core/routing/constants";

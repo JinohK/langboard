@@ -1,7 +1,7 @@
-import { IconComponent, Table, Tooltip } from "@/components/base";
-import { createShortUUID } from "@/core/utils/StringUtils";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroller";
+import { IconComponent, Table, Tooltip } from "@/components/base";
+import { createShortUUID } from "@/core/utils/StringUtils";
 
 let curPage = 1;
 function TrackingPage(): JSX.Element {

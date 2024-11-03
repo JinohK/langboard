@@ -1,6 +1,6 @@
-import { ROUTES } from "@/core/routing/constants";
 import { lazy } from "react";
 import { Route } from "react-router-dom";
+import { ROUTES } from "@/core/routing/constants";
 
 const ErrorPage = lazy(() => import("./index"));
 

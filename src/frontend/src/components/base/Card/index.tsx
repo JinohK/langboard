@@ -31,4 +31,4 @@ const Footer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElem
 ));
 Footer.displayName = "CardFooter";
 
-export { Root, Header, Footer, Title, Description, Content };
+export { Content, Description, Footer, Header, Root, Title };

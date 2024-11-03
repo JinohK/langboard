@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import Skeleton from "@/components/base/Skeleton";
 import Progress from "@/components/base/Progress";
+import Skeleton from "@/components/base/Skeleton";
 
 interface IBaseSuspenseComponentProps {
     children: React.ReactNode;

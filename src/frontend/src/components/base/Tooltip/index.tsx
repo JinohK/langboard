@@ -1,9 +1,11 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Provider = TooltipPrimitive.Provider;
 
@@ -26,4 +28,4 @@ const Content = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Conten
 );
 Content.displayName = TooltipPrimitive.Content.displayName;
 
-export { Root, Trigger, Content, Provider };
+export { Content, Provider, Root, Trigger };

@@ -1,16 +1,16 @@
-import { Button } from "@/components/base";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
+import { Button } from "@/components/base";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
-import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/recovery/useSendResetLink";
-import useValidateRecoveryToken from "@/controllers/recovery/useValidateRecoveryToken";
+import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
+import useValidateRecoveryToken from "@/controllers/auth/useValidateRecoveryToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/AccountRecoveryPage/SendResetLinkForm";
-import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 
 function AccountRecoveryPage(): JSX.Element {
     const [t] = useTranslation();

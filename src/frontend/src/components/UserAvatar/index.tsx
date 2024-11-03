@@ -1,12 +1,12 @@
 /* eslint-disable @/max-len */
+import * as SeparatorPrimitive from "@radix-ui/react-separator";
+import { forwardRef, useState } from "react";
 import { Avatar, Card, HoverCard, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
+import { User } from "@/core/models";
+import { generateRandomColor } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
-import { forwardRef, useState } from "react";
-import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import { generateRandomColor } from "@/core/utils/ColorUtils";
-import { User } from "@/core/models";
 
 export interface IUserAvatarProps {
     user: User.Interface;

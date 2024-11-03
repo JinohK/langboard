@@ -1,12 +1,14 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import { type DialogProps } from "@radix-ui/react-dialog";
 import { Command as Primitive } from "cmdk";
-import { cn } from "@/core/utils/ComponentUtils";
-import IconComponent from "@/components/base/IconComponent";
+import * as React from "react";
 import * as BaseDialog from "@/components/base/Dialog";
+import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = React.forwardRef<React.ElementRef<typeof Primitive>, React.ComponentPropsWithoutRef<typeof Primitive>>(
     ({ className, ...props }, ref) => (
@@ -105,4 +107,4 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 };
 Shortcut.displayName = "CommandShortcut";
 
-export { Primitive, Root, Dialog, Input, List, Empty, Group, Item, Shortcut, Separator };
+export { Dialog, Empty, Group, Input, Item, List, Primitive, Root, Separator, Shortcut };

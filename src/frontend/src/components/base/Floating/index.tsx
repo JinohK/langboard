@@ -1,9 +1,9 @@
 import * as React from "react";
+import * as Button from "@/components/base/Floating/Button";
+import * as Form from "@/components/base/Form";
 import BaseInput from "@/components/base/Input";
 import BaseLabel from "@/components/base/Label";
 import BaseTextarea, { type TextareaProps as BaseTextareaProps } from "@/components/base/Textarea";
-import * as Button from "@/components/base/Floating/Button";
-import * as Form from "@/components/base/Form";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
@@ -88,4 +88,4 @@ const LabelTextarea = React.forwardRef<React.ElementRef<typeof Textarea>, React.
 );
 LabelTextarea.displayName = "FloatingLabelTextarea";
 
-export { Button, Input, Textarea, Label, LabelInput, LabelTextarea };
+export { Button, Input, Label, LabelInput, LabelTextarea, Textarea };

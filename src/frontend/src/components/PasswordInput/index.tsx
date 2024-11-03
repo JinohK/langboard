@@ -1,7 +1,7 @@
-import { Floating, Form, IconComponent } from "@/components/base";
-import FormErrorMessage from "@/components/FormErrorMessage";
-import { cn } from "@/core/utils/ComponentUtils";
 import { useState } from "react";
+import FormErrorMessage from "@/components/FormErrorMessage";
+import { Floating, Form, IconComponent } from "@/components/base";
+import { cn } from "@/core/utils/ComponentUtils";
 
 interface IBasePasswordInputProps {
     name: string;

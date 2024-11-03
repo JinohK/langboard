@@ -7,17 +7,16 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-import * as React from "react";
 import { composeEventHandlers } from "@radix-ui/primitive";
 import { useComposedRefs } from "@radix-ui/react-compose-refs";
 import { createContextScope } from "@radix-ui/react-context";
+import type { Scope } from "@radix-ui/react-context";
 import { useId } from "@radix-ui/react-id";
 import { Label as LabelPrimitive } from "@radix-ui/react-label";
 import { Primitive } from "@radix-ui/react-primitive";
-
-import type { Scope } from "@radix-ui/react-context";
+import * as React from "react";
 
 type ScopedProps<P> = P & { __scopeForm?: Scope };
 const [createFormContext, createFormScope] = createContextScope("Form");
@@ -672,6 +671,6 @@ const Message = FormMessage;
 const ValidityState = FormValidityState;
 const Submit = FormSubmit;
 
-export { createFormScope, Root, Field, Label, Control, Message, ValidityState, Submit };
+export { Control, createFormScope, Field, Label, Message, Root, Submit, ValidityState };
 
-export type { FormProps, FormFieldProps, FormLabelProps, FormControlProps, FormMessageProps, FormValidityStateProps, FormSubmitProps };
+export type { FormControlProps, FormFieldProps, FormLabelProps, FormMessageProps, FormProps, FormSubmitProps, FormValidityStateProps };

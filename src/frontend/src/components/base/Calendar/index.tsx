@@ -3,9 +3,11 @@
 
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
-import { cn } from "@/core/utils/ComponentUtils";
 import { ButtonVariants } from "@/components/base/Button";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 

@@ -1,7 +1,7 @@
-import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
-import { cn } from "@/core/utils/ComponentUtils";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
+import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export interface IThemeSwitcherProps {
     variant?: ButtonProps["variant"];

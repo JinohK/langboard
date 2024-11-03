@@ -1,8 +1,8 @@
+import { lazy } from "react";
+import { Navigate, Route } from "react-router-dom";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
-import { lazy } from "react";
-import { Navigate, Route } from "react-router-dom";
 
 const BoardPage = lazy(() => import("./index"));
 

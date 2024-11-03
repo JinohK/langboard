@@ -1,7 +1,7 @@
+import { Children, forwardRef, isValidElement } from "react";
 import { IconComponent } from "@/components/base";
 import { default as BaseButton, ButtonProps } from "@/components/base/Button";
 import { cn } from "@/core/utils/ComponentUtils";
-import { Children, forwardRef, isValidElement } from "react";
 
 const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (
@@ -152,4 +152,4 @@ const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, classNa
 });
 Root.displayName = "FloatingButton.Root";
 
-export { Root, Content, Trigger, CloseButton };
+export { CloseButton, Content, Root, Trigger };

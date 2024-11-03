@@ -1,13 +1,13 @@
-import { Button, Toast } from "@/components/base";
-import { FormOnlyLayout } from "@/components/Layout";
-import useActivateUser from "@/controllers/signup/useActivateUser";
-import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/signup/useSignUp";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FormOnlyLayout } from "@/components/Layout";
+import { Button, Toast } from "@/components/base";
+import useActivateUser from "@/controllers/auth/useActivateUser";
+import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/auth/useSignUp";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ROUTES } from "@/core/routing/constants";
 
 function ActivatePage(): JSX.Element {
     const [t] = useTranslation();

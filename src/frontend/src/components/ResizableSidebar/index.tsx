@@ -1,10 +1,10 @@
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { screenSizeMap } from "@/core/utils/SizeMap";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 export interface IResizableSidebarProps {
     main: React.ReactNode;

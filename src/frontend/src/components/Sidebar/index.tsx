@@ -1,9 +1,9 @@
-import { Button, Floating, IconComponent } from "@/components/base";
-import NavItems from "@/components/Sidebar/NavItems";
-import { ISidebarProps } from "@/components/Sidebar/types";
-import { cn } from "@/core/utils/ComponentUtils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import NavItems from "@/components/Sidebar/NavItems";
+import { ISidebarProps } from "@/components/Sidebar/types";
+import { Button, Floating, IconComponent } from "@/components/base";
+import { cn } from "@/core/utils/ComponentUtils";
 
 function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Actions" }: ISidebarProps) {
     const [t] = useTranslation();

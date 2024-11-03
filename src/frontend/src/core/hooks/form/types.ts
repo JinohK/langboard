@@ -1,5 +1,5 @@
-import { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
 import { MutateOptions, UseMutateFunction } from "@tanstack/react-query";
+import { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
 
 export interface IBaseValidationSchema {
     required?: bool;

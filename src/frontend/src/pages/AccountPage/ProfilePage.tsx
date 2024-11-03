@@ -1,13 +1,13 @@
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
-import { Button, Form, IconComponent, Input, Label, Toast } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import { Button, Form, IconComponent, Input, Label, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { useRef } from "react";
-import { useTranslation } from "react-i18next";
 
 function ProfilePage(): JSX.Element {
     const { aboutMe, updatedUser } = useAuth();

@@ -1,7 +1,7 @@
-import { AuthGuard } from "@/core/routing/AuthGuard";
-import { ROUTES } from "@/core/routing/constants";
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
+import { AuthGuard } from "@/core/routing/AuthGuard";
+import { ROUTES } from "@/core/routing/constants";
 
 const AccountPage = lazy(() => import("./index"));
 

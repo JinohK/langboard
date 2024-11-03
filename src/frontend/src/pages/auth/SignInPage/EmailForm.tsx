@@ -1,14 +1,13 @@
-import { Button, Floating, Form } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/core/routing/constants";
+import FormErrorMessage from "@/components/FormErrorMessage";
+import { Button, Floating, Form, IconComponent } from "@/components/base";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { IconComponent } from "@/components/base";
-import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/SignInPage/constants";
-import { cn } from "@/core/utils/ComponentUtils";
-import FormErrorMessage from "@/components/FormErrorMessage";
 import useForm from "@/core/hooks/form/useForm";
+import { ROUTES } from "@/core/routing/constants";
+import { cn } from "@/core/utils/ComponentUtils";
+import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 
 export interface IEmailFormProps {
     signToken: string;

@@ -1,10 +1,12 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import * as React from "react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_CHARS, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
-import { cn } from "@/core/utils/ComponentUtils";
+import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
+
+/* eslint-disable @/max-len */
 
 const Root = React.forwardRef<React.ElementRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
     ({ className, containerClassName, ...props }, ref) => (
@@ -57,4 +59,4 @@ const Separator = React.forwardRef<React.ElementRef<"div">, React.ComponentProps
 ));
 Separator.displayName = "InputOTPSeparator";
 
-export { Root, Group, Slot, Separator, REGEXP_ONLY_DIGITS, REGEXP_ONLY_CHARS, REGEXP_ONLY_DIGITS_AND_CHARS };
+export { Group, REGEXP_ONLY_CHARS, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS, Root, Separator, Slot };

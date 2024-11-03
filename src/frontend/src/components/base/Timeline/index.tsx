@@ -1,7 +1,7 @@
 import React from "react";
-import { cn } from "@/core/utils/ComponentUtils";
 import { tv, VariantProps } from "tailwind-variants";
 import IconComponent from "@/components/base/IconComponent";
+import { cn } from "@/core/utils/ComponentUtils";
 
 const timelineVariants = tv(
     {
@@ -175,4 +175,4 @@ const Line = React.forwardRef<HTMLHRElement, TimelineLineProps>(({ className, do
 });
 Line.displayName = "TimelineLine";
 
-export { Root, Dot, Item, Content, Heading, Line };
+export { Content, Dot, Heading, Item, Line, Root };

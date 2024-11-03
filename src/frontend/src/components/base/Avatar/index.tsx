@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
-import { cn } from "@/core/utils/ComponentUtils";
+import * as React from "react";
 import { tv, type VariantProps } from "tailwind-variants";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export const AvatarVariants = tv(
     {
@@ -55,4 +55,4 @@ const Fallback = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallba
 );
 Fallback.displayName = AvatarPrimitive.Fallback.displayName;
 
-export { Root, Image, Fallback };
+export { Fallback, Image, Root };
