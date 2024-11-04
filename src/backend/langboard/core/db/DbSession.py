@@ -95,7 +95,7 @@ class DbSession(BaseSqlBuilder):
 
         :param obj: The object to be updated; must be a subclass of :class:`BaseSqlModel`.
         """
-        if obj.is_new():
+        if obj.is_new() or not obj.has_changes():
             return
         session = self._get_session(DbSessionRole.Update)
         try:
@@ -103,6 +103,7 @@ class DbSession(BaseSqlBuilder):
         except Exception:
             pass
         session.add(obj)
+        obj.clear_changes()
 
     @overload
     async def delete(self, obj: BaseSqlModel): ...
@@ -121,10 +122,15 @@ class DbSession(BaseSqlBuilder):
         session = self._get_session(DbSessionRole.Delete)
         obj = await session.merge(obj)
         if purge or not isinstance(obj, SoftDeleteModel):
+            obj.clear_changes()
             await session.delete(obj)
+            return
+        if obj.deleted_at is not None:
+            obj.clear_changes()
             return
         obj.deleted_at = now()
         session.add(obj)
+        obj.clear_changes()
 
     @overload
     async def exec(

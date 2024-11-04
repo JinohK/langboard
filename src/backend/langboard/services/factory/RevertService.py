@@ -111,16 +111,7 @@ class RevertService(BaseService):
             await self._db.commit()
         else:
             target_id = cast(int, unsaved_model.id)
-            sql_query = (
-                self._db.query("select")
-                .table(unsaved_model.__class__)
-                .where(unsaved_model.__class__.id == unsaved_model.id)
-            )
-            result = await self._db.exec(sql_query)
-            prev_record = result.first()
-            if not prev_record:
-                raise Exception("Record not found")
-            prev_record = prev_record.model_dump()
+            prev_record = unsaved_model.changes_dict
             await self._db.update(unsaved_model)
 
         file_column_names = [column_name for column_name in file_columns if column_name in unsaved_model.model_fields]

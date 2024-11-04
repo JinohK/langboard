@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Optional, TypeVar
-from pydantic import SecretStr, model_serializer
+from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
@@ -15,9 +15,32 @@ _TColumnType = TypeVar("_TColumnType")
 class BaseSqlModel(ABC, SQLModel):
     """Bases for all SQL models in the application inherited from :class:`SQLModel`."""
 
+    __pydantic_post_init__ = "model_post_init"
+
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=now, nullable=False)
     updated_at: datetime = Field(default_factory=now, nullable=False, sa_column_kwargs={"onupdate": now})
+
+    @property
+    def changes(self) -> dict[str, Any]:
+        """Get the changes made to the object."""
+        if not isinstance(self, BaseSqlModel) or not hasattr(self, "_changes"):
+            return {}
+        return {**self._changes}
+
+    @property
+    def changes_dict(self) -> dict[str, Any]:
+        """Get the changed values as a dictionary if the object is a model."""
+        if not isinstance(self, BaseSqlModel) or not hasattr(self, "_changes"):
+            return {}
+        changed_values = {}
+        for key, value in self._changes.items():
+            if isinstance(value, SecretStr):
+                value = value.get_secret_value()
+            elif isinstance(value, BaseModel):
+                value = value.model_dump()
+            changed_values[key] = value
+        return changed_values
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
@@ -34,6 +57,27 @@ class BaseSqlModel(ABC, SQLModel):
 
     def __ne__(self, target: object) -> bool:
         return not self.__eq__(target)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if (
+            not isinstance(self, BaseSqlModel)
+            or not hasattr(self, "_initiated")
+            or not hasattr(self, "_changes")
+            or name == "_initiated"
+            or name == "_changes"
+        ):
+            super().__setattr__(name, value)
+            return
+
+        model_fields_names = self.model_fields.keys()
+        if not self.is_new() and name in model_fields_names:
+            old_value = getattr(self, name)
+            if old_value != value:
+                if name not in self._changes:
+                    self._changes[name] = old_value
+                elif self._changes[name] == value:
+                    del self._changes[name]
+        super().__setattr__(name, value)
 
     @classmethod
     def column(cls, name: str, _: type[_TColumnType] | None = None) -> InstrumentedAttribute[_TColumnType]:
@@ -74,11 +118,27 @@ class BaseSqlModel(ABC, SQLModel):
             return name
         return str(column.expression)
 
+    def model_post_init(self, *args: Any, **kwargs: Any) -> None:
+        self._initiated = True
+        self._changes: dict[str, Any] = {}
+
     def is_new(self) -> bool:
         """Checks if the object is new and has not been saved to the database."""
         if not isinstance(self, BaseSqlModel):
             return False
         return self.id is None
+
+    def has_changes(self) -> bool:
+        """Check if the object has changes."""
+        if not isinstance(self, BaseSqlModel):
+            return False
+        return hasattr(self, "_changes") and bool(self._changes)
+
+    def clear_changes(self) -> None:
+        """Clear the changes made to the object."""
+        if not isinstance(self, BaseSqlModel):
+            return
+        self._changes = {}
 
     @model_serializer
     def serialize(self) -> dict[str, Any]:
