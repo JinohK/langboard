@@ -7,6 +7,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
 from ..utils.DateTime import now
 from ..utils.String import pascal_to_snake
+from .ColumnTypes import DateTimeField
 
 
 _TColumnType = TypeVar("_TColumnType")
@@ -18,8 +19,8 @@ class BaseSqlModel(ABC, SQLModel):
     __pydantic_post_init__ = "model_post_init"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=now, nullable=False)
-    updated_at: datetime = Field(default_factory=now, nullable=False, sa_column_kwargs={"onupdate": now})
+    created_at: datetime = DateTimeField(default=now, nullable=False)
+    updated_at: datetime = DateTimeField(default=now, nullable=False, onupdate=True)
 
     @property
     def changes(self) -> dict[str, Any]:
@@ -183,4 +184,4 @@ class BaseSqlModel(ABC, SQLModel):
 class SoftDeleteModel(BaseSqlModel):
     """Base model for soft-deleting objects in the database inherited from :class:`BaseSqlModel`."""
 
-    deleted_at: Optional[datetime] = Field(default=None, nullable=True)
+    deleted_at: Optional[datetime] = DateTimeField(default=None, nullable=True)

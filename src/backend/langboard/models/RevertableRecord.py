@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from sqlalchemy import JSON, Column
 from sqlmodel import Field
-from ..core.db import BaseSqlModel
+from ..core.db import BaseSqlModel, DateTimeField
 from ..core.utils.DateTime import now
 from ..core.utils.String import create_short_unique_id
 
@@ -19,7 +19,7 @@ class RevertableRecord(BaseSqlModel, table=True):
     table_name: str = Field(nullable=False)
     column_values: dict = Field(default="", sa_column=Column(type_=JSON))
     file_column_names: list[str] | None = Field(default=None, sa_column=Column(type_=JSON))
-    valid_until: datetime = Field(default_factory=lambda: now() + timedelta(minutes=1), nullable=False)
+    valid_until: datetime = DateTimeField(default=lambda: now() + timedelta(minutes=1), nullable=False)
     revert_type: RevertType = Field(nullable=False)
     is_purged: bool = Field(default=False)
     is_soft_delete: bool = Field(default=False)

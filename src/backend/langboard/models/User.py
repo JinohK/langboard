@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
-from ..core.db import ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
+from ..core.db import DateTimeField, ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
 from ..core.storage import FileModel
 from ..core.utils.String import generate_random_string
 
@@ -19,7 +19,7 @@ class User(SoftDeleteModel, table=True):
     position: str | None = Field(default=None, nullable=True)
     is_admin: bool = Field(default=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
-    activated_at: datetime | None = Field(default=None, nullable=True)
+    activated_at: datetime = DateTimeField(default=None, nullable=True)
 
     def check_password(self, password: str) -> bool:
         return checkpw(password.encode(), self.password.get_secret_value().encode())
