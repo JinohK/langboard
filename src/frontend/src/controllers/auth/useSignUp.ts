@@ -27,7 +27,7 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
             }
 
             if (key === "avatar") {
-                formData.append(key, value, value.name);
+                formData.append(key, value[0], value[0].name);
             } else {
                 formData.append(key, value);
             }
