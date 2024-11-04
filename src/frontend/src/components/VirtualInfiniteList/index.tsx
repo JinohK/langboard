@@ -81,6 +81,10 @@ function VirtualInfiniteList<T>({
         </div>
     );
 
+    if (isReverse && scrollable()) {
+        scrollable()!.style.transform = "scaleY(-1)";
+    }
+
     const virtualizer = useVirtualizer({
         count: hasNextPage ? items.length + 1 : items.length,
         getScrollElement: scrollable,

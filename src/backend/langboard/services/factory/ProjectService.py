@@ -37,18 +37,20 @@ class ProjectService(BaseService):
         )
 
         descs = [desc(Project.updated_at), desc(Project.id)]
+        group_bys = [Project.column("id"), ProjectAssignedUser.column("starred")]
 
         if list_type == "starred":
             sql_query = sql_query.where(ProjectAssignedUser.starred == True)  # noqa
         elif list_type == "recent":
             descs.insert(0, desc(ProjectAssignedUser.last_viewed_at))
+            group_bys.append(ProjectAssignedUser.column("last_viewed_at"))
         elif list_type == "unstarred":
             sql_query = sql_query.where(ProjectAssignedUser.starred == False)  # noqa
 
-        sql_query = sql_query.order_by(*descs)
         result = await self._db.exec(self._db.query("select").count(sql_query, Project.id))
         (total,) = result.one()
 
+        sql_query = sql_query.order_by(*descs)
         sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
 
         sql_query = cast(
@@ -63,7 +65,7 @@ class ProjectService(BaseService):
                     Group,
                     (ProjectRole.group_id == Group.id) & (Group.deleted_at == None),  # type: ignore # noqa
                 )
-                .group_by(Project.column("id"))
+                .group_by(*group_bys)
             ),
         )
 

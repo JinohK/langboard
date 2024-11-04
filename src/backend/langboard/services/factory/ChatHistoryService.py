@@ -31,11 +31,12 @@ class ChatHistoryService(BaseService):
         if filterable is not None:
             sql_query = sql_query.where(ChatHistory.filterable == filterable)
 
-        sql_query = sql_query.order_by(desc(ChatHistory.created_at), desc(ChatHistory.id))
         result = await self._db.exec(self._db.query("select").count(sql_query, ChatHistory.id))
         (total,) = result.one()
 
+        sql_query = sql_query.order_by(desc(ChatHistory.created_at), desc(ChatHistory.id))
         sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
+        sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
         result = await self._db.exec(sql_query)
         histories = result.all()
