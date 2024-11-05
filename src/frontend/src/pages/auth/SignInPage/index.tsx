@@ -60,7 +60,7 @@ function SignInPage(): JSX.Element {
                 }
             );
         }
-    }, [navigate, location]);
+    }, [location]);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);

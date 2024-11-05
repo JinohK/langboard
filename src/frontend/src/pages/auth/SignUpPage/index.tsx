@@ -76,7 +76,7 @@ function SignUpPage(): JSX.Element {
                 break;
             }
         }
-    }, [navigate, location]);
+    }, [location]);
 
     const leftSide = (
         <>
