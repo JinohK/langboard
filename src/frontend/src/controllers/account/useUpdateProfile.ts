@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IRevertKeyBaseResponse } from "@/controllers/revert/useRevertMutate";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import useRevert from "@/core/hooks/useRevert";
@@ -11,11 +12,7 @@ export interface IUpdateProfileForm extends Pick<User.Interface, "firstname" | "
     revert_key?: string;
 }
 
-interface IUpdateProfileResponse {
-    revert_key: string;
-}
-
-const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOptions<IUpdateProfileForm, IUpdateProfileResponse>) => {
+const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOptions<IUpdateProfileForm, IRevertKeyBaseResponse>) => {
     const { mutate } = useQueryMutation();
     const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.UPDATE_PROFILE, revertCallback);
 

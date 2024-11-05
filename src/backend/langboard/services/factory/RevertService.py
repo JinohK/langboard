@@ -1,6 +1,7 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, Literal, cast, overload
+from pydantic import BaseModel
 from sqlalchemy import Row, column, delete, insert, table, text, update
 from ...core.db import BaseSqlModel, SoftDeleteModel
 from ...core.storage import FileModel, Storage
@@ -8,6 +9,13 @@ from ...core.utils.DateTime import now
 from ...models import RevertableRecord
 from ...models.RevertableRecord import RevertType
 from ..BaseService import BaseService
+
+
+class RevertRecordModel(BaseModel):
+    unsaved_model: BaseSqlModel
+    revert_type: RevertType
+    file_columns: list[str] = []
+    purge: bool = False
 
 
 class RevertService(BaseService):
@@ -19,67 +27,128 @@ class RevertService(BaseService):
     async def revert(self, revert_key: str) -> bool:
         sql_query = self._db.query("select").table(RevertableRecord).where(RevertableRecord.revert_key == revert_key)
         result = await self._db.exec(sql_query)
-        record = result.first()
-        if not record:
+        records = result.all()
+        if not records:
             return False
 
-        current_record_dict = await self.__get_current_record(record)
+        for record in records:
+            current_record_dict = await self.__get_current_record(record)
 
-        if record.valid_until.timestamp() < now().timestamp():
-            if record.file_column_names:
-                self.__delete_files(record.file_column_names, record.column_values, current_record_dict)
-            await self._db.delete(record)
-            await self._db.commit()
-            return False
+            if record.valid_until.timestamp() < now().timestamp():
+                if record.file_column_names:
+                    self.__delete_files(record.file_column_names, record.column_values, current_record_dict)
+                await self._db.delete(record)
+                await self._db.commit()
+                return False
 
-        if record.revert_type == RevertType.Delete:
-            sql_query = delete(table(record.table_name)).where(column("id") == record.target_id)
-        elif record.revert_type == RevertType.Insert:
-            if record.is_soft_delete and not record.is_purged:
-                sql_query = (
-                    update(table(record.table_name, column("deleted_at")))
-                    .values({"deleted_at": None})
-                    .where(column("id") == record.target_id)
-                )
+            if record.revert_type == RevertType.Delete:
+                sql_query = delete(table(record.table_name)).where(column("id") == record.target_id)
+            elif record.revert_type == RevertType.Insert:
+                if record.is_soft_delete and not record.is_purged:
+                    sql_query = (
+                        update(table(record.table_name, column("deleted_at")))
+                        .values({"deleted_at": None})
+                        .where(column("id") == record.target_id)
+                    )
+                else:
+                    columns = [column(column_name) for column_name in record.column_values.keys()]
+                    sql_query = insert(table(record.table_name, *columns)).values(record.column_values)
             else:
+                if "id" in record.column_values:
+                    record.column_values.pop("id")
                 columns = [column(column_name) for column_name in record.column_values.keys()]
-                sql_query = insert(table(record.table_name, *columns)).values(record.column_values)
-        else:
-            if "id" in record.column_values:
-                record.column_values.pop("id")
-                columns = [column(column_name) for column_name in record.column_values.keys()]
-            values = {
-                column_name: json_dumps(value) if isinstance(value, dict) or isinstance(value, list) else value
-                for column_name, value in record.column_values.items()
-            }
-            sql_query = (
-                update(table(record.table_name, *columns)).values(values).where(column("id") == record.target_id)
-            )
+                values = {}
+                for column_name, value in record.column_values.items():
+                    values[column_name] = (
+                        json_dumps(value, default=str) if isinstance(value, dict) or isinstance(value, list) else value
+                    )
+                sql_query = (
+                    update(table(record.table_name, *columns)).values(values).where(column("id") == record.target_id)
+                )
 
-        if record.file_column_names:
-            self.__delete_files(record.file_column_names, current_record_dict, record.column_values)
-        await self._db.exec(sql_query)
+            if record.file_column_names:
+                self.__delete_files(record.file_column_names, current_record_dict, record.column_values)
+            await self._db.exec(sql_query)
 
-        await self._db.delete(record)
+            await self._db.delete(record)
         await self._db.commit()
 
         return True
 
+    async def record(self, *revert_record_models: RevertRecordModel) -> str:
+        """Record the current state of a model for future reversion
+
+        :param RevertRecordModel.unsaved_model: The model to record and must not be saved in the database
+        :param RevertRecordModel.file_columns: The column names that are :cls:`FileModel` type columns
+        :param RevertRecordModel.revert_type: The type of revert action to record.
+        :param RevertRecordModel.purge: When :param:`revert_type` is :val:`RevertType.Insert`,\n
+            it can be set to :val:`True` to purge the record instead of soft deleting it
+
+        :val:`RevertType.Insert` means the model will be deleted in this method\n
+            and will be inserted if :meth:`RevertService.revert` is called
+
+        :val:`RevertType.Delete` means the model will be inserted in this method\n
+            and will be deleted if :meth:`RevertService.revert` is called
+
+        :val:`RevertType.Update` means the model will be updated if :meth:`RevertService.revert` is called
+        """
+        revert_key = RevertableRecord.create_revert_key()
+        revertable_records = []
+        for model in revert_record_models:
+            is_purged = False
+            if model.revert_type == RevertType.Delete:
+                self._db.insert(model.unsaved_model)
+                await self._db.commit()
+                target_id = cast(int, model.unsaved_model.id)
+                prev_record = {}
+            elif model.revert_type == RevertType.Insert:
+                target_id = cast(int, model.unsaved_model.id)
+                prev_record = model.unsaved_model.model_dump()
+                if model.purge:
+                    is_purged = True
+                await self._db.delete(model.unsaved_model, purge=model.purge)  # type: ignore
+                await self._db.commit()
+            else:
+                target_id = cast(int, model.unsaved_model.id)
+                prev_record = model.unsaved_model.changes_dict
+                await self._db.update(model.unsaved_model)
+
+            file_column_names = [
+                column_name for column_name in model.file_columns if column_name in model.unsaved_model.model_fields
+            ]
+
+            record = RevertableRecord(
+                revert_key=revert_key,
+                table_name=model.unsaved_model.__tablename__,
+                target_id=target_id,
+                column_values=prev_record,
+                file_column_names=file_column_names if file_column_names else None,
+                revert_type=model.revert_type,
+                is_purged=is_purged,
+                is_soft_delete=isinstance(model.unsaved_model, SoftDeleteModel),
+            )
+            revertable_records.append(record)
+
+        self._db.insert_all(revertable_records)
+        await self._db.commit()
+
+        return revert_key
+
     @overload
-    async def record(
+    def create_record_model(
         self,
         unsaved_model: SoftDeleteModel,
         revert_type: Literal[RevertType.Insert],
         file_columns: list[str] = [],
         purge: bool = False,
-    ) -> str: ...
+    ) -> RevertRecordModel: ...
     @overload
-    async def record(
+    def create_record_model(
         self, unsaved_model: BaseSqlModel, revert_type: RevertType, file_columns: list[str] = []
-    ) -> str: ...
-    async def record(
+    ) -> RevertRecordModel: ...
+    def create_record_model(
         self, unsaved_model: BaseSqlModel, revert_type: RevertType, file_columns: list[str] = [], purge: bool = False
-    ) -> str:
+    ) -> RevertRecordModel:
         """Record the current state of a model for future reversion
 
         :param unsaved_model: The model to record and must not be saved in the database
@@ -96,40 +165,12 @@ class RevertService(BaseService):
 
         :val:`RevertType.Update` means the model will be updated if :meth:`RevertService.revert` is called
         """
-        is_purged = False
-        if revert_type == RevertType.Delete:
-            self._db.insert(unsaved_model)
-            await self._db.commit()
-            target_id = cast(int, unsaved_model.id)
-            prev_record = {}
-        elif revert_type == RevertType.Insert:
-            target_id = cast(int, unsaved_model.id)
-            prev_record = unsaved_model.model_dump()
-            if purge:
-                is_purged = True
-            await self._db.delete(unsaved_model, purge=purge)  # type: ignore
-            await self._db.commit()
-        else:
-            target_id = cast(int, unsaved_model.id)
-            prev_record = unsaved_model.changes_dict
-            await self._db.update(unsaved_model)
-
-        file_column_names = [column_name for column_name in file_columns if column_name in unsaved_model.model_fields]
-
-        record = RevertableRecord(
-            table_name=unsaved_model.__tablename__,
-            target_id=target_id,
-            column_values=prev_record,
-            file_column_names=file_column_names if file_column_names else None,
+        return RevertRecordModel(
+            unsaved_model=unsaved_model,
             revert_type=revert_type,
-            is_purged=is_purged,
-            is_soft_delete=isinstance(unsaved_model, SoftDeleteModel),
+            file_columns=file_columns,
+            purge=purge if isinstance(unsaved_model, SoftDeleteModel) and revert_type == RevertType.Insert else False,
         )
-
-        self._db.insert(record)
-        await self._db.commit()
-
-        return record.revert_key
 
     async def delete_old_records(self) -> None:
         sql_query = (
@@ -146,7 +187,9 @@ class RevertService(BaseService):
             current_record_dict = await self.__get_current_record(record)
             self.__delete_files(record.file_column_names, record.column_values, current_record_dict)
 
-        sql_query = self._db.query("delete").table(RevertableRecord).where(RevertableRecord.valid_until < now())  # type: ignore
+        sql_query = (
+            self._db.query("delete").table(RevertableRecord).where(RevertableRecord.column("valid_until") < now())
+        )
         await self._db.exec(sql_query)
         await self._db.commit()
 

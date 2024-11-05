@@ -8,8 +8,8 @@ import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
 import useValidateRecoveryToken from "@/controllers/auth/useValidateRecoveryToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
-import ResetPasswordForm from "@/pages/AccountRecoveryPage/ResetPasswordForm";
-import SendResetLinkForm from "@/pages/AccountRecoveryPage/SendResetLinkForm";
+import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
+import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 
 function AccountRecoveryPage(): JSX.Element {

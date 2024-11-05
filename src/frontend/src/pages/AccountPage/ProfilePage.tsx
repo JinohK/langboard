@@ -2,7 +2,8 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Form, IconComponent, Input, Label, Toast } from "@/components/base";
+import SubmitButton from "@/components/SubmitButton";
+import { Form, Input, Label, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -126,13 +127,9 @@ function ProfilePage(): JSX.Element {
                             </div>
                         </div>
                         <div className="mt-16 flex items-center justify-center gap-8">
-                            <Button type="submit" disabled={isValidating}>
-                                {isValidating ? (
-                                    <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
-                                ) : (
-                                    t("common.Save")
-                                )}
-                            </Button>
+                            <SubmitButton type="submit" isValidating={isValidating}>
+                                {t("common.Save")}
+                            </SubmitButton>
                         </div>
                     </Form.Root>
                 </>

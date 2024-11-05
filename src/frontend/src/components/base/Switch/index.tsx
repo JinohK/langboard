@@ -5,8 +5,6 @@ import * as SwitchPrimitives from "@radix-ui/react-switch";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>>(
     ({ className, ...props }, ref) => (
         <SwitchPrimitives.Root

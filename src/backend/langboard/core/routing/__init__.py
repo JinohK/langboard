@@ -2,6 +2,7 @@ from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .AppRouter import AppRouter
 from .BaseMiddleware import BaseMiddleware
 from .Form import BaseFormModel, form_model
+from .JsonResponse import JsonResponse
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TCachedScopes
 from .SocketRequest import SocketRequest
@@ -17,6 +18,7 @@ __all__ = [
     "BaseFormModel",
     "BaseMiddleware",
     "form_model",
+    "JsonResponse",
     "SocketDefaultEvent",
     "SocketEvent",
     "SocketRequest",

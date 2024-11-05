@@ -6,6 +6,10 @@ interface IRevertForm {
     revert_key: string;
 }
 
+export interface IRevertKeyBaseResponse {
+    revert_key: string;
+}
+
 const useRevertMutate = (path: string, options?: TMutationOptions<IRevertForm>) => {
     if (path.startsWith("/")) {
         path = path.slice(1);

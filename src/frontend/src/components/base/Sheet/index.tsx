@@ -3,11 +3,9 @@
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import * as React from "react";
-import { tv, type VariantProps } from "tailwind-variants";
+import { type VariantProps, tv } from "tailwind-variants";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
-
-/* eslint-disable @/max-len */
 
 const Root = SheetPrimitive.Root;
 

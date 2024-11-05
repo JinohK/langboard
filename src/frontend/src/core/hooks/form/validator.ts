@@ -80,13 +80,17 @@ class Validator {
 
         return true;
     }
+
+    public custom(schemaValue: TValidationSchema["custom"], value: string | File[] | FileList): bool {
+        return !schemaValue || schemaValue.validate(value);
+    }
 }
 
 export const validate = (
     form: HTMLFormElement | Record<string, string | File | DataTransfer>,
     value: string | File[] | FileList,
     schema: TValidationSchema
-): keyof IBaseValidationSchema | undefined => {
+): keyof IBaseValidationSchema | (string & {}) | undefined => {
     const validator = new Validator();
     const keys = Object.keys(schema) as (keyof TValidationSchema)[];
 
@@ -96,6 +100,9 @@ export const validate = (
         const schemaValue = schema[key] as TValidationSchema[typeof key];
         const result = validate(schemaValue as undefined, value, form);
         if (!result) {
+            if (key === "custom" && schema.custom) {
+                return schema.custom!.errorKey;
+            }
             return key;
         }
     }

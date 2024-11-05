@@ -1,16 +1,15 @@
 import { useRef, useState } from "react";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IUseForm, TUseFormProps } from "@/core/hooks/form/types";
+import { IUseForm, TFormDataType, TUseFormProps } from "@/core/hooks/form/types";
 import { convertValidationToLangKey, handleResponseErrors } from "@/core/hooks/form/utils";
 import { validate } from "@/core/hooks/form/validator";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-type TFormDataType<TFormData extends bool, TVariables> = TFormData extends true ? FormData : TVariables;
-
-const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends bool = false>({
+const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends bool = bool>({
     errorLangPrefix,
     schema,
+    isValidatingState,
     isFormData,
     inputRefs,
     beforeHandleSubmit,
@@ -26,12 +25,16 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
     badRequestHandlerCallback,
 }: TUseFormProps<TVariables, TData, TContext, TError, TFormData>): IUseForm<TVariables, TFormData> => {
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isValidating, setIsValidating] = useState(false);
+    const [isValidating, setIsValidating] = isValidatingState ? isValidatingState : useState(false);
     const formDataRef = useRef<TFormDataType<TFormData, TVariables>>((isFormData ? new FormData() : {}) as TFormDataType<TFormData, TVariables>);
     const focusElementRef = useRef<HTMLInputElement | string | null>(null);
     const formRef = useRef<HTMLFormElement | null>(null);
 
     const handleSubmit = (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => {
+        if (isValidating) {
+            return;
+        }
+
         let form: HTMLFormElement | Record<string, string | File | DataTransfer>;
         if (formOrEvent.nativeEvent instanceof Event) {
             formOrEvent.preventDefault();
@@ -53,20 +56,20 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                 Object.entries(predefinedValues).forEach(([key, value]) => {
                     if (value instanceof DataTransfer) {
                         for (let i = 0; i < value.files.length; ++i) {
-                            formDataRef.current.append(key, value.files[i], value.files[i].name);
+                            (formDataRef.current as FormData).append(key, value.files[i], value.files[i].name);
                         }
                     } else if (value instanceof FileList) {
                         for (let i = 0; i < value.length; ++i) {
-                            formDataRef.current.append(key, value[i], value[i].name);
+                            (formDataRef.current as FormData).append(key, value[i], value[i].name);
                         }
                     } else if (value instanceof File) {
-                        formDataRef.current.append(key, value, value.name);
+                        (formDataRef.current as FormData).append(key, value, value.name);
                     } else if (Array.isArray(value)) {
                         value.forEach((v) => {
-                            formDataRef.current.append(key, v);
+                            (formDataRef.current as FormData).append(key, v);
                         });
                     } else {
-                        formDataRef.current.append(key, value as string);
+                        (formDataRef.current as FormData).append(key, value as string);
                     }
                 });
             } else {
@@ -127,14 +130,14 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
             if (isFormData) {
                 if (TypeUtils.isString(inputValue)) {
-                    formDataRef.current.append(inputName, inputValue);
+                    (formDataRef.current as FormData).append(inputName, inputValue);
                 } else {
                     for (let i = 0; i < inputValue.length; ++i) {
-                        formDataRef.current.append(inputName, inputValue[i], inputValue[i].name);
+                        (formDataRef.current as FormData).append(inputName, inputValue[i], inputValue[i].name);
                     }
                 }
             } else {
-                formDataRef.current[inputName] = inputValue;
+                (formDataRef.current as Record<string, unknown>)[inputName] = inputValue;
             }
         });
 
@@ -153,7 +156,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
         }
 
         if (!mutate) {
-            successCallback!(formDataRef.current);
+            successCallback!(formDataRef.current as FormData & TVariables);
             return;
         }
 
@@ -182,7 +185,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             };
         }
 
-        mutate(formDataRef.current, {
+        mutate(formDataRef.current as TVariables, {
             onSuccess: mutateOnSuccess,
             onError,
             onSettled: (data, error, variables, context) => {

@@ -51,4 +51,4 @@ class Logger:
         """Returns a logger with the given name."""
         if name == "main":
             return self.main
-        return getLogger(name)
+        return getLogger(f"{PROJECT_NAME}.{name}")

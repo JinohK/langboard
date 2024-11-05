@@ -6,8 +6,6 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Root = SelectPrimitive.Root;
 
 const Group = SelectPrimitive.Group;

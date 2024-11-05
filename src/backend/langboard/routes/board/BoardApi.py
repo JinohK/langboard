@@ -1,7 +1,6 @@
 from fastapi import Depends, status
-from fastapi.responses import JSONResponse
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
@@ -13,8 +12,8 @@ from .RoleFinder import project_role_finder
 @AppRouter.api.post("/board/{project_uid}/available")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def is_project_available() -> JSONResponse:
-    return JSONResponse(content={}, status_code=status.HTTP_200_OK)
+async def is_project_available() -> JsonResponse:
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.get("/board/{project_uid}/chat")
@@ -25,10 +24,10 @@ async def get_project_chat(
     user: User = Auth.scope("api"),
     query: ChatHistoryPagination = Depends(),
     service: Service = Service.scope(),
-) -> JSONResponse:
+) -> JsonResponse:
     histories, total = await service.chat_history.get_list(user, "project", query.current_date, query, project_uid)
 
-    return JSONResponse(content={"histories": histories, "total": total}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"histories": histories, "total": total}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/board/{project_uid}/chat/clear")
@@ -36,7 +35,7 @@ async def get_project_chat(
 @AuthFilter.add
 async def clear_project_chat(
     project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
-) -> JSONResponse:
+) -> JsonResponse:
     await service.chat_history.clear(user, "project", project_uid)
 
-    return JSONResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

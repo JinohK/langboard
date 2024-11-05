@@ -1,8 +1,7 @@
 from fastapi import Depends, status
-from fastapi.responses import JSONResponse
 from ...core.ai import BotType, QueueBot, QueueBotModel
 from ...core.filter import AuthFilter
-from ...core.routing import AppRouter
+from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import Pagination
 from ...core.security import Auth
 from ...models import User
@@ -15,10 +14,10 @@ from .DashboardProject import DashboardProjectCreateForm, DashboardProjectListRe
 async def get_starred_projects(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
-) -> JSONResponse:
+) -> JsonResponse:
     projects = await service.user.get_starred_projects(user)
 
-    return JSONResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.get("/dashboard/projects/{list_type}", response_model=DashboardProjectListResponse)
@@ -28,9 +27,9 @@ async def get_projects(
     query: Pagination = Depends(),
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
-) -> JSONResponse | DashboardProjectListResponse:
+) -> JsonResponse | DashboardProjectListResponse:
     if list_type not in ["all", "starred", "recent", "unstarred"]:
-        return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     projects, total = await service.project.get_dashboard_list(user, list_type, query)
 
@@ -48,7 +47,7 @@ async def create_project(
 ):
     project = await service.project.create(user, form.title, form.description, form.project_type)
     if not project:
-        return JSONResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
     QueueBot.add(
         QueueBotModel(
@@ -60,7 +59,7 @@ async def create_project(
         )
     )
 
-    return JSONResponse(content={"project_uid": project.uid}, status_code=status.HTTP_201_CREATED)
+    return JsonResponse(content={"project_uid": project.uid}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/dashboard/projects/{project_uid}/star")
@@ -69,9 +68,9 @@ async def toggle_star_project(
     project_uid: str,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
-) -> JSONResponse:
+) -> JsonResponse:
     result = await service.project.toggle_star(user, project_uid)
     if not result:
-        return JSONResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JSONResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

@@ -1,14 +1,12 @@
 import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
-import Cookies from "universal-cookie";
 import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { getCookieStore } from "@/core/stores/CookieStore";
 import TypeUtils from "@/core/utils/TypeUtils";
-
-const cookies = new Cookies();
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -29,8 +27,9 @@ export const api = axios.create({
 });
 
 export const refresh = async (): Promise<string | never> => {
+    const cookieStore = getCookieStore();
     try {
-        const refreshToken = cookies.get(APP_REFRESH_TOKEN);
+        const refreshToken = cookieStore.get(APP_REFRESH_TOKEN);
 
         const response = await api.post(API_ROUTES.AUTH.REFRESH, undefined, {
             headers: {
@@ -39,11 +38,14 @@ export const refresh = async (): Promise<string | never> => {
         });
 
         if (response.status !== EHttpStatus.HTTP_200_OK) {
+            const cookieStore = getCookieStore();
+            cookieStore.remove(APP_ACCESS_TOKEN);
+            cookieStore.remove(APP_REFRESH_TOKEN);
             redirectToSignIn();
             throw new Error("Failed to refresh token");
         }
 
-        cookies.set(APP_ACCESS_TOKEN, response.data.access_token, { path: "/" });
+        cookieStore.set(APP_ACCESS_TOKEN, response.data.access_token);
         return response.data.access_token;
     } catch (e) {
         redirectToSignIn();
@@ -53,8 +55,8 @@ export const refresh = async (): Promise<string | never> => {
 
 api.interceptors.request.use(
     async (config) => {
-        const cookies = new Cookies();
-        const accessToken = cookies.get(APP_ACCESS_TOKEN);
+        const cookieStore = getCookieStore();
+        const accessToken = cookieStore.get(APP_ACCESS_TOKEN);
 
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;

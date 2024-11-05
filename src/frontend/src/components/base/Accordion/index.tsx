@@ -1,12 +1,9 @@
-/* eslint-disable @/max-len */
 "use client";
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
-
-/* eslint-disable @/max-len */
 
 const Root = AccordionPrimitive.Root;
 
@@ -23,6 +20,7 @@ const Trigger = React.forwardRef<
         <AccordionPrimitive.Trigger
             ref={ref}
             className={cn(
+                // eslint-disable-next-line @/max-len
                 "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
                 className
             )}

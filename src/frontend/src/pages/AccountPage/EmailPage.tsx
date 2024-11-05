@@ -1,5 +1,52 @@
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/core/providers/AuthProvider";
+import AddSubEmailForm from "@/pages/AccountPage/components/AddSubEmailForm";
+import EmailList from "@/pages/AccountPage/components/EmailList";
+import PrimaryEmailForm from "@/pages/AccountPage/components/PrimaryEmailForm";
+
 function EmailPage(): JSX.Element {
-    return <>Change Password</>;
+    const [t] = useTranslation();
+    const { aboutMe, updatedUser } = useAuth();
+    const [isValidating, setIsValidating] = useState(false);
+    const [user, setUser] = useState(aboutMe());
+
+    useEffect(() => {
+        let isMounted = true;
+        let aboutMeTimeout: NodeJS.Timeout;
+
+        const getUser = () => {
+            if (!isMounted) {
+                clearTimeout(aboutMeTimeout);
+                return;
+            }
+
+            const curUser = aboutMe();
+            if (!curUser) {
+                aboutMeTimeout = setTimeout(getUser, 50);
+                return;
+            }
+
+            setUser(curUser);
+        };
+
+        aboutMeTimeout = setTimeout(getUser, 50);
+
+        return () => {
+            isMounted = false;
+        };
+    }, [aboutMe, aboutMe()]);
+
+    return (
+        <>
+            <h2 className="mb-11 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Emails")}</h2>
+            <div className="flex flex-col gap-6">
+                <EmailList updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
+                <AddSubEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
+                <PrimaryEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
+            </div>
+        </>
+    );
 }
 
 export default EmailPage;

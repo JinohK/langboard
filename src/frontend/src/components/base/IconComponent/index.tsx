@@ -1,8 +1,8 @@
 import { icons } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
-import { ComponentPropsWithoutRef, ElementRef, ElementType, forwardRef, ForwardRefExoticComponent, lazy, memo, RefAttributes, SVGProps } from "react";
+import { ComponentPropsWithoutRef, ElementRef, ElementType, ForwardRefExoticComponent, RefAttributes, SVGProps, forwardRef, lazy, memo } from "react";
 import Flag from "react-flagkit";
-import { tv, VariantProps } from "tailwind-variants";
+import { VariantProps, tv } from "tailwind-variants";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 

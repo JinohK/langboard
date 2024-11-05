@@ -17,8 +17,13 @@ export const API_ROUTES = {
         },
     },
     ACCOUNT: {
+        GET_SUBEMAILS: "/account/subemails",
         UPDATE_PROFILE: "/account/profile",
         CHANGE_PASSWORD: "/account/password",
+        EMAIL: {
+            CRUD: "/account/email",
+            VERIFY: "/account/email/verify",
+        },
     },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",

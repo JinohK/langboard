@@ -3,7 +3,7 @@
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
-import { heightSizeMap, TDimensionSize } from "@/core/utils/SizeMap";
+import { TDimensionSize, heightSizeMap } from "@/core/utils/SizeMap";
 
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
     indeterminate?: bool;

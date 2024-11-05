@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import CachedImage from "@/components/CachedImage";
 import NavItems from "@/components/Header/NavItems";
 import { IHeaderProps } from "@/components/Header/types";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -9,7 +10,6 @@ import UserAvatar from "@/components/UserAvatar";
 import { Button, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import CachedImage from "@/components/CachedImage";
 
 function Header({ navs }: IHeaderProps) {
     const { isAuthenticated, aboutMe, signOut } = useAuth();

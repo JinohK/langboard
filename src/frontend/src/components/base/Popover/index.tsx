@@ -5,8 +5,6 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Root = PopoverPrimitive.Root;
 
 const Trigger = PopoverPrimitive.Trigger;

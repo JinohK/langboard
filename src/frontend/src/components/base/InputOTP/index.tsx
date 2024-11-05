@@ -6,8 +6,6 @@ import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Root = React.forwardRef<React.ElementRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
     ({ className, containerClassName, ...props }, ref) => (
         <OTPInput

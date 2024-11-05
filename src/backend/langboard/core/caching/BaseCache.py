@@ -65,4 +65,4 @@ class BaseCache(ABC):
         if isinstance(value, BaseModel):
             return value.model_dump_json()
         else:
-            return json_dumps(value)
+            return json_dumps(value, default=str)

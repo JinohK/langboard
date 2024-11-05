@@ -4,6 +4,7 @@ import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 
 const AccountPage = lazy(() => import("./index"));
+const EmailVerificationPage = lazy(() => import("./EmailVerificationPage"));
 
 function AccountRoute() {
     return (
@@ -25,13 +26,31 @@ function AccountRoute() {
                 }
             />
             <Route
-                path={ROUTES.ACCOUNT.EMAIL}
+                index
                 element={
                     <AuthGuard>
                         <AccountPage />
                     </AuthGuard>
                 }
             />
+            <Route path={ROUTES.ACCOUNT.EMAILS.ROUTE}>
+                <Route
+                    index
+                    element={
+                        <AuthGuard>
+                            <AccountPage />
+                        </AuthGuard>
+                    }
+                />
+                <Route
+                    path={ROUTES.ACCOUNT.EMAILS.VERIFY}
+                    element={
+                        <AuthGuard message="myAccount.errors.You must sign in before verifying your email.">
+                            <EmailVerificationPage />
+                        </AuthGuard>
+                    }
+                />
+            </Route>
             <Route
                 path={ROUTES.ACCOUNT.PASSWORD}
                 element={

@@ -8,8 +8,6 @@ import * as BaseDialog from "@/components/base/Dialog";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Root = React.forwardRef<React.ElementRef<typeof Primitive>, React.ComponentPropsWithoutRef<typeof Primitive>>(
     ({ className, ...props }, ref) => (
         <Primitive

@@ -64,6 +64,7 @@
     "Forgot password?": "Forgot password?",
     "errors": {
       "Couldn't find your {app} Account": "Couldn't find your {{app}} Account.",
+      "Email is not verified yet.": "Email is not verified yet.",
       "missing": {
         "email": "Enter an email address.",
         "password": "Enter a password."
@@ -144,17 +145,37 @@
     "My Account": "My Account",
     "Sign out": "Sign out",
     "Profile": "Profile",
+    "Emails": "Emails",
+    "Add new email": "Add new email",
+    "Primary email": "Primary email",
+    "Primary": "Primary",
+    "Sub": "Sub",
+    "Unverified": "Unverified",
+    "Search email...": "Search email...",
+    "Resend": "Resend",
     "Profile updated successfully.": "Profile updated successfully.",
+    "Please check your inbox to verify your email.": "Please check your inbox to verify your email.",
+    "The email verified successfully.": "The email verified successfully.",
+    "Email deleted successfully.": "Email deleted successfully.",
+    "Primary email updated successfully.": "Primary email updated successfully.",
     "Password updated successfully.": "Password updated successfully.",
     "errors": {
+      "Cannot delete primary email.": "Cannot delete primary email..",
+      "The email is not verified yet.": "The email is not verified yet.",
+      "You must sign in before verifying your email.": "You must sign in before verifying your email.",
+      "The email is already verified.": "The email is already verified.",
+      "The email is already primary.": "The email is already primary.",
+      "The email is probably deleted.": "The email is probably deleted.",
       "missing": {
         "firstname": "Enter your first name.",
         "lastname": "Enter your last name.",
+        "new_email": "Enter a new email address.",
         "current_password": "Enter your current password.",
         "new_password": "Enter a new password.",
         "password-confirm": "Enter a new password confirmation."
       },
       "invalid": {
+        "new_email": "Email already exists. Try another one.",
         "current_password": "Wrong current password. Try again.",
         "password-confirm": "Wrong password confirmation. Try again."
       }

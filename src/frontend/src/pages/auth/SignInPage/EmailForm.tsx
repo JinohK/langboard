@@ -47,6 +47,9 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     formRef.current!.email.focus();
                 }, 0);
             },
+            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
+                setErrors({ email: "signIn.errors.Email is not verified yet." });
+            },
         },
         useDefaultBadRequestHandler: true,
     });

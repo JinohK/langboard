@@ -5,8 +5,6 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 
-/* eslint-disable @/max-len */
-
 const Provider = TooltipPrimitive.Provider;
 
 const Root = TooltipPrimitive.Root;

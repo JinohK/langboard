@@ -1,6 +1,7 @@
 {
   "subjects": {
     "recovery": "Reset your password",
-    "signup": "Activate your account"
+    "signup": "Activate your account",
+    "subemail": "Verify your new email"
   }
 }

@@ -22,7 +22,10 @@ export const ROUTES = {
     ACCOUNT: {
         ROUTE: "/account",
         PROFILE: "/account/profile",
-        EMAIL: "/account/email",
+        EMAILS: {
+            ROUTE: "/account/emails",
+            VERIFY: "/account/emails/verify",
+        },
         PASSWORD: "/account/password",
     },
     BOARD: {

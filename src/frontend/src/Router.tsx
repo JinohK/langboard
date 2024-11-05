@@ -11,7 +11,12 @@ const loadRoutes = async () => {
     const routes = await Promise.all(
         pages.map(async (importPage) => {
             const Page = (await importPage()).default;
-            return Page();
+            try {
+                return Page();
+            } catch (error) {
+                console.log("Error occurred while loading route:", Page.name);
+                throw error;
+            }
         })
     );
 

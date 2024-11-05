@@ -1,3 +1,3 @@
 export declare global {
-    type bool = bool;
+    type bool = boolean;
 }

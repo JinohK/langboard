@@ -1,10 +1,10 @@
-import { useVirtualizer, Virtualizer } from "@tanstack/react-virtual";
+import { Virtualizer, useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID, StringCase } from "@/core/utils/StringUtils";
+import { StringCase, createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IVirtualInfiniteListProps<T> {
     status: "pending" | "error" | "success";

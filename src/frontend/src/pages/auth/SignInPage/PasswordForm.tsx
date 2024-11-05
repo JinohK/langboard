@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Checkbox, Floating, Form, IconComponent, Label } from "@/components/base";
+import { Button, Checkbox, Floating, Form, IconComponent, Label, Toast } from "@/components/base";
 import useSignIn from "@/controllers/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -53,6 +53,16 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                 setTimeout(() => {
                     formRef.current!.password.focus();
                 }, 0);
+            },
+            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
+                Toast.Add.error(t("signIn.errors.Email is not verified yet."));
+                setEmail("");
+                const searchParams = new URLSearchParams(location.search);
+                searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+                navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
+            },
+            [EHttpStatus.HTTP_423_LOCKED]: () => {
+                navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email } });
             },
         },
         useDefaultBadRequestHandler: true,

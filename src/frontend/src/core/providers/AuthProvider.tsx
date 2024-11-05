@@ -1,17 +1,18 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from "react";
-import Cookies from "universal-cookie";
 import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
+import useCookieStore from "@/core/stores/CookieStore";
 
 export interface IAuthUser extends User.Interface {
     industry: string;
     purpose: string;
     affiliation?: string;
     position?: string;
+    subemails: { email: string; verified_at: string }[];
 }
 
 export interface IAuthContext {
@@ -43,17 +44,17 @@ const initialContext = {
 const AuthContext = createContext<IAuthContext>(initialContext);
 
 export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode => {
-    const cookies = new Cookies();
+    const cookieStore = useCookieStore();
     const { queryClient } = useQueryMutation();
-    const user = useRef<IAuthUser | null>(null);
+    const userRef = useRef<IAuthUser | null>(null);
     const [updated, update] = useReducer((x) => x + 1, 0);
 
     const getAccessToken = (): string | null => {
-        return cookies.get(APP_ACCESS_TOKEN) ?? null;
+        return cookieStore.get(APP_ACCESS_TOKEN) ?? null;
     };
 
     const getRefreshToken = (): string | null => {
-        return cookies.get(APP_REFRESH_TOKEN) ?? null;
+        return cookieStore.get(APP_REFRESH_TOKEN) ?? null;
     };
 
     const isAuthenticated = (): bool => {
@@ -62,8 +63,8 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     useEffect(() => {
         if (!isAuthenticated()) {
-            if (user.current) {
-                user.current = null;
+            if (userRef.current) {
+                userRef.current = null;
             }
             return;
         }
@@ -73,12 +74,12 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
             if (cachedData) {
                 const { expiresAt, user: cachedUser } = JSON.parse(cachedData);
                 if (expiresAt > Date.now()) {
-                    user.current = cachedUser;
+                    userRef.current = cachedUser;
                     return;
                 }
 
                 sessionStorage.removeItem("about-me");
-                user.current = null;
+                userRef.current = null;
             }
 
             const response = await api.get(API_ROUTES.AUTH.ABOUT_ME, {
@@ -99,7 +100,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 })
             );
 
-            user.current = response.data.user;
+            userRef.current = response.data.user;
             return;
         };
 
@@ -107,22 +108,24 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     }, [updated]);
 
     const updatedUser = () => {
+        sessionStorage.removeItem("about-me");
+        userRef.current = null;
         update();
     };
 
     const removeTokens = () => {
-        cookies.remove(APP_ACCESS_TOKEN, { path: "/" });
-        cookies.remove(APP_REFRESH_TOKEN, { path: "/" });
+        cookieStore.remove(APP_ACCESS_TOKEN);
+        cookieStore.remove(APP_REFRESH_TOKEN);
     };
 
     const signIn = (accessToken: string, refreshToken: string) => {
-        cookies.set(APP_ACCESS_TOKEN, accessToken, { path: "/" });
-        cookies.set(APP_REFRESH_TOKEN, refreshToken, { path: "/" });
+        cookieStore.set(APP_ACCESS_TOKEN, accessToken);
+        cookieStore.set(APP_REFRESH_TOKEN, refreshToken);
         update();
     };
 
     const signOut = () => {
-        user.current = null;
+        userRef.current = null;
         sessionStorage.removeItem("about-me");
         removeTokens();
         queryClient.clear();
@@ -130,7 +133,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     };
 
     const aboutMe = () => {
-        return user.current;
+        return userRef.current;
     };
 
     return (

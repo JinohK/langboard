@@ -4,7 +4,7 @@ from ...Constants import BASE_DIR, PROJECT_NAME
 from ..BaseService import BaseService
 
 
-_TTemplateNames = Literal["recovery", "signup"]
+_TTemplateNames = Literal["recovery", "signup", "subemail"]
 
 
 class EmailService(BaseService):

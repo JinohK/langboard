@@ -2,7 +2,7 @@
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as React from "react";
-import { tv, type VariantProps } from "tailwind-variants";
+import { type VariantProps, tv } from "tailwind-variants";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export const AvatarVariants = tv(

@@ -1,7 +1,7 @@
 import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactRefresh from "eslint-plugin-react-refresh";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
 
 const config = {
     plugins: {

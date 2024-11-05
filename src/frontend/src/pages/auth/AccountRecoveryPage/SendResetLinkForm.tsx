@@ -6,7 +6,7 @@ import { Button, Floating, Form, IconComponent, Toast } from "@/components/base"
 import useSendResetLink from "@/controllers/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
-import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
+import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
 
 export interface ISendResetLinkFormProps {
     signToken: string;

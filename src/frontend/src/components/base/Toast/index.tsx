@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { ExternalToast, toast, Toaster, ToastT, useSonner } from "sonner";
+import { ExternalToast, ToastT, Toaster, toast, useSonner } from "sonner";
 import Button from "@/components/base/Button";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";

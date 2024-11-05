@@ -1,7 +1,7 @@
+import { forwardRef, memo, useEffect, useState } from "react";
+import { VariantProps, tv } from "tailwind-variants";
 import { Skeleton, SuspenseComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { forwardRef, memo, useEffect, useState } from "react";
-import { tv, VariantProps } from "tailwind-variants";
 
 const CachedImageVariants = tv(
     {

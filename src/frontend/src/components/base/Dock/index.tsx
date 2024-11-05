@@ -3,7 +3,7 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import type { PropsWithChildren } from "react";
 import React, { useRef } from "react";
-import { tv, VariantProps } from "tailwind-variants";
+import { VariantProps, tv } from "tailwind-variants";
 import { Tooltip } from "@/components/base";
 import { ButtonProps } from "@/components/base/Button";
 import IconComponent from "@/components/base/IconComponent";

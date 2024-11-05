@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import PasswordInput from "@/components/PasswordInput";
-import { Button, Form, IconComponent, Toast } from "@/components/base";
+import SubmitButton from "@/components/SubmitButton";
+import { Form, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -58,9 +59,9 @@ function PasswordPage(): JSX.Element {
                     </div>
                 </div>
                 <div className="mt-16 flex items-center justify-center gap-8">
-                    <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Save")}
-                    </Button>
+                    <SubmitButton type="submit" isValidating={isValidating}>
+                        {t("common.Save")}
+                    </SubmitButton>
                 </div>
             </Form.Root>
         </>

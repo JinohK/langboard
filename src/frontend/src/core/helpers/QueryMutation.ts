@@ -3,15 +3,15 @@ import {
     QueryClient,
     QueryFunction,
     QueryKey,
-    useInfiniteQuery,
     UseInfiniteQueryOptions,
-    useMutation,
     UseMutationOptions,
     UseMutationResult,
-    useQuery,
-    useQueryClient,
     UseQueryOptions,
     UseQueryResult,
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
 } from "@tanstack/react-query";
 
 export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError = Error> = UseQueryOptions<TQueryFnData, TError, TData>;

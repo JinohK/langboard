@@ -1,10 +1,10 @@
 from fastapi import status
-from fastapi.responses import JSONResponse
 from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
 from ..core.filter import AuthFilter, FilterMiddleware
+from ..core.routing import JsonResponse
 from ..core.security import Auth
 from ..models import User
 
@@ -35,11 +35,11 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
             if isinstance(validation_result, User):
                 scope["user"] = validation_result
             elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-                response = JSONResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                response = JsonResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
                 await response(scope, receive, send)
                 return
             else:
-                response = JSONResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
                 await response(scope, receive, send)
                 return
 

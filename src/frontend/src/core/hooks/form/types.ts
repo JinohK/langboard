@@ -10,6 +10,10 @@ export interface IBaseValidationSchema {
     email?: bool;
     sameWith?: string;
     mimeType?: string | string[];
+    custom?: {
+        errorKey: keyof IBaseValidationSchema | (string & {});
+        validate: (value: string | File[] | FileList) => bool;
+    };
 }
 
 interface IFileValidationSchema extends IBaseValidationSchema {
@@ -20,14 +24,17 @@ interface IFileValidationSchema extends IBaseValidationSchema {
 
 export type TValidationSchema = IBaseValidationSchema | IFileValidationSchema;
 
+export type TFormDataType<TFormData extends bool, TVariables> = TFormData extends true ? FormData : TVariables;
+
 interface IBaseUseFormProps<TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends bool = false> {
     errorLangPrefix: string;
     schema: Record<string, TValidationSchema> | (() => Record<string, TValidationSchema>);
+    isValidatingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
     isFormData?: TFormData;
     inputRefs?: Record<string, React.RefObject<HTMLInputElement | null> | React.MutableRefObject<DataTransfer>>;
     beforeHandleSubmit?: () => void;
     predefineValues?: Partial<TVariables> | (() => Partial<TVariables>);
-    successCallback?: (form: TFormData extends true ? FormData : TVariables) => void;
+    successCallback?: (form: TFormDataType<TFormData, TVariables>) => void;
     failCallback?: (errors?: Record<string, string>) => void;
     mutate?: UseMutateFunction<TData, TError, TVariables, TContext>;
     mutateOnSuccess?: MutateOptions<TData, TError, TVariables, TContext>["onSuccess"];
@@ -40,13 +47,13 @@ interface IBaseUseFormProps<TVariables = unknown, TData = unknown, TContext = un
 
 interface IFormDataUseFormProps<TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends true = true>
     extends IBaseUseFormProps<TVariables, TData, TContext, TError, TFormData> {
-    successCallback: (form: TFormData extends true ? FormData : TVariables) => void;
+    successCallback: (form: TFormDataType<TFormData, TVariables>) => void;
     isFormData: TFormData;
 }
 
 interface IFormUseFormProps<TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends false = false>
     extends IBaseUseFormProps<TVariables, TData, TContext, TError, TFormData> {
-    successCallback: (form: TFormData extends true ? FormData : TVariables) => void;
+    successCallback: (form: TFormDataType<TFormData, TVariables>) => void;
     isFormData?: TFormData;
 }
 
@@ -75,18 +82,25 @@ interface IMutateErrorHandlerUseFormProps<TVariables = unknown, TData = unknown,
     badRequestHandlerCallback?: (errors?: Record<string, string>, focusElement?: string | HTMLInputElement | null) => void;
 }
 
-export type TUseFormProps<TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends bool = false> =
-    | IFormDataUseFormProps<TVariables, TData, TContext, TError, TFormData>
-    | IFormUseFormProps<TVariables, TData, TContext, TError, TFormData>
-    | IMutateErrorCallbackUseFormProps<TVariables, TData, TContext, TError>
-    | IMutateErrorHandlerUseFormProps<TVariables, TData, TContext, TError>;
+export type TUseFormProps<
+    TVariables = unknown,
+    TData = unknown,
+    TContext = unknown,
+    TError = Error,
+    TFormData extends bool = false,
+> = TFormData extends true
+    ? IFormDataUseFormProps<TVariables, TData, TContext, TError>
+    :
+          | IFormUseFormProps<TVariables, TData, TContext, TError>
+          | IMutateErrorCallbackUseFormProps<TVariables, TData, TContext, TError>
+          | IMutateErrorHandlerUseFormProps<TVariables, TData, TContext, TError>;
 
 export interface IUseForm<TVariables = unknown, TFormData extends bool = false> {
     errors: Record<string, string>;
     setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
-    formDataRef: React.MutableRefObject<TFormData extends true ? FormData : TVariables>;
+    formDataRef: React.MutableRefObject<TFormDataType<TFormData, TVariables>>;
     handleSubmit: (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => void;
     formRef: React.MutableRefObject<HTMLFormElement | null>;
     focusElementRef: React.MutableRefObject<HTMLInputElement | string | null>;

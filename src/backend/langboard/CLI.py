@@ -1,3 +1,4 @@
+from asyncio import run
 from logging import INFO
 from multiprocessing import Process, cpu_count
 from os import sep
@@ -5,6 +6,7 @@ from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
 from .Constants import HOST, PORT
+from .core.ai import QueueBot
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
@@ -40,6 +42,18 @@ def _run_app_wrapper(options: RunCommandOptions, is_restarting: bool = False) ->
     return process
 
 
+def _start_queue_bot():
+    load_modules("bots", "Bot", log=True)
+    queue = QueueBot()
+    run(queue.loop())
+
+
+def _run_queue_bot_wrapper() -> Process:
+    process = Process(target=_start_queue_bot)
+    process.start()
+    return process
+
+
 def _close_processes(processes: list[Process]):
     close_all_sessions()
     for process in processes:
@@ -58,6 +72,7 @@ def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
         for _ in range(min(workers, cpu_count())):
             process = _run_app_wrapper(options, is_restarting)
             processes.append(process)
+        processes.append(_run_queue_bot_wrapper())
 
         options.workers = workers
 

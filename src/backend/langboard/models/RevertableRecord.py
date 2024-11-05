@@ -14,7 +14,7 @@ class RevertType(Enum):
 
 
 class RevertableRecord(BaseSqlModel, table=True):
-    revert_key: str = Field(default_factory=lambda: create_short_unique_id(16), unique=True, nullable=False)
+    revert_key: str = Field(nullable=False)
     target_id: int = Field(nullable=False)
     table_name: str = Field(nullable=False)
     column_values: dict = Field(default="", sa_column=Column(type_=JSON))
@@ -23,6 +23,10 @@ class RevertableRecord(BaseSqlModel, table=True):
     revert_type: RevertType = Field(nullable=False)
     is_purged: bool = Field(default=False)
     is_soft_delete: bool = Field(default=False)
+
+    @staticmethod
+    def create_revert_key() -> str:
+        return create_short_unique_id(16)
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["target_id", "table_name", "valid_until", "revert_type", "is_purged", "is_soft_delete"]

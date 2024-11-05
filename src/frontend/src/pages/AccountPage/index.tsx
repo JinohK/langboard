@@ -28,11 +28,11 @@ function AccountPage(): JSX.Element {
                 navigate(ROUTES.ACCOUNT.PROFILE);
             },
         },
-        [ROUTES.ACCOUNT.EMAIL]: {
+        [ROUTES.ACCOUNT.EMAILS.ROUTE]: {
             icon: "mail",
-            name: "user.Email",
+            name: "myAccount.Emails",
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.EMAIL);
+                navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
             },
         },
         [ROUTES.ACCOUNT.PASSWORD]: {
@@ -53,7 +53,7 @@ function AccountPage(): JSX.Element {
         case ROUTES.ACCOUNT.PROFILE:
             pageContent = <ProfilePage />;
             break;
-        case ROUTES.ACCOUNT.EMAIL:
+        case ROUTES.ACCOUNT.EMAILS.ROUTE:
             pageContent = <EmailPage />;
             break;
         case ROUTES.ACCOUNT.PASSWORD:

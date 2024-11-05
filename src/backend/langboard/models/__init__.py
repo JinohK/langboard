@@ -6,6 +6,7 @@ from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectRole import ProjectRole
 from .RevertableRecord import RevertableRecord
 from .User import User
+from .UserEmail import UserEmail
 
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "ProjectRole",
     "RevertableRecord",
     "User",
+    "UserEmail",
 ]

@@ -7,7 +7,7 @@ import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
-import SuccessResult from "@/pages/AccountRecoveryPage/SuccessResult";
+import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;

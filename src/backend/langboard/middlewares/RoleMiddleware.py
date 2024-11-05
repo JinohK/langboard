@@ -1,8 +1,8 @@
 from fastapi import status
-from fastapi.responses import JSONResponse
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
 from ..core.filter import FilterMiddleware, RoleFilter
+from ..core.routing import JsonResponse
 from ..core.security import Role
 from ..models import User
 
@@ -28,13 +28,13 @@ class RoleMiddleware(FilterMiddleware):
 
         if should_filter:
             if "user" not in scope:
-                response = JSONResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
                 await response(scope, receive, send)
                 return
 
             user: User = scope["user"]
             if not user.id:
-                response = JSONResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
                 await response(scope, receive, send)
                 return
 
@@ -45,7 +45,7 @@ class RoleMiddleware(FilterMiddleware):
                 is_authorized = await role.is_authorized(user.id, child_scope["path_params"], actions, role_finder)
                 await role.close()
                 if not is_authorized:
-                    response = JSONResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+                    response = JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
                     await response(scope, receive, send)
                     return
 
