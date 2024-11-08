@@ -71,13 +71,12 @@ const IconComponent = memo(
         }
 
         const style = {
-            strokeWidth: strokeWidth,
             ...(stroke && { stroke: stroke }),
         };
 
         return (
             <SuspenseComponent className={className}>
-                <TargetIcon className={className} style={style} ref={ref} id={id} {...props} />
+                <TargetIcon className={className} strokeWidth={strokeWidth} style={style} ref={ref} id={id} {...props} />
             </SuspenseComponent>
         );
     })

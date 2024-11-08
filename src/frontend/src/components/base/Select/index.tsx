@@ -2,9 +2,9 @@
 "use client";
 
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+import IconComponent from "@/components/base/IconComponent";
 
 const Root = SelectPrimitive.Root;
 
@@ -24,7 +24,7 @@ const Trigger = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Trigger
         >
             {children}
             <SelectPrimitive.Icon asChild>
-                <ChevronDown className="h-4 w-4 opacity-50" />
+                <IconComponent icon="chevron-down" size="4" className="opacity-50" />
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
     )
@@ -36,7 +36,7 @@ const ScrollUpButton = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
 >(({ className, ...props }, ref) => (
     <SelectPrimitive.ScrollUpButton ref={ref} className={cn("flex cursor-default items-center justify-center py-1", className)} {...props}>
-        <ChevronUp className="h-4 w-4" />
+        <IconComponent icon="chevron-up" size="4" />
     </SelectPrimitive.ScrollUpButton>
 ));
 ScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
@@ -46,7 +46,7 @@ const ScrollDownButton = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
 >(({ className, ...props }, ref) => (
     <SelectPrimitive.ScrollDownButton ref={ref} className={cn("flex cursor-default items-center justify-center py-1", className)} {...props}>
-        <ChevronDown className="h-4 w-4" />
+        <IconComponent icon="chevron-down" size="4" />
     </SelectPrimitive.ScrollDownButton>
 ));
 ScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
@@ -100,7 +100,7 @@ const Item = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item>, Rea
         >
             <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
                 <SelectPrimitive.ItemIndicator>
-                    <Check className="h-4 w-4" />
+                    <IconComponent icon="check" size="4" />
                 </SelectPrimitive.ItemIndicator>
             </span>
 

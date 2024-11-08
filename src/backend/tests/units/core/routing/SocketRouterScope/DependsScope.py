@@ -56,7 +56,7 @@ class DependsScope(BaseScopeTest):
 
             if model.is_async_generator:
                 assert isinstance(result, AsyncGenerator)
-                assert await anext(result) == model.expected
+                assert await result.__anext__() == model.expected
                 await result.aclose()
             else:
                 assert isinstance(result, Generator)

@@ -39,6 +39,15 @@ class UserService(BaseService):
         email = Encryptor.decrypt(token, key)
         return await self.get_by_email(email)
 
+    async def get_all_by_ids(self, user_ids: list[int]) -> list[User]:
+        sql_query = self._db.query("select").table(User)
+        if len(user_ids) > 1:
+            sql_query = sql_query.where(User.column("id").in_(user_ids))
+        else:
+            sql_query = sql_query.where(User.column("id") == user_ids[0])
+        result = await self._db.exec(sql_query)
+        return list(result.all())
+
     async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
         user.avatar = avatar

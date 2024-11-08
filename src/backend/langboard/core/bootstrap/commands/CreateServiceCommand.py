@@ -42,4 +42,4 @@ class CreateServiceCommand(BaseCommand):
 
         code = format_template("service", formats)
 
-        create_service_py(name, code, is_role=False)
+        create_service_py(name, code)

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON
 from sqlmodel import Field
 from ..core.db import BaseSqlModel, DateTimeField
 from ..core.utils.DateTime import now
@@ -17,8 +17,8 @@ class RevertableRecord(BaseSqlModel, table=True):
     revert_key: str = Field(nullable=False)
     target_id: int = Field(nullable=False)
     table_name: str = Field(nullable=False)
-    column_values: dict = Field(default="", sa_column=Column(type_=JSON))
-    file_column_names: list[str] | None = Field(default=None, sa_column=Column(type_=JSON))
+    column_values: dict = Field(default="", sa_type=JSON)
+    file_column_names: list[str] | None = Field(default=None, sa_type=JSON)
     valid_until: datetime = DateTimeField(default=lambda: now() + timedelta(minutes=1), nullable=False)
     revert_type: RevertType = Field(nullable=False)
     is_purged: bool = Field(default=False)

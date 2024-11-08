@@ -1,6 +1,6 @@
 from asyncio import run
 from ....Loader import load_modules
-from ...ai import QueueBot
+from ...ai.QueueBot import QueueBot
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 
 

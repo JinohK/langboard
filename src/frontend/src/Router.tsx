@@ -14,7 +14,7 @@ const loadRoutes = async () => {
             try {
                 return Page();
             } catch (error) {
-                console.log("Error occurred while loading route:", Page.name);
+                console.error("Error occurred while loading route:", Page.name);
                 throw error;
             }
         })

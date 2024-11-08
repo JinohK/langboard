@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON
 from sqlmodel import Field
 from ..core.db import BaseSqlModel
 from .Group import Group
@@ -11,7 +11,7 @@ ALL_GRANTED = "*"
 
 
 class BaseRoleModel(BaseSqlModel):
-    actions: list[str] = Field(default=[ALL_GRANTED], sa_column=Column(JSON))
+    actions: list[str] = Field(default=[ALL_GRANTED], sa_type=JSON)
     user_id: int | None = Field(default=None, foreign_key=User.expr("id"), nullable=True)
     group_id: int | None = Field(default=None, foreign_key=Group.expr("id"), nullable=True)
 

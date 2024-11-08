@@ -22,7 +22,7 @@ class RoleService(BaseService):
         service_name = service.__name__
         if service_name not in self._services:
             self._services[service_name] = service(self._db)  # type: ignore
-        return self._services[service_name]
+        return self._services[service_name]  # type: ignore
 
     @property
     def project(self):

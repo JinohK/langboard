@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -16,7 +16,7 @@ _TColumnType = TypeVar("_TColumnType")
 class BaseSqlModel(ABC, SQLModel):
     """Bases for all SQL models in the application inherited from :class:`SQLModel`."""
 
-    __changes__: dict[str, dict[str, Any]] = {}
+    __changes__: ClassVar[dict[str, dict[str, Any]]] = {}
     __pydantic_post_init__ = "model_post_init"
 
     id: int | None = Field(default=None, primary_key=True)

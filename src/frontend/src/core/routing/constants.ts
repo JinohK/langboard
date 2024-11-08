@@ -31,6 +31,7 @@ export const ROUTES = {
     BOARD: {
         ROUTE: "/board",
         MAIN: (uid: string) => `/board/${uid}`,
+        TASK: (uid: string, taskUID: string) => `/board/${uid}/task/${taskUID}`,
     },
     DASHBOARD: {
         ROUTE: "/dashboard",

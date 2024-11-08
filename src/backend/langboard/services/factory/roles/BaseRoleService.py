@@ -1,101 +1,13 @@
 from abc import ABC
-from typing import Any, Callable, Concatenate, Generic, ParamSpec, Protocol, Sequence, TypeVar, overload
+from typing import Generic, Sequence, TypeVar
 from ....core.db import DbSession
 from ....models.BaseRoleModel import BaseRoleModel
 
 
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
-_TParams = ParamSpec("_TParams")
-_TReturn = TypeVar("_TReturn", covariant=True)
-
-
-class _Method(Protocol, Generic[_TParams, _TReturn]):
-    @overload
-    def __call__(self_, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn: ...  # type: ignore
-    @overload
-    def __call__(self_, self: Any, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn: ...  # type: ignore
-    def __call__(self_, self: Any, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn: ...  # type: ignore
 
 
 class BaseRoleService(ABC, Generic[_TRoleModel]):
-    @staticmethod
-    def class_filterable_wrapper(
-        cls_: Callable[Concatenate[Any, Any, Any, Any, Any, Any, _TParams], Any],
-    ) -> Callable[[Callable[..., _TReturn]], _Method[_TParams, _TReturn]]:
-        """Provides a decorator a class method that provides type hints for the method's parameters and return value.
-
-        If the method needs only top-level variables of the class inherited :class:`BaseRoleModel`, this decorator should be used.
-
-        E.g.::
-
-            class AnyRole(BaseRoleModel):
-                any_field: str
-
-            class AnyRoleService(BaseRoleService[AnyRole]):
-                @BaseRoleService.class_filterable_wrapper(AnyRole)  # type: ignore
-                def grant(self, **kwargs):
-                    ...
-
-            AnyRoleService.grant(any_field="any_value")
-        """
-        return BaseRoleService._class_wrapper(cls_)  # type: ignore
-
-    @staticmethod
-    def class_filterable_with_ids_wrapper(
-        cls_: Callable[Concatenate[Any, Any, Any, Any, _TParams], Any],
-    ) -> Callable[[Callable[..., _TReturn]], _Method[_TParams, _TReturn]]:
-        """Provides a decorator a class method that provides type hints for the method's parameters and return value.
-
-        If the method needs a user_id or a group_id parameter, this decorator should be used.
-
-        E.g.::
-
-            class AnyRole(BaseRoleModel):
-                any_field: str
-
-            class AnyRoleService(BaseRoleService[AnyRole]):
-                @BaseRoleService.class_filterable_with_ids_wrapper(AnyRole)  # type: ignore
-                def grant_all(self, user_id: int, **kwargs):
-                    ...
-
-            AnyRoleService.grant(user_id=1, group_id=None, any_field="any_value")
-        """
-        return BaseRoleService._class_wrapper(cls_)  # type: ignore
-
-    @staticmethod
-    def class_init_wrapper(
-        cls_: Callable[Concatenate[Any, Any, Any, _TParams], Any],
-    ) -> Callable[[Callable[..., _TReturn]], _Method[_TParams, _TReturn]]:
-        """Provides a decorator a class method that provides type hints for the method's parameters and return value.
-
-        If the method needs all the parameters of the class inherited :class:`BaseRoleModel`, this decorator should be used.
-
-        E.g.::
-
-            class AnyRole(BaseRoleModel):
-                any_field: str
-
-            class AnyRoleService(BaseRoleService[AnyRole]):
-                @BaseRoleService.class_init_wrapper(AnyRole)  # type: ignore
-                def grant(self, **kwargs):
-                    ...
-
-            AnyRoleService.grant(actions=[ALL_GRANTED], user_id=1, any_field="any_value")
-        """
-        return BaseRoleService._class_wrapper(cls_)  # type: ignore
-
-    @staticmethod
-    def _class_wrapper(
-        cls_: Callable[Concatenate[_TParams], Any],
-    ) -> Callable[[Callable[..., _TReturn]], _Method[_TParams, _TReturn]]:
-        def spec_decorator(method: Callable[..., _TReturn]) -> _Method[_TParams, _TReturn]:
-            def inner(self: Any, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn:
-                return method(self, *args, **kwargs)
-
-            return inner  # type: ignore
-
-        return spec_decorator
-
     def __init__(self, db: DbSession, model_class: type[_TRoleModel]):
         self._db = db
         self._model_class = model_class
@@ -116,7 +28,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         result = await self._db.exec(query)
         return result.all()
 
-    async def grant(self, **kwargs) -> bool:
+    async def grant(self, **kwargs) -> _TRoleModel:
         """Grant actions to the role.
 
         If both `user_id` and `group_id` are provided, the `user_id` will be used.
@@ -127,16 +39,13 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         """
         role = await self._get_or_create_role(**kwargs)
 
-        try:
-            if role.is_new():
-                self._db.insert(role)
-            else:
-                await self._db.update(role)
-            return True
-        except Exception:
-            return False
+        if role.is_new():
+            self._db.insert(role)
+        else:
+            await self._db.update(role)
+        return role
 
-    async def grant_all(self, **kwargs) -> bool:
+    async def grant_all(self, **kwargs) -> _TRoleModel:
         """Grant all actions to the role. :meth:`BaseRoleModel.set_all_actions` will be called.
 
         If both `user_id` and `group_id` are provided, the `user_id` will be used.
@@ -148,16 +57,13 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         role = await self._get_or_create_role(**kwargs)
         role.set_all_actions()
 
-        try:
-            if role.is_new():
-                self._db.insert(role)
-            else:
-                await self._db.update(role)
-            return True
-        except Exception:
-            return False
+        if role.is_new():
+            self._db.insert(role)
+        else:
+            await self._db.update(role)
+        return role
 
-    async def grant_default(self, **kwargs) -> bool:
+    async def grant_default(self, **kwargs) -> _TRoleModel:
         """Grant default actions to the role. :meth:`BaseRoleModel.set_default_actions` will be called.
 
         If both `user_id` and `group_id` are provided, the `user_id` will be used.
@@ -169,16 +75,13 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         role = await self._get_or_create_role(**kwargs)
         role.set_default_actions()
 
-        try:
-            if role.is_new():
-                self._db.insert(role)
-            else:
-                await self._db.update(role)
-            return True
-        except Exception:
-            return False
+        if role.is_new():
+            self._db.insert(role)
+        else:
+            await self._db.update(role)
+        return role
 
-    async def withdraw(self, **kwargs) -> bool:
+    async def withdraw(self, **kwargs) -> _TRoleModel | None:
         """Withdraw the role.
 
         If both `user_id` and `group_id` are provided, the `user_id` will be used.
@@ -188,14 +91,11 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         After the method is executed, db must be committed to save the changes.
         """
         role = await self._get_or_create_role(**kwargs)
-        try:
-            if role.is_new():
-                return False
+        if role.is_new():
+            return None
 
-            await self._db.delete(role)
-            return True
-        except Exception:
-            return False
+        await self._db.delete(role)
+        return role
 
     async def _get_or_create_role(self, **kwargs) -> _TRoleModel:
         if kwargs.get("user_id", None) is not None:

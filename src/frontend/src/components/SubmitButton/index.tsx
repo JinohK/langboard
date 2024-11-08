@@ -5,7 +5,7 @@ import { TDimensionSize } from "@/core/utils/SizeMap";
 
 interface IBaseSubmitButtonProps extends ButtonProps {
     loadingIconSize?: TDimensionSize;
-    isValidating: boolean;
+    isValidating: bool;
     children: React.ReactNode;
 }
 

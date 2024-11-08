@@ -32,7 +32,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
 
     return (
         <Dialog.Root open={opened} onOpenChange={setOpened}>
-            <Dialog.Content className="sm:max-w-md">
+            <Dialog.Content className="sm:max-w-md" aria-describedby="">
                 <Form.Root onSubmit={handleSubmit} ref={formRef}>
                     <Dialog.Header>
                         <Dialog.Title>{t("dashboard.Create New Project")}</Dialog.Title>

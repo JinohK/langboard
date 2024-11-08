@@ -30,6 +30,16 @@ class User(SoftDeleteModel, table=True):
     def get_fullname(self) -> str:
         return f"{self.firstname} {self.lastname}"
 
+    def api_response(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "email": self.email,
+            "username": self.username,
+            "avatar": self.avatar.path if self.avatar else None,
+        }
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return [
             "firstname",

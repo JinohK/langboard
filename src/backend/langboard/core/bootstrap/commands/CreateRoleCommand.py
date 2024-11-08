@@ -42,4 +42,4 @@ class CreateRoleCommand(BaseCommand):
         create_model_py(f"{name}Role", model_code)
 
         service_code = format_template("role_service", formats)
-        create_service_py(name, service_code, is_role=True)
+        create_service_py(name, service_code, factory=("roles", "Role"))

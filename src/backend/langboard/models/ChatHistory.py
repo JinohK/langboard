@@ -1,3 +1,4 @@
+from typing import Any
 from sqlmodel import Field
 from ..core.db import SoftDeleteModel
 from ..core.utils.String import create_short_unique_id
@@ -11,6 +12,14 @@ class ChatHistory(SoftDeleteModel, table=True):
     receiver_id: int | None = Field(default=None, foreign_key=User.expr("id"), nullable=True)
     history_type: str = Field(nullable=False)
     message: str = Field(nullable=False)
+
+    def api_response(self) -> dict[str, Any]:
+        return {
+            "uid": self.uid,
+            "sender_id": self.sender_id,
+            "receiver_id": self.receiver_id,
+            "message": self.message,
+        }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["uid", "filterable", "sender_id", "receiver_id", "history_type", "message"]

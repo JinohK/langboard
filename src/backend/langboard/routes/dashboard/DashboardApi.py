@@ -1,5 +1,6 @@
 from fastapi import Depends, status
-from ...core.ai import BotType, QueueBot, QueueBotModel
+from ...core.ai import BotType
+from ...core.ai.QueueBot import QueueBot, QueueBotModel
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import Pagination

@@ -52,7 +52,7 @@ class AnnotatedScope(BaseScopeTest):
 
             if model.is_async_generator is True:
                 assert isinstance(result, AsyncGenerator)
-                assert await anext(result) == model.expected
+                assert await result.__anext__() == model.expected
                 await result.aclose()
             elif model.is_async_generator is False:
                 assert isinstance(result, Generator)

@@ -61,7 +61,10 @@ class SocketRouterScopeException(EventBaseSocketException[_TException], Generic[
         return concat("\t", "\n\t".join(messages), "\n")
 
 
-def MissingException(loc: Literal["body", "query", "path", "header"], field: str, inputs: dict = {}) -> ValidationError:
+def MissingException(
+    loc: Literal["body", "query", "path", "header"], field: str, inputs: dict | None = None
+) -> ValidationError:
+    inputs = inputs or {}
     return ValidationError.from_exception_data(
         "Field required", [{"type": "missing", "loc": (loc, field), "input": inputs}]
     )

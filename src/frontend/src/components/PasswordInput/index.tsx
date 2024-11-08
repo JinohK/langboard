@@ -6,10 +6,10 @@ import { cn } from "@/core/utils/ComponentUtils";
 interface IBasePasswordInputProps {
     name: string;
     label: string;
-    autoFocus?: boolean;
+    autoFocus?: bool;
     className?: string;
-    isFormControl?: boolean;
-    isValidating?: boolean;
+    isFormControl?: bool;
+    isValidating?: bool;
     autoComplete?: string;
     defaultValue?: string;
     error?: string;
@@ -17,7 +17,7 @@ interface IBasePasswordInputProps {
 
 interface IFormPasswordInputProps extends IBasePasswordInputProps {
     isFormControl: true;
-    isValidating: boolean;
+    isValidating: bool;
 }
 
 interface IUnformedPasswordInputProps extends IBasePasswordInputProps {

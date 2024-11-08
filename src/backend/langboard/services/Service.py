@@ -20,6 +20,10 @@ class Service(ServiceFactory):
         self._serivces.clear()
 
     @property
+    def activity(self):
+        return self._create_or_get_service(factory.ActivityService)
+
+    @property
     def user(self):
         return self._create_or_get_service(factory.UserService)
 
@@ -42,3 +46,15 @@ class Service(ServiceFactory):
     @property
     def revert(self):
         return self._create_or_get_service(factory.RevertService)
+
+    @property
+    def project_column(self):
+        return self._create_or_get_service(factory.ProjectColumnService)
+
+    @property
+    def task(self):
+        return self._create_or_get_service(factory.TaskService)
+
+    @property
+    def group(self):
+        return self._create_or_get_service(factory.GroupService)

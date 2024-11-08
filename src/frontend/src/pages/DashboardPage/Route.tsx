@@ -64,6 +64,14 @@ function DashboardRoute() {
                     </AuthGuard>
                 }
             />
+            <Route
+                path={`${ROUTES.DASHBOARD.ROUTE}/*`}
+                element={
+                    <AuthGuard>
+                        <DashboardPage />
+                    </AuthGuard>
+                }
+            />
         </Route>
     );
 }

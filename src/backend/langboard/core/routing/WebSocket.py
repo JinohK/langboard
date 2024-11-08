@@ -53,3 +53,25 @@ class WebSocket(SocketifyWebSocket):
                 self.__ws = None
 
         return _WebSocketStream(self)
+
+    @overload
+    def publish(self, topic: str, event_response: str, data: Any = None, compress: bool = False): ...
+    @overload
+    def publish(self, topic: str, event_response: SocketResponse, compress: bool = False): ...
+    def publish(  # type: ignore
+        self,
+        topic: str,
+        event_response: SocketResponse | str,
+        data: Any = None,
+        compress: bool = False,
+    ) -> Self | SendStatus | None:
+        if isinstance(event_response, str):
+            response_model = SocketResponse(event=event_response, data=data)
+        elif isinstance(event_response, SocketResponse):
+            response_model = event_response
+        else:
+            return self
+
+        return super().publish(
+            topic=topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
+        )

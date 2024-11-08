@@ -54,6 +54,7 @@ class QueueBot:
         for file in file_list:
             await self.__execute(service, file)
             file.unlink()
+            self.__logger.info("Bot executed: %s", file.name)
         service.close()
         await db.close()
 

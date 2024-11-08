@@ -181,6 +181,16 @@
       }
     }
   },
+  "activity": {
+    "user": {
+      "project": {
+        "created": {
+          "title": "Created a new project",
+          "content": "Created <primary>{{new.project_type}}</primary> project named <primary>{{new.title}}</primary>."
+        }
+      }
+    }
+  },
   "dashboard": {
     "Projects": "Projects",
     "tabs": {
@@ -203,6 +213,10 @@
     "errors": {
       "Project not found": "Project not found"
     }
+  },
+  "board": {
+    "Collapse": "Collapse",
+    "Expand": "Expand"
   },
   "project": {
     "Title": "Project Title",

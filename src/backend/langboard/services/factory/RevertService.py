@@ -1,6 +1,6 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Literal, cast, overload
+from typing import Any, Literal, TypeVar, cast, overload
 from pydantic import BaseModel
 from sqlalchemy import Row, column, delete, insert, table, text, update
 from ...core.db import BaseSqlModel, SoftDeleteModel
@@ -9,6 +9,10 @@ from ...core.utils.DateTime import now
 from ...models import RevertableRecord
 from ...models.RevertableRecord import RevertType
 from ..BaseService import BaseService
+
+
+_TSoftDeleteModel = TypeVar("_TSoftDeleteModel", bound=SoftDeleteModel)
+_TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
 
 
 class RevertRecordModel(BaseModel):
@@ -75,7 +79,12 @@ class RevertService(BaseService):
 
         return True
 
-    async def record(self, *revert_record_models: RevertRecordModel) -> str:
+    async def record(
+        self,
+        *revert_record_models: RevertRecordModel,
+        revert_key: str = RevertableRecord.create_revert_key(),
+        only_commit: bool = False,
+    ) -> str:
         """Record the current state of a model for future reversion
 
         :param RevertRecordModel.unsaved_model: The model to record and must not be saved in the database
@@ -83,6 +92,7 @@ class RevertService(BaseService):
         :param RevertRecordModel.revert_type: The type of revert action to record.
         :param RevertRecordModel.purge: When :param:`revert_type` is :val:`RevertType.Insert`,\n
             it can be set to :val:`True` to purge the record instead of soft deleting it
+        :param revert_key: The key to be already generated
 
         :val:`RevertType.Insert` means the model will be deleted in this method\n
             and will be inserted if :meth:`RevertService.revert` is called
@@ -92,12 +102,12 @@ class RevertService(BaseService):
 
         :val:`RevertType.Update` means the model will be updated if :meth:`RevertService.revert` is called
         """
-        revert_key = RevertableRecord.create_revert_key()
         revertable_records = []
         for model in revert_record_models:
             is_purged = False
             if model.revert_type == RevertType.Delete:
-                self._db.insert(model.unsaved_model)
+                if not only_commit:
+                    self._db.insert(model.unsaved_model)
                 await self._db.commit()
                 target_id = cast(int, model.unsaved_model.id)
                 prev_record = {}
@@ -106,12 +116,14 @@ class RevertService(BaseService):
                 prev_record = model.unsaved_model.model_dump()
                 if model.purge:
                     is_purged = True
-                await self._db.delete(model.unsaved_model, purge=model.purge)  # type: ignore
+                if not only_commit:
+                    await self._db.delete(model.unsaved_model, purge=model.purge)  # type: ignore
                 await self._db.commit()
             else:
                 target_id = cast(int, model.unsaved_model.id)
                 prev_record = model.unsaved_model.changes_dict
-                await self._db.update(model.unsaved_model)
+                if not only_commit:
+                    await self._db.update(model.unsaved_model)
 
             file_column_names = [
                 column_name for column_name in model.file_columns if column_name in model.unsaved_model.model_fields
@@ -137,17 +149,24 @@ class RevertService(BaseService):
     @overload
     def create_record_model(
         self,
-        unsaved_model: SoftDeleteModel,
+        unsaved_model: _TSoftDeleteModel,  # type: ignore
         revert_type: Literal[RevertType.Insert],
-        file_columns: list[str] = [],
+        file_columns: list[str] | None = None,
         purge: bool = False,
     ) -> RevertRecordModel: ...
     @overload
     def create_record_model(
-        self, unsaved_model: BaseSqlModel, revert_type: RevertType, file_columns: list[str] = []
+        self,
+        unsaved_model: _TBaseModel,  # type: ignore
+        revert_type: RevertType,
+        file_columns: list[str] | None = None,
     ) -> RevertRecordModel: ...
     def create_record_model(
-        self, unsaved_model: BaseSqlModel, revert_type: RevertType, file_columns: list[str] = [], purge: bool = False
+        self,
+        unsaved_model: _TBaseModel,  # type: ignore
+        revert_type: RevertType,
+        file_columns: list[str] | None = None,
+        purge: bool = False,
     ) -> RevertRecordModel:
         """Record the current state of a model for future reversion
 
@@ -165,6 +184,7 @@ class RevertService(BaseService):
 
         :val:`RevertType.Update` means the model will be updated if :meth:`RevertService.revert` is called
         """
+        file_columns = file_columns or []
         return RevertRecordModel(
             unsaved_model=unsaved_model,
             revert_type=revert_type,

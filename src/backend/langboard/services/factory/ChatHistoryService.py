@@ -22,7 +22,7 @@ class ChatHistoryService(BaseService):
     ) -> tuple[list[dict[str, Any]], int]:
         sql_query = (
             self._db.query("select")
-            .columns(ChatHistory.uid, ChatHistory.sender_id, ChatHistory.receiver_id, ChatHistory.message)
+            .table(ChatHistory)
             .where((ChatHistory.sender_id == user.id) | (ChatHistory.receiver_id == user.id))
             .where(ChatHistory.history_type == history_type)
             .where(ChatHistory.created_at <= current_date)
@@ -42,15 +42,8 @@ class ChatHistoryService(BaseService):
         histories = result.all()
 
         chat_histories = []
-        for uid, sender_id, receiver_id, message in histories:
-            chat_histories.append(
-                {
-                    "uid": uid,
-                    "sender_id": sender_id,
-                    "receiver_id": receiver_id,
-                    "message": message,
-                }
-            )
+        for chat_history in histories:
+            chat_histories.append(chat_history.api_response())
 
         return chat_histories, total
 

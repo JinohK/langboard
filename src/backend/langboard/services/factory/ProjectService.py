@@ -1,12 +1,27 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from sqlmodel import desc
+from sqlmodel import asc, desc
 from sqlmodel.sql.expression import Select
+from ...core.ai import BotType
 from ...core.schema import Pagination
-from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, ProjectRole, User
+from ...core.utils.DateTime import now
+from ...models import (
+    Group,
+    GroupAssignedUser,
+    Project,
+    ProjectActivity,
+    ProjectAssignedUser,
+    ProjectColumn,
+    ProjectRole,
+    User,
+)
+from ...models.BaseRoleModel import ALL_GRANTED
 from ..BaseService import BaseService
+from .ActivityService import ActivityResult, ActivityService
+from .GroupService import GroupService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
+from .UserService import UserService
 
 
 class ProjectService(BaseService):
@@ -14,6 +29,59 @@ class ProjectService(BaseService):
     def name() -> str:
         """DO NOT EDIT THIS METHOD"""
         return "project"
+
+    async def get_by_id(self, project_id: int) -> Project | None:
+        result = await self._db.exec(self._db.query("select").table(Project).where(Project.id == project_id))
+        return result.first()
+
+    async def get_by_uid(self, uid: str) -> Project | None:
+        result = await self._db.exec(self._db.query("select").table(Project).where(Project.uid == uid))
+        return result.first()
+
+    async def get_columns(self, project: Project) -> list[dict[str, Any]]:
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectColumn)
+            .where(ProjectColumn.column("project_id") == project.id)
+            .order_by(asc(ProjectColumn.order))
+            .group_by(ProjectColumn.column("order"))
+        )
+        raw_columns = result.all()
+        columns = []
+        for raw_column in raw_columns:
+            columns.append(raw_column.api_response())
+        return columns
+
+    async def get_user_role_actions(self, user: User, project: Project) -> list[str]:
+        if user.is_admin:
+            return [ALL_GRANTED]
+        role_service = self._get_service(RoleService)
+        roles = await role_service.project.get_roles(user_id=user.id, group_id=None, project_id=cast(int, project.id))
+        if roles:
+            return roles[0].actions
+        role_class = role_service.project._model_class
+        result = await self._db.exec(
+            self._db.query("select")
+            .column(role_class.actions)
+            .join(GroupAssignedUser, role_class.column("group_id") == GroupAssignedUser.group_id)
+            .where(GroupAssignedUser.user_id == user.id)
+        )
+        actions = result.first()
+        return list(actions or [])
+
+    async def get_assigned_users(self, project: Project) -> list[dict[str, Any]]:
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(User)
+            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
+            .where(ProjectAssignedUser.project_id == project.id)
+        )
+        raw_users = result.all()
+        users = []
+        for user in raw_users:
+            users.append(user.api_response())
+
+        return users
 
     async def get_dashboard_list(
         self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str, pagination: Pagination
@@ -116,9 +184,22 @@ class ProjectService(BaseService):
 
         return result > 0
 
+    async def set_last_view(self, user: User, project: Project) -> None:
+        await self._db.exec(
+            self._db.query("update")
+            .table(ProjectAssignedUser)
+            .values(last_viewed_at=now())
+            .where(
+                (ProjectAssignedUser.column("project_id") == project.id)
+                & (ProjectAssignedUser.column("user_id") == user.id)
+            )
+        )
+        await self._db.commit()
+
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectCreated)
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
-    ) -> Project | None:
+    ) -> tuple[ActivityResult, Project | None] | None:
         if not user.id or not title:
             return None
 
@@ -132,114 +213,162 @@ class ProjectService(BaseService):
         role_service = self._get_service(RoleService)
         await role_service.project.grant_all(user_id=user.id, project_id=cast(int, project.id))
 
-        await self._db.commit()
+        activity_result = ActivityResult(
+            user_or_bot=user,
+            model=project,
+            shared={"uid": project.uid},
+            new=["title", "project_type"],
+        )
 
-        return project
+        return activity_result, project
 
     @overload
-    async def update(self, project: Project, form: dict) -> str: ...
+    async def update(self, project: Project, form: dict, user: User) -> str: ...
     @overload
-    async def update(self, project: Project, form: dict, from_bot: Literal[False]) -> str: ...
+    async def update(self, project: Project, form: dict, user: User, from_bot: Literal[False]) -> str: ...
     @overload
-    async def update(self, project: int, form: dict, from_bot: Literal[True]) -> None: ...
-    async def update(self, project: Project | int, form: dict, from_bot: bool = False) -> str | None:
+    async def update(self, project: int, form: dict, user: None, from_bot: Literal[True]) -> None: ...
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUpdated)
+    async def update(
+        self, project: Project | int, form: dict, user: User | None = None, from_bot: bool = False
+    ) -> tuple[ActivityResult, str | None] | None:
         if "id" in form:
             form.pop("id")
+        if "uid" in form:
+            form.pop("uid")
 
-        if from_bot:
-            await self._db.exec(
-                self._db.query("update").table(Project).values(form).where(Project.id == cast(int, project))  # type: ignore
-            )
-            await self._db.commit()
-            return
+        if isinstance(project, int):
+            result = await self._db.exec(self._db.query("select").table(Project).where(Project.id == project))
+            project = cast(Project, result.first())
+            if not project:
+                return None
+
+        old_project_record = {}
 
         for key, value in form.items():
             if hasattr(project, key):
+                old_project_record[key] = getattr(project, key)
                 setattr(project, key, value)
 
-        revert_key = await self._get_service(RevertService).record(cast(Project, project), RevertType.Update)
-        return revert_key
+        activitiy_params = {
+            "model": project,
+            "activity_type": ActivityService.ACTIVITY_TYPES.ProjectUpdated,
+            "shared": {"uid": project.uid},
+            "new": [*list(form.keys())],
+            "old": old_project_record,
+        }
+
+        if from_bot:
+            await self._db.update(project)
+            return ActivityResult(user_or_bot=BotType.Project, **activitiy_params), None
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(cast(Project, project), RevertType.Update)
+        )
+        activity_result = ActivityResult(user_or_bot=cast(User, user), revert_key=revert_key, **activitiy_params)
+        return activity_result, revert_key
 
     @overload
     async def assign_user(
-        self, project: Project, user: User, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: Project, target_user: User, grant_actions: list[str] | None = None
+    ) -> str | None: ...
     @overload
     async def assign_user(
-        self, project: Project, user: int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: Project, target_user: int, grant_actions: list[str] | None = None
+    ) -> str | None: ...
     @overload
     async def assign_user(
-        self, project: int, user: int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: int, target_user: int, grant_actions: list[str] | None = None
+    ) -> str | None: ...
     @overload
     async def assign_user(
-        self, project: int, user: User, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: int, target_user: User, grant_actions: list[str] | None = None
+    ) -> str | None: ...
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedUser)
     async def assign_user(
-        self, project: Project | int, user: User | int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None:
-        project_id = project.id if isinstance(project, Project) else project
-        user_id = user.id if isinstance(user, User) else user
-
-        if not project_id or not user_id:
+        self, user: User, project: Project | int, target_user: User | int, grant_actions: list[str] | None = None
+    ) -> tuple[ActivityResult, str | None] | None:
+        grant_actions = grant_actions or []
+        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
+        target_user = (
+            cast(User, await self._get_service(UserService).get_by_id(target_user))
+            if isinstance(target_user, int)
+            else target_user
+        )
+        if not project or not target_user or not project.id or not target_user.id:
             raise ValueError("Project or user not found")
 
         result = await self._db.exec(
             self._db.query("select")
             .count(ProjectAssignedUser, ProjectAssignedUser.id)
-            .where(ProjectAssignedUser.project_id == project_id)
-            .where(ProjectAssignedUser.user_id == user_id)
+            .where(ProjectAssignedUser.project_id == project.id)
+            .where(ProjectAssignedUser.user_id == target_user.id)
         )
-        (existed,) = result.one()
+        (existed,) = result.first() or (None,)
 
         if existed:
             return
 
-        assigned_user = ProjectAssignedUser(project_id=project_id, user_id=user_id)
+        assigned_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
         self._db.insert(assigned_user)
 
         role_service = self._get_service(RoleService)
-
         if grant_actions:
-            await role_service.project.grant(actions=grant_actions, user_id=user_id, project_id=project_id)
+            role = await role_service.project.grant(
+                actions=grant_actions, user_id=target_user.id, project_id=project.id
+            )
         else:
-            await role_service.project.grant_default(user_id=user_id, project_id=project_id)
+            role = await role_service.project.grant_default(user_id=target_user.id, project_id=project.id)
 
-        if commit:
-            await self._db.commit()
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(assigned_user, RevertType.Delete),
+            revert_service.create_record_model(role, RevertType.Delete if role.is_new() else RevertType.Update),
+            only_commit=True,
+        )
+
+        activity_result = ActivityResult(
+            user_or_bot=user,
+            model=project,
+            shared={"uid": project.uid, "user_id": target_user.id},
+            new={},
+            revert_key=revert_key,
+        )
+
+        return activity_result, revert_key
 
     @overload
     async def assign_group(
-        self, project: Project, group: Group, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: Project, group: Group, grant_actions: list[str] | None = None
+    ) -> str: ...
     @overload
     async def assign_group(
-        self, project: Project, group: int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: Project, group: int, grant_actions: list[str] | None = None
+    ) -> str: ...
     @overload
     async def assign_group(
-        self, project: int, group: int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: int, group: int, grant_actions: list[str] | None = None
+    ) -> str: ...
     @overload
     async def assign_group(
-        self, project: int, group: Group, grant_actions: list[str] = [], commit: bool = True
-    ) -> None: ...
+        self, user: User, project: int, group: Group, grant_actions: list[str] | None = None
+    ) -> str: ...
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedGroup)
     async def assign_group(
-        self, project: Project | int, group: Group | int, grant_actions: list[str] = [], commit: bool = True
-    ) -> None:
-        project_id = project.id if isinstance(project, Project) else project
-        group_id = group.id if isinstance(group, Group) else group
-
-        if not project_id or not group_id:
-            raise ValueError("Project or group not found")
+        self, user: User, project: Project | int, group: Group | int, grant_actions: list[str] | None = None
+    ) -> tuple[ActivityResult, str | None] | None:
+        grant_actions = grant_actions or []
+        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
+        group = cast(Group, await self._get_service(GroupService).get_by_id(group)) if isinstance(group, int) else group
+        if not project or not group or not project.id or not group.id:
+            raise ValueError("Project or user not found")
 
         role_service = self._get_service(RoleService)
-
         if grant_actions:
-            await role_service.project.grant(actions=grant_actions, group_id=group_id, project_id=project_id)
+            role = await role_service.project.grant(actions=grant_actions, group_id=group.id, project_id=project.id)
         else:
-            await role_service.project.grant_default(group_id=group_id, project_id=project_id)
+            role = await role_service.project.grant_default(group_id=group.id, project_id=project.id)
 
         query = (
             self._db.query("select")
@@ -247,103 +376,151 @@ class ProjectService(BaseService):
             .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
             .outerjoin(
                 ProjectAssignedUser,
-                (User.id == ProjectAssignedUser.user_id) & (ProjectAssignedUser.project_id == project_id),  # type: ignore
+                (User.column("id") == ProjectAssignedUser.user_id) & (ProjectAssignedUser.project_id == project.id),
             )
-            .where(GroupAssignedUser.group_id == group_id)
+            .where(GroupAssignedUser.group_id == group.id)
         )
 
         result = await self._db.exec(query)
-        users = result.all()
+        target_users = result.all()
 
         assigned_users: list[ProjectAssignedUser] = []
-
-        for user, assigned in users:
-            if assigned is not None or user.id is None:
+        for target_user, assigned in target_users:
+            if assigned is not None or target_user.id is None:
                 continue
 
-            assigned_user = ProjectAssignedUser(project_id=project_id, user_id=user.id)
+            assigned_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
             assigned_users.append(assigned_user)
-
         self._db.insert_all(assigned_users)
-        if commit:
-            await self._db.commit()
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            *[
+                revert_service.create_record_model(role, RevertType.Delete if role.is_new() else RevertType.Update),
+                *[
+                    revert_service.create_record_model(assigned_user, RevertType.Delete)
+                    for assigned_user in assigned_users
+                ],
+            ],
+            only_commit=True,
+        )
+
+        activity_result = ActivityResult(
+            user_or_bot=user,
+            model=project,
+            shared={"uid": project.uid, "group_id": group.id},
+            new={},
+            revert_key=revert_key,
+        )
+
+        return activity_result, revert_key
 
     @overload
-    async def withdraw_user(self, project: Project, user: User, commit: bool = True) -> None: ...
+    async def withdraw_user(self, user: User, project: Project, target_user: User) -> str | None: ...
     @overload
-    async def withdraw_user(self, project: Project, user: int, commit: bool = True) -> None: ...
+    async def withdraw_user(self, user: User, project: Project, target_user: int) -> str | None: ...
     @overload
-    async def withdraw_user(self, project: int, user: User, commit: bool = True) -> None: ...
+    async def withdraw_user(self, user: User, project: int, target_user: User) -> str | None: ...
     @overload
-    async def withdraw_user(self, project: int, user: int, commit: bool = True) -> None: ...
-    async def withdraw_user(self, project: Project | int, user: User | int, commit: bool = True) -> None:
-        project_id = project.id if isinstance(project, Project) else project
-        user_id = user.id if isinstance(user, User) else user
-
-        if not project_id or not user_id:
+    async def withdraw_user(self, user: User, project: int, target_user: int) -> str | None: ...
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedUser)
+    async def withdraw_user(
+        self, user: User, project: Project | int, target_user: User | int
+    ) -> tuple[ActivityResult, str | None] | None:
+        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
+        target_user = (
+            cast(User, await self._get_service(UserService).get_by_id(target_user))
+            if isinstance(target_user, int)
+            else target_user
+        )
+        if not project or not target_user or not project.id or not target_user.id:
             raise ValueError("Project or user not found")
 
         if not isinstance(project, Project):
             result = await self._db.exec(
-                self._db.query("select").column(Project.owner_id).where(Project.id == project_id)
+                self._db.query("select").column(Project.owner_id).where(Project.id == project.id)
             )
             owner_id = result.first()
         else:
             owner_id = project.owner_id
 
-        if not owner_id or owner_id == user_id:
-            return
+        if not owner_id or owner_id == target_user.id:
+            return None
 
         role_service = self._get_service(RoleService)
         role_class = role_service.project._model_class
 
-        await role_service.project.withdraw(user_id=user_id, project_id=project_id)
+        role = await role_service.project.withdraw(user_id=target_user.id, project_id=project.id)
 
         result = await self._db.exec(
             self._db.query("select")
             .count(role_class, role_class.id)
             .join(GroupAssignedUser, role_class.group_id == GroupAssignedUser.group_id)  # type: ignore
-            .where(GroupAssignedUser.user_id == user_id)
-            .where(role_class.project_id == project_id)
+            .where(GroupAssignedUser.user_id == target_user.id)
+            .where(role_class.project_id == project.id)
         )
-        (existed_in_group,) = result.one()
+        (existed_in_group,) = result.first() or (None,)
+
+        revert_service = self._get_service(RevertService)
+        revert_models = []
+        if role:
+            revert_models.append(revert_service.create_record_model(role, RevertType.Insert))
+
+        activity_result_params = {
+            "user_or_bot": user,
+            "model": project,
+            "shared": {"uid": project.uid, "user_id": target_user.id},
+            "new": {},
+        }
 
         if existed_in_group:
-            if commit:
-                await self._db.commit()
-            return
+            if revert_models:
+                revert_key = await revert_service.record(*revert_models, only_commit=True)
+                activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
+                return activity_result, revert_key
+            return None
 
-        await self._db.exec(
-            self._db.query("delete")
-            .table(ProjectAssignedUser)
-            .where(ProjectAssignedUser.project_id == project_id)  # type: ignore
-            .where(ProjectAssignedUser.user_id == user_id)  # type: ignore
-        )
+        assigned_user = (
+            await self._db.exec(
+                self._db.query("select")
+                .table(ProjectAssignedUser)
+                .where(ProjectAssignedUser.column("project_id") == project.id)
+                .where(ProjectAssignedUser.column("user_id") == target_user.id)
+            )
+        ).first()
+        if assigned_user:
+            await self._db.delete(assigned_user)
+            revert_models.append(revert_service.create_record_model(assigned_user, RevertType.Insert))
 
-        if commit:
-            await self._db.commit()
+        if revert_models:
+            revert_key = await revert_service.record(*revert_models, only_commit=True)
+            activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
+            return activity_result, revert_key
+        return None
 
     @overload
-    async def withdraw_group(self, project: Project, group: Group, commit: bool = True) -> None: ...
+    async def withdraw_group(self, user: User, project: Project, group: Group) -> str | None: ...
     @overload
-    async def withdraw_group(self, project: Project, group: int, commit: bool = True) -> None: ...
+    async def withdraw_group(self, user: User, project: Project, group: int) -> str | None: ...
     @overload
-    async def withdraw_group(self, project: int, group: int, commit: bool = True) -> None: ...
+    async def withdraw_group(self, user: User, project: int, group: int) -> str | None: ...
     @overload
-    async def withdraw_group(self, project: int, group: Group, commit: bool = True) -> None: ...
-    async def withdraw_group(self, project: Project | int, group: Group | int, commit: bool = True) -> None:
-        project_id = project.id if isinstance(project, Project) else project
-        group_id = group.id if isinstance(group, Group) else group
-
-        if not project_id or not group_id:
-            raise ValueError("Project or group not found")
+    async def withdraw_group(self, user: User, project: int, group: Group) -> str | None: ...
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedGroup)
+    async def withdraw_group(
+        self, user: User, project: Project | int, group: Group | int
+    ) -> tuple[ActivityResult, str | None] | None:
+        project = cast(Project, await self.get_by_id(project) if isinstance(project, int) else project)
+        group = cast(Group, await self._get_service(GroupService).get_by_id(group)) if isinstance(group, int) else group
+        if not project or not group or not project.id or not group.id:
+            raise ValueError("Project or user not found")
 
         role_service = self._get_service(RoleService)
         role_class = role_service.project._model_class
 
         result = await self._db.exec(
             self._db.query("select")
-            .columns(ProjectAssignedUser.id, role_class.id)
+            .tables(ProjectAssignedUser, role_class)
             .join(User, (ProjectAssignedUser.user_id == User.id) & (User.deleted_at == None))  # type: ignore # noqa
             .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
             .join(
@@ -356,31 +533,45 @@ class ProjectService(BaseService):
                 role_class,
                 (role_class.user_id == User.id) & (role_class.project_id == ProjectAssignedUser.project_id),  # type: ignore
             )
-            .where(GroupAssignedUser.group_id == group_id)
-            .where(ProjectAssignedUser.project_id == project_id)
+            .where(GroupAssignedUser.group_id == group.id)
+            .where(ProjectAssignedUser.project_id == project.id)
         )
         results = result.all()
 
-        assigned_user_ids: list[int] = [
-            assigned_user_id
-            for assigned_user_id, role_id in results
-            if assigned_user_id is not None and role_id is None
+        assigned_users: list[ProjectAssignedUser] = [
+            assigned_user
+            for assigned_user, assigned_role in results
+            if assigned_user is not None and assigned_role is None
         ]
 
-        await role_service.project.withdraw(group_id=group_id, project_id=project_id)
+        role = await role_service.project.withdraw(group_id=group.id, project_id=project.id)
 
-        if not assigned_user_ids:
-            if commit:
-                await self._db.commit()
+        revert_service = self._get_service(RevertService)
+        revert_models = []
+
+        if role:
+            revert_models.append(revert_service.create_record_model(role, RevertType.Insert))
+
+        activity_result_params = {
+            "user_or_bot": user,
+            "model": project,
+            "shared": {"uid": project.uid, "group_id": group.id},
+            "new": {},
+        }
+
+        if not assigned_users:
+            if revert_models:
+                revert_key = await revert_service.record(*revert_models, only_commit=True)
+                activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
+                return activity_result, revert_key
             return
 
-        query = self._db.query("delete").table(ProjectAssignedUser)
+        revert_models.extend(
+            [revert_service.create_record_model(assigned_user, RevertType.Insert) for assigned_user in assigned_users]
+        )
 
-        if len(assigned_user_ids) == 1:
-            query = query.where(ProjectAssignedUser.id == assigned_user_ids[0])  # type: ignore
-        else:
-            query = query.where(ProjectAssignedUser.column("id", int).in_(assigned_user_ids))
-
-        await self._db.exec(query)
-        if commit:
-            await self._db.commit()
+        if revert_models:
+            revert_key = await revert_service.record(*revert_models, only_commit=True)
+            activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
+            return activity_result, revert_key
+        return

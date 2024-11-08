@@ -10,13 +10,13 @@ import { createNameInitials } from "@/core/utils/StringUtils";
 
 export interface IUserAvatarProps {
     user: User.Interface;
-    children: React.ReactNode;
-    align?: "center" | "start" | "end";
+    children?: React.ReactNode;
+    listAlign?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
     className?: string;
 }
 
-function Root({ user, children, align, avatarSize, className }: IUserAvatarProps): JSX.Element {
+function Root({ user, children, listAlign, avatarSize, className }: IUserAvatarProps): JSX.Element {
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
 
@@ -34,6 +34,17 @@ function Root({ user, children, align, avatarSize, className }: IUserAvatarProps
 
     const avatarClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
 
+    if (!children) {
+        return (
+            <Avatar.Root size={avatarSize} className={cn("relative", className)}>
+                <Avatar.Image src={user.avatar} />
+                <Avatar.Fallback className={avatarClassNames} style={styles}>
+                    {initials}
+                </Avatar.Fallback>
+            </Avatar.Root>
+        );
+    }
+
     return (
         <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
             <HoverCard.Trigger asChild>
@@ -48,7 +59,7 @@ function Root({ user, children, align, avatarSize, className }: IUserAvatarProps
                     </Avatar.Fallback>
                 </Avatar.Root>
             </HoverCard.Trigger>
-            <HoverCard.Content className="w-60 border-none bg-background p-0 xs:w-72" align={align}>
+            <HoverCard.Content className="z-50 w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
                 <Card.Root className="relative">
                     <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">

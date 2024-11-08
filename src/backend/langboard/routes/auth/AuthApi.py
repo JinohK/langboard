@@ -67,13 +67,7 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
 @AppRouter.api.get("/auth/me")
 @AuthFilter.add
 async def about_me(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
-    response = user.model_dump()
-    response.pop("password")
-    response.pop("deleted_at")
-    response.pop("updated_at")
-
-    if user.avatar:
-        response["avatar"] = user.avatar.path
+    response = user.api_response()
 
     response["groups"] = await service.user.get_assigned_group_names(user)
     response["subemails"] = await service.user.get_subemails(user)

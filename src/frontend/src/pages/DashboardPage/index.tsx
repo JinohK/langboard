@@ -9,11 +9,13 @@ import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import TasksPage from "@/pages/DashboardPage/TasksPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
 import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
+import MyActivityDialog from "@/pages/DashboardPage/components/MyActivityDialog";
 
 function DashboardPage(): JSX.Element {
     const navigate = useNavigate();
     const location = useLocation();
-    const [projectFormOpened, setProjectFormOpened] = useState(false);
+    const [projectFormOpened, setProjectFormOpened] = useState(location.pathname.endsWith("/newproject"));
+    const [activityOpened, setActivityOpened] = useState(location.pathname.endsWith("/myactivity"));
     const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
 
     const headerNavs: Record<string, IHeaderNavItem> = {
@@ -54,6 +56,7 @@ function DashboardPage(): JSX.Element {
             icon: "plus",
             name: "dashboard.Create New Project",
             onClick: () => {
+                navigate(`${location.pathname}/newproject`);
                 setProjectFormOpened(true);
             },
         },
@@ -61,12 +64,13 @@ function DashboardPage(): JSX.Element {
             icon: "history",
             name: "dashboard.My Activity",
             onClick: () => {
-                // TODO: Activity, Implementing navigation to activity
+                navigate(`${location.pathname}/myactivity`);
+                setActivityOpened(true);
             },
         },
     ];
 
-    const pathname: string = location.pathname;
+    const pathname: string = location.pathname.replace(/\/newproject$/, "").replace(/\/myactivity$/, "");
 
     if (pathname.startsWith(ROUTES.DASHBOARD.PROJECTS.ROUTE)) {
         headerNavs[ROUTES.DASHBOARD.ROUTE].active = true;
@@ -99,7 +103,24 @@ function DashboardPage(): JSX.Element {
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs}>
             {pageContent}
-            <CreateProjectFormDialog opened={projectFormOpened} setOpened={setProjectFormOpened} />
+            <CreateProjectFormDialog
+                opened={projectFormOpened}
+                setOpened={(opened: bool) => {
+                    if (!opened) {
+                        navigate(location.pathname.replace(/\/newproject$/, ""));
+                    }
+                    setProjectFormOpened(opened);
+                }}
+            />
+            <MyActivityDialog
+                opened={activityOpened}
+                setOpened={(opened: bool) => {
+                    if (!opened) {
+                        navigate(location.pathname.replace(/\/myactivity$/, ""));
+                    }
+                    setActivityOpened(opened);
+                }}
+            />
         </DashboardStyledLayout>
     );
 }

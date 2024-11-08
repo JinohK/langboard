@@ -6,7 +6,7 @@ from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
 from .Constants import HOST, PORT
-from .core.ai import QueueBot
+from .core.ai.QueueBot import QueueBot
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions

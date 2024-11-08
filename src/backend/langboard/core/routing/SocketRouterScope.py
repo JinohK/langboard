@@ -81,7 +81,7 @@ class SocketRouterScope:
         result = await self._create_scope(req)
         if isinstance(result, AsyncGeneratorType):
             self._generators.append((self.use_cache, result))
-            result = await anext(result)
+            result = await result.__anext__()
         elif isinstance(result, GeneratorType):
             self._generators.append((self.use_cache, result))
             result = next(result)

@@ -1,5 +1,5 @@
 from sqlmodel import Field
-from ..core.db import {base_class}
+from ..core.db import DateTimeField, ModelColumnType, SecretStr, SecretStrType, {base_class}
 
 
 class {class_name}({base_class}, table=True):

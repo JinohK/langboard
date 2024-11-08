@@ -22,6 +22,7 @@ export interface IVirtualInfiniteListProps<T> {
     gap?: number;
     noItemsElement?: JSX.Element;
     virtualizerRef?: React.MutableRefObject<Virtualizer<HTMLElement, Element> | null>;
+    loader?: JSX.Element;
 }
 
 const measureElementHeight = (list: HTMLElement, className: string | undefined, element: JSX.Element) => {
@@ -73,12 +74,15 @@ function VirtualInfiniteList<T>({
     gap = 0,
     noItemsElement,
     virtualizerRef,
+    loader,
 }: IVirtualInfiniteListProps<T>) {
     const isLoading = useRef(false);
-    const loader = useRef(
-        <div className="my-3 flex justify-center" key={createShortUUID()}>
-            <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
-        </div>
+    const loaderRef = useRef(
+        loader ?? (
+            <div className="my-3 flex justify-center" key={createShortUUID()}>
+                <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
+            </div>
+        )
     );
 
     if (isReverse && scrollable()) {
@@ -96,7 +100,7 @@ function VirtualInfiniteList<T>({
 
             const isLoader = i !== 0 && !items[i];
 
-            return measureElementHeight(scrollElement, className, isLoader ? loader.current : createItem(items[i]));
+            return measureElementHeight(scrollElement, className, isLoader ? loaderRef.current : createItem(items[i]));
         },
         overscan,
     });
@@ -193,7 +197,7 @@ function VirtualInfiniteList<T>({
                                 data-index={row.index}
                                 ref={virtualizer.measureElement}
                             >
-                                {isLoader && hasNextPage ? loader.current : createItem(item)}
+                                {isLoader && hasNextPage ? loaderRef.current : createItem(item)}
                             </div>
                         );
                     })}

@@ -67,16 +67,18 @@ def create_model_py(name: str, code: str) -> None:
     update_init_py(target_dir, init_path)
 
 
-def create_service_py(name: str, code: str, is_role: bool) -> None:
+def create_service_py(name: str, code: str, factory: tuple[str, str] | None = None) -> None:
     target_dir = BASE_DIR / "services" / "factory"
-    if is_role:
-        target_dir = target_dir / "roles"
+    if factory:
+        target_dir = target_dir / factory[0]
 
-    class_name = f"{name}RoleService" if is_role else f"{name}Service"
+    class_name = f"{name}{factory[1]}Service" if factory else f"{name}Service"
     save_path = target_dir / f"{class_name}.py"
     init_path = target_dir / "__init__.py"
     main_service = (
-        (BASE_DIR / "services" / "factory" / "RoleService.py") if is_role else (BASE_DIR / "services" / "Service.py")
+        (BASE_DIR / "services" / "factory" / f"{factory[1]}Service.py")
+        if factory
+        else (BASE_DIR / "services" / "Service.py")
     )
 
     target_dir.mkdir(parents=True, exist_ok=True)

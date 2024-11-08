@@ -138,7 +138,7 @@ class SocketApp(dict):
 
         await self._run_events(user_data["route_path"], SocketDefaultEvent.Drain, req)
 
-    async def on_subscription(self, ws: SocketifyWebSocket, topic: str, **kwargs) -> None:
+    async def on_subscription(self, ws: SocketifyWebSocket, topic: str, subscriptions, subscriptions_before) -> None:
         user_data = ws.get_user_data()
         if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
@@ -151,7 +151,10 @@ class SocketApp(dict):
             ws,
             user_data,
             {"topic": topic},
-            from_app=kwargs,
+            from_app={
+                "subscriptions": subscriptions,
+                "subscriptions_before": subscriptions_before,
+            },
         )
 
         await self._run_events(user_data["route_path"], SocketDefaultEvent.Subscription, req)

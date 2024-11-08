@@ -1,6 +1,6 @@
 from ...core.ai import BotRunner, BotType
 from ...core.filter import RoleFilter
-from ...core.routing import AppRouter, SocketResponse, WebSocket
+from ...core.routing import AppRouter, SocketDefaultEvent, SocketResponse, WebSocket
 from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
@@ -9,6 +9,17 @@ from .RoleFinder import project_role_finder
 
 
 AppRouter.socket.use_path("/board/{project_uid}")
+
+
+@AppRouter.socket.on(SocketDefaultEvent.Open)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+def board_open(ws: WebSocket, project_uid: str):
+    ws.subscribe(f"board:{project_uid}")
+
+
+@AppRouter.socket.on(SocketDefaultEvent.Close)
+def board_close(ws: WebSocket, project_uid: str):
+    ws.unsubscribe(f"board:{project_uid}")
 
 
 @AppRouter.socket.on("chat:available")
@@ -46,3 +57,10 @@ async def project_chat(
             ws_stream.buffer(data={"uid": ai_message.uid, "message": ai_message.message})
     await service.chat_history.update(ai_message)
     ws_stream.end(data={"uid": ai_message.uid, "message": ai_message.message})
+
+
+@AppRouter.socket.on("task:order:changed")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+async def task_order_changed(ws: WebSocket, project_uid: str, column_uids: list):
+    for column_uid in column_uids:
+        ws.publish(topic=f"board:{project_uid}", event_response=f"task:order:changed:{column_uid}", data={})

@@ -6,6 +6,7 @@ export { default as Button, ButtonVariants, type ButtonProps } from "@/component
 export { default as Calendar, type CalendarProps } from "@/components/base/Calendar";
 export * as Card from "@/components/base/Card";
 export { default as Checkbox } from "@/components/base/Checkbox";
+export * as Collapsible from "@/components/base/Collapsible";
 export * as Command from "@/components/base/Command";
 export * as ContextMenu from "@/components/base/ContextMenu";
 export * as Dialog from "@/components/base/Dialog";
@@ -23,6 +24,7 @@ export * as Menubar from "@/components/base/Menubar";
 export * as NavigationMenu from "@/components/base/NavigationMenu";
 export * as Popover from "@/components/base/Popover";
 export { default as Progress } from "@/components/base/Progress";
+export * as ScrollArea from "@/components/base/ScrollArea";
 export * as Select from "@/components/base/Select";
 export { default as Separator } from "@/components/base/Separator";
 export * as Sheet from "@/components/base/Sheet";

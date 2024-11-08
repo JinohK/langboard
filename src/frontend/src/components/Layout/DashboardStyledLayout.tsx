@@ -4,12 +4,15 @@ import { IHeaderNavItem } from "@/components/Header/types";
 import ResizableSidebar, { IResizableSidebarProps } from "@/components/ResizableSidebar";
 import Sidebar from "@/components/Sidebar";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
+import { cn } from "@/core/utils/ComponentUtils";
+import { ScrollArea } from "@/components/base";
 
 interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;
     headerNavs?: IHeaderNavItem[];
     sidebarNavs?: ISidebarNavItem[];
     resizableSidebar?: Omit<IResizableSidebarProps, "main">;
+    noPadding?: bool;
 }
 
 interface ISidebarDashboardStyledLayoutProps extends IBaseDashboardStyledLayoutProps {
@@ -28,11 +31,11 @@ export type TDashboardStyledLayoutProps =
     | IBaseDashboardStyledLayoutProps;
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
-    ({ children, headerNavs, sidebarNavs, resizableSidebar, ...props }, ref) => {
+    ({ children, headerNavs, sidebarNavs, resizableSidebar, noPadding, ...props }, ref) => {
         const main = (
-            <main id="main" className="relative size-full overflow-y-auto p-4 md:p-6 lg:p-8">
-                {children}
-            </main>
+            <ScrollArea.Root viewportId="main" className="relative size-full overflow-y-auto">
+                <main className={cn("relative size-full overflow-y-auto", noPadding ? "" : "p-4 md:p-6 lg:p-8")}>{children}</main>
+            </ScrollArea.Root>
         );
 
         let sidebar;

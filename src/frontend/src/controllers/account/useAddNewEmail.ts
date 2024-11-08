@@ -6,7 +6,7 @@ import { ROUTES } from "@/core/routing/constants";
 export interface IAddNewEmailForm {
     new_email: string;
     lang: string;
-    is_resend?: boolean;
+    is_resend?: bool;
 }
 
 export const SUB_EMAIL_VERIFY_TOKEN_QUERY_NAME = "bEvt";

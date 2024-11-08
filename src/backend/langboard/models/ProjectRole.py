@@ -5,10 +5,13 @@ from .Project import Project
 
 
 class ProjectRoleAction(Enum):
-    Read = "read"
+    Read = "read"  # included task_read
     Write = "write"
     Update = "update"
     Delete = "delete"
+    TaskWrite = "task_write"
+    TaskUpdate = "task_update"
+    TaskDelete = "task_delete"
 
 
 class ProjectRole(BaseRoleModel, table=True):

@@ -25,6 +25,9 @@ export const API_ROUTES = {
             VERIFY: "/account/email/verify",
         },
     },
+    ACTIVITIY: {
+        USER: "/activity/user",
+    },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",
         PROJECTS: "/dashboard/projects",
@@ -35,6 +38,8 @@ export const API_ROUTES = {
         IS_AVAILABLE: "/board/{uid}/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
+        GET_COLUMN_TASKS: "/board/{uid}/column/{column_uid}/tasks",
+        CHANGE_TASK_ORDER: "/board/{uid}/task/{task_uid}/order",
     },
     REVERT: (path: string) => `/revert/${path}`,
 } as const;
@@ -48,6 +53,7 @@ export const SOCKET_SERVER_EVENTS = {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SENT: "chat:sent",
         CHAT_STREAM: "chat:stream",
+        TASK_ORDER_CHANGED: "task:order:changed:{column_uid}",
     },
 } as const;
 
@@ -55,5 +61,6 @@ export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SEND: "chat:send",
+        TASK_ORDER_CHANGED: "task:order:changed",
     },
 } as const;

@@ -29,7 +29,7 @@ const FORM_NAME = "Form";
 
 type ValidityMap = { [fieldName: string]: ValidityState | undefined };
 type CustomMatcherEntriesMap = { [fieldName: string]: CustomMatcherEntry[] };
-type CustomErrorsMap = { [fieldName: string]: Record<string, boolean> };
+type CustomErrorsMap = { [fieldName: string]: Record<string, bool> };
 
 type ValidationContextValue = {
     getFieldValidity(fieldName: string): ValidityState | undefined;
@@ -39,8 +39,8 @@ type ValidationContextValue = {
     onFieldCustomMatcherEntryAdd(fieldName: string, matcherEntry: CustomMatcherEntry): void;
     onFieldCustomMatcherEntryRemove(fieldName: string, matcherEntryId: string): void;
 
-    getFieldCustomErrors(fieldName: string): Record<string, boolean>;
-    onFieldCustomErrorsChange(fieldName: string, errors: Record<string, boolean>): void;
+    getFieldCustomErrors(fieldName: string): Record<string, bool>;
+    onFieldCustomErrorsChange(fieldName: string, errors: Record<string, bool>): void;
 
     onFieldValiditionClear(fieldName: string): void;
 };
@@ -189,7 +189,7 @@ const FIELD_NAME = "FormField";
 type FormFieldContextValue = {
     id: string;
     name: string;
-    serverInvalid: boolean;
+    serverInvalid: bool;
 };
 const [FormFieldProvider, useFormFieldContext] = createFormContext<FormFieldContextValue>(FIELD_NAME);
 
@@ -197,7 +197,7 @@ type FormFieldElement = React.ElementRef<typeof Primitive.div>;
 type PrimitiveDivProps = React.ComponentPropsWithoutRef<typeof Primitive.div>;
 interface FormFieldProps extends PrimitiveDivProps {
     name: string;
-    serverInvalid?: boolean;
+    serverInvalid?: bool;
 }
 
 const FormField = React.forwardRef<FormFieldElement, FormFieldProps>((props: ScopedProps<FormFieldProps>, forwardedRef) => {
@@ -441,7 +441,7 @@ const MESSAGE_NAME = "FormMessage";
 type FormMessageElement = FormMessageImplElement;
 interface FormMessageProps extends Omit<FormMessageImplProps, "name"> {
     match?: ValidityMatcher | CustomMatcher;
-    forceMatch?: boolean;
+    forceMatch?: bool;
     name?: string;
 }
 
@@ -468,7 +468,7 @@ FormMessage.displayName = MESSAGE_NAME;
 type FormBuiltInMessageElement = FormMessageImplElement;
 interface FormBuiltInMessageProps extends FormMessageImplProps {
     match: ValidityMatcher;
-    forceMatch?: boolean;
+    forceMatch?: bool;
     name: string;
 }
 
@@ -494,7 +494,7 @@ const FormBuiltInMessage = React.forwardRef<FormBuiltInMessageElement, FormBuilt
 type FormCustomMessageElement = React.ElementRef<typeof FormMessageImpl>;
 interface FormCustomMessageProps extends React.ComponentPropsWithoutRef<typeof FormMessageImpl> {
     match: CustomMatcher;
-    forceMatch?: boolean;
+    forceMatch?: bool;
     name: string;
 }
 
@@ -594,8 +594,8 @@ FormSubmit.displayName = SUBMIT_NAME;
 /* -----------------------------------------------------------------------------------------------*/
 
 type ValidityStateKey = keyof ValidityState;
-type SyncCustomMatcher = (value: string, formData: FormData) => boolean;
-type AsyncCustomMatcher = (value: string, formData: FormData) => Promise<boolean>;
+type SyncCustomMatcher = (value: string, formData: FormData) => bool;
+type AsyncCustomMatcher = (value: string, formData: FormData) => Promise<bool>;
 type CustomMatcher = SyncCustomMatcher | AsyncCustomMatcher;
 type CustomMatcherEntry = { id: string; match: CustomMatcher };
 type SyncCustomMatcherEntry = { id: string; match: SyncCustomMatcher };
@@ -607,7 +607,7 @@ function validityStateToObject(validity: ValidityState) {
     for (const key in validity) {
         object[key] = validity[key as ValidityStateKey];
     }
-    return object as Record<ValidityStateKey, boolean>;
+    return object as Record<ValidityStateKey, bool>;
 }
 
 function isHTMLElement(element: any): element is HTMLElement {
@@ -652,11 +652,11 @@ function hasBuiltInError(validity: ValidityState) {
     return error;
 }
 
-function getValidAttribute(validity: ValidityState | undefined, serverInvalid: boolean) {
+function getValidAttribute(validity: ValidityState | undefined, serverInvalid: bool) {
     if (validity?.valid === true && !serverInvalid) return true;
     return undefined;
 }
-function getInvalidAttribute(validity: ValidityState | undefined, serverInvalid: boolean) {
+function getInvalidAttribute(validity: ValidityState | undefined, serverInvalid: bool) {
     if (validity?.valid === false || serverInvalid) return true;
     return undefined;
 }

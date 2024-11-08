@@ -37,7 +37,7 @@ const isArray: <T>(value: unknown) => value is T[] = isType("array");
 const isNumber: (value: unknown) => value is number = isType("number");
 const isObject: (value: unknown) => value is object = isType("object");
 const isString: (value: unknown) => value is string = isType("string");
-const isBool: (value: unknown) => value is bool = isType("boolean");
+const isBool: (value: unknown) => value is bool = isType("bool");
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isFunction: <TFunc extends (...args: any) => any>(value: unknown | TFunc) => value is (...params: Parameters<TFunc>) => ReturnType<TFunc> =
     isType("function");

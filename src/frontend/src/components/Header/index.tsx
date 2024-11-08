@@ -73,7 +73,7 @@ function Header({ navs }: IHeaderProps) {
                         {separator}
                         <UserAvatar.Root
                             user={aboutMe()!}
-                            align="end"
+                            listAlign="end"
                             avatarSize={{
                                 initial: "sm",
                                 md: "default",

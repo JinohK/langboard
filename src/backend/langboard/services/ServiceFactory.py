@@ -17,4 +17,4 @@ class ServiceFactory(ABC):
         if service_name not in self._serivces:
             self._serivces[service_name] = service(self._create_or_get_service, self._db)
 
-        return self._serivces[service_name]
+        return self._serivces[service_name]  # type: ignore

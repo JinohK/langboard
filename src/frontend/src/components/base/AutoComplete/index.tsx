@@ -1,11 +1,11 @@
 import { Command as CommandPrimitive } from "cmdk";
-import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import * as Command from "@/components/base/Command";
 import Input from "@/components/base/Input";
 import * as Popover from "@/components/base/Popover";
 import Skeleton from "@/components/base/Skeleton";
 import { cn } from "@/core/utils/ComponentUtils";
+import IconComponent from "@/components/base/IconComponent";
 
 type Props = {
     selectedValue: string;
@@ -101,7 +101,11 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                                             onMouseDown={(e) => e.preventDefault()}
                                             onSelect={onSelectItem}
                                         >
-                                            <Check className={cn("mr-2 h-4 w-4", currentValue === option.value ? "opacity-100" : "opacity-0")} />
+                                            <IconComponent
+                                                icon="check"
+                                                size="4"
+                                                className={cn("mr-2", currentValue === option.value ? "opacity-100" : "opacity-0")}
+                                            />
                                             {option.label}
                                         </Command.Item>
                                     ))}
