@@ -26,13 +26,7 @@ function Header({ navs }: IHeaderProps) {
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
             <Flex
-                direction={{
-                    initial: "col",
-                    md: "row",
-                }}
-                items={{
-                    md: "center",
-                }}
+                items="center"
                 gap={{
                     initial: "6",
                     md: "5",
