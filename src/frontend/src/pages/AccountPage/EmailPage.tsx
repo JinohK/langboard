@@ -4,6 +4,7 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import AddSubEmailForm from "@/pages/AccountPage/components/AddSubEmailForm";
 import EmailList from "@/pages/AccountPage/components/EmailList";
 import PrimaryEmailForm from "@/pages/AccountPage/components/PrimaryEmailForm";
+import { Flex } from "@/components/base";
 
 function EmailPage(): JSX.Element {
     const [t] = useTranslation();
@@ -40,11 +41,11 @@ function EmailPage(): JSX.Element {
     return (
         <>
             <h2 className="mb-11 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Emails")}</h2>
-            <div className="flex flex-col gap-6">
+            <Flex direction="col" gap="6">
                 <EmailList updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
                 <AddSubEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
                 <PrimaryEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
-            </div>
+            </Flex>
         </>
     );
 }

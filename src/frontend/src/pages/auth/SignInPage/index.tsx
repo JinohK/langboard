@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
 import { ROUTES } from "@/core/routing/constants";
-import { cn } from "@/core/utils/ComponentUtils";
 import { generateToken } from "@/core/utils/StringUtils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
+import { Flex } from "@/components/base";
 
 function SignInPage(): JSX.Element {
     const navigate = useNavigate();
@@ -79,7 +79,7 @@ function SignInPage(): JSX.Element {
 
     return (
         <FormOnlyLayout size="default" useLogo>
-            <div className={cn("flex", wrapperClassName)}>{form}</div>
+            <Flex className={wrapperClassName}>{form}</Flex>
         </FormOnlyLayout>
     );
 }

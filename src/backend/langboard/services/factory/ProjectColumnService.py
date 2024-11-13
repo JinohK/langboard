@@ -1,8 +1,13 @@
-from typing import Any
-from sqlalchemy import func
-from ...core.schema.Pagination import Pagination
-from ...models import Project, ProjectColumn, Task, TaskAssignedUser, TaskComment, User
+from typing import cast
+from ...models import (
+    Project,
+    ProjectActivity,
+    ProjectColumn,
+    Task,
+    User,
+)
 from ..BaseService import BaseService
+from .ActivityService import ActivityResult, ActivityService
 
 
 class ProjectColumnService(BaseService):
@@ -11,53 +16,75 @@ class ProjectColumnService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project_column"
 
-    async def get_board_tasks(self, project_uid: str, column_uid: str, pagination: Pagination) -> list[dict[str, Any]]:
-        sql_query = (
-            self._db.query("select")
-            .columns(
-                Task.id, Task.uid, Task.title, Task.order, func.count(TaskComment.column("id")).label("comment_count")
-            )
-            .join(Project, Task.column("project_id") == Project.column("id"))
-            .where(Project.column("uid") == project_uid)
-        )
-
+    async def count_tasks(self, project_id: int, column_uid: str) -> int:
+        sql_query = self._db.query("select").count(Task, Task.id).where(Task.column("project_id") == project_id)
         if column_uid == Project.ARCHIVE_COLUMN_UID:
             sql_query = sql_query.where(Task.column("archived_at") != None)  # noqa
         else:
-            sql_query = sql_query.join(
-                ProjectColumn, Task.column("project_column_uid") == ProjectColumn.column("uid")
-            ).where(ProjectColumn.column("uid") == column_uid)
-
-        sql_query = sql_query.outerjoin(TaskComment, Task.column("id") == TaskComment.column("task_id"))
-
-        sql_query = sql_query.order_by(Task.column("order").asc()).group_by(Task.column("order"))
-        sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
-
+            sql_query = sql_query.where(Task.column("project_column_uid") == column_uid)
         result = await self._db.exec(sql_query)
-        raw_tasks = result.all()
+        count = cast(int, result.one())
+        return count
 
-        tasks = []
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.TaskChangedColumn)
+    async def change_column_order(
+        self, user: User, project_uid: str, column_uid: str, order: int
+    ) -> tuple[ActivityResult | None, bool]:
+        result = await self._db.exec(
+            self._db.query("select").table(Project).where(Project.column("uid") == project_uid).limit(1)
+        )
+        project = result.first()
+        if not project:
+            return None, False
 
-        for id, uid, title, order, comment_count in raw_tasks:
-            sql_query = (
-                self._db.query("select")
-                .table(User)
-                .join(TaskAssignedUser, User.column("id") == TaskAssignedUser.column("user_id"))
-                .where(TaskAssignedUser.column("task_id") == id)
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectColumn)
+            .where(ProjectColumn.column("project_id") == project.id)
+            .order_by(ProjectColumn.column("order").asc())
+            .group_by(ProjectColumn.column("order"))
+        )
+        columns: list[Project | ProjectColumn] = list(result.all())
+        columns.insert(project.archive_column_order, project)
+
+        if column_uid == Project.ARCHIVE_COLUMN_UID:
+            original_column_order = project.archive_column_order
+            target_column = columns.pop(project.archive_column_order)
+        else:
+            target_column = None
+            for column in columns:
+                if column.uid == column_uid:
+                    target_column = column
+                    columns.remove(column)
+                    break
+            if not target_column:
+                return None, False
+            original_column_order = (
+                target_column.order if isinstance(target_column, ProjectColumn) else project.archive_column_order
             )
 
-            result = await self._db.exec(sql_query)
-            raw_users = result.all()
+        columns.insert(order, target_column)
 
-            tasks.append(
-                {
-                    "uid": uid,
-                    "column_uid": column_uid,
-                    "title": title,
-                    "order": order,
-                    "comment_count": comment_count,
-                    "members": [user.api_response() for user in raw_users],
-                }
-            )
+        for i, column in enumerate(columns):
+            if isinstance(column, Project):
+                column.archive_column_order = i
+            else:
+                column.order = i
+            await self._db.update(column)
 
-        return tasks
+        activity_result = ActivityResult(
+            user_or_bot=user,
+            model=project,
+            shared={
+                "project_uid": project.uid,
+                "column_uid": column_uid,
+            },
+            new={
+                "column_order": order,
+            },
+            old={
+                "column_order": original_column_order,
+            },
+        )
+
+        return activity_result, True

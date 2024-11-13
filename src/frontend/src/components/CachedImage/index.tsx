@@ -2,26 +2,12 @@ import { forwardRef, memo, useEffect, useState } from "react";
 import { VariantProps, tv } from "tailwind-variants";
 import { Skeleton, SuspenseComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
+import { DimensionMap } from "@/core/utils/VariantUtils";
 
 const CachedImageVariants = tv(
     {
         variants: {
-            size: {
-                "1": "size-1",
-                "2": "size-2",
-                "3": "size-3",
-                "4": "size-4",
-                "5": "size-5",
-                "6": "size-6",
-                "7": "size-7",
-                "8": "size-8",
-                "9": "size-9",
-                "10": "size-10",
-                "11": "size-11",
-                "12": "size-12",
-                "14": "size-14",
-                full: "size-full",
-            },
+            size: DimensionMap.all,
         },
         defaultVariants: {
             size: undefined,

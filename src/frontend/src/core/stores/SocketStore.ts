@@ -37,6 +37,22 @@ const useSocketStore = create<ISocketStore>(() => {
         } else {
             sockets[path] = { socket, events: {}, sendingQueue: [] };
         }
+
+        const ping = () => {
+            if (socket.readyState === WebSocket.CONNECTING) {
+                setTimeout(ping, 3000);
+                return;
+            }
+
+            if (socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            socket.send("");
+            setTimeout(ping, 20000);
+        };
+
+        ping();
     };
 
     const sendQueue = (map: ISocketMap) => {

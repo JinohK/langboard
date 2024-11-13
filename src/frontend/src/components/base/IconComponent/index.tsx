@@ -1,30 +1,16 @@
 import { icons } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
-import { ComponentPropsWithoutRef, ElementRef, ElementType, ForwardRefExoticComponent, RefAttributes, SVGProps, forwardRef, lazy, memo } from "react";
+import { forwardRef, lazy, memo } from "react";
 import Flag from "react-flagkit";
 import { VariantProps, tv } from "tailwind-variants";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
 import { cn } from "@/core/utils/ComponentUtils";
+import { DimensionMap } from "@/core/utils/VariantUtils";
 
 export const IconVariants = tv(
     {
         variants: {
-            size: {
-                "1": "size-1",
-                "2": "size-2",
-                "3": "size-3",
-                "4": "size-4",
-                "5": "size-5",
-                "6": "size-6",
-                "7": "size-7",
-                "8": "size-8",
-                "9": "size-9",
-                "10": "size-10",
-                "11": "size-11",
-                "12": "size-12",
-                "14": "size-14",
-                full: "size-full",
-            },
+            size: DimensionMap.all,
         },
         defaultVariants: {
             size: undefined,
@@ -35,30 +21,40 @@ export const IconVariants = tv(
     }
 );
 
-type SVGAttributes = Partial<SVGProps<SVGSVGElement>>;
-type ElementAttributes = RefAttributes<SVGSVGElement> & SVGAttributes;
-interface IIconProps extends ElementAttributes, VariantProps<typeof IconVariants> {
-    icon: string;
+type TSVGElementAttributes = React.RefAttributes<SVGSVGElement> & Partial<React.SVGProps<SVGSVGElement>>;
+type TImageElementAttributes = React.RefAttributes<HTMLImageElement> & React.HTMLAttributes<HTMLImageElement>;
+
+interface ICountryIconProps extends TImageElementAttributes, VariantProps<typeof IconVariants> {
+    icon: `country-${string}`;
 }
-type TIconProps = ForwardRefExoticComponent<IIconProps & RefAttributes<SVGSVGElement>>;
+
+interface ILucideIconProps extends TSVGElementAttributes, VariantProps<typeof IconVariants> {
+    icon: keyof typeof dynamicIconImports | (string & {});
+}
+
+export type TIconProps = React.ForwardRefExoticComponent<ICountryIconProps> | React.ForwardRefExoticComponent<ILucideIconProps>;
+
+export type TIconName = ICountryIconProps["icon"] | ILucideIconProps["icon"];
 
 const IconComponent = memo(
-    forwardRef<ElementRef<TIconProps>, ComponentPropsWithoutRef<TIconProps>>(({ icon, size, className, stroke, strokeWidth, id, ...props }, ref) => {
+    forwardRef<React.ElementRef<TIconProps>, React.ComponentPropsWithoutRef<TIconProps>>(({ icon, size, className, id, ...props }, ref) => {
         if (size) {
             className = cn(IconVariants({ size }), className ?? "");
         }
 
-        if (icon.includes("flag-")) {
-            const country = icon.split("flag-").pop();
+        const isCountryIcon = (name: string): name is `country-${string}` => name.startsWith("country-");
+
+        if (isCountryIcon(icon)) {
+            const country = icon.split("country-").pop();
 
             return (
                 <SuspenseComponent className={className}>
-                    <Flag country={country} className={className} id={id} />
+                    <Flag country={country} className={className} id={id} {...(props as React.HTMLAttributes<HTMLImageElement>)} />
                 </SuspenseComponent>
             );
         }
 
-        let TargetIcon: ElementType = icons[icon as keyof typeof icons];
+        let TargetIcon: React.ElementType = icons[icon as keyof typeof icons];
         if (!TargetIcon) {
             const dynamicIcon = dynamicIconImports[icon as keyof typeof dynamicIconImports];
             if (dynamicIcon) {
@@ -70,13 +66,9 @@ const IconComponent = memo(
             return null;
         }
 
-        const style = {
-            ...(stroke && { stroke: stroke }),
-        };
-
         return (
             <SuspenseComponent className={className}>
-                <TargetIcon className={className} strokeWidth={strokeWidth} style={style} ref={ref} id={id} {...props} />
+                <TargetIcon className={className} ref={ref} id={id} {...props} />
             </SuspenseComponent>
         );
     })

@@ -97,7 +97,7 @@ def extract_func_param(
     [Callable[Concatenate[Any, Any, Any, Any, Any, Any, Any, Any, Any, _TParams], Any]],
     Callable[[Callable[..., _TReturn]], _Func[_TParams, _TReturn]],
 ]: ...
-def extract_func_param(  # type: ignore
+def extract_func_param(
     exclude_length: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] = 0,
 ) -> Callable[[Callable[..., Any]], Callable[[Callable[..., _TReturn]], _Func[_TParams, _TReturn]]]:
     """Provides a decorator for a model class method that provides type hints for the method's parameters and return value.

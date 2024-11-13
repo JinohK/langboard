@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Button, Card, IconComponent, Toast } from "@/components/base";
+import { Avatar, Button, Card, Flex, IconComponent, Toast } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -115,22 +115,22 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                         }
 
                         return (
-                            <div key={key} className="border-card-border flex items-center justify-between border-b py-4">
+                            <Flex items="center" justify="between" py="4" key={key} className="border-card-border border-b">
                                 <p className="text-sm text-muted-foreground">{t(`user.${new StringCase(key).toPascal()}`)}</p>
                                 <p className="text-sm">{translate(key, value)}</p>
-                            </div>
+                            </Flex>
                         );
                     })}
                 </Card.Content>
             </Card.Root>
-            <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">
+            <Flex items="center" justify={{ initial: "between", xs: "end" }} gap="8" mt="16">
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.OPTIONAL)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
                 <Button type="button" onClick={() => handleSubmit({ ...values, lang: i18n.language })} disabled={isValidating}>
                     {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("signUp.Sign up")}
                 </Button>
-            </div>
+            </Flex>
         </>
     );
 }

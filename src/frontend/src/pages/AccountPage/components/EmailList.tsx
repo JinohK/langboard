@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
 import SubmitButton from "@/components/SubmitButton";
-import { Badge, Card, IconComponent, Separator, Skeleton, Toast } from "@/components/base";
+import { Badge, Card, Flex, IconComponent, Separator, Skeleton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/account/useAddNewEmail";
 import useDeleteSubEmail from "@/controllers/account/useDeleteSubEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -15,18 +15,18 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
 
     const skeletonEmails = (
         <>
-            <div className="flex gap-3 p-3">
+            <Flex gap="3" p="3">
                 <Skeleton className="h-6 w-16" />
                 <Skeleton className="h-6 w-1/3" />
-            </div>
+            </Flex>
             <Separator />
-            <div className="flex items-center justify-between p-3">
-                <div className="flex w-full gap-3">
+            <Flex items="center" justify="between" p="3">
+                <Flex gap="3" w="full">
                     <Skeleton className="h-6 w-16" />
                     <Skeleton className="h-6 w-1/3" />
-                </div>
+                </Flex>
                 <Skeleton className="size-8" />
-            </div>
+            </Flex>
         </>
     );
 
@@ -99,20 +99,20 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
             <Card.Content className="p-0">
                 {!user && skeletonEmails}
                 {user && (
-                    <div className="flex gap-3 p-3">
+                    <Flex gap="3" p="3">
                         <Badge>{t("myAccount.Primary")}</Badge>
                         <span>{user.email}</span>
-                    </div>
+                    </Flex>
                 )}
                 {user?.subemails.map((subEmail) => (
                     <Fragment key={`email-list-${subEmail.email}`}>
                         <Separator />
-                        <div className="flex items-center justify-between p-3">
-                            <div className="flex gap-3">
+                        <Flex items="center" justify="between" p="3">
+                            <Flex gap="3">
                                 <Badge variant="secondary">{t(`myAccount.${subEmail.verified_at ? "Sub" : "Unverified"}`)}</Badge>
                                 <span>{subEmail.email}</span>
-                            </div>
-                            <div className="flex gap-3">
+                            </Flex>
+                            <Flex gap="3">
                                 {!subEmail.verified_at && (
                                     <SubmitButton
                                         type="button"
@@ -135,8 +135,8 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
                                 >
                                     <IconComponent icon="trash-2" size="4" />
                                 </SubmitButton>
-                            </div>
-                        </div>
+                            </Flex>
+                        </Flex>
                     </Fragment>
                 ))}
             </Card.Content>

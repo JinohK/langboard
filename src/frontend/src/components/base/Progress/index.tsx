@@ -3,18 +3,18 @@
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
-import { TDimensionSize, heightSizeMap } from "@/core/utils/SizeMap";
+import { TSize, DimensionMap } from "@/core/utils/VariantUtils";
 
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
     indeterminate?: bool;
-    height?: TDimensionSize;
+    height?: TSize;
 }
 
 const Progress = React.forwardRef<React.ElementRef<typeof ProgressPrimitive.Root>, ProgressProps>(
     ({ className, value, indeterminate = false, height = "4", ...props }, ref) => (
         <ProgressPrimitive.Root
             ref={ref}
-            className={cn("relative w-full overflow-hidden rounded-full bg-secondary", heightSizeMap[height], className)}
+            className={cn("relative w-full overflow-hidden rounded-full bg-secondary", DimensionMap.height[height], className)}
             {...props}
         >
             <ProgressPrimitive.Indicator

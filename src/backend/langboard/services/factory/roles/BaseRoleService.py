@@ -117,6 +117,6 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             if arg in filterable_columns and value is not None:
                 query = query.where(getattr(self._model_class, arg) == value)
 
-        result = await self._db.exec(query)
+        result = await self._db.exec(query.limit(1))
         role = result.first()
         return self._model_class(**kwargs) if not role else role

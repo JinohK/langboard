@@ -1,36 +1,56 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
+import { Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
 import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import useToggleStarProject from "@/controllers/dashboard/useToggleStarProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
-import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import { ColorGenerator } from "@/core/utils/ColorUtils";
 
-interface IBaseProjectCardListProps {
-    isSkeleton?: bool;
-    project?: IDashboardProject;
-    refetchAllStarred?: () => Promise<unknown>;
-    refetchProjects?: () => Promise<unknown>;
-}
-
-interface ISkeletonProjectCardListProps extends IBaseProjectCardListProps {
-    isSkeleton: true;
-}
-
-interface IProjectCardProps extends IBaseProjectCardListProps {
-    isSkeleton?: false;
+export interface IProjectCardListProps {
     project: IDashboardProject;
     refetchAllStarred: () => Promise<unknown>;
     refetchProjects: () => Promise<unknown>;
 }
 
-export type TProjectCardProps = IProjectCardProps | ISkeletonProjectCardListProps;
+export const SkeletonProjectCard = memo(() => {
+    const tasks = [];
+    for (let i = 0; i < 6; ++i) {
+        tasks.push({
+            type: null,
+            subtasks: <Skeleton className="inline-block h-3.5 w-3/4" />,
+            color: <Skeleton className="inline-block h-0.5 w-full rounded-full" />,
+        });
+    }
 
-const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProjects }: TProjectCardProps): JSX.Element => {
+    return (
+        <Card.Root className="border-transparent shadow-transparent">
+            <Card.Header className="relative block pt-5">
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
+                    <Skeleton className="inline-block h-3.5 w-1/2" />
+                </Card.Title>
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">
+                    <Skeleton className="inline-block h-4 w-3/4" />
+                </Card.Title>
+                <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block size-9 rounded-md" />
+            </Card.Header>
+            <Card.Content></Card.Content>
+            <Card.Footer className="flex items-center gap-1.5">
+                {tasks.map((task) => (
+                    <Flex direction="col" items="center" gap="0.5" className="min-w-5" key={createShortUUID()}>
+                        {task.subtasks}
+                        {task.color}
+                    </Flex>
+                ))}
+            </Card.Footer>
+        </Card.Root>
+    );
+});
+
+const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProjectCardListProps): JSX.Element => {
     const [t] = useTranslation();
     const navigate = useNavigate();
     const { mutate } = useToggleStarProject();
@@ -52,10 +72,6 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
             },
             {
                 onSuccess: async () => {
-                    if (isSkeleton) {
-                        return;
-                    }
-
                     await Promise.all([refetchAllStarred(), refetchProjects()]);
                 },
                 onError: (error) => {
@@ -82,120 +98,54 @@ const ProjectCard = memo(({ isSkeleton, project, refetchAllStarred, refetchProje
         navigate(ROUTES.BOARD.MAIN(project.uid));
     };
 
-    let cardClassNames = "cursor-pointer";
-    let groupNames;
-    let title;
-    let starBtn;
-    let tasks;
-    if (isSkeleton) {
-        cardClassNames = "border-transparent shadow-transparent";
-        groupNames = <Skeleton className="inline-block h-3.5 w-1/2" />;
-        title = <Skeleton className="inline-block h-4 w-3/4" />;
-        starBtn = <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block size-9 rounded-md" />;
-        tasks = [];
-        for (let i = 0; i < 6; ++i) {
-            tasks.push({
-                type: null,
-                subtasks: <Skeleton className="inline-block h-3.5 w-3/4" />,
-                color: <Skeleton className="inline-block h-0.5 w-full rounded-full" />,
-            });
-        }
-    } else {
-        groupNames = project!.group_names.length ? project!.group_names.join(", ") : <>&nbsp;</>;
-        title = project!.title;
-        starBtn = (
-            <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button
-                            variant={project?.starred ? "default" : "outline"}
-                            className="absolute right-2.5 top-1 mt-0"
-                            size="icon"
-                            onClick={toggleStar}
-                            disabled={isUpdating}
-                        >
-                            {isUpdating ? (
-                                <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
-                            ) : (
-                                <IconComponent icon="star" />
-                            )}
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content side="bottom">
-                        {t(`dashboard.${project?.starred ? "Unstar this project" : "Star this project"}`)}
-                    </Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
-        );
-
-        // TODO: Task, Fix here after implementing task
-        tasks = [
-            {
-                type: "Request",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-blue-500",
-            },
-            {
-                type: "Preparation",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-yellow-500",
-            },
-            {
-                type: "Development",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-green-500",
-            },
-            {
-                type: "Testing",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-pink-500",
-            },
-            {
-                type: "Deployment",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-purple-500",
-            },
-            {
-                type: "Completed",
-                subtasks: Math.floor(Math.random() * 100),
-                color: "bg-gray-500",
-            },
-        ];
-    }
-
     return (
-        <Card.Root className={cardClassNames} onClick={toBoard}>
+        <Card.Root className="cursor-pointer" onClick={toBoard}>
             <Card.Header className="relative block pt-5">
-                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">{groupNames}</Card.Title>
-                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
-                {starBtn}
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
+                    {project.group_names.length ? project.group_names.join(", ") : <>&nbsp;</>}
+                </Card.Title>
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{project.title}</Card.Title>
+                <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <Button
+                                variant={project?.starred ? "default" : "outline"}
+                                className="absolute right-2.5 top-1 mt-0"
+                                size="icon"
+                                onClick={toggleStar}
+                                disabled={isUpdating}
+                            >
+                                {isUpdating ? (
+                                    <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
+                                ) : (
+                                    <IconComponent icon="star" />
+                                )}
+                            </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content side="bottom">
+                            {t(`dashboard.${project?.starred ? "Unstar this project" : "Star this project"}`)}
+                        </Tooltip.Content>
+                    </Tooltip.Root>
+                </Tooltip.Provider>
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
-                {tasks.map((task) => {
-                    if (isSkeleton) {
-                        return (
-                            <div className="flex min-w-5 flex-col items-center gap-0.5" key={createShortUUID()}>
-                                {task.subtasks}
-                                {task.color}
-                            </div>
-                        );
-                    } else {
-                        return (
-                            <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
-                                        <div className="flex min-w-5 flex-col gap-0.5 text-center">
-                                            <span className="text-sm font-semibold">{task.subtasks}</span>
-                                            <div className={cn("inline-block h-0.5 w-full rounded-full", task.color as string)} />
-                                        </div>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content side="bottom">{task.type}</Tooltip.Content>
-                                </Tooltip.Root>
-                            </Tooltip.Provider>
-                        );
-                    }
-                })}
+                {project.columns.map((column) => (
+                    <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                                <Flex direction="col" gap="0.5" className="min-w-5 text-center">
+                                    <span className="text-sm font-semibold">{column.count}</span>
+                                    <div
+                                        className="inline-block h-0.5 w-full rounded-full"
+                                        style={{ background: new ColorGenerator(column.name).generateRandomColor() }}
+                                    />
+                                </Flex>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content side="bottom">{column.name}</Tooltip.Content>
+                        </Tooltip.Root>
+                    </Tooltip.Provider>
+                ))}
             </Card.Footer>
         </Card.Root>
     );

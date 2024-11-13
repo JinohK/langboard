@@ -12,5 +12,8 @@ class ProjectAssignedUser(BaseSqlModel, table=True):
     starred: bool = Field(default=False, nullable=False)
     last_viewed_at: datetime = DateTimeField(default=now, nullable=False)
 
+    def api_response(self):
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["project_id", "user_id", "starred", "last_viewed_at"]

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Form, IconComponent } from "@/components/base";
+import { Flex, Form, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export interface IFormErrorMessageProps {
@@ -14,10 +14,10 @@ function FormErrorMessage({ error, icon, wrapperClassName, messageClassName }: I
 
     return (
         <Form.Message>
-            <div className={cn("mt-1 flex items-center gap-1", wrapperClassName)}>
+            <Flex items="center" gap="1" mt="1" className={wrapperClassName}>
                 {icon && <IconComponent icon={icon} className="text-red-500" size="4" />}
                 <span className={cn("text-sm text-red-500", messageClassName)}>{t(error)}</span>
-            </div>
+            </Flex>
         </Form.Message>
     );
 }

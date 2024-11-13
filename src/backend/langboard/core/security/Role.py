@@ -34,7 +34,7 @@ class Role:
         else:
             query = role_finder(query, path_params)
 
-        result = await self._db.exec(query)
+        result = await self._db.exec(query.limit(1))
         granted_actions = result.first()
 
         # If the user has no direct permissions, check if they have group permissions
@@ -42,7 +42,7 @@ class Role:
             query = (
                 self._db.query("select")
                 .column(self._model_class.actions)
-                .join(GroupAssignedUser, self._model_class.group_id == GroupAssignedUser.group_id)  # type: ignore
+                .join(GroupAssignedUser, self._model_class.column("group_id") == GroupAssignedUser.column("group_id"))
                 .where(GroupAssignedUser.user_id == user_id)
             )
 
@@ -52,7 +52,7 @@ class Role:
             else:
                 query = role_finder(query, path_params)
 
-            result = await self._db.exec(query)
+            result = await self._db.exec(query.limit(1))
             granted_actions = result.first()
 
         if not granted_actions:

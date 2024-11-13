@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { AutoComplete, Button, Form, IconComponent, Input } from "@/components/base";
+import { AutoComplete, Button, Flex, Form, IconComponent, Input } from "@/components/base";
 import { ISignUpForm } from "@/controllers/auth/useSignUp";
 import useForm from "@/core/hooks/form/useForm";
 import { User } from "@/core/models";
@@ -70,14 +70,14 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                 />
                 {errors.purpose && <FormErrorMessage error={errors.purpose} icon="circle-alert" />}
             </Form.Field>
-            <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">
+            <Flex items="center" gap="8" justify={{ initial: "between", xs: "end" }} mt="16">
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.REQUIRED)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
                 <Button type="submit" disabled={isValidating}>
                     {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                 </Button>
-            </div>
+            </Flex>
         </Form.Root>
     );
 }

@@ -29,7 +29,8 @@
     "Internal server error": "Internal server error",
     "Network error": "Network error",
     "Malformed request": "Malformed request",
-    "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later."
+    "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later.",
+    "Server has been temporarily disabled. Please try again later.": "Server has been temporarily disabled. Please try again later."
   },
   "user": {
     "Email": "Email",
@@ -186,7 +187,23 @@
       "project": {
         "created": {
           "title": "Created a new project",
-          "content": "Created <primary>{{new.project_type}}</primary> project named <primary>{{new.title}}</primary>."
+          "content": "Created <primary>{{new.project_type}}</primary> project <primary>{{new.title}}</primary>."
+        },
+        "assigned_user": {
+          "title": "Assigned a user to a project",
+          "content": "Assigned <primary>{{shared.user.firstname}} {{shared.user.lastname}}</primary> to the project <primary>{{shared.project.title}}</primary>."
+        },
+        "assigned_group": {
+          "title": "Assigned a group to a project",
+          "content": "Assigned <primary>{{shared.group.name}}</primary> to the project <primary>{{shared.project.title}}</primary>."
+        },
+        "unassigned_user": {
+          "title": "Unassigned a user from a project",
+          "content": "Unassigned <primary>{{shared.user.firstname}} {{shared.user.lastname}}</primary> from the project <primary>{{shared.project.title}}</primary>."
+        },
+        "unassigned_group": {
+          "title": "Unassigned a group from a project",
+          "content": "Unassigned <primary>{{shared.group.name}}</primary> from the project <primary>{{shared.project.title}}</primary>."
         }
       }
     }
@@ -216,7 +233,22 @@
   },
   "board": {
     "Collapse": "Collapse",
-    "Expand": "Expand"
+    "Expand": "Expand",
+    "Filters": "Filters",
+    "filters": {
+      "Clear": "Clear",
+      "Keyword": "Keyword",
+      "Members": "Members",
+      "labels": {
+        "parents": "Parents of",
+        "children": "Children of"
+      },
+      "No members assigned": "No members assigned",
+      "Assigned to me": "Assigned to me",
+      "Select members": "Select members",
+      "Select tasks": "Select tasks",
+      "Clear selections": "Clear selections"
+    }
   },
   "project": {
     "Title": "Project Title",
@@ -232,6 +264,8 @@
       "missing": {
         "title": "Enter a title."
       }
-    }
+    },
+    "Parents": "Parents",
+    "Children": "Children"
   }
 }

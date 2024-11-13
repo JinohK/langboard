@@ -43,6 +43,7 @@ const isFunction: <TFunc extends (...args: any) => any>(value: unknown | TFunc) 
     isType("function");
 const isNull: (value: unknown) => value is null = isType("null");
 const isUndefined: (value: unknown) => value is undefined = isType("undefined");
+const isNullOrUndefined = (value: unknown): value is null | undefined => isNull(value) || isUndefined(value);
 
 const getProperty = <T>(obj: unknown, key: string): T | undefined => Object.assign(obj ?? {})?.[key];
 const hasProperty = <T>(obj: unknown, key: string): obj is T => {
@@ -85,6 +86,7 @@ const TypeUtils = {
     isFunction,
     isNull,
     isUndefined,
+    isNullOrUndefined,
     isWindow,
     isNode,
     isElement,

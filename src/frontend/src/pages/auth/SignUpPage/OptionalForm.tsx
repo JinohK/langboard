@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
-import { Button, Form, IconComponent, Input } from "@/components/base";
+import { Button, Flex, Form, IconComponent, Input } from "@/components/base";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
@@ -83,7 +83,18 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                     />
                 </Form.Control>
             </Form.Field>
-            <div className="mt-16 flex items-center gap-6 max-xs:justify-between xs:justify-end xs:gap-8">
+            <Flex
+                items="center"
+                justify={{
+                    initial: "between",
+                    xs: "end",
+                }}
+                gap={{
+                    initial: "6",
+                    xs: "8",
+                }}
+                mt="16"
+            >
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.ADDITIONAL)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
@@ -93,7 +104,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 <Button type="submit" disabled={isValidating}>
                     {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                 </Button>
-            </div>
+            </Flex>
         </Form.Root>
     );
 }

@@ -1,7 +1,7 @@
 import { Virtualizer, useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { IconComponent } from "@/components/base";
+import { Flex, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase, createShortUUID } from "@/core/utils/StringUtils";
@@ -79,9 +79,9 @@ function VirtualInfiniteList<T>({
     const isLoading = useRef(false);
     const loaderRef = useRef(
         loader ?? (
-            <div className="my-3 flex justify-center" key={createShortUUID()}>
+            <Flex justify="center" my="3" key={createShortUUID()}>
                 <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
-            </div>
+            </Flex>
         )
     );
 
@@ -177,8 +177,9 @@ function VirtualInfiniteList<T>({
             {!items.length && noItemsElement ? (
                 <div className="-scale-y-100">{noItemsElement}</div>
             ) : (
-                <div
-                    className={cn("relative flex", isReverse ? "flex-col-reverse" : "flex-col", className)}
+                <Flex
+                    direction={isReverse ? "col-reverse" : "col"}
+                    className={cn("relative", className)}
                     style={{ height: `${virtualizer.getTotalSize()}px` }}
                 >
                     {virtualizer.getVirtualItems().map((row) => {
@@ -201,7 +202,7 @@ function VirtualInfiniteList<T>({
                             </div>
                         );
                     })}
-                </div>
+                </Flex>
             )}
         </>
     );

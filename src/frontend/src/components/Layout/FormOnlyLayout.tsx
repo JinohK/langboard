@@ -3,6 +3,7 @@ import CachedImage from "@/components/CachedImage";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { cn } from "@/core/utils/ComponentUtils";
+import { Flex } from "@/components/base";
 
 interface IBaseFormOnlyLayoutProps {
     size?: "default" | "sm" | "lg";
@@ -64,19 +65,19 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
         if (isTwoSided) {
             const { wrapper, width } = createTwoSidedSizeClassNames(size);
             content = (
-                <div className={cn("flex", wrapper)}>
+                <Flex className={wrapper}>
                     <div className={width}>{leftSide}</div>
                     <div className={width}>{rightSide}</div>
-                </div>
+                </Flex>
             );
         } else {
             content = children;
         }
 
         return (
-            <div className="flex h-screen min-h-screen flex-col items-center justify-center xs:h-auto">
+            <Flex direction="col" items="center" justify="center" h={{ initial: "screen", xs: "auto" }} className="min-h-screen">
                 <div className={cn("w-full", widthClassName)} ref={ref} {...props}>
-                    <div className="flex flex-col max-xs:h-full max-xs:justify-between">
+                    <Flex direction="col" className="max-xs:h-full max-xs:justify-between">
                         <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
                             {useLogo && (
                                 <div className="mb-6">
@@ -89,9 +90,9 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
                             <LanguageSwitcher variant="ghost" triggerType="text" />
                             <ThemeSwitcher variant="ghost" triggerType="text" />
                         </div>
-                    </div>
+                    </Flex>
                 </div>
-            </div>
+            </Flex>
         );
     }
 );

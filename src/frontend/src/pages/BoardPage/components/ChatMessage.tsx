@@ -1,6 +1,5 @@
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { IconComponent } from "@/components/base";
+import { Flex, IconComponent } from "@/components/base";
+import Markdown from "@/components/Markdown";
 import { IChatMessage } from "@/controllers/board/useGetProjectChatMessages";
 import { cn } from "@/core/utils/ComponentUtils";
 
@@ -11,7 +10,7 @@ export interface IChatMessageProps extends IChatMessage {
 
 function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, className }: IChatMessageProps): JSX.Element {
     return (
-        <div className={cn("flex", isReceived ? "flex-row" : "flex-row-reverse", className)} id={`chat-${uid}`}>
+        <Flex direction={isReceived ? "row" : "row-reverse"} className={className} id={`chat-${uid}`}>
             {isReceived && (
                 <IconComponent icon={icon} size="8" className="mr-2 mt-1 flex items-center justify-center rounded-full bg-muted text-xs" />
             )}
@@ -23,17 +22,17 @@ function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, classN
                 )}
             >
                 {isWaiting && !message ? (
-                    <div className="flex justify-center space-x-1">
+                    <Flex justify="center" className="space-x-1">
                         <span className="sr-only">Loading...</span>
                         <div className="size-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.3s]"></div>
                         <div className="size-3 animate-bounce rounded-full bg-secondary [animation-delay:-0.15s]"></div>
                         <div className="size-3 animate-bounce rounded-full bg-secondary"></div>
-                    </div>
+                    </Flex>
                 ) : (
-                    <Markdown remarkPlugins={[[remarkGfm, { singleTilde: false }]]}>{message}</Markdown>
+                    <Markdown>{message}</Markdown>
                 )}
             </div>
-        </div>
+        </Flex>
     );
 }
 

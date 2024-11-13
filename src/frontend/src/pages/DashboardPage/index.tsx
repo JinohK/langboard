@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
@@ -17,6 +17,7 @@ function DashboardPage(): JSX.Element {
     const [projectFormOpened, setProjectFormOpened] = useState(location.pathname.endsWith("/newproject"));
     const [activityOpened, setActivityOpened] = useState(location.pathname.endsWith("/myactivity"));
     const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
+    const [scrollAreaMutable, updateScrollArea] = useReducer((x) => x + 1, 0);
 
     const headerNavs: Record<string, IHeaderNavItem> = {
         [ROUTES.DASHBOARD.ROUTE]: {
@@ -87,21 +88,21 @@ function DashboardPage(): JSX.Element {
             pageContent = <TrackingPage />;
             break;
         case ROUTES.DASHBOARD.PROJECTS.ALL:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" />;
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" updateScrollArea={updateScrollArea} />;
             break;
         case ROUTES.DASHBOARD.PROJECTS.STARRED:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" />;
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" updateScrollArea={updateScrollArea} />;
             break;
         case ROUTES.DASHBOARD.PROJECTS.RECENT:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" />;
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" updateScrollArea={updateScrollArea} />;
             break;
         case ROUTES.DASHBOARD.PROJECTS.UNSTARRED:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" />;
+            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" updateScrollArea={updateScrollArea} />;
             break;
     }
 
     return (
-        <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs}>
+        <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs} scrollAreaMutable={scrollAreaMutable}>
             {pageContent}
             <CreateProjectFormDialog
                 opened={projectFormOpened}

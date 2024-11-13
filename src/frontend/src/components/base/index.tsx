@@ -13,6 +13,7 @@ export * as Dialog from "@/components/base/Dialog";
 export * as Dock from "@/components/base/Dock";
 export * as Drawer from "@/components/base/Drawer";
 export * as DropdownMenu from "@/components/base/DropdownMenu";
+export { default as Flex } from "@/components/base/Flex";
 export * as Floating from "@/components/base/Floating";
 export * as Form from "@/components/base/Form";
 export * as HoverCard from "@/components/base/HoverCard";

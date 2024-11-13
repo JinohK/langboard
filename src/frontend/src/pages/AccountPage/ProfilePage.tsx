@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import SubmitButton from "@/components/SubmitButton";
-import { Form, Input, Label, Toast } from "@/components/base";
+import { Flex, Form, Input, Label, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -62,7 +62,7 @@ function ProfilePage(): JSX.Element {
                 <>
                     <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Profile")}</h2>
                     <Form.Root onSubmit={handleSubmit} ref={formRef}>
-                        <div className="mt-11 flex gap-10 max-md:flex-col max-md:items-center md:justify-center">
+                        <Flex gap="10" mt="11" className="max-md:flex-col max-md:items-center md:justify-center">
                             <AvatarUploader
                                 userInitials={createNameInitials(user.firstname, user.lastname)}
                                 initialAvatarUrl={user.avatar}
@@ -75,7 +75,7 @@ function ProfilePage(): JSX.Element {
                                     md: "5xl",
                                 }}
                             />
-                            <div className="flex w-full max-w-sm flex-col gap-4">
+                            <Flex direction="col" gap="4" w="full" className="max-w-sm">
                                 <Label className="grid w-full items-center gap-1.5">
                                     <div>{t("user.Username")}</div>
                                     <Input disabled defaultValue={user.username} />
@@ -124,13 +124,13 @@ function ProfilePage(): JSX.Element {
                                         </Form.Control>
                                     </Label>
                                 </Form.Field>
-                            </div>
-                        </div>
-                        <div className="mt-16 flex items-center justify-center gap-8">
+                            </Flex>
+                        </Flex>
+                        <Flex items="center" justify="center" gap="8" mt="16">
                             <SubmitButton type="submit" isValidating={isValidating}>
                                 {t("common.Save")}
                             </SubmitButton>
-                        </div>
+                        </Flex>
                     </Form.Root>
                 </>
             )}

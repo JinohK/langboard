@@ -19,7 +19,6 @@ export interface IChatMessage {
 
 export interface IGetProjectChatMessagesResponse {
     histories: IChatMessage[];
-    total: number;
 }
 
 const useGetProjectChatMessages = (

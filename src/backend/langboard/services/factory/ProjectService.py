@@ -1,7 +1,5 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from sqlmodel import asc, desc
-from sqlmodel.sql.expression import Select
 from ...core.ai import BotType
 from ...core.schema import Pagination
 from ...core.utils.DateTime import now
@@ -18,10 +16,9 @@ from ...models import (
 from ...models.BaseRoleModel import ALL_GRANTED
 from ..BaseService import BaseService
 from .ActivityService import ActivityResult, ActivityService
-from .GroupService import GroupService
+from .ProjectColumnService import ProjectColumnService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
-from .UserService import UserService
 
 
 class ProjectService(BaseService):
@@ -31,25 +28,29 @@ class ProjectService(BaseService):
         return "project"
 
     async def get_by_id(self, project_id: int) -> Project | None:
-        result = await self._db.exec(self._db.query("select").table(Project).where(Project.id == project_id))
-        return result.first()
+        return await self._get_by(Project, "id", project_id)
 
     async def get_by_uid(self, uid: str) -> Project | None:
-        result = await self._db.exec(self._db.query("select").table(Project).where(Project.uid == uid))
-        return result.first()
+        return await self._get_by(Project, "uid", uid)
 
     async def get_columns(self, project: Project) -> list[dict[str, Any]]:
         result = await self._db.exec(
             self._db.query("select")
             .table(ProjectColumn)
             .where(ProjectColumn.column("project_id") == project.id)
-            .order_by(asc(ProjectColumn.order))
+            .order_by(ProjectColumn.column("order").asc())
             .group_by(ProjectColumn.column("order"))
         )
         raw_columns = result.all()
-        columns = []
-        for raw_column in raw_columns:
-            columns.append(raw_column.api_response())
+        columns = [raw_column.api_response() for raw_column in raw_columns]
+        columns.insert(
+            project.archive_column_order,
+            {
+                "uid": Project.ARCHIVE_COLUMN_UID,
+                "name": project.archive_column_name,
+                "order": project.archive_column_order,
+            },
+        )
         return columns
 
     async def get_user_role_actions(self, user: User, project: Project) -> list[str]:
@@ -63,8 +64,9 @@ class ProjectService(BaseService):
         result = await self._db.exec(
             self._db.query("select")
             .column(role_class.actions)
-            .join(GroupAssignedUser, role_class.column("group_id") == GroupAssignedUser.group_id)
-            .where(GroupAssignedUser.user_id == user.id)
+            .join(GroupAssignedUser, role_class.column("group_id") == GroupAssignedUser.column("group_id"))
+            .where(GroupAssignedUser.column("user_id") == user.id)
+            .limit(1)
         )
         actions = result.first()
         return list(actions or [])
@@ -85,86 +87,66 @@ class ProjectService(BaseService):
 
     async def get_dashboard_list(
         self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str, pagination: Pagination
-    ) -> tuple[list[dict[str, Any]], int]:
+    ) -> list[dict[str, Any]]:
         if list_type not in ["all", "starred", "recent", "unstarred"]:
-            return [], 0
+            return []
 
         sql_query = (
             self._db.query("select")
-            .columns(
-                Project.uid,
-                ProjectAssignedUser.starred,
-                Project.title,
-                Project.project_type,
+            .tables(Project, ProjectAssignedUser, func.aggregate_strings(Group.column("name"), ","))
+            .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
+            .outerjoin(ProjectRole, Project.column("id") == ProjectRole.column("project_id"))
+            .outerjoin(
+                Group,
+                (ProjectRole.column("group_id") == Group.column("id")) & (Group.column("deleted_at") == None),  # noqa
             )
-            .join(
-                ProjectAssignedUser,
-                Project.id == ProjectAssignedUser.project_id,  # type: ignore
-            )
-            .where(ProjectAssignedUser.user_id == user.id)
+            .where(ProjectAssignedUser.column("user_id") == user.id)
         )
 
-        descs = [desc(Project.updated_at), desc(Project.id)]
+        descs = [Project.column("updated_at").desc(), Project.column("id").desc()]
         group_bys = [Project.column("id"), ProjectAssignedUser.column("starred")]
 
         if list_type == "starred":
-            sql_query = sql_query.where(ProjectAssignedUser.starred == True)  # noqa
+            sql_query = sql_query.where(ProjectAssignedUser.column("starred") == True)  # noqa
         elif list_type == "recent":
-            descs.insert(0, desc(ProjectAssignedUser.last_viewed_at))
+            descs.insert(0, ProjectAssignedUser.column("last_viewed_at").desc())
             group_bys.append(ProjectAssignedUser.column("last_viewed_at"))
         elif list_type == "unstarred":
-            sql_query = sql_query.where(ProjectAssignedUser.starred == False)  # noqa
-
-        result = await self._db.exec(self._db.query("select").count(sql_query, Project.id))
-        (total,) = result.one()
+            sql_query = sql_query.where(ProjectAssignedUser.column("starred") == False)  # noqa
 
         sql_query = sql_query.order_by(*descs)
         sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
-
-        sql_query = cast(
-            Select[tuple[str, bool, str, str, str | None]],
-            (
-                sql_query.add_columns(func.aggregate_strings(Group.column("name"), ","))
-                .outerjoin(
-                    ProjectRole,
-                    Project.id == ProjectRole.project_id,  # type: ignore
-                )
-                .outerjoin(
-                    Group,
-                    (ProjectRole.group_id == Group.id) & (Group.deleted_at == None),  # type: ignore # noqa
-                )
-                .group_by(*group_bys)
-            ),
-        )
+        sql_query = sql_query.group_by(*group_bys)
 
         result = await self._db.exec(sql_query)
-        projects = result.all()
+        raw_projects = result.all()
 
-        dict_projects = []
+        column_service = self._get_service(ProjectColumnService)
 
-        for uid, starred, title, project_type, group_names in projects:
-            dict_projects.append(
+        projects = []
+        for project, assigned_user, group_names in raw_projects:
+            columns = await self.get_columns(project)
+            project_dict = project.api_response()
+            project_dict["starred"] = assigned_user.starred
+            project_dict["group_names"] = group_names.split(",") if group_names else []
+            project_dict["columns"] = [
                 {
-                    "uid": uid,
-                    "starred": starred,
-                    "title": title,
-                    "project_type": project_type,
-                    "group_names": group_names.split(",") if group_names else [],
+                    "name": column["name"],
+                    "count": await column_service.count_tasks(cast(int, project.id), column["uid"]),
                 }
-            )
+                for column in columns
+            ]
+            projects.append(project_dict)
 
-        return dict_projects, total
+        return projects
 
     async def toggle_star(self, user: User, uid: str, commit: bool = True) -> bool:
         result = await self._db.exec(
             self._db.query("select")
             .columns(ProjectAssignedUser.starred, Project.id)
-            .join(
-                ProjectAssignedUser,
-                Project.id == ProjectAssignedUser.project_id,  # type: ignore
-            )
-            .where(Project.uid == uid)
-            .where(ProjectAssignedUser.user_id == user.id)
+            .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.project_id)
+            .where(Project.column("uid") == uid)
+            .where(ProjectAssignedUser.column("user_id") == user.id)
             .limit(1)
         )
         starred, project_id = result.first() or (None, None)
@@ -176,7 +158,10 @@ class ProjectService(BaseService):
             self._db.query("update")
             .table(ProjectAssignedUser)
             .values(starred=not starred)
-            .where((ProjectAssignedUser.project_id == project_id) & (ProjectAssignedUser.user_id == user.id))
+            .where(
+                (ProjectAssignedUser.column("project_id") == project_id)
+                & (ProjectAssignedUser.column("user_id") == user.id)
+            )
         )
 
         if commit:
@@ -199,7 +184,7 @@ class ProjectService(BaseService):
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectCreated)
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
-    ) -> tuple[ActivityResult, Project | None] | None:
+    ) -> tuple[ActivityResult, Project] | None:
         if not user.id or not title:
             return None
 
@@ -216,7 +201,7 @@ class ProjectService(BaseService):
         activity_result = ActivityResult(
             user_or_bot=user,
             model=project,
-            shared={"uid": project.uid},
+            shared={"project_uid": project.uid},
             new=["title", "project_type"],
         )
 
@@ -238,8 +223,7 @@ class ProjectService(BaseService):
             form.pop("uid")
 
         if isinstance(project, int):
-            result = await self._db.exec(self._db.query("select").table(Project).where(Project.id == project))
-            project = cast(Project, result.first())
+            project = cast(Project, await self.get_by_id(project))
             if not project:
                 return None
 
@@ -253,7 +237,7 @@ class ProjectService(BaseService):
         activitiy_params = {
             "model": project,
             "activity_type": ActivityService.ACTIVITY_TYPES.ProjectUpdated,
-            "shared": {"uid": project.uid},
+            "shared": {"project_uid": project.uid},
             "new": [*list(form.keys())],
             "old": old_project_record,
         }
@@ -288,16 +272,17 @@ class ProjectService(BaseService):
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedUser)
     async def assign_user(
         self, user: User, project: Project | int, target_user: User | int, grant_actions: list[str] | None = None
-    ) -> tuple[ActivityResult, str | None] | None:
+    ) -> tuple[ActivityResult, str] | None:
         grant_actions = grant_actions or []
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
         target_user = (
-            cast(User, await self._get_service(UserService).get_by_id(target_user))
-            if isinstance(target_user, int)
-            else target_user
+            cast(User, await self._get_by(User, "id", target_user)) if isinstance(target_user, int) else target_user
         )
         if not project or not target_user or not project.id or not target_user.id:
             raise ValueError("Project or user not found")
+
+        if not project.owner_id or project.owner_id == target_user.id:
+            return None
 
         result = await self._db.exec(
             self._db.query("select")
@@ -305,10 +290,10 @@ class ProjectService(BaseService):
             .where(ProjectAssignedUser.project_id == project.id)
             .where(ProjectAssignedUser.user_id == target_user.id)
         )
-        (existed,) = result.first() or (None,)
+        existed = result.one()
 
         if existed:
-            return
+            return None
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
         self._db.insert(assigned_user)
@@ -331,7 +316,7 @@ class ProjectService(BaseService):
         activity_result = ActivityResult(
             user_or_bot=user,
             model=project,
-            shared={"uid": project.uid, "user_id": target_user.id},
+            shared={"project_uid": project.uid, "user_id": target_user.id, "project_id": project.id},
             new={},
             revert_key=revert_key,
         )
@@ -357,10 +342,10 @@ class ProjectService(BaseService):
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedGroup)
     async def assign_group(
         self, user: User, project: Project | int, group: Group | int, grant_actions: list[str] | None = None
-    ) -> tuple[ActivityResult, str | None] | None:
+    ) -> tuple[ActivityResult, str] | None:
         grant_actions = grant_actions or []
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
-        group = cast(Group, await self._get_service(GroupService).get_by_id(group)) if isinstance(group, int) else group
+        group = cast(Group, await self._get_by(Group, "id", group)) if isinstance(group, int) else group
         if not project or not group or not project.id or not group.id:
             raise ValueError("Project or user not found")
 
@@ -373,7 +358,7 @@ class ProjectService(BaseService):
         query = (
             self._db.query("select")
             .tables(User, ProjectAssignedUser)
-            .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
+            .join(GroupAssignedUser, User.column("id") == GroupAssignedUser.user_id)
             .outerjoin(
                 ProjectAssignedUser,
                 (User.column("id") == ProjectAssignedUser.user_id) & (ProjectAssignedUser.project_id == project.id),
@@ -408,7 +393,7 @@ class ProjectService(BaseService):
         activity_result = ActivityResult(
             user_or_bot=user,
             model=project,
-            shared={"uid": project.uid, "group_id": group.id},
+            shared={"project_uid": project.uid, "group_id": group.id, "project_id": project.id},
             new={},
             revert_key=revert_key,
         )
@@ -426,25 +411,15 @@ class ProjectService(BaseService):
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedUser)
     async def withdraw_user(
         self, user: User, project: Project | int, target_user: User | int
-    ) -> tuple[ActivityResult, str | None] | None:
+    ) -> tuple[ActivityResult, str] | None:
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
         target_user = (
-            cast(User, await self._get_service(UserService).get_by_id(target_user))
-            if isinstance(target_user, int)
-            else target_user
+            cast(User, await self._get_by(User, "id", target_user)) if isinstance(target_user, int) else target_user
         )
         if not project or not target_user or not project.id or not target_user.id:
             raise ValueError("Project or user not found")
 
-        if not isinstance(project, Project):
-            result = await self._db.exec(
-                self._db.query("select").column(Project.owner_id).where(Project.id == project.id)
-            )
-            owner_id = result.first()
-        else:
-            owner_id = project.owner_id
-
-        if not owner_id or owner_id == target_user.id:
+        if not project.owner_id or project.owner_id == target_user.id:
             return None
 
         role_service = self._get_service(RoleService)
@@ -455,11 +430,11 @@ class ProjectService(BaseService):
         result = await self._db.exec(
             self._db.query("select")
             .count(role_class, role_class.id)
-            .join(GroupAssignedUser, role_class.group_id == GroupAssignedUser.group_id)  # type: ignore
-            .where(GroupAssignedUser.user_id == target_user.id)
-            .where(role_class.project_id == project.id)
+            .join(GroupAssignedUser, role_class.column("group_id") == GroupAssignedUser.column("group_id"))
+            .where(GroupAssignedUser.column("user_id") == target_user.id)
+            .where(role_class.column("project_id") == project.id)
         )
-        (existed_in_group,) = result.first() or (None,)
+        existed_in_group = result.one()
 
         revert_service = self._get_service(RevertService)
         revert_models = []
@@ -469,7 +444,7 @@ class ProjectService(BaseService):
         activity_result_params = {
             "user_or_bot": user,
             "model": project,
-            "shared": {"uid": project.uid, "user_id": target_user.id},
+            "shared": {"project_uid": project.uid, "user_id": target_user.id, "project_id": project.id},
             "new": {},
         }
 
@@ -486,6 +461,7 @@ class ProjectService(BaseService):
                 .table(ProjectAssignedUser)
                 .where(ProjectAssignedUser.column("project_id") == project.id)
                 .where(ProjectAssignedUser.column("user_id") == target_user.id)
+                .limit(1)
             )
         ).first()
         if assigned_user:
@@ -509,9 +485,9 @@ class ProjectService(BaseService):
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedGroup)
     async def withdraw_group(
         self, user: User, project: Project | int, group: Group | int
-    ) -> tuple[ActivityResult, str | None] | None:
+    ) -> tuple[ActivityResult, str] | None:
         project = cast(Project, await self.get_by_id(project) if isinstance(project, int) else project)
-        group = cast(Group, await self._get_service(GroupService).get_by_id(group)) if isinstance(group, int) else group
+        group = cast(Group, await self._get_by(Group, "id", group)) if isinstance(group, int) else group
         if not project or not group or not project.id or not group.id:
             raise ValueError("Project or user not found")
 
@@ -521,17 +497,21 @@ class ProjectService(BaseService):
         result = await self._db.exec(
             self._db.query("select")
             .tables(ProjectAssignedUser, role_class)
-            .join(User, (ProjectAssignedUser.user_id == User.id) & (User.deleted_at == None))  # type: ignore # noqa
-            .join(GroupAssignedUser, User.id == GroupAssignedUser.user_id)  # type: ignore
+            .join(
+                User,
+                (ProjectAssignedUser.column("user_id") == User.column("id")) & (User.column("deleted_at") == None),  # noqa
+            )
+            .join(GroupAssignedUser, User.column("id") == GroupAssignedUser.column("user_id"))
             .join(
                 Project,
-                (ProjectAssignedUser.project_id == Project.id)
-                & (Project.owner_id != User.id)  # type: ignore
-                & (User.deleted_at == None),  # noqa
+                (ProjectAssignedUser.column("project_id") == Project.column("id"))
+                & (Project.column("owner_id") != User.column("id"))
+                & (User.column("deleted_at") == None),  # noqa
             )
             .outerjoin(
                 role_class,
-                (role_class.user_id == User.id) & (role_class.project_id == ProjectAssignedUser.project_id),  # type: ignore
+                (role_class.column("user_id") == User.id)
+                & (role_class.column("project_id") == ProjectAssignedUser.column("project_id")),
             )
             .where(GroupAssignedUser.group_id == group.id)
             .where(ProjectAssignedUser.project_id == project.id)
@@ -555,7 +535,7 @@ class ProjectService(BaseService):
         activity_result_params = {
             "user_or_bot": user,
             "model": project,
-            "shared": {"uid": project.uid, "group_id": group.id},
+            "shared": {"project_uid": project.uid, "group_id": group.id, "project_id": project.id},
             "new": {},
         }
 

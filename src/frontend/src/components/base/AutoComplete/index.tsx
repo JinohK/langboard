@@ -6,6 +6,7 @@ import * as Popover from "@/components/base/Popover";
 import Skeleton from "@/components/base/Skeleton";
 import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
+import Flex from "@/components/base/Flex";
 
 type Props = {
     selectedValue: string;
@@ -43,7 +44,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
     };
 
     return (
-        <div className="flex items-center">
+        <Flex items="center">
             <Popover.Root open={open} onOpenChange={setOpen}>
                 <Command.Root
                     shouldFilter={false}
@@ -116,7 +117,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                     </Popover.Content>
                 </Command.Root>
             </Popover.Root>
-        </div>
+        </Flex>
     );
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
-import { Button, Toast } from "@/components/base";
+import { Button, Flex, Toast } from "@/components/base";
 import useActivateUser from "@/controllers/auth/useActivateUser";
 import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -39,9 +39,9 @@ function ActivatePage(): JSX.Element {
                             <p className="mt-4 text-sm xs:text-base">
                                 {t("signUp.activate.Simply sign in with your email and password to get started.")}
                             </p>
-                            <div className="mt-8 flex justify-center">
+                            <Flex justify="center" mt="8">
                                 <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>{t("signIn.Sign in")}</Button>
-                            </div>
+                            </Flex>
                         </>
                     );
                 },

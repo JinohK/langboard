@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import Any, ClassVar
 from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import SoftDeleteModel
@@ -16,6 +16,13 @@ class Project(SoftDeleteModel, table=True):
     project_type: str = Field(default="Other", nullable=False)
     archive_column_name: str = Field(default="Archive", nullable=False)
     archive_column_order: int = Field(default=0, nullable=False)
+
+    def api_response(self) -> dict[str, Any]:
+        return {
+            "uid": self.uid,
+            "title": self.title,
+            "project_type": self.project_type,
+        }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["uid", "title", "project_type", "archive_column_name", "archive_column_order"]

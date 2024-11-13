@@ -16,7 +16,9 @@ class ActivityType(Enum):
     ProjectUnassignedUser = "project.unassigned_user"
     ProjectAssignedGroup = "project.assigned_group"
     ProjectUnassignedGroup = "project.unassigned_group"
-    TaskChangedOrder = "task.changed_order"
+    ProjectColumnChangedOrder = "project.column_changed_order"
+    TaskCreated = "task.created"
+    TaskChangedColumn = "task.changed_column"
 
 
 class BaseActivityModel(BaseSqlModel):
@@ -32,6 +34,9 @@ class BaseActivityModel(BaseSqlModel):
             return []
 
         return [field for field in self.model_fields if field not in BaseActivityModel.model_fields]
+
+    def api_response(self):
+        return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         keys: list[str | tuple[str, str]] = ["activity_type", "user_id"]

@@ -11,6 +11,7 @@ import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
 interface IProjectPageProps {
     currentTab: IGetProjectsForm["listType"];
     refetchAllStarred: () => Promise<unknown>;
+    updateScrollArea: React.DispatchWithoutAction;
 }
 
 const MAX_PROJECTS_PER_PAGE = 16;
@@ -25,7 +26,7 @@ const cachedProjectQueries: Record<
     unstarred: { params: { listType: "unstarred", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
 };
 
-const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps): JSX.Element => {
+const ProjectPage = memo(({ currentTab, refetchAllStarred, updateScrollArea }: IProjectPageProps): JSX.Element => {
     const [t] = useTranslation();
     const navigate = useNavigate();
     const currentProjectQuery = cachedProjectQueries[currentTab];
@@ -36,7 +37,7 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps):
         refetch,
     } = useGetProjects(currentProjectQuery.params, {
         getNextPageParam: (lastPage, _, lastPageParam) => {
-            if (lastPage.total >= lastPageParam.page * lastPageParam.limit) {
+            if (lastPage.projects.length === lastPageParam.limit) {
                 return {
                     ...lastPageParam,
                     page: lastPageParam.page + 1,
@@ -56,6 +57,7 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred }: IProjectPageProps):
             projects.push(...currentProjectQuery.data.pages.flatMap((page) => page.projects));
             forceUpdate();
         }
+        updateScrollArea();
     }, [rawProjects]);
 
     return (

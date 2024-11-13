@@ -11,10 +11,13 @@ class Task(SoftDeleteModel, table=True):
     project_id: int = Field(foreign_key=Project.expr("id"), nullable=False)
     project_column_uid: str | None = Field(foreign_key=ProjectColumn.expr("uid"), nullable=True)
     title: str = Field(nullable=False)
-    description: str | None = Field(default=None, sa_type=TEXT, nullable=True)
+    description: str = Field(default="", sa_type=TEXT, nullable=True)
     deadline_at: datetime | None = DateTimeField(default=None, nullable=True)
     order: int = Field(default=0, nullable=False)
     archived_at: datetime | None = DateTimeField(default=None, nullable=True)
 
+    def api_response(self):
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["uid", "project_column_uid", "title", "deadline_at"]
+        return ["uid", "project_id", "project_column_uid", "title", "deadline_at", "order", "archived_at"]

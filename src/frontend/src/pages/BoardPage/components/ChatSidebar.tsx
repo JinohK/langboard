@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Button, DropdownMenu, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -23,6 +23,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
     const { queryClient } = useQueryMutation();
     const inputRef = useRef<HTMLInputElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const sendChatCallbackRef = useRef<(message: string) => void>(() => {});
 
     const sendChat = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -38,9 +39,12 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
 
         chatInput.value = "";
 
-        if (!socket.send(SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND, { message: chat }).isConnected) {
+        const isSent = socket.send(SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND, { message: chat }).isConnected;
+        if (!isSent) {
             socket.reconnect();
-            socket.send(SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND, { message: chat });
+            Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
+        } else {
+            sendChatCallbackRef.current(chat);
         }
     };
 
@@ -69,9 +73,11 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
     };
 
     return (
-        <div className="flex size-full flex-col">
+        <Flex direction="col" size="full">
             <div className="relative h-16">
-                <div className="flex h-full items-center justify-center truncate text-nowrap text-lg">{t("project.Chat with AI")}</div>
+                <Flex items="center" justify="center" h="full" textSize="lg" className="truncate text-nowrap">
+                    {t("project.Chat with AI")}
+                </Flex>
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
                         <Button
@@ -93,7 +99,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </div>
-            <Conversation uid={uid} socket={socket} inputRef={inputRef} buttonRef={buttonRef} />
+            <Conversation uid={uid} socket={socket} inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
             <Form.Root className="flex h-12 w-full items-center" onSubmit={sendChat}>
                 <Form.Field name="chat-message" className="mx-1 w-[calc(100%_-_theme(spacing.10))]">
                     <Form.Control asChild>
@@ -112,7 +118,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                     <IconComponent icon="send" size="4" />
                 </Button>
             </Form.Root>
-        </div>
+        </Flex>
     );
 }
 

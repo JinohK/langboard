@@ -11,6 +11,7 @@ export const AvatarVariants = tv(
         variants: {
             size: {
                 default: "size-10 text-base",
+                xs: "size-6 text-xs",
                 sm: "size-8 text-xs",
                 lg: "size-14 text-2xl",
                 "2xl": "size-20 text-3xl",
@@ -32,9 +33,11 @@ export interface IAvatarProps extends AvatarPrimitive.AvatarProps, VariantProps<
 
 type TAvatarProps = React.ForwardRefExoticComponent<IAvatarProps & React.RefAttributes<HTMLSpanElement>>;
 
-const Root = React.forwardRef<React.ElementRef<TAvatarProps>, React.ComponentPropsWithoutRef<TAvatarProps>>(({ className, size, ...props }, ref) => (
-    <AvatarPrimitive.Root ref={ref} className={cn("select-none", AvatarVariants({ size, className }))} {...props} />
-));
+const Root = React.memo(
+    React.forwardRef<React.ElementRef<TAvatarProps>, React.ComponentPropsWithoutRef<TAvatarProps>>(({ className, size, ...props }, ref) => (
+        <AvatarPrimitive.Root ref={ref} className={cn("select-none", AvatarVariants({ size }), className)} {...props} />
+    ))
+);
 Root.displayName = AvatarPrimitive.Root.displayName;
 
 const Image = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(

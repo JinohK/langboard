@@ -5,7 +5,6 @@ import { Project } from "@/core/models";
 
 export interface IGetAllStarredProjectsResponse {
     projects: Project.Interface[];
-    total: number;
 }
 
 const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjectsResponse>) => {

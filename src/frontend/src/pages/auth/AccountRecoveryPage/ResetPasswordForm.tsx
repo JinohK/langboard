@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import PasswordInput from "@/components/PasswordInput";
-import { Button, Form, IconComponent } from "@/components/base";
+import { Button, Flex, Form, IconComponent } from "@/components/base";
 import useRecoveryPassword from "@/controllers/auth/useRecoveryPassword";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -77,11 +77,11 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                     isValidating={isValidating}
                     error={errors["password-confirm"]}
                 />
-                <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
+                <Flex items="center" gap="8" justify="end" mt="16">
                     <Button type="submit" disabled={isValidating}>
                         {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
-                </div>
+                </Flex>
             </Form.Root>
         );
     }

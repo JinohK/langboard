@@ -1,22 +1,39 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { forwardRef, useState } from "react";
-import { Avatar, Card, HoverCard, Separator } from "@/components/base";
+import { Avatar, Card, Flex, HoverCard, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
-import { generateRandomColor } from "@/core/utils/ColorUtils";
+import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
 
-export interface IUserAvatarProps {
+interface IBaseUserAvatarProps {
     user: User.Interface;
     children?: React.ReactNode;
     listAlign?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
     className?: string;
+    withName?: boolean;
+    nameClassName?: string;
+    labelClassName?: string;
 }
 
-function Root({ user, children, listAlign, avatarSize, className }: IUserAvatarProps): JSX.Element {
+interface IUserAvatarListPropsWithName extends IBaseUserAvatarProps {
+    withName: true;
+    nameClassName?: string;
+    labelClassName?: string;
+}
+
+interface IUserAvatarListPropsWithoutName extends IBaseUserAvatarProps {
+    withName?: false;
+    nameClassName?: undefined;
+    labelClassName?: undefined;
+}
+
+export type TUserAvatarProps = IUserAvatarListPropsWithName | IUserAvatarListPropsWithoutName;
+
+function Root({ user, children, listAlign, avatarSize, className, withName = false, nameClassName, labelClassName }: TUserAvatarProps): JSX.Element {
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
 
@@ -25,47 +42,58 @@ function Root({ user, children, listAlign, avatarSize, className }: IUserAvatarP
         "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45"
     );
 
-    const [bgColor, textColor] = generateRandomColor(initials);
+    const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
 
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
     };
 
-    const avatarClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
+    const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
+    let avatarRootClassName = cn("relative", className);
+    let avatarRootOnClick;
+
+    if (children) {
+        avatarRootClassName = cn(avatarRootClassName, "cursor-pointer", avatarAfterPseudoClassNames);
+        avatarRootOnClick = () => setIsOpened(!isOpened);
+    }
+
+    const avatar = (
+        <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
+            <Avatar.Image src={user.avatar} />
+            <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
+                {initials}
+            </Avatar.Fallback>
+        </Avatar.Root>
+    );
+
+    let avatarWrapper = avatar;
+
+    if (withName) {
+        avatarWrapper = (
+            <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
+                {avatar}
+                <span className={nameClassName}>
+                    {user.firstname} {user.lastname}
+                </span>
+            </Flex>
+        );
+    }
 
     if (!children) {
-        return (
-            <Avatar.Root size={avatarSize} className={cn("relative", className)}>
-                <Avatar.Image src={user.avatar} />
-                <Avatar.Fallback className={avatarClassNames} style={styles}>
-                    {initials}
-                </Avatar.Fallback>
-            </Avatar.Root>
-        );
+        return avatarWrapper;
     }
 
     return (
         <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
-            <HoverCard.Trigger asChild>
-                <Avatar.Root
-                    size={avatarSize}
-                    className={cn("relative cursor-pointer", className, avatarAfterPseudoClassNames)}
-                    onClick={() => setIsOpened(!isOpened)}
-                >
-                    <Avatar.Image src={user.avatar} />
-                    <Avatar.Fallback className={avatarClassNames} style={styles}>
-                        {initials}
-                    </Avatar.Fallback>
-                </Avatar.Root>
-            </HoverCard.Trigger>
+            <HoverCard.Trigger asChild>{avatarWrapper}</HoverCard.Trigger>
             <HoverCard.Content className="z-50 w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
                 <Card.Root className="relative">
                     <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">
                             <Avatar.Image src={user.avatar} />
-                            <Avatar.Fallback className={avatarClassNames} style={styles}>
+                            <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
                                 {initials}
                             </Avatar.Fallback>
                         </Avatar.Root>
@@ -97,18 +125,22 @@ const ListLabel = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(({
     );
 });
 
-const ListItem = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(({ children, className, ...props }, ref) => {
+const ListItem = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof Flex>>(({ children, className, ...props }, ref) => {
     return (
-        <div
+        <Flex
+            items="center"
+            px="5"
+            py="2"
+            textSize="sm"
             className={cn(
-                "relative flex cursor-default select-none items-center px-5 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                "relative cursor-default select-none outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                 className
             )}
             ref={ref}
             {...props}
         >
             {children}
-        </div>
+        </Flex>
     );
 });
 

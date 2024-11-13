@@ -3,6 +3,7 @@ import { SuspenseComponent } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { SocketRouteWrapper } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { Suspense } from "react";
 
 const modules = import.meta.glob<{ default: () => JSX.Element }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);
@@ -26,18 +27,20 @@ const loadRoutes = async () => {
 };
 
 const Router = () => (
-    <SuspenseComponent shouldWrapChildren={false} isPage>
+    <Suspense>
         <Await
             resolve={loadRoutes()}
             children={(routes) => (
-                <BrowserRouter>
-                    <SocketRouteWrapper>
-                        <Routes>{routes}</Routes>
-                    </SocketRouteWrapper>
-                </BrowserRouter>
+                <SuspenseComponent shouldWrapChildren={false} isPage>
+                    <BrowserRouter>
+                        <SocketRouteWrapper>
+                            <Routes>{routes}</Routes>
+                        </SocketRouteWrapper>
+                    </BrowserRouter>
+                </SuspenseComponent>
             )}
         />
-    </SuspenseComponent>
+    </Suspense>
 );
 
 export default Router;

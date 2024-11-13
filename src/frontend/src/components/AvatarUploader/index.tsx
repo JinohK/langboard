@@ -3,7 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { VariantProps } from "tailwind-variants";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Avatar, Dock, Form, IconComponent, Input, Tooltip } from "@/components/base";
+import { Avatar, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
 
 export interface IAvatarUploaderProps {
@@ -100,12 +100,16 @@ function AvatarUploader({
     return (
         <div className="relative">
             <Form.Field {...getRootProps({ name })}>
-                <div className="relative flex cursor-pointer justify-center transition-all duration-200 hover:opacity-80">
+                <Flex justify="center" className="relative cursor-pointer transition-all duration-200 hover:opacity-80">
                     {isDragActive && (
-                        // eslint-disable-next-line @/max-len
-                        <div className="absolute left-0 top-0 z-50 flex size-full items-center justify-center border-2 border-dashed border-primary bg-background">
+                        <Flex
+                            items="center"
+                            justify="center"
+                            size="full"
+                            className="absolute left-0 top-0 z-50 border-2 border-dashed border-primary bg-background"
+                        >
                             {t("user.Drop avatar here")}
-                        </div>
+                        </Flex>
                     )}
                     <Tooltip.Provider delayDuration={400}>
                         <Tooltip.Root>
@@ -121,7 +125,7 @@ function AvatarUploader({
                     <Form.Control asChild>
                         <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />
                     </Form.Control>
-                </div>
+                </Flex>
                 {errorMessage && <FormErrorMessage error={errorMessage} icon="circle-alert" wrapperClassName="justify-center" />}
             </Form.Field>
             {!hideDock && (

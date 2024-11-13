@@ -3,7 +3,6 @@ from ...models import Group, GroupAssignedUser, User, UserActivity
 from ..BaseService import BaseService
 from .ActivityService import ActivityResult, ActivityService
 from .RevertService import RevertService, RevertType
-from .UserService import UserService
 
 
 class GroupService(BaseService):
@@ -13,17 +12,7 @@ class GroupService(BaseService):
         return "group"
 
     async def get_by_id(self, group_id: int) -> Group | None:
-        result = await self._db.exec(self._db.query("select").table(Group).where(Group.column("id") == group_id))
-        return result.first()
-
-    async def get_all_by_ids(self, group_ids: list[int]) -> list[Group]:
-        sql_query = self._db.query("select").table(Group)
-        if len(group_ids) > 1:
-            sql_query = sql_query.where(Group.column("id").in_(group_ids))
-        else:
-            sql_query = sql_query.where(Group.column("id") == group_ids[0])
-        result = await self._db.exec(sql_query)
-        return list(result.all())
+        return await self._get_by(Group, "id", group_id)
 
     @ActivityService.activity_method(UserActivity, ActivityService.ACTIVITY_TYPES.GroupAssignedUser)
     async def create(self, user: User, name: str, user_ids: list[int] | None = None) -> tuple[ActivityResult, str]:
@@ -38,16 +27,9 @@ class GroupService(BaseService):
 
         if user_ids:
             assigned_users = []
-            if len(user_ids) == 1:
-                users = await self._db.exec(
-                    self._db.query("select").table(User).where(User.column("id") == user_ids[0])
-                )
-            else:
-                users = await self._db.exec(self._db.query("select").table(User).where(User.column("id").in_(user_ids)))
+            raw_users = await self._get_all_by(User, "id", user_ids)
 
-            users = users.all()
-
-            for user in users:
+            for user in raw_users:
                 assigned_users.append(GroupAssignedUser(group_id=cast(int, group.id), user_id=cast(int, user.id)))
 
             await revert_service.record(
@@ -73,7 +55,7 @@ class GroupService(BaseService):
         self, user: User, group_id: int, target_user_ids: list[int]
     ) -> tuple[ActivityResult, bool] | None:
         group = await self.get_by_id(group_id)
-        target_users = await self._get_service(UserService).get_all_by_ids(target_user_ids)
+        target_users = await self._get_all_by(User, "id", target_user_ids)
         if not group or not target_users:
             return None
 
@@ -83,10 +65,7 @@ class GroupService(BaseService):
             .join(GroupAssignedUser, GroupAssignedUser.column("user_id") == User.column("id"))
             .where(GroupAssignedUser.group_id == group_id)
         )
-        if len(target_user_ids) > 1:
-            sql_query = sql_query.where(User.column("id").in_(target_user_ids))
-        else:
-            sql_query = sql_query.where(User.column("id") == target_user_ids[0])
+        sql_query = self._where_in(sql_query, User.column("id"), target_user_ids)
         result = await self._db.exec(sql_query)
         results = result.all()
 

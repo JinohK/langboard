@@ -12,11 +12,12 @@ export interface IConversationProps {
     socket: IConnectedSocket;
     inputRef: React.RefObject<HTMLInputElement>;
     buttonRef: React.RefObject<HTMLButtonElement>;
+    sendChatCallbackRef: React.MutableRefObject<(message: string) => void>;
 }
 
 const params = { project_uid: "", page: 1, limit: 20, current_date: new Date() };
 
-function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) {
+function Conversation({ uid, socket, inputRef, buttonRef, sendChatCallbackRef }: IConversationProps) {
     const [t] = useTranslation();
     const conversationRef = useRef<HTMLDivElement>(null);
     const virtualizerRef = useRef<Virtualizer<HTMLElement, Element> | null>(null);
@@ -30,7 +31,7 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
         hasNextPage,
     } = useGetProjectChatMessages(params, {
         getNextPageParam: (lastPage, _, lastPageParam) => {
-            if (lastPage.total >= lastPageParam.page * lastPageParam.limit) {
+            if (lastPage.histories.length === params.limit) {
                 return {
                     ...lastPageParam,
                     page: lastPageParam.page + 1,
@@ -41,15 +42,16 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
         },
     });
     const [messages, setMessages] = useState<IChatMessageProps[]>(chatHistories?.pages.flatMap((page) => page.histories) ?? []);
-    let streamChat: IChatMessageProps | null = null;
+    const streamChatRef = useRef<IChatMessageProps | null>(null);
     const sentCallback = useCallback((data: { uid: string; message: string }) => {
         setMessages((prev) => [
+            ...prev.slice(0, 1),
             {
                 uid: data.uid,
                 message: data.message,
                 isReceived: false,
             },
-            ...prev,
+            ...prev.slice(2),
         ]);
         conversationRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
@@ -59,37 +61,55 @@ function Conversation({ uid, socket, inputRef, buttonRef }: IConversationProps) 
             return;
         }
 
-        streamChat = {
+        streamChatRef.current = {
             uid: data.uid,
             message: "",
             isReceived: true,
             isWaiting: true,
         };
 
-        setMessages((prev) => [streamChat!, ...prev]);
+        setMessages((prev) => [streamChatRef.current!, ...prev.slice(1)]);
         conversationRef.current?.scrollTo({ top: 0 });
     }, []);
     const bufferCallback = useCallback((data: { uid: string; message: string }) => {
-        if (!streamChat || streamChat.uid !== data.uid) {
+        if (!streamChatRef.current || streamChatRef.current.uid !== data.uid) {
             return;
         }
 
-        streamChat.message = data.message;
+        streamChatRef.current.message = data.message;
+        streamChatRef.current.isWaiting = false;
 
         setMessages((prev) => [...prev]);
     }, []);
     const endCallback = useCallback((data: { uid: string }) => {
-        if (!streamChat || streamChat.uid !== data.uid) {
+        if (!streamChatRef.current || streamChatRef.current.uid !== data.uid) {
             return;
         }
 
         setMessages((prev) => [...prev]);
 
-        streamChat = null;
+        streamChatRef.current = null;
         params.current_date = new Date();
         inputRef.current!.disabled = false;
         buttonRef.current!.disabled = false;
     }, []);
+    sendChatCallbackRef.current = (message: string) => {
+        setMessages((prev) => [
+            {
+                uid: "waiting-response-chat-receiving",
+                message: "",
+                isReceived: true,
+                isWaiting: true,
+            },
+            {
+                uid: "waiting-response-chat-sending",
+                message: message,
+                isReceived: false,
+                isWaiting: true,
+            },
+            ...prev,
+        ]);
+    };
 
     useEffect(() => {
         if (!socket.isConnected()) {

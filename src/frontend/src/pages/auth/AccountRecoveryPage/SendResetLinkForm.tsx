@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Floating, Form, IconComponent, Toast } from "@/components/base";
+import { Button, Flex, Floating, Form, IconComponent, Toast } from "@/components/base";
 import useSendResetLink from "@/controllers/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -91,11 +91,11 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
                     <Floating.LabelInput label={t("user.Last Name")} isFormControl disabled={isValidating} />
                     {errors.lastname && <FormErrorMessage error={errors.lastname} icon="circle-alert" />}
                 </Form.Field>
-                <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
+                <Flex items="center" gap="8" justify="end" mt="16">
                     <Button type="submit" disabled={isValidating}>
                         {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
-                </div>
+                </Flex>
             </Form.Root>
         );
     }

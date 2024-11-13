@@ -6,9 +6,9 @@ from langchain_core.runnables.utils import Input
 from pydantic import BaseModel
 
 
-def get_langchain_output_message(output: dict) -> str | None:
+def get_langchain_output_message(output: Any) -> str | None:
     if hasattr(output, "response"):
-        return output.response  # type: ignore
+        return output.response
     elif "response" in output:
         return output["response"]
     else:
@@ -33,7 +33,7 @@ class LangchainStreamResponse:
 
     async def __aiter__(self) -> AsyncGenerator[str, Any]:
         async for output in self.__runnable.astream(self.__input):
-            response = get_langchain_output_message(output)  # type: ignore
+            response = get_langchain_output_message(output)
             if response is not None:
                 yield response
             else:

@@ -23,4 +23,4 @@ def class_instance(*args, **kwargs):
     def cls(cls: type[_TClass]) -> _TClass:
         return cls(*args, **kwargs)
 
-    return cls  # type: ignore
+    return cls

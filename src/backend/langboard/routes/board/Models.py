@@ -8,6 +8,11 @@ class ChatHistoryPagination(Pagination):
 
 
 @form_model
+class ChangeColumnOrderForm(BaseFormModel):
+    order: int
+
+
+@form_model
 class ChangeTaskOrderForm(BaseFormModel):
     order: int
     column_uid: str = ""

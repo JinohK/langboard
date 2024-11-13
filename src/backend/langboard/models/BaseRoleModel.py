@@ -33,6 +33,9 @@ class BaseRoleModel(BaseSqlModel):
     def set_all_actions(self) -> None:
         self.actions = [ALL_GRANTED]
 
+    def api_response(self):
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         keys: list[str | tuple[str, str]] = ["user_id", "group_id"]
         keys.extend(self.get_filterable_columns())

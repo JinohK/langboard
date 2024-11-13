@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Floating, Form, IconComponent } from "@/components/base";
+import { Button, Flex, Floating, Form, IconComponent } from "@/components/base";
 import useAuthEmail from "@/controllers/auth/useAuthEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -65,7 +65,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
                     {errors.email && <FormErrorMessage error={errors.email} icon="circle-alert" />}
                 </Form.Field>
-                <div className="mt-16 flex items-center gap-8 max-xs:justify-between xs:justify-end">
+                <Flex items="center" gap="8" justify={{ initial: "between", xs: "end" }} mt="16">
                     <Button
                         type="button"
                         variant="ghost"
@@ -77,7 +77,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     <Button type="submit" disabled={isValidating}>
                         {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
-                </div>
+                </Flex>
             </Form.Root>
         </>
     );

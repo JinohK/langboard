@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SubmitButton from "@/components/SubmitButton";
-import { Button, Command, IconComponent, Popover, Skeleton, Toast } from "@/components/base";
+import { Button, Command, Flex, IconComponent, Popover, Skeleton, Toast } from "@/components/base";
 import useChangePrimaryEmail from "@/controllers/account/useChangePrimaryEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -59,7 +59,7 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
     return (
         <div>
             <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Primary email")}</h4>
-            <div className="flex items-center gap-2">
+            <Flex items="center" gap="2">
                 <Popover.Root open={open} onOpenChange={setOpen}>
                     <Popover.Trigger asChild>
                         <Button variant="outline" role="combobox" aria-expanded={open} className="min-w-64 justify-between" disabled={isValidating}>
@@ -108,7 +108,7 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
                 <SubmitButton type="button" size="sm" onClick={handleSubmit} isValidating={isValidating}>
                     {t("common.Save")}
                 </SubmitButton>
-            </div>
+            </Flex>
         </div>
     );
 }

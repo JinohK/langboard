@@ -5,7 +5,7 @@ import ResizableSidebar, { IResizableSidebarProps } from "@/components/Resizable
 import Sidebar from "@/components/Sidebar";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { cn } from "@/core/utils/ComponentUtils";
-import { ScrollArea } from "@/components/base";
+import { Flex, ScrollArea } from "@/components/base";
 
 interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;
@@ -13,6 +13,7 @@ interface IBaseDashboardStyledLayoutProps {
     sidebarNavs?: ISidebarNavItem[];
     resizableSidebar?: Omit<IResizableSidebarProps, "main">;
     noPadding?: bool;
+    scrollAreaMutable?: React.ComponentPropsWithoutRef<typeof ScrollArea.Root>["mutable"];
 }
 
 interface ISidebarDashboardStyledLayoutProps extends IBaseDashboardStyledLayoutProps {
@@ -31,10 +32,11 @@ export type TDashboardStyledLayoutProps =
     | IBaseDashboardStyledLayoutProps;
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
-    ({ children, headerNavs, sidebarNavs, resizableSidebar, noPadding, ...props }, ref) => {
+    ({ children, headerNavs, sidebarNavs, resizableSidebar, noPadding, scrollAreaMutable, ...props }, ref) => {
         const main = (
             <ScrollArea.Root viewportId="main" className="relative size-full overflow-y-auto">
                 <main className={cn("relative size-full overflow-y-auto", noPadding ? "" : "p-4 md:p-6 lg:p-8")}>{children}</main>
+                <ScrollArea.Bar mutable={scrollAreaMutable} />
             </ScrollArea.Root>
         );
 
@@ -48,10 +50,10 @@ const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutP
         }
 
         return (
-            <div className="flex min-h-screen w-full flex-col" ref={ref} {...props}>
+            <Flex direction="col" w="full" className="min-h-screen" ref={ref} {...props}>
                 {headerNavs && <Header navs={headerNavs} />}
                 <div className="min-h-[calc(100vh_-_theme(spacing.16))] w-full overflow-y-auto">{sidebar}</div>
-            </div>
+            </Flex>
         );
     }
 );

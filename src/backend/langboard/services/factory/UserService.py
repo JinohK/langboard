@@ -1,8 +1,7 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Literal, overload
+from typing import Any
 from urllib.parse import urlparse
-from sqlmodel import desc
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.security import Auth
@@ -26,10 +25,23 @@ class UserService(BaseService):
         return f"{cache_type}:{email}"
 
     async def get_by_id(self, user_id: int | None) -> User | None:
-        return await self.__get("id", user_id)
+        return await self._get_by(User, "id", user_id)
 
     async def get_by_email(self, email: str | None) -> tuple[User, UserEmail | None] | tuple[None, None]:
-        return await self.__get("email", email)
+        user = await self._get_by(User, "email", email)
+        if user:
+            return user, None
+        result = await self._db.exec(
+            self._db.query("select")
+            .tables(User, UserEmail)
+            .join(
+                UserEmail,
+                (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
+            )
+            .where(UserEmail.column("email") == email)
+            .limit(1)
+        )
+        return result.first() or (None, None)
 
     async def get_by_token(
         self, token: str | None, key: str | None
@@ -38,15 +50,6 @@ class UserService(BaseService):
             return None, None
         email = Encryptor.decrypt(token, key)
         return await self.get_by_email(email)
-
-    async def get_all_by_ids(self, user_ids: list[int]) -> list[User]:
-        sql_query = self._db.query("select").table(User)
-        if len(user_ids) > 1:
-            sql_query = sql_query.where(User.column("id").in_(user_ids))
-        else:
-            sql_query = sql_query.where(User.column("id") == user_ids[0])
-        result = await self._db.exec(sql_query)
-        return list(result.all())
 
     async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
@@ -65,16 +68,10 @@ class UserService(BaseService):
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
         if not user.id:
             return []
-        result = await self._db.exec(self._db.query("select").table(UserEmail).where(UserEmail.user_id == user.id))
-        raw_subemails = result.all()
+        raw_subemails = await self._get_all_by(UserEmail, "user_id", user.id)
         subemails = []
         for subemail in raw_subemails:
-            subemails.append(
-                {
-                    "email": subemail.email,
-                    "verified_at": subemail.verified_at,
-                }
-            )
+            subemails.append(subemail.api_response())
         return subemails
 
     async def get_assigned_group_names(self, user: User) -> list[str]:
@@ -84,8 +81,8 @@ class UserService(BaseService):
         result = await self._db.exec(
             self._db.query("select")
             .column(Group.name)
-            .join(GroupAssignedUser, GroupAssignedUser.group_id == Group.id)  # type: ignore
-            .where(GroupAssignedUser.user_id == user.id)
+            .join(GroupAssignedUser, GroupAssignedUser.column("group_id") == Group.column("id"))
+            .where(GroupAssignedUser.column("user_id") == user.id)
         )
 
         group_names = result.all()
@@ -98,28 +95,22 @@ class UserService(BaseService):
 
         result = await self._db.exec(
             self._db.query("select")
-            .columns(
-                Project.uid,
-                Project.title,
-                Project.project_type,
+            .table(Project)
+            .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
+            .where(ProjectAssignedUser.column("user_id") == user.id)
+            .where(ProjectAssignedUser.column("starred") == True)  # noqa
+            .order_by(
+                ProjectAssignedUser.column("last_viewed_at").desc(),
+                Project.column("updated_at").desc(),
+                Project.column("id").desc(),
             )
-            .join(ProjectAssignedUser, ProjectAssignedUser.project_id == Project.id)  # type: ignore
-            .where(ProjectAssignedUser.user_id == user.id)
-            .where(ProjectAssignedUser.starred == True)  # noqa
-            .order_by(desc(ProjectAssignedUser.last_viewed_at), desc(Project.updated_at), desc(Project.id))
         )
         raw_projects = result.all()
 
         projects = []
 
-        for uid, title, project_type in raw_projects:
-            projects.append(
-                {
-                    "uid": uid,
-                    "title": title,
-                    "project_type": project_type,
-                }
-            )
+        for project in raw_projects:
+            projects.append(project.api_response())
         return projects
 
     async def create_token_url(
@@ -187,10 +178,7 @@ class UserService(BaseService):
 
     async def update(self, user: User, form: dict) -> str:
         for key, value in form.items():
-            if key == "id":
-                continue
-
-            if hasattr(user, key):
+            if key != "id" and hasattr(user, key):
                 setattr(user, key, value)
 
         revert_service = self._get_service(RevertService)
@@ -228,29 +216,3 @@ class UserService(BaseService):
         user.set_password(password)
         await self._db.update(user)
         await self._db.commit()
-
-    @overload
-    async def __get(
-        self, column: Literal["email"], value: Any
-    ) -> tuple[User, UserEmail | None] | tuple[None, None]: ...
-    @overload
-    async def __get(self, column: str, value: Any) -> User | None: ...
-    async def __get(self, column: str, value: Any) -> User | None | tuple[User, UserEmail | None] | tuple[None, None]:
-        if not value:
-            return None
-        result = await self._db.exec(self._db.query("select").table(User).where(User.column(column) == value))
-        user = result.first()
-        if column != "email":
-            return user
-        if user:
-            return user, None
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(User, UserEmail)
-            .join(
-                UserEmail,
-                (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
-            )
-            .where(UserEmail.column("email") == value)
-        )
-        return result.first() or (None, None)

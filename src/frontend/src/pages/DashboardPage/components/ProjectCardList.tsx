@@ -3,7 +3,7 @@ import InfiniteScroll from "react-infinite-scroller";
 import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import ProjectCard from "@/pages/DashboardPage/components/ProjectCard";
+import ProjectCard, { SkeletonProjectCard } from "@/pages/DashboardPage/components/ProjectCard";
 
 export interface IProjectCardListProps {
     curPage: number;
@@ -28,7 +28,7 @@ function ProjectCardList({
     const skeletonCards = [];
 
     for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<ProjectCard isSkeleton={true} key={createShortUUID()} />);
+        skeletonCards.push(<SkeletonProjectCard key={createShortUUID()} />);
     }
 
     useEffect(() => {
@@ -36,7 +36,12 @@ function ProjectCardList({
         for (let i = 0; i < projects.length; ++i) {
             const project = projects[i];
             newProjectCards.push(
-                <ProjectCard project={project} key={project.uid} refetchAllStarred={refetchAllStarred} refetchProjects={refetchProjects} />
+                <ProjectCard
+                    project={project}
+                    key={`${project.uid}-${createShortUUID()}`}
+                    refetchAllStarred={refetchAllStarred}
+                    refetchProjects={refetchProjects}
+                />
             );
         }
 

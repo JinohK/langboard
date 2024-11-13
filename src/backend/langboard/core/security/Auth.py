@@ -125,7 +125,7 @@ class Auth:
 
         try:
             session = DbSession()
-            result = await session.exec(session.query("select").table(User).where(User.id == user_id))
+            result = await session.exec(session.query("select").table(User).where(User.id == user_id).limit(1))
             user = result.first()
             await session.close()
 

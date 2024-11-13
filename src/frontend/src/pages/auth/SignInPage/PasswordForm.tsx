@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Checkbox, Floating, Form, IconComponent, Label, Toast } from "@/components/base";
+import { Button, Checkbox, Flex, Floating, Form, IconComponent, Label, Toast } from "@/components/base";
 import useSignIn from "@/controllers/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -114,14 +114,14 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     <Checkbox onClick={() => setShouldShowPassword((prev) => !prev)} disabled={isValidating} />
                     {t("signIn.Show password")}
                 </Label>
-                <div className="mt-8 flex items-center gap-8 max-xs:justify-between xs:justify-end">
+                <Flex items="center" gap="8" justify={{ initial: "between", xs: "end" }} mt="16">
                     <Button type="button" variant="ghost" disabled={isValidating} onClick={toFindPassword}>
                         {t("signIn.Forgot password?")}
                     </Button>
                     <Button type="submit" disabled={isValidating}>
                         {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                     </Button>
-                </div>
+                </Flex>
             </Form.Root>
         </>
     );

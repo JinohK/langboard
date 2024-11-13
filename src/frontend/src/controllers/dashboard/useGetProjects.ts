@@ -14,11 +14,14 @@ export interface IGetProjectsForm {
 export interface IDashboardProject extends Project.Interface {
     starred: bool;
     group_names: string[];
+    columns: {
+        name: string;
+        count: number;
+    }[];
 }
 
 export interface IGetProjectsResponse {
     projects: IDashboardProject[];
-    total: number;
 }
 
 const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOptions<IGetProjectsResponse, IGetProjectsForm>) => {

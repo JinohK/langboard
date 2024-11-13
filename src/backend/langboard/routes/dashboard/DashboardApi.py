@@ -32,9 +32,9 @@ async def get_projects(
     if list_type not in ["all", "starred", "recent", "unstarred"]:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    projects, total = await service.project.get_dashboard_list(user, list_type, query)
+    projects = await service.project.get_dashboard_list(user, list_type, query)
 
-    response = DashboardProjectListResponse(projects=projects, total=total)
+    response = DashboardProjectListResponse(projects=projects)
 
     return response
 

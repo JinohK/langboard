@@ -12,8 +12,8 @@ class WebSocket(SocketifyWebSocket):
     @overload
     def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
     @overload
-    def send(self, event_response: SocketResponse, compress: bool = False, fin: bool = True): ...
-    def send(  # type: ignore
+    def send(self, event_response: SocketResponse, data: None = None, compress: bool = False, fin: bool = True): ...
+    def send(
         self,
         event_response: SocketResponse | str,
         data: Any = None,
@@ -57,8 +57,8 @@ class WebSocket(SocketifyWebSocket):
     @overload
     def publish(self, topic: str, event_response: str, data: Any = None, compress: bool = False): ...
     @overload
-    def publish(self, topic: str, event_response: SocketResponse, compress: bool = False): ...
-    def publish(  # type: ignore
+    def publish(self, topic: str, event_response: SocketResponse, data: None = None, compress: bool = False): ...
+    def publish(
         self,
         topic: str,
         event_response: SocketResponse | str,

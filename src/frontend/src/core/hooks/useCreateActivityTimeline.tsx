@@ -1,11 +1,17 @@
-import { IconComponent, Timeline } from "@/components/base";
+import { IconComponent, Skeleton, Timeline } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { Activity, User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
+export interface IActivityTimelineProps {
+    activity: Activity.Interface;
+    user: User.Interface;
+    isCurrentUser?: bool;
+}
 
 const useCreateActivityTimeline = (type: string) => {
     const [t] = useTranslation();
@@ -17,10 +23,14 @@ const useCreateActivityTimeline = (type: string) => {
     const getLink = (activityType: Activity.Interface["activity_type"], shared: Activity.Interface["activity"]["shared"]) => {
         switch (activityType) {
             case "project.created":
-                return ROUTES.BOARD.MAIN(shared.uid as string);
             case "project.updated":
-                return ROUTES.BOARD.MAIN(shared.uid as string);
-            case "task.changed_order":
+            case "project.assigned_user":
+            case "project.unassigned_user":
+            case "project.assigned_group":
+            case "project.unassigned_group":
+            case "project.column_changed_order":
+                return ROUTES.BOARD.MAIN(shared.project_uid as string);
+            case "task.changed_column":
                 return ROUTES.BOARD.TASK(shared.project_uid as string, shared.task_uid as string);
             default:
                 return null;
@@ -51,7 +61,24 @@ const useCreateActivityTimeline = (type: string) => {
         return values;
     };
 
-    const create = (activity: Activity.Interface, user: User.Interface, isCurrentUser: bool = true) => {
+    const SkeletonActivity = memo(() => (
+        <Timeline.Item status="done" className="gap-x-2">
+            <Timeline.Heading>
+                <Skeleton as="span" className="block h-6 w-44" />
+            </Timeline.Heading>
+            <Timeline.Dot
+                status="custom"
+                customIcon={<Skeleton as="span" className="inline-block size-8 rounded-full" />}
+                className="size-8 border-none"
+            />
+            <Timeline.Line done className="animate-pulse rounded-md bg-primary/10" />
+            <Timeline.Content>
+                <Skeleton as="span" className="block h-14 w-56" />
+            </Timeline.Content>
+        </Timeline.Item>
+    ));
+
+    const ActivityTimeline = memo(({ activity, user, isCurrentUser = true }: IActivityTimelineProps) => {
         const link = getLink(activity.activity_type, activity.activity.shared);
         let avatar;
         if (isCurrentUser) {
@@ -92,9 +119,9 @@ const useCreateActivityTimeline = (type: string) => {
                 </Timeline.Content>
             </Timeline.Item>
         );
-    };
+    });
 
-    return { create };
+    return { SkeletonActivity, ActivityTimeline };
 };
 
 export default useCreateActivityTimeline;

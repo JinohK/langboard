@@ -3,7 +3,7 @@ import { VariantProps, tv } from "tailwind-variants";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 
-const timelineVariants = tv(
+export const TimelineVariants = tv(
     {
         base: "grid",
         variants: {
@@ -22,11 +22,11 @@ const timelineVariants = tv(
     }
 );
 
-interface TimelineProps extends React.HTMLAttributes<HTMLUListElement>, VariantProps<typeof timelineVariants> {}
+interface TimelineProps extends React.HTMLAttributes<HTMLUListElement>, VariantProps<typeof TimelineVariants> {}
 
 const Root = React.forwardRef<HTMLUListElement, TimelineProps>(({ children, className, positions, ...props }, ref) => {
     return (
-        <ul className={cn(timelineVariants({ positions }), className)} ref={ref} {...props}>
+        <ul className={cn(TimelineVariants({ positions }), className)} ref={ref} {...props}>
             {children}
         </ul>
     );
@@ -141,10 +141,10 @@ const timelineHeadingVariants = tv(
     }
 );
 
-interface TimelineHeadingProps extends React.HTMLAttributes<HTMLParagraphElement>, VariantProps<typeof timelineHeadingVariants> {}
+interface TimelineHeadingProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof timelineHeadingVariants> {}
 
-const Heading = React.forwardRef<HTMLParagraphElement, TimelineHeadingProps>(({ className, side, variant, ...props }, ref) => (
-    <p
+const Heading = React.forwardRef<HTMLDivElement, TimelineHeadingProps>(({ className, side, variant, ...props }, ref) => (
+    <div
         role="heading"
         aria-level={variant === "primary" ? 2 : 3}
         className={cn(timelineHeadingVariants({ side, variant }), className)}

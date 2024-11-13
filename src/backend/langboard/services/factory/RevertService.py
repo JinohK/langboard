@@ -29,9 +29,7 @@ class RevertService(BaseService):
         return "revert"
 
     async def revert(self, revert_key: str) -> bool:
-        sql_query = self._db.query("select").table(RevertableRecord).where(RevertableRecord.revert_key == revert_key)
-        result = await self._db.exec(sql_query)
-        records = result.all()
+        records = await self._get_all_by(RevertableRecord, "revert_key", revert_key)
         if not records:
             return False
 
@@ -218,6 +216,7 @@ class RevertService(BaseService):
             self._db.query("select")
             .columns(table(record.table_name), text("*"))  # type: ignore
             .where(column("id") == record.target_id)
+            .limit(1)
         )
         current_record = cast(Row | None, result.first())
         return dict(current_record._mapping) if current_record else {}

@@ -88,13 +88,17 @@ class SocketApp(dict):
 
         await self._run_events(user_data["route_path"], SocketDefaultEvent.Open, req)
 
-    async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, _: OpCode) -> None:
+    async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, code: OpCode) -> None:
         user_data = ws.get_user_data()
         if not user_data or not self._is_valid_user_data(user_data):
             self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
             return
 
         if not await self._validate_token(ws, user_data["auth_token"]):
+            return
+
+        if not message:
+            ws.send("", OpCode.PONG)
             return
 
         try:

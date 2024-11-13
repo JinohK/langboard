@@ -7,7 +7,7 @@ import { IHeaderProps } from "@/components/Header/types";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import UserAvatar from "@/components/UserAvatar";
-import { Button, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
+import { Button, Flex, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 
@@ -25,7 +25,25 @@ function Header({ navs }: IHeaderProps) {
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-            <div className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+            <Flex
+                direction={{
+                    initial: "col",
+                    md: "row",
+                }}
+                items={{
+                    md: "center",
+                }}
+                gap={{
+                    initial: "6",
+                    md: "5",
+                    lg: "6",
+                }}
+                textSize={{
+                    initial: "lg",
+                    md: "sm",
+                }}
+                className="font-medium max-md:hidden"
+            >
                 <a onClick={toDashboard} className="flex size-6 cursor-pointer items-center gap-2 text-lg font-semibold md:text-base">
                     <CachedImage src="/images/logo.png" alt="Logo" size="full" />
                 </a>
@@ -36,7 +54,7 @@ function Header({ navs }: IHeaderProps) {
                         </NavigationMenu.List>
                     </NavigationMenu.Root>
                 )}
-            </div>
+            </Flex>
             {navs.length > 0 && (
                 <Sheet.Root open={isOpened} onOpenChange={setIsOpen}>
                     <Sheet.Title hidden />
@@ -64,7 +82,18 @@ function Header({ navs }: IHeaderProps) {
                     </Sheet.Content>
                 </Sheet.Root>
             )}
-            <div className="flex w-full items-center justify-end gap-2 md:ml-auto lg:gap-3">
+            <Flex
+                items="center"
+                justify="end"
+                gap={{
+                    initial: "2",
+                    md: "3",
+                }}
+                w="full"
+                ml={{
+                    md: "auto",
+                }}
+            >
                 <LanguageSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
                 {separator}
                 <ThemeSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
@@ -93,7 +122,7 @@ function Header({ navs }: IHeaderProps) {
                         </UserAvatar.Root>
                     </>
                 ) : null}
-            </div>
+            </Flex>
         </header>
     );
 }

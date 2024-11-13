@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
-import { Button, Toast } from "@/components/base";
+import { Button, Flex, Toast } from "@/components/base";
 import useResendSignUpLink from "@/controllers/auth/useResendSignUpLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -69,12 +69,12 @@ function CompletePage(): JSX.Element {
             <p className="mt-4 text-sm xs:text-base">
                 {t("signUp.complete.If you don't see the email, check junk, spam, social, or other folders.")}
             </p>
-            <div className="mt-8 flex items-center justify-center gap-3">
+            <Flex items="center" justify="center" gap="3" mt="8">
                 <span className="text-sm xs:text-base">{t("signUp.complete.Haven't received the email?")}</span>
                 <Button type="button" variant="outline" onClick={resend} disabled={isResending}>
                     {t("signUp.complete.Resend")}
                 </Button>
-            </div>
+            </Flex>
         </FormOnlyLayout>
     );
 }

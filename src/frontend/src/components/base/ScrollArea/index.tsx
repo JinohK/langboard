@@ -1,20 +1,21 @@
 "use client";
 
 import * as React from "react";
-import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import * as ScrollAreaPrimitive from "@/components/base/ScrollArea/Primitive";
 import { cn } from "@/core/utils/ComponentUtils";
 
 interface IScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
     viewportId?: string;
+    mutable?: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>["mutable"];
 }
 
 const Root = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>, IScrollAreaProps>(
-    ({ className, children, viewportId, ...props }, ref) => (
+    ({ className, children, viewportId, mutable, onScroll, ...props }, ref) => (
         <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
-            <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]" id={viewportId}>
+            <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]" id={viewportId} onScroll={onScroll}>
                 {children}
             </ScrollAreaPrimitive.Viewport>
-            <Bar />
+            <Bar mutable={mutable} />
             <ScrollAreaPrimitive.Corner />
         </ScrollAreaPrimitive.Root>
     )

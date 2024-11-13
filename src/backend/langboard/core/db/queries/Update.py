@@ -11,5 +11,5 @@ class UpdateQuery:
 
         statement = update(table)
         if not with_deleted and (isinstance(table, type) and issubclass(table, SoftDeleteModel)):
-            statement = statement.where(table.deleted_at == None)  # type: ignore # noqa
+            statement = statement.where(table.column("deleted_at") == None)  # noqa
         return statement

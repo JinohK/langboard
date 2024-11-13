@@ -1,17 +1,26 @@
-from typing import Any, Callable, Concatenate, Coroutine, Generic, ParamSpec, Protocol, TypeVar, cast, overload
+from typing import (
+    Any,
+    Callable,
+    Concatenate,
+    Coroutine,
+    Generic,
+    ParamSpec,
+    Protocol,
+    TypeVar,
+    cast,
+    overload,
+)
 from pydantic import BaseModel
-from sqlmodel.sql.expression import SelectOfScalar
 from ...core.ai.BotType import BotType
 from ...core.db import BaseSqlModel, DbSession
 from ...core.utils.String import pascal_to_snake
-from ...models import User, UserActivity
+from ...models import Group, Project, ProjectColumn, Task, User, UserActivity
 from ...models.BaseActivityModel import ActivityType, BaseActivityModel
 from ..BaseService import BaseService
-from .GroupService import GroupService
 from .RevertService import RevertService, RevertType
-from .UserService import UserService
 
 
+_TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
 _TBaseActivityModel = TypeVar("_TBaseActivityModel", bound=BaseActivityModel)
 _TActivityMethodParams = ParamSpec("_TActivityMethodParams")
 _TActivityMethodReturn = TypeVar("_TActivityMethodReturn", covariant=True)
@@ -159,9 +168,8 @@ class ActivityService(BaseService):
     async def get_activities(
         self, activity_class: type[_TBaseActivityModel], user_id: int, page: int, limit: int, **kwargs
     ) -> list[dict[str, Any]]:
-        query: SelectOfScalar[_TBaseActivityModel] = self.__get_activities_query(
-            activity_class=activity_class, user_id=user_id, **kwargs
-        )
+        query = self._db.query("select").table(activity_class)
+        query = self._where_recursive(query, activity_class, **{"user_id": user_id, **kwargs})
         query = query.order_by(activity_class.column("created_at").desc(), activity_class.column("id").desc()).group_by(
             activity_class.column("id"), activity_class.column("created_at")
         )
@@ -170,55 +178,44 @@ class ActivityService(BaseService):
         raw_activities = result.all()
         activities = []
 
-        user_service = self._get_service(UserService)
-        group_service = self._get_service(GroupService)
-
+        cached = {}
         for raw_activity in raw_activities:
             activity = {
+                "id": raw_activity.id,
                 "activity_type": raw_activity.activity_type.value,
                 "activity": raw_activity.activity,
             }
 
-            if "user_id" in raw_activity.activity["shared"]:
-                user_id = raw_activity.activity["shared"]["user_id"]
-                user = await user_service.get_by_id(user_id)
-                if user:
-                    activity["activity"]["shared"]["user"] = user.api_response()
+            await self.__transform_activity_shared_data(cached, activity, "user_id", User, "id", "user")
+            await self.__transform_activity_shared_data(cached, activity, "user_ids", User, "id", "users")
+            await self.__transform_activity_shared_data(cached, activity, "group_id", Group, "id", "group")
+            await self.__transform_activity_shared_data(cached, activity, "group_ids", Group, "id", "groups")
+            await self.__transform_activity_shared_data(cached, activity, "user_id", User, "id", "user")
+            await self.__transform_activity_shared_data(cached, activity, "project_id", Project, "id", "project")
+            await self.__transform_activity_shared_data(
+                cached, activity, "column_uid", ProjectColumn, "uid", "project_column"
+            )
+            await self.__transform_activity_shared_data(cached, activity, "task_id", Task, "id", "task")
 
-            if "user_ids" in raw_activity.activity["shared"]:
-                user_ids = raw_activity.activity["shared"]["user_ids"]
-                raw_users = await user_service.get_all_by_ids(user_ids)
-                users = []
-                for raw_user in raw_users:
-                    users.append(raw_user.api_response())
-                activity["activity"]["shared"]["users"] = users
-
-            if "group_id" in raw_activity.activity["shared"]:
-                group = await group_service.get_by_id(raw_activity.activity["shared"]["group_id"])
-                if group:
-                    activity["activity"]["shared"]["group"] = group.api_response()
-
-            if "group_ids" in raw_activity.activity["shared"]:
-                group_ids = raw_activity.activity["shared"]["group_ids"]
-                raw_groups = await group_service.get_all_by_ids(group_ids)
-                groups = []
-                for raw_group in raw_groups:
-                    groups.append(raw_group.api_response())
-                activity["activity"]["shared"]["groups"] = groups
             activities.append(activity)
+        cached.clear()
         return activities
 
-    def __get_activities_query(self, activity_class: type[_TBaseActivityModel], **kwargs):
-        """Get activities by filtering with the given parameters.
-
-        If the given parameters are not in the model's fields or are `None`, they will be ignored.
-
-        If no parameters are given, all activities will be returned.
-        """
-        query = self._db.query("select").table(activity_class)
-
-        for arg, value in kwargs.items():
-            if arg in activity_class.model_fields and value is not None:
-                query = query.where(getattr(activity_class, arg) == value)
-
-        return query
+    async def __transform_activity_shared_data(
+        self,
+        cached: dict[str, Any],
+        activity: dict[str, Any],
+        target_key: str,
+        target_model: type[_TBaseModel],
+        column_name: str,
+        transform_key: str,
+    ) -> None:
+        if target_key not in activity["activity"]["shared"]:
+            return
+        target_value = activity["activity"]["shared"][target_key]
+        cached_key = f"{target_key}_{target_value}"
+        if cached_key in cached:
+            return cached[cached_key]
+        target = await self._get_by(target_model, column_name, target_value)
+        if target:
+            activity["activity"]["shared"][transform_key] = target.api_response()

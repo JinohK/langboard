@@ -1,6 +1,6 @@
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroller";
-import { IconComponent, Table, Tooltip } from "@/components/base";
+import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
 let curPage = 1;
@@ -67,9 +67,9 @@ function TasksPage(): JSX.Element {
             hasMore={true}
             threshold={43}
             loader={
-                <div className="mt-6 flex justify-center" key={createShortUUID()}>
+                <Flex justify="center" mt="6" key={createShortUUID()}>
                     <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
-                </div>
+                </Flex>
             }
             initialLoad={false}
             className="!overflow-y-hidden"

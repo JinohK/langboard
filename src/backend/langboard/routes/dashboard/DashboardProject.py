@@ -5,7 +5,6 @@ from ...core.routing import BaseFormModel, form_model
 
 class DashboardProjectListResponse(BaseModel):
     projects: list[dict[str, Any]]
-    total: int
 
 
 @form_model

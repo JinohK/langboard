@@ -27,7 +27,7 @@ function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerI
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
                 <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("locales.title")} size={size}>
-                    {triggerType === "text" ? t(`locales.${i18n.language}`) : <IconComponent icon={`flag-${i18n.language.split("-").pop()}`} />}
+                    {triggerType === "text" ? t(`locales.${i18n.language}`) : <IconComponent icon={`country-${i18n.language.split("-").pop()}`} />}
                     {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>
             </DropdownMenu.Trigger>
@@ -37,7 +37,7 @@ function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerI
                     {langs.map((locale) => {
                         return (
                             <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale} className="cursor-pointer">
-                                <IconComponent icon={`flag-${locale.split("-").pop()}`} className="mr-2" />
+                                <IconComponent icon={`country-${locale.split("-").pop()}`} className="mr-2" />
                                 {t(`locales.${locale}`)}
                             </DropdownMenu.Item>
                         );

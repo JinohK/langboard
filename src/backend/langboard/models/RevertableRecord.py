@@ -28,5 +28,8 @@ class RevertableRecord(BaseSqlModel, table=True):
     def create_revert_key() -> str:
         return create_short_unique_id(16)
 
+    def api_response(self):
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["target_id", "table_name", "valid_until", "revert_type", "is_purged", "is_soft_delete"]

@@ -1,11 +1,13 @@
 import { Children, forwardRef, isValidElement } from "react";
-import { IconComponent } from "@/components/base";
+import { Flex, IconComponent } from "@/components/base";
 import { default as BaseButton, ButtonProps } from "@/components/base/Button";
 import { cn } from "@/core/utils/ComponentUtils";
 
 const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (
-        <div
+        <Flex
+            direction="col"
+            items="center"
             className={cn(
                 "group-data-[fullscreen=false]/floating:absolute group-data-[fullscreen=false]/floating:bottom-16",
                 "group-data-[fullscreen=false]/floating:w-full group-data-[fullscreen=false]/floating:gap-1.5",
@@ -18,15 +20,14 @@ const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>
                 "group-data-[fullscreen=true]/floating:bg-background",
                 "group-data-[expanded=true]/floating:-translate-y-0 group-data-[expanded=true]/floating:scale-x-100",
                 "group-data-[expanded=true]/floating:opacity-90 [&>*]:group-data-[expanded=true]/floating:opacity-100",
-                "z-10 flex scale-x-0 flex-col items-center opacity-0",
-                "w-sc translate-y-full transition-all duration-300 ease-out",
+                "z-10 translate-y-full scale-x-0 opacity-0 transition-all duration-300 ease-out",
                 className
             )}
             {...props}
             ref={ref}
         >
             {children}
-        </div>
+        </Flex>
     );
 });
 Content.displayName = "FloatingButton.Content";

@@ -66,7 +66,7 @@ class S3Storage(BaseStorage):
 
     def _connect_client(self):
         return client(
-            "s3",  # type: ignore
+            "s3",
             region_name=S3_REGION_NAME,
             aws_access_key_id=S3_ACCESS_KEY_ID,
             aws_secret_access_key=S3_SECRET_ACCESS_KEY,

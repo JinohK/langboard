@@ -25,7 +25,10 @@ def board_close(ws: WebSocket, project_uid: str):
 @AppRouter.socket.on("chat:available")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 async def is_chat_available():
-    is_available = await BotRunner.is_available(BotType.ProjectChat)
+    try:
+        is_available = await BotRunner.is_available(BotType.ProjectChat)
+    except Exception:
+        is_available = False
     bot_name = BotRunner.get_bot_name(BotType.ProjectChat)
     return SocketResponse(event="chat:available", data={"available": is_available, "bot_name": bot_name})
 

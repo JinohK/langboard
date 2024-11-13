@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
-import { screenSizeMap } from "@/core/utils/SizeMap";
+import { ScreenMap } from "@/core/utils/VariantUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IResizableSidebarProps {
@@ -30,7 +30,7 @@ function ResizableSidebar({
     const isResizing = useRef(false);
     const [t] = useTranslation();
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < screenSizeMap.md);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < ScreenMap.size.md);
 
     const collapsedWidth = 26;
 
@@ -42,7 +42,7 @@ function ResizableSidebar({
         const { destroy: destroyResizeEvent } = setupResizeEvent({
             resizingRef: isResizing,
             doneCallback: () => {
-                setIsMobile(window.innerWidth < screenSizeMap.md);
+                setIsMobile(window.innerWidth < ScreenMap.size.md);
             },
         });
 

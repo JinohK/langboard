@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import PasswordInput from "@/components/PasswordInput";
-import { Button, Floating, Form, IconComponent } from "@/components/base";
+import { Button, Flex, Floating, Form, IconComponent } from "@/components/base";
 import useSignUpExistsEmail from "@/controllers/auth/useSignUpExistsEmail";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
@@ -98,11 +98,11 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 defaultValue={values.password}
                 error={errors["password-confirm"]}
             />
-            <div className="mt-16 flex items-center gap-8 max-xs:justify-end xs:justify-end">
+            <Flex items="center" justify="end" gap="8" mt="16">
                 <Button type="submit" disabled={isValidating}>
                     {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
                 </Button>
-            </div>
+            </Flex>
         </Form.Root>
     );
 }
