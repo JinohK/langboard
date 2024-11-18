@@ -132,7 +132,7 @@ class ProjectService(BaseService):
             project_dict["columns"] = [
                 {
                     "name": column["name"],
-                    "count": await column_service.count_tasks(cast(int, project.id), column["uid"]),
+                    "count": await column_service.count_cards(cast(int, project.id), column["uid"]),
                 }
                 for column in columns
             ]
@@ -253,22 +253,6 @@ class ProjectService(BaseService):
         activity_result = ActivityResult(user_or_bot=cast(User, user), revert_key=revert_key, **activitiy_params)
         return activity_result, revert_key
 
-    @overload
-    async def assign_user(
-        self, user: User, project: Project, target_user: User, grant_actions: list[str] | None = None
-    ) -> str | None: ...
-    @overload
-    async def assign_user(
-        self, user: User, project: Project, target_user: int, grant_actions: list[str] | None = None
-    ) -> str | None: ...
-    @overload
-    async def assign_user(
-        self, user: User, project: int, target_user: int, grant_actions: list[str] | None = None
-    ) -> str | None: ...
-    @overload
-    async def assign_user(
-        self, user: User, project: int, target_user: User, grant_actions: list[str] | None = None
-    ) -> str | None: ...
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedUser)
     async def assign_user(
         self, user: User, project: Project | int, target_user: User | int, grant_actions: list[str] | None = None
@@ -323,22 +307,6 @@ class ProjectService(BaseService):
 
         return activity_result, revert_key
 
-    @overload
-    async def assign_group(
-        self, user: User, project: Project, group: Group, grant_actions: list[str] | None = None
-    ) -> str: ...
-    @overload
-    async def assign_group(
-        self, user: User, project: Project, group: int, grant_actions: list[str] | None = None
-    ) -> str: ...
-    @overload
-    async def assign_group(
-        self, user: User, project: int, group: int, grant_actions: list[str] | None = None
-    ) -> str: ...
-    @overload
-    async def assign_group(
-        self, user: User, project: int, group: Group, grant_actions: list[str] | None = None
-    ) -> str: ...
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedGroup)
     async def assign_group(
         self, user: User, project: Project | int, group: Group | int, grant_actions: list[str] | None = None
@@ -349,12 +317,13 @@ class ProjectService(BaseService):
         if not project or not group or not project.id or not group.id:
             raise ValueError("Project or user not found")
 
-        role_service = self._get_service(RoleService)
-        if grant_actions:
-            role = await role_service.project.grant(actions=grant_actions, group_id=group.id, project_id=project.id)
-        else:
-            role = await role_service.project.grant_default(group_id=group.id, project_id=project.id)
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(User)
+            .join(GroupAssignedUser, User.column("id") == GroupAssignedUser.column("user_id"))
+        )
 
+        role_service = self._get_service(RoleService)
         query = (
             self._db.query("select")
             .tables(User, ProjectAssignedUser)
@@ -370,18 +339,27 @@ class ProjectService(BaseService):
         target_users = result.all()
 
         assigned_users: list[ProjectAssignedUser] = []
+        roles: list[ProjectRole] = []
         for target_user, assigned in target_users:
             if assigned is not None or target_user.id is None:
                 continue
 
             assigned_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
             assigned_users.append(assigned_user)
+            if grant_actions:
+                role = await role_service.project.grant(
+                    actions=grant_actions, user_id=target_user.id, project_id=project.id
+                )
+            else:
+                role = await role_service.project.grant_default(user_id=target_user.id, project_id=project.id)
+            roles.append(role)
+
         self._db.insert_all(assigned_users)
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(
             *[
-                revert_service.create_record_model(role, RevertType.Delete if role.is_new() else RevertType.Update),
+                *[revert_service.create_record_model(role, RevertType.Delete) for role in roles],
                 *[
                     revert_service.create_record_model(assigned_user, RevertType.Delete)
                     for assigned_user in assigned_users
@@ -394,20 +372,14 @@ class ProjectService(BaseService):
             user_or_bot=user,
             model=project,
             shared={"project_uid": project.uid, "group_id": group.id, "project_id": project.id},
-            new={},
+            new={
+                "user_ids": [assigned_user.user_id for assigned_user in assigned_users],
+            },
             revert_key=revert_key,
         )
 
         return activity_result, revert_key
 
-    @overload
-    async def withdraw_user(self, user: User, project: Project, target_user: User) -> str | None: ...
-    @overload
-    async def withdraw_user(self, user: User, project: Project, target_user: int) -> str | None: ...
-    @overload
-    async def withdraw_user(self, user: User, project: int, target_user: User) -> str | None: ...
-    @overload
-    async def withdraw_user(self, user: User, project: int, target_user: int) -> str | None: ...
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedUser)
     async def withdraw_user(
         self, user: User, project: Project | int, target_user: User | int
@@ -473,85 +445,3 @@ class ProjectService(BaseService):
             activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
             return activity_result, revert_key
         return None
-
-    @overload
-    async def withdraw_group(self, user: User, project: Project, group: Group) -> str | None: ...
-    @overload
-    async def withdraw_group(self, user: User, project: Project, group: int) -> str | None: ...
-    @overload
-    async def withdraw_group(self, user: User, project: int, group: int) -> str | None: ...
-    @overload
-    async def withdraw_group(self, user: User, project: int, group: Group) -> str | None: ...
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedGroup)
-    async def withdraw_group(
-        self, user: User, project: Project | int, group: Group | int
-    ) -> tuple[ActivityResult, str] | None:
-        project = cast(Project, await self.get_by_id(project) if isinstance(project, int) else project)
-        group = cast(Group, await self._get_by(Group, "id", group)) if isinstance(group, int) else group
-        if not project or not group or not project.id or not group.id:
-            raise ValueError("Project or user not found")
-
-        role_service = self._get_service(RoleService)
-        role_class = role_service.project._model_class
-
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(ProjectAssignedUser, role_class)
-            .join(
-                User,
-                (ProjectAssignedUser.column("user_id") == User.column("id")) & (User.column("deleted_at") == None),  # noqa
-            )
-            .join(GroupAssignedUser, User.column("id") == GroupAssignedUser.column("user_id"))
-            .join(
-                Project,
-                (ProjectAssignedUser.column("project_id") == Project.column("id"))
-                & (Project.column("owner_id") != User.column("id"))
-                & (User.column("deleted_at") == None),  # noqa
-            )
-            .outerjoin(
-                role_class,
-                (role_class.column("user_id") == User.id)
-                & (role_class.column("project_id") == ProjectAssignedUser.column("project_id")),
-            )
-            .where(GroupAssignedUser.group_id == group.id)
-            .where(ProjectAssignedUser.project_id == project.id)
-        )
-        results = result.all()
-
-        assigned_users: list[ProjectAssignedUser] = [
-            assigned_user
-            for assigned_user, assigned_role in results
-            if assigned_user is not None and assigned_role is None
-        ]
-
-        role = await role_service.project.withdraw(group_id=group.id, project_id=project.id)
-
-        revert_service = self._get_service(RevertService)
-        revert_models = []
-
-        if role:
-            revert_models.append(revert_service.create_record_model(role, RevertType.Insert))
-
-        activity_result_params = {
-            "user_or_bot": user,
-            "model": project,
-            "shared": {"project_uid": project.uid, "group_id": group.id, "project_id": project.id},
-            "new": {},
-        }
-
-        if not assigned_users:
-            if revert_models:
-                revert_key = await revert_service.record(*revert_models, only_commit=True)
-                activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
-                return activity_result, revert_key
-            return
-
-        revert_models.extend(
-            [revert_service.create_record_model(assigned_user, RevertType.Insert) for assigned_user in assigned_users]
-        )
-
-        if revert_models:
-            revert_key = await revert_service.record(*revert_models, only_commit=True)
-            activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
-            return activity_result, revert_key
-        return

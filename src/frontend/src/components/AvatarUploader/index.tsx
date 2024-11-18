@@ -130,7 +130,7 @@ function AvatarUploader({
             </Form.Field>
             {!hideDock && (
                 <Dock.Root direction="middle" magnification={50} distance={100} size="sm">
-                    <Dock.IconButton
+                    <Dock.Button
                         buttonProps={{ type: "button", className: "p-3", onClick: () => !isValidating && inputRef.current?.click() }}
                         dockIconProps={{ className: "bg-accent/70 transition-colors duration-300 hover:text-primary" }}
                         title={t("user.Upload avatar")}
@@ -138,7 +138,7 @@ function AvatarUploader({
                         icon="upload"
                     />
                     {canRevertUrl && avatarUrl !== initialAvatarUrl && (
-                        <Dock.IconButton
+                        <Dock.Button
                             buttonProps={{ type: "button", className: "p-3", onClick: revertUrl }}
                             dockIconProps={{ className: "bg-accent/70 transition-colors duration-300 hover:text-primary" }}
                             title={t("user.Revert avatar")}

@@ -5,33 +5,33 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 
 let curPage = 1;
 function TrackingPage(): JSX.Element {
-    // TODO: Task, Implemnting the table
-    const [subtasks, setSubtasks] = useState<
+    // TODO: Card, Implemnting the table
+    const [subcards, setSubcards] = useState<
         {
-            task: string;
-            subtask: string;
+            card: string;
+            subcard: string;
             status: string;
             startedAt: Date;
             timeTaken: string;
         }[]
     >([]);
 
-    const createTasks = () => {
+    const createCards = () => {
         const status = ["Request", "Preparation", "Development", "Testing", "Deployment", "Completed"];
         for (let i = 0; i < 30; ++i) {
-            subtasks.push({
-                task: `Task ${createShortUUID()}`,
-                subtask: `Subask ${createShortUUID()}`,
+            subcards.push({
+                card: `Card ${createShortUUID()}`,
+                subcard: `Subask ${createShortUUID()}`,
                 status: status[Math.floor(Math.random() * status.length)],
                 startedAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))),
                 timeTaken: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
             });
         }
-        setSubtasks([...subtasks]);
+        setSubcards([...subcards]);
     };
 
-    if (subtasks.length === 0) {
-        createTasks();
+    if (subcards.length === 0) {
+        createCards();
     }
 
     const next = (page: number) => {
@@ -42,7 +42,7 @@ function TrackingPage(): JSX.Element {
         new Promise((resolve) => {
             setTimeout(() => {
                 curPage = page;
-                createTasks();
+                createCards();
                 resolve(undefined);
             }, 3500);
         });
@@ -82,23 +82,23 @@ function TrackingPage(): JSX.Element {
                 <Table.Header>
                     <Table.Row>
                         {createCell(true, "ID", "w-1/12 text-center")}
-                        {createCell(true, "Task", "w-1/5 text-center")}
-                        {createCell(true, "Task", "w-1/5 text-center")}
+                        {createCell(true, "Card", "w-1/5 text-center")}
+                        {createCell(true, "Card", "w-1/5 text-center")}
                         {createCell(true, "Status", "w-1/6 text-center")}
                         {createCell(true, "Started at", "w-1/6 text-center")}
                         {createCell(true, "Time taken", "w-1/6 text-center")}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {subtasks.map((task, index) => (
-                        <Table.Row key={task.task}>
+                    {subcards.map((card, index) => (
+                        <Table.Row key={card.card}>
                             {createCell(false, (index + 1).toString(), "max-w-0 truncate text-center")}
-                            {createCell(false, task.task, "max-w-0 truncate text-center")}
-                            {createCell(false, task.subtask, "max-w-0 truncate text-center")}
-                            {createCell(false, task.status, "max-w-0 truncate text-center")}
+                            {createCell(false, card.card, "max-w-0 truncate text-center")}
+                            {createCell(false, card.subcard, "max-w-0 truncate text-center")}
+                            {createCell(false, card.status, "max-w-0 truncate text-center")}
                             {createCell(
                                 false,
-                                task.startedAt.toLocaleDateString(undefined, {
+                                card.startedAt.toLocaleDateString(undefined, {
                                     year: "numeric",
                                     month: "numeric",
                                     day: "numeric",
@@ -106,7 +106,7 @@ function TrackingPage(): JSX.Element {
                                 }),
                                 "max-w-0 truncate text-center"
                             )}
-                            {createCell(false, task.timeTaken, "max-w-0 truncate text-center")}
+                            {createCell(false, card.timeTaken, "max-w-0 truncate text-center")}
                         </Table.Row>
                     ))}
                 </Table.Body>

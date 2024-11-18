@@ -7,6 +7,7 @@ import { User } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
+import { useTranslation } from "react-i18next";
 
 interface IBaseUserAvatarProps {
     user: User.Interface;
@@ -14,7 +15,7 @@ interface IBaseUserAvatarProps {
     listAlign?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
     className?: string;
-    withName?: boolean;
+    withName?: bool;
     nameClassName?: string;
     labelClassName?: string;
 }
@@ -34,6 +35,7 @@ interface IUserAvatarListPropsWithoutName extends IBaseUserAvatarProps {
 export type TUserAvatarProps = IUserAvatarListPropsWithName | IUserAvatarListPropsWithoutName;
 
 function Root({ user, children, listAlign, avatarSize, className, withName = false, nameClassName, labelClassName }: TUserAvatarProps): JSX.Element {
+    const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
 
@@ -55,7 +57,9 @@ function Root({ user, children, listAlign, avatarSize, className, withName = fal
 
     if (children) {
         avatarRootClassName = cn(avatarRootClassName, "cursor-pointer", avatarAfterPseudoClassNames);
-        avatarRootOnClick = () => setIsOpened(!isOpened);
+        if (user.id !== 0) {
+            avatarRootOnClick = () => setIsOpened(!isOpened);
+        }
     }
 
     const avatar = (
@@ -70,17 +74,16 @@ function Root({ user, children, listAlign, avatarSize, className, withName = fal
     let avatarWrapper = avatar;
 
     if (withName) {
+        const names = user.id !== 0 ? `${user.firstname} ${user.lastname}` : t("common.Unknown User");
         avatarWrapper = (
             <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
                 {avatar}
-                <span className={nameClassName}>
-                    {user.firstname} {user.lastname}
-                </span>
+                <span className={nameClassName}>{names}</span>
             </Flex>
         );
     }
 
-    if (!children) {
+    if (!children || user.id === 0) {
         return avatarWrapper;
     }
 

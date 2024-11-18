@@ -7,13 +7,13 @@ const FlexVariants = tv(
     {
         base: "flex",
         variants: {
-            direction: FlexMap.direction,
-            wrap: FlexMap.wrap,
-            items: FlexMap.items,
-            justify: FlexMap.justify,
-            gap: GapMap.all,
-            gapX: GapMap.x,
-            gapY: GapMap.y,
+            direction: { ...FlexMap.direction },
+            wrap: { ...FlexMap.wrap },
+            items: { ...FlexMap.items },
+            justify: { ...FlexMap.justify },
+            gap: { ...GapMap.all },
+            gapX: { ...GapMap.x },
+            gapY: { ...GapMap.y },
             ...shardTailwindVariants,
         },
     },
@@ -23,7 +23,7 @@ const FlexVariants = tv(
 );
 
 export interface IFlexProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof FlexVariants> {
-    inline?: boolean;
+    inline?: bool;
 }
 
 const Flex = forwardRef<HTMLDivElement, IFlexProps>(({ className, children, inline, ...props }, ref) => {

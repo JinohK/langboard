@@ -30,8 +30,8 @@ const useCreateActivityTimeline = (type: string) => {
             case "project.unassigned_group":
             case "project.column_changed_order":
                 return ROUTES.BOARD.MAIN(shared.project_uid as string);
-            case "task.changed_column":
-                return ROUTES.BOARD.TASK(shared.project_uid as string, shared.task_uid as string);
+            case "card.changed_column":
+                return ROUTES.BOARD.CARD(shared.project_uid as string, shared.card_uid as string);
             default:
                 return null;
         }

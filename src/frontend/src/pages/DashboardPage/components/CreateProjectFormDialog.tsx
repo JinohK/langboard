@@ -39,7 +39,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     </Dialog.Header>
                     <Form.Field name="title">
                         <Floating.LabelInput
-                            label={t("project.Title")}
+                            label={t("project.Project Title")}
                             isFormControl
                             autoFocus
                             autoComplete="off"
@@ -50,7 +50,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     </Form.Field>
                     <Form.Field name="description">
                         <Floating.LabelTextarea
-                            label={t("project.Description")}
+                            label={t("project.Project Description")}
                             isFormControl
                             autoComplete="off"
                             className="mt-4"
@@ -61,7 +61,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     <Form.Field name="project_type">
                         <Select.Root name="project_type" autoComplete="off" disabled={isValidating}>
                             <Select.Trigger className="mt-4 w-full">
-                                <Select.Value placeholder={t("project.Type")} />
+                                <Select.Value placeholder={t("project.Project Type")} />
                             </Select.Trigger>
                             <Select.Content>
                                 {Project.TYPES.map((type) => (

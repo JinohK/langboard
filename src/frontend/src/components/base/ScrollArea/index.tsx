@@ -6,13 +6,14 @@ import { cn } from "@/core/utils/ComponentUtils";
 
 interface IScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
     viewportId?: string;
+    viewportClassName?: string;
     mutable?: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>["mutable"];
 }
 
 const Root = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>, IScrollAreaProps>(
-    ({ className, children, viewportId, mutable, onScroll, ...props }, ref) => (
+    ({ className, children, viewportId, viewportClassName, mutable, onScroll, ...props }, ref) => (
         <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
-            <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]" id={viewportId} onScroll={onScroll}>
+            <ScrollAreaPrimitive.Viewport className={cn("h-full w-full rounded-[inherit]", viewportClassName)} id={viewportId} onScroll={onScroll}>
                 {children}
             </ScrollAreaPrimitive.Viewport>
             <Bar mutable={mutable} />

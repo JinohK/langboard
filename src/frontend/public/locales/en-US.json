@@ -22,7 +22,13 @@
     "Create": "Create",
     "Other": "Other",
     "Actions": "Actions",
-    "Back to Sign In": "Back to Sign In"
+    "Back to Sign In": "Back to Sign In",
+    "Collapse": "Collapse",
+    "Expand": "Expand",
+    "Drag to reorder": "Drag to reorder",
+    "Unknown User": "Unknown User",
+    "Edit": "Edit",
+    "Delete": "Delete"
   },
   "errors": {
     "Unknown error": "Unknown error",
@@ -200,10 +206,6 @@
         "unassigned_user": {
           "title": "Unassigned a user from a project",
           "content": "Unassigned <primary>{{shared.user.firstname}} {{shared.user.lastname}}</primary> from the project <primary>{{shared.project.title}}</primary>."
-        },
-        "unassigned_group": {
-          "title": "Unassigned a group from a project",
-          "content": "Unassigned <primary>{{shared.group.name}}</primary> from the project <primary>{{shared.project.title}}</primary>."
         }
       }
     }
@@ -220,7 +222,7 @@
     "Unstar this project": "Unstar this project",
     "No projects found": "No projects found",
 
-    "Tasks": "Tasks",
+    "Cards": "Cards",
     "Starred": "Starred",
     "Tracking": "Tracking",
 
@@ -232,8 +234,6 @@
     }
   },
   "board": {
-    "Collapse": "Collapse",
-    "Expand": "Expand",
     "Filters": "Filters",
     "filters": {
       "Clear": "Clear",
@@ -246,14 +246,14 @@
       "No members assigned": "No members assigned",
       "Assigned to me": "Assigned to me",
       "Select members": "Select members",
-      "Select tasks": "Select tasks",
+      "Select cards": "Select cards",
       "Clear selections": "Clear selections"
     }
   },
   "project": {
-    "Title": "Project Title",
-    "Description": "Project Description",
-    "Type": "Project Type",
+    "Project Title": "Project Title",
+    "Project Description": "Project Description",
+    "Project Type": "Project Type",
     "Chat with AI": "Chat with AI",
     "Clear chat": "Clear chat",
     "Ask anything to {app} AI!": "Ask anything to {{app}} AI!",
@@ -267,5 +267,35 @@
     },
     "Parents": "Parents",
     "Children": "Children"
+  },
+  "card": {
+    "Title": "Title",
+    "Type": "Type",
+    "Add members": "Add members",
+    "Members": "Members",
+    "Deadline": "Deadline",
+    "Set deadline": "Set deadline",
+    "Description": "Description",
+    "No description": "No description",
+    "Attached files": "Attached files",
+    "Checklist": "Checklist",
+    "Comments": "Comments",
+    "edited": "edited",
+    "React comment": "React comment",
+    "Reply": "Reply",
+    "No comments": "No comments",
+    "Add a comment as {firstname} {lastname}": "Add a comment as {{firstname}} {{lastname}}"
+  },
+  "reaction": {
+    "React": "React",
+    "check-mark": "Check",
+    "thumbs-up": "Thumbs Up",
+    "thumbs-down": "Thumbs Down",
+    "laughing": "Laughing",
+    "party-popper": "Party Popper",
+    "confusing": "Confusing",
+    "heart": "Heart",
+    "rocket": "Rocket",
+    "eyes": "Eyes"
   }
 }

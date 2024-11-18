@@ -17,11 +17,11 @@ export interface IProjectCardListProps {
 }
 
 export const SkeletonProjectCard = memo(() => {
-    const tasks = [];
+    const cards = [];
     for (let i = 0; i < 6; ++i) {
-        tasks.push({
+        cards.push({
             type: null,
-            subtasks: <Skeleton className="inline-block h-3.5 w-3/4" />,
+            subcards: <Skeleton className="inline-block h-3.5 w-3/4" />,
             color: <Skeleton className="inline-block h-0.5 w-full rounded-full" />,
         });
     }
@@ -39,10 +39,10 @@ export const SkeletonProjectCard = memo(() => {
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
-                {tasks.map((task) => (
+                {cards.map((card) => (
                     <Flex direction="col" items="center" gap="0.5" className="min-w-5" key={createShortUUID()}>
-                        {task.subtasks}
-                        {task.color}
+                        {card.subcards}
+                        {card.color}
                     </Flex>
                 ))}
             </Card.Footer>

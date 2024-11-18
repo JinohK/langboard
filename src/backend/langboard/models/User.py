@@ -31,6 +31,16 @@ class User(SoftDeleteModel, table=True):
         return f"{self.firstname} {self.lastname}"
 
     def api_response(self) -> dict[str, Any]:
+        if self.deleted_at is not None:
+            return {
+                "id": 0,
+                "firstname": "",
+                "lastname": "",
+                "email": "",
+                "username": "",
+                "avatar": None,
+            }
+
         return {
             "id": self.id,
             "firstname": self.firstname,

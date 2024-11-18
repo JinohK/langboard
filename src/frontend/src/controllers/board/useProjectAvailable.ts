@@ -10,7 +10,7 @@ export interface IProjectAvailableForm {
 
 export interface IBoardProject extends Project.Interface {
     members: User.Interface[];
-    current_user_role_actions: Project.TProjectRoleActions[];
+    current_user_role_actions: Project.TRoleActions[];
 }
 
 const useProjectAvailable = (form: IProjectAvailableForm, options?: TQueryOptions<IBoardProject>) => {

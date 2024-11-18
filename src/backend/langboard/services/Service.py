@@ -52,9 +52,17 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.ProjectColumnService)
 
     @property
-    def task(self):
-        return self._create_or_get_service(factory.TaskService)
+    def card(self):
+        return self._create_or_get_service(factory.CardService)
 
     @property
     def group(self):
         return self._create_or_get_service(factory.GroupService)
+
+    @property
+    def checkitem(self):
+        return self._create_or_get_service(factory.CheckitemService)
+
+    @property
+    def reaction(self):
+        return self._create_or_get_service(factory.ReactionService)

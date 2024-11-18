@@ -1,11 +1,17 @@
 const useRoleActionFilter = <T extends string>(userActions: (T | "*")[]) => {
     const ALL_GRANTED = "*";
-    const hasRoleAction = (role: T) => {
+    const hasRoleAction = (...roles: T[]) => {
         if (userActions.includes(ALL_GRANTED)) {
             return true;
         }
 
-        return userActions.includes(role);
+        for (let i = 0; i < roles.length; ++i) {
+            if (userActions.includes(roles[i])) {
+                return true;
+            }
+        }
+
+        return false;
     };
 
     return { hasRoleAction };

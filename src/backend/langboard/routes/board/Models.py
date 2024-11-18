@@ -13,6 +13,6 @@ class ChangeColumnOrderForm(BaseFormModel):
 
 
 @form_model
-class ChangeTaskOrderForm(BaseFormModel):
+class ChangeCardOrderForm(BaseFormModel):
     order: int
     column_uid: str = ""

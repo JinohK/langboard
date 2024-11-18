@@ -10,7 +10,7 @@ interface IUserAvatarListProps extends React.HTMLAttributes<HTMLDivElement> {
     users: User.Interface[];
     maxVisible: number;
     size?: TUserAvatarProps["avatarSize"];
-    spacing?: "1" | "2" | "3" | "4" | "5";
+    spacing?: "1" | "2" | "3" | "4" | "5" | "none";
     listAlign?: TUserAvatarProps["listAlign"];
 }
 
@@ -24,6 +24,7 @@ const UserAvatarList = forwardRef<HTMLDivElement, IUserAvatarListProps>(
             3: "-space-x-3",
             4: "-space-x-2",
             5: "-space-x-1",
+            none: "",
         };
 
         return (

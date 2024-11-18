@@ -6,7 +6,7 @@ import { ISidebarNavItem } from "@/components/Sidebar/types";
 import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredProjects";
 import { ROUTES } from "@/core/routing/constants";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
-import TasksPage from "@/pages/DashboardPage/TasksPage";
+import CardsPage from "@/pages/DashboardPage/CardsPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
 import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
 import MyActivityDialog from "@/pages/DashboardPage/components/MyActivityDialog";
@@ -26,10 +26,10 @@ function DashboardPage(): JSX.Element {
                 navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
-        [ROUTES.DASHBOARD.TASKS]: {
-            name: "dashboard.Tasks",
+        [ROUTES.DASHBOARD.CARDS]: {
+            name: "dashboard.Cards",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.TASKS);
+                navigate(ROUTES.DASHBOARD.CARDS);
             },
         },
         starred: {
@@ -81,8 +81,8 @@ function DashboardPage(): JSX.Element {
 
     let pageContent;
     switch (pathname) {
-        case ROUTES.DASHBOARD.TASKS:
-            pageContent = <TasksPage />;
+        case ROUTES.DASHBOARD.CARDS:
+            pageContent = <CardsPage />;
             break;
         case ROUTES.DASHBOARD.TRACKING:
             pageContent = <TrackingPage />;

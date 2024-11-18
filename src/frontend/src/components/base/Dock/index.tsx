@@ -48,8 +48,8 @@ const Root = React.forwardRef<HTMLDivElement, DockProps>(
 
         const renderChildren = () => {
             return React.Children.map(children, (child) => {
-                if (React.isValidElement(child) && (child.type === Icon || child.type === IconButton)) {
-                    if (child.type === IconButton) {
+                if (React.isValidElement(child) && (child.type === Icon || child.type === Button)) {
+                    if (child.type === Button) {
                         return React.cloneElement(child, {
                             ...child.props,
                             dockIconProps: {
@@ -135,14 +135,31 @@ function Icon({ magnification = DEFAULT_MAGNIFICATION, distance = DEFAULT_DISTAN
 
 Icon.displayName = "DockIcon";
 
-export interface IDockIconButtonProps extends Pick<ButtonProps, "title" | "titleSide"> {
+interface IBaseDockButtonProps extends Pick<ButtonProps, "title" | "titleSide"> {
     buttonProps: Omit<ButtonProps, "children" | "title" | "titleSide">;
     dockIconProps: Omit<DockIconProps, "children" | "props">;
+    icon?: string;
+    children?: React.ReactNode;
+}
+
+interface IDockIconButtonProps extends IBaseDockButtonProps {
     icon: string;
 }
 
-function IconButton({ buttonProps, dockIconProps, icon, title, titleSide }: IDockIconButtonProps) {
-    let iconComp = <IconComponent icon={icon} className="size-full" />;
+interface IDockCustomButtonProps extends IBaseDockButtonProps {
+    children: React.ReactNode;
+}
+
+export type TDockButtonProps = IDockIconButtonProps | IDockCustomButtonProps;
+
+function Button({ buttonProps, dockIconProps, title, titleSide, icon, children }: TDockButtonProps) {
+    let iconComp;
+    if (icon) {
+        iconComp = <IconComponent icon={icon} className="size-full" />;
+    } else {
+        iconComp = children;
+    }
+
     if (title) {
         iconComp = (
             <Tooltip.Provider delayDuration={400} disableHoverableContent>
@@ -158,4 +175,4 @@ function IconButton({ buttonProps, dockIconProps, icon, title, titleSide }: IDoc
     return <Icon {...dockIconProps}>{iconComp}</Icon>;
 }
 
-export { DockVariants, Icon, IconButton, Root };
+export { DockVariants, Icon, Button, Root };

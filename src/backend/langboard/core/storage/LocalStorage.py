@@ -1,4 +1,5 @@
 from os import path, unlink
+from pathlib import Path
 from typing import BinaryIO
 from ...Constants import LOCAL_STORAGE_DIR
 from ..utils.String import get_random_filename
@@ -32,7 +33,7 @@ class LocalStorage(BaseStorage):
         return FileModel(
             storage_type=LocalStorage.storage_type,
             storage_name=storage_name.value,
-            original_filename=filename,
+            original_filename=Path(filename).name,
             filename=new_filename,
             path=f"/file/{self._encrypt_storage_type(LocalStorage.storage_type)}/{storage_name.value}/{new_filename}",
         )

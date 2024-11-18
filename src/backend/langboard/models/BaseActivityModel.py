@@ -15,10 +15,10 @@ class ActivityType(Enum):
     ProjectAssignedUser = "project.assigned_user"
     ProjectUnassignedUser = "project.unassigned_user"
     ProjectAssignedGroup = "project.assigned_group"
-    ProjectUnassignedGroup = "project.unassigned_group"
     ProjectColumnChangedOrder = "project.column_changed_order"
-    TaskCreated = "task.created"
-    TaskChangedColumn = "task.changed_column"
+    CardCreated = "card.created"
+    CardChangedColumn = "card.changed_column"
+    CardCheckitemCreated = "card.checkitem.created"
 
 
 class BaseActivityModel(BaseSqlModel):

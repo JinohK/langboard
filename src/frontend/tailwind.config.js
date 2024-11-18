@@ -54,29 +54,55 @@ const config = {
             },
             keyframes: {
                 "accordion-down": {
-                    from: { height: "0" },
-                    to: { height: "var(--radix-accordion-content-height)" },
+                    from: {
+                        height: "0",
+                    },
+                    to: {
+                        height: "var(--radix-accordion-content-height)",
+                    },
                 },
                 "accordion-up": {
-                    from: { height: "var(--radix-accordion-content-height)" },
-                    to: { height: "0" },
+                    from: {
+                        height: "var(--radix-accordion-content-height)",
+                    },
+                    to: {
+                        height: "0",
+                    },
                 },
                 "collapse-down": {
-                    from: { height: "0" },
-                    to: { height: "var(--radix-collapsible-content-height)" },
+                    from: {
+                        height: "0",
+                    },
+                    to: {
+                        height: "var(--radix-collapsible-content-height)",
+                    },
                 },
                 "collapse-up": {
-                    from: { height: "var(--radix-collapsible-content-height)" },
-                    to: { height: "0" },
+                    from: {
+                        height: "var(--radix-collapsible-content-height)",
+                    },
+                    to: {
+                        height: "0",
+                    },
                 },
                 "caret-blink": {
-                    "0%,70%,100%": { opacity: "1" },
-                    "20%,50%": { opacity: "0" },
+                    "0%,70%,100%": {
+                        opacity: "1",
+                    },
+                    "20%,50%": {
+                        opacity: "0",
+                    },
                 },
                 progress: {
-                    "0%": { transform: "translateX(0) scaleX(0)" },
-                    "40%": { transform: "translateX(0) scaleX(0.2)" },
-                    "100%": { transform: "translateX(100%) scaleX(0.2)" },
+                    "0%": {
+                        transform: "translateX(0) scaleX(0)",
+                    },
+                    "40%": {
+                        transform: "translateX(0) scaleX(0.2)",
+                    },
+                    "100%": {
+                        transform: "translateX(100%) scaleX(0.2)",
+                    },
                 },
             },
             animation: {

@@ -7,7 +7,7 @@ class {class_name}({base_class}, table=True):
     
 
     def api_response(self) -> dict[str, Any]:
-        return {}
+        return {empty_dict}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return []

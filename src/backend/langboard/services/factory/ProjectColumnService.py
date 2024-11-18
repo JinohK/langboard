@@ -1,9 +1,9 @@
 from typing import cast
 from ...models import (
+    Card,
     Project,
     ProjectActivity,
     ProjectColumn,
-    Task,
     User,
 )
 from ..BaseService import BaseService
@@ -16,17 +16,17 @@ class ProjectColumnService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project_column"
 
-    async def count_tasks(self, project_id: int, column_uid: str) -> int:
-        sql_query = self._db.query("select").count(Task, Task.id).where(Task.column("project_id") == project_id)
+    async def count_cards(self, project_id: int, column_uid: str) -> int:
+        sql_query = self._db.query("select").count(Card, Card.id).where(Card.column("project_id") == project_id)
         if column_uid == Project.ARCHIVE_COLUMN_UID:
-            sql_query = sql_query.where(Task.column("archived_at") != None)  # noqa
+            sql_query = sql_query.where(Card.column("archived_at") != None)  # noqa
         else:
-            sql_query = sql_query.where(Task.column("project_column_uid") == column_uid)
+            sql_query = sql_query.where(Card.column("project_column_uid") == column_uid)
         result = await self._db.exec(sql_query)
         count = cast(int, result.one())
         return count
 
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.TaskChangedColumn)
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn)
     async def change_column_order(
         self, user: User, project_uid: str, column_uid: str, order: int
     ) -> tuple[ActivityResult | None, bool]:

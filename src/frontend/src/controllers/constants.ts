@@ -38,10 +38,14 @@ export const API_ROUTES = {
         IS_AVAILABLE: "/board/{uid}/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
-        GET_TASKS: "/board/{uid}/tasks",
-        GET_COLUMN_TASKS: "/board/{uid}/column/{column_uid}/tasks",
+        GET_CARDS: "/board/{uid}/cards",
+        GET_COLUMN_CARDS: "/board/{uid}/column/{column_uid}/cards",
         CHANGE_COLUMN_ORDER: "/board/{uid}/column/{column_uid}/order",
-        CHANGE_TASK_ORDER: "/board/{uid}/task/{task_uid}/order",
+        CARD: {
+            CHANGE_ORDER: "/board/{uid}/card/{card_uid}/order",
+            GET_DETAILS: "/board/{uid}/card/{card_uid}",
+            GET_COMMENTS: "/board/{uid}/card/{card_uid}/comments",
+        },
     },
     REVERT: (path: string) => `/revert/${path}`,
 } as const;
@@ -55,7 +59,7 @@ export const SOCKET_SERVER_EVENTS = {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SENT: "chat:sent",
         CHAT_STREAM: "chat:stream",
-        TASK_ORDER_CHANGED: "task:order:changed:{column_uid}",
+        CARD_ORDER_CHANGED: "card:order:changed:{column_uid}",
     },
 } as const;
 
@@ -63,6 +67,6 @@ export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SEND: "chat:send",
-        TASK_ORDER_CHANGED: "task:order:changed",
+        CARD_ORDER_CHANGED: "card:order:changed",
     },
 } as const;

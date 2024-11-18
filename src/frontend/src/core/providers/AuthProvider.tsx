@@ -8,6 +8,7 @@ import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
 
 export interface IAuthUser extends User.Interface {
+    is_admin?: bool;
     industry: string;
     purpose: string;
     affiliation?: string;

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from ...core.ai.BotType import BotType
 from ...core.db import BaseSqlModel, DbSession
 from ...core.utils.String import pascal_to_snake
-from ...models import Group, Project, ProjectColumn, Task, User, UserActivity
+from ...models import Card, Checkitem, Group, Project, ProjectColumn, User, UserActivity
 from ...models.BaseActivityModel import ActivityType, BaseActivityModel
 from ..BaseService import BaseService
 from .RevertService import RevertService, RevertType
@@ -190,12 +190,12 @@ class ActivityService(BaseService):
             await self.__transform_activity_shared_data(cached, activity, "user_ids", User, "id", "users")
             await self.__transform_activity_shared_data(cached, activity, "group_id", Group, "id", "group")
             await self.__transform_activity_shared_data(cached, activity, "group_ids", Group, "id", "groups")
-            await self.__transform_activity_shared_data(cached, activity, "user_id", User, "id", "user")
             await self.__transform_activity_shared_data(cached, activity, "project_id", Project, "id", "project")
             await self.__transform_activity_shared_data(
                 cached, activity, "column_uid", ProjectColumn, "uid", "project_column"
             )
-            await self.__transform_activity_shared_data(cached, activity, "task_id", Task, "id", "task")
+            await self.__transform_activity_shared_data(cached, activity, "card_id", Card, "id", "card")
+            await self.__transform_activity_shared_data(cached, activity, "checkitem_id", Checkitem, "id", "checkitem")
 
             activities.append(activity)
         cached.clear()
@@ -210,12 +210,18 @@ class ActivityService(BaseService):
         column_name: str,
         transform_key: str,
     ) -> None:
+        prefix = ""
         if target_key not in activity["activity"]["shared"]:
-            return
-        target_value = activity["activity"]["shared"][target_key]
-        cached_key = f"{target_key}_{target_value}"
+            for key in activity["activity"]["shared"]:
+                if key.endswith(f"_{target_key}"):
+                    prefix = key[: -len(target_key)]
+            if not prefix:
+                return
+        key = f"{prefix}{target_key}"
+        target_value = activity["activity"]["shared"][key]
+        cached_key = f"{key}_{target_value}"
         if cached_key in cached:
             return cached[cached_key]
         target = await self._get_by(target_model, column_name, target_value)
         if target:
-            activity["activity"]["shared"][transform_key] = target.api_response()
+            activity["activity"]["shared"][f"{prefix}{transform_key}"] = target.api_response()

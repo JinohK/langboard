@@ -31,7 +31,7 @@ export const ROUTES = {
     BOARD: {
         ROUTE: "/board",
         MAIN: (uid: string) => `/board/${uid}`,
-        TASK: (uid: string, taskUID: string) => `/board/${uid}/task/${taskUID}`,
+        CARD: (uid: string, cardUID: string) => `/board/${uid}/${cardUID}`,
     },
     DASHBOARD: {
         ROUTE: "/dashboard",
@@ -42,7 +42,7 @@ export const ROUTES = {
             RECENT: "/dashboard/projects/recent",
             UNSTARRED: "/dashboard/projects/unstarred",
         },
-        TASKS: "/dashboard/tasks",
+        CARDS: "/dashboard/cards",
         TRACKING: "/dashboard/tracking",
     },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,

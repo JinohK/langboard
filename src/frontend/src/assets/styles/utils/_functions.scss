@@ -47,3 +47,10 @@
 
     @return true;
 }
+
+@function color-var($name, $divisions: null) {
+    @if $divisions != null {
+        @return hsl(var(--#{$name}) / $divisions);
+    }
+    @return hsl(var(--#{$name}));
+}

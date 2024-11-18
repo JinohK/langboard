@@ -62,8 +62,8 @@ async def project_chat(
     ws_stream.end(data={"uid": ai_message.uid, "message": ai_message.message})
 
 
-@AppRouter.socket.on("task:order:changed")
+@AppRouter.socket.on("card:order:changed")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-async def task_order_changed(ws: WebSocket, project_uid: str, column_uids: list):
+async def card_order_changed(ws: WebSocket, project_uid: str, column_uids: list):
     for column_uid in column_uids:
-        ws.publish(topic=f"board:{project_uid}", event_response=f"task:order:changed:{column_uid}", data={})
+        ws.publish(topic=f"board:{project_uid}", event_response=f"card:order:changed:{column_uid}", data={})

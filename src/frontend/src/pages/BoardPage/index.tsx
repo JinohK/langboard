@@ -8,26 +8,28 @@ import { SOCKET_CLIENT_EVENTS, SOCKET_ROUTES, SOCKET_SERVER_EVENTS } from "@/con
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IConnectedSocket, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import ChatSidebar from "@/pages/BoardPage/components/ChatSidebar";
-import Board from "@/pages/BoardPage/components/Board";
+import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
+import Board from "@/pages/BoardPage/components/board/Board";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
 
 function BoardPageParamChecker(): JSX.Element {
     const params = useParams();
-    const uid = params.uid;
+    const projectUID = params.projectUID;
+    const cardUID = params.cardUID;
 
-    if (!uid) {
+    if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
-    return <BoardPageProxy uid={uid} />;
+    return <BoardPageProxy projectUID={projectUID} cardUID={cardUID} />;
 }
 
-function BoardPageProxy({ uid }: { uid: string }): JSX.Element {
+function BoardPageProxy({ projectUID, cardUID }: { projectUID: string; cardUID?: string }): JSX.Element {
     const [t] = useTranslation();
     const navigate = useNavigate();
     const { connect, closeAll } = useSocket();
-    const { data: project, error, isSuccess } = useProjectAvailable({ uid });
+    const { data: project, error, isSuccess } = useProjectAvailable({ uid: projectUID });
     const socketRef = useRef<IConnectedSocket | null>(null);
     const isChatAvailableRef = useRef(false);
     const [isReady, setIsReady] = useState(false);
@@ -66,7 +68,7 @@ function BoardPageProxy({ uid }: { uid: string }): JSX.Element {
             return;
         }
 
-        const curSocket = connect(SOCKET_ROUTES.BOARD(uid));
+        const curSocket = connect(SOCKET_ROUTES.BOARD(projectUID));
 
         curSocket.on(SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE, isChatAvailableCallback);
         curSocket.on("error", socketErrorCallback);
@@ -88,24 +90,24 @@ function BoardPageProxy({ uid }: { uid: string }): JSX.Element {
             {!isReady ? (
                 <Progress indeterminate height="1" />
             ) : (
-                <BoardPage uid={uid} project={project!} socket={socketRef.current!} isChatAvailable={isChatAvailableRef.current} />
+                <BoardPage cardUID={cardUID} project={project!} socket={socketRef.current!} isChatAvailable={isChatAvailableRef.current} />
             )}
         </>
     );
 }
 
 interface IBoardPageProps {
-    uid: string;
+    cardUID?: string;
     project: IBoardProject;
     socket: IConnectedSocket;
     isChatAvailable: bool;
 }
 
-function BoardPage({ uid, project, socket, isChatAvailable }: IBoardPageProps): JSX.Element {
+function BoardPage({ cardUID, project, socket, isChatAvailable }: IBoardPageProps): JSX.Element {
     const resizableSidebar = {
         children: (
             <Suspense>
-                <ChatSidebar uid={uid} socket={socket} />
+                <ChatSidebar uid={project.uid} socket={socket} />
             </Suspense>
         ),
         initialWidth: 280,
@@ -120,6 +122,11 @@ function BoardPage({ uid, project, socket, isChatAvailable }: IBoardPageProps): 
             <Suspense>
                 <Board socket={socket} project={project} />
             </Suspense>
+            {cardUID && (
+                <Suspense>
+                    <BoardCard projectUID={project.uid} cardUID={cardUID} socket={socket} />
+                </Suspense>
+            )}
         </DashboardStyledLayout>
     );
 }

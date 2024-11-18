@@ -45,12 +45,12 @@ type ScrollAreaContextValue = {
     onContentChange(content: HTMLDivElement): void;
     scrollbarX: ScrollAreaScrollbarElement | null;
     onScrollbarXChange(scrollbar: ScrollAreaScrollbarElement | null): void;
-    scrollbarXEnabled: boolean;
-    onScrollbarXEnabledChange(rendered: boolean): void;
+    scrollbarXEnabled: bool;
+    onScrollbarXEnabledChange(rendered: bool): void;
     scrollbarY: ScrollAreaScrollbarElement | null;
     onScrollbarYChange(scrollbar: ScrollAreaScrollbarElement | null): void;
-    scrollbarYEnabled: boolean;
-    onScrollbarYEnabledChange(rendered: boolean): void;
+    scrollbarYEnabled: bool;
+    onScrollbarYEnabledChange(rendered: bool): void;
     onCornerWidthChange(width: number): void;
     onCornerHeightChange(height: number): void;
 };
@@ -486,7 +486,7 @@ const ScrollAreaScrollbarVisible = React.forwardRef<ScrollAreaScrollbarVisibleEl
 /* -----------------------------------------------------------------------------------------------*/
 
 type ScrollAreaScrollbarAxisPrivateProps = {
-    hasThumb: boolean;
+    hasThumb: bool;
     sizes: Sizes;
     onSizesChange(sizes: Sizes): void;
     onThumbChange(thumb: ScrollAreaThumbElement | null): void;
@@ -649,7 +649,7 @@ const ScrollAreaScrollbarY = React.forwardRef<ScrollAreaScrollbarAxisElement, Sc
 /* -----------------------------------------------------------------------------------------------*/
 
 type ScrollbarContext = {
-    hasThumb: boolean;
+    hasThumb: bool;
     scrollbar: ScrollAreaScrollbarElement | null;
     onThumbChange(thumb: ScrollAreaThumbElement | null): void;
     onThumbPointerUp(): void;
@@ -662,7 +662,7 @@ const [ScrollbarProvider, useScrollbarContext] = createScrollAreaContext<Scrollb
 type ScrollAreaScrollbarImplElement = React.ElementRef<typeof Primitive.div>;
 type ScrollAreaScrollbarImplPrivateProps = {
     sizes: Sizes;
-    hasThumb: boolean;
+    hasThumb: bool;
     onThumbChange: ScrollbarContext["onThumbChange"];
     onThumbPointerUp: ScrollbarContext["onThumbPointerUp"];
     onThumbPointerDown: ScrollbarContext["onThumbPointerDown"];
@@ -745,6 +745,7 @@ const ScrollAreaScrollbarImpl = React.forwardRef<ScrollAreaScrollbarImplElement,
                     {...scrollbarProps}
                     ref={composeRefs}
                     style={{ position: "absolute", ...scrollbarProps.style }}
+                    data-scroll-area-scrollbar
                     onPointerDown={composeEventHandlers(props.onPointerDown, (event) => {
                         const mainPointer = 0;
                         if (event.button === mainPointer) {
@@ -1046,7 +1047,7 @@ function useResizeObserver(element: HTMLElement | null, onResize: () => void) {
  * correct order in the DOM, adopting the intended consumer `children`.
  */
 function getSubtree(
-    options: { asChild: boolean | undefined; children: React.ReactNode },
+    options: { asChild: bool | undefined; children: React.ReactNode },
     content: React.ReactNode | ((children: React.ReactNode) => React.ReactNode)
 ) {
     const { asChild, children } = options;

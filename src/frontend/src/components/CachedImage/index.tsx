@@ -7,10 +7,14 @@ import { DimensionMap } from "@/core/utils/VariantUtils";
 const CachedImageVariants = tv(
     {
         variants: {
-            size: DimensionMap.all,
+            size: { ...DimensionMap.all },
+            w: { ...DimensionMap.width },
+            h: { ...DimensionMap.height },
         },
         defaultVariants: {
             size: undefined,
+            width: undefined,
+            height: undefined,
         },
     },
     {
@@ -42,10 +46,10 @@ const lazyImage = (src: string) => {
 };
 
 const CachedImage = memo(
-    forwardRef<HTMLImageElement, ICachedImageProps>(({ size, src, fallback, className, ...props }, ref) => {
+    forwardRef<HTMLImageElement, ICachedImageProps>(({ size, w, h, src, fallback, className, ...props }, ref) => {
         const [image, setImage] = useState<React.ReactNode | null>(null);
 
-        const classNames = cn(CachedImageVariants({ size }), className);
+        const classNames = cn(CachedImageVariants({ size, w, h }), className);
 
         useEffect(() => {
             if (!src) {

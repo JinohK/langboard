@@ -11,7 +11,15 @@ function BoardRoute() {
         <Route path={ROUTES.BOARD.ROUTE} key="route-board">
             <Route index element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />} />
             <Route
-                path={ROUTES.BOARD.MAIN(":uid")}
+                path={ROUTES.BOARD.MAIN(":projectUID")}
+                element={
+                    <AuthGuard>
+                        <BoardPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
+                path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")}
                 element={
                     <AuthGuard>
                         <BoardPage />

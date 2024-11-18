@@ -5,7 +5,7 @@ from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import ChangeColumnOrderForm, ChangeTaskOrderForm, ChatHistoryPagination
+from .Models import ChangeColumnOrderForm, ChatHistoryPagination
 from .RoleFinder import project_role_finder
 
 
@@ -50,10 +50,10 @@ async def clear_project_chat(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/board/{project_uid}/tasks")
+@AppRouter.api.get("/board/{project_uid}/cards")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def get_project_tasks(
+async def get_project_cards(
     project_uid: str,
     service: Service = Service.scope(),
 ) -> JsonResponse:
@@ -61,8 +61,8 @@ async def get_project_tasks(
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     columns = await service.project.get_columns(project)
-    tasks = await service.task.get_board_tasks(project_uid)
-    return JsonResponse(content={"tasks": tasks, "columns": columns}, status_code=status.HTTP_200_OK)
+    cards = await service.card.get_board_list(project_uid)
+    return JsonResponse(content={"cards": cards, "columns": columns}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/column/{column_uid}/order")
@@ -76,17 +76,4 @@ async def update_column_order(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     await service.project_column.change_column_order(user, project_uid, column_uid, form.order)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
-
-
-@AppRouter.api.put("/board/{project_uid}/task/{task_uid}/order")
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.TaskUpdate], project_role_finder)
-@AuthFilter.add
-async def update_column_tasks(
-    task_uid: str,
-    form: ChangeTaskOrderForm,
-    user: User = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    await service.task.change_task_order(user, task_uid, form.order, form.column_uid)
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

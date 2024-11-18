@@ -49,7 +49,7 @@ function DashboardRoute() {
                 }
             />
             <Route
-                path={ROUTES.DASHBOARD.TASKS}
+                path={ROUTES.DASHBOARD.CARDS}
                 element={
                     <AuthGuard>
                         <DashboardPage />
