@@ -212,7 +212,9 @@ export const SocketRouteWrapper = ({ children }: ISocketProviderProps): React.Re
     const location = useLocation();
 
     useEffect(() => {
-        closeAll();
+        if (!location.state?.isSamePage) {
+            closeAll();
+        }
     }, [location]);
 
     return children;

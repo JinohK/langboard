@@ -1,10 +1,11 @@
 import { Button, Dialog, Flex, IconComponent, DateTimePicker, Toast } from "@/components/base";
-import Markdown from "@/components/Markdown";
+import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import useGetCardDetails from "@/controllers/board/useGetCardDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
+import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -12,7 +13,6 @@ import BoardCardChecklist from "@/pages/BoardPage/components/card/BoardCardCheck
 import BoardCardFileList from "@/pages/BoardPage/components/card/BoardCardFileList";
 import BoardCommentForm from "@/pages/BoardPage/components/card/BoardCommentForm";
 import BoardCommentList from "@/pages/BoardPage/components/card/BoardCommentList";
-import { IBaseCardRelatedComponentProps } from "@/pages/BoardPage/components/card/types";
 import { forwardRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -53,34 +53,38 @@ function BoardCard({ projectUID, cardUID, socket }: IBoardCardProps): JSX.Elemen
             {!cardData || !aboutMe() ? (
                 "loading..."
             ) : (
-                <BoardCardResult
-                    socket={socket}
+                <BoardCardProvider
                     projectUID={projectUID}
                     card={cardData.card}
-                    currentUserRoleActions={cardData.current_user_role_actions}
                     currentUser={aboutMe()!}
-                />
+                    currentUserRoleActions={cardData.current_user_role_actions}
+                    socket={socket}
+                >
+                    <BoardCardResult />
+                </BoardCardProvider>
             )}
         </>
     );
 }
 
-interface IBoardCardResultProps extends IBaseCardRelatedComponentProps {}
-
-function BoardCardResult({ projectUID, card, currentUserRoleActions, currentUser, socket }: IBoardCardResultProps): JSX.Element {
+function BoardCardResult(): JSX.Element {
+    const { projectUID, card, currentUser, setCurrentEditor } = useBoardCard();
     const [t] = useTranslation();
     const navigate = useNavigate();
     const [deadline, setDeadline] = useState<Date | undefined>(card.deadline_at);
     const viewportId = `board-card-${card.uid}`;
 
     const close = () => {
-        navigate(ROUTES.BOARD.MAIN(projectUID));
+        setCurrentEditor("");
+        navigate(ROUTES.BOARD.MAIN(projectUID), {
+            state: { isSamePage: true },
+        });
     };
 
     return (
         <Dialog.Root open={true} onOpenChange={close}>
             <Dialog.Content
-                className="max-w-screen p-4 sm:max-w-screen-sm lg:max-w-screen-md"
+                className="max-w-[100vw] p-4 pb-0 sm:max-w-screen-sm lg:max-w-screen-md"
                 aria-describedby=""
                 withCloseButton={false}
                 viewportId={viewportId}
@@ -124,51 +128,25 @@ function BoardCardResult({ projectUID, card, currentUserRoleActions, currentUser
                     </Flex>
                     <BoardCardSection title="card.Description" className="relative min-h-56">
                         {card.description ? (
-                            <Markdown>{card.description}</Markdown>
+                            <PlateEditor value={card.description} mentionableUsers={card.project_members} currentUser={currentUser} readOnly />
                         ) : (
                             <span className="absolute top-1/2 mt-4 -translate-y-1/2 text-muted-foreground">{t("card.No description")}</span>
                         )}
                     </BoardCardSection>
                     {card.files.length > 0 && (
                         <BoardCardSection title="card.Attached files">
-                            <BoardCardFileList
-                                projectUID={projectUID}
-                                card={card}
-                                currentUser={currentUser}
-                                currentUserRoleActions={currentUserRoleActions}
-                                socket={socket}
-                                files={card.files}
-                            />
+                            <BoardCardFileList />
                         </BoardCardSection>
                     )}
                     {card.checkitems.length > 0 && (
                         <BoardCardSection title="card.Checklist">
-                            <BoardCardChecklist
-                                projectUID={projectUID}
-                                card={card}
-                                currentUser={currentUser}
-                                currentUserRoleActions={currentUserRoleActions}
-                                socket={socket}
-                            />
+                            <BoardCardChecklist />
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">
-                        <BoardCommentList
-                            projectUID={projectUID}
-                            card={card}
-                            currentUser={currentUser}
-                            currentUserRoleActions={currentUserRoleActions}
-                            socket={socket}
-                            viewportId={viewportId}
-                        />
+                        <BoardCommentList viewportId={viewportId} />
                     </BoardCardSection>
-                    <BoardCommentForm
-                        projectUID={projectUID}
-                        card={card}
-                        currentUser={currentUser}
-                        currentUserRoleActions={currentUserRoleActions}
-                        socket={socket}
-                    />
+                    <BoardCommentForm />
                 </Flex>
             </Dialog.Content>
         </Dialog.Root>

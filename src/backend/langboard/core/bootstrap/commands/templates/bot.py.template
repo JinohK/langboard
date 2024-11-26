@@ -1,5 +1,12 @@
 from typing import Any, Literal
-from ..core.ai import BaseBot, BotType, LangchainStreamResponse, LangflowStreamResponse, create_bot_data_model
+from ..core.ai import (
+    BaseBot,
+    BotType,
+    LangchainStreamResponse,
+    LangflowRequestModel,
+    LangflowStreamResponse,
+    create_bot_data_model,
+)
 
 
 class {bot_type}Bot(BaseBot):
@@ -17,8 +24,20 @@ class {bot_type}Bot(BaseBot):
         # Do something
 
         # langchain output must be includes "response" field
-        # return await self._send_langchain(runnable=Runnable[Input, LangchainOutput], input=..., use_stream=True or False)
-        # return await self._send_langflow_chat(flow_id="", message=..., use_stream=True or False)
+        # return await self._run_langchain(runnable=Runnable[Input, LangchainOutput], input=..., use_stream=True or False)
+        # return await self._run_langflow(request_model=LangflowRequestModel(flow_id="", message=..., tweaks={} or None), use_stream=True or False)
+
+    async def run_abortable(
+        self, data: dict[str, Any], task_id: str
+    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+        data_model = create_bot_data_model({bot_type}Bot.bot_type(), data)
+        # Do something
+
+        # langchain output must be includes "response" field
+        # If you use langflow, you can cancel the request.
+        # However, you can't cancel the execution of langchain.
+        # return await self._run_langchain(runnable=Runnable[Input, LangchainOutput], input=..., use_stream=True or False)
+        # return await self._run_langflow_abortable(task_id=task_id, request_model=LangflowRequestModel(flow_id="", message=..., tweaks={} or None), use_stream=True or False)
 
     async def is_available(self) -> bool:
         # If using langchain,

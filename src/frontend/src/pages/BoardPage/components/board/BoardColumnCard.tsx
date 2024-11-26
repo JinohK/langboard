@@ -1,10 +1,11 @@
 import { Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
-import Markdown from "@/components/Markdown";
+import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import { IBoardCard } from "@/controllers/board/useGetCards";
 import { IBoardProject } from "@/controllers/board/useProjectAvailable";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import { Project } from "@/core/models";
+import { IAuthUser } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase } from "@/core/utils/StringUtils";
@@ -22,6 +23,7 @@ export interface IBoardColumnCardProps {
     card: IBoardCard & {
         isOpenedRef?: React.MutableRefObject<bool>;
     };
+    currentUser: IAuthUser;
     filters: IFilterMap;
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
     isOverlay?: bool;
@@ -53,7 +55,7 @@ export const SkeletonBoardColumnCard = memo(() => {
     );
 });
 
-const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
+const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     if (TypeUtils.isNullOrUndefined(card.isOpenedRef)) {
         card.isOpenedRef = useRef(false);
     }
@@ -118,7 +120,7 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
         variants: {
             dragging: {
                 over: "ring-2 opacity-30",
-                overlay: "ring-2 ring-primary",
+                overlay: "ring-2",
             },
         },
     });
@@ -138,7 +140,7 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
         };
     } else {
         props = {
-            className: "cursor-pointer",
+            className: "cursor-pointer hover:ring-2 ring-primary",
         };
     }
 
@@ -149,6 +151,7 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
             isOpenedRef={card.isOpenedRef}
             isClickRef={isClickRef}
             projectUID={project.uid}
+            canUpdateCard={hasRoleAction(Project.ERoleAction.CARD_UPDATE)}
             cardUID={card.uid}
             title={card.title}
             commentCount={card.comment_count}
@@ -158,7 +161,7 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
         />
     );
 
-    if (!isOverlay && !isDragging && card.description.length > 0) {
+    if (!isOverlay && !isDragging && card.description) {
         cardInner = (
             <HoverCard.Root
                 open={isHoverCardOpened}
@@ -175,13 +178,13 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
                 <HoverCard.Content
                     side="right"
                     align="end"
-                    className="max-xs:max-w-screen w-64 cursor-auto p-0"
+                    className="max-xs:max-w-[100vw] w-64 cursor-auto p-0"
                     {...{ [disabledDraggingAttr]: "" }}
                     hidden={isHoverCardHidden}
                 >
                     <ScrollArea.Root>
                         <div className="max-h-[calc(100vh-_theme(spacing.4))] break-all p-4 [&_img]:max-w-full">
-                            <Markdown>{card.description}</Markdown>
+                            <PlateEditor value={card.description} mentionableUsers={project.members} currentUser={currentUser} readOnly />
                         </div>
                     </ScrollArea.Root>
                 </HoverCard.Content>
@@ -194,6 +197,7 @@ const BoardColumnCard = memo(({ project, card, filters, closeHoverCardRef, isOve
 
 interface IBoardColumnCardInnerProps extends Omit<IBoardCard, "uid" | "column_uid" | "description" | "comment_count" | "order"> {
     projectUID: IBoardProject["uid"];
+    canUpdateCard: bool;
     cardUID: IBoardCard["uid"];
     commentCount: IBoardCard["comment_count"];
     disabledDraggingAttr: string;
@@ -207,6 +211,7 @@ const BoardColumnCardInner = memo(
     ({
         filters,
         projectUID,
+        canUpdateCard,
         cardUID,
         title,
         commentCount,
@@ -232,12 +237,14 @@ const BoardColumnCardInner = memo(
 
         const openCard = () => {
             setTimeout(() => {
-                if (!isClickRef.current) {
+                if (!isClickRef.current && canUpdateCard) {
                     return;
                 }
 
                 isClickRef.current = false;
-                navigate(ROUTES.BOARD.CARD(projectUID, cardUID));
+                navigate(ROUTES.BOARD.CARD(projectUID, cardUID), {
+                    state: { isSamePage: true },
+                });
             }, 150);
         };
 

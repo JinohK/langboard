@@ -1,4 +1,4 @@
-import { Children, forwardRef, isValidElement } from "react";
+import { forwardRef } from "react";
 import { Flex, IconComponent } from "@/components/base";
 import { default as BaseButton, ButtonProps } from "@/components/base/Button";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -92,53 +92,6 @@ interface IFloatingRootProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, className, fullScreen = false, ...props }, ref) => {
-    let hasContent = false;
-    let hasTrigger = false;
-    Children.forEach(children, (child) => {
-        if (child === null) {
-            return;
-        }
-
-        if (!isValidElement(child)) {
-            throw new Error(`${Root.displayName} children must be valid React elements`);
-        }
-
-        if (child.type === Trigger) {
-            hasTrigger = true;
-        }
-
-        if (child.type !== Content) {
-            return;
-        }
-
-        hasContent = true;
-
-        let hasCloseButton = false;
-        if (fullScreen) {
-            Children.forEach(child.props.children, (contentChild) => {
-                if (contentChild === null) {
-                    return;
-                }
-
-                if (!isValidElement(contentChild)) {
-                    throw new Error(`${Content.displayName} children must be valid React elements`);
-                }
-
-                if (contentChild.type === CloseButton) {
-                    hasCloseButton = true;
-                }
-            });
-
-            if (!hasCloseButton) {
-                throw new Error(`${Content.displayName} must have a ${CloseButton.displayName} when fullScreen is true`);
-            }
-        }
-    });
-
-    if (!hasContent || !hasTrigger) {
-        throw new Error(`${Root.displayName} must have a ${Content.displayName} and a ${Trigger.displayName}`);
-    }
-
     return (
         <div
             className={cn("floating-wrapper group/floating fixed bottom-2 left-2 z-50 inline-block md:hidden", className)}

@@ -32,7 +32,7 @@ function ThemeSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon
             <DropdownMenu.Content>
                 {Object.keys(themes).map((mode) => {
                     return (
-                        <DropdownMenu.Item onClick={() => setTheme(mode.toLowerCase())} key={mode} className="cursor-pointer">
+                        <DropdownMenu.Item onClick={() => setTheme(mode.toLowerCase())} key={mode}>
                             <IconComponent icon={themes[mode]} className="mr-2" />
                             {t(`themes.${mode}`)}
                         </DropdownMenu.Item>

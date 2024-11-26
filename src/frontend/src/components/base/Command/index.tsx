@@ -33,27 +33,30 @@ const Dialog = ({ children, ...props }: CommandDialogProps) => {
     );
 };
 
-const Input = React.forwardRef<React.ElementRef<typeof Primitive.Input>, React.ComponentPropsWithoutRef<typeof Primitive.Input>>(
-    ({ className, ...props }, ref) => (
-        <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-            <IconComponent icon="search" size="4" className="mr-2 shrink-0 opacity-50" />
-            <Primitive.Input
-                ref={ref}
-                className={cn(
-                    "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-                    className
-                )}
-                {...props}
-            />
-        </div>
-    )
-);
+const Input = React.forwardRef<
+    React.ElementRef<typeof Primitive.Input>,
+    React.ComponentPropsWithoutRef<typeof Primitive.Input> & {
+        withoutIcon?: bool;
+    }
+>(({ className, withoutIcon = false, ...props }, ref) => (
+    <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+        {!withoutIcon && <IconComponent icon="search" size="4" className="mr-2 shrink-0 opacity-50" />}
+        <Primitive.Input
+            ref={ref}
+            className={cn(
+                "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+                className
+            )}
+            {...props}
+        />
+    </div>
+));
 
 Input.displayName = Primitive.Input.displayName;
 
 const List = React.forwardRef<React.ElementRef<typeof Primitive.List>, React.ComponentPropsWithoutRef<typeof Primitive.List>>(
     ({ className, ...props }, ref) => (
-        <Primitive.List ref={ref} className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)} {...props} />
+        <Primitive.List ref={ref} className={cn("max-h-[min(70vh,300px)] overflow-y-auto overflow-x-hidden", className)} {...props} />
     )
 );
 

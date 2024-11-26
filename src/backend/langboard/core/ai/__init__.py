@@ -1,4 +1,4 @@
-from .BaseBot import BaseBot
+from .BaseBot import BaseBot, LangflowRequestModel
 from .BotDataModel import create_bot_data_model
 from .BotResponse import LangchainOutput, LangchainStreamResponse, LangflowStreamResponse
 from .BotRunner import BotRunner
@@ -10,6 +10,7 @@ __all__ = [
     "create_bot_data_model",
     "LangchainOutput",
     "LangchainStreamResponse",
+    "LangflowRequestModel",
     "LangflowStreamResponse",
     "BotRunner",
     "BotType",

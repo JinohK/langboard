@@ -19,6 +19,7 @@ class ActivityType(Enum):
     CardCreated = "card.created"
     CardChangedColumn = "card.changed_column"
     CardCheckitemCreated = "card.checkitem.created"
+    CardFileAttached = "card.file.attached"
 
 
 class BaseActivityModel(BaseSqlModel):

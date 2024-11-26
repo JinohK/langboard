@@ -36,7 +36,7 @@ function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerI
                 <DropdownMenu.Content>
                     {langs.map((locale) => {
                         return (
-                            <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale} className="cursor-pointer">
+                            <DropdownMenu.Item onClick={() => changeLanguageHandler(locale)} key={locale}>
                                 <IconComponent icon={`country-${locale.split("-").pop()}`} className="mr-2" />
                                 {t(`locales.${locale}`)}
                             </DropdownMenu.Item>

@@ -202,7 +202,9 @@ function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, 
                                     isOverlay
                                 />
                             )}
-                            {activeCard && <BoardColumnCard project={project} card={activeCard} filters={filters} isOverlay />}
+                            {activeCard && (
+                                <BoardColumnCard project={project} card={activeCard} currentUser={currentUser} filters={filters} isOverlay />
+                            )}
                         </DragOverlay>,
                         document.body
                     )}

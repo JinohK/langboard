@@ -1,6 +1,7 @@
 import { Button, Flex, IconComponent } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
 import { IBoardCardFile } from "@/controllers/board/useGetCardDetails";
+import { formatDateDistance } from "@/core/utils/StringUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
@@ -19,7 +20,7 @@ interface IBoardCardFileragData {
 }
 
 function BoardCardFile({ file, isOverlay, orderable }: IBoardCardFileProps): JSX.Element {
-    const [t] = useTranslation();
+    const [t, i18n] = useTranslation();
     const mimeType = mimeTypes.lookup(file.url) || "file";
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: file.uid,
@@ -40,8 +41,8 @@ function BoardCardFile({ file, isOverlay, orderable }: IBoardCardFileProps): JSX
     const variants = tv({
         variants: {
             dragging: {
-                over: "ring-2 [&>div]:opacity-30",
-                overlay: "ring-2 ring-primary",
+                over: "border-b-2 border-primary/50 [&>div]:opacity-30",
+                overlay: "",
             },
         },
     });
@@ -77,7 +78,7 @@ function BoardCardFile({ file, isOverlay, orderable }: IBoardCardFileProps): JSX
             </Flex>
             <div>
                 <div className="text-sm">{file.name}</div>
-                <div className="text-xs text-muted-foreground">Added {file.created_at.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">{t("card.Added {date}", { date: formatDateDistance(i18n, t, file.created_at) })}</div>
             </div>
         </Flex>
     );

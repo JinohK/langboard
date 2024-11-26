@@ -1,6 +1,7 @@
-from typing import Any, TypeVar, overload
+from typing import Any, TypeVar, cast, overload
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
+from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -18,7 +19,9 @@ from ...models import (
 from ..BaseService import BaseService
 from .ActivityService import ActivityResult, ActivityService
 from .CheckitemService import CheckitemService
+from .ProjectService import ProjectService
 from .ReactionService import ReactionService
+from .RevertService import RevertService, RevertType
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
@@ -32,6 +35,9 @@ class CardService(BaseService):
 
     async def get_by_id(self, card_id: int | None) -> Card | None:
         return await self._get_by(Card, "id", card_id)
+
+    async def get_by_uid(self, card_uid: str | None) -> Card | None:
+        return await self._get_by(Card, "uid", card_uid)
 
     async def get_details(self, card_uid: str) -> dict[str, Any] | None:
         result = await self._db.exec(
@@ -50,6 +56,9 @@ class CardService(BaseService):
 
         checkitem_service = self._get_service(CheckitemService)
         api_card["checkitems"] = await checkitem_service.get_list(card.uid)
+
+        project_service = self._get_service(ProjectService)
+        api_card["project_members"] = await project_service.get_assigned_users(card.project_id)
 
         result = await self._db.exec(
             self._db.query("select")
@@ -332,6 +341,47 @@ class CardService(BaseService):
             await self._db.commit()
 
         return activity_result, True
+
+    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardFileAttached)
+    async def add_attachment(
+        self, user: User, card_uid: str, attachment: FileModel
+    ) -> tuple[ActivityResult, str] | None:
+        card = await self.get_by_uid(card_uid)
+        if not card:
+            return None
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .column(func.max(CardFile.order))
+            .where(CardFile.card_uid == card_uid)
+            .group_by(CardFile.card_uid)
+            .limit(1)
+        )
+        attachment_order = result.first()
+        if attachment_order is None:
+            attachment_order = -1
+
+        card_file = CardFile(
+            user_id=cast(int, user.id),
+            card_uid=card.uid,
+            file=attachment,
+            order=attachment_order + 1,
+        )
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(card_file, RevertType.Delete),
+        )
+
+        activity_result = ActivityResult(
+            user_or_bot=user,
+            model=card,
+            shared={"project_id": card.project_id},
+            new={"file": attachment.original_filename},
+            revert_key=revert_key,
+        )
+
+        return activity_result, revert_key
 
     @overload
     def __filter_column(self, query: Select[_TSelectParam], column_uid: str) -> Select[_TSelectParam]: ...

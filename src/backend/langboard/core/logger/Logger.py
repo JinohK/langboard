@@ -43,6 +43,7 @@ class Logger:
         getLogger("aiosqlite").setLevel(ERROR)
         getLogger("asyncpg").setLevel(ERROR)
         getLogger("httpx").setLevel(ERROR)
+        getLogger("urllib3.connectionpool").setLevel(ERROR)
         getLogger("httpcore.connection").setLevel(ERROR)
         getLogger("httpcore.http11").setLevel(ERROR)
         getLogger("watchdog.observers.inotify_buffer").setLevel(ERROR)

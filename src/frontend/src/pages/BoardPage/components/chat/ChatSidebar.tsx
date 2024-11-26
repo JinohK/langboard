@@ -89,10 +89,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                         </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="start">
-                        <DropdownMenu.Item
-                            className="flex cursor-pointer gap-1 font-semibold text-destructive focus:text-destructive"
-                            onClick={clearChat}
-                        >
+                        <DropdownMenu.Item className="flex gap-1 font-semibold text-destructive focus:text-destructive" onClick={clearChat}>
                             <IconComponent icon="trash-2" size="4" strokeWidth="2" />
                             {t("project.Clear chat")}
                         </DropdownMenu.Item>

@@ -87,7 +87,7 @@ const useCreateActivityTimeline = (type: string) => {
             avatar = (
                 <UserAvatar.Root user={user} avatarSize="sm">
                     <UserAvatar.List>
-                        <UserAvatar.ListLabel>{user.email}</UserAvatar.ListLabel>
+                        <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                     </UserAvatar.List>
                 </UserAvatar.Root>
             );

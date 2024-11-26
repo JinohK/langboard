@@ -1,3 +1,7 @@
+import { differenceInDays, formatDistanceToNow } from "date-fns";
+import { TFunction, i18n } from "i18next";
+import * as dateLocale from "date-fns/locale";
+
 type TStringCase = "flat" | "upper" | "camel" | "pascal" | "snake" | "upperSnake" | "kebab";
 
 export class StringCase {
@@ -49,6 +53,18 @@ export class StringCase {
 
     public toKebab(): string {
         return this.#rawChunks.join("-").toLowerCase();
+    }
+
+    public toLanguageObjKey(): string {
+        return this.#rawChunks
+            .map((chunk, i) => {
+                if (i === 0) {
+                    return chunk.toLowerCase();
+                } else {
+                    return chunk.toUpperCase();
+                }
+            })
+            .join("");
     }
 
     #detectCase(): TStringCase {
@@ -128,4 +144,14 @@ export const format = (str: string, map: Record<string, string>): string => {
     return str.replace(/{(\w+)}/g, (match, key) => {
         return map[key] || match;
     });
+};
+
+export const formatDateDistance = (i18n: i18n, translate: TFunction<"translation", undefined>, date: Date): string => {
+    return differenceInDays(Date.now(), date) >= 1
+        ? date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+        : translate("date.{distance} ago", {
+              distance: formatDistanceToNow(date, {
+                  locale: dateLocale[new StringCase(i18n.language).toLanguageObjKey() as keyof typeof dateLocale],
+              }),
+          });
 };

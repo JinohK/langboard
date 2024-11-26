@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @/max-len */
 "use client";
 
@@ -10,6 +11,8 @@ const Provider = TooltipPrimitive.Provider;
 const Root = TooltipPrimitive.Root;
 
 const Trigger = TooltipPrimitive.Trigger;
+
+const Portal = TooltipPrimitive.Portal;
 
 const Content = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Content>, React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>>(
     ({ className, sideOffset = 4, ...props }, ref) => (
@@ -26,4 +29,43 @@ const Content = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Conten
 );
 Content.displayName = TooltipPrimitive.Content.displayName;
 
-export { Content, Provider, Root, Trigger };
+function withTooltip<T extends React.ComponentType<any> | keyof HTMLElementTagNameMap>(Component: T) {
+    return React.forwardRef<
+        React.ElementRef<T>,
+        {
+            tooltipContentProps?: Omit<React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>, "children">;
+            tooltipProps?: Omit<React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>, "children">;
+            tooltip?: React.ReactNode;
+        } & React.ComponentPropsWithoutRef<T> &
+            Omit<TooltipPrimitive.TooltipProviderProps, "children">
+    >(function ExtendComponent(
+        { delayDuration = 0, disableHoverableContent = true, skipDelayDuration = 0, tooltip, tooltipContentProps, tooltipProps, ...props },
+        ref
+    ) {
+        const [mounted, setMounted] = React.useState(false);
+
+        React.useEffect(() => {
+            setMounted(true);
+        }, []);
+
+        const component = <Component ref={ref} {...(props as any)} />;
+
+        if (tooltip && mounted) {
+            return (
+                <Provider delayDuration={delayDuration} disableHoverableContent={disableHoverableContent} skipDelayDuration={skipDelayDuration}>
+                    <Root {...tooltipProps}>
+                        <Trigger asChild>{component}</Trigger>
+
+                        <Portal>
+                            <Content {...tooltipContentProps}>{tooltip}</Content>
+                        </Portal>
+                    </Root>
+                </Provider>
+            );
+        }
+
+        return component;
+    });
+}
+
+export { Content, Provider, Root, Trigger, Portal, withTooltip };

@@ -14,13 +14,24 @@ class BotRunner:
     async def run(
         self, bot_type: BotType, data: dict[str, Any]
     ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
-        if bot_type not in BaseBot.__bots__:
+        bot = self.__get_bot(bot_type)
+        if bot is None:
             return None
+        return await bot.run(data)
 
-        if bot_type not in self.__bot_factory:
-            self.__bot_factory[bot_type] = BaseBot.__bots__[bot_type]()
+    async def run_abortable(
+        self, bot_type: BotType, data: dict[str, Any], task_id: str
+    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+        bot = self.__get_bot(bot_type)
+        if bot is None:
+            return None
+        return await bot.run_abortable(data, task_id)
 
-        return await self.__bot_factory[bot_type].run(data)
+    async def abort(self, bot_type: BotType, task_id: str):
+        bot = self.__get_bot(bot_type)
+        if bot is None:
+            return
+        await bot.abort(task_id)
 
     def get_bot_name(self, bot_type: BotType) -> str | None:
         if bot_type not in BaseBot.__bots__:
@@ -36,3 +47,12 @@ class BotRunner:
             self.__bot_factory[bot_type] = BaseBot.__bots__[bot_type]()
 
         return await self.__bot_factory[bot_type].is_available()
+
+    def __get_bot(self, bot_type: BotType) -> BaseBot | None:
+        if bot_type not in BaseBot.__bots__:
+            return None
+
+        if bot_type not in self.__bot_factory:
+            self.__bot_factory[bot_type] = BaseBot.__bots__[bot_type]()
+
+        return self.__bot_factory[bot_type]

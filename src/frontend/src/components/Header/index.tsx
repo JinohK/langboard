@@ -36,7 +36,7 @@ function Header({ navs }: IHeaderProps) {
                     initial: "lg",
                     md: "sm",
                 }}
-                className="font-medium max-md:hidden"
+                className="max-md:hidden font-medium"
             >
                 <a onClick={toDashboard} className="flex size-6 cursor-pointer items-center gap-2 text-lg font-semibold md:text-base">
                     <CachedImage src="/images/logo.png" alt="Logo" size="full" />

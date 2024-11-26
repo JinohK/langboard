@@ -57,11 +57,21 @@ export const navigateFilters = (navigate: NavigateFunction, filters: IFilterMap)
     const newFiltersString = transformFilters(filters);
 
     if (!newFiltersString.length) {
-        navigate({ search: "" });
+        navigate(
+            { search: "" },
+            {
+                state: { isSamePage: true },
+            }
+        );
         return;
     }
 
-    navigate({ search: `?filters=${newFiltersString}` });
+    navigate(
+        { search: `?filters=${newFiltersString}` },
+        {
+            state: { isSamePage: true },
+        }
+    );
 };
 
 export const filterMember = (filters: IFilterMap, member: User.Interface) => {

@@ -48,7 +48,7 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction }: IReact
                     magnification={50}
                     distance={100}
                     size="sm"
-                    className="!mt-0 max-w-[100vw] flex-wrap gap-1 px-1 py-0 max-xs:h-auto"
+                    className="max-xs:h-auto !mt-0 max-w-[100vw] flex-wrap gap-1 px-1 py-0"
                 >
                     {reactionOrders.map((reaction) => ReactionCounterButton({ reaction, isDock: true, toggleCallback }))}
                 </Dock.Root>

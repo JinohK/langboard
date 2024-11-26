@@ -59,8 +59,8 @@ function BoardCardCheckitem({ checkitem, subCheckitemsMap, isOverlay, orderable 
         variants: {
             dragging: {
                 default: "border-2 border-transparent",
-                over: "ring-2 opacity-30",
-                overlay: "ring-2 ring-primary",
+                over: "border-b-2 border-primary/50 opacity-30",
+                overlay: "",
             },
         },
     });

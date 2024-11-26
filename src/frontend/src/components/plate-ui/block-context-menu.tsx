@@ -1,0 +1,140 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { AIChatPlugin } from "@udecode/plate-ai/react";
+import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
+import { someNode, unsetNodes } from "@udecode/plate-common";
+import { ParagraphPlugin, focusEditor, useEditorPlugin, useEditorSelector } from "@udecode/plate-common/react";
+import { HEADING_KEYS } from "@udecode/plate-heading";
+import { IndentListPlugin } from "@udecode/plate-indent-list/react";
+import { BLOCK_CONTEXT_MENU_ID, BlockMenuPlugin, BlockSelectionPlugin, useBlockSelectionNodes } from "@udecode/plate-selection/react";
+import { useIsTouchDevice } from "@/core/hooks/useIsTouchDevice";
+import { ContextMenu } from "@/components/base";
+import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
+import { useTranslation } from "react-i18next";
+
+type Value = "askAI" | null;
+
+export function BlockContextMenu({ children }: { children: React.ReactNode }) {
+    const [t] = useTranslation();
+    const { api, editor } = useEditorPlugin(BlockMenuPlugin);
+    const [value, setValue] = useState<Value>(null);
+    const isTouch = useIsTouchDevice();
+    const tableRelatedKeys: string[] = [TablePlugin.key, TableCellPlugin.key, TableRowPlugin.key];
+    const tableRelatedSelected = useEditorSelector((editor) => someNode(editor, { match: { type: tableRelatedKeys } }), []);
+    const tableRelatedSelectedInBlock = useBlockSelectionNodes()?.some(([node]) => node && node.type && tableRelatedKeys.includes(node.type));
+    const tableSelected = tableRelatedSelected || tableRelatedSelectedInBlock;
+
+    const handleTurnInto = useCallback(
+        (type: string) => {
+            editor
+                .getApi(BlockSelectionPlugin)
+                .blockSelection.getNodes()
+                .forEach(([node, path]) => {
+                    if (node[IndentListPlugin.key]) {
+                        unsetNodes(editor, [IndentListPlugin.key, "indent"], { at: path });
+                    }
+
+                    editor.tf.toggle.block({ type }, { at: path });
+                });
+        },
+        [editor]
+    );
+
+    if (isTouch) {
+        return children;
+    }
+
+    return (
+        <ContextMenu.Root
+            onOpenChange={(open) => {
+                if (!open) {
+                    // prevent unselect the block selection
+                    setTimeout(() => {
+                        api.blockMenu.hide();
+                    }, 0);
+                }
+            }}
+            modal={false}
+        >
+            <ContextMenu.Trigger
+                asChild
+                onContextMenu={(event) => {
+                    const dataset = (event.target as HTMLElement).dataset;
+
+                    const disabled = dataset?.slateEditor === "true";
+
+                    if (disabled) return event.preventDefault();
+
+                    api.blockMenu.show(BLOCK_CONTEXT_MENU_ID, {
+                        x: event.clientX,
+                        y: event.clientY,
+                    });
+                }}
+            >
+                <div className="w-full">{children}</div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content
+                className="w-64"
+                onCloseAutoFocus={(e) => {
+                    e.preventDefault();
+                    editor.getApi(BlockSelectionPlugin).blockSelection.focus();
+
+                    if (value === "askAI") {
+                        editor.getApi(AIChatPlugin).aiChat.show();
+                    }
+
+                    setValue(null);
+                }}
+            >
+                <ContextMenu.Group>
+                    <ContextMenu.Item
+                        onClick={() => {
+                            setValue("askAI");
+                        }}
+                    >
+                        {t("editor.Ask AI")}
+                    </ContextMenu.Item>
+                    <ContextMenu.Item
+                        onClick={() => {
+                            editor.getTransforms(BlockSelectionPlugin).blockSelection.removeNodes();
+                            focusEditor(editor);
+                        }}
+                    >
+                        {t("editor.Delete")}
+                    </ContextMenu.Item>
+                    <ContextMenu.Item
+                        onClick={() => {
+                            editor
+                                .getTransforms(BlockSelectionPlugin)
+                                .blockSelection.duplicate(editor.getApi(BlockSelectionPlugin).blockSelection.getNodes());
+                        }}
+                    >
+                        {t("editor.Duplicate")}
+                        {/* <ContextMenu.Shortcut>⌘ + D</ContextMenu.Shortcut> */}
+                    </ContextMenu.Item>
+                    <ContextMenu.Sub>
+                        <ContextMenu.SubTrigger disabled={tableSelected}>{t("editor.Turn into")}</ContextMenu.SubTrigger>
+                        <ContextMenu.SubContent className="w-48">
+                            <ContextMenu.Item onClick={() => handleTurnInto(ParagraphPlugin.key)}>{t("editor.Paragraph")}</ContextMenu.Item>
+
+                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h1)}>{t("editor.Heading 1")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h2)}>{t("editor.Heading 2")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h3)}>{t("editor.Heading 3")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(BlockquotePlugin.key)}>{t("editor.Blockquote")}</ContextMenu.Item>
+                        </ContextMenu.SubContent>
+                    </ContextMenu.Sub>
+                </ContextMenu.Group>
+
+                <ContextMenu.Group>
+                    <ContextMenu.Item onClick={() => editor.getTransforms(BlockSelectionPlugin).blockSelection.setIndent(1)}>
+                        {t("editor.Indent")}
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onClick={() => editor.getTransforms(BlockSelectionPlugin).blockSelection.setIndent(-1)}>
+                        {t("editor.Outdent")}
+                    </ContextMenu.Item>
+                </ContextMenu.Group>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
+    );
+}

@@ -1,7 +1,8 @@
-from fastapi import status
+from fastapi import File, UploadFile, status
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
+from ...core.storage import Storage, StorageName
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
@@ -44,3 +45,25 @@ async def get_card_detail(
 async def get_card_comments(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     comments = await service.card.get_comments(card_uid)
     return JsonResponse(content={"comments": comments}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/board/{project_uid}/card/{card_uid}/attachment")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def upload_card_attachment(
+    card_uid: str, attachment: UploadFile = File(), user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    if not attachment:
+        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    file_model = Storage.upload(attachment, StorageName.CardAttachment)
+    if not file_model:
+        return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    revert_key = await service.card.add_attachment(user, card_uid, file_model)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(
+        content={"path": file_model.path, "name": file_model.original_filename}, status_code=status.HTTP_200_OK
+    )

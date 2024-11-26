@@ -48,6 +48,7 @@ export interface IBoardCardWithDetails extends ProjectCard.Interface {
     }[];
     files: IBoardCardFile[];
     checkitems: IBoardCardCheckitem[];
+    project_members: User.Interface[];
 }
 
 export interface IGetCardDetailsResponse {

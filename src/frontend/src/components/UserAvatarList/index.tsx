@@ -38,7 +38,7 @@ const UserAvatarList = forwardRef<HTMLDivElement, IUserAvatarListProps>(
                         className="hover:z-50"
                     >
                         <UserAvatar.List>
-                            <UserAvatar.ListLabel>{user.firstname}</UserAvatar.ListLabel>
+                            <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                         </UserAvatar.List>
                     </UserAvatar.Root>
                 ))}
@@ -66,7 +66,7 @@ const UserAvatarList = forwardRef<HTMLDivElement, IUserAvatarListProps>(
                                                 labelClassName="justify-start gap-2 px-3 py-1 hover:bg-accent/70 cursor-pointer"
                                             >
                                                 <UserAvatar.List>
-                                                    <UserAvatar.ListLabel>{user.firstname}</UserAvatar.ListLabel>
+                                                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                                                 </UserAvatar.List>
                                             </UserAvatar.Root>
                                             <Separator className="my-1 h-px bg-muted" />

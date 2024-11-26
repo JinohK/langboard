@@ -76,7 +76,7 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
             setTimeout(() => {
                 changeCardOrderMutate(form, {
                     onSuccess: () => {
-                        socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD_ORDER_CHANGED, {
+                        socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD.ORDER_CHANGED, {
                             column_uids: uidsShouldUpdate,
                         });
                     },
@@ -136,7 +136,7 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
             forceUpdate();
         };
 
-        const eventName = format(SOCKET_SERVER_EVENTS.BOARD.CARD_ORDER_CHANGED, { column_uid: column.uid });
+        const eventName = format(SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED, { column_uid: column.uid });
 
         socket.on(eventName, shouldRefetchCallback);
 
@@ -166,12 +166,12 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
     };
 
     const variants = tv({
-        base: "my-1 w-80 flex-shrink-0 snap-center",
+        base: "my-1 w-80 flex-shrink-0 snap-center ring-primary",
         variants: {
             dragging: {
                 default: "border-2 border-transparent",
                 over: "ring-2 opacity-30",
-                overlay: "ring-2 ring-primary",
+                overlay: "ring-2",
             },
         },
     });
@@ -223,6 +223,7 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
                                             key={`${column.uid}-${card.uid}`}
                                             project={project}
                                             card={card}
+                                            currentUser={currentUser}
                                             filters={filters}
                                             closeHoverCardRef={closeHoverCardRef}
                                         />

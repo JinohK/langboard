@@ -45,6 +45,7 @@ export const API_ROUTES = {
             CHANGE_ORDER: "/board/{uid}/card/{card_uid}/order",
             GET_DETAILS: "/board/{uid}/card/{card_uid}",
             GET_COMMENTS: "/board/{uid}/card/{card_uid}/comments",
+            UPLOAD_ATTACHMENT: "/board/{uid}/card/{card_uid}/attachment",
         },
     },
     REVERT: (path: string) => `/revert/${path}`,
@@ -59,7 +60,12 @@ export const SOCKET_SERVER_EVENTS = {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SENT: "chat:sent",
         CHAT_STREAM: "chat:stream",
-        CARD_ORDER_CHANGED: "card:order:changed:{column_uid}",
+        CARD: {
+            ORDER_CHANGED: "card:order:changed:{column_uid}",
+            EDITOR_USERS: "card:editor:users:{uid}",
+            EDITOR_START_EDITING: "card:editor:start:{uid}",
+            EDITOR_STOP_EDITING: "card:editor:stop:{uid}",
+        },
     },
 } as const;
 
@@ -67,6 +73,12 @@ export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
         IS_CHAT_AVAILABLE: "chat:available",
         CHAT_SEND: "chat:send",
-        CARD_ORDER_CHANGED: "card:order:changed",
+        CARD: {
+            ORDER_CHANGED: "card:order:changed",
+            BASE_EDITOR: "card:editor",
+            EDITOR_USERS: "card:editor:users",
+            EDITOR_START_EDITING: "card:editor:start",
+            EDITOR_STOP_EDITING: "card:editor:stop",
+        },
     },
 } as const;

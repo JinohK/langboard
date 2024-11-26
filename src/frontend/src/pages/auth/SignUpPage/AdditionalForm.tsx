@@ -47,7 +47,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
     };
 
     return (
-        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+        <Form.Root className="max-xs:mt-11 flex flex-col gap-4" onSubmit={handleSubmit} ref={formRef}>
             <Form.Field name="industry">
                 <Input type="hidden" name="industry" value={industryRef.current} ref={industryInputRef} />
                 <AutoComplete

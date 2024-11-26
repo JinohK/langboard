@@ -50,7 +50,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     };
 
     return (
-        <Form.Root className="flex flex-col gap-4 max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+        <Form.Root className="max-xs:mt-11 flex flex-col gap-4" onSubmit={handleSubmit} ref={formRef}>
             <AvatarUploader
                 userInitials={createNameInitials(values.firstname, values.lastname)}
                 initialAvatarUrl={(values as unknown as Record<string, string>).avatarUrl ?? undefined}

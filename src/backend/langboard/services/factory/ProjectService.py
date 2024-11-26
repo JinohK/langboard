@@ -71,12 +71,16 @@ class ProjectService(BaseService):
         actions = result.first()
         return list(actions or [])
 
-    async def get_assigned_users(self, project: Project) -> list[dict[str, Any]]:
+    @overload
+    async def get_assigned_users(self, project: int) -> list[dict[str, Any]]: ...
+    @overload
+    async def get_assigned_users(self, project: Project) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, project: Project | int) -> list[dict[str, Any]]:
         result = await self._db.exec(
             self._db.query("select")
             .table(User)
             .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
-            .where(ProjectAssignedUser.project_id == project.id)
+            .where(ProjectAssignedUser.project_id == (project.id if isinstance(project, Project) else project))
         )
         raw_users = result.all()
         users = []

@@ -43,7 +43,7 @@ const Trigger = React.forwardRef<
         <IconComponent
             icon="chevron-down"
             size="3"
-            className="relative top-[1px] ml-1 transition duration-200 group-data-[state=open]:rotate-180"
+            className="relative top-px ml-1 transition duration-200 group-data-[state=open]:rotate-180"
             aria-hidden="true"
         />
     </NavigationMenuPrimitive.Trigger>

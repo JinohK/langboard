@@ -41,8 +41,8 @@ function BoardCardSubCheckitem({ checkitem, orderable, isOverlay }: IBoardCardSu
         ),
         variants: {
             dragging: {
-                over: "ring-2 [&>div]:opacity-30",
-                overlay: "ring-2 ring-primary",
+                over: "border-b-2 border-primary/50 [&>div]:opacity-30",
+                overlay: "",
             },
         },
     });

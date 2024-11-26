@@ -10,7 +10,33 @@ const Root = ContextMenuPrimitive.Root;
 
 const Trigger = ContextMenuPrimitive.Trigger;
 
-const Group = ContextMenuPrimitive.Group;
+const Group = React.forwardRef<HTMLDivElement, { label?: React.ReactNode } & React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Group>>(
+    ({ label, ...props }, ref) => {
+        return (
+            <>
+                <Separator
+                    className={cn(
+                        "hidden",
+                        "mb-0 shrink-0 peer-has-[[role=menuitem]]/menu-group:block peer-has-[[role=menuitemcheckbox]]/menu-group:block peer-has-[[role=option]]/menu-group:block"
+                    )}
+                />
+
+                <ContextMenuPrimitive.Group
+                    ref={ref}
+                    {...props}
+                    className={cn(
+                        "hidden",
+                        "peer/menu-group group/menu-group my-1.5 has-[[role=menuitem]]:block has-[[role=menuitemcheckbox]]:block has-[[role=option]]:block",
+                        props.className
+                    )}
+                >
+                    {label && <Label>{label}</Label>}
+                    {props.children}
+                </ContextMenuPrimitive.Group>
+            </>
+        );
+    }
+);
 
 const Portal = ContextMenuPrimitive.Portal;
 
@@ -27,7 +53,7 @@ const SubTrigger = React.forwardRef<
     <ContextMenuPrimitive.SubTrigger
         ref={ref}
         className={cn(
-            "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
+            "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground data-[disabled]:opacity-50",
             inset && "pl-8",
             className
         )}
@@ -80,7 +106,7 @@ const Item = React.forwardRef<
     <ContextMenuPrimitive.Item
         ref={ref}
         className={cn(
-            "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+            "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             inset && "pl-8",
             className
         )}
@@ -96,7 +122,7 @@ const CheckboxItem = React.forwardRef<
     <ContextMenuPrimitive.CheckboxItem
         ref={ref}
         className={cn(
-            "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+            "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             className
         )}
         checked={checked}
@@ -119,7 +145,7 @@ const RadioItem = React.forwardRef<
     <ContextMenuPrimitive.RadioItem
         ref={ref}
         className={cn(
-            "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+            "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             className
         )}
         {...props}

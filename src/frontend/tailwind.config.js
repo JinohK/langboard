@@ -1,6 +1,7 @@
 import tailwindForms from "@tailwindcss/forms";
 import tailwindTypography from "@tailwindcss/typography";
 import tailwindAnimate from "tailwindcss-animate";
+import tailwindScrollbarHide from "tailwind-scrollbar-hide";
 import { withTV } from "tailwind-variants/transformer";
 
 /** @type {import('tailwindcss').Config} */
@@ -45,6 +46,21 @@ const config = {
                 card: {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
+                },
+                chart: {
+                    1: "hsl(var(--chart-1))",
+                    2: "hsl(var(--chart-2))",
+                    3: "hsl(var(--chart-3))",
+                    4: "hsl(var(--chart-4))",
+                    5: "hsl(var(--chart-5))",
+                },
+                brand: {
+                    DEFAULT: "hsl(var(--brand))",
+                    foreground: "hsl(var(--brand-foreground))",
+                },
+                highlight: {
+                    DEFAULT: "hsl(var(--highlight))",
+                    foreground: "hsl(var(--highlight-foreground))",
                 },
             },
             borderRadius: {
@@ -113,6 +129,11 @@ const config = {
                 "caret-blink": "caret-blink 1.25s ease-out infinite",
                 progress: "progress 3s infinite linear",
             },
+            screens: {
+                "main-hover": {
+                    raw: "(hover: hover)",
+                },
+            },
         },
         screens: {
             xs: "520px",
@@ -128,6 +149,7 @@ const config = {
         }),
         tailwindTypography(),
         tailwindAnimate,
+        tailwindScrollbarHide,
     ],
 };
 

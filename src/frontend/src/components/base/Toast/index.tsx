@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useTheme } from "next-themes";
@@ -14,12 +15,9 @@ type TExternalToast = Omit<ExternalToast, "action" | "actionButtonStyle" | "canc
     actions?: JSX.Element[];
     useCloseButton?: bool | true;
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TPromise<Data = any> = Promise<Data> | (() => Promise<Data>);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TPromiseResult<Data = any> = string | React.ReactNode | ((data: Data) => React.ReactNode | string | Promise<React.ReactNode | string>);
 type TPromiseExternalToast = Omit<TExternalToast, "description">;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TPromiseData<ToastData = any> = TPromiseExternalToast & {
     loading?: string;
     success?: TPromiseResult<ToastData>;
@@ -27,7 +25,6 @@ type TPromiseData<ToastData = any> = TPromiseExternalToast & {
     description?: TPromiseResult;
     finally?: () => void | Promise<void>;
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TConvertedPromiseData<ToastData = any> = TPromiseExternalToast & {
     loading?: React.ReactNode;
     success?: TPromiseResult<ToastData>;
@@ -121,7 +118,7 @@ Add.warning = (message: string | React.ReactNode, data?: TExternalToast): string
 Add.error = (message: string | React.ReactNode, data?: TExternalToast): string | number => toast.error(message, createToastData(data));
 Add.custom = (jsx: (id: number | string) => React.ReactElement, data?: TExternalToast): string | number => toast.custom(jsx, createToastData(data));
 Add.message = (message: string | React.ReactNode, data?: TExternalToast): string | number => toast.message(message, createToastData(data));
-Add.promise = function <ToastData>(promise: TPromise<ToastData>, data?: TPromiseData<ToastData>): string | number {
+Add.promise = function <ToastData>(promise: TPromise<ToastData>, data?: TPromiseData<ToastData>): ReturnType<typeof toast.promise> {
     return toast.promise(promise, createToastData(data));
 };
 Add.dismiss = toast.dismiss;

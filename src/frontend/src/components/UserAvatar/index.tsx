@@ -1,6 +1,6 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import { forwardRef, useState } from "react";
+import React, { forwardRef, useState } from "react";
 import { Avatar, Card, Flex, HoverCard, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
@@ -18,23 +18,40 @@ interface IBaseUserAvatarProps {
     withName?: bool;
     nameClassName?: string;
     labelClassName?: string;
+    noAvatar?: bool;
+    customName?: React.ReactNode;
 }
 
 interface IUserAvatarListPropsWithName extends IBaseUserAvatarProps {
     withName: true;
     nameClassName?: string;
     labelClassName?: string;
+    noAvatar?: bool;
+    customName?: React.ReactNode;
 }
 
 interface IUserAvatarListPropsWithoutName extends IBaseUserAvatarProps {
     withName?: false;
     nameClassName?: undefined;
     labelClassName?: undefined;
+    noAvatar?: never;
+    customName?: never;
 }
 
 export type TUserAvatarProps = IUserAvatarListPropsWithName | IUserAvatarListPropsWithoutName;
 
-function Root({ user, children, listAlign, avatarSize, className, withName = false, nameClassName, labelClassName }: TUserAvatarProps): JSX.Element {
+function Root({
+    user,
+    children,
+    listAlign,
+    avatarSize,
+    className,
+    withName = false,
+    nameClassName,
+    labelClassName,
+    noAvatar,
+    customName,
+}: TUserAvatarProps): JSX.Element {
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
@@ -77,8 +94,8 @@ function Root({ user, children, listAlign, avatarSize, className, withName = fal
         const names = user.id !== 0 ? `${user.firstname} ${user.lastname}` : t("common.Unknown User");
         avatarWrapper = (
             <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
-                {avatar}
-                <span className={nameClassName}>{names}</span>
+                {!noAvatar && avatar}
+                {customName ? customName : <span className={nameClassName}>{names}</span>}
             </Flex>
         );
     }

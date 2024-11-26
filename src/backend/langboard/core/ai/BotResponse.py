@@ -17,7 +17,10 @@ def get_langchain_output_message(output: Any) -> str | None:
 
 def get_langflow_output_message(response: dict) -> str | None:
     try:
-        return response["outputs"][0]["messages"][0]["message"]
+        response_outputs = response["outputs"][0]
+        while "messages" not in response_outputs:
+            response_outputs = response_outputs["outputs"][0]
+        return response_outputs["messages"][0]["message"]
     except Exception:
         return None
 

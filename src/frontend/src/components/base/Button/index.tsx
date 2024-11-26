@@ -10,6 +10,9 @@ export const ButtonVariants = tv(
         // eslint-disable-next-line @/max-len
         base: "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
         variants: {
+            isMenu: {
+                true: "w-full cursor-pointer justify-start gap-1",
+            },
             variant: {
                 default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
                 destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
@@ -41,22 +44,24 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     titleSide?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["side"];
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, title, titleSide, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    const btn = <Comp className={cn(ButtonVariants({ variant, size, className }))} ref={ref} {...props} />;
-    if (!title) {
-        return btn;
-    } else {
-        return (
-            <Tooltip.Provider delayDuration={400}>
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
-                    <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
-        );
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ className, variant, size, title, titleSide, isMenu, asChild = false, ...props }, ref) => {
+        const Comp = asChild ? Slot : "button";
+        const btn = <Comp className={cn(ButtonVariants({ variant, size, isMenu, className }))} ref={ref} {...props} />;
+        if (!title) {
+            return btn;
+        } else {
+            return (
+                <Tooltip.Provider delayDuration={400}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
+                        <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>
+                    </Tooltip.Root>
+                </Tooltip.Provider>
+            );
+        }
     }
-});
+);
 Button.displayName = "Button";
 
 export default Button;

@@ -1,7 +1,7 @@
 from .ColumnTypes import DateTimeField, ModelColumnType, SecretStr, SecretStrType
 from .DbSession import DbSession
 from .DbSessionRole import DbSessionRole
-from .Models import BaseSqlModel, SoftDeleteModel
+from .Models import BaseSqlModel, EditorContentModel, SoftDeleteModel
 
 
 __all__ = [
@@ -10,6 +10,7 @@ __all__ = [
     "ModelColumnType",
     "BaseSqlModel",
     "SoftDeleteModel",
+    "EditorContentModel",
     "DbSessionRole",
     "SecretStr",
     "SecretStrType",

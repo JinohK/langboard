@@ -202,3 +202,7 @@ class SoftDeleteModel(BaseSqlModel):
     """Base model for soft-deleting objects in the database inherited from :class:`BaseSqlModel`."""
 
     deleted_at: datetime | None = DateTimeField(default=None, nullable=True)
+
+
+class EditorContentModel(BaseModel):
+    content: str
