@@ -1,6 +1,7 @@
 import { differenceInDays, formatDistanceToNow } from "date-fns";
 import { TFunction, i18n } from "i18next";
 import * as dateLocale from "date-fns/locale";
+import { API_URL } from "@/constants";
 
 type TStringCase = "flat" | "upper" | "camel" | "pascal" | "snake" | "upperSnake" | "kebab";
 
@@ -154,4 +155,36 @@ export const formatDateDistance = (i18n: i18n, translate: TFunction<"translation
                   locale: dateLocale[new StringCase(i18n.language).toLanguageObjKey() as keyof typeof dateLocale],
               }),
           });
+};
+
+export const formatBytes = (
+    bytes: number,
+    opts: {
+        decimals?: number;
+        sizeType?: "accurate" | "normal";
+    } = {}
+) => {
+    const { decimals = 0, sizeType = "normal" } = opts;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const accurateSizes = ["Bytes", "KiB", "MiB", "GiB", "TiB"];
+
+    if (bytes === 0) {
+        return "0 Byte";
+    }
+
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${sizeType === "accurate" ? (accurateSizes[i] ?? "Bytest") : (sizes[i] ?? "Bytes")}`;
+};
+
+export const convertServerFileURL = <TURL extends string | undefined>(url: TURL): TURL extends string ? string : undefined => {
+    if (!url) {
+        return url as unknown as TURL extends string ? string : undefined;
+    }
+
+    if (url.startsWith("http")) {
+        return url as unknown as TURL extends string ? string : undefined;
+    }
+
+    return `${API_URL}${url}` as unknown as TURL extends string ? string : undefined;
 };

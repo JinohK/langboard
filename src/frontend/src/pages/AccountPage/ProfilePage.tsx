@@ -4,7 +4,7 @@ import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import SubmitButton from "@/components/SubmitButton";
 import { Flex, Form, Input, Label, Toast } from "@/components/base";
-import useUpdateProfile from "@/controllers/account/useUpdateProfile";
+import useUpdateProfile from "@/controllers/api/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { createNameInitials } from "@/core/utils/StringUtils";

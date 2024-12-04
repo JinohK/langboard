@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Checkbox, Flex, Floating, Form, IconComponent, Label, Toast } from "@/components/base";
-import useSignIn from "@/controllers/auth/useSignIn";
+import { Button, Checkbox, Flex, Floating, Form, Label, Toast } from "@/components/base";
+import useSignIn from "@/controllers/api/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
+import SubmitButton from "@/components/SubmitButton";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -98,7 +99,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     {email}
                 </Button>
             </div>
-            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={handleSubmit} ref={formRef}>
+            <Form.Root className={cn("mt-11 xs:mt-0", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="password">
                     <Floating.LabelInput
                         type={shouldShowPassword ? "text" : "password"}
@@ -118,9 +119,9 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     <Button type="button" variant="ghost" disabled={isValidating} onClick={toFindPassword}>
                         {t("signIn.Forgot password?")}
                     </Button>
-                    <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                    </Button>
+                    <SubmitButton type="submit" isValidating={isValidating}>
+                        {t("common.Next")}
+                    </SubmitButton>
                 </Flex>
             </Form.Root>
         </>

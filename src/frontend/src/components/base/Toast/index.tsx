@@ -41,7 +41,7 @@ const Area = ({ ...props }: AreaProps) => {
     return (
         <Toaster
             theme={theme as AreaProps["theme"]}
-            className="toaster group"
+            className="toaster group pointer-events-auto"
             toastOptions={{
                 classNames: {
                     toast: cn(sharedToastClassNames, "group-[.toaster]:text-foreground group-[.toaster]:border-border leading-none"),
@@ -118,8 +118,11 @@ Add.warning = (message: string | React.ReactNode, data?: TExternalToast): string
 Add.error = (message: string | React.ReactNode, data?: TExternalToast): string | number => toast.error(message, createToastData(data));
 Add.custom = (jsx: (id: number | string) => React.ReactElement, data?: TExternalToast): string | number => toast.custom(jsx, createToastData(data));
 Add.message = (message: string | React.ReactNode, data?: TExternalToast): string | number => toast.message(message, createToastData(data));
-Add.promise = function <ToastData>(promise: TPromise<ToastData>, data?: TPromiseData<ToastData>): ReturnType<typeof toast.promise> {
-    return toast.promise(promise, createToastData(data));
+Add.promise = function <ToastData>(
+    promise: TPromise<ToastData>,
+    data?: TPromiseData<ToastData>
+): (string | number) & { unwrap: () => Promise<ToastData> } {
+    return toast.promise(promise, createToastData(data)) as (string | number) & { unwrap: () => Promise<ToastData> };
 };
 Add.dismiss = toast.dismiss;
 Add.loading = (message: string | React.ReactNode, data?: TExternalToast): string | number => toast.loading(message, createToastData(data));

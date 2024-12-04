@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from "react";
-import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -13,6 +13,7 @@ export interface IAuthUser extends User.Interface {
     purpose: string;
     affiliation?: string;
     position?: string;
+    user_groups: { id: number; name: string; users: User.Interface[] }[];
     subemails: { email: string; verified_at: string }[];
 }
 
@@ -89,9 +90,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 },
             });
 
-            if (response.data.user.avatar) {
-                response.data.user.avatar = `${API_URL}${response.data.user.avatar}`;
-            }
+            User.transformFromApi(response.data.user);
 
             sessionStorage.setItem(
                 "about-me",

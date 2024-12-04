@@ -1,5 +1,4 @@
 from typing import Any, TypeVar
-from ...models import GroupAssignedUser
 from ...models.BaseRoleModel import ALL_GRANTED, BaseRoleModel
 from ..db import DbSession
 from ..filter.RoleFilter import _RoleFinderFunc
@@ -36,24 +35,6 @@ class Role:
 
         result = await self._db.exec(query.limit(1))
         granted_actions = result.first()
-
-        # If the user has no direct permissions, check if they have group permissions
-        if not granted_actions:
-            query = (
-                self._db.query("select")
-                .column(self._model_class.actions)
-                .join(GroupAssignedUser, self._model_class.column("group_id") == GroupAssignedUser.column("group_id"))
-                .where(GroupAssignedUser.user_id == user_id)
-            )
-
-            if not role_finder:
-                for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
-                    query = query.where(self._model_class[column_name] == path_params[column_name])
-            else:
-                query = role_finder(query, path_params)
-
-            result = await self._db.exec(query.limit(1))
-            granted_actions = result.first()
 
         if not granted_actions:
             return False

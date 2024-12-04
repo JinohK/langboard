@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Dialog, Floating, Form, Select } from "@/components/base";
-import useCreateProject from "@/controllers/dashboard/useCreateProject";
+import { AutoComplete, Button, Dialog, Floating, Form, Input } from "@/components/base";
+import useCreateProject from "@/controllers/api/dashboard/useCreateProject";
 import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
+import { useRef } from "react";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -16,6 +17,8 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
     const [t] = useTranslation();
     const navigate = useNavigate();
     const { mutate } = useCreateProject();
+    const projectTypeRef = useRef<string>("");
+    const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "project.errors",
         schema: {
@@ -29,6 +32,11 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
         },
         useDefaultBadRequestHandler: true,
     });
+
+    const setIndustry = (value: string) => {
+        projectTypeRef.current = value;
+        projectTypeInputRef.current!.value = value;
+    };
 
     return (
         <Dialog.Root open={opened} onOpenChange={setOpened}>
@@ -59,19 +67,19 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                         />
                     </Form.Field>
                     <Form.Field name="project_type">
-                        <Select.Root name="project_type" autoComplete="off" disabled={isValidating}>
-                            <Select.Trigger className="mt-4 w-full">
-                                <Select.Value placeholder={t("project.Project Type")} />
-                            </Select.Trigger>
-                            <Select.Content>
-                                {Project.TYPES.map((type) => (
-                                    <Select.Item key={type} value={type}>
-                                        {t(`project.types.${type}`)}
-                                    </Select.Item>
-                                ))}
-                                <Select.Item value="Other">{t("common.Other")}</Select.Item>
-                            </Select.Content>
-                        </Select.Root>
+                        <Input type="hidden" name="project_type" value={projectTypeRef.current} ref={projectTypeInputRef} />
+                        <AutoComplete
+                            selectedValue=""
+                            onValueChange={setIndustry}
+                            items={Project.TYPES.map((project_type) => ({
+                                value: project_type,
+                                label: t(project_type === "Other" ? "common.Other" : `project.types.${project_type}`),
+                            }))}
+                            emptyMessage={projectTypeRef.current ?? ""}
+                            placeholder={t("project.Project Type")}
+                            className="mt-4"
+                        />
+                        {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}
                     </Form.Field>
                     <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                         <Dialog.Close asChild>

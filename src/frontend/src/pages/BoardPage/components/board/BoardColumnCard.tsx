@@ -1,30 +1,27 @@
 import { Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
-import UserAvatarList from "@/components/UserAvatarList";
-import { IBoardCard } from "@/controllers/board/useGetCards";
-import { IBoardProject } from "@/controllers/board/useProjectAvailable";
-import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
+import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { IBoardCard } from "@/controllers/api/board/useGetCards";
+import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
+import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
+import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
+import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
 import { Project } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { IFilterMap, navigateFilters } from "@/pages/BoardPage/components/board/boardFilterUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { tv } from "tailwind-variants";
 
 export interface IBoardColumnCardProps {
-    project: IBoardProject;
     card: IBoardCard & {
         isOpenedRef?: React.MutableRefObject<bool>;
     };
-    currentUser: IAuthUser;
-    filters: IFilterMap;
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
     isOverlay?: bool;
 }
@@ -46,24 +43,31 @@ export const SkeletonBoardColumnCard = memo(() => {
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
                 <Skeleton className="inline-block h-3.5 w-6" />
-                <Flex className="rtl:space-x-reverse">
-                    <Skeleton className="inline-block size-8 rounded-full" />
-                    <Skeleton className="inline-block size-8 rounded-full" />
-                </Flex>
+                <SkeletonUserAvatarList count={2} size="sm" />
             </Card.Footer>
         </Card.Root>
     );
 });
 
-const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
+const DISABLE_DRAGGING_ATTR = "data-drag-disabled";
+
+const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
+    const { project, currentUser, socket, hasRoleAction } = useBoard();
     if (TypeUtils.isNullOrUndefined(card.isOpenedRef)) {
         card.isOpenedRef = useRef(false);
     }
-    const disabledDraggingAttr = "data-drag-disabled";
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
-    const isClickRef = useRef(false);
-    const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(project.current_user_role_actions);
+    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+    const isClickedRef = useRef(false);
+    const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
+        socket,
+        cardUID: card.uid,
+        callback: (data) => {
+            card.description = data.description;
+            forceUpdate();
+        },
+    });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
         data: {
@@ -74,40 +78,47 @@ const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverC
             roleDescription: "Card",
         },
     });
-    const onMouseDown = useCallback((e: React.MouseEvent<HTMLElement>) => {
-        if ((e.target as HTMLElement)?.closest?.(`[${disabledDraggingAttr}]`)) {
-            return;
-        }
-
-        const checkIsClick = () => {
-            isClickRef.current = true;
-            window.removeEventListener("mouseup", checkIsClick);
-        };
-
-        window.addEventListener("mouseup", checkIsClick);
-
-        setTimeout(() => {
-            if (isClickRef.current) {
+    const onPointerStart = useCallback(
+        (type: "mouse" | "touch") => (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
+            if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
                 return;
             }
 
-            window.removeEventListener("mouseup", checkIsClick);
-            listeners?.onMouseDown?.(e);
-        }, 150);
-    }, []);
-    const onTouchStart = useCallback((e: React.TouchEvent<HTMLElement>) => {
-        if ((e.target as HTMLElement)?.closest?.(`[${disabledDraggingAttr}]`)) {
-            return;
-        }
+            const upEvent = type === "mouse" ? "mouseup" : "touchend";
+            const targetListener = type === "mouse" ? "onMouseDown" : "onTouchStart";
 
-        listeners?.onTouchStart?.(e);
-    }, []);
+            const checkIsClick = () => {
+                isClickedRef.current = true;
+                window.removeEventListener(upEvent, checkIsClick);
+            };
+
+            window.addEventListener(upEvent, checkIsClick);
+
+            setTimeout(() => {
+                if (isClickedRef.current) {
+                    return;
+                }
+
+                window.removeEventListener(upEvent, checkIsClick);
+                listeners?.[targetListener]?.(e);
+            }, 150);
+        },
+        []
+    );
     const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-        if ((e.target as HTMLElement)?.closest?.(`[${disabledDraggingAttr}]`)) {
+        if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
             return;
         }
 
         listeners?.onKeyDown?.(e);
+    }, []);
+
+    useEffect(() => {
+        const { off } = onCardDescriptionChanged();
+
+        return () => {
+            off();
+        };
     }, []);
 
     const style = {
@@ -132,8 +143,8 @@ const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverC
             className: variants({
                 dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
             }),
-            onMouseDown,
-            onTouchStart,
+            onMouseDown: onPointerStart("mouse"),
+            onTouchStart: onPointerStart("touch"),
             onKeyDown,
             ...attributes,
             ref: setNodeRef,
@@ -144,24 +155,9 @@ const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverC
         };
     }
 
-    let cardInner = (
-        <BoardColumnCardInner
-            filters={filters}
-            disabledDraggingAttr={disabledDraggingAttr}
-            isOpenedRef={card.isOpenedRef}
-            isClickRef={isClickRef}
-            projectUID={project.uid}
-            canUpdateCard={hasRoleAction(Project.ERoleAction.CARD_UPDATE)}
-            cardUID={card.uid}
-            title={card.title}
-            commentCount={card.comment_count}
-            members={card.members}
-            relationships={card.relationships}
-            setIsHoverCardHidden={setIsHoverCardHidden}
-        />
-    );
+    let cardInner = <BoardColumnCardInner isClickedRef={isClickedRef} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
-    if (!isOverlay && !isDragging && card.description) {
+    if (!isOverlay && !isDragging && card.description?.content.trim().length) {
         cardInner = (
             <HoverCard.Root
                 open={isHoverCardOpened}
@@ -178,8 +174,8 @@ const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverC
                 <HoverCard.Content
                     side="right"
                     align="end"
-                    className="max-xs:max-w-[100vw] w-64 cursor-auto p-0"
-                    {...{ [disabledDraggingAttr]: "" }}
+                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-0"
+                    {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                     hidden={isHoverCardHidden}
                 >
                     <ScrollArea.Root>
@@ -195,149 +191,172 @@ const BoardColumnCard = memo(({ project, card, filters, currentUser, closeHoverC
     return <div {...props}>{cardInner}</div>;
 });
 
-interface IBoardColumnCardInnerProps extends Omit<IBoardCard, "uid" | "column_uid" | "description" | "comment_count" | "order"> {
-    projectUID: IBoardProject["uid"];
-    canUpdateCard: bool;
-    cardUID: IBoardCard["uid"];
-    commentCount: IBoardCard["comment_count"];
-    disabledDraggingAttr: string;
-    isOpenedRef: React.MutableRefObject<bool>;
-    isClickRef: React.MutableRefObject<bool>;
-    filters: IFilterMap;
+interface IBoardColumnCardInnerProps {
+    card: IBoardColumnCardProps["card"];
+    isClickedRef: React.MutableRefObject<bool>;
     setIsHoverCardHidden: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-const BoardColumnCardInner = memo(
-    ({
-        filters,
-        projectUID,
-        canUpdateCard,
-        cardUID,
-        title,
-        commentCount,
-        members,
-        relationships,
-        disabledDraggingAttr,
-        isOpenedRef,
-        isClickRef,
-        setIsHoverCardHidden,
-    }: IBoardColumnCardInnerProps) => {
-        const [t] = useTranslation();
-        const [isOpened, setIsOpened] = useState(isOpenedRef.current);
-        const navigate = useNavigate();
-        const attributes = {
-            [disabledDraggingAttr]: "",
-            onPointerEnter: (e: React.PointerEvent) => {
+const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
+    const { project, socket, filters, hasRoleAction, navigateWithFilters } = useBoard();
+    const [t] = useTranslation();
+    const [title, setTitle] = useState(card.title);
+    const [commentCount, setCommentCount] = useState(card.count_comment);
+    const [isOpened, setIsOpened] = useState(card.isOpenedRef!.current);
+    const { on: onCardTitleChanged } = useCardTitleChangedHandlers({
+        socket,
+        cardUID: card.uid,
+        callback: (data) => {
+            card.title = data.title;
+            setTitle(data.title);
+        },
+    });
+    const { on: onCardCommentAdded } = useCardCommentAddedHandlers({
+        socket,
+        cardUID: card.uid,
+        callback: () => {
+            setCommentCount((count) => {
+                card.count_comment = count + 1;
+                return card.count_comment;
+            });
+        },
+    });
+    const { on: onCardCommentDeleted } = useCardCommentDeletedHandlers({
+        socket,
+        cardUID: card.uid,
+        callback: () => {
+            setCommentCount((count) => {
+                card.count_comment = count - 1;
+                return card.count_comment;
+            });
+        },
+    });
+    const attributes = {
+        [DISABLE_DRAGGING_ATTR]: "",
+        onPointerEnter: (e: React.PointerEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                setIsHoverCardHidden(true);
+            }
+        },
+    };
+
+    useEffect(() => {
+        const { off: offCardTitleChanged } = onCardTitleChanged();
+        const { off: offCardCommentAdded } = onCardCommentAdded();
+        const { off: offCardCommentDeleted } = onCardCommentDeleted();
+
+        return () => {
+            offCardTitleChanged();
+            offCardCommentAdded();
+            offCardCommentDeleted();
+        };
+    }, []);
+
+    const openCard = (e: React.MouseEvent<HTMLDivElement>) => {
+        setTimeout(() => {
+            if (!isClickedRef.current && hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+                return;
+            }
+
+            if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                return;
+            }
+
+            isClickedRef.current = false;
+            navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
+        }, 150);
+    };
+
+    const setFilters = (relationshipType: keyof IBoardCard["relationships"]) => {
+        if (!filters[relationshipType]) {
+            filters[relationshipType] = [];
+        }
+
+        if (filters[relationshipType].includes(card.uid)) {
+            filters[relationshipType] = filters[relationshipType].filter((id) => id !== card.uid);
+        } else {
+            filters[relationshipType].push(card.uid);
+        }
+
+        navigateWithFilters();
+    };
+
+    return (
+        <Card.Root
+            className="relative cursor-pointer"
+            onPointerOut={(e) => {
                 const target = e.target as HTMLElement;
-                if (target.closest(`[${disabledDraggingAttr}]`)) {
-                    setIsHoverCardHidden(true);
+                if (!target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                    setIsHoverCardHidden(false);
                 }
-            },
-        };
-
-        const openCard = () => {
-            setTimeout(() => {
-                if (!isClickRef.current && canUpdateCard) {
-                    return;
-                }
-
-                isClickRef.current = false;
-                navigate(ROUTES.BOARD.CARD(projectUID, cardUID), {
-                    state: { isSamePage: true },
-                });
-            }, 150);
-        };
-
-        const setFilters = (relationshipType: keyof IBoardCard["relationships"]) => {
-            if (!filters[relationshipType]) {
-                filters[relationshipType] = [];
-            }
-
-            if (filters[relationshipType].includes(cardUID)) {
-                filters[relationshipType] = filters[relationshipType].filter((id) => id !== cardUID);
-            } else {
-                filters[relationshipType].push(cardUID);
-            }
-
-            navigateFilters(navigate, filters);
-        };
-
-        return (
-            <Card.Root
-                className="relative cursor-pointer"
-                onPointerOut={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (!target.closest(`[${disabledDraggingAttr}]`)) {
-                        setIsHoverCardHidden(false);
-                    }
+            }}
+            onClick={openCard}
+        >
+            <Collapsible.Root
+                open={isOpened}
+                onOpenChange={(opened) => {
+                    setIsOpened(opened);
+                    card.isOpenedRef!.current = opened;
                 }}
-                onClick={openCard}
             >
-                <Collapsible.Root
-                    open={isOpened}
-                    onOpenChange={(opened) => {
-                        setIsOpened(opened);
-                        isOpenedRef.current = opened;
-                    }}
+                <Card.Header className="relative block py-4">
+                    <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
+                    <Collapsible.Trigger asChild>
+                        <Button
+                            variant="ghost"
+                            className="absolute right-2.5 top-1 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
+                            size="icon-sm"
+                            title={t(`common.${isOpened ? "Collapse" : "Expand"}`)}
+                            titleSide="bottom"
+                            {...attributes}
+                        >
+                            <IconComponent icon="chevron-down" size="4" />
+                        </Button>
+                    </Collapsible.Trigger>
+                </Card.Header>
+                <Collapsible.Content
+                    className={cn(
+                        "overflow-hidden text-sm transition-all",
+                        "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
+                    )}
                 >
-                    <Card.Header className="relative block py-4">
-                        <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
-                        <Collapsible.Trigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="absolute right-2.5 top-1 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
-                                size="icon-sm"
-                                title={t(`common.${isOpened ? "Collapse" : "Expand"}`)}
-                                titleSide="bottom"
-                                {...attributes}
-                            >
-                                <IconComponent icon="chevron-down" size="4" />
-                            </Button>
-                        </Collapsible.Trigger>
-                    </Card.Header>
-                    <Collapsible.Content
-                        className={cn(
-                            "overflow-hidden text-sm transition-all",
-                            "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
-                        )}
-                    >
-                        <Card.Content>
-                            {(["parents", "children"] as (keyof IBoardCard["relationships"])[]).map((relationshipType) => {
-                                const relationship = relationships[relationshipType];
-                                if (!relationship.length) {
-                                    return null;
-                                }
+                    <Card.Content>
+                        {(["parents", "children"] as (keyof IBoardCard["relationships"])[]).map((relationshipType) => {
+                            const relationship = card.relationships[relationshipType];
+                            if (!relationship.length) {
+                                return null;
+                            }
 
-                                return (
-                                    <Button
-                                        key={`board-card-relationship-button-${relationshipType}-${cardUID}`}
-                                        size="icon-sm"
-                                        className={cn(
-                                            "absolute top-1/2 z-20 block -translate-y-1/2 transform rounded-full text-xs",
-                                            relationshipType === "parents" ? "-left-3" : "-right-3"
-                                        )}
-                                        title={t(`project.${new StringCase(relationshipType).toPascal()}`)}
-                                        titleSide={relationshipType === "parents" ? "right" : "left"}
-                                        onClick={() => setFilters(relationshipType)}
-                                        {...attributes}
-                                    >
-                                        +{relationship.length}
-                                    </Button>
-                                );
-                            })}
-                        </Card.Content>
-                        <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
-                            <Flex items="center" gap="2">
-                                <IconComponent icon="message-square" size="4" className="text-secondary" strokeWidth="4" />
-                                <span>{commentCount}</span>
-                            </Flex>
-                            <UserAvatarList maxVisible={3} users={members} size="sm" {...attributes} className="cursor-default" />
-                        </Card.Footer>
-                    </Collapsible.Content>
-                </Collapsible.Root>
-            </Card.Root>
-        );
-    }
-);
+                            return (
+                                <Button
+                                    key={`board-card-relationship-button-${relationshipType}-${card.uid}`}
+                                    size="icon-sm"
+                                    className={cn(
+                                        "absolute top-1/2 z-20 block -translate-y-1/2 transform rounded-full text-xs",
+                                        relationshipType === "parents" ? "-left-3" : "-right-3"
+                                    )}
+                                    title={t(`project.${new StringCase(relationshipType).toPascal()}`)}
+                                    titleSide={relationshipType === "parents" ? "right" : "left"}
+                                    onClick={() => setFilters(relationshipType)}
+                                    {...attributes}
+                                >
+                                    +{relationship.length}
+                                </Button>
+                            );
+                        })}
+                    </Card.Content>
+                    <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
+                        <Flex items="center" gap="2">
+                            <IconComponent icon="message-square" size="4" className="text-secondary" strokeWidth="4" />
+                            <span>{commentCount}</span>
+                        </Flex>
+                        <UserAvatarList maxVisible={3} users={card.members} size="sm" {...attributes} className="cursor-default" />
+                    </Card.Footer>
+                </Collapsible.Content>
+            </Collapsible.Root>
+        </Card.Root>
+    );
+});
 
 export default BoardColumnCard;

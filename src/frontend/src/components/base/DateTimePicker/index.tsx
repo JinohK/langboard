@@ -9,6 +9,10 @@ import * as React from "react";
 import { useState } from "react";
 import * as Popover from "@/components/base/Popover";
 import Calendar, { ICalendarProps } from "@/components/base/Calendar";
+import { ScreenMap } from "@/core/utils/VariantUtils";
+import { Dialog } from "@/components/base";
+import { createRoot } from "react-dom/client";
+import { StringCase } from "@/core/utils/StringUtils";
 
 export interface IDateTimePickerProps extends ICalendarProps {
     renderTrigger: (props: DateTimeRenderTriggerProps) => React.ReactNode;
@@ -25,19 +29,94 @@ export type DateTimeRenderTriggerProps = {
 function DateTimePicker({ renderTrigger, onChange, ...props }: IDateTimePickerProps): JSX.Element {
     const { timezone, disabled, use12HourFormat } = props;
     const [open, setOpen] = useState(false);
-
+    const [isDialog, setIsDialog] = useState(false);
+    const triggerRef = React.useRef<HTMLButtonElement>(null);
     const handleChange = (date: Date | undefined) => {
         onChange(date);
         setOpen(false);
     };
+    const checkDialog = React.useCallback(async () => {
+        if (!triggerRef.current) {
+            return;
+        }
+
+        const rect = triggerRef.current.getBoundingClientRect();
+
+        const height = await measureHeight();
+        if (window.innerWidth < ScreenMap.size.sm || window.innerHeight < height + rect.bottom) {
+            setIsDialog(true);
+        } else {
+            setIsDialog(false);
+        }
+    }, []);
+
+    const measureHeight = (): Promise<number> =>
+        new Promise((resolve) => {
+            const rootElem = document.createElement("div");
+            const styles = {
+                position: "absolute",
+                visibility: "hidden",
+                zIndex: "-1",
+                height: "auto",
+                width: "auto",
+                top: "0",
+            };
+            rootElem.style.cssText = Object.entries(styles)
+                .map(([key, value]) => {
+                    return `${new StringCase(key).toKebab()}: ${value} !important`;
+                })
+                .join(";");
+            document.body.appendChild(rootElem);
+            const root = createRoot(rootElem);
+            root.render(<Calendar onChange={() => {}} {...props} />);
+            setTimeout(() => {
+                const height = rootElem.clientHeight;
+                document.body.removeChild(rootElem);
+                resolve(height);
+            });
+        });
+
+    React.useEffect(() => {
+        checkDialog();
+
+        let resizeTimeout: NodeJS.Timeout;
+        const resizeHandler = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                checkDialog();
+            }, 300);
+        };
+
+        window.addEventListener("resize", resizeHandler);
+
+        return () => {
+            window.removeEventListener("resize", resizeHandler);
+        };
+    }, []);
+
+    const caledar = <Calendar onChange={handleChange} {...props} />;
 
     return (
-        <Popover.Root open={open} onOpenChange={setOpen}>
-            <Popover.Trigger asChild>{renderTrigger({ open, timezone, disabled, use12HourFormat, setOpen })}</Popover.Trigger>
-            <Popover.Content className="w-auto p-2">
-                <Calendar onChange={handleChange} {...props} />
-            </Popover.Content>
-        </Popover.Root>
+        <>
+            {isDialog ? (
+                <Dialog.Root open={open} onOpenChange={setOpen}>
+                    <Dialog.Trigger asChild ref={triggerRef}>
+                        {renderTrigger({ open, timezone, disabled, use12HourFormat, setOpen })}
+                    </Dialog.Trigger>
+                    <Dialog.Content className="w-auto p-2 pt-8" aria-describedby="">
+                        <Dialog.Title hidden />
+                        {caledar}
+                    </Dialog.Content>
+                </Dialog.Root>
+            ) : (
+                <Popover.Root open={open} onOpenChange={setOpen}>
+                    <Popover.Trigger asChild ref={triggerRef}>
+                        {renderTrigger({ open, timezone, disabled, use12HourFormat, setOpen })}
+                    </Popover.Trigger>
+                    <Popover.Content className="w-auto p-2">{caledar}</Popover.Content>
+                </Popover.Root>
+            )}
+        </>
     );
 }
 

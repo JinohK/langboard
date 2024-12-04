@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
-import useClearProjectChatMessages from "@/controllers/board/useClearProjectChatMessages";
+import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";

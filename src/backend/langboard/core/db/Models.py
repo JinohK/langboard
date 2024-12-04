@@ -205,4 +205,4 @@ class SoftDeleteModel(BaseSqlModel):
 
 
 class EditorContentModel(BaseModel):
-    content: str
+    content: str = Field(default="")

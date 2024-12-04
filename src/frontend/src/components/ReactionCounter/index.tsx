@@ -5,21 +5,28 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { LottieRefCurrentProps } from "lottie-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IReactionCounterProps<TReactionData = unknown> {
     reactions: Partial<Record<TEmoji, TReactionData[]>>;
     toggleCallback: (reaction: TEmoji) => void;
     isActiveReaction?: (reaction: TEmoji, data: TReactionData[]) => bool;
+    disabled?: bool;
 }
 
-function ReactionCounter({ reactions, toggleCallback, isActiveReaction }: IReactionCounterProps): JSX.Element {
+function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled }: IReactionCounterProps): JSX.Element {
     const [t] = useTranslation();
     const reactionOrders: TEmoji[] = ["check-mark", "thumbs-up", "thumbs-down", "laughing", "party-popper", "confusing", "heart", "rocket", "eyes"];
+    const [isOpened, setIsOpened] = useState(false);
+
+    const toggle = (emoji: TEmoji) => {
+        setIsOpened(false);
+        toggleCallback(emoji);
+    };
 
     return (
-        <Popover.Root>
+        <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
             <Flex wrap="wrap" gap="1">
                 {reactionOrders.map((reaction) => {
                     if (!reactions[reaction] || reactions[reaction].length === 0) {
@@ -31,8 +38,9 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction }: IReact
                             key={`reaction-counter-${reaction}-${createShortUUID()}`}
                             reaction={reaction}
                             reactionData={reactions[reaction]}
-                            toggleCallback={toggleCallback}
+                            toggleCallback={toggle}
                             isActiveReaction={isActiveReaction}
+                            disabled={disabled}
                         />
                     );
                 })}
@@ -48,9 +56,9 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction }: IReact
                     magnification={50}
                     distance={100}
                     size="sm"
-                    className="max-xs:h-auto !mt-0 max-w-[100vw] flex-wrap gap-1 px-1 py-0"
+                    className="!mt-0 h-auto max-w-[100vw] flex-wrap gap-1 px-1 py-0 xs:h-12"
                 >
-                    {reactionOrders.map((reaction) => ReactionCounterButton({ reaction, isDock: true, toggleCallback }))}
+                    {reactionOrders.map((reaction) => ReactionCounterButton({ reaction, isDock: true, toggleCallback: toggle, disabled }))}
                 </Dock.Root>
             </Popover.Content>
         </Popover.Root>
@@ -63,6 +71,7 @@ interface IBaseReactionCounterButtonProps<TReactionData = unknown> {
     isDock?: bool;
     toggleCallback: (emoji: TEmoji) => void;
     isActiveReaction?: (emoji: TEmoji, data: TReactionData[]) => bool;
+    disabled?: bool;
 }
 
 interface IReactionCounterListButtonProps<TReactionData = unknown> extends IBaseReactionCounterButtonProps<TReactionData> {
@@ -78,7 +87,7 @@ interface IReactionCounterDockButtonProps extends IBaseReactionCounterButtonProp
 
 type TReactionCounterButtonProps = IReactionCounterListButtonProps | IReactionCounterDockButtonProps;
 
-function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiveReaction }: TReactionCounterButtonProps): JSX.Element {
+function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiveReaction, disabled }: TReactionCounterButtonProps): JSX.Element {
     const [t] = useTranslation();
     const lottieRef = useRef<LottieRefCurrentProps>(null);
     const isPlayed = useRef<bool>(false);
@@ -107,6 +116,7 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
                     onPointerEnter: play,
                     onPointerLeave: stop,
                     onClick: () => toggleCallback(reaction),
+                    disabled,
                 }}
                 dockIconProps={{ className: "bg-accent/70 transition-colors duration-300 hover:text-primary" }}
                 title={t(`reaction.${reaction}`)}
@@ -126,6 +136,7 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
             onPointerEnter={play}
             onPointerLeave={stop}
             onClick={() => toggleCallback(reaction)}
+            disabled={disabled}
         >
             <Flex items="center" w="4">
                 {emoji}

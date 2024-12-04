@@ -78,6 +78,8 @@ interface IBaseUseCreateEditor {
     socket?: IConnectedSocket;
     baseSocketEvent?: string;
     uploadPath?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    uploadedCallback?: (respones: any) => void;
 }
 
 interface IUseReadonlyEditor extends IBaseUseCreateEditor {
@@ -86,6 +88,7 @@ interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     socket?: never;
     baseSocketEvent?: never;
     uploadPath?: never;
+    uploadedCallback?: never;
 }
 
 interface IUseEditor extends IBaseUseCreateEditor {
@@ -100,17 +103,17 @@ export type TUseCreateEditor = IUseReadonlyEditor | IUseEditor;
 
 const createEditorSocketEvents = (baseEvent: string) => ({
     chatEvents: {
-        send: `${baseEvent}:chat:send`,
-        stream: `${baseEvent}:chat:stream`,
+        send: `${baseEvent}:editor:chat:send`,
+        stream: `${baseEvent}:editor:chat:stream`,
     },
     copilotEvents: {
-        abort: `${baseEvent}:copilot:abort`,
-        send: `${baseEvent}:copilot:send`,
-        receive: `${baseEvent}:copilot:receive`,
+        abort: `${baseEvent}:editor:copilot:abort`,
+        send: `${baseEvent}:editor:copilot:send`,
+        receive: `${baseEvent}:editor:copilot:receive`,
     },
 });
 
-const getComponents = ({ currentUser, mentionableUsers, uploadPath, readOnly = false }: TUseCreateEditor) => {
+const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCallback, readOnly = false }: TUseCreateEditor) => {
     const viewComponents = {
         [AudioPlugin.key]: MediaAudioElement,
         [BlockquotePlugin.key]: BlockquoteElement,
@@ -150,7 +153,7 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, readOnly = f
             },
         }),
         [ParagraphPlugin.key]: ParagraphElement,
-        [PlaceholderPlugin.key]: withProps(MediaPlaceholderElement, { uploadPath }),
+        [PlaceholderPlugin.key]: withProps(MediaPlaceholderElement, { uploadPath, uploadedCallback }),
         [StrikethroughPlugin.key]: withProps(PlateLeaf, { as: "s" }),
         [SubscriptPlugin.key]: withProps(PlateLeaf, { as: "sub" }),
         [SuperscriptPlugin.key]: withProps(PlateLeaf, { as: "sup" }),

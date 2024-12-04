@@ -26,7 +26,13 @@ export const MentionElement = withRef<
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionableUsers.find((user) => user.id.toString() === element.key);
+    const mentionedUser = mentionableUsers.find((user) => user.id.toString() === element.key) ?? {
+        id: 0,
+        email: "",
+        firstname: "",
+        lastname: "",
+        username: "",
+    };
 
     return (
         <PlateElement
@@ -48,7 +54,7 @@ export const MentionElement = withRef<
             {mounted && IS_APPLE ? (
                 // Mac OS IME https://github.com/ianstormtaylor/slate/issues/3490
                 <UserAvatar.Root
-                    user={mentionedUser ?? { id: 0, email: "", firstname: "", lastname: "", username: "" }}
+                    user={mentionedUser}
                     withName
                     noAvatar
                     customName={
@@ -66,7 +72,7 @@ export const MentionElement = withRef<
             ) : (
                 // Others like Android https://github.com/ianstormtaylor/slate/pull/5360
                 <UserAvatar.Root
-                    user={mentionedUser ?? { id: 0, email: "", firstname: "", lastname: "", username: "" }}
+                    user={mentionedUser}
                     withName
                     noAvatar
                     customName={

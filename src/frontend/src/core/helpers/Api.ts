@@ -96,10 +96,5 @@ api.interceptors.response.use(
 
         const result = await handleAsync(error);
         return result;
-    },
-    {
-        runWhen: (config) => {
-            return !config.url?.endsWith(API_ROUTES.AUTH.REFRESH);
-        },
     }
 );

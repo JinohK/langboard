@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Toast } from "@/components/base";
-import useRevertMutate from "@/controllers/revert/useRevertMutate";
+import useRevertMutate from "@/controllers/api/revert/useRevertMutate";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 const useRevert = (path: string, revertCallback?: () => void) => {

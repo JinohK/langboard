@@ -8,16 +8,17 @@ import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
 import Flex from "@/components/base/Flex";
 
-type Props = {
+export interface IAutorCompleteProps {
     selectedValue: string;
     onValueChange: (value: string) => void;
     items: { value: string; label: string }[];
     isLoading?: bool;
     emptyMessage: string;
     placeholder: string;
-};
+    className?: string;
+}
 
-function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder }: Props) {
+function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, className }: IAutorCompleteProps) {
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(selectedValue);
 
@@ -44,7 +45,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
     };
 
     return (
-        <Flex items="center">
+        <Flex items="center" className={className}>
             <Popover.Root open={open} onOpenChange={setOpen}>
                 <Command.Root
                     shouldFilter={false}

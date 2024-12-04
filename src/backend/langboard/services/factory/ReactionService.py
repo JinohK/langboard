@@ -27,7 +27,9 @@ class ReactionService(BaseService):
 
         return reactions
 
-    async def toggle(self, user: User, model_class: type[BaseReactionModel], target_id: int | str, reaction_type: str):
+    async def toggle(
+        self, user: User, model_class: type[BaseReactionModel], target_id: int | str, reaction_type: str
+    ) -> bool:
         result = await self._db.exec(
             self._db.query("select")
             .table(model_class)
@@ -38,8 +40,9 @@ class ReactionService(BaseService):
             )
         )
         reaction = result.first()
+        is_reacted = bool(reaction)
 
-        if reaction:
+        if is_reacted:
             await self._db.delete(reaction)
         else:
             reaction_params = {
@@ -50,3 +53,5 @@ class ReactionService(BaseService):
             reaction = model_class(**reaction_params)
             self._db.insert(reaction)
         await self._db.commit()
+
+        return not is_reacted

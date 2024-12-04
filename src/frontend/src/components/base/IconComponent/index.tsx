@@ -10,7 +10,7 @@ import { DimensionMap } from "@/core/utils/VariantUtils";
 export const IconVariants = tv(
     {
         variants: {
-            size: { ...DimensionMap.all },
+            size: DimensionMap.all,
         },
         defaultVariants: {
             size: undefined,

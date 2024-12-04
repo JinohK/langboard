@@ -16,4 +16,4 @@ export enum ERoleAction {
     CARD_DELETE = "card_delete",
 }
 
-export const TYPES = ["SI", "SW"];
+export const TYPES = ["SI", "SW", "Other"];

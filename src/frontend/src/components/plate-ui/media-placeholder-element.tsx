@@ -18,11 +18,12 @@ import {
 } from "@udecode/plate-media/react";
 import { AudioLines, FileUp, Film, ImageIcon } from "lucide-react";
 import { useFilePicker } from "use-file-picker";
-import { useUploadFile } from "./uploadthing";
+import { IUseUploadFile, useUploadFile } from "./uploadthing";
 import { PlateElement } from "./plate-element";
 import { Spinner } from "./spinner";
 import { useTranslation } from "react-i18next";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { formatBytes } from "@/core/utils/StringUtils";
 
 const CONTENT: Record<
     string,
@@ -56,20 +57,14 @@ const CONTENT: Record<
 
 export const MediaPlaceholderElement = withHOC(
     PlaceholderProvider,
-    withRef<typeof PlateElement, { uploadPath?: string }>(({ children, className, editor, nodeProps, uploadPath, ...props }, ref) => {
+    withRef<typeof PlateElement, IUseUploadFile>(({ children, className, editor, nodeProps, uploadPath, uploadedCallback, ...props }, ref) => {
         const [t] = useTranslation();
         const element = props.element as TPlaceholderElement;
-
         const { api } = useEditorPlugin(PlaceholderPlugin);
-
-        const { isUploading, progress, uploadFile, uploadedFile, uploadingFile } = useUploadFile({ uploadPath });
-
+        const { isUploading, progress, uploadFile, uploadedFile, uploadingFile } = useUploadFile({ uploadPath, uploadedCallback });
         const loading = isUploading && uploadingFile;
-
         const currentContent = CONTENT[element.mediaType];
-
         const isImage = element.mediaType === ImagePlugin.key;
-
         const imageRef = useRef<HTMLImageElement>(null);
 
         const { openFilePicker } = useFilePicker({
@@ -219,23 +214,4 @@ export function ImageProgress({
             )}
         </div>
     );
-}
-
-export function formatBytes(
-    bytes: number,
-    opts: {
-        decimals?: number;
-        sizeType?: "accurate" | "normal";
-    } = {}
-) {
-    const { decimals = 0, sizeType = "normal" } = opts;
-
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    const accurateSizes = ["Bytes", "KiB", "MiB", "GiB", "TiB"];
-
-    if (bytes === 0) return "0 Byte";
-
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-
-    return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${sizeType === "accurate" ? (accurateSizes[i] ?? "Bytest") : (sizes[i] ?? "Bytes")}`;
 }

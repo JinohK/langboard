@@ -2,6 +2,7 @@ export * as Activity from "@/core/models/Activity";
 export * as Project from "@/core/models/Project";
 export * as ProjectColumn from "@/core/models/ProjectColumn";
 export * as ProjectCard from "@/core/models/ProjectCard";
+export * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 export * as ProjectCardComment from "@/core/models/ProjectCardComment";
 export * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 export * as ProjectCheckitemTimer from "@/core/models/ProjectCheckitemTimer";

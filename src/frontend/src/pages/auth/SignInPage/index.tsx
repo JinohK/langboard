@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
-import useAuthEmail from "@/controllers/auth/useAuthEmail";
+import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import { ROUTES } from "@/core/routing/constants";
 import { generateToken } from "@/core/utils/StringUtils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";

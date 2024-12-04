@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button } from "@/components/base";
-import { ISignUpForm } from "@/controllers/auth/useSignUp";
+import { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import { ROUTES } from "@/core/routing/constants";
 import AdditionalForm from "@/pages/auth/SignUpPage/AdditionalForm";
 import OptionalForm from "@/pages/auth/SignUpPage/OptionalForm";

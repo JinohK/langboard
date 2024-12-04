@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroller";
-import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
+import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import ProjectCard, { SkeletonProjectCard } from "@/pages/DashboardPage/components/ProjectCard";

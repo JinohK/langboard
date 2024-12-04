@@ -1,24 +1,16 @@
 import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
-import { IBoardCard } from "@/controllers/board/useGetCards";
-import { IBoardProject } from "@/controllers/board/useProjectAvailable";
+import { IBoardCard } from "@/controllers/api/board/useGetCards";
+import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { filterMember, filterCard, IFilterMap, navigateFilters } from "@/pages/BoardPage/components/board/boardFilterUtils";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
-export interface IBoardFilterProps {
-    members: IBoardProject["members"];
-    cards: IBoardCard[];
-    filters: IFilterMap;
-}
-
-function BoardFilter({ members, cards, filters }: IBoardFilterProps) {
+function BoardFilter() {
+    const { project, cards, filters, filterCard, filterMember, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
-    const navigate = useNavigate();
 
     const setFilterKeyword = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (!filters.keyword) {
@@ -33,7 +25,7 @@ function BoardFilter({ members, cards, filters }: IBoardFilterProps) {
 
         filters.keyword = keyword.split(",");
 
-        navigateFilters(navigate, filters);
+        navigateWithFilters();
     };
 
     const countAppliedFilters =
@@ -44,31 +36,32 @@ function BoardFilter({ members, cards, filters }: IBoardFilterProps) {
 
     const clearFilters = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
-        navigateFilters(navigate, {});
+        Object.keys(filters).forEach((filterName) => {
+            delete filters[filterName as keyof IFilterMap];
+        });
+        navigateWithFilters();
     };
 
     return (
         <Popover.Root>
             <Popover.Trigger asChild>
                 <Flex items="center">
-                    <Button variant="ghost" className={cn("gap-1", countAppliedFilters > 0 ? "rounded-e-none bg-accent/75 pr-2" : "")}>
-                        <IconComponent icon="filter" size="4" />
-                        <span>
-                            {t("board.Filters")}
-                            {countAppliedFilters > 0 && ` (${countAppliedFilters})`}
-                        </span>
+                    <Button
+                        variant="ghost"
+                        className={cn("gap-1 px-2 text-xs xs:px-4 xs:text-sm", countAppliedFilters > 0 ? "rounded-e-none bg-accent/75 xs:pr-2" : "")}
+                    >
+                        <IconComponent icon="filter" size={{ initial: "3", xs: "4" }} />
+                        <span className="hidden xs:inline-block">{t("board.Filters")}</span>
+                        {countAppliedFilters > 0 && <span className="pb-1 xs:pb-0.5">{` (${countAppliedFilters})`}</span>}
                     </Button>
                     {countAppliedFilters > 0 && (
-                        <Button variant="ghost" className="rounded-s-none bg-accent/75 p-1 pl-2 pr-4" onClick={clearFilters}>
-                            {t("board.filters.Clear")}
+                        <Button variant="ghost" className="rounded-s-none bg-accent/75 px-2 py-1 text-xs xs:pr-4 xs:text-sm" onClick={clearFilters}>
+                            <span className="pb-0.5 xs:pb-0">{t("board.filters.Clear")}</span>
                         </Button>
                     )}
                 </Flex>
             </Popover.Trigger>
-            <Popover.Content
-                align="end"
-                className="max-xs:sticky max-xs:left-0 max-xs:top-0 max-xs:h-[calc(100vh_-_theme(spacing.32))] max-xs:w-screen"
-            >
+            <Popover.Content align="end" className="max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.4))]">
                 <ScrollArea.Root>
                     <Flex direction="col" gap="4" className="max-h-[calc(100vh_-_theme(spacing.40))]">
                         <Label className="block">
@@ -82,22 +75,21 @@ function BoardFilter({ members, cards, filters }: IBoardFilterProps) {
                         <Flex direction="col">
                             <Label>{t("board.filters.Members")}</Label>
                             <Flex direction="col" pt="1">
-                                <BoardFilterItem filters={filters} name="members" value="none">
+                                <BoardFilterItem name="members" value="none">
                                     <span>{t("board.filters.No members assigned")}</span>
                                 </BoardFilterItem>
-                                <BoardFilterItem filters={filters} name="members" value="me">
+                                <BoardFilterItem name="members" value="me">
                                     <span>{t("board.filters.Assigned to me")}</span>
                                 </BoardFilterItem>
                                 <BoardExtendedFilter
                                     filterLangLabel="Select members"
                                     uncountableItems={["none", "me"]}
                                     filterName="members"
-                                    filters={filters}
                                     createFilterItems={() =>
-                                        members
-                                            .filter((member) => filterMember(filters, member))
+                                        project.members
+                                            .filter((member) => filterMember(member))
                                             .map((member) => (
-                                                <BoardFilterItem key={createShortUUID()} filters={filters} name="members" value={member.email}>
+                                                <BoardFilterItem key={createShortUUID()} name="members" value={member.email}>
                                                     <UserAvatar.Root user={member} withName avatarSize="xs" labelClassName="gap-1" />
                                                 </BoardFilterItem>
                                             ))
@@ -111,13 +103,12 @@ function BoardFilter({ members, cards, filters }: IBoardFilterProps) {
                                 <BoardExtendedFilter
                                     filterLangLabel="Select cards"
                                     filterName={relationship}
-                                    filters={filters}
                                     createFilterItems={() =>
                                         cards
                                             .filter((card) => card.relationships[relationship as keyof IBoardCard["relationships"]].length > 0)
-                                            .filter((card) => filterCard(filters, card))
+                                            .filter((card) => filterCard(card))
                                             .map((card) => (
-                                                <BoardFilterItem key={createShortUUID()} filters={filters} name={relationship} value={card.uid}>
+                                                <BoardFilterItem key={createShortUUID()} name={relationship} value={card.uid}>
                                                     <span>{card.title}</span>
                                                 </BoardFilterItem>
                                             ))
@@ -136,20 +127,19 @@ interface IBoardFilterExtendedProps {
     filterLangLabel: string;
     uncountableItems?: string[];
     filterName: keyof IFilterMap;
-    filters: IFilterMap;
     createFilterItems: () => React.ReactNode;
 }
 
-const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterName, filters, createFilterItems }: IBoardFilterExtendedProps) => {
+const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterName, createFilterItems }: IBoardFilterExtendedProps) => {
+    const { filters, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
-    const navigate = useNavigate();
 
     const countSelections = filters[filterName]?.filter((v) => !(uncountableItems ?? []).includes(v)).length ?? 0;
 
     const clearSelection = () => {
         filters[filterName] = [];
 
-        navigateFilters(navigate, filters);
+        navigateWithFilters();
     };
 
     return (
@@ -191,15 +181,14 @@ const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterNam
 });
 
 interface IBoardFilterItemProps {
-    filters: IFilterMap;
     name: keyof IFilterMap;
     value: string;
     children: React.ReactNode;
 }
 
-const BoardFilterItem = memo(({ filters, name, value, children }: IBoardFilterItemProps) => {
-    const navigate = useNavigate();
-    const defaultChecked = filters[name] && filters[name].includes(value);
+const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) => {
+    const { filters, navigateWithFilters } = useBoard();
+    const checked = useMemo(() => !!filters[name] && filters[name].includes(value), [filters, filters[name]]);
 
     const setFilterCards = (checked: CheckedState) => {
         if (!filters[name]) {
@@ -212,12 +201,12 @@ const BoardFilterItem = memo(({ filters, name, value, children }: IBoardFilterIt
             filters[name] = filters[name].filter((filter) => filter !== value);
         }
 
-        navigateFilters(navigate, filters);
+        navigateWithFilters();
     };
 
     return (
         <Label className="flex cursor-pointer items-center gap-2 p-3 hover:bg-accent">
-            <Checkbox name={name} defaultChecked={defaultChecked} onCheckedChange={setFilterCards} />
+            <Checkbox name={name} checked={checked} onCheckedChange={setFilterCards} />
             {children}
         </Label>
     );

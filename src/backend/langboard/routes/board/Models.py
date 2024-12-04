@@ -1,4 +1,5 @@
 from datetime import datetime
+from pydantic import BaseModel
 from ...core.routing import BaseFormModel, form_model
 from ...core.schema import Pagination
 
@@ -13,6 +14,49 @@ class ChangeColumnOrderForm(BaseFormModel):
 
 
 @form_model
-class ChangeCardOrderForm(BaseFormModel):
+class ChangeOrderForm(BaseFormModel):
     order: int
-    column_uid: str = ""
+    parent_uid: str = ""
+
+
+class ChangeColumnOrderSocketForm(BaseModel):
+    uid: str
+    order: int
+
+
+@form_model
+class ChangeAttachmentNameForm(BaseFormModel):
+    attachment_name: str
+
+
+class ChangeOrderSocketForm(BaseModel):
+    column_name: str = ""
+    from_column_uid: str
+    to_column_uid: str | None = None
+    uid: str
+    order: int
+
+
+@form_model
+class ChangeCardDetailsForm(BaseFormModel):
+    title: str | None = None
+    deadline_at: str | None = None
+    description: dict | None = None
+
+
+@form_model
+class ToggleCardCommentReactionForm(BaseFormModel):
+    reaction: str
+
+
+@form_model
+class CreateCardCheckitemForm(BaseFormModel):
+    title: str
+    assignees: list[int] | None = None
+
+
+@form_model
+class CardifyCheckitemForm(BaseFormModel):
+    column_uid: str | None = None
+    with_sub_checkitems: bool = False
+    with_assign_users: bool = False

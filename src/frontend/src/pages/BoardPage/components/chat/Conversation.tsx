@@ -2,7 +2,7 @@ import { Virtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import VirtualInfiniteList from "@/components/VirtualInfiniteList";
-import useGetProjectChatMessages from "@/controllers/board/useGetProjectChatMessages";
+import useGetProjectChatMessages from "@/controllers/api/board/useGetProjectChatMessages";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import ChatMessage, { IChatMessageProps } from "@/pages/BoardPage/components/chat/ChatMessage";

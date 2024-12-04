@@ -27,7 +27,7 @@ class ProjectColumnService(BaseService):
         return count
 
     @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn)
-    async def change_column_order(
+    async def change_order(
         self, user: User, project_uid: str, column_uid: str, order: int
     ) -> tuple[ActivityResult | None, bool]:
         result = await self._db.exec(

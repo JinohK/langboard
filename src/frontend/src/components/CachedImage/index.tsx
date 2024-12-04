@@ -7,9 +7,9 @@ import { DimensionMap } from "@/core/utils/VariantUtils";
 const CachedImageVariants = tv(
     {
         variants: {
-            size: { ...DimensionMap.all },
-            w: { ...DimensionMap.width },
-            h: { ...DimensionMap.height },
+            size: DimensionMap.all,
+            w: DimensionMap.width,
+            h: DimensionMap.height,
         },
         defaultVariants: {
             size: undefined,

@@ -30,7 +30,7 @@ import {
     startOfDay,
     endOfDay,
 } from "date-fns";
-import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, Clock } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, Clock } from "lucide-react";
 import { DayPicker, Matcher, TZDate } from "react-day-picker";
 import Button, { ButtonVariants } from "@/components/base/Button";
 import * as Popover from "@/components/base/Popover";
@@ -100,169 +100,154 @@ export interface ICalendarProps extends Omit<React.ComponentProps<typeof DayPick
         second?: bool;
     };
 }
+const Calendar = React.forwardRef<HTMLDivElement, ICalendarProps>(
+    ({ value, onChange, min, max, timezone, hideTime, use12HourFormat, disabled, clearable, classNames, timePicker, ...props }, ref) => {
+        const [monthYearPicker, setMonthYearPicker] = useState<"month" | "year" | false>(false);
+        const initDate = useMemo(() => new TZDate(value || new Date(), timezone), [value, timezone]);
 
-function Calendar({
-    value,
-    onChange,
-    min,
-    max,
-    timezone,
-    hideTime,
-    use12HourFormat,
-    disabled,
-    clearable,
-    classNames,
-    timePicker,
-    ...props
-}: ICalendarProps) {
-    const [monthYearPicker, setMonthYearPicker] = useState<"month" | "year" | false>(false);
-    const initDate = useMemo(() => new TZDate(value || new Date(), timezone), [value, timezone]);
+        const [month, setMonth] = useState<Date>(initDate);
+        const [date, setDate] = useState<Date>(initDate);
 
-    const [month, setMonth] = useState<Date>(initDate);
-    const [date, setDate] = useState<Date>(initDate);
+        const endMonth = useMemo(() => {
+            return setYear(month, getYear(month) + 1);
+        }, [month]);
+        const minDate = useMemo(() => (min ? new TZDate(min, timezone) : undefined), [min, timezone]);
+        const maxDate = useMemo(() => (max ? new TZDate(max, timezone) : undefined), [max, timezone]);
 
-    const endMonth = useMemo(() => {
-        return setYear(month, getYear(month) + 1);
-    }, [month]);
-    const minDate = useMemo(() => (min ? new TZDate(min, timezone) : undefined), [min, timezone]);
-    const maxDate = useMemo(() => (max ? new TZDate(max, timezone) : undefined), [max, timezone]);
+        const onDayChanged = useCallback(
+            (d: Date) => {
+                d.setHours(date.getHours(), date.getMinutes(), date.getSeconds());
+                if (min && d < min) {
+                    d.setHours(min.getHours(), min.getMinutes(), min.getSeconds());
+                }
+                if (max && d > max) {
+                    d.setHours(max.getHours(), max.getMinutes(), max.getSeconds());
+                }
+                setDate(d);
+            },
+            [setDate, setMonth]
+        );
+        const onSumbit = useCallback(() => {
+            onChange(new Date(date));
+        }, [date, onChange]);
 
-    const onDayChanged = useCallback(
-        (d: Date) => {
-            d.setHours(date.getHours(), date.getMinutes(), date.getSeconds());
-            if (min && d < min) {
-                d.setHours(min.getHours(), min.getMinutes(), min.getSeconds());
-            }
-            if (max && d > max) {
-                d.setHours(max.getHours(), max.getMinutes(), max.getSeconds());
-            }
-            setDate(d);
-        },
-        [setDate, setMonth]
-    );
-    const onSumbit = useCallback(() => {
-        onChange(new Date(date));
-    }, [date, onChange]);
+        const onMonthYearChanged = useCallback(
+            (d: Date, mode: "month" | "year") => {
+                setMonth(d);
+                if (mode === "year") {
+                    setMonthYearPicker("month");
+                } else {
+                    setMonthYearPicker(false);
+                }
+            },
+            [setMonth, setMonthYearPicker]
+        );
+        const onNextMonth = useCallback(() => {
+            setMonth(addMonths(month, 1));
+        }, [month]);
+        const onPrevMonth = useCallback(() => {
+            setMonth(subMonths(month, 1));
+        }, [month]);
 
-    const onMonthYearChanged = useCallback(
-        (d: Date, mode: "month" | "year") => {
-            setMonth(d);
-            if (mode === "year") {
-                setMonthYearPicker("month");
-            } else {
-                setMonthYearPicker(false);
-            }
-        },
-        [setMonth, setMonthYearPicker]
-    );
-    const onNextMonth = useCallback(() => {
-        setMonth(addMonths(month, 1));
-    }, [month]);
-    const onPrevMonth = useCallback(() => {
-        setMonth(subMonths(month, 1));
-    }, [month]);
+        useEffect(() => {
+            setDate(initDate);
+            setMonth(initDate);
+            setMonthYearPicker(false);
+        }, [initDate]);
 
-    useEffect(() => {
-        setDate(initDate);
-        setMonth(initDate);
-        setMonthYearPicker(false);
-    }, [initDate]);
-
-    return (
-        <>
-            <div className="flex items-center justify-between">
-                <div className="text-md ms-2 flex cursor-pointer items-center font-bold">
-                    <div>
-                        <span onClick={() => setMonthYearPicker(monthYearPicker === "month" ? false : "month")}>{format(month, "MMMM")}</span>
-                        <span className="ms-1" onClick={() => setMonthYearPicker(monthYearPicker === "year" ? false : "year")}>
+        return (
+            <div ref={ref}>
+                <div className="flex items-center justify-between">
+                    <div className="text-md ms-2 flex cursor-pointer items-center font-bold">
+                        <Button variant="ghost" className="px-3" onClick={() => setMonthYearPicker(monthYearPicker === "month" ? false : "month")}>
+                            {format(month, "MMMM")}
+                        </Button>
+                        <Button variant="ghost" className="me-1 px-3" onClick={() => setMonthYearPicker(monthYearPicker === "year" ? false : "year")}>
                             {format(month, "yyyy")}
-                        </span>
+                        </Button>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setMonthYearPicker(monthYearPicker ? false : "year")}>
-                        {monthYearPicker ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                    </Button>
+                    <div className={cn("flex space-x-2", monthYearPicker ? "hidden" : "")}>
+                        <Button variant="ghost" size="icon" onClick={onPrevMonth}>
+                            <ChevronLeftIcon />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={onNextMonth}>
+                            <ChevronRightIcon />
+                        </Button>
+                    </div>
                 </div>
-                <div className={cn("flex space-x-2", monthYearPicker ? "hidden" : "")}>
-                    <Button variant="ghost" size="icon" onClick={onPrevMonth}>
-                        <ChevronLeftIcon />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={onNextMonth}>
-                        <ChevronRightIcon />
-                    </Button>
-                </div>
-            </div>
-            <div className="relative overflow-hidden">
-                <DayPicker
-                    timeZone={timezone}
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => d && onDayChanged(d)}
-                    month={month}
-                    endMonth={endMonth}
-                    disabled={[max ? { after: max } : null, min ? { before: min } : null].filter(Boolean) as Matcher[]}
-                    onMonthChange={setMonth}
-                    classNames={{
-                        dropdowns: "flex w-full gap-2",
-                        months: "flex w-full h-fit",
-                        month: "flex flex-col w-full",
-                        month_caption: "hidden",
-                        button_previous: "hidden",
-                        button_next: "hidden",
-                        month_grid: "w-full border-collapse",
-                        weekdays: "flex justify-between mt-2",
-                        weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-                        week: "flex w-full justify-between mt-2",
-                        day: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 rounded-1",
-                        day_button: cn(ButtonVariants({ variant: "ghost" }), "size-9 rounded-md p-0 font-normal aria-selected:opacity-100"),
-                        range_end: "day-range-end",
-                        selected:
-                            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-l-md rounded-r-md",
-                        today: "bg-accent text-accent-foreground",
-                        outside:
-                            "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-                        disabled: "text-muted-foreground opacity-50",
-                        range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                        hidden: "invisible",
-                    }}
-                    showOutsideDays={true}
-                    {...props}
-                />
-                <div className={cn("absolute bottom-0 left-0 right-0 top-0", monthYearPicker ? "bg-popover" : "hidden")}></div>
-                <MonthYearPicker
-                    value={month}
-                    mode={monthYearPicker as any}
-                    onChange={onMonthYearChanged}
-                    minDate={minDate}
-                    maxDate={maxDate}
-                    className={cn("absolute bottom-0 left-0 right-0 top-0", monthYearPicker ? "" : "hidden")}
-                />
-            </div>
-            <div className="flex flex-col gap-2">
-                {!hideTime && (
-                    <TimePicker
-                        timePicker={timePicker}
-                        value={date}
-                        onChange={setDate}
-                        use12HourFormat={use12HourFormat}
-                        min={minDate}
-                        max={maxDate}
+                <div className="relative overflow-hidden">
+                    <DayPicker
+                        timeZone={timezone}
+                        mode="single"
+                        selected={date}
+                        onSelect={(d) => d && onDayChanged(d)}
+                        month={month}
+                        endMonth={endMonth}
+                        disabled={[max ? { after: max } : null, min ? { before: min } : null].filter(Boolean) as Matcher[]}
+                        onMonthChange={setMonth}
+                        classNames={{
+                            dropdowns: "flex w-full gap-2",
+                            months: "flex w-full h-fit",
+                            month: "flex flex-col w-full",
+                            month_caption: "hidden",
+                            button_previous: "hidden",
+                            button_next: "hidden",
+                            month_grid: "w-full border-collapse",
+                            weekdays: "flex justify-between mt-2",
+                            weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+                            week: "flex w-full justify-between mt-2",
+                            day: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 rounded-1",
+                            day_button: cn(ButtonVariants({ variant: "ghost" }), "size-9 rounded-md p-0 font-normal aria-selected:opacity-100"),
+                            range_end: "day-range-end",
+                            selected:
+                                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-l-md rounded-r-md",
+                            today: "bg-accent text-accent-foreground",
+                            outside:
+                                "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                            disabled: "text-muted-foreground opacity-50",
+                            range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                            hidden: "invisible",
+                        }}
+                        showOutsideDays={true}
+                        {...props}
                     />
-                )}
-                <div className="flex flex-row-reverse items-center justify-between">
-                    <Button className="ms-2 h-7 px-2" onClick={onSumbit}>
-                        Done
-                    </Button>
-                    {timezone && (
-                        <div className="text-sm">
-                            <span>Timezone:</span>
-                            <span className="ms-1 font-semibold">{timezone}</span>
-                        </div>
+                    <div className={cn("absolute bottom-0 left-0 right-0 top-0", monthYearPicker ? "bg-popover" : "hidden")}></div>
+                    <MonthYearPicker
+                        value={month}
+                        mode={monthYearPicker as any}
+                        onChange={onMonthYearChanged}
+                        minDate={minDate}
+                        maxDate={maxDate}
+                        className={cn("absolute bottom-0 left-0 right-0 top-0", monthYearPicker ? "" : "hidden")}
+                    />
+                </div>
+                <div className="mt-2 flex flex-col gap-2">
+                    {!hideTime && (
+                        <TimePicker
+                            timePicker={timePicker}
+                            value={date}
+                            onChange={setDate}
+                            use12HourFormat={use12HourFormat}
+                            min={minDate}
+                            max={maxDate}
+                        />
                     )}
+                    <div className="flex flex-row-reverse items-center justify-between">
+                        <Button className="ms-2 h-7 px-2" onClick={onSumbit}>
+                            Done
+                        </Button>
+                        {timezone && (
+                            <div className="text-sm">
+                                <span>Timezone:</span>
+                                <span className="ms-1 font-semibold">{timezone}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </>
-    );
-}
+        );
+    }
+);
 
 function MonthYearPicker({
     value,
@@ -563,8 +548,24 @@ function TimePicker({
                 }
             }
         }
-        return format(value, arr.join(":") + (use12HourFormat ? " a" : ""));
+        const formatStr = `${arr.join(":")}${use12HourFormat ? " a" : ""}`;
+        if (!formatStr.length) {
+            return "";
+        }
+
+        return format(value, formatStr);
     }, [value, use12HourFormat, timePicker]);
+
+    let widthClassName = "w-72";
+    if (timePicker) {
+        if (timePicker.hour && timePicker.minute && timePicker.second) {
+            widthClassName = "w-72";
+        } else if ((timePicker.hour && timePicker.minute) || (timePicker.minute && timePicker.second) || (timePicker.hour && timePicker.second)) {
+            widthClassName = "w-48";
+        } else {
+            widthClassName = "w-24";
+        }
+    }
 
     return (
         <Popover.Root open={open} onOpenChange={setOpen}>
@@ -572,10 +573,10 @@ function TimePicker({
                 <Button variant="outline" role="combobox" aria-expanded={open} className="justify-between">
                     <Clock className="mr-2 size-4" />
                     {display}
-                    <ChevronDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+                    <ChevronDownIcon className={cn("ml-2 size-4 shrink-0 opacity-50 transition-all", open ? "rotate-180" : "")} />
                 </Button>
             </Popover.Trigger>
-            <Popover.Content className="p-0" side="top">
+            <Popover.Content className={cn("p-0", widthClassName)} side="top">
                 <div className="flex-col gap-2 p-2">
                     <div className="flex h-56 grow">
                         {(!timePicker || timePicker.hour) && (
@@ -666,9 +667,14 @@ const TimeItem = ({
     disabled?: bool;
 }) => {
     return (
-        <Button variant="ghost" className={cn("flex justify-center px-1 pe-2 ps-1", className)} onClick={() => onSelect(option)} disabled={disabled}>
+        <Button
+            variant="ghost"
+            className={cn("flex w-full justify-center px-1 pe-2 ps-1", className)}
+            onClick={() => onSelect(option)}
+            disabled={disabled}
+        >
             <div className="w-4">{selected && <CheckIcon className="my-auto size-4" />}</div>
-            <span className="ms-2">{option.label}</span>
+            <span className="ms-2 w-[calc(100%_-_theme(spacing.4))] text-left">{option.label}</span>
         </Button>
     );
 };

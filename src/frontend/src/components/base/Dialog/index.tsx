@@ -48,9 +48,20 @@ const CloseButton = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Clo
 const Content = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { viewportId?: string; withCloseButton?: bool }
->(({ className, children, viewportId, withCloseButton = true, ...props }, ref) => {
-    const onOverlayClick = (event: React.PointerEvent<HTMLDivElement>) => {
-        if ((event.target as HTMLElement).hasAttribute("data-scroll-area-scrollbar")) {
+>(({ className, children, viewportId, withCloseButton = true, onPointerDownOutside, ...props }, ref) => {
+    const onOverlayClick = (
+        event:
+            | React.PointerEvent<HTMLDivElement>
+            | CustomEvent<{
+                  originalEvent: PointerEvent;
+              }>
+    ) => {
+        const target = event.target as HTMLElement;
+        if (
+            target.hasAttribute("data-scroll-area-scrollbar") ||
+            target.closest("[data-scroll-area-scrollbar]") ||
+            target.closest("[data-sonner-toast]")
+        ) {
             event.preventDefault();
             event.stopPropagation();
         }
@@ -67,9 +78,13 @@ const Content = React.forwardRef<
                                 "relative w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 focus-visible:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
                                 className
                             )}
+                            onPointerDownOutside={(e) => {
+                                onOverlayClick(e);
+                                onPointerDownOutside?.(e);
+                            }}
                             {...props}
                         >
-                            {withCloseButton && <CloseButton className="sticky right-0 top-2 z-50" />}
+                            {withCloseButton && <CloseButton className="absolute right-2 top-2 z-50" />}
                             {children}
                         </DialogPrimitive.Content>
                     </Flex>

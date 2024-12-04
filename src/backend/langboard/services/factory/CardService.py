@@ -1,26 +1,27 @@
-from typing import Any, TypeVar, cast, overload
+from datetime import datetime
+from typing import Any, Literal, TypeVar, cast, overload
+from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...core.storage import FileModel
+from ...core.ai import BotType
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
     CardActivity,
     CardAssignedUser,
     CardComment,
-    CardCommentReaction,
-    CardFile,
     CardRelationship,
     GlobalCardRelationshipType,
     Project,
+    ProjectActivity,
     ProjectColumn,
     User,
 )
 from ..BaseService import BaseService
 from .ActivityService import ActivityResult, ActivityService
+from .CardAttachmentService import CardAttachmentService
 from .CheckitemService import CheckitemService
 from .ProjectService import ProjectService
-from .ReactionService import ReactionService
 from .RevertService import RevertService, RevertType
 
 
@@ -42,17 +43,20 @@ class CardService(BaseService):
     async def get_details(self, card_uid: str) -> dict[str, Any] | None:
         result = await self._db.exec(
             self._db.query("select")
-            .tables(Card, ProjectColumn)
+            .tables(Card, ProjectColumn, Project)
             .join(ProjectColumn, Card.column("project_column_uid") == ProjectColumn.column("uid"))
+            .join(Project, Card.column("project_id") == Project.column("id"))
             .where(Card.column("uid") == card_uid)
         )
-        card, column = result.first() or (None, None)
-        if card is None or column is None:
+        card, column, project = result.first() or (None, None, None)
+        if not card or not column or not project:
             return None
 
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
         api_card["column_name"] = column.name
+        api_card["archive_column_uid"] = Project.ARCHIVE_COLUMN_UID
+        api_card["all_columns"] = await self._get_service(ProjectService).get_columns(project)
 
         checkitem_service = self._get_service(CheckitemService)
         api_card["checkitems"] = await checkitem_service.get_list(card.uid)
@@ -60,18 +64,8 @@ class CardService(BaseService):
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id)
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(CardFile, User)
-            .join(User, CardFile.column("user_id") == User.column("id"))
-            .where(CardFile.column("card_uid") == card_uid)
-            .order_by(CardFile.column("order").asc())
-            .group_by(CardFile.column("order"))
-        )
-        card_files = result.all()
-        api_card["files"] = [
-            {**card_file.api_response(), "user": user.api_response()} for card_file, user in card_files
-        ]
+        card_attachment_service = self._get_service(CardAttachmentService)
+        api_card["attachments"] = await card_attachment_service.get_board_list(card_uid)
 
         result = await self._db.exec(
             self._db.query("select")
@@ -125,10 +119,13 @@ class CardService(BaseService):
             self._db.query("select")
             .tables(
                 Card,
-                func.count(CardComment.column("id")).label("comment_count"),  # type: ignore
+                func.count(CardComment.column("id")).label("count_comment"),  # type: ignore
             )
             .join(Project, Card.column("project_id") == Project.column("id"))
-            .outerjoin(CardComment, Card.column("uid") == CardComment.column("card_uid"))
+            .outerjoin(
+                CardComment,
+                (Card.column("uid") == CardComment.column("card_uid")) & (CardComment.column("deleted_at") == None),  # noqa
+            )
             .where(Project.column("uid") == project_uid)
             .order_by(Card.column("order").asc())
             .group_by(Card.column("id"), Card.column("order"))
@@ -139,99 +136,79 @@ class CardService(BaseService):
 
         cards = []
 
-        for card, comment_count in raw_cards:
-            sql_query = (
-                self._db.query("select")
-                .table(User)
-                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
-                .where(CardAssignedUser.column("card_id") == card.id)
-            )
-
-            result = await self._db.exec(sql_query)
-            raw_users = result.all()
-
-            sql_query = (
-                self._db.query("select")
-                .table(CardRelationship)
-                .join(
-                    GlobalCardRelationshipType,
-                    CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
-                )
-                .where(
-                    (CardRelationship.column("card_uid_parent") == card.uid)
-                    | (CardRelationship.column("card_uid_child") == card.uid)
-                )
-            )
-
-            result = await self._db.exec(sql_query)
-            raw_relationship = result.all()
-
-            parents = []
-            children = []
-            for relationship in raw_relationship:
-                if relationship.card_uid_parent == card.uid:
-                    children.append(relationship.card_uid_child)
-                else:
-                    parents.append(relationship.card_uid_parent)
-
-            card_api = card.api_response()
-            card_api["comment_count"] = comment_count
-            card_api["members"] = [user.api_response() for user in raw_users]
-            card_api["relationships"] = {
-                "parents": parents,
-                "children": children,
-            }
-
+        for card, count_comment in raw_cards:
+            card_api = await self.convert_board_list_api_response(card, count_comment)
             cards.append(card_api)
 
         return cards
 
-    async def get_comments(self, card_uid: str) -> list[dict[str, Any]]:
-        result = await self._db.exec(
+    async def convert_board_list_api_response(self, card: Card, count_comment: int | None = None) -> dict[str, Any]:
+        if count_comment is None:
+            sql_query = (
+                self._db.query("select").count(CardComment, "id").where(CardComment.column("card_uid") == card.uid)
+            )
+
+            result = await self._db.exec(sql_query)
+            count_comment = result.one()
+
+        sql_query = (
             self._db.query("select")
-            .tables(CardComment, User)
-            .join(User, CardComment.column("user_id") == User.column("id"))
-            .where(CardComment.column("card_uid") == card_uid)
-            .order_by(CardComment.column("created_at").asc(), CardComment.column("id").asc())
-            .group_by(CardComment.column("id"), CardComment.column("created_at"))
+            .table(User)
+            .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
+            .where(CardAssignedUser.column("card_id") == card.id)
         )
-        raw_comments = result.all()
 
-        reaction_service = self._get_service(ReactionService)
+        result = await self._db.exec(sql_query)
+        raw_users = result.all()
 
-        comments = []
-        for comment, user in raw_comments:
-            api_comment = comment.api_response()
-            api_comment["user"] = user.api_response()
-            api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.uid)
-            comments.append(api_comment)
+        sql_query = (
+            self._db.query("select")
+            .table(CardRelationship)
+            .join(
+                GlobalCardRelationshipType,
+                CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
+            )
+            .where(
+                (CardRelationship.column("card_uid_parent") == card.uid)
+                | (CardRelationship.column("card_uid_child") == card.uid)
+            )
+        )
 
-        return comments
+        result = await self._db.exec(sql_query)
+        raw_relationship = result.all()
+
+        parents = []
+        children = []
+        for relationship in raw_relationship:
+            if relationship.card_uid_parent == card.uid:
+                children.append(relationship.card_uid_child)
+            else:
+                parents.append(relationship.card_uid_parent)
+
+        card_api = card.api_response()
+        card_api["count_comment"] = count_comment
+        card_api["members"] = [user.api_response() for user in raw_users]
+        card_api["relationships"] = {
+            "parents": parents,
+            "children": children,
+        }
+        return card_api
 
     @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCreated)
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCreated, no_user_activity=True)
     async def create(
         self, user: User, project: Project, column_uid: str, title: str
-    ) -> tuple[ActivityResult, Card] | None:
+    ) -> tuple[ActivityResult, tuple[ActivityResult, Card]] | None:
         if not project.id or column_uid == Project.ARCHIVE_COLUMN_UID:
             return None
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .column(Card.order)
-            .where((Card.column("project_column_uid") == column_uid) & (Card.column("project_id") == project.id))
-            .order_by(Card.column("order").desc())
-            .group_by(Card.column("order"))
-            .limit(1)
-        )
-        last_order = result.first()
-        if last_order is None:
-            last_order = -1
+        max_order = await self._get_max_order(Card, "project_id", project.id, {"project_column_uid": column_uid})
 
         card = Card(
             project_id=project.id,
             project_column_uid=column_uid,
             title=title,
-            order=last_order + 1,
+            order=max_order + 1,
         )
         self._db.insert(card)
         await self._db.commit()
@@ -243,12 +220,63 @@ class CardService(BaseService):
             new={"title": title, "column_uid": column_uid},
         )
 
-        return activity_result, card
+        return activity_result, (activity_result, card)
+
+    @overload
+    async def update(self, card: Card, form: dict, user: User) -> str: ...
+    @overload
+    async def update(self, card: Card, form: dict, user: User, from_bot: Literal[False]) -> str: ...
+    @overload
+    async def update(self, card: int, form: dict, user: None, from_bot: Literal[True]) -> None: ...
+    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardUpdated)
+    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardUpdated, no_user_activity=True)
+    async def update(
+        self, card: Card | int, form: dict, user: User | None = None, from_bot: bool = False
+    ) -> tuple[ActivityResult, tuple[ActivityResult, str | None]] | None:
+        for immutable_key in ["id", "uid", "project_id"]:
+            if immutable_key in form:
+                form.pop(immutable_key)
+
+        if isinstance(card, int):
+            card = cast(Card, await self._get_by(Card, "id", card))
+            if not card:
+                return None
+
+        old_card_record = {}
+
+        for key, value in form.items():
+            if hasattr(card, key):
+                old_card_record[key] = getattr(card, key)
+                if isinstance(old_card_record[key], BaseModel):
+                    old_card_record[key] = old_card_record[key].model_dump()
+                elif isinstance(old_card_record[key], datetime):
+                    old_card_record[key] = old_card_record[key].isoformat()
+                setattr(card, key, value)
+
+        activitiy_params = {
+            "model": card,
+            "shared": {"project_id": card.project_id, "card_uid": card.uid},
+            "new": [*list(form.keys())],
+            "old": old_card_record,
+        }
+
+        if from_bot:
+            await self._db.update(card)
+            activity_result = ActivityResult(user_or_bot=BotType.Project, **activitiy_params)
+            revert_key = None
+        else:
+            revert_service = self._get_service(RevertService)
+            revert_key = await revert_service.record(revert_service.create_record_model(card, RevertType.Update))
+            activity_result = ActivityResult(user_or_bot=cast(User, user), revert_key=revert_key, **activitiy_params)
+        return activity_result, (activity_result, revert_key)
 
     @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn)
+    @ActivityService.activity_method(
+        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn, no_user_activity=True
+    )
     async def change_order(
         self, user: User, card_uid: str, order: int, column_uid: str = ""
-    ) -> tuple[ActivityResult | None, bool]:
+    ) -> tuple[ActivityResult | None, tuple[ActivityResult | None, bool]]:
         result = await self._db.exec(
             self._db.query("select")
             .tables(Card, Project, ProjectColumn)
@@ -259,7 +287,7 @@ class CardService(BaseService):
         )
         record = result.first()
         if not record:
-            return None, False
+            return None, (None, False)
         card, project, original_column = record
 
         original_column_uid = original_column.uid if original_column else Project.ARCHIVE_COLUMN_UID
@@ -268,14 +296,14 @@ class CardService(BaseService):
             if column_uid != Project.ARCHIVE_COLUMN_UID:
                 column = await self._get_by(ProjectColumn, "uid", column_uid)
                 if not column or column.project_id != card.project_id:
-                    return None, False
+                    return None, (None, False)
 
                 card.archived_at = None
                 card.project_column_uid = column_uid
             else:
                 project = await self._get_by(Project, "id", card.project_id)
                 if not project:
-                    return None, False
+                    return None, (None, False)
                 card.archived_at = now()
                 card.project_column_uid = None
 
@@ -288,15 +316,13 @@ class CardService(BaseService):
         )
         if column_uid:
             update_query = self.__filter_column(
-                shared_update_query.values({Card.order: Card.order - 1}).where(
-                    (Card.column("order") >= original_order)
-                ),
+                shared_update_query.values({Card.order: Card.order - 1}).where(Card.column("order") >= original_order),
                 original_column_uid,
             )
             await self._db.exec(update_query)
 
             update_query = self.__filter_column(
-                (shared_update_query.values({Card.order: Card.order + 1}).where((Card.column("order") >= order))),
+                (shared_update_query.values({Card.order: Card.order + 1}).where(Card.column("order") >= order)),
                 column_uid,
             )
             await self._db.exec(update_query)
@@ -340,48 +366,7 @@ class CardService(BaseService):
             activity_result = None
             await self._db.commit()
 
-        return activity_result, True
-
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardFileAttached)
-    async def add_attachment(
-        self, user: User, card_uid: str, attachment: FileModel
-    ) -> tuple[ActivityResult, str] | None:
-        card = await self.get_by_uid(card_uid)
-        if not card:
-            return None
-
-        result = await self._db.exec(
-            self._db.query("select")
-            .column(func.max(CardFile.order))
-            .where(CardFile.card_uid == card_uid)
-            .group_by(CardFile.card_uid)
-            .limit(1)
-        )
-        attachment_order = result.first()
-        if attachment_order is None:
-            attachment_order = -1
-
-        card_file = CardFile(
-            user_id=cast(int, user.id),
-            card_uid=card.uid,
-            file=attachment,
-            order=attachment_order + 1,
-        )
-
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(card_file, RevertType.Delete),
-        )
-
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=card,
-            shared={"project_id": card.project_id},
-            new={"file": attachment.original_filename},
-            revert_key=revert_key,
-        )
-
-        return activity_result, revert_key
+        return activity_result, (activity_result, True)
 
     @overload
     def __filter_column(self, query: Select[_TSelectParam], column_uid: str) -> Select[_TSelectParam]: ...

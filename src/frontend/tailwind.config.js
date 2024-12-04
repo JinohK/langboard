@@ -2,7 +2,7 @@ import tailwindForms from "@tailwindcss/forms";
 import tailwindTypography from "@tailwindcss/typography";
 import tailwindAnimate from "tailwindcss-animate";
 import tailwindScrollbarHide from "tailwind-scrollbar-hide";
-import { withTV } from "tailwind-variants/transformer";
+import { withTansformTV } from "./transform-variants";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -153,4 +153,4 @@ const config = {
     ],
 };
 
-export default withTV(config);
+export default withTansformTV(config);

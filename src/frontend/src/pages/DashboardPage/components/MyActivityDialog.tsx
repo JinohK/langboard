@@ -2,7 +2,7 @@ import { Dialog, ScrollArea } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import InfiniteScroll from "react-infinite-scroller";
 import { useEffect, useRef, useState } from "react";
-import useGetUserActivities from "@/controllers/activity/useGetUserActivities";
+import useGetUserActivities from "@/controllers/api/activity/useGetUserActivities";
 import { Activity } from "@/core/models";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import useCreateActivityTimeline from "@/core/hooks/useCreateActivityTimeline";

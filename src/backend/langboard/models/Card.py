@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SoftDeleteModel
 from ..core.utils.String import create_short_unique_id
@@ -11,6 +12,7 @@ class Card(SoftDeleteModel, table=True):
     project_column_uid: str | None = Field(foreign_key=ProjectColumn.expr("uid"), nullable=True)
     title: str = Field(nullable=False)
     description: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
+    ai_description: str | None = Field(default=None, sa_type=TEXT)
     deadline_at: datetime | None = DateTimeField(default=None, nullable=True)
     order: int = Field(default=0, nullable=False)
     archived_at: datetime | None = DateTimeField(default=None, nullable=True)
@@ -21,6 +23,7 @@ class Card(SoftDeleteModel, table=True):
             "column_uid": self.project_column_uid,
             "title": self.title,
             "description": self.description.model_dump() if self.description else None,
+            "ai_description": self.ai_description,
             "order": self.order,
         }
 

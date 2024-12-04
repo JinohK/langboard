@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Flex, Floating, Form, IconComponent } from "@/components/base";
-import useAuthEmail from "@/controllers/auth/useAuthEmail";
+import { Button, Flex, Floating, Form } from "@/components/base";
+import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
+import SubmitButton from "@/components/SubmitButton";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -60,7 +61,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                 <h2 className="text-4xl font-normal">{t("signIn.Sign in")}</h2>
                 <div className="mt-4 text-base">{t("signIn.Use your {app} Account")}</div>
             </div>
-            <Form.Root className={cn("max-xs:mt-11", className)} onSubmit={handleSubmit} ref={formRef}>
+            <Form.Root className={cn("mt-11 xs:mt-0", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="email">
                     <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
                     {errors.email && <FormErrorMessage error={errors.email} icon="circle-alert" />}
@@ -74,9 +75,9 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                     >
                         {t("signIn.Create account")}
                     </Button>
-                    <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                    </Button>
+                    <SubmitButton type="submit" isValidating={isValidating}>
+                        {t("common.Next")}
+                    </SubmitButton>
                 </Flex>
             </Form.Root>
         </>

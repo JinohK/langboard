@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
-import useGetAllStarredProjects from "@/controllers/dashboard/useGetAllStarredProjects";
+import useGetAllStarredProjects from "@/controllers/api/dashboard/useGetAllStarredProjects";
 import { ROUTES } from "@/core/routing/constants";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import CardsPage from "@/pages/DashboardPage/CardsPage";

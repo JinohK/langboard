@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { Progress, Toast } from "@/components/base";
-import useProjectAvailable, { IBoardProject } from "@/controllers/board/useProjectAvailable";
+import useProjectAvailable, { IBoardProject } from "@/controllers/api/board/useProjectAvailable";
 import { SOCKET_CLIENT_EVENTS, SOCKET_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { IConnectedSocket, useSocket } from "@/core/providers/SocketProvider";

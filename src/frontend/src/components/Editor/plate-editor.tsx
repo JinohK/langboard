@@ -7,6 +7,7 @@ import { TUseCreateEditor, useCreateEditor } from "@/components/Editor/useCreate
 import { Editor, EditorContainer } from "@/components/plate-ui/editor";
 import { IEditorContent } from "@/core/models/Base";
 import { useRef } from "react";
+import { FocusScope } from "@radix-ui/react-focus-scope";
 
 export type TEditor = ReturnType<typeof useCreateEditor>;
 
@@ -16,6 +17,7 @@ interface IBasePlateEditorProps extends Omit<TUseCreateEditor, "plugins"> {
     className?: string;
     editorRef?: React.MutableRefObject<TEditor | undefined>;
     editorElementRef?: React.MutableRefObject<HTMLDivElement | null>;
+    placeholder?: string;
 }
 
 interface IPlateViewerProps extends IBasePlateEditorProps {
@@ -40,6 +42,7 @@ export function PlateEditor({
     setValue,
     editorRef,
     editorElementRef,
+    placeholder,
     ...props
 }: TPlateEditorProps) {
     if (!editorRef) {
@@ -58,24 +61,26 @@ export function PlateEditor({
     editorRef.current = editor;
 
     return (
-        <DndProvider backend={HTML5Backend}>
-            <Plate
-                editor={editor}
-                readOnly={readOnly}
-                onValueChange={(opts) => {
-                    if (readOnly) {
-                        return;
-                    }
+        <FocusScope trapped={false} loop={false} className="w-full">
+            <DndProvider backend={HTML5Backend}>
+                <Plate
+                    editor={editor}
+                    readOnly={readOnly}
+                    onValueChange={(opts) => {
+                        if (readOnly) {
+                            return;
+                        }
 
-                    setValue?.({
-                        content: opts.editor.api.markdown.serialize(),
-                    });
-                }}
-            >
-                <EditorContainer readOnly={readOnly}>
-                    <Editor variant={variant} className={className} ref={editorElementRef} />
-                </EditorContainer>
-            </Plate>
-        </DndProvider>
+                        setValue?.({
+                            content: opts.editor.api.markdown.serialize(),
+                        });
+                    }}
+                >
+                    <EditorContainer readOnly={readOnly}>
+                        <Editor variant={variant} className={className} placeholder={placeholder} ref={editorElementRef} />
+                    </EditorContainer>
+                </Plate>
+            </DndProvider>
+        </FocusScope>
     );
 }

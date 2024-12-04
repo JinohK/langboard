@@ -68,8 +68,11 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
 @AuthFilter.add
 async def about_me(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
     response = user.api_response()
-
-    response["groups"] = await service.user.get_assigned_group_names(user)
+    response["industry"] = user.industry
+    response["purpose"] = user.purpose
+    response["affiliation"] = user.affiliation
+    response["position"] = user.position
+    response["user_groups"] = await service.user.get_groups(user)
     response["subemails"] = await service.user.get_subemails(user)
 
     if user.is_admin:

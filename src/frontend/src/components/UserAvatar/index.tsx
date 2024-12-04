@@ -1,7 +1,7 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import React, { forwardRef, useState } from "react";
-import { Avatar, Card, Flex, HoverCard, Separator } from "@/components/base";
+import React, { forwardRef, memo, useState } from "react";
+import { Avatar, Card, Flex, HoverCard, IconComponent, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
@@ -20,93 +20,65 @@ interface IBaseUserAvatarProps {
     labelClassName?: string;
     noAvatar?: bool;
     customName?: React.ReactNode;
+    customTrigger?: React.ReactNode;
 }
 
-interface IUserAvatarListPropsWithName extends IBaseUserAvatarProps {
+interface IUserAvatarPropsWithName extends IBaseUserAvatarProps {
     withName: true;
     nameClassName?: string;
     labelClassName?: string;
     noAvatar?: bool;
     customName?: React.ReactNode;
+    customTrigger?: never;
 }
 
-interface IUserAvatarListPropsWithoutName extends IBaseUserAvatarProps {
+interface IUserAvatarPropsWithoutName extends IBaseUserAvatarProps {
     withName?: false;
-    nameClassName?: undefined;
-    labelClassName?: undefined;
+    nameClassName?: never;
+    labelClassName?: never;
     noAvatar?: never;
     customName?: never;
+    customTrigger?: never;
 }
 
-export type TUserAvatarProps = IUserAvatarListPropsWithName | IUserAvatarListPropsWithoutName;
+interface IUserAvatarPropsWithCustomTrigger extends IBaseUserAvatarProps {
+    withName?: never;
+    nameClassName?: never;
+    labelClassName?: never;
+    noAvatar?: never;
+    customName?: never;
+    customTrigger: React.ReactNode;
+}
 
-function Root({
-    user,
-    children,
-    listAlign,
-    avatarSize,
-    className,
-    withName = false,
-    nameClassName,
-    labelClassName,
-    noAvatar,
-    customName,
-}: TUserAvatarProps): JSX.Element {
-    const [t] = useTranslation();
+export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithoutName | IUserAvatarPropsWithCustomTrigger;
+
+const Root = memo((props: TUserAvatarProps): JSX.Element => {
+    const { user, children, listAlign, customTrigger } = props;
     const [isOpened, setIsOpened] = useState(false);
     const initials = createNameInitials(user.firstname, user.lastname);
-
-    const avatarAfterPseudoClassNames = cn(
-        "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
-        "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45"
-    );
-
+    const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
-
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
     };
 
-    const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
-    let avatarRootClassName = cn("relative", className);
-    let avatarRootOnClick;
-
-    if (children) {
-        avatarRootClassName = cn(avatarRootClassName, "cursor-pointer", avatarAfterPseudoClassNames);
-        if (user.id !== 0) {
-            avatarRootOnClick = () => setIsOpened(!isOpened);
-        }
-    }
-
-    const avatar = (
-        <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
-            <Avatar.Image src={user.avatar} />
-            <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                {initials}
-            </Avatar.Fallback>
-        </Avatar.Root>
-    );
-
-    let avatarWrapper = avatar;
-
-    if (withName) {
-        const names = user.id !== 0 ? `${user.firstname} ${user.lastname}` : t("common.Unknown User");
-        avatarWrapper = (
-            <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
-                {!noAvatar && avatar}
-                {customName ? customName : <span className={nameClassName}>{names}</span>}
-            </Flex>
-        );
+    let trigger;
+    if (customTrigger) {
+        trigger = customTrigger;
+    } else {
+        trigger = <Trigger {...props} isOpened={isOpened} setIsOpened={setIsOpened} />;
     }
 
     if (!children || user.id === 0) {
-        return avatarWrapper;
+        return <>{trigger}</>;
     }
 
     return (
         <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
-            <HoverCard.Trigger asChild>{avatarWrapper}</HoverCard.Trigger>
+            <HoverCard.Trigger asChild>
+                <span>{trigger}</span>
+            </HoverCard.Trigger>
             <HoverCard.Content className="z-50 w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
                 <Card.Root className="relative">
                     <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary/50" />
@@ -127,7 +99,77 @@ function Root({
             </HoverCard.Content>
         </HoverCard.Root>
     );
+});
+
+export interface IUserAvatarTriggerProps extends Omit<TUserAvatarProps, "listAlign" | "customTrigger"> {
+    isOpened: bool;
+    setIsOpened: (opened: bool) => void;
 }
+
+const Trigger = memo(
+    ({
+        user,
+        children,
+        avatarSize,
+        className,
+        withName = false,
+        nameClassName,
+        labelClassName,
+        noAvatar,
+        customName,
+        isOpened,
+        setIsOpened,
+    }: IUserAvatarTriggerProps) => {
+        const [t] = useTranslation();
+        const initials = createNameInitials(user.firstname, user.lastname);
+
+        const avatarAfterPseudoClassNames = cn(
+            "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
+            children && user.id !== 0 ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer" : ""
+        );
+
+        const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+
+        const styles: Record<string, string> = {
+            "--avatar-bg": bgColor,
+            "--avatar-text-color": textColor,
+        };
+
+        const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
+        let avatarRootClassName = cn("relative", className);
+        let avatarRootOnClick;
+
+        if (children) {
+            avatarRootClassName = cn(avatarRootClassName, avatarAfterPseudoClassNames);
+            if (user.id !== 0) {
+                avatarRootOnClick = () => setIsOpened(!isOpened);
+            }
+        }
+
+        const avatar = (
+            <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
+                <Avatar.Image src={user.avatar} />
+                <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
+                    {initials.length ? initials : <IconComponent icon="user" className="h-[80%] w-[80%]" />}
+                </Avatar.Fallback>
+            </Avatar.Root>
+        );
+
+        let avatarWrapper = avatar;
+
+        if (withName) {
+            const names = user.id !== 0 ? `${user.firstname} ${user.lastname}` : t("common.Unknown User");
+            avatarWrapper = (
+                <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
+                    {!noAvatar && avatar}
+                    {customName ? customName : <span className={nameClassName}>{names}</span>}
+                </Flex>
+            );
+        }
+
+        return avatarWrapper;
+    }
+);
 
 const List = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (

@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import PasswordInput from "@/components/PasswordInput";
-import { Button, Flex, Form, IconComponent } from "@/components/base";
-import useRecoveryPassword from "@/controllers/auth/useRecoveryPassword";
-import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/auth/useSendResetLink";
+import { Button, Flex, Form } from "@/components/base";
+import useRecoveryPassword from "@/controllers/api/auth/useRecoveryPassword";
+import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
+import SubmitButton from "@/components/SubmitButton";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;
@@ -60,7 +61,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
         );
     } else {
         return (
-            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+            <Form.Root className="mt-11 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
                 <PasswordInput
                     name="password"
                     label={t("user.New password")}
@@ -78,9 +79,9 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
                     error={errors["password-confirm"]}
                 />
                 <Flex items="center" gap="8" justify="end" mt="16">
-                    <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                    </Button>
+                    <SubmitButton type="submit" isValidating={isValidating}>
+                        {t("common.Next")}
+                    </SubmitButton>
                 </Flex>
             </Form.Root>
         );

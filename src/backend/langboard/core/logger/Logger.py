@@ -40,6 +40,7 @@ class Logger:
 
         getLogger("asyncio").setLevel(ERROR)
         getLogger("multipart").setLevel(ERROR)
+        getLogger("python_multipart.multipart").setLevel(ERROR)
         getLogger("aiosqlite").setLevel(ERROR)
         getLogger("asyncpg").setLevel(ERROR)
         getLogger("httpx").setLevel(ERROR)

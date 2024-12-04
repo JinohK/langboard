@@ -1,25 +1,26 @@
-import { Button, Flex, IconComponent, ScrollArea, Toast } from "@/components/base";
-import UserAvatarList from "@/components/UserAvatarList";
-import useChangeColumnOrder from "@/controllers/board/useChangeColumnOrder";
-import useGetCards, { IBoardCard } from "@/controllers/board/useGetCards";
-import { IBoardProject } from "@/controllers/board/useProjectAvailable";
+import { Flex, ScrollArea, Toast } from "@/components/base";
+import useChangeColumnOrder from "@/controllers/api/board/useChangeColumnOrder";
+import useGetCards from "@/controllers/api/board/useGetCards";
+import { IBoardProject } from "@/controllers/api/board/useProjectAvailable";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import { ProjectColumn } from "@/core/models";
-import { IAuthUser, useAuth } from "@/core/providers/AuthProvider";
+import { useAuth } from "@/core/providers/AuthProvider";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BoardColumnCard, { IBoardColumnCardProps } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import BoardColumn, { IBoardColumnProps } from "@/pages/BoardPage/components/board/BoardColumn";
 import BoardFilter from "@/pages/BoardPage/components/board/BoardFilter";
-import { transformStringFilters } from "@/pages/BoardPage/components/board/boardFilterUtils";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { BoardProvider, useBoard } from "@/core/providers/BoardProvider";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useReorderColumn from "@/core/hooks/useReorderColumn";
+import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
 
 export interface IBoardProps {
     socket: IConnectedSocket;
@@ -56,36 +57,36 @@ function Board({ socket, project }: IBoardProps) {
             {!projectData || !aboutMe() ? (
                 "loading..."
             ) : (
-                <BoardResult socket={socket} project={project} columns={projectData.columns} cards={projectData.cards} currentUser={aboutMe()!} />
+                <BoardProvider
+                    socket={socket}
+                    project={project}
+                    columns={projectData.columns}
+                    cards={projectData.cards}
+                    currentUser={aboutMe()!}
+                    currentUserRoleActions={project.current_user_role_actions}
+                >
+                    <BoardResult />
+                </BoardProvider>
             )}
         </>
     );
 }
 
-interface IBoardResultProps {
-    socket: IConnectedSocket;
-    project: IBoardProject;
-    columns: ProjectColumn.Interface[];
-    cards: IBoardCard[];
-    currentUser: IAuthUser;
-}
-
-function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, currentUser }: IBoardResultProps) {
-    const location = useLocation();
-    const searchParams = new URLSearchParams(location.search);
-    const rawFilters = searchParams.get("filters");
-    const filters = transformStringFilters(rawFilters);
+function BoardResult() {
+    const { project, columns: flatColumns, socket } = useBoard();
     const [t] = useTranslation();
-    const [columns, setColumns] = useState<ProjectColumn.Interface[]>(flatColumns);
+    const {
+        columns,
+        setColumns,
+        reorder: reorderColumns,
+        sendColumnOrderChanged,
+    } = useReorderColumn({
+        type: "BoardColumn",
+        eventNameParams: { uid: project.uid },
+        columns: flatColumns,
+        socket,
+    });
     const columnUIDs = useMemo(() => columns.map((col) => col.uid), [columns]);
-    const [cards] = useState<IBoardCard[]>(flatCards);
-    const cardsMap = useMemo<Record<string, IBoardCard>>(() => {
-        const map: Record<string, IBoardCard> = {};
-        cards.forEach((card) => {
-            map[card.uid] = card;
-        });
-        return map;
-    }, [cards]);
     const dndContextId = useId();
     const { mutate: changeColumnOrderMutate } = useChangeColumnOrder();
     const {
@@ -101,11 +102,16 @@ function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, 
         rowDragDataType: "Card",
         columnCallbacks: {
             onDragEnd: (originalColumn, index) => {
-                setColumns((prev) => arrayMove(prev, originalColumn.order, index).map((col, i) => ({ ...col, order: i })));
+                if (!reorderColumns(originalColumn, index)) {
+                    return;
+                }
 
                 changeColumnOrderMutate(
                     { project_uid: project.uid, column_uid: originalColumn.uid, order: index },
                     {
+                        onSuccess: () => {
+                            sendColumnOrderChanged({ uid: originalColumn.uid, order: index });
+                        },
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {
@@ -120,7 +126,9 @@ function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, 
                 );
             },
         },
-        transformContainerId: (card) => `board-column-${card.column_uid}`,
+        transformContainerId: (columnOrCard) => {
+            return `board-column-${(columnOrCard as IBoardColumnCardProps["card"]).column_uid ?? columnOrCard.uid}`;
+        },
     });
 
     const scrollHorizontal = (originalEvent: React.MouseEvent<HTMLElement>) => {
@@ -155,14 +163,9 @@ function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, 
     return (
         <>
             <Flex justify="between" px="4" pt="4" wrap="wrap">
+                <BoardMemberList members={project.members} />
                 <Flex items="center" gap="1">
-                    <UserAvatarList users={project.members} maxVisible={6} size="default" spacing="3" listAlign="start" />
-                    <Button variant="outline" size="icon" className="size-10" title={t("card.Add members")}>
-                        <IconComponent icon="plus" size="6" />
-                    </Button>
-                </Flex>
-                <Flex items="center" gap="1">
-                    <BoardFilter members={project.members} cards={flatCards} filters={filters} />
+                    <BoardFilter />
                 </Flex>
             </Flex>
 
@@ -171,40 +174,18 @@ function BoardResult({ socket, project, columns: flatColumns, cards: flatCards, 
                     <Flex direction="row" items="start" gap="10" p="4" onMouseDown={scrollHorizontal}>
                         <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
-                                <BoardColumn
-                                    key={col.uid}
-                                    socket={socket}
-                                    project={project}
-                                    filters={filters}
-                                    column={col}
-                                    callbacksRef={callbacksRef}
-                                    cardsMap={cardsMap}
-                                    currentUser={currentUser}
-                                />
+                                <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
                             ))}
                         </SortableContext>
                     </Flex>
                     <ScrollArea.Bar orientation="horizontal" />
                 </ScrollArea.Root>
 
-                {typeof window !== "undefined" &&
+                {!TypeUtils.isUndefined(window) &&
                     createPortal(
                         <DragOverlay>
-                            {activeColumn && (
-                                <BoardColumn
-                                    socket={socket}
-                                    project={project}
-                                    filters={filters}
-                                    column={activeColumn}
-                                    callbacksRef={callbacksRef}
-                                    cardsMap={cardsMap}
-                                    currentUser={currentUser}
-                                    isOverlay
-                                />
-                            )}
-                            {activeCard && (
-                                <BoardColumnCard project={project} card={activeCard} currentUser={currentUser} filters={filters} isOverlay />
-                            )}
+                            {activeColumn && <BoardColumn column={activeColumn} callbacksRef={callbacksRef} isOverlay />}
+                            {activeCard && <BoardColumnCard card={activeCard} isOverlay />}
                         </DragOverlay>,
                         document.body
                     )}

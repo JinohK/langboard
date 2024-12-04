@@ -2,11 +2,12 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Flex, Floating, Form, IconComponent, Toast } from "@/components/base";
-import useSendResetLink from "@/controllers/auth/useSendResetLink";
+import { Button, Flex, Floating, Form, Toast } from "@/components/base";
+import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
+import SubmitButton from "@/components/SubmitButton";
 
 export interface ISendResetLinkFormProps {
     signToken: string;
@@ -82,7 +83,7 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
         );
     } else {
         return (
-            <Form.Root className="max-xs:mt-11" onSubmit={handleSubmit} ref={formRef}>
+            <Form.Root className="mt-11 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="firstname">
                     <Floating.LabelInput label={t("user.First Name")} isFormControl autoFocus disabled={isValidating} />
                     {errors.firstname && <FormErrorMessage error={errors.firstname} icon="circle-alert" />}
@@ -92,9 +93,9 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
                     {errors.lastname && <FormErrorMessage error={errors.lastname} icon="circle-alert" />}
                 </Form.Field>
                 <Flex items="center" gap="8" justify="end" mt="16">
-                    <Button type="submit" disabled={isValidating}>
-                        {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                    </Button>
+                    <SubmitButton type="submit" isValidating={isValidating}>
+                        {t("common.Next")}
+                    </SubmitButton>
                 </Flex>
             </Form.Root>
         );

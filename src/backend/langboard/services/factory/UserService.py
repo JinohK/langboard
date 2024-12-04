@@ -9,7 +9,7 @@ from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Group, GroupAssignedUser, Project, ProjectAssignedUser, User, UserEmail
+from ...models import Project, ProjectAssignedUser, User, UserEmail, UserGroup, UserGroupAssignedUser
 from ...models.RevertableRecord import RevertType
 from ..BaseService import BaseService
 from .RevertService import RevertService
@@ -65,6 +65,25 @@ class UserService(BaseService):
         await self._db.commit()
         return user_email
 
+    async def get_groups(self, user: User) -> list[dict[str, Any]]:
+        if not user.id:
+            return []
+
+        raw_groups = await self._get_all_by(UserGroup, "user_id", user.id)
+        groups = []
+        for group in raw_groups:
+            api_group = group.api_response()
+            result = await self._db.exec(
+                self._db.query("select")
+                .table(User)
+                .join(UserGroupAssignedUser, UserGroupAssignedUser.column("user_id") == User.column("id"))
+                .where(UserGroupAssignedUser.column("group_id") == group.id)
+            )
+            users = result.all()
+            api_group["users"] = [user.api_response() for user in users]
+            groups.append(api_group)
+        return groups
+
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
         if not user.id:
             return []
@@ -73,21 +92,6 @@ class UserService(BaseService):
         for subemail in raw_subemails:
             subemails.append(subemail.api_response())
         return subemails
-
-    async def get_assigned_group_names(self, user: User) -> list[str]:
-        if not user or user.is_new():
-            return []
-
-        result = await self._db.exec(
-            self._db.query("select")
-            .column(Group.name)
-            .join(GroupAssignedUser, GroupAssignedUser.column("group_id") == Group.column("id"))
-            .where(GroupAssignedUser.column("user_id") == user.id)
-        )
-
-        group_names = result.all()
-
-        return [group_name for group_name in group_names]
 
     async def get_starred_projects(self, user: User) -> list[dict[str, str]]:
         if not user or user.is_new():

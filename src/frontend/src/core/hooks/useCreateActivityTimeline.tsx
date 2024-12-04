@@ -13,7 +13,7 @@ export interface IActivityTimelineProps {
     isCurrentUser?: bool;
 }
 
-const useCreateActivityTimeline = (type: string) => {
+const useCreateActivityTimeline = (type: string, withDiffView: bool = false) => {
     const [t] = useTranslation();
     const navigate = useNavigate();
     const transComponentsRef = useRef<{ readonly [tagName: string]: React.ReactElement }>({

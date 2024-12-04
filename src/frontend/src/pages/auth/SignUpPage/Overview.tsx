@@ -1,13 +1,14 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Button, Card, Flex, IconComponent, Toast } from "@/components/base";
-import useSignUp, { ISignUpForm } from "@/controllers/auth/useSignUp";
+import { Avatar, Button, Card, Flex, Toast } from "@/components/base";
+import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
+import SubmitButton from "@/components/SubmitButton";
 
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];
@@ -127,9 +128,9 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.OPTIONAL)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
-                <Button type="button" onClick={() => handleSubmit({ ...values, lang: i18n.language })} disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("signUp.Sign up")}
-                </Button>
+                <SubmitButton type="button" onClick={() => handleSubmit({ ...values, lang: i18n.language })} isValidating={isValidating}>
+                    {t("signUp.Sign up")}
+                </SubmitButton>
             </Flex>
         </>
     );

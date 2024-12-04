@@ -2,13 +2,14 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import PasswordInput from "@/components/PasswordInput";
-import { Button, Flex, Floating, Form, IconComponent } from "@/components/base";
-import useSignUpExistsEmail from "@/controllers/auth/useSignUpExistsEmail";
+import { Flex, Floating, Form } from "@/components/base";
+import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
+import SubmitButton from "@/components/SubmitButton";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
@@ -50,7 +51,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     }, []);
 
     return (
-        <Form.Root className="max-xs:mt-11 flex flex-col gap-4" onSubmit={handleSubmit} ref={formRef}>
+        <Form.Root className="mt-11 flex flex-col gap-4 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
             <Form.Field name="email">
                 <Floating.LabelInput
                     label={t("user.Email")}
@@ -99,9 +100,9 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 error={errors["password-confirm"]}
             />
             <Flex items="center" justify="end" gap="8" mt="16">
-                <Button type="submit" disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                </Button>
+                <SubmitButton type="submit" isValidating={isValidating}>
+                    {t("common.Next")}
+                </SubmitButton>
             </Flex>
         </Form.Root>
     );

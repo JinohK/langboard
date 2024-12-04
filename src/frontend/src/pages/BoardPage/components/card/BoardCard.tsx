@@ -1,7 +1,5 @@
-import { Button, Dialog, Flex, IconComponent, DateTimePicker, Toast } from "@/components/base";
-import { PlateEditor } from "@/components/Editor/plate-editor";
-import UserAvatarList from "@/components/UserAvatarList";
-import useGetCardDetails from "@/controllers/board/useGetCardDetails";
+import { Dialog, Flex, Toast } from "@/components/base";
+import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -9,13 +7,19 @@ import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvi
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import BoardCardChecklist from "@/pages/BoardPage/components/card/BoardCardChecklist";
-import BoardCardFileList from "@/pages/BoardPage/components/card/BoardCardFileList";
-import BoardCommentForm from "@/pages/BoardPage/components/card/BoardCommentForm";
-import BoardCommentList from "@/pages/BoardPage/components/card/BoardCommentList";
-import { forwardRef, useEffect, useState } from "react";
+import BoardCardActionList from "@/pages/BoardPage/components/card/action/BoardCardActionList";
+import BoardCardChecklist from "@/pages/BoardPage/components/card/checkitem/BoardCardChecklist";
+import BoardCardColumnName from "@/pages/BoardPage/components/card/BoardCardColumnName";
+import BoardCardDeadline from "@/pages/BoardPage/components/card/BoardCardDeadline";
+import BoardCardDescription from "@/pages/BoardPage/components/card/BoardCardDescription";
+import BoardCardAttachmentList from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentList";
+import BoardCardTitle from "@/pages/BoardPage/components/card/BoardCardTitle";
+import BoardCommentForm from "@/pages/BoardPage/components/card/comment/BoardCommentForm";
+import BoardCommentList from "@/pages/BoardPage/components/card/comment/BoardCommentList";
+import { forwardRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import BoardCardMemberList from "@/pages/BoardPage/components/card/BoardCardMemberList";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -68,10 +72,8 @@ function BoardCard({ projectUID, cardUID, socket }: IBoardCardProps): JSX.Elemen
 }
 
 function BoardCardResult(): JSX.Element {
-    const { projectUID, card, currentUser, setCurrentEditor } = useBoardCard();
-    const [t] = useTranslation();
+    const { projectUID, card, setCurrentEditor } = useBoardCard();
     const navigate = useNavigate();
-    const [deadline, setDeadline] = useState<Date | undefined>(card.deadline_at);
     const viewportId = `board-card-${card.uid}`;
 
     const close = () => {
@@ -88,66 +90,51 @@ function BoardCardResult(): JSX.Element {
                 aria-describedby=""
                 withCloseButton={false}
                 viewportId={viewportId}
+                data-card-dialog-content
             >
-                <Dialog.Header className="sticky -top-2 z-10 mb-3 border-b-2 bg-background pb-3">
-                    <Dialog.Title className="pr-7 sm:text-2xl">{card.title}</Dialog.Title>
-                    <Dialog.Description>{card.column_name}</Dialog.Description>
+                <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
+                    <BoardCardTitle />
+                    <Dialog.Description>
+                        <BoardCardColumnName />
+                    </Dialog.Description>
                     <Dialog.CloseButton className="absolute right-0" />
                 </Dialog.Header>
-                <Flex direction="col" gap="4">
-                    <Flex direction={{ initial: "col", sm: "row" }} gap="4">
-                        <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
-                            {card.members.length > 0 && (
-                                <UserAvatarList
-                                    users={card.members}
-                                    maxVisible={6}
-                                    spacing="none"
-                                    size={{ initial: "sm", sm: "default" }}
-                                    className="space-x-1"
-                                />
-                            )}
-                            <Button variant="outline" size="icon" className="size-8 sm:size-10" title={t("card.Add members")}>
-                                <IconComponent icon="plus" size="6" />
-                            </Button>
+                <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
+                    <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
+                        <Flex direction={{ initial: "col", sm: "row" }} gap="4">
+                            <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
+                                <BoardCardMemberList members={card.members} />
+                            </BoardCardSection>
+                            <BoardCardSection title="card.Deadline" className="sm:w-1/2">
+                                <BoardCardDeadline />
+                            </BoardCardSection>
+                        </Flex>
+                        <BoardCardSection title="card.Description" className="relative min-h-56">
+                            <BoardCardDescription />
                         </BoardCardSection>
-                        <BoardCardSection title="card.Deadline" className="sm:w-1/2">
-                            <DateTimePicker
-                                value={deadline}
-                                min={new Date()}
-                                onChange={(date) => {
-                                    setDeadline(date);
-                                }}
-                                renderTrigger={() => (
-                                    <Button variant={deadline ? "default" : "outline"} className="h-8 gap-2 sm:h-10" title={t("card.Set deadline")}>
-                                        <IconComponent icon="calendar" size="4" />
-                                        {deadline?.toLocaleString() ?? t("card.Set deadline")}
-                                    </Button>
-                                )}
-                            />
+                        {card.attachments.length > 0 && (
+                            <BoardCardSection title="card.Attached files">
+                                <BoardCardAttachmentList />
+                            </BoardCardSection>
+                        )}
+                        {card.checkitems.length > 0 && (
+                            <BoardCardSection title="card.Checklist">
+                                <BoardCardChecklist />
+                            </BoardCardSection>
+                        )}
+                        <BoardCardSection title="card.Comments">
+                            <BoardCommentList viewportId={viewportId} />
                         </BoardCardSection>
                     </Flex>
-                    <BoardCardSection title="card.Description" className="relative min-h-56">
-                        {card.description ? (
-                            <PlateEditor value={card.description} mentionableUsers={card.project_members} currentUser={currentUser} readOnly />
-                        ) : (
-                            <span className="absolute top-1/2 mt-4 -translate-y-1/2 text-muted-foreground">{t("card.No description")}</span>
-                        )}
-                    </BoardCardSection>
-                    {card.files.length > 0 && (
-                        <BoardCardSection title="card.Attached files">
-                            <BoardCardFileList />
-                        </BoardCardSection>
-                    )}
-                    {card.checkitems.length > 0 && (
-                        <BoardCardSection title="card.Checklist">
-                            <BoardCardChecklist />
-                        </BoardCardSection>
-                    )}
-                    <BoardCardSection title="card.Comments">
-                        <BoardCommentList viewportId={viewportId} />
-                    </BoardCardSection>
-                    <BoardCommentForm />
+                    <div className="w-full sm:max-w-32">
+                        <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
+                            <BoardCardSection title="card.Actions" titleClassName="mb-2">
+                                <BoardCardActionList />
+                            </BoardCardSection>
+                        </div>
+                    </div>
                 </Flex>
+                <BoardCommentForm />
             </Dialog.Content>
         </Dialog.Root>
     );

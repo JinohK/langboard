@@ -1,5 +1,5 @@
 import { cn } from "@/core/utils/ComponentUtils";
-import { extractVariantProps, FlexMap, GapMap, shardTailwindVariants } from "@/core/utils/VariantUtils";
+import { DimensionMap, extractVariantProps, FlexMap, GapMap, MarginMap, PaddingMap, TextMap } from "@/core/utils/VariantUtils";
 import { forwardRef } from "react";
 import { tv, VariantProps } from "tailwind-variants";
 
@@ -7,14 +7,31 @@ const FlexVariants = tv(
     {
         base: "flex",
         variants: {
-            direction: { ...FlexMap.direction },
-            wrap: { ...FlexMap.wrap },
-            items: { ...FlexMap.items },
-            justify: { ...FlexMap.justify },
-            gap: { ...GapMap.all },
-            gapX: { ...GapMap.x },
-            gapY: { ...GapMap.y },
-            ...shardTailwindVariants,
+            direction: FlexMap.direction,
+            wrap: FlexMap.wrap,
+            items: FlexMap.items,
+            justify: FlexMap.justify,
+            gap: GapMap.all,
+            gapX: GapMap.x,
+            gapY: GapMap.y,
+            w: DimensionMap.width,
+            h: DimensionMap.height,
+            size: DimensionMap.all,
+            p: PaddingMap.all,
+            pl: PaddingMap.left,
+            pr: PaddingMap.right,
+            pt: PaddingMap.top,
+            pb: PaddingMap.bottom,
+            px: PaddingMap.x,
+            py: PaddingMap.y,
+            m: MarginMap.all,
+            ml: MarginMap.left,
+            mr: MarginMap.right,
+            mt: MarginMap.top,
+            mb: MarginMap.bottom,
+            mx: MarginMap.x,
+            my: MarginMap.y,
+            textSize: TextMap.size,
         },
     },
     {

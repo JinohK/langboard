@@ -10,6 +10,7 @@ import {
 } from "@/components/Editor/plugins/markdown/remark-slate";
 import { serializeMd } from "@/components/Editor/plugins/markdown/serializer";
 import { remarkDefaultDataTextRules } from "@/components/Editor/plugins/markdown/remark-slate/remarkDefaultDataTextRules";
+import { serializeSelectionMd } from "@/components/Editor/plugins/markdown/serializer/serializeSelectionMd";
 
 // export type MarkdownDeserializer = {
 //   elementRules?: Partial<Record<MdastElementType, RemarkElementRule>>;
@@ -58,15 +59,16 @@ export const MarkdownPlugin = createTSlatePlugin<MarkdownConfig>({
     .extendApi(({ editor }) => ({
         deserialize: bindFirst(deserializeMd, editor),
         serialize: bindFirst(serializeMd, editor),
+        serializeSelection: bindFirst(serializeSelectionMd, editor),
     }))
     .extend(({ api }) => ({
         parser: {
             deserialize: ({ data }) => api.markdown.deserialize(data),
             format: "text/plain",
             query: ({ data, dataTransfer }) => {
-                // const htmlData = dataTransfer.getData("text/html");
+                const htmlData = dataTransfer.getData("text/html");
 
-                // if (htmlData) return false;
+                if (htmlData) return false;
 
                 const { files } = dataTransfer;
 

@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
-import { Button, Flex, Form, IconComponent, Input } from "@/components/base";
+import { Button, Flex, Form, Input } from "@/components/base";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
+import SubmitButton from "@/components/SubmitButton";
 
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
@@ -50,7 +51,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     };
 
     return (
-        <Form.Root className="max-xs:mt-11 flex flex-col gap-4" onSubmit={handleSubmit} ref={formRef}>
+        <Form.Root className="mt-11 flex flex-col gap-4 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
             <AvatarUploader
                 userInitials={createNameInitials(values.firstname, values.lastname)}
                 initialAvatarUrl={(values as unknown as Record<string, string>).avatarUrl ?? undefined}
@@ -101,9 +102,9 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 <Button type="button" variant="ghost" onClick={skipStep} disabled={isValidating}>
                     {t("common.Skip")}
                 </Button>
-                <Button type="submit" disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                </Button>
+                <SubmitButton type="submit" isValidating={isValidating}>
+                    {t("common.Next")}
+                </SubmitButton>
             </Flex>
         </Form.Root>
     );

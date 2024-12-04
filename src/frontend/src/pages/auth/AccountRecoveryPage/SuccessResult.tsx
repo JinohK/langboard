@@ -14,7 +14,7 @@ function SuccessResult({ title, children, buttons }: ISuccessResultProps): JSX.E
     }
 
     return (
-        <Flex direction="col" items="center" gap="8" className="max-xs:mt-11">
+        <Flex direction="col" items="center" gap="8" className="mt-11 xs:mt-0">
             <IconComponent icon="circle-check" size="8" className="text-green-500" />
             <h2 className="text-center text-2xl">{title}</h2>
             <h5 className="text-base">{children}</h5>

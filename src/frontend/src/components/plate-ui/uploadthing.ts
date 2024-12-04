@@ -1,8 +1,8 @@
 import { Toast } from "@/components/base";
-import { API_URL } from "@/constants";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { convertServerFileURL } from "@/core/utils/StringUtils";
 import { AxiosProgressEvent } from "axios";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -14,9 +14,11 @@ export interface UploadedFile {
 
 export interface IUseUploadFile {
     uploadPath?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    uploadedCallback?: (respones: any) => void;
 }
 
-export function useUploadFile({ uploadPath }: IUseUploadFile) {
+export function useUploadFile({ uploadPath, uploadedCallback }: IUseUploadFile) {
     const [t] = useTranslation();
     const [uploadedFile, setUploadedFile] = React.useState<UploadedFile>();
     const [uploadingFile, setUploadingFile] = React.useState<File>();
@@ -41,7 +43,8 @@ export function useUploadFile({ uploadPath }: IUseUploadFile) {
         formData.append("attachment", file);
 
         try {
-            const result = await api.post(`${API_URL}${uploadPath}`, formData, {
+            const uploadURL = convertServerFileURL(uploadPath);
+            const result = await api.post(uploadURL, formData, {
                 onUploadProgress: (progressEvent: AxiosProgressEvent) => {
                     const total = progressEvent.total ?? 0;
                     const progress = (progressEvent.loaded / total) * 100;
@@ -49,35 +52,23 @@ export function useUploadFile({ uploadPath }: IUseUploadFile) {
                 },
             });
 
-            // Simulate upload progress
-            let progress = 0;
-
-            const simulateProgress = async () => {
-                while (progress < 100) {
-                    await new Promise((resolve) => setTimeout(resolve, 50));
-                    progress += 2;
-                    setProgress(Math.min(progress, 100));
-                }
-            };
-
-            await simulateProgress();
-
-            const { name, path } = result.data;
+            const { name, url } = result.data;
             const uploadedFile = {
                 name,
-                url: `${API_URL}${path}`,
+                url: convertServerFileURL(url as string),
             };
 
             setUploadedFile(uploadedFile);
+            uploadedCallback?.(result.data);
 
             return uploadedFile;
         } catch (error) {
+            // TODO: Show error message
             const { handle } = setupApiErrorHandler({
                 [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                     Toast.Add.error(t("editor.errors.upload.unknown"));
                 },
                 [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                    // TODO: Show error message
                     Toast.Add.error(t("editor.errors.upload.unknown"));
                 },
                 [EHttpStatus.HTTP_500_INTERNAL_SERVER_ERROR]: () => {

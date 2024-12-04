@@ -2,8 +2,8 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
-import { IDashboardProject } from "@/controllers/dashboard/useGetProjects";
-import useToggleStarProject from "@/controllers/dashboard/useToggleStarProject";
+import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
+import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
@@ -102,7 +102,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProj
         <Card.Root className="cursor-pointer" onClick={toBoard}>
             <Card.Header className="relative block pt-5">
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
-                    {project.group_names.length ? project.group_names.join(", ") : <>&nbsp;</>}
+                    {t(project.project_type === "Other" ? "common.Other" : `project.types.${project.project_type}`)}
                 </Card.Title>
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{project.title}</Card.Title>
                 <Tooltip.Provider delayDuration={400} key={createShortUUID()}>

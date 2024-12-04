@@ -1,3 +1,4 @@
+from datetime import datetime
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, Literal, TypeVar, cast, overload
@@ -122,6 +123,12 @@ class RevertService(BaseService):
                 prev_record = model.unsaved_model.changes_dict
                 if not only_commit:
                     await self._db.update(model.unsaved_model)
+
+            for key, value in prev_record.items():
+                if isinstance(value, BaseModel):
+                    prev_record[key] = value.model_dump()
+                elif isinstance(value, datetime):
+                    prev_record[key] = value.isoformat()
 
             file_column_names = [
                 column_name for column_name in model.file_columns if column_name in model.unsaved_model.model_fields

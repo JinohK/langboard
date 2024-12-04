@@ -39,7 +39,7 @@ export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow 
         onDragEnd?: (containderId: string, originalRow: TRow, index: number) => void;
         onDragOver?: (containderId: string, activeRow: TRow, index: number, isForeign: bool) => void;
     };
-    transformContainerId: (originalRow: TRow) => string;
+    transformContainerId: (originalRow: TColumn | TRow) => string;
 }
 
 function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISortableData>({
@@ -106,7 +106,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         }
 
         if (overData.type === columnDragDataType) {
-            if (!originalColumn || originalColumn.order === overData.sortable.index) {
+            if (!originalColumn) {
                 return;
             }
 
@@ -121,11 +121,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         if (rowCallbacks?.onDragEnd) {
             rowCallbacks?.onDragEnd?.(overData.sortable.containerId, originalRow, overData.sortable.index);
         } else {
-            const columnId = transformContainerId(originalRow);
             const containerId = overData.sortable.containerId;
-            if (columnId === containerId && originalRow.order === overData.sortable.index) {
-                return;
-            }
 
             containerIdRowDragCallbacksRef.current[containerId]?.onDragEnd(originalRow, overData.sortable.index);
         }
@@ -139,18 +135,20 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         const activeData = event.active.data.current;
         const overData = event.over.data.current;
 
-        if (activeData?.type === columnDragDataType) {
-            return;
-        }
-
-        if (activeData?.type !== rowDragDataType || !activeData.sortable || !overData?.sortable) {
+        if (activeData?.type === columnDragDataType || activeData?.type !== rowDragDataType || !activeData.sortable || !overData?.sortable) {
             return;
         }
 
         const activeContainerId = transformContainerId(activeData.data);
-        const overContainerId = overData.sortable.containerId;
-        const overIndex = overData.sortable.index;
-        const isDifferentColumn = activeContainerId !== overContainerId;
+        let overContainerId = overData.sortable.containerId;
+        let overIndex = overData.sortable.index;
+        let isDifferentColumn = activeContainerId !== overContainerId;
+        if (overData.type === columnDragDataType) {
+            overContainerId = transformContainerId(overData.data);
+            overIndex = 0;
+            isDifferentColumn = true;
+        }
+
         if (!isDifferentColumn) {
             if (rowCallbacks?.onDragOver) {
                 rowCallbacks?.onDragOver?.(activeContainerId, activeData.data, overIndex, false);

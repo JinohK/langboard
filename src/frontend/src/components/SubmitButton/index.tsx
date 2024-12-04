@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { IconComponent } from "@/components/base";
 import Button, { ButtonProps } from "@/components/base/Button";
-import { TDimensionSize } from "@/core/utils/VariantUtils";
+import { type TDimensionSize } from "@/core/utils/VariantUtils";
 
 interface IBaseSubmitButtonProps extends ButtonProps {
     loadingIconSize?: TDimensionSize;

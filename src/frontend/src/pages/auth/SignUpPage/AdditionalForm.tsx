@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { AutoComplete, Button, Flex, Form, IconComponent, Input } from "@/components/base";
-import { ISignUpForm } from "@/controllers/auth/useSignUp";
+import { AutoComplete, Button, Flex, Form, Input } from "@/components/base";
+import { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import useForm from "@/core/hooks/form/useForm";
 import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
+import SubmitButton from "@/components/SubmitButton";
 
 function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const { t } = useTranslation();
@@ -47,13 +48,13 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
     };
 
     return (
-        <Form.Root className="max-xs:mt-11 flex flex-col gap-4" onSubmit={handleSubmit} ref={formRef}>
+        <Form.Root className="mt-11 flex flex-col gap-4 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
             <Form.Field name="industry">
                 <Input type="hidden" name="industry" value={industryRef.current} ref={industryInputRef} />
                 <AutoComplete
                     selectedValue={values.industry}
                     onValueChange={setIndustry}
-                    items={User.INDUSTRIES.map((industry) => ({ value: industry, label: `signUp.industries.${industry}` }))}
+                    items={User.INDUSTRIES.map((industry) => ({ value: industry, label: t(`signUp.industries.${industry}`) }))}
                     emptyMessage={industryRef.current ?? ""}
                     placeholder={t("user.What industry are you in?")}
                 />
@@ -64,7 +65,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                 <AutoComplete
                     selectedValue={values.purpose}
                     onValueChange={setPurpose}
-                    items={User.PURPOSES.map((purpose) => ({ value: purpose, label: `signUp.purposes.${purpose}` }))}
+                    items={User.PURPOSES.map((purpose) => ({ value: purpose, label: t(`signUp.purposes.${purpose}`) }))}
                     emptyMessage={purposeRef.current ?? ""}
                     placeholder={t("user.What is your purpose for using {app}?")}
                 />
@@ -74,9 +75,9 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.REQUIRED)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
-                <Button type="submit" disabled={isValidating}>
-                    {isValidating ? <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" /> : t("common.Next")}
-                </Button>
+                <SubmitButton type="submit" isValidating={isValidating}>
+                    {t("common.Next")}
+                </SubmitButton>
             </Flex>
         </Form.Root>
     );

@@ -56,8 +56,8 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.CardService)
 
     @property
-    def group(self):
-        return self._create_or_get_service(factory.GroupService)
+    def user_group(self):
+        return self._create_or_get_service(factory.UserGroupService)
 
     @property
     def checkitem(self):
@@ -66,3 +66,11 @@ class Service(ServiceFactory):
     @property
     def reaction(self):
         return self._create_or_get_service(factory.ReactionService)
+
+    @property
+    def card_comment(self):
+        return self._create_or_get_service(factory.CardCommentService)
+
+    @property
+    def card_attachment(self):
+        return self._create_or_get_service(factory.CardAttachmentService)

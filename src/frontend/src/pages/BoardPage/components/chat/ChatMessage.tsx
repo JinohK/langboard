@@ -1,6 +1,6 @@
 import { Flex, IconComponent } from "@/components/base";
 import Markdown from "@/components/Markdown";
-import { IChatMessage } from "@/controllers/board/useGetProjectChatMessages";
+import { IChatMessage } from "@/controllers/api/board/useGetProjectChatMessages";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export interface IChatMessageProps extends IChatMessage {

@@ -30,15 +30,15 @@ export const createTwoSidedSizeClassNames = (size: IBaseFormOnlyLayoutProps["siz
 
     switch (size) {
         case "sm":
-            wrapperClassName = "max-xs:flex-col xs:flex-wrap xs:justify-between";
+            wrapperClassName = "flex-col xs:flex-row xs:flex-wrap xs:justify-between";
             widthClassName = "xs:w-1/2";
             break;
         case "lg":
-            wrapperClassName = "max-md:flex-col md:flex-wrap md:justify-between";
+            wrapperClassName = "flex-col md:flex-row md:flex-wrap md:justify-between";
             widthClassName = "md:w-1/2";
             break;
         default:
-            wrapperClassName = "max-sm:flex-col sm:flex-wrap sm:justify-between";
+            wrapperClassName = "flex-col sm:flex-row sm:flex-wrap sm:justify-between";
             widthClassName = "sm:w-1/2";
             break;
     }
@@ -77,7 +77,14 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
         return (
             <Flex direction="col" items="center" justify="center" h={{ initial: "screen", xs: "auto" }} className="min-h-screen">
                 <div className={cn("w-full", widthClassName)} ref={ref} {...props}>
-                    <Flex direction="col" className="max-xs:h-full max-xs:justify-between">
+                    <Flex
+                        direction="col"
+                        justify={{
+                            initial: "between",
+                            xs: "normal",
+                        }}
+                        className="h-full xs:h-auto"
+                    >
                         <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
                             {useLogo && (
                                 <div className="mb-6">

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/core/utils/ComponentUtils";
+import { FocusScope } from "@radix-ui/react-focus-scope";
 
 const Root = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
     <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
@@ -24,10 +25,9 @@ Overlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const Content = React.forwardRef<
     React.ElementRef<typeof DrawerPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { withGrabber?: bool }
->(({ className, children, withGrabber = true, ...props }, ref) => (
-    <Portal>
-        <Overlay />
+    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { withGrabber?: bool; focusGuards?: bool }
+>(({ className, children, withGrabber = true, focusGuards = true, ...props }, ref) => {
+    let content = (
         <DrawerPrimitive.Content
             ref={ref}
             className={cn(
@@ -39,8 +39,23 @@ const Content = React.forwardRef<
             {withGrabber && <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />}
             {children}
         </DrawerPrimitive.Content>
-    </Portal>
-));
+    );
+
+    if (!focusGuards) {
+        content = (
+            <FocusScope trapped={false} loop={false}>
+                {content}
+            </FocusScope>
+        );
+    }
+
+    return (
+        <Portal>
+            <Overlay />
+            {content}
+        </Portal>
+    );
+});
 Content.displayName = "DrawerContent";
 
 const Header = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

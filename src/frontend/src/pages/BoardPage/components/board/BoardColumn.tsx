@@ -1,30 +1,22 @@
 import { Card, Flex, ScrollArea } from "@/components/base";
-import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/board/useChangeCardOrder";
-import { IBoardCard } from "@/controllers/board/useGetCards";
-import { IBoardProject } from "@/controllers/board/useProjectAvailable";
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/api/board/useChangeCardOrder";
+import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
-import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
+import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
+import useReorderRow from "@/core/hooks/useReorderRow";
 import { Project, ProjectColumn } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
-import { createShortUUID, format } from "@/core/utils/StringUtils";
+import { useBoard } from "@/core/providers/BoardProvider";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnCard, { IBoardColumnCardProps, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
-import { filterCard, filterCardMember, IFilterMap, filterCardRelationships } from "@/pages/BoardPage/components/board/boardFilterUtils";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroller";
 import { tv } from "tailwind-variants";
 
 export interface IBoardColumnProps {
-    socket: IConnectedSocket;
-    project: IBoardProject;
-    filters: IFilterMap;
     column: ProjectColumn.Interface;
     callbacksRef: React.MutableRefObject<Record<string, IRowDragCallback<IBoardColumnCardProps["card"]>>>;
-    cardsMap: Record<string, IBoardCard>;
-    currentUser: IAuthUser;
     isOverlay?: bool;
 }
 
@@ -33,93 +25,48 @@ interface IBoardColumnDragData {
     data: IBoardColumnProps["column"];
 }
 
-function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap, currentUser, isOverlay }: IBoardColumnProps) {
-    const activeRef = useRef<IBoardCard | null>(null);
-    const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
-    const [page, setPage] = useState(1);
-    const PAGE_SIZE = 10;
+function BoardColumn({ column, callbacksRef, isOverlay }: IBoardColumnProps) {
+    const { project, filters, socket, cards: allCards, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardRelationships } = useBoard();
+    const updater = useReducer((x) => x + 1, 0);
+    const [updated, forceUpdate] = updater;
+    const PAGE_SIZE = 20;
     const cardUIDs = useMemo(() => {
         return Object.keys(cardsMap)
             .filter((cardUID) => cardsMap[cardUID].column_uid === column.uid)
-            .filter((cardUID) => filterCard(filters, cardsMap[cardUID]))
-            .filter((cardUID) => filterCardMember(filters, project.members, cardsMap[cardUID], currentUser))
-            .filter((cardUID) => filterCardRelationships(filters, cardsMap[cardUID]))
+            .filter((cardUID) => filterCard(cardsMap[cardUID]))
+            .filter((cardUID) => filterCardMember(cardsMap[cardUID]))
+            .filter((cardUID) => filterCardRelationships(cardsMap[cardUID]))
             .sort((a, b) => cardsMap[a].order - cardsMap[b].order);
     }, [filters, updated]);
-    const cards = useMemo<IBoardCard[]>(() => {
-        return cardUIDs.slice(0, page * PAGE_SIZE).map((cardUID) => cardsMap[cardUID]);
-    }, [cardUIDs, page, updated]);
+    const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: cardUIDs, size: PAGE_SIZE, updater });
+    const cards = items.map((cardUID) => cardsMap[cardUID]);
     const closeHoverCardRef = useRef<(() => void) | undefined>();
-    const lastPageRef = useRef(Math.ceil(cardUIDs.length / PAGE_SIZE));
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
-    callbacksRef.current[columnId] = {
-        onDragEnd: (originalActiveCard, index) => {
-            activeRef.current = null;
-            const form: IChangeCardOrderForm = { project_uid: project.uid, card_uid: originalActiveCard.uid, order: index };
-            const uidsShouldUpdate = [originalActiveCard.column_uid];
-            if (originalActiveCard.column_uid !== column.uid) {
-                form.column_uid = column.uid;
-                uidsShouldUpdate.push(column.uid);
-            }
-
-            if (originalActiveCard.order > index) {
-                cards.slice(index, originalActiveCard.order).forEach((t) => {
-                    cardsMap[t.uid].order += 1;
-                });
-            }
-
-            cardsMap[originalActiveCard.uid].order = index;
-            cardsMap[originalActiveCard.uid].column_uid = column.uid;
-            forceUpdate();
-
-            setTimeout(() => {
-                changeCardOrderMutate(form, {
-                    onSuccess: () => {
-                        socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD.ORDER_CHANGED, {
-                            column_uids: uidsShouldUpdate,
-                        });
-                    },
-                });
-            }, 300);
-        },
-        onDragOver: (card, index, isForeign) => {
-            if (!isForeign) {
-                activeRef.current = card;
-                if (card.order > index) {
-                    cards.slice(index, card.order).forEach((t) => {
-                        cardsMap[t.uid].order += 1;
-                    });
-                } else {
-                    cards.slice(card.order + 1, index + 1).forEach((t) => {
-                        cardsMap[t.uid].order -= 1;
-                    });
-                }
-                cardsMap[card.uid].order = index;
-                forceUpdate();
-                return;
-            }
-
-            activeRef.current = card;
-
-            const shouldRemove = index === -1;
-            if (shouldRemove) {
-                cards.slice(card.order + 1).forEach((t) => {
-                    cardsMap[t.uid].order -= 1;
-                });
-                forceUpdate();
-                return;
-            }
-
-            cards.slice(index).forEach((t) => {
-                cardsMap[t.uid].order += 1;
-            });
-            cardsMap[card.uid].order = index;
-            cardsMap[card.uid].column_uid = column.uid;
+    const {
+        moveToColumn,
+        removeFromColumn,
+        reorderInColumn,
+        sendRowOrderChanged: sendBoardCardOrderChanged,
+    } = useReorderRow({
+        type: "BoardCard",
+        eventNameParams: { uid: column.uid },
+        allRowsMap: cardsMap,
+        rows: cards,
+        columnKey: "column_uid",
+        currentColumnId: column.uid,
+        socket,
+        updater,
+    });
+    const { on: onBoardCardCreated } = useBoardCardCreatedHandlers({
+        socket,
+        columnUID: column.uid,
+        callback: (data) => {
+            allCards.push(data.card);
+            cardsMap[data.card.uid] = data.card;
             forceUpdate();
         },
-    };
-    const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(project.current_user_role_actions);
+    });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: column.uid,
         data: {
@@ -131,34 +78,61 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
         },
     });
 
-    useEffect(() => {
-        const shouldRefetchCallback = () => {
+    callbacksRef.current[columnId] = {
+        onDragEnd: (originalCard, index) => {
+            const isOrderUpdated = originalCard.column_uid !== column.uid || originalCard.order !== index;
+            reorderInColumn(originalCard.uid, index);
+            if (!isOrderUpdated) {
+                forceUpdate();
+                return;
+            }
+
+            const form: IChangeCardOrderForm = { project_uid: project.uid, card_uid: originalCard.uid, order: index };
+            if (originalCard.column_uid !== column.uid) {
+                form.parent_uid = column.uid;
+            }
+
+            cardsMap[originalCard.uid].order = index;
+            cardsMap[originalCard.uid].column_uid = column.uid;
             forceUpdate();
-        };
 
-        const eventName = format(SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED, { column_uid: column.uid });
+            setTimeout(() => {
+                changeCardOrderMutate(form, {
+                    onSuccess: () => {
+                        sendBoardCardOrderChanged({
+                            column_name: column.name,
+                            from_column_uid: originalCard.column_uid,
+                            to_column_uid: form.parent_uid,
+                            uid: originalCard.uid,
+                            order: index,
+                        });
+                    },
+                });
+            }, 300);
+        },
+        onDragOver: (activeCard, index, isForeign) => {
+            if (!isForeign) {
+                return;
+            }
 
-        socket.on(eventName, shouldRefetchCallback);
+            const shouldRemove = index === -1;
+            if (shouldRemove) {
+                removeFromColumn(activeCard.uid);
+            } else {
+                moveToColumn(activeCard.uid, index, column.uid);
+            }
+
+            forceUpdate();
+        },
+    };
+
+    useEffect(() => {
+        const { off } = onBoardCardCreated();
 
         return () => {
-            socket.off(eventName, shouldRefetchCallback);
+            off();
         };
     }, []);
-
-    useEffect(() => {
-        forceUpdate();
-    }, [page]);
-
-    const nextPage = (next: number) => {
-        if (next - page > 1) {
-            return;
-        }
-
-        new Promise((resolve) => {
-            setPage(next);
-            resolve(undefined);
-        });
-    };
 
     const style = {
         transition,
@@ -208,7 +182,7 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
                         getScrollParent={() => document.getElementById(columnId)}
                         loadMore={nextPage}
                         loader={<SkeletonBoardColumnCard key={createShortUUID()} />}
-                        hasMore={page < lastPageRef.current && cardUIDs.length > PAGE_SIZE}
+                        hasMore={hasMore}
                         threshold={140}
                         initialLoad={false}
                         className="pb-2.5"
@@ -217,18 +191,9 @@ function BoardColumn({ socket, project, filters, column, callbacksRef, cardsMap,
                     >
                         <SortableContext id={columnId} items={cardUIDs} strategy={verticalListSortingStrategy}>
                             <Flex direction="col" gap="3">
-                                {cards.map((card) => {
-                                    return (
-                                        <BoardColumnCard
-                                            key={`${column.uid}-${card.uid}`}
-                                            project={project}
-                                            card={card}
-                                            currentUser={currentUser}
-                                            filters={filters}
-                                            closeHoverCardRef={closeHoverCardRef}
-                                        />
-                                    );
-                                })}
+                                {cards.map((card) => (
+                                    <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} closeHoverCardRef={closeHoverCardRef} />
+                                ))}
                             </Flex>
                         </SortableContext>
                     </InfiniteScroll>

@@ -1,21 +1,25 @@
 import { createContext, useContext, useRef, useState } from "react";
 import { Project, User } from "@/core/models";
-import { IBoardCardWithDetails } from "@/controllers/board/useGetCardDetails";
+import { IBoardCardWithDetails } from "@/controllers/api/card/useGetCardDetails";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { format } from "@/core/utils/StringUtils";
+import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 
 export interface IBoardCardContext {
     projectUID: string;
     card: IBoardCardWithDetails;
     currentUser: IAuthUser;
-    currentUserRoleActions: Project.TRoleActions[];
+    hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     socket: IConnectedSocket;
     currentEditor: string;
     setCurrentEditor: (uid: string) => void;
     replyRef: React.MutableRefObject<(targetUser: User.Interface) => void>;
     subscribeEditorSocketEvents: (uid: string, startCallback: (userIds: number[]) => void, stopCallback: (userIds: number[]) => void) => () => void;
+    sharedClassNames: {
+        morePopover: string;
+    };
 }
 
 interface IBoardCardProviderProps {
@@ -31,12 +35,13 @@ const initialContext = {
     projectUID: "",
     card: {} as IBoardCardWithDetails,
     currentUser: {} as IAuthUser,
-    currentUserRoleActions: [],
+    hasRoleAction: () => false,
     socket: {} as IConnectedSocket,
     currentEditor: "",
     setCurrentEditor: () => {},
     replyRef: { current: () => {} },
     subscribeEditorSocketEvents: () => () => {},
+    sharedClassNames: {} as IBoardCardContext["sharedClassNames"],
 };
 
 const BoardCardContext = createContext<IBoardCardContext>(initialContext);
@@ -51,6 +56,10 @@ export const BoardCardProvider = ({
 }: IBoardCardProviderProps): React.ReactNode => {
     const [currentEditor, setCurEditor] = useState<string>("");
     const replyRef = useRef<(targetUser: User.Interface) => void>(() => {});
+    const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
+    const sharedClassNames = {
+        morePopover: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
+    };
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditor) {
@@ -111,12 +120,13 @@ export const BoardCardProvider = ({
                 projectUID,
                 card,
                 currentUser,
-                currentUserRoleActions,
+                hasRoleAction,
                 socket,
                 currentEditor,
                 setCurrentEditor,
                 replyRef,
                 subscribeEditorSocketEvents,
+                sharedClassNames,
             }}
         >
             {children}
