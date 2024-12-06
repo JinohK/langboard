@@ -1,11 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IColumnOrderChangedRequest {
-    card_uid?: string;
-    uid: string;
-    order: number;
-}
+export interface IColumnOrderChangedRequest extends IModelIdBase {}
 
 export interface IColumnOrderChangedResponse {
     uid: string;

@@ -9,15 +9,18 @@ class UserGroupService(BaseService):
     @staticmethod
     def name() -> str:
         """DO NOT EDIT THIS METHOD"""
-        return "group"
+        return "user_group"
 
     async def get_by_id(self, group_id: int) -> UserGroup | None:
         return await self._get_by(UserGroup, "id", group_id)
 
     @ActivityService.activity_method(UserActivity, ActivityService.ACTIVITY_TYPES.UserGroupAssignedUser)
-    async def create(self, user: User, name: str, user_ids: list[int] | None = None) -> tuple[ActivityResult, str]:
+    async def create(
+        self, user: User, name: str, user_ids: list[int] | None = None
+    ) -> tuple[ActivityResult, tuple[UserGroup, str]]:
+        max_order = await self._get_max_order(UserGroup, "user_id", user.id)
         user_ids = user_ids or []
-        user_group = UserGroup(user_id=cast(int, user.id), name=name)
+        user_group = UserGroup(user_id=cast(int, user.id), name=name, order=max_order + 1)
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(revert_service.create_record_model(user_group, RevertType.Delete))
@@ -50,7 +53,7 @@ class UserGroupService(BaseService):
             revert_key=revert_key,
         )
 
-        return activity_result, revert_key
+        return activity_result, (user_group, revert_key)
 
     @ActivityService.activity_method(UserActivity, ActivityService.ACTIVITY_TYPES.UserGroupAssignedUser)
     async def assign_users(

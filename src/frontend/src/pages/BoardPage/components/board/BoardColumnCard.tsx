@@ -1,12 +1,11 @@
 import { Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
-import { IBoardCard } from "@/controllers/api/board/useGetCards";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
-import { Project } from "@/core/models";
+import { Project, ProjectCard } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -19,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 
 export interface IBoardColumnCardProps {
-    card: IBoardCard & {
+    card: ProjectCard.IBoard & {
         isOpenedRef?: React.MutableRefObject<bool>;
     };
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
@@ -268,7 +267,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
         }, 150);
     };
 
-    const setFilters = (relationshipType: keyof IBoardCard["relationships"]) => {
+    const setFilters = (relationshipType: keyof ProjectCard.IBoard["relationships"]) => {
         if (!filters[relationshipType]) {
             filters[relationshipType] = [];
         }
@@ -322,7 +321,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
                     )}
                 >
                     <Card.Content>
-                        {(["parents", "children"] as (keyof IBoardCard["relationships"])[]).map((relationshipType) => {
+                        {(["parents", "children"] as (keyof ProjectCard.IBoard["relationships"])[]).map((relationshipType) => {
                             const relationship = card.relationships[relationshipType];
                             if (!relationship.length) {
                                 return null;

@@ -8,17 +8,12 @@ export interface IProjectAvailableForm {
     uid: string;
 }
 
-export interface IBoardProject extends Project.Interface {
-    members: User.Interface[];
-    current_user_role_actions: Project.TRoleActions[];
-}
-
-const useProjectAvailable = (form: IProjectAvailableForm, options?: TQueryOptions<IBoardProject>) => {
+const useProjectAvailable = (form: IProjectAvailableForm, options?: TQueryOptions<Project.IBoard>) => {
     const { query } = useQueryMutation();
 
     const isProjectAvailable = async () => {
         const url = format(API_ROUTES.BOARD.IS_AVAILABLE, { uid: form.uid });
-        const res = await api.post<{ project: Required<IBoardProject> }>(url);
+        const res = await api.post<{ project: Required<Project.IBoard> }>(url);
 
         User.transformFromApi(res.data.project.members);
 

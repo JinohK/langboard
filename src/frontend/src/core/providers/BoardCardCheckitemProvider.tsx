@@ -1,11 +1,11 @@
 import { createContext, useContext } from "react";
-import { IBaseBoardCardCheckitem } from "@/controllers/api/card/useGetCardDetails";
 import { useTranslation } from "react-i18next";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { ProjectCheckitem } from "@/core/models";
 
 export interface IBoardCardCheckitemContext {
-    checkitem: IBaseBoardCardCheckitem;
+    checkitem: ProjectCheckitem.IBaseBoard;
     isParent?: bool;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
@@ -15,7 +15,7 @@ export interface IBoardCardCheckitemContext {
 }
 
 interface IBoardCardCheckitemProviderProps {
-    checkitem: IBaseBoardCardCheckitem;
+    checkitem: ProjectCheckitem.IBaseBoard;
     isParent?: bool;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
@@ -25,7 +25,7 @@ interface IBoardCardCheckitemProviderProps {
 }
 
 const initialContext = {
-    checkitem: {} as IBaseBoardCardCheckitem,
+    checkitem: {} as ProjectCheckitem.IBaseBoard,
     isParent: false,
     isValidating: false,
     setIsValidating: () => {},

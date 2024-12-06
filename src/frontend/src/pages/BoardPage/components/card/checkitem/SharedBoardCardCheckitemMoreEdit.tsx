@@ -43,11 +43,10 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
-            success: () => {
+            success: (data) => {
                 checkitem.title = title;
                 sendCardCheckitemTitleChanged({
-                    checkitem_uid: checkitem.uid,
-                    title,
+                    model_id: data.model_id,
                 });
                 return t("card.File name changed successfully.");
             },
@@ -73,7 +72,7 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
                     {t("card.Edit title")}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Floating.LabelInput
                     label={t("card.Checkitem title")}
                     id={titleInputId}

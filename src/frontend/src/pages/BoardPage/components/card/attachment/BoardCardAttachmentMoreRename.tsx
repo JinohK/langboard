@@ -54,11 +54,10 @@ function BoardCardAttachmentMoreRename({
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
-            success: () => {
+            success: (data) => {
                 attachment.name = name;
                 sendCardAttachmentNameChanged({
-                    attachment_uid: attachment.uid,
-                    attachment_name: name,
+                    model_id: data.model_id,
                 });
                 update();
                 return t("card.File name changed successfully.");
@@ -85,7 +84,7 @@ function BoardCardAttachmentMoreRename({
                     {t("card.Rename")}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Floating.LabelInput
                     label={t("card.File name")}
                     id={nameInputId}

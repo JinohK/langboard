@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -10,7 +11,9 @@ export interface IChangeCardAttachmentNameForm {
     attachment_name: string;
 }
 
-const useChangeCardAttachmentName = (options?: TMutationOptions<IChangeCardAttachmentNameForm>) => {
+export interface IChangeCardAttachmentNameResponse extends IModelIdBase {}
+
+const useChangeCardAttachmentName = (options?: TMutationOptions<IChangeCardAttachmentNameForm, IChangeCardAttachmentNameResponse>) => {
     const { mutate } = useQueryMutation();
 
     const changeCardAttachmentName = async (params: IChangeCardAttachmentNameForm) => {

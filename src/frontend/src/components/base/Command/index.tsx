@@ -7,6 +7,7 @@ import * as React from "react";
 import * as BaseDialog from "@/components/base/Dialog";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
+import { tv } from "tailwind-variants";
 
 const Root = React.forwardRef<React.ElementRef<typeof Primitive>, React.ComponentPropsWithoutRef<typeof Primitive>>(
     ({ className, ...props }, ref) => (
@@ -68,17 +69,12 @@ const Empty = React.forwardRef<React.ElementRef<typeof Primitive.Empty>, React.C
 
 Empty.displayName = Primitive.Empty.displayName;
 
+const GroupVariants = tv({
+    base: "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
+});
+
 const Group = React.forwardRef<React.ElementRef<typeof Primitive.Group>, React.ComponentPropsWithoutRef<typeof Primitive.Group>>(
-    ({ className, ...props }, ref) => (
-        <Primitive.Group
-            ref={ref}
-            className={cn(
-                "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
-                className
-            )}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <Primitive.Group ref={ref} className={cn(GroupVariants(), className)} {...props} />
 );
 
 Group.displayName = Primitive.Group.displayName;
@@ -88,17 +84,12 @@ const Separator = React.forwardRef<React.ElementRef<typeof Primitive.Separator>,
 );
 Separator.displayName = Primitive.Separator.displayName;
 
+const ItemVariants = tv({
+    base: "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50",
+});
+
 const Item = React.forwardRef<React.ElementRef<typeof Primitive.Item>, React.ComponentPropsWithoutRef<typeof Primitive.Item>>(
-    ({ className, ...props }, ref) => (
-        <Primitive.Item
-            ref={ref}
-            className={cn(
-                "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50",
-                className
-            )}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <Primitive.Item ref={ref} className={cn(ItemVariants(), className)} {...props} />
 );
 
 Item.displayName = Primitive.Item.displayName;
@@ -108,4 +99,4 @@ const Shortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>
 };
 Shortcut.displayName = "CommandShortcut";
 
-export { Dialog, Empty, Group, Input, Item, List, Primitive, Root, Separator, Shortcut };
+export { Dialog, Empty, GroupVariants, Group, Input, ItemVariants, Item, List, Primitive, Root, Separator, Shortcut };

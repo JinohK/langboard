@@ -1,14 +1,9 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCommentReactedRequest {
-    user_id: number;
-    card_uid: string;
-    comment_uid: string;
-    reaction: TEmoji;
-    is_reacted: bool;
-}
+export interface ICardCommentReactedRequest extends IModelIdBase {}
 
 export interface ICardCommentReactedResponse {
     user_id: number;

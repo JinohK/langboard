@@ -11,8 +11,7 @@ import * as Popover from "@/components/base/Popover";
 import Calendar, { ICalendarProps } from "@/components/base/Calendar";
 import { ScreenMap } from "@/core/utils/VariantUtils";
 import { Dialog } from "@/components/base";
-import { createRoot } from "react-dom/client";
-import { StringCase } from "@/core/utils/StringUtils";
+import { measureHeight } from "@/core/utils/ComponentUtils";
 
 export interface IDateTimePickerProps extends ICalendarProps {
     renderTrigger: (props: DateTimeRenderTriggerProps) => React.ReactNode;
@@ -35,56 +34,26 @@ function DateTimePicker({ renderTrigger, onChange, ...props }: IDateTimePickerPr
         onChange(date);
         setOpen(false);
     };
-    const checkDialog = React.useCallback(async () => {
+    const checkDialogHeight = React.useCallback(async () => {
         if (!triggerRef.current) {
             return;
         }
 
         const rect = triggerRef.current.getBoundingClientRect();
 
-        const height = await measureHeight();
-        if (window.innerWidth < ScreenMap.size.sm || window.innerHeight < height + rect.bottom) {
-            setIsDialog(true);
-        } else {
-            setIsDialog(false);
-        }
+        const height = await measureHeight(<Calendar onChange={() => {}} {...props} />);
+        setIsDialog(window.innerWidth < ScreenMap.size.sm || window.innerHeight < height + rect.bottom);
     }, []);
 
-    const measureHeight = (): Promise<number> =>
-        new Promise((resolve) => {
-            const rootElem = document.createElement("div");
-            const styles = {
-                position: "absolute",
-                visibility: "hidden",
-                zIndex: "-1",
-                height: "auto",
-                width: "auto",
-                top: "0",
-            };
-            rootElem.style.cssText = Object.entries(styles)
-                .map(([key, value]) => {
-                    return `${new StringCase(key).toKebab()}: ${value} !important`;
-                })
-                .join(";");
-            document.body.appendChild(rootElem);
-            const root = createRoot(rootElem);
-            root.render(<Calendar onChange={() => {}} {...props} />);
-            setTimeout(() => {
-                const height = rootElem.clientHeight;
-                document.body.removeChild(rootElem);
-                resolve(height);
-            });
-        });
-
     React.useEffect(() => {
-        checkDialog();
+        checkDialogHeight();
 
         let resizeTimeout: NodeJS.Timeout;
         const resizeHandler = () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                checkDialog();
-            }, 300);
+                checkDialogHeight();
+            }, 100);
         };
 
         window.addEventListener("resize", resizeHandler);

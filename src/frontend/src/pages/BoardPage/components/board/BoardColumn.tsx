@@ -98,19 +98,15 @@ function BoardColumn({ column, callbacksRef, isOverlay }: IBoardColumnProps) {
 
             setTimeout(() => {
                 changeCardOrderMutate(form, {
-                    onSuccess: () => {
+                    onSuccess: (data) => {
                         sendBoardCardOrderChanged({
-                            column_name: column.name,
-                            from_column_uid: originalCard.column_uid,
-                            to_column_uid: form.parent_uid,
-                            uid: originalCard.uid,
-                            order: index,
+                            model_id: data.model_id,
                         });
                     },
                 });
             }, 300);
         },
-        onDragOver: (activeCard, index, isForeign) => {
+        onDragOverOrMove: (activeCard, index, isForeign) => {
             if (!isForeign) {
                 return;
             }

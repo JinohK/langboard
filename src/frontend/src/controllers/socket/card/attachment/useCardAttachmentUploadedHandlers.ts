@@ -1,16 +1,12 @@
-import { IBoardCardAttachment } from "@/controllers/api/card/useGetCardDetails";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, User } from "@/core/models";
 
-export interface ICardAttachmentUploadedRequest {
-    card_uid: string;
-    attachment_uid: string;
-    attachment: IBoardCardAttachment;
-}
+export interface ICardAttachmentUploadedRequest extends IModelIdBase {}
 
 export interface ICardAttachmentUploadedResponse {
-    attachment: IBoardCardAttachment;
+    attachment: ProjectCardAttachment.IBoard;
 }
 
 export interface IUseCardAttachmentUploadedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentUploadedResponse> {

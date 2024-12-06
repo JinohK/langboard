@@ -1,10 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardTitleChangedRequest {
-    card_uid: string;
-    title: string;
-}
+export interface ICardTitleChangedRequest extends IModelIdBase {}
 
 export interface ICardTitleChangedResponse {
     title: string;

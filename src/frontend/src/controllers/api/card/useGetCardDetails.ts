@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { Project, ProjectCard, ProjectCardAttachment, ProjectCheckitem, ProjectCheckitemTimer, ProjectColumn, User } from "@/core/models";
+import { Project, ProjectCard, ProjectCardAttachment, ProjectCheckitemTimer, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetCardDetailsForm {
@@ -9,46 +9,8 @@ export interface IGetCardDetailsForm {
     card_uid: string;
 }
 
-export interface IBaseBoardCardCheckitem extends ProjectCheckitem.Interface {
-    assigned_members: User.Interface[];
-    timer?: ProjectCheckitemTimer.Interface;
-    acc_time_seconds: number;
-}
-
-export interface IBoardCardSubCheckitem extends IBaseBoardCardCheckitem {
-    checkitem_uid: string;
-}
-
-export interface IBoardCardCheckitem extends IBaseBoardCardCheckitem {
-    sub_checkitems: IBoardCardSubCheckitem[];
-}
-
-export interface IBoardCardAttachment extends ProjectCardAttachment.Interface {
-    user: User.Interface;
-}
-
-export interface IBoardCardWithDetails extends ProjectCard.Interface {
-    deadline_at?: Date;
-    column_name: string;
-    all_columns: ProjectColumn.Interface[];
-    archive_column_uid: string;
-    members: User.Interface[];
-    relationships: {
-        parent_icon?: string;
-        parent_name: string;
-        child_icon?: string;
-        child_name: string;
-        description: string;
-        is_parent: bool;
-        related_card: ProjectCard.Interface;
-    }[];
-    attachments: IBoardCardAttachment[];
-    checkitems: IBoardCardCheckitem[];
-    project_members: User.Interface[];
-}
-
 export interface IGetCardDetailsResponse {
-    card: IBoardCardWithDetails;
+    card: ProjectCard.IBoardWithDetails;
     current_user_role_actions: Project.TRoleActions[];
 }
 

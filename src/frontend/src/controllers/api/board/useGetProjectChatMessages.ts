@@ -1,6 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TInfiniteQueryOptions, TQueryFunction, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { ChatMessageModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetProjectChatMessagesForm {
@@ -10,15 +11,8 @@ export interface IGetProjectChatMessagesForm {
     limit: number;
 }
 
-export interface IChatMessage {
-    uid: string;
-    icon?: string;
-    message: string;
-    isReceived: bool;
-}
-
 export interface IGetProjectChatMessagesResponse {
-    histories: IChatMessage[];
+    histories: ChatMessageModel.Interface[];
 }
 
 const useGetProjectChatMessages = (
@@ -37,13 +31,7 @@ const useGetProjectChatMessages = (
             },
         });
 
-        for (let i = 0; i < res.data.histories.length; ++i) {
-            if (!res.data.histories[i].sender_id) {
-                res.data.histories[i].isReceived = true;
-            } else {
-                res.data.histories[i].isReceived = false;
-            }
-        }
+        ChatMessageModel.transformFromApi(res.data.histories);
 
         return res.data;
     };

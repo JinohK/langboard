@@ -215,10 +215,12 @@ class CheckitemService(BaseService):
 
         return activity_result, (activity_result, True)
 
-    async def change_order(self, card_uid: str, checkitem_uid: str, order: int, parent_checkitem_uid: str = "") -> bool:
+    async def change_order(
+        self, card_uid: str, checkitem_uid: str, order: int, parent_checkitem_uid: str = ""
+    ) -> tuple[Checkitem, str | None, Checkitem | None] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if not checkitem or not card:
-            return False
+            return None
 
         original_parent_uid = checkitem.checkitem_uid
         original_order = checkitem.order
@@ -226,6 +228,7 @@ class CheckitemService(BaseService):
         is_sub = original_parent_uid is not None
         shared_update_query = self._db.query("update").table(Checkitem).where(Checkitem.column("card_uid") == card_uid)
 
+        parent_checkitem = None
         if is_sub:
             if not parent_checkitem_uid or parent_checkitem_uid == original_parent_uid:
                 shared_update_query = shared_update_query.where(
@@ -235,7 +238,7 @@ class CheckitemService(BaseService):
             else:
                 parent_checkitem = await self._get_by(Checkitem, "uid", parent_checkitem_uid)
                 if parent_checkitem is None:
-                    return False
+                    return None
         else:
             shared_update_query = shared_update_query.where(Checkitem.column("checkitem_uid") == None)  # noqa
 
@@ -266,7 +269,7 @@ class CheckitemService(BaseService):
         await self._db.update(checkitem)
         await self._db.commit()
 
-        return True
+        return (checkitem, original_parent_uid, parent_checkitem)
 
     @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemCardified)
     @ActivityService.activity_method(
@@ -359,7 +362,7 @@ class CheckitemService(BaseService):
     )
     async def delete(
         self, user: User, card_uid: str, checkitem_uid: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, bool]] | None:
+    ) -> tuple[ActivityResult, tuple[ActivityResult, Checkitem]] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if not checkitem or not card:
             return None
@@ -398,7 +401,7 @@ class CheckitemService(BaseService):
             },
         )
 
-        return activity_result, (activity_result, True)
+        return activity_result, (activity_result, checkitem)
 
     @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemTimerStarted)
     @ActivityService.activity_method(

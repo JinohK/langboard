@@ -1,10 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardAttachmentNameChangedRequest {
-    attachment_uid: string;
-    attachment_name: string;
-}
+export interface ICardAttachmentNameChangedRequest extends IModelIdBase {}
 
 export interface ICardAttachmentNameChangedResponse {
     name: string;

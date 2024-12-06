@@ -1,5 +1,4 @@
-import { IBoardCardSubCheckitem } from "@/controllers/api/card/useGetCardDetails";
-import { Project } from "@/core/models";
+import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import SharedBoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitem";
@@ -8,14 +7,14 @@ import { CSS } from "@dnd-kit/utilities";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardSubCheckitemProps {
-    checkitem: IBoardCardSubCheckitem;
+    checkitem: ProjectCheckitem.IBoardSub;
     deletedSubCheckitem: (uid: string) => void;
     isOverlay?: bool;
 }
 
 interface IBoardCardCheckitemDragData {
     type: "SubCheckitem";
-    data: IBoardCardSubCheckitem;
+    data: ProjectCheckitem.IBoardSub;
 }
 
 function BoardCardSubCheckitem({ checkitem, deletedSubCheckitem, isOverlay }: IBoardCardSubCheckitemProps): JSX.Element {

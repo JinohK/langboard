@@ -1,9 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
-import { Project, ProjectColumn, User } from "@/core/models";
+import { Project, ProjectCard, ProjectColumn, User } from "@/core/models";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
-import { IBoardProject } from "@/controllers/api/board/useProjectAvailable";
-import { IBoardCard } from "@/controllers/api/board/useGetCards";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { NavigateOptions, To, useLocation, useNavigate } from "react-router-dom";
@@ -17,25 +15,25 @@ export interface IFilterMap {
 
 export interface IBoardContext {
     socket: IConnectedSocket;
-    project: IBoardProject;
+    project: Project.IBoard;
     columns: ProjectColumn.Interface[];
-    cards: IBoardCard[];
-    cardsMap: Record<string, IBoardCard>;
+    cards: ProjectCard.IBoard[];
+    cardsMap: Record<string, ProjectCard.IBoard>;
     currentUser: IAuthUser;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     filters: IFilterMap;
     navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
     filterMember: (member: User.Interface) => bool;
-    filterCard: (card: IBoardCard) => bool;
-    filterCardMember: (card: IBoardCard) => bool;
-    filterCardRelationships: (card: IBoardCard) => bool;
+    filterCard: (card: ProjectCard.IBoard) => bool;
+    filterCardMember: (card: ProjectCard.IBoard) => bool;
+    filterCardRelationships: (card: ProjectCard.IBoard) => bool;
 }
 
 interface IBoardProviderProps {
     socket: IConnectedSocket;
-    project: IBoardProject;
+    project: Project.IBoard;
     columns: ProjectColumn.Interface[];
-    cards: IBoardCard[];
+    cards: ProjectCard.IBoard[];
     currentUser: IAuthUser;
     currentUserRoleActions: Project.TRoleActions[];
     children: React.ReactNode;
@@ -43,7 +41,7 @@ interface IBoardProviderProps {
 
 const initialContext = {
     socket: {} as IConnectedSocket,
-    project: {} as IBoardProject,
+    project: {} as Project.IBoard,
     columns: [],
     cards: [],
     cardsMap: {},
@@ -78,7 +76,7 @@ export const BoardProvider = ({
     }, [location, location.search]);
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const cardsMap = useMemo(() => {
-        const map: Record<string, IBoardCard> = {};
+        const map: Record<string, ProjectCard.IBoard> = {};
         cards.forEach((card) => {
             map[card.uid] = card;
         });
@@ -147,7 +145,7 @@ export const BoardProvider = ({
         );
     };
 
-    const filterCard = (card: IBoardCard) => {
+    const filterCard = (card: ProjectCard.IBoard) => {
         const keyword = filters.keyword?.join(",");
         if (!keyword) {
             return true;
@@ -156,7 +154,7 @@ export const BoardProvider = ({
         return card.title.toLowerCase().includes(keyword.toLowerCase()) || card.members.some((member) => filterMember(member));
     };
 
-    const filterCardMember = (card: IBoardCard) => {
+    const filterCardMember = (card: ProjectCard.IBoard) => {
         if (!filters.members?.length) {
             return true;
         }
@@ -184,17 +182,17 @@ export const BoardProvider = ({
         return false;
     };
 
-    const filterCardRelationships = (card: IBoardCard) => {
+    const filterCardRelationships = (card: ProjectCard.IBoard) => {
         if (!filters.parents?.length && !filters.children?.length) {
             return true;
         }
 
-        const oppositeRelationships: Record<keyof IBoardCard["relationships"], keyof IBoardCard["relationships"]> = {
+        const oppositeRelationships: Record<keyof ProjectCard.IBoard["relationships"], keyof ProjectCard.IBoard["relationships"]> = {
             parents: "children",
             children: "parents",
         };
 
-        const filter = (relationship: keyof IBoardCard["relationships"]) => {
+        const filter = (relationship: keyof ProjectCard.IBoard["relationships"]) => {
             const opposite = oppositeRelationships[relationship];
             return (
                 filters[relationship]!.some((oppositeUID) => card.relationships[opposite].includes(oppositeUID)) ||

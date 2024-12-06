@@ -291,8 +291,9 @@ class ActivityService(BaseService):
             return cached[cached_key]
 
         if isinstance(target_value, list):
-            target = await self._get_all_by(target_model, column_name, target_value)
-            activity["activity"]["shared"][f"{prefix}{transform_key}"] = [item.api_response() for item in target]
+            if target_value:
+                target = await self._get_all_by(target_model, column_name, target_value)
+                activity["activity"]["shared"][f"{prefix}{transform_key}"] = [item.api_response() for item in target]
         else:
             target = await self._get_by(target_model, column_name, target_value)
             activity["activity"]["shared"][f"{prefix}{transform_key}"] = target.api_response() if target else None

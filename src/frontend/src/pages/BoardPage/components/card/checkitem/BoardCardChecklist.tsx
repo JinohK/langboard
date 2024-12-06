@@ -1,11 +1,11 @@
 import { Button, Collapsible, Flex, Toast } from "@/components/base";
 import useChangeCheckitemOrder from "@/controllers/api/card/checkitem/useChangeCheckitemOrder";
-import { IBoardCardCheckitem, IBoardCardSubCheckitem } from "@/controllers/api/card/useGetCardDetails";
 import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import { ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/BoardCardCheckitem";
@@ -33,8 +33,8 @@ function BoardCardChecklist(): JSX.Element {
         socket,
     });
     const checkitemUIDs = useMemo(() => checkitems.map((checkitem) => checkitem.uid), [checkitems]);
-    const subCheckitemsMap = useMemo<Record<string, IBoardCardSubCheckitem>>(() => {
-        const map: Record<string, IBoardCardSubCheckitem> = {};
+    const subCheckitemsMap = useMemo<Record<string, ProjectCheckitem.IBoardSub>>(() => {
+        const map: Record<string, ProjectCheckitem.IBoardSub> = {};
         checkitems.forEach((checkitem) => {
             checkitem.sub_checkitems.forEach((subCheckitem) => {
                 map[subCheckitem.uid] = subCheckitem;
@@ -69,8 +69,8 @@ function BoardCardChecklist(): JSX.Element {
         sensors,
         onDragStart,
         onDragEnd,
-        onDragOver,
-    } = useColumnRowSortable<IBoardCardCheckitem, IBoardCardSubCheckitem>({
+        onDragOverOrMove,
+    } = useColumnRowSortable<ProjectCheckitem.IBoard, ProjectCheckitem.IBoardSub>({
         columnDragDataType: "Checkitem",
         rowDragDataType: "SubCheckitem",
         columnCallbacks: {
@@ -82,11 +82,9 @@ function BoardCardChecklist(): JSX.Element {
                 changeCheckitemOrderMutate(
                     { project_uid: projectUID, card_uid: card.uid, checkitem_uid: originalCheckitem.uid, order: index },
                     {
-                        onSuccess: () => {
+                        onSuccess: (data) => {
                             sendColumnOrderChanged({
-                                card_uid: card.uid,
-                                uid: originalCheckitem.uid,
-                                order: index,
+                                model_id: data.model_id,
                             });
                         },
                         onError: (error) => {
@@ -106,7 +104,7 @@ function BoardCardChecklist(): JSX.Element {
             },
         },
         transformContainerId: (checkitem) => {
-            return `board-checkitem-${(checkitem as IBoardCardSubCheckitem).checkitem_uid ?? checkitem.uid}`;
+            return `board-checkitem-${(checkitem as ProjectCheckitem.IBoardSub).checkitem_uid ?? checkitem.uid}`;
         },
     });
 
@@ -121,7 +119,7 @@ function BoardCardChecklist(): JSX.Element {
     }, []);
 
     return (
-        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOver}>
+        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
             <SortableContext items={checkitemUIDs} strategy={verticalListSortingStrategy}>
                 {checkitems.slice(0, 5).map((checkitem) => (
                     <BoardCardCheckitem

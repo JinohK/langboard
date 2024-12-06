@@ -1,10 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCheckitemTimerStoppedRequest {
-    checkitem_uid: string;
-    acc_time_seconds: number;
-}
+export interface ICardCheckitemTimerStoppedRequest extends IModelIdBase {}
 
 export interface ICardCheckitemTimerStoppedResponse {
     acc_time_seconds: number;

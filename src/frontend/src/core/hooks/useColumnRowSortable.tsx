@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import {
     Active,
+    closestCenter,
     DragEndEvent,
+    DragMoveEvent,
     DragOverEvent,
     DragStartEvent,
     KeyboardSensor,
@@ -11,7 +13,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import coordinateGetter from "@/core/hooks/coordinateGetter";
+import createCoordinateGetter from "@/core/hooks/createCoordinateGetter";
 
 export interface ISortableData {
     order: number;
@@ -24,7 +26,7 @@ export interface ISortableDragData<T extends ISortableData> {
 
 export interface IRowDragCallback<TRow extends ISortableData> {
     onDragEnd: (originalRow: TRow, index: number) => void;
-    onDragOver: (row: TRow, index: number, isForeign: bool) => void;
+    onDragOverOrMove: (row: TRow, index: number, isForeign: bool) => void;
 }
 
 export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow extends ISortableData> {
@@ -37,7 +39,7 @@ export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow 
     rowCallbacks?: {
         onDragStart?: (activeRow: TRow, index: number) => void;
         onDragEnd?: (containderId: string, originalRow: TRow, index: number) => void;
-        onDragOver?: (containderId: string, activeRow: TRow, index: number, isForeign: bool) => void;
+        onDragOverOrMove?: (containderId: string, activeRow: TRow, index: number, isForeign: bool) => void;
     };
     transformContainerId: (originalRow: TColumn | TRow) => string;
 }
@@ -67,7 +69,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         useSensor(MouseSensor),
         useSensor(TouchSensor),
         useSensor(KeyboardSensor, {
-            coordinateGetter,
+            coordinateGetter: createCoordinateGetter(columnDragDataType),
         })
     );
 
@@ -90,7 +92,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         }
     };
 
-    const onDragEnd = async (event: DragEndEvent) => {
+    const onDragEnd = (event: DragEndEvent) => {
         const originalColumn = activeColumn;
         const originalRow = activeRow;
         setActiveColumn(null);
@@ -127,7 +129,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         }
     };
 
-    const onDragOver = (event: DragOverEvent) => {
+    const onDragOverOrMove = (event: DragOverEvent | DragMoveEvent) => {
         if (!event.over || event.active.id === event.over.id || !hasDraggableData(event.active) || !hasDraggableData(event.over)) {
             return;
         }
@@ -139,21 +141,46 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
             return;
         }
 
+        const droppableMap = new Map<string, DOMRect>();
+        event.collisions?.forEach((collision) => {
+            if (collision?.data?.droppableContainer) {
+                droppableMap.set(collision.data.droppableContainer.id, collision.data.droppableContainer.rect);
+            }
+        });
+
+        const collisions = closestCenter({
+            active: event.active,
+            collisionRect: event.over.rect,
+            droppableContainers: event.collisions?.map((collision) => collision.data?.droppableContainer) ?? [],
+            droppableRects: droppableMap,
+            pointerCoordinates: null,
+        });
+
+        if (!collisions[0]?.data?.droppableContainer) {
+            return;
+        }
+
+        overData.data = collisions[0].data.droppableContainer.data.current.data;
+        overData.sortable = collisions[0].data.droppableContainer.data.current.sortable;
+        overData.type = collisions[0].data.droppableContainer.data.current.type;
+
         const activeContainerId = transformContainerId(activeData.data);
-        let overContainerId = overData.sortable.containerId;
+        const overContainerId = transformContainerId(overData.data);
+        const isDifferentColumn = activeContainerId !== overContainerId;
         let overIndex = overData.sortable.index;
-        let isDifferentColumn = activeContainerId !== overContainerId;
         if (overData.type === columnDragDataType) {
-            overContainerId = transformContainerId(overData.data);
+            if (!isDifferentColumn) {
+                return;
+            }
+
             overIndex = 0;
-            isDifferentColumn = true;
         }
 
         if (!isDifferentColumn) {
-            if (rowCallbacks?.onDragOver) {
-                rowCallbacks?.onDragOver?.(activeContainerId, activeData.data, overIndex, false);
+            if (rowCallbacks?.onDragOverOrMove) {
+                rowCallbacks?.onDragOverOrMove?.(activeContainerId, { ...activeData.data }, overIndex, false);
             } else {
-                containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOver(activeData.data, overIndex, false);
+                containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove({ ...activeData.data }, overIndex, false);
             }
             return;
         }
@@ -163,17 +190,17 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         }
 
         isUpdatingRef.current = true;
-        if (rowCallbacks?.onDragOver) {
-            rowCallbacks?.onDragOver?.(overContainerId, activeData.data, overIndex, true);
-            rowCallbacks?.onDragOver?.(activeContainerId, activeData.data, -1, true);
+        if (rowCallbacks?.onDragOverOrMove) {
+            rowCallbacks?.onDragOverOrMove?.(overContainerId, { ...activeData.data }, overIndex, true);
+            rowCallbacks?.onDragOverOrMove?.(activeContainerId, { ...activeData.data }, -1, true);
         } else {
-            containerIdRowDragCallbacksRef.current[overContainerId]?.onDragOver(activeData.data, overIndex, true);
-            containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOver(activeData.data, -1, true);
+            containerIdRowDragCallbacksRef.current[overContainerId]?.onDragOverOrMove({ ...activeData.data }, overIndex, true);
+            containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove({ ...activeData.data }, -1, true);
         }
         isUpdatingRef.current = false;
     };
 
-    return { activeColumn, activeRow, containerIdRowDragCallbacksRef, sensors, onDragStart, onDragEnd, onDragOver };
+    return { activeColumn, activeRow, containerIdRowDragCallbacksRef, sensors, onDragStart, onDragEnd, onDragOverOrMove };
 }
 
 export default useColumnRowSortable;

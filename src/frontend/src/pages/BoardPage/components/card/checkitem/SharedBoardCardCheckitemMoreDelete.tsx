@@ -1,7 +1,6 @@
 import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useDeleteCheckitem from "@/controllers/api/card/checkitem/useDeleteCheckitem";
-import { IBoardCardSubCheckitem } from "@/controllers/api/card/useGetCardDetails";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -32,11 +31,10 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
-            success: () => {
+            success: (data) => {
                 deleted(checkitem.uid);
                 sendCheckitemDeleted({
-                    parent_uid: isParent ? card.uid : (checkitem as IBoardCardSubCheckitem).checkitem_uid,
-                    checkitem_uid: checkitem.uid,
+                    model_id: data.model_id,
                 });
                 return t("card.Checkitem deleted successfully.");
             },
@@ -62,7 +60,7 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
                     {t("common.Delete")}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <div className="mb-1 text-center text-sm font-semibold sm:text-base">{t("card.Are you sure you want to delete this checkitem?")}</div>
                 {isParent && (
                     <div className="max-w-full text-center text-sm font-bold text-red-500">

@@ -8,17 +8,8 @@ export interface IGetCardsForm {
     project_uid: string;
 }
 
-export interface IBoardCard extends ProjectCard.Interface {
-    count_comment: number;
-    members: User.Interface[];
-    relationships: {
-        parents: string[];
-        children: string[];
-    };
-}
-
 export interface IGetCardsResponse {
-    cards: IBoardCard[];
+    cards: ProjectCard.IBoard[];
     columns: ProjectColumn.Interface[];
 }
 

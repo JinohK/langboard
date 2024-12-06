@@ -1,7 +1,8 @@
-import { IBoardCardAttachment } from "@/controllers/api/card/useGetCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { ProjectCardAttachment } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 import { AxiosProgressEvent } from "axios";
 
@@ -12,7 +13,9 @@ export interface IUploadCardAttachmentForm {
     onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
-const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmentForm, IBoardCardAttachment>) => {
+export interface IUploadCardAttachmentResponse extends ProjectCardAttachment.IBoard, IModelIdBase {}
+
+const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmentForm, IUploadCardAttachmentResponse>) => {
     const { mutate } = useQueryMutation();
 
     const updateCardComment = async (params: IUploadCardAttachmentForm) => {

@@ -1,4 +1,3 @@
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -10,13 +9,8 @@ export interface IGetCardCommentsForm {
     card_uid: string;
 }
 
-export interface IBoardCardComment extends ProjectCardComment.Interface {
-    user: User.Interface;
-    reactions: Partial<Record<TEmoji, number[]>>;
-}
-
 export interface IGetCardCommentsResponse {
-    comments: IBoardCardComment[];
+    comments: ProjectCardComment.IBoard[];
 }
 
 const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOptions<IGetCardCommentsForm, IGetCardCommentsResponse>) => {

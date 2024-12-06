@@ -1,7 +1,6 @@
 import { Flex, ScrollArea, Toast } from "@/components/base";
-import useChangeColumnOrder from "@/controllers/api/board/useChangeColumnOrder";
+import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
 import useGetCards from "@/controllers/api/board/useGetCards";
-import { IBoardProject } from "@/controllers/api/board/useProjectAvailable";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
@@ -21,10 +20,11 @@ import { BoardProvider, useBoard } from "@/core/providers/BoardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
 import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
+import { Project } from "@/core/models";
 
 export interface IBoardProps {
     socket: IConnectedSocket;
-    project: IBoardProject;
+    project: Project.IBoard;
 }
 
 function Board({ socket, project }: IBoardProps) {
@@ -88,7 +88,7 @@ function BoardResult() {
     });
     const columnUIDs = useMemo(() => columns.map((col) => col.uid), [columns]);
     const dndContextId = useId();
-    const { mutate: changeColumnOrderMutate } = useChangeColumnOrder();
+    const { mutate: changeProjectColumnOrderMutate } = useChangeProjectColumnOrder();
     const {
         activeColumn,
         activeRow: activeCard,
@@ -96,7 +96,7 @@ function BoardResult() {
         sensors,
         onDragStart,
         onDragEnd,
-        onDragOver,
+        onDragOverOrMove,
     } = useColumnRowSortable<IBoardColumnProps["column"], IBoardColumnCardProps["card"]>({
         columnDragDataType: "Column",
         rowDragDataType: "Card",
@@ -106,11 +106,11 @@ function BoardResult() {
                     return;
                 }
 
-                changeColumnOrderMutate(
+                changeProjectColumnOrderMutate(
                     { project_uid: project.uid, column_uid: originalColumn.uid, order: index },
                     {
-                        onSuccess: () => {
-                            sendColumnOrderChanged({ uid: originalColumn.uid, order: index });
+                        onSuccess: (data) => {
+                            sendColumnOrderChanged({ model_id: data.model_id });
                         },
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
@@ -169,7 +169,7 @@ function BoardResult() {
                 </Flex>
             </Flex>
 
-            <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOver}>
+            <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragMove={onDragOverOrMove}>
                 <ScrollArea.Root className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
                     <Flex direction="row" items="start" gap="10" p="4" onMouseDown={scrollHorizontal}>
                         <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>

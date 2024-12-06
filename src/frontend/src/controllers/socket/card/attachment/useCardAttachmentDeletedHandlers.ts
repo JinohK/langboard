@@ -1,10 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardAttachmentDeletedRequest {
-    card_uid: string;
-    attachment_uid: string;
-}
+export interface ICardAttachmentDeletedRequest extends IModelIdBase {}
 
 export interface ICardAttachmentDeletedResponse {
     uid: string;

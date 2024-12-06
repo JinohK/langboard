@@ -76,4 +76,10 @@ async def update_column_order(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     await service.project_column.change_order(user, project_uid, column_uid, form.order)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id(
+        {
+            "uid": column_uid,
+            "order": form.order,
+        }
+    )
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)

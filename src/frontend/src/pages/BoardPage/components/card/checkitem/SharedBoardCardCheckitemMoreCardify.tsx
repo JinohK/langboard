@@ -45,8 +45,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
                 checkitem.cardified_uid = data.new_card.uid;
                 update();
                 sendCardCheckitemCardified({
-                    checkitem_uid: checkitem.uid,
-                    new_card: data.new_card,
+                    model_id: data.model_id,
                 });
                 return t("card.Cardified the checkitem successfully.");
             },
@@ -86,7 +85,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
                     {t("card.Cardify")}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Flex direction="col" gap="2">
                     {allColumns.length > 0 && (
                         <Select.Root value={selectedColumnUID} onValueChange={(value) => setSelectedColumnUID(value)} disabled={isValidating}>

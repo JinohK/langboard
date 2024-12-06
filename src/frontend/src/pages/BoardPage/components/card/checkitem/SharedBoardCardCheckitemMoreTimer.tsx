@@ -44,9 +44,7 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
                 update();
                 const sendTimer = isStopped ? sendCheckitemTimerStopped : sendCheckitemTimerStarted;
                 sendTimer({
-                    checkitem_uid: checkitem.uid,
-                    timer: data.timer,
-                    acc_time_seconds: data.acc_time_seconds,
+                    model_id: data.model_id,
                 });
                 return t(`card.Timer ${isStopped ? "stopped" : "started"} successfully.`);
             },
@@ -72,7 +70,7 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
                     {t(`card.${checkitem.timer ? "Stop" : "Start"} timer`)}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <div className="mb-1 text-center text-sm font-semibold sm:text-base">
                     {t(`card.Are you sure you want to ${checkitem.timer ? "stop" : "start"} the timer?`)}
                 </div>

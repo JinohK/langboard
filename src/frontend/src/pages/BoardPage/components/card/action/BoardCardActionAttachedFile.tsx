@@ -57,9 +57,7 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
             card.attachments.push(newFile);
 
             sendCardAttachmentUploaded({
-                card_uid: card.uid,
-                attachment_uid: newFile.uid,
-                attachment: newFile,
+                model_id: newFile.model_id,
             });
         } catch {
             setIsError(true);

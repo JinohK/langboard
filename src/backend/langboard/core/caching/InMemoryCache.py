@@ -17,16 +17,22 @@ class InMemoryCache(BaseCache):
     @overload
     async def get(self, key: str) -> Any | None: ...
     @overload
-    async def get(self, key: str, cast: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
-    async def get(self, key: str, cast: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
+    async def get(self, key: str, caster: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
+    async def get(self, key: str, caster: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
         await self._expire()
         with self._lock:
             raw_value, ttl = self._cache.get(key, (None, None))
             if raw_value is None or ttl is None:
                 return None
 
-            value = await self._cast_get(raw_value, cast)
+            value = await self._cast_get(raw_value, caster)
         return value
+
+    async def has(self, key: str) -> bool:
+        await self._expire()
+        with self._lock:
+            result = key in self._cache
+        return result
 
     async def set(self, key: str, value: Any, ttl: int = 0) -> None:
         await self._expire()

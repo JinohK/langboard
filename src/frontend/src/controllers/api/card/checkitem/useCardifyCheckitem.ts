@@ -1,8 +1,8 @@
-import { IBoardCard } from "@/controllers/api/board/useGetCards";
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { User } from "@/core/models";
+import { ProjectCard, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICardifyCheckitemForm {
@@ -14,8 +14,8 @@ export interface ICardifyCheckitemForm {
     with_assign_users?: bool;
 }
 
-export interface ICardifyCheckitemResponse {
-    new_card: IBoardCard;
+export interface ICardifyCheckitemResponse extends IModelIdBase {
+    new_card: ProjectCard.IBoard;
 }
 
 const useCardifyCheckitem = (options?: TMutationOptions<ICardifyCheckitemForm, ICardifyCheckitemResponse>) => {

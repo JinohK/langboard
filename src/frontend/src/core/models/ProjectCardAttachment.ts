@@ -1,3 +1,4 @@
+import * as User from "@/core/models/User";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -7,6 +8,10 @@ export interface Interface {
     url: string;
     order: number;
     created_at: Date;
+}
+
+export interface IBoard extends Interface {
+    user: User.Interface;
 }
 
 export const transformFromApi = <TAttachment extends Interface | Interface[]>(

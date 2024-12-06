@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from fastapi import status
 from ...core.db import EditorContentModel
 from ...core.filter import AuthFilter, RoleFilter
@@ -20,8 +21,21 @@ async def change_card_order(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.card.change_order(user, card_uid, form.order, form.parent_uid)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    result = await service.card.change_order(user, card_uid, form.order, form.parent_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    card, original_column, new_column = result
+    model = {
+        "from_column_uid": original_column.uid,
+        "uid": card.uid,
+        "order": card.order,
+    }
+    if new_column:
+        model["to_column_uid"] = new_column.uid
+        model["column_name"] = new_column.name
+
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.get("/board/{project_uid}/card/{card_uid}")
@@ -71,7 +85,11 @@ async def change_card_details(
     revert_key = await service.card.update(card, form_dict, user)
     if not revert_key:
         return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    response = {}
+    model: dict[str, Any] = {"card_uid": card_uid}
     for key in form_dict:
-        response[key] = getattr(card, key)
-    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+        model[key] = getattr(card, key)
+        if isinstance(model[key], EditorContentModel):
+            model[key] = model[key].model_dump()
+    model_id = await service.socket.create_model_id(model)
+    model.pop("card_uid")
+    return JsonResponse(content={"model_id": model_id, **model}, status_code=status.HTTP_200_OK)

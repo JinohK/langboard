@@ -1,6 +1,6 @@
 import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
-import { IBoardCard } from "@/controllers/api/board/useGetCards";
+import { ProjectCard } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -105,7 +105,9 @@ function BoardFilter() {
                                     filterName={relationship}
                                     createFilterItems={() =>
                                         cards
-                                            .filter((card) => card.relationships[relationship as keyof IBoardCard["relationships"]].length > 0)
+                                            .filter(
+                                                (card) => card.relationships[relationship as keyof ProjectCard.IBoard["relationships"]].length > 0
+                                            )
                                             .filter((card) => filterCard(card))
                                             .map((card) => (
                                                 <BoardFilterItem key={createShortUUID()} name={relationship} value={card.uid}>

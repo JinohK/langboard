@@ -17,7 +17,8 @@ async def add_card_comment(
     card_uid: str, comment: EditorContentModel, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
     card_comment = await service.card_comment.create(user, card_uid, comment, resepond_as_api=True)
-    return JsonResponse(content={"comment": card_comment}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id({"comment": card_comment, "card_uid": card_uid})
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}")
@@ -32,7 +33,14 @@ async def update_card_comment(
     if card_comment.user_id != user.id and not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
     card_comment = await service.card_comment.update(user, card_comment, comment)
-    return JsonResponse(content={"commented_at": card_comment.updated_at}, status_code=status.HTTP_200_OK)
+    model = {
+        "content": comment.model_dump(),
+        "card_uid": card_comment.card_uid,
+        "uid": card_comment.uid,
+        "commented_at": card_comment.updated_at,
+    }
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}")
@@ -47,7 +55,12 @@ async def delete_card_comment(
     if card_comment.user_id != user.id and not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
     await service.card_comment.delete(user, card_comment)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model = {
+        "card_uid": card_comment.card_uid,
+        "comment_uid": card_comment.uid,
+    }
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react")
@@ -63,4 +76,12 @@ async def react_card_comment(
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     is_reacted = await service.reaction.toggle(user, CardCommentReaction, card_comment.uid, form.reaction)
-    return JsonResponse(content={"is_reacted": is_reacted}, status_code=status.HTTP_200_OK)
+    model = {
+        "user_id": user.id,
+        "card_uid": card_comment.card_uid,
+        "comment_uid": comment_uid,
+        "reaction": form.reaction,
+        "is_reacted": is_reacted,
+    }
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id, "is_reacted": is_reacted}, status_code=status.HTTP_200_OK)

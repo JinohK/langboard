@@ -1,12 +1,9 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitemTimer } from "@/core/models";
 
-export interface ICardCheckitemTimerStartedRequest {
-    checkitem_uid: string;
-    timer: ProjectCheckitemTimer.Interface;
-    acc_time_seconds: number;
-}
+export interface ICardCheckitemTimerStartedRequest extends IModelIdBase {}
 
 export interface ICardCheckitemTimerStartedResponse {
     timer: ProjectCheckitemTimer.Interface;

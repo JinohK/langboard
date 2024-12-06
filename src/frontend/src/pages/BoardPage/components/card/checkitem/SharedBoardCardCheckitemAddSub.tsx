@@ -1,7 +1,6 @@
+import { AssignMemberForm } from "@/components/AssignMemberPopover";
 import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, Toast } from "@/components/base";
-import MultiSelect from "@/components/MultiSelect";
 import SubmitButton from "@/components/SubmitButton";
-import UserAvatar from "@/components/UserAvatar";
 import useCreateSubCheckitem from "@/controllers/api/card/checkitem/useCreateSubCheckitem";
 import useCardSubCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardSubCheckitemCreatedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
@@ -17,7 +16,7 @@ function SharedBoardCardCheckitemAddSub({
     fromDropdown?: bool;
     setIsMoreMenuOpened?: (value: bool) => void;
 }): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, socket, currentUser, sharedClassNames } = useBoardCard();
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
@@ -48,16 +47,15 @@ function SharedBoardCardCheckitemAddSub({
             card_uid: card.uid,
             checkitem_uid: checkitem.uid,
             title,
+            assignees: selectedMembers.map((id) => parseInt(id)),
         });
 
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
             error: sharedErrorHandler,
             success: (data) => {
-                checkitem.title = title;
                 sendCardSubCheckitemCreated({
-                    checkitem_uid: checkitem.uid,
-                    checkitem: data.checkitem,
+                    model_id: data.model_id,
                 });
                 return t("card.Sub-checkitem created successfully.");
             },
@@ -96,7 +94,7 @@ function SharedBoardCardCheckitemAddSub({
                     </Button>
                 )}
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Floating.LabelInput
                     label={t("card.Checkitem title")}
                     id={titleInputId}
@@ -106,24 +104,21 @@ function SharedBoardCardCheckitemAddSub({
                         }
                     }}
                 />
-                <MultiSelect
-                    selections={card.project_members.map((member) => ({
-                        value: member.id.toString(),
-                        label: `${member.firstname} ${member.lastname}`,
-                    }))}
-                    selectedState={[selectedMembers, setSelectedMembers]}
-                    placeholder={t("card.Select members...")}
-                    className={cn(
-                        "mt-2 max-w-[calc(100vw_-_theme(spacing.20))]",
-                        "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                        "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
-                    )}
-                    inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
-                    createBadgeWrapper={(badge, value) => (
-                        <UserAvatar.Root user={card.project_members.find((member) => member.id.toString() === value)!} customTrigger={badge}>
-                            test
-                        </UserAvatar.Root>
-                    )}
+                <AssignMemberForm
+                    multiSelectProps={{
+                        selectedState: [selectedMembers, setSelectedMembers],
+                        placeholder: t("card.Select members..."),
+                        className: cn(
+                            "mt-2 max-w-[calc(100vw_-_theme(spacing.20))]",
+                            "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
+                            "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                        ),
+                        inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
+                    }}
+                    isValidating={isValidating}
+                    allUsers={card.project_members}
+                    assignedUsers={[]}
+                    currentUser={currentUser}
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

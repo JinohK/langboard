@@ -1,11 +1,11 @@
 import { Button, Collapsible, Flex, Toast } from "@/components/base";
 import useChangeCardAttachmentOrder from "@/controllers/api/card/attachment/useChangeCardAttachmentOrder";
-import { IBoardCardAttachment } from "@/controllers/api/card/useGetCardDetails";
 import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentDeletedHandlers";
 import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import { ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardAttachment from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
@@ -61,8 +61,8 @@ function BoardCardAttachmentList(): JSX.Element {
         sensors,
         onDragStart,
         onDragEnd,
-        onDragOver,
-    } = useColumnRowSortable<IBoardCardAttachment, IBoardCardAttachment>({
+        onDragOverOrMove,
+    } = useColumnRowSortable<ProjectCardAttachment.IBoard, ProjectCardAttachment.IBoard>({
         columnDragDataType: "Attachment",
         rowDragDataType: "FakeAttachment",
         columnCallbacks: {
@@ -74,11 +74,9 @@ function BoardCardAttachmentList(): JSX.Element {
                 changeCardAttachmentOrderMutate(
                     { project_uid: projectUID, card_uid: card.uid, attachment_uid: originalAttachment.uid, order: index },
                     {
-                        onSuccess: () => {
+                        onSuccess: (data) => {
                             sendColumnOrderChanged({
-                                card_uid: card.uid,
-                                uid: originalAttachment.uid,
-                                order: index,
+                                model_id: data.model_id,
                             });
                         },
                         onError: (error) => {
@@ -112,7 +110,7 @@ function BoardCardAttachmentList(): JSX.Element {
     }, []);
 
     return (
-        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOver}>
+        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
             <SortableContext items={attachmentsUIDs} strategy={verticalListSortingStrategy}>
                 <Flex direction="col" gap="2">
                     {attachments.slice(0, 5).map((attachment) => (

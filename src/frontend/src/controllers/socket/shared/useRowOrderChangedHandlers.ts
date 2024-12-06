@@ -1,13 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IRowOrderChangedRequest {
-    column_name?: string;
-    from_column_uid: string;
-    to_column_uid?: string;
-    uid: string;
-    order: number;
-}
+export interface IRowOrderChangedRequest extends IModelIdBase {}
 
 export interface IRowOrderChangedResponse {
     move_type: "from_column" | "to_column" | "in_column";

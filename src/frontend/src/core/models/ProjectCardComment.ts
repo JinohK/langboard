@@ -1,3 +1,5 @@
+import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
+import * as User from "@/core/models/User";
 import { IEditorContent } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -6,6 +8,11 @@ export interface Interface {
     content: IEditorContent;
     is_edited: bool;
     commented_at: Date;
+}
+
+export interface IBoard extends Interface {
+    user: User.Interface;
+    reactions: Partial<Record<TEmoji, number[]>>;
 }
 
 export const transformFromApi = <TComment extends Interface | Interface[]>(

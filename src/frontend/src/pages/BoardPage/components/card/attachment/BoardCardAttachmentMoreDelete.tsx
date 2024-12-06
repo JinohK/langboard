@@ -42,11 +42,10 @@ function BoardCardAttachmentMoreDelete({
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
-            success: () => {
+            success: (data) => {
                 deletedAttachment(attachment.uid);
                 sendCardAttachmentDeleted({
-                    card_uid: card.uid,
-                    attachment_uid: attachment.uid,
+                    model_id: data.model_id,
                 });
                 return t("card.File deleted successfully.");
             },
@@ -72,7 +71,7 @@ function BoardCardAttachmentMoreDelete({
                     {t("common.Delete")}
                 </DropdownMenu.Item>
             </Popover.Trigger>
-            <Popover.Content className={sharedClassNames.morePopover} align="end">
+            <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <div className="mb-1 text-sm font-semibold sm:text-base">{t("card.Are you sure you want to delete this file?")}</div>
                 <div className="text-center text-sm font-bold text-red-500">{t("card.This action cannot be undone.")}</div>
                 <Flex items="center" justify="end" gap="1" mt="2">

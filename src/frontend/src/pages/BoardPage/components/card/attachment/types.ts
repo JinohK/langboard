@@ -1,7 +1,7 @@
-import { IBoardCardAttachment } from "@/controllers/api/card/useGetCardDetails";
+import { ProjectCardAttachment } from "@/core/models";
 
 export interface IBaseBoardCardAttachmentMoreProps {
-    attachment: IBoardCardAttachment;
+    attachment: ProjectCardAttachment.IBoard;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
     setIsMoreMenuOpened: (value: bool) => void;

@@ -10,23 +10,25 @@ from .ProjectService import ProjectService
 from .ReactionService import ReactionService
 from .RevertService import RevertService
 from .RoleService import RoleService
+from .SocketService import SocketService
 from .UserGroupService import UserGroupService
 from .UserService import UserService
 
 
 __all__ = [
     "ActivityService",
-    "CardCommentService",
     "CardAttachmentService",
+    "CardCommentService",
     "CardService",
     "ChatHistoryService",
     "CheckitemService",
     "EmailService",
-    "UserGroupService",
     "ProjectColumnService",
     "ProjectService",
     "ReactionService",
     "RevertService",
     "RoleService",
+    "SocketService",
+    "UserGroupService",
     "UserService",
 ]

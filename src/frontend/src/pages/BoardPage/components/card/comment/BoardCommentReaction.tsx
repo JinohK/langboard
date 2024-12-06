@@ -1,14 +1,14 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import ReactionCounter from "@/components/ReactionCounter";
-import { IBoardCardComment } from "@/controllers/api/card/comment/useGetCardComments";
 import useReactCardComment from "@/controllers/api/card/comment/useReactCardComment";
 import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useEffect, useState } from "react";
 
 export interface IBoardCommentReactionProps {
-    comment: IBoardCardComment;
+    comment: ProjectCardComment.IBoard;
 }
 
 const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Element => {
@@ -55,11 +55,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
                     toggleReaction(currentUser.id, reaction, data.is_reacted);
 
                     sendCardCommentReacted({
-                        user_id: currentUser.id,
-                        card_uid: card.uid,
-                        comment_uid: comment.uid,
-                        reaction,
-                        is_reacted: data.is_reacted,
+                        model_id: comment.uid,
                     });
                 },
                 onError: (error) => {

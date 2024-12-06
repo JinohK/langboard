@@ -1,10 +1,11 @@
 import { Flex, Toast } from "@/components/base";
-import useGetCardComments, { IBoardCardComment } from "@/controllers/api/card/comment/useGetCardComments";
+import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
+import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -47,7 +48,7 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
 }
 
 interface IBoardCommentListResultProps extends IBoardCommentListProps {
-    comments: IBoardCardComment[];
+    comments: ProjectCardComment.IBoard[];
 }
 
 function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCommentListResultProps): JSX.Element {
@@ -67,7 +68,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
         socket,
         cardUID: card.uid,
         callback: (data) => {
-            deletedComment(data.comment_uid, false);
+            deletedComment(data.comment_uid);
         },
     });
 
@@ -81,7 +82,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
         };
     }, []);
 
-    const deletedComment = (commentUID: string, shouldSend: bool = true) => {
+    const deletedComment = (commentUID: string, modelId?: string) => {
         const index = flatComments.findIndex((c) => c.uid === commentUID);
         if (index === -1) {
             return;
@@ -90,11 +91,11 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
         flatComments.splice(index, 1);
         forceUpdate();
 
-        if (!shouldSend) {
+        if (!modelId) {
             return;
         }
 
-        sendCardCommentDeleted({ card_uid: card.uid, comment_uid: commentUID });
+        sendCardCommentDeleted({ model_id: modelId });
     };
 
     return (

@@ -35,7 +35,8 @@
     "Deleting...": "Deleting...",
     "Changing...": "Changing...",
     "Starting...": "Starting...",
-    "Stopping...": "Stopping..."
+    "Stopping...": "Stopping...",
+    "Add members from group": "Add members from group"
   },
   "editor": {
     "Accept": "Accept",

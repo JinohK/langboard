@@ -3,14 +3,13 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import SubmitButton from "@/components/SubmitButton";
 import UserAvatar from "@/components/UserAvatar";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
-import { IBoardCardComment } from "@/controllers/api/card/comment/useGetCardComments";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import { API_ROUTES } from "@/controllers/constants";
 import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import useCardCommentUpdatedHandlers from "@/controllers/socket/card/comment/useCardCommentUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project } from "@/core/models";
+import { Project, ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -35,8 +34,8 @@ export function SkeletonBoardComment(): JSX.Element {
 }
 
 export interface IBoardCommentProps {
-    comment: IBoardCardComment;
-    deletedComment: (commentUID: string) => void;
+    comment: ProjectCardComment.IBoard;
+    deletedComment: (commentUID: string, modelId: string) => void;
 }
 
 function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Element {
@@ -106,9 +105,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                 onSuccess: (data) => {
                     comment.content = { ...valueRef.current };
                     sendCardCommentUpdated({
-                        comment_uid: comment.uid,
-                        commented_at: data.commented_at,
-                        ...comment.content,
+                        model_id: data.model_id,
                     });
                     Toast.Add.success(t("card.Comment updated successfully."));
                     cancelEditing();
@@ -168,8 +165,8 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                 handle(error);
                 return message;
             },
-            success: () => {
-                deletedComment(comment.uid);
+            success: (data) => {
+                deletedComment(comment.uid, data.model_id);
                 return t("card.Comment deleted successfully.");
             },
             finally: () => {
@@ -221,9 +218,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                         uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                         uploadedCallback={(data) => {
                             sendCardAttachmentUploaded({
-                                card_uid: card.uid,
-                                attachment_uid: data.uid,
-                                attachment: data,
+                                model_id: data.model_id,
                             });
                         }}
                         setValue={setValue}

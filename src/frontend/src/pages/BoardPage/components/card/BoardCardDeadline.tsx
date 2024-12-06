@@ -44,7 +44,7 @@ const BoardCardDeadline = memo(() => {
             {
                 onSuccess: (data) => {
                     setDeadline(data.deadline_at);
-                    sendCardDeadlineChanged({ card_uid: card.uid, deadline_at: data.deadline_at });
+                    sendCardDeadlineChanged({ model_id: data.model_id });
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

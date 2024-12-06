@@ -1,8 +1,7 @@
 import { Button, Flex, IconComponent } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
-import { IBoardCardAttachment } from "@/controllers/api/card/useGetCardDetails";
 import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentNameChangedHandlers";
-import { Project } from "@/core/models";
+import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCardAttachmentMore from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMore";
@@ -14,14 +13,14 @@ import mimeTypes from "react-native-mime-types";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardAttachmentProps {
-    attachment: IBoardCardAttachment;
+    attachment: ProjectCardAttachment.IBoard;
     deletedAttachment: (uid: string) => void;
     isOverlay?: bool;
 }
 
 interface IBoardCardAttachmentDragData {
     type: "Attachment";
-    data: IBoardCardAttachment;
+    data: ProjectCardAttachment.IBoard;
 }
 
 function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {

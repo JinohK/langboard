@@ -72,9 +72,9 @@ function BoardCardDescription(): JSX.Element {
                 handle(error);
                 return message;
             },
-            success: () => {
-                card.description = descriptionRef.current;
-                sendCardDescriptionChanged({ card_uid: card.uid, description: descriptionRef.current });
+            success: (data) => {
+                card.description = data.description;
+                sendCardDescriptionChanged({ model_id: data.model_id });
                 return t("card.Description changed successfully.");
             },
             finally: () => {
@@ -149,9 +149,7 @@ function BoardCardDescription(): JSX.Element {
                     uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                     uploadedCallback={(data) => {
                         sendCardAttachmentUploaded({
-                            card_uid: card.uid,
-                            attachment_uid: data.uid,
-                            attachment: data,
+                            model_id: data.model_id,
                         });
                     }}
                     setValue={setValue}

@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { IEditorContent } from "@/core/models/Base";
@@ -18,7 +19,7 @@ interface IDetails {
 type TChangeableDetail = keyof IDetails;
 
 export type TChangeCardDetailsForm<TDetail extends TChangeableDetail> = IBaseChangeCardDetailsForm & Pick<IDetails, TDetail>;
-export type TChangeCardDetailsResponse<TDetail extends TChangeableDetail> = Required<Pick<IDetails, TDetail>>;
+export type TChangeCardDetailsResponse<TDetail extends TChangeableDetail> = Required<Pick<IDetails, TDetail>> & IModelIdBase;
 
 const useChangeCardDetails = <TDetail extends TChangeableDetail>(
     type: TDetail,

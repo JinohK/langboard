@@ -1,8 +1,8 @@
-import { IBoardCardSubCheckitem } from "@/controllers/api/card/useGetCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCheckitemTimer, User } from "@/core/models";
+import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICreateSubCheckitemForm {
@@ -13,8 +13,8 @@ export interface ICreateSubCheckitemForm {
     assignees?: number[];
 }
 
-export interface ICreateSubCheckitemResponse {
-    checkitem: IBoardCardSubCheckitem;
+export interface ICreateSubCheckitemResponse extends IModelIdBase {
+    checkitem: ProjectCheckitem.IBoardSub;
 }
 
 const useCreateSubCheckitem = (options?: TMutationOptions<ICreateSubCheckitemForm, ICreateSubCheckitemResponse>) => {

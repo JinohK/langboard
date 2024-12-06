@@ -1,6 +1,5 @@
 import { createContext, useContext, useRef, useState } from "react";
-import { Project, User } from "@/core/models";
-import { IBoardCardWithDetails } from "@/controllers/api/card/useGetCardDetails";
+import { Project, ProjectCard, User } from "@/core/models";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
@@ -9,7 +8,7 @@ import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 
 export interface IBoardCardContext {
     projectUID: string;
-    card: IBoardCardWithDetails;
+    card: ProjectCard.IBoardWithDetails;
     currentUser: IAuthUser;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     socket: IConnectedSocket;
@@ -18,13 +17,13 @@ export interface IBoardCardContext {
     replyRef: React.MutableRefObject<(targetUser: User.Interface) => void>;
     subscribeEditorSocketEvents: (uid: string, startCallback: (userIds: number[]) => void, stopCallback: (userIds: number[]) => void) => () => void;
     sharedClassNames: {
-        morePopover: string;
+        popoverContent: string;
     };
 }
 
 interface IBoardCardProviderProps {
     projectUID: string;
-    card: IBoardCardWithDetails;
+    card: ProjectCard.IBoardWithDetails;
     currentUser: IAuthUser;
     currentUserRoleActions: Project.TRoleActions[];
     socket: IConnectedSocket;
@@ -33,7 +32,7 @@ interface IBoardCardProviderProps {
 
 const initialContext = {
     projectUID: "",
-    card: {} as IBoardCardWithDetails,
+    card: {} as ProjectCard.IBoardWithDetails,
     currentUser: {} as IAuthUser,
     hasRoleAction: () => false,
     socket: {} as IConnectedSocket,
@@ -58,7 +57,7 @@ export const BoardCardProvider = ({
     const replyRef = useRef<(targetUser: User.Interface) => void>(() => {});
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const sharedClassNames = {
-        morePopover: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
+        popoverContent: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
     };
 
     const setCurrentEditor = (uid: string) => {

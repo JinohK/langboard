@@ -133,7 +133,7 @@ function BoardCommentForm(): JSX.Element {
             },
             {
                 onSuccess: (data) => {
-                    sendCardCommentAdded({ card_uid: card.uid, comment: data.comment });
+                    sendCardCommentAdded({ model_id: data.model_id });
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});
@@ -230,9 +230,7 @@ function BoardCommentForm(): JSX.Element {
                                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                                 uploadedCallback={(data) => {
                                     sendCardAttachmentUploaded({
-                                        card_uid: card.uid,
-                                        attachment_uid: data.uid,
-                                        attachment: data,
+                                        model_id: data.model_id,
                                     });
                                 }}
                                 setValue={setValue}

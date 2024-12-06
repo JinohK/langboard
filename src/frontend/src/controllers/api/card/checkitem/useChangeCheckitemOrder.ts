@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -10,7 +11,9 @@ export interface IChangeCheckitemOrderForm {
     order: number;
 }
 
-const useChangeCheckitemOrder = (options?: TMutationOptions<IChangeCheckitemOrderForm>) => {
+export interface IChangeCheckitemOrderResponse extends IModelIdBase {}
+
+const useChangeCheckitemOrder = (options?: TMutationOptions<IChangeCheckitemOrderForm, IChangeCheckitemOrderResponse>) => {
     const { mutate } = useQueryMutation();
 
     const changeCheckitemOrder = async (params: IChangeCheckitemOrderForm) => {

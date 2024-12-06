@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -9,7 +10,9 @@ export interface IDeleteCardAttachmentForm {
     attachment_uid: string;
 }
 
-const useDeleteCardAttachment = (options?: TMutationOptions<IDeleteCardAttachmentForm>) => {
+export interface IDeleteCardAttachmentResponse extends IModelIdBase {}
+
+const useDeleteCardAttachment = (options?: TMutationOptions<IDeleteCardAttachmentForm, IDeleteCardAttachmentResponse>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCardAttachment = async (params: IDeleteCardAttachmentForm) => {

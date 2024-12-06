@@ -1,8 +1,8 @@
-import { IBoardCardCheckitem } from "@/controllers/api/card/useGetCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCheckitemTimer, User } from "@/core/models";
+import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICreateCheckitemForm {
@@ -12,8 +12,8 @@ export interface ICreateCheckitemForm {
     assignees?: number[];
 }
 
-export interface ICreateCheckitemResponse {
-    checkitem: IBoardCardCheckitem;
+export interface ICreateCheckitemResponse extends IModelIdBase {
+    checkitem: ProjectCheckitem.IBoard;
 }
 
 const useCreateCheckitem = (options?: TMutationOptions<ICreateCheckitemForm, ICreateCheckitemResponse>) => {

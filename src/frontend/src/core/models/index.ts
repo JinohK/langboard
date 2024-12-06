@@ -1,4 +1,5 @@
 export * as Activity from "@/core/models/Activity";
+export * as ChatMessageModel from "@/core/models/ChatMessageModel";
 export * as Project from "@/core/models/Project";
 export * as ProjectColumn from "@/core/models/ProjectColumn";
 export * as ProjectCard from "@/core/models/ProjectCard";

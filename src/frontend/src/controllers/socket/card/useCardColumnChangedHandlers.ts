@@ -1,22 +1,22 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IBoardCardOrderChangedResponse {
+export interface ICardColumnChangedResponse {
     column_uid: string;
     column_name: string;
 }
 
-export interface IUseBoardCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IBoardCardOrderChangedResponse> {
+export interface IUseCardColumnChangedHandlersProps extends IBaseUseSocketHandlersProps<ICardColumnChangedResponse> {
     cardUID: string;
 }
 
-interface IUseBoardCardOrderChangedHandlers {
-    (props: IUseBoardCardOrderChangedHandlersProps): {
+interface IUseCardColumnChangedHandlers {
+    (props: IUseCardColumnChangedHandlersProps): {
         on: () => { off: () => void };
     };
 }
 
-const useBoardCardOrderChangedHandlers: IUseBoardCardOrderChangedHandlers = ({ socket, callback, cardUID }) => {
+const useCardColumnChangedHandlers: IUseCardColumnChangedHandlers = ({ socket, callback, cardUID }) => {
     return useSocketHandler({
         socket,
         onProps: {
@@ -30,4 +30,4 @@ const useBoardCardOrderChangedHandlers: IUseBoardCardOrderChangedHandlers = ({ s
     });
 };
 
-export default useBoardCardOrderChangedHandlers;
+export default useCardColumnChangedHandlers;

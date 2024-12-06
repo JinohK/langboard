@@ -276,7 +276,9 @@ class CardService(BaseService):
     )
     async def change_order(
         self, user: User, card_uid: str, order: int, column_uid: str = ""
-    ) -> tuple[ActivityResult | None, tuple[ActivityResult | None, bool]]:
+    ) -> tuple[
+        ActivityResult | None, tuple[ActivityResult | None, tuple[Card, ProjectColumn, ProjectColumn | None] | None]
+    ]:
         result = await self._db.exec(
             self._db.query("select")
             .tables(Card, Project, ProjectColumn)
@@ -287,25 +289,27 @@ class CardService(BaseService):
         )
         record = result.first()
         if not record:
-            return None, (None, False)
+            return None, (None, None)
         card, project, original_column = record
 
         original_column_uid = original_column.uid if original_column else Project.ARCHIVE_COLUMN_UID
         original_column_name = original_column.name if original_column else project.archive_column_name
         if column_uid:
             if column_uid != Project.ARCHIVE_COLUMN_UID:
-                column = await self._get_by(ProjectColumn, "uid", column_uid)
-                if not column or column.project_id != card.project_id:
-                    return None, (None, False)
+                new_column = await self._get_by(ProjectColumn, "uid", column_uid)
+                if not new_column or new_column.project_id != card.project_id:
+                    return None, (None, None)
 
                 card.archived_at = None
                 card.project_column_uid = column_uid
             else:
                 project = await self._get_by(Project, "id", card.project_id)
                 if not project:
-                    return None, (None, False)
+                    return None, (None, None)
                 card.archived_at = now()
                 card.project_column_uid = None
+        else:
+            new_column = None
 
         original_order = card.order
 
@@ -354,7 +358,9 @@ class CardService(BaseService):
                 new={
                     "column_uid": column_uid,
                     "column_name": (
-                        column.name if column_uid != Project.ARCHIVE_COLUMN_UID else project.archive_column_name
+                        cast(ProjectColumn, new_column).name
+                        if column_uid != Project.ARCHIVE_COLUMN_UID
+                        else project.archive_column_name
                     ),
                 },
                 old={
@@ -366,7 +372,7 @@ class CardService(BaseService):
             activity_result = None
             await self._db.commit()
 
-        return activity_result, (activity_result, True)
+        return activity_result, (activity_result, (card, original_column, new_column))
 
     @overload
     def __filter_column(self, query: Select[_TSelectParam], column_uid: str) -> Select[_TSelectParam]: ...

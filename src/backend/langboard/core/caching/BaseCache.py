@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 class BaseCache(ABC):
     @abstractmethod
-    async def get(self, key: str, cast: Callable[[Any], Any] | None = None) -> Any | None:
+    async def get(self, key: str, caster: Callable[[Any], Any] | None = None) -> Any | None:
         """Gets value from cache by key
 
         You can provide a cast function to cast the value before returning it.
@@ -19,6 +19,13 @@ class BaseCache(ABC):
 
         :param key: Key to get value from cache
         :param cast: Function to cast value to
+        """
+
+    @abstractmethod
+    async def has(self, key: str) -> bool:
+        """Checks if key exists in cache
+
+        :param key: Key to check if exists in cache
         """
 
     @abstractmethod

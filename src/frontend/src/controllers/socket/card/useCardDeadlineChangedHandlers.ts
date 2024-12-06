@@ -1,10 +1,8 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardDeadlineChangedRequest {
-    card_uid: string;
-    deadline_at: Date;
-}
+export interface ICardDeadlineChangedRequest extends IModelIdBase {}
 
 export interface ICardDeadlineChangedResponse {
     deadline_at: Date;

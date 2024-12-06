@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -9,7 +10,9 @@ export interface IDeleteCardCommentForm {
     comment_uid: string;
 }
 
-const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm>) => {
+export interface IDeleteCardCommentResponse extends IModelIdBase {}
+
+const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm, IDeleteCardCommentResponse>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCardComment = async (params: IDeleteCardCommentForm) => {

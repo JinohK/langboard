@@ -1,6 +1,6 @@
 from typing import Any, Callable, TypeVar, overload
 from ...Constants import CACHE_TYPE
-from ..utils.decorators import class_instance, singleton
+from ..utils.decorators import class_instance, thread_safe_singleton
 from .BaseCache import BaseCache
 from .InMemoryCache import InMemoryCache
 from .RedisCache import RedisCache
@@ -10,7 +10,7 @@ _TCastReturn = TypeVar("_TCastReturn")
 
 
 @class_instance()
-@singleton
+@thread_safe_singleton
 class Cache(BaseCache):
     def __init__(self):
         if CACHE_TYPE == "redis":
@@ -21,9 +21,12 @@ class Cache(BaseCache):
     @overload
     async def get(self, key: str) -> Any | None: ...
     @overload
-    async def get(self, key: str, cast: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
-    async def get(self, key: str, cast: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
-        return await self._cache.get(key, cast)
+    async def get(self, key: str, caster: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
+    async def get(self, key: str, caster: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
+        return await self._cache.get(key, caster)
+
+    async def has(self, key: str) -> bool:
+        return await self._cache.has(key)
 
     @overload
     async def set(self, key: str, value: Any) -> None: ...

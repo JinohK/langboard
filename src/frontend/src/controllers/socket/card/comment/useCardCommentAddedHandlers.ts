@@ -1,15 +1,12 @@
-import { IBoardCardComment } from "@/controllers/api/card/comment/useGetCardComments";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment, User } from "@/core/models";
 
-export interface ICardCommentAddedRequest {
-    card_uid: string;
-    comment: IBoardCardComment;
-}
+export interface ICardCommentAddedRequest extends IModelIdBase {}
 
 export interface ICardCommentAddedResponse {
-    comment: IBoardCardComment;
+    comment: ProjectCardComment.IBoard;
 }
 
 export interface IUseCardCommentAddedHandlersProps extends IBaseUseSocketHandlersProps<ICardCommentAddedResponse> {

@@ -74,3 +74,7 @@ class Service(ServiceFactory):
     @property
     def card_attachment(self):
         return self._create_or_get_service(factory.CardAttachmentService)
+
+    @property
+    def socket(self):
+        return self._create_or_get_service(factory.SocketService)

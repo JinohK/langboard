@@ -29,9 +29,10 @@ async def upload_card_attachment(
     if not card_attachment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(
-        content={**card_attachment.api_response(), "user": user.api_response()}, status_code=status.HTTP_200_OK
-    )
+    model = {**card_attachment.api_response(), "user": user.api_response(), "card_uid": card_uid}
+    model_id = await service.socket.create_model_id(model)
+    model.pop("card_uid")
+    return JsonResponse(content={"model_id": model_id, **model}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/order")
@@ -41,11 +42,17 @@ async def change_attachment_order(
     card_uid: str,
     attachment_uid: str,
     form: ChangeOrderForm,
-    user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     await service.card_attachment.change_order(card_uid, attachment_uid, form.order)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id(
+        {
+            "card_uid": card_uid,
+            "uid": attachment_uid,
+            "order": form.order,
+        }
+    )
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/name")
@@ -75,7 +82,13 @@ async def change_card_attachment_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id(
+        {
+            "uid": attachment_uid,
+            "name": form.attachment_name,
+        }
+    )
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}")
@@ -104,4 +117,10 @@ async def delete_card_attachment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id(
+        {
+            "card_uid": card_uid,
+            "uid": attachment_uid,
+        }
+    )
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)

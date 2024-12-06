@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -9,7 +10,9 @@ export interface IDeleteCheckitemForm {
     checkitem_uid: string;
 }
 
-const useDeleteCheckitem = (options?: TMutationOptions<IDeleteCheckitemForm>) => {
+export interface IDeleteCheckitemResponse extends IModelIdBase {}
+
+const useDeleteCheckitem = (options?: TMutationOptions<IDeleteCheckitemForm, IDeleteCheckitemResponse>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCheckitem = async (params: IDeleteCheckitemForm) => {

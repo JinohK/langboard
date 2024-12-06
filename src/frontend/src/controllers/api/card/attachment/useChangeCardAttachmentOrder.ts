@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -10,7 +11,9 @@ export interface IChangeCardAttachmentOrderForm {
     order: number;
 }
 
-const useChangeCardAttachmentOrder = (options?: TMutationOptions<IChangeCardAttachmentOrderForm>) => {
+export interface IChangeCardAttachmentOrderResponse extends IModelIdBase {}
+
+const useChangeCardAttachmentOrder = (options?: TMutationOptions<IChangeCardAttachmentOrderForm, IChangeCardAttachmentOrderResponse>) => {
     const { mutate } = useQueryMutation();
 
     const changeCardAttachmentOrder = async (params: IChangeCardAttachmentOrderForm) => {

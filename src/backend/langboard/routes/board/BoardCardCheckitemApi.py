@@ -22,8 +22,9 @@ async def create_checkitem(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     checkitem = await service.checkitem.create(user, card_uid, form.title, None, form.assignees)
-    response = await service.checkitem.convert_api_response(checkitem)
-    return JsonResponse(content={"checkitem": response}, status_code=status.HTTP_201_CREATED)
+    api_checkitem = await service.checkitem.convert_api_response(checkitem)
+    model_id = await service.socket.create_model_id(api_checkitem)
+    return JsonResponse(content={"model_id": model_id, "checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/sub-checkitem")
@@ -37,8 +38,9 @@ async def create_sub_checkitem(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     checkitem = await service.checkitem.create(user, card_uid, form.title, checkitem_uid, form.assignees)
-    response = await service.checkitem.convert_api_response(checkitem)
-    return JsonResponse(content={"checkitem": response}, status_code=status.HTTP_201_CREATED)
+    api_checkitem = await service.checkitem.convert_api_response(checkitem)
+    model_id = await service.socket.create_model_id(api_checkitem)
+    return JsonResponse(content={"model_id": model_id, "checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title")
@@ -54,7 +56,8 @@ async def change_checkitem_title(
     result = await service.checkitem.change_title(user, card_uid, checkitem_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id({"title": form.title, "uid": checkitem_uid})
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order")
@@ -67,7 +70,14 @@ async def change_checkitem_order(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     await service.checkitem.change_order(card_uid, checkitem_uid, form.order)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    model_id = await service.socket.create_model_id(
+        {
+            "card_uid": card_uid,
+            "uid": checkitem_uid,
+            "order": form.order,
+        }
+    )
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/sub-checkitem/{sub_checkitem_uid}/order")
@@ -79,8 +89,19 @@ async def change_sub_checkitem_order(
     form: ChangeOrderForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.checkitem.change_order(card_uid, sub_checkitem_uid, form.order, form.parent_uid)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    result = await service.checkitem.change_order(card_uid, sub_checkitem_uid, form.order, form.parent_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    sub_checkitem, original_parent_uid, parent_checkitem = result
+    model = {
+        "from_column_uid": original_parent_uid,
+        "uid": sub_checkitem_uid,
+        "order": sub_checkitem.order,
+    }
+    if original_parent_uid and parent_checkitem and original_parent_uid != parent_checkitem.uid:
+        model["to_column_uid"] = parent_checkitem.uid
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify")
@@ -98,8 +119,15 @@ async def cardify_checkitem(
     )
     if not new_card:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    model = await service.card.convert_board_list_api_response(new_card)
+    model_id = await service.socket.create_model_id(
+        {
+            "checkitem_uid": checkitem_uid,
+            "new_card": model,
+        }
+    )
     return JsonResponse(
-        content={"new_card": await service.card.convert_board_list_api_response(new_card)},
+        content={"model_id": model_id, "new_card": model},
         status_code=status.HTTP_200_OK,
     )
 
@@ -113,8 +141,18 @@ async def delete_checkitem(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.checkitem.delete(user, card_uid, checkitem_uid)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    result = await service.checkitem.delete(user, card_uid, checkitem_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    model = {
+        "uid": checkitem_uid,
+    }
+    if result.checkitem_uid:
+        model["parent_uid"] = result.checkitem_uid
+    else:
+        model["parent_uid"] = card_uid
+    model_id = await service.socket.create_model_id(model)
+    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/timer/toggle")
@@ -140,6 +178,12 @@ async def toggle_checkitem_timer(
         if not timer:
             return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(
-        content={"timer": timer.api_response(), "acc_time_seconds": acc_time_seconds}, status_code=status.HTTP_200_OK
-    )
+    model = {
+        "checkitem_uid": checkitem_uid,
+        "timer": timer.api_response(),
+        "acc_time_seconds": acc_time_seconds,
+    }
+    model_id = await service.socket.create_model_id(model)
+    model.pop("checkitem_uid")
+
+    return JsonResponse(content={"model_id": model_id, **model}, status_code=status.HTTP_200_OK)

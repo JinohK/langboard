@@ -5,7 +5,6 @@ from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import ChangeColumnOrderSocketForm
 from .RoleFinder import project_role_finder
 
 
@@ -65,9 +64,13 @@ async def project_chat(
 
 @AppRouter.socket.on("column:order:changed")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-async def column_order_changed(ws: WebSocket, project_uid: str, form: ChangeColumnOrderSocketForm):
+async def column_order_changed(ws: WebSocket, project_uid: str, model_id: str, service: Service = Service.scope()):
+    model = await service.socket.get_model(model_id)
+    if not model:
+        return
+
     ws.publish(
         topic=f"board:{project_uid}",
         event_response=f"column:order:changed:{project_uid}",
-        data={"uid": form.uid, "order": form.order},
+        data=model,
     )

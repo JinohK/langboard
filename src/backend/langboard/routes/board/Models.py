@@ -1,5 +1,4 @@
 from datetime import datetime
-from pydantic import BaseModel
 from ...core.routing import BaseFormModel, form_model
 from ...core.schema import Pagination
 
@@ -19,22 +18,9 @@ class ChangeOrderForm(BaseFormModel):
     parent_uid: str = ""
 
 
-class ChangeColumnOrderSocketForm(BaseModel):
-    uid: str
-    order: int
-
-
 @form_model
 class ChangeAttachmentNameForm(BaseFormModel):
     attachment_name: str
-
-
-class ChangeOrderSocketForm(BaseModel):
-    column_name: str = ""
-    from_column_uid: str
-    to_column_uid: str | None = None
-    uid: str
-    order: int
 
 
 @form_model

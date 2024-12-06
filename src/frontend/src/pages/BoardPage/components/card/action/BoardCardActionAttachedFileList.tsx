@@ -22,7 +22,7 @@ const BoardCardActionAttachedFileList = memo(({ attachedFiles, deleteFile, updat
         sensors,
         onDragStart,
         onDragEnd,
-        onDragOver,
+        onDragOverOrMove,
     } = useColumnRowSortable<IAttachedFile, IAttachedFile>({
         columnDragDataType: "AttachedFile",
         rowDragDataType: "FakeAttachedFile",
@@ -39,7 +39,7 @@ const BoardCardActionAttachedFileList = memo(({ attachedFiles, deleteFile, updat
     });
 
     return (
-        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOver}>
+        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
             <SortableContext items={attachedFileKeys} strategy={verticalListSortingStrategy}>
                 <Flex direction="col" gap="2">
                     {attachedFiles.map((attachedFile) => (

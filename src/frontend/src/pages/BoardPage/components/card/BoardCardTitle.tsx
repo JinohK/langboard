@@ -73,9 +73,9 @@ function BoardCardTitle(): JSX.Element {
                 handle(error);
                 return message;
             },
-            success: () => {
-                card.title = newValue;
-                sendCardTitleChanged({ card_uid: card.uid, title: newValue });
+            success: (data) => {
+                card.title = data.model_id;
+                sendCardTitleChanged({ model_id: data.model_id });
                 return t("card.Description changed successfully.");
             },
             finally: () => {

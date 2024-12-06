@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -10,7 +11,9 @@ export interface IChangeCheckitemTitleForm {
     title: string;
 }
 
-const useChangeCheckitemTitle = (options?: TMutationOptions<IChangeCheckitemTitleForm>) => {
+export interface IChangeCheckitemTitleResponse extends IModelIdBase {}
+
+const useChangeCheckitemTitle = (options?: TMutationOptions<IChangeCheckitemTitleForm, IChangeCheckitemTitleResponse>) => {
     const { mutate } = useQueryMutation();
 
     const changeCheckitemTitle = async (params: IChangeCheckitemTitleForm) => {

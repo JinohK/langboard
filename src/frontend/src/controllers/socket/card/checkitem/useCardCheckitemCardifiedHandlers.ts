@@ -1,15 +1,12 @@
-import { IBoardCard } from "@/controllers/api/board/useGetCards";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { IModelIdBase } from "@/controllers/types";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { User } from "@/core/models";
+import { ProjectCard, User } from "@/core/models";
 
-export interface ICardCheckitemCardifiedRequest {
-    checkitem_uid: string;
-    new_card: IBoardCard;
-}
+export interface ICardCheckitemCardifiedRequest extends IModelIdBase {}
 
 export interface ICardCheckitemCardifiedResponse {
-    new_card: IBoardCard;
+    new_card: ProjectCard.IBoard;
 }
 
 export interface IUseCardCheckitemCardifiedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemCardifiedResponse> {
