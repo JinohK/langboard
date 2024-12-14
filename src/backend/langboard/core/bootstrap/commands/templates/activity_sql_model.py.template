@@ -1,5 +1,0 @@
-from .BaseActivityModel import BaseActivityModel
-
-
-class {class_name}Activity(BaseActivityModel, table=True):
-    pass

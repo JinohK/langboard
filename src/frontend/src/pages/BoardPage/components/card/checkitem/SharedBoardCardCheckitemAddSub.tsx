@@ -2,7 +2,6 @@ import { AssignMemberForm } from "@/components/AssignMemberPopover";
 import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useCreateSubCheckitem from "@/controllers/api/card/checkitem/useCreateSubCheckitem";
-import useCardSubCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardSubCheckitemCreatedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -16,13 +15,12 @@ function SharedBoardCardCheckitemAddSub({
     fromDropdown?: bool;
     setIsMoreMenuOpened?: (value: bool) => void;
 }): JSX.Element {
-    const { projectUID, card, socket, currentUser, sharedClassNames } = useBoardCard();
+    const { projectUID, card, currentUser, sharedClassNames } = useBoardCard();
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
     const { mutateAsync: createSubCheckitemMutateAsync } = useCreateSubCheckitem();
-    const { send: sendCardSubCheckitemCreated } = useCardSubCheckitemCreatedHandlers({ socket });
     const titleInputId = `board-card-new-sub-checkitem-title-input-${checkitem.uid}${fromDropdown ? "-dropdown" : ""}`;
 
     const createSubCheckitem = () => {
@@ -47,16 +45,13 @@ function SharedBoardCardCheckitemAddSub({
             card_uid: card.uid,
             checkitem_uid: checkitem.uid,
             title,
-            assignees: selectedMembers.map((id) => parseInt(id)),
+            assigned_users: selectedMembers.map((id) => parseInt(id)),
         });
 
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
             error: sharedErrorHandler,
-            success: (data) => {
-                sendCardSubCheckitemCreated({
-                    model_id: data.model_id,
-                });
+            success: () => {
                 return t("card.Sub-checkitem created successfully.");
             },
             finally: () => {
@@ -106,7 +101,6 @@ function SharedBoardCardCheckitemAddSub({
                 />
                 <AssignMemberForm
                     multiSelectProps={{
-                        selectedState: [selectedMembers, setSelectedMembers],
                         placeholder: t("card.Select members..."),
                         className: cn(
                             "mt-2 max-w-[calc(100vw_-_theme(spacing.20))]",
@@ -119,6 +113,7 @@ function SharedBoardCardCheckitemAddSub({
                     allUsers={card.project_members}
                     assignedUsers={[]}
                     currentUser={currentUser}
+                    onValueChange={setSelectedMembers}
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

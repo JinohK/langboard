@@ -88,7 +88,7 @@ export const BoardCardCheckitemProvider = ({
 export const useBoardCardCheckitem = () => {
     const context = useContext(BoardCardCheckitemContext);
     if (!context) {
-        throw new Error("useBoardCardCheckitem must be used within an BoardCardCheckitemProvider");
+        throw new Error("useBoardCardCheckitem must be used within a BoardCardCheckitemProvider");
     }
     return context;
 };

@@ -1,5 +1,4 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
@@ -9,10 +8,10 @@ export interface ICreateCheckitemForm {
     project_uid: string;
     card_uid: string;
     title: string;
-    assignees?: number[];
+    assigned_users?: number[];
 }
 
-export interface ICreateCheckitemResponse extends IModelIdBase {
+export interface ICreateCheckitemResponse {
     checkitem: ProjectCheckitem.IBoard;
 }
 
@@ -26,7 +25,7 @@ const useCreateCheckitem = (options?: TMutationOptions<ICreateCheckitemForm, ICr
         });
         const res = await api.post(url, {
             title: params.title,
-            assignees: params.assignees,
+            assigned_users: params.assigned_users,
         });
 
         ProjectCheckitemTimer.transformFromApi(res.data.checkitem.timer);

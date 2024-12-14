@@ -1,21 +1,17 @@
 import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useToggleCheckitemTimer from "@/controllers/api/card/checkitem/useToggleCheckitemTimer";
-import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
-import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler, update } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: toggleCheckitemTimerMutateAsync } = useToggleCheckitemTimer();
-    const { send: sendCheckitemTimerStarted } = useCardCheckitemTimerStartedHandlers({ socket, checkitemUID: checkitem.uid });
-    const { send: sendCheckitemTimerStopped } = useCardCheckitemTimerStoppedHandlers({ socket, checkitemUID: checkitem.uid });
 
     const toggleTimer = () => {
         if (isValidating) {
@@ -42,10 +38,6 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
                 }
                 checkitem.acc_time_seconds = data.acc_time_seconds;
                 update();
-                const sendTimer = isStopped ? sendCheckitemTimerStopped : sendCheckitemTimerStarted;
-                sendTimer({
-                    model_id: data.model_id,
-                });
                 return t(`card.Timer ${isStopped ? "stopped" : "started"} successfully.`);
             },
             finally: () => {

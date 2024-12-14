@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
 from ...core.db import DbSession
-from ..BaseService import BaseService
+from ...core.service import BaseService
 from . import roles as factory
 from .roles.BaseRoleService import BaseRoleService
 
@@ -14,8 +14,8 @@ class RoleService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "role"
 
-    def __init__(self, get_service: Callable, db: DbSession):
-        super().__init__(get_service, db)
+    def __init__(self, get_service: Callable, get_service_by_name: Callable, db: DbSession):
+        super().__init__(get_service, get_service_by_name, db)
         self._services: dict[str, BaseRoleService] = {}
 
     def _create_or_get_service(self, service: type[_TRoleService]) -> _TRoleService:

@@ -5,7 +5,6 @@ import UserAvatar from "@/components/UserAvatar";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import { API_ROUTES } from "@/controllers/constants";
-import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import useCardCommentUpdatedHandlers from "@/controllers/socket/card/comment/useCardCommentUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -35,7 +34,7 @@ export function SkeletonBoardComment(): JSX.Element {
 
 export interface IBoardCommentProps {
     comment: ProjectCardComment.IBoard;
-    deletedComment: (commentUID: string, modelId: string) => void;
+    deletedComment: (commentUID: string) => void;
 }
 
 function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Element {
@@ -51,9 +50,9 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();
-    const { send: sendCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({ socket });
-    const { on: onCardCommentUpdated, send: sendCardCommentUpdated } = useCardCommentUpdatedHandlers({
+    const { on: onCardCommentUpdated } = useCardCommentUpdatedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             if (comment.uid !== data.comment_uid) {
@@ -102,11 +101,8 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                 content: valueRef.current,
             },
             {
-                onSuccess: (data) => {
+                onSuccess: () => {
                     comment.content = { ...valueRef.current };
-                    sendCardCommentUpdated({
-                        model_id: data.model_id,
-                    });
                     Toast.Add.success(t("card.Comment updated successfully."));
                     cancelEditing();
                 },
@@ -165,8 +161,8 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                deletedComment(comment.uid, data.model_id);
+            success: () => {
+                deletedComment(comment.uid);
                 return t("card.Comment deleted successfully.");
             },
             finally: () => {
@@ -214,13 +210,10 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                         className={isEditing ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
                         readOnly={!isEditing}
                         socket={socket}
-                        baseSocketEvent="card"
+                        baseSocketEvent="board:card"
+                        chatEventKey={`card-comment-${card.uid}`}
+                        copilotEventKey={`card-comment-${comment.uid}`}
                         uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
-                        uploadedCallback={(data) => {
-                            sendCardAttachmentUploaded({
-                                model_id: data.model_id,
-                            });
-                        }}
                         setValue={setValue}
                         editorElementRef={editorElementRef}
                     />

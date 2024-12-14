@@ -1,5 +1,4 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { IEditorContent } from "@/core/models/Base";
@@ -11,7 +10,7 @@ export interface IAddCardCommentForm {
     content: IEditorContent;
 }
 
-export interface IAddCardCommentResponse extends IModelIdBase {}
+export interface IAddCardCommentResponse {}
 
 const useAddCardComment = (options?: TMutationOptions<IAddCardCommentForm, IAddCardCommentResponse>) => {
     const { mutate } = useQueryMutation();

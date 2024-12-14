@@ -10,8 +10,10 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 import SubmitButton from "@/components/SubmitButton";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const { t } = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusElementRef } = useForm({
@@ -47,6 +49,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     });
 
     useEffect(() => {
+        setIsLoadingRef.current(false);
         setInitialErrorsWithFocusingElement(["email", "firstname", "lastname", "password"], initialErrorsRef, setErrors, formRef);
     }, []);
 

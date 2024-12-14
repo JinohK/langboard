@@ -8,6 +8,11 @@ class ChatHistoryPagination(Pagination):
 
 
 @form_model
+class ChangeColumnNameForm(BaseFormModel):
+    name: str
+
+
+@form_model
 class ChangeColumnOrderForm(BaseFormModel):
     order: int
 
@@ -38,7 +43,12 @@ class ToggleCardCommentReactionForm(BaseFormModel):
 @form_model
 class CreateCardCheckitemForm(BaseFormModel):
     title: str
-    assignees: list[int] | None = None
+    assigned_users: list[int] | None = None
+
+
+@form_model
+class AssignUsersForm(BaseFormModel):
+    assigned_users: list[int]
 
 
 @form_model

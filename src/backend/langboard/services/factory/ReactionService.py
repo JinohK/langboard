@@ -1,7 +1,7 @@
 from sqlalchemy import func
+from ...core.service import BaseService
 from ...models import User
 from ...models.BaseReactionModel import BaseReactionModel
-from ..BaseService import BaseService
 
 
 class ReactionService(BaseService):

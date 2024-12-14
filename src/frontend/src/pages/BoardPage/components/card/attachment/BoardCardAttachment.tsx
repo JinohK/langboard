@@ -1,4 +1,4 @@
-import { Button, Flex, IconComponent } from "@/components/base";
+import { Button, Flex, IconComponent, Skeleton } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
 import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentNameChangedHandlers";
 import { Project, ProjectCardAttachment } from "@/core/models";
@@ -23,8 +23,26 @@ interface IBoardCardAttachmentDragData {
     data: ProjectCardAttachment.IBoard;
 }
 
+export function SkeletonBoardCardAttachment() {
+    return (
+        <Flex items="center" justify="between">
+            <Flex items="center" gap={{ initial: "1.5", sm: "2.5" }}>
+                <Skeleton className="h-8 w-12 rounded-sm bg-muted sm:h-12 sm:w-16" />
+                <div className="ml-1 sm:ml-0">
+                    <div className="text-sm">
+                        <Skeleton className="h-5 w-28" />
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        <Skeleton className="h-5 w-20" />
+                    </div>
+                </div>
+            </Flex>
+        </Flex>
+    );
+}
+
 function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
-    const { socket, currentUser, hasRoleAction } = useBoardCard();
+    const { projectUID, socket, currentUser, hasRoleAction } = useBoardCard();
     const [t, i18n] = useTranslation();
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const mimeType = mimeTypes.lookup(attachment.url) || "file";
@@ -41,6 +59,7 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
     const [isValidating, setIsValidating] = useState(false);
     const { on: onCardAttachmentNameChanged } = useCardAttachmentNameChangedHandlers({
         socket,
+        projectUID,
         attachmentUID: attachment.uid,
         callback: (data) => {
             attachment.name = data.name;

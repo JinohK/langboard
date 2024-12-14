@@ -4,12 +4,12 @@ import { useTranslation } from "react-i18next";
 import VirtualInfiniteList from "@/components/VirtualInfiniteList";
 import useGetProjectChatMessages from "@/controllers/api/board/useGetProjectChatMessages";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import ChatMessage, { IChatMessageProps } from "@/pages/BoardPage/components/chat/ChatMessage";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { useSocket } from "@/core/providers/SocketProvider";
 
 export interface IConversationProps {
     uid: string;
-    socket: IConnectedSocket;
     inputRef: React.RefObject<HTMLInputElement>;
     buttonRef: React.RefObject<HTMLButtonElement>;
     sendChatCallbackRef: React.MutableRefObject<(message: string) => void>;
@@ -17,8 +17,9 @@ export interface IConversationProps {
 
 const params = { project_uid: "", page: 1, limit: 20, current_date: new Date() };
 
-function Conversation({ uid, socket, inputRef, buttonRef, sendChatCallbackRef }: IConversationProps) {
+function Conversation({ uid, inputRef, buttonRef, sendChatCallbackRef }: IConversationProps) {
     const [t] = useTranslation();
+    const socket = useSocket();
     const conversationRef = useRef<HTMLDivElement>(null);
     const virtualizerRef = useRef<Virtualizer<HTMLElement, Element> | null>(null);
     params.project_uid = uid;
@@ -122,12 +123,36 @@ function Conversation({ uid, socket, inputRef, buttonRef, sendChatCallbackRef }:
             end: endCallback,
         };
 
-        socket.on(SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT, sentCallback);
-        socket.stream(SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM, streamCallbacks);
+        socket.on({
+            topic: ESocketTopic.Board,
+            id: uid,
+            event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
+            eventKey: `board-chat-${uid}`,
+            callback: sentCallback,
+        });
+        socket.stream({
+            topic: ESocketTopic.Board,
+            id: uid,
+            event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
+            eventKey: `board-chat-stream-${uid}`,
+            callbacks: streamCallbacks,
+        });
 
         return () => {
-            socket.off(SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT, sentCallback);
-            socket.streamOff(SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM, streamCallbacks);
+            socket.off({
+                topic: ESocketTopic.Board,
+                id: uid,
+                event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
+                eventKey: `board-chat-${uid}`,
+                callback: sentCallback,
+            });
+            socket.streamOff({
+                topic: ESocketTopic.Board,
+                id: uid,
+                event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
+                eventKey: `board-chat-stream-${uid}`,
+                callbacks: streamCallbacks,
+            });
         };
     }, []);
 

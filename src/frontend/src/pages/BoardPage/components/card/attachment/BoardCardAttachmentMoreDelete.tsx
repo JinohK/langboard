@@ -1,7 +1,6 @@
 import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useDeleteCardAttachment from "@/controllers/api/card/attachment/useDeleteCardAttachment";
-import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentDeletedHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
 import { useState } from "react";
@@ -20,11 +19,10 @@ function BoardCardAttachmentMoreDelete({
     deletedAttachment,
     sharedErrorHandler,
 }: IBoardCardAttachmentMoreDeleteProps): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: deleteCardAttachmentMutateAsync } = useDeleteCardAttachment();
-    const { send: sendCardAttachmentDeleted } = useCardAttachmentDeletedHandlers({ socket });
 
     const deleteAttachment = () => {
         if (isValidating) {
@@ -42,11 +40,8 @@ function BoardCardAttachmentMoreDelete({
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
-            success: (data) => {
+            success: () => {
                 deletedAttachment(attachment.uid);
-                sendCardAttachmentDeleted({
-                    model_id: data.model_id,
-                });
                 return t("card.File deleted successfully.");
             },
             finally: () => {

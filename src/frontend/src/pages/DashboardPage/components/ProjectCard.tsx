@@ -1,6 +1,5 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
 import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
@@ -9,6 +8,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IProjectCardListProps {
     project: IDashboardProject;
@@ -52,7 +52,7 @@ export const SkeletonProjectCard = memo(() => {
 
 const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProjectCardListProps): JSX.Element => {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const { mutate } = useToggleStarProject();
     const [isUpdating, setIsUpdating] = useState(false);
 

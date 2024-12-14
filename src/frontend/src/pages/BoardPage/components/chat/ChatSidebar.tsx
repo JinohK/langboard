@@ -1,24 +1,25 @@
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import Conversation from "@/pages/BoardPage/components/chat/Conversation";
+import { useSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IChatSidebarProps {
     uid: string;
-    socket: IConnectedSocket;
 }
 
-function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
+const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = useRef(usePageNavigate());
+    const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
     const { queryClient } = useQueryMutation();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +40,12 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
 
         chatInput.value = "";
 
-        const isSent = socket.send(SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND, { message: chat }).isConnected;
+        const isSent = socket.send({
+            topic: ESocketTopic.Board,
+            id: uid,
+            eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND,
+            data: { message: chat },
+        }).isConnected;
         if (!isSent) {
             socket.reconnect();
             Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
@@ -62,7 +68,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     });
 
@@ -96,7 +102,7 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </div>
-            <Conversation uid={uid} socket={socket} inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
+            <Conversation uid={uid} inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
             <Form.Root className="flex h-12 w-full items-center" onSubmit={sendChat}>
                 <Form.Field name="chat-message" className="mx-1 w-[calc(100%_-_theme(spacing.10))]">
                     <Form.Control asChild>
@@ -117,6 +123,6 @@ function ChatSidebar({ uid, socket }: IChatSidebarProps): JSX.Element {
             </Form.Root>
         </Flex>
     );
-}
+});
 
 export default ChatSidebar;

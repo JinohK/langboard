@@ -66,7 +66,12 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
     };
 
     const sensors = useSensors(
-        useSensor(MouseSensor),
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                delay: 100,
+                distance: 0.001,
+            },
+        }),
         useSensor(TouchSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: createCoordinateGetter(columnDragDataType),

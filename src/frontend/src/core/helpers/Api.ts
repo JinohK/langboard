@@ -48,6 +48,9 @@ export const refresh = async (): Promise<string | never> => {
         cookieStore.set(APP_ACCESS_TOKEN, response.data.access_token);
         return response.data.access_token;
     } catch (e) {
+        const cookieStore = getCookieStore();
+        cookieStore.remove(APP_ACCESS_TOKEN);
+        cookieStore.remove(APP_REFRESH_TOKEN);
         redirectToSignIn();
         return Promise.reject();
     }
@@ -83,6 +86,9 @@ api.interceptors.response.use(
                 throw e;
             },
             [EHttpStatus.HTTP_401_UNAUTHORIZED]: (e) => {
+                const cookieStore = getCookieStore();
+                cookieStore.remove(APP_ACCESS_TOKEN);
+                cookieStore.remove(APP_REFRESH_TOKEN);
                 redirectToSignIn();
                 throw e;
             },

@@ -1,24 +1,28 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
 
-export interface ICardSubCheckitemCreatedRequest extends IModelIdBase {}
+export interface ICardSubCheckitemCreatedRequest {}
 
 export interface ICardSubCheckitemCreatedResponse {
     checkitem: ProjectCheckitem.IBoardSub;
 }
 
 export interface IUseCardSubCheckitemCreatedHandlersProps extends IBaseUseSocketHandlersProps<ICardSubCheckitemCreatedResponse> {
-    checkitemUID?: string;
+    projectUID: string;
+    checkitemUID: string;
 }
 
-const useCardSubCheckitemCreatedHandlers = ({ socket, callback, checkitemUID }: IUseCardSubCheckitemCreatedHandlersProps) => {
+const useCardSubCheckitemCreatedHandlers = ({ socket, callback, projectUID, checkitemUID }: IUseCardSubCheckitemCreatedHandlersProps) => {
     return useSocketHandler<ICardSubCheckitemCreatedRequest, ICardSubCheckitemCreatedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-checkitem-sub-checkitem-created-${checkitemUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.SUB_CHECKITEM.CREATED,
-            params: checkitemUID ? { uid: checkitemUID } : undefined,
+            params: { uid: checkitemUID },
             callback,
             responseConverter: (response) => ({
                 checkitem: {
@@ -27,9 +31,6 @@ const useCardSubCheckitemCreatedHandlers = ({ socket, callback, checkitemUID }: 
                     timer: ProjectCheckitemTimer.transformFromApi(response.checkitem.timer),
                 },
             }),
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.SUB_CHECKITEM.CREATED,
         },
     });
 };

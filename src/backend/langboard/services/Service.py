@@ -1,7 +1,7 @@
 from fastapi import Depends
 from ..core.db import DbSession
+from ..core.service import ServiceFactory
 from . import factory
-from .ServiceFactory import ServiceFactory
 
 
 class Service(ServiceFactory):
@@ -18,10 +18,6 @@ class Service(ServiceFactory):
 
     def close(self):
         self._serivces.clear()
-
-    @property
-    def activity(self):
-        return self._create_or_get_service(factory.ActivityService)
 
     @property
     def user(self):
@@ -74,7 +70,3 @@ class Service(ServiceFactory):
     @property
     def card_attachment(self):
         return self._create_or_get_service(factory.CardAttachmentService)
-
-    @property
-    def socket(self):
-        return self._create_or_get_service(factory.SocketService)

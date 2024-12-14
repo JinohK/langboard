@@ -16,8 +16,9 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
     const [reactions, setReactions] = useState(comment.reactions);
     const { mutate: reactCardCommentMutate } = useReactCardComment();
     const [isValidating, setIsValidating] = useState(false);
-    const { on: onCardCommentReacted, send: sendCardCommentReacted } = useCardCommentReactedHandlers({
+    const { on: onCardCommentReacted } = useCardCommentReactedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             if (comment.uid !== data.comment_uid) {
@@ -53,10 +54,6 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
             {
                 onSuccess: (data) => {
                     toggleReaction(currentUser.id, reaction, data.is_reacted);
-
-                    sendCardCommentReacted({
-                        model_id: comment.uid,
-                    });
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});

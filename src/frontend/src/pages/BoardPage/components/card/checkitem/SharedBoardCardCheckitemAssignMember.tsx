@@ -17,7 +17,6 @@ const SharedBoardCardCheckitemAssignMember = memo(
         const { projectUID, card, socket, currentUser, sharedClassNames } = useBoardCard();
         const [members, setMembers] = useState(flatMembers);
         const [t] = useTranslation();
-        const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
         const onSave = (users: User.Interface[], endCallback: () => void) => {
             if (isValidating) {
@@ -50,7 +49,6 @@ const SharedBoardCardCheckitemAssignMember = memo(
                     spacing: "4",
                 }}
                 multiSelectProps={{
-                    selectedState: [selectedMembers, setSelectedMembers],
                     placeholder: t("card.Select members..."),
                     className: cn(
                         "max-w-[calc(100vw_-_theme(spacing.20))]",
@@ -65,7 +63,7 @@ const SharedBoardCardCheckitemAssignMember = memo(
                 assignedUsers={members}
                 currentUser={currentUser}
                 iconSize={{ initial: "4", lg: "6" }}
-                canRemoveAlreadyAssigned
+                canControlAssignedUsers
             />
         );
     }

@@ -19,13 +19,14 @@ export interface ISkeletonUserAvatarListProps {
     count: number;
     size?: TUserAvatarProps["avatarSize"];
     spacing?: "1" | "2" | "3" | "4" | "5" | "none";
+    className?: string;
 }
 
-export const SkeletonUserAvatarList = ({ count, size, spacing = "none" }: ISkeletonUserAvatarListProps) => {
+export const SkeletonUserAvatarList = ({ count, size, spacing = "none", className = "" }: ISkeletonUserAvatarListProps) => {
     return (
         <Flex className={cn("rtl:space-x-reverse", SPACING_MAP[spacing])}>
             {Array.from({ length: count }).map(() => (
-                <Skeleton key={createShortUUID()} className={cn("inline-block", AvatarVariants({ size }))} />
+                <Skeleton key={createShortUUID()} className={cn("inline-block", AvatarVariants({ size }), className)} />
             ))}
         </Flex>
     );

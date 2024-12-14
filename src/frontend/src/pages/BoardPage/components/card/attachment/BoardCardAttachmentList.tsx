@@ -8,12 +8,22 @@ import useReorderColumn from "@/core/hooks/useReorderColumn";
 import { ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
-import BoardCardAttachment from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
+import BoardCardAttachment, { SkeletonBoardCardAttachment } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+
+export function SkeletonBoardCardAttachmentList() {
+    return (
+        <Flex direction="col" gap="2">
+            <SkeletonBoardCardAttachment />
+            <SkeletonBoardCardAttachment />
+            <SkeletonBoardCardAttachment />
+        </Flex>
+    );
+}
 
 function BoardCardAttachmentList(): JSX.Element {
     const [t] = useTranslation();
@@ -23,10 +33,10 @@ function BoardCardAttachmentList(): JSX.Element {
         columns: attachments,
         setColumns: setAttachments,
         reorder: reorderColumns,
-        sendColumnOrderChanged,
     } = useReorderColumn({
         type: "BoardCardAttachment",
         eventNameParams: { uid: card.uid },
+        topicId: projectUID,
         columns: card.attachments,
         socket,
     });
@@ -37,6 +47,7 @@ function BoardCardAttachmentList(): JSX.Element {
     };
     const { on: onCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             setAttachments((prev) => {
@@ -51,6 +62,7 @@ function BoardCardAttachmentList(): JSX.Element {
     });
     const { on: onCardAttachmentDeleted } = useCardAttachmentDeletedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             deletedAttachment(data.uid);
@@ -74,11 +86,6 @@ function BoardCardAttachmentList(): JSX.Element {
                 changeCardAttachmentOrderMutate(
                     { project_uid: projectUID, card_uid: card.uid, attachment_uid: originalAttachment.uid, order: index },
                     {
-                        onSuccess: (data) => {
-                            sendColumnOrderChanged({
-                                model_id: data.model_id,
-                            });
-                        },
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {

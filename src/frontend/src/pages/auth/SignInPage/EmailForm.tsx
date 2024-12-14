@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Button, Flex, Floating, Form } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
@@ -9,6 +8,9 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import SubmitButton from "@/components/SubmitButton";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { useEffect } from "react";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -17,8 +19,9 @@ export interface IEmailFormProps {
 }
 
 function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const { mutate } = useAuthEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "signIn.errors",
@@ -54,6 +57,10 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
         },
         useDefaultBadRequestHandler: true,
     });
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     return (
         <>

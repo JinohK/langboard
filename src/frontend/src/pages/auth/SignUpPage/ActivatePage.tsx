@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex, Toast } from "@/components/base";
 import useActivateUser from "@/controllers/api/auth/useActivateUser";
@@ -8,10 +8,13 @@ import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSig
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function ActivatePage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const location = useLocation();
     const { mutate } = useActivateUser();
     const [description, setDescription] = useState<JSX.Element | null>(null);
@@ -57,6 +60,9 @@ function ActivatePage(): JSX.Element {
                     });
 
                     handle(error);
+                },
+                onSettled: () => {
+                    setIsLoadingRef.current(false);
                 },
             }
         );

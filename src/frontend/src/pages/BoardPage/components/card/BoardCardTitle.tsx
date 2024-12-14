@@ -1,4 +1,4 @@
-import { Dialog, Textarea, Toast } from "@/components/base";
+import { Dialog, Skeleton, Textarea, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -7,6 +7,14 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+export function SkeletonBoardCardTitle() {
+    return (
+        <Dialog.Title>
+            <Skeleton className="h-8 w-1/3" />
+        </Dialog.Title>
+    );
+}
 
 function BoardCardTitle(): JSX.Element {
     const { projectUID, card, socket, hasRoleAction } = useBoardCard();
@@ -17,8 +25,9 @@ function BoardCardTitle(): JSX.Element {
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const [height, setHeight] = useState(0);
-    const { on: onCardTitleChanged, send: sendCardTitleChanged } = useCardTitleChangedHandlers({
+    const { on: onCardTitleChanged } = useCardTitleChangedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             card.title = data.title;
@@ -74,8 +83,7 @@ function BoardCardTitle(): JSX.Element {
                 return message;
             },
             success: (data) => {
-                card.title = data.model_id;
-                sendCardTitleChanged({ model_id: data.model_id });
+                card.title = data.title;
                 return t("card.Description changed successfully.");
             },
             finally: () => {

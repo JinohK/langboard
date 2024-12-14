@@ -5,11 +5,11 @@ from typing import Any, Literal, TypeVar, cast, overload
 from pydantic import BaseModel
 from sqlalchemy import Row, column, delete, insert, table, text, update
 from ...core.db import BaseSqlModel, SoftDeleteModel
+from ...core.service import BaseService
 from ...core.storage import FileModel, Storage
 from ...core.utils.DateTime import now
 from ...models import RevertableRecord
 from ...models.RevertableRecord import RevertType
-from ..BaseService import BaseService
 
 
 _TSoftDeleteModel = TypeVar("_TSoftDeleteModel", bound=SoftDeleteModel)

@@ -15,7 +15,8 @@ export interface IMultiSelectItem {
 export interface IMultiSelectProps {
     selections: IMultiSelectItem[];
     placeholder?: string;
-    selectedState: [string[], React.Dispatch<React.SetStateAction<string[]>>];
+    selectedValue?: string[];
+    onValueChange?: (value: string[]) => void;
     className?: string;
     badgeClassName?: string;
     inputClassName?: string;
@@ -24,12 +25,25 @@ export interface IMultiSelectProps {
 }
 
 const MultiSelect = React.memo(
-    ({ selections, placeholder, selectedState, className, badgeClassName, inputClassName, createBadgeWrapper, disabled }: IMultiSelectProps) => {
+    ({
+        selections,
+        placeholder,
+        selectedValue,
+        onValueChange,
+        className,
+        badgeClassName,
+        inputClassName,
+        createBadgeWrapper,
+        disabled,
+    }: IMultiSelectProps) => {
         const [wrapper, setWrapper] = React.useState<HTMLDivElement | null>(null);
         const inputRef = React.useRef<HTMLInputElement>(null);
         const [open, setOpen] = React.useState(false);
-        const [selected, setSelected] = selectedState;
-        const selectables = React.useMemo(() => selections.filter((selection) => !selected.includes(selection.value)), [selections, selected]);
+        const [selected, setSelected] = React.useState(selectedValue ?? []);
+        const selectables = React.useMemo(
+            () => selections.filter((selection) => !selected.includes(selection.value)),
+            [selections, selectedValue, selected]
+        );
         const [inputValue, setInputValue] = React.useState("");
         const handleUnselect = React.useCallback((item: string) => {
             setSelected((prev) => prev.filter((selected) => selected !== item));
@@ -57,6 +71,18 @@ const MultiSelect = React.memo(
                 input.blur();
             }
         }, []);
+
+        React.useEffect(() => {
+            if (onValueChange) {
+                onValueChange(selected);
+            }
+        }, [selected]);
+
+        React.useEffect(() => {
+            if (selectedValue) {
+                setSelected(selectedValue);
+            }
+        }, [selectedValue]);
 
         const boundary: (Element | null)[] = [];
         const hasExplicitBoundaries = boundary.length > 0;

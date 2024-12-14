@@ -1,5 +1,4 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCheckitemTimer } from "@/core/models";
@@ -11,7 +10,7 @@ export interface IToggleCheckitemTimerForm {
     checkitem_uid: string;
 }
 
-export interface IToggleCheckitemTimerResponse extends IModelIdBase {
+export interface IToggleCheckitemTimerResponse {
     timer: ProjectCheckitemTimer.Interface;
     acc_time_seconds: number;
 }

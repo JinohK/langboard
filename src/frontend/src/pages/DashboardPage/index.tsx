@@ -1,5 +1,5 @@
 import { useReducer, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -10,9 +10,10 @@ import CardsPage from "@/pages/DashboardPage/CardsPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
 import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
 import MyActivityDialog from "@/pages/DashboardPage/components/MyActivityDialog";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function DashboardPage(): JSX.Element {
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const location = useLocation();
     const [projectFormOpened, setProjectFormOpened] = useState(location.pathname.endsWith("/newproject"));
     const [activityOpened, setActivityOpened] = useState(location.pathname.endsWith("/myactivity"));

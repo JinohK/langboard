@@ -1,5 +1,4 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCardAttachment } from "@/core/models";
@@ -13,7 +12,7 @@ export interface IUploadCardAttachmentForm {
     onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
-export interface IUploadCardAttachmentResponse extends ProjectCardAttachment.IBoard, IModelIdBase {}
+export interface IUploadCardAttachmentResponse extends ProjectCardAttachment.IBoard {}
 
 const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmentForm, IUploadCardAttachmentResponse>) => {
     const { mutate } = useQueryMutation();

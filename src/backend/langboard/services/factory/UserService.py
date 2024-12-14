@@ -5,13 +5,13 @@ from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.security import Auth
+from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, User, UserEmail, UserGroup, UserGroupAssignedUser
 from ...models.RevertableRecord import RevertType
-from ..BaseService import BaseService
 from .RevertService import RevertService
 
 

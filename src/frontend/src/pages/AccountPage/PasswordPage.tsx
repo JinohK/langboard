@@ -5,8 +5,11 @@ import { Flex, Form, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/api/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { useEffect } from "react";
 
 function PasswordPage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const { updatedUser } = useAuth();
     const [t] = useTranslation();
     const { mutate } = useChangePassword();
@@ -25,6 +28,10 @@ function PasswordPage(): JSX.Element {
         },
         useDefaultBadRequestHandler: true,
     });
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     return (
         <>

@@ -1,9 +1,12 @@
 import { Flex, Separator } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
+import { useEffect } from "react";
 
 function ErrorPage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const code = window.location.pathname.split("/").pop();
     let errorCode = EHttpStatus[code as keyof typeof EHttpStatus];
     if (!errorCode) {
@@ -15,6 +18,10 @@ function ErrorPage(): JSX.Element {
     }
 
     const message = getErrorMessage(errorCode);
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     return (
         <Flex direction="col" items="center" justify="center" className="max-h-screen min-h-screen">

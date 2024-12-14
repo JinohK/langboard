@@ -1,7 +1,7 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Button, ButtonProps, DropdownMenu, Flex, IconComponent, Popover } from "@/components/base";
 import UserAvatarList, { IUserAvatarListProps, SkeletonUserAvatarList } from "@/components/UserAvatarList";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IAuthUser, useAuth } from "@/core/providers/AuthProvider";
 import { TIconProps } from "@/components/base/IconComponent";
 import { User } from "@/core/models";
@@ -15,14 +15,14 @@ export interface IAssignMemberPopoverProps {
     popoverButtonProps: ButtonProps;
     popoverContentProps?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
     userAvatarListProps: Omit<IUserAvatarListProps, "users">;
-    multiSelectProps: Pick<IMultiSelectProps, "selectedState" | "placeholder" | "className" | "badgeClassName" | "inputClassName">;
+    multiSelectProps: Pick<IMultiSelectProps, "placeholder" | "className" | "badgeClassName" | "inputClassName">;
     allUsers: User.Interface[];
     assignedUsers: User.Interface[];
     isValidating: bool;
     onSave: (users: User.Interface[], endCallback: () => void) => void;
     iconSize?: React.ComponentPropsWithoutRef<TIconProps>["size"];
     currentUser?: IAuthUser;
-    canRemoveAlreadyAssigned?: bool;
+    canControlAssignedUsers?: bool;
 }
 
 export const AssignMemberPopover = memo(
@@ -37,20 +37,26 @@ export const AssignMemberPopover = memo(
         onSave,
         iconSize = "4",
         currentUser,
-        canRemoveAlreadyAssigned,
+        canControlAssignedUsers,
     }: IAssignMemberPopoverProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
         const [isOpened, setIsOpened] = useState(false);
-        const [selected, setSelected] = multiSelectProps.selectedState;
+        const selectedRef = useRef<string[]>(canControlAssignedUsers ? assignedUsers.map((user) => user.id.toString()) : []);
         const { variant = "outline" } = popoverButtonProps;
         const user = currentUser ?? aboutMe();
+        const setIsOpenedState = (state: bool) => {
+            selectedRef.current = [];
+            setIsOpened(state);
+        };
         const save = () => {
-            const users = allUsers.filter((user) => selected.includes(user.id.toString()));
+            const users = allUsers.filter((user) => selectedRef.current.includes(user.id.toString()));
             onSave(users, () => {
-                setSelected([]);
-                setIsOpened(false);
+                setIsOpenedState(false);
             });
+        };
+        const onValueChange = (value: string[]) => {
+            selectedRef.current = value;
         };
 
         if (!user) {
@@ -66,7 +72,7 @@ export const AssignMemberPopover = memo(
         return (
             <Flex items="center" gap="1">
                 {assignedUsers.length > 0 && <UserAvatarList users={assignedUsers} {...userAvatarListProps} />}
-                <Popover.Root modal={true} open={isOpened} onOpenChange={setIsOpened}>
+                <Popover.Root modal={true} open={isOpened} onOpenChange={setIsOpenedState}>
                     <Popover.Trigger asChild>
                         <Button variant={variant} {...popoverButtonProps}>
                             <IconComponent icon="plus" size={iconSize} />
@@ -79,13 +85,14 @@ export const AssignMemberPopover = memo(
                             assignedUsers={assignedUsers}
                             isValidating={isValidating}
                             currentUser={user}
-                            canRemoveAlreadyAssigned={canRemoveAlreadyAssigned}
+                            canControlAssignedUsers={canControlAssignedUsers}
+                            onValueChange={onValueChange}
                         />
                         <Flex items="center" justify="end" gap="1" mt="2">
-                            <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
+                            <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpenedState(false)}>
                                 {t("common.Cancel")}
                             </Button>
-                            <SubmitButton type="button" size="sm" onClick={() => save()} isValidating={isValidating}>
+                            <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating}>
                                 {t("common.Save")}
                             </SubmitButton>
                         </Flex>
@@ -97,13 +104,17 @@ export const AssignMemberPopover = memo(
 );
 
 export interface IAssignMemberFormProps
-    extends Omit<IAssignMemberPopoverProps, "popoverButtonProps" | "popoverContentProps" | "userAvatarListProps" | "onSave" | "iconSize"> {}
+    extends Omit<IAssignMemberPopoverProps, "popoverButtonProps" | "popoverContentProps" | "userAvatarListProps" | "onSave" | "iconSize"> {
+    onValueChange: IMultiSelectProps["onValueChange"];
+}
 
 export const AssignMemberForm = memo(
-    ({ multiSelectProps, allUsers, assignedUsers, isValidating, currentUser, canRemoveAlreadyAssigned }: IAssignMemberFormProps) => {
+    ({ multiSelectProps, allUsers, assignedUsers, isValidating, currentUser, canControlAssignedUsers, onValueChange }: IAssignMemberFormProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
-        const [selected, setSelected] = multiSelectProps.selectedState;
+        const [selected, setSelected] = useState<string[]>(
+            canControlAssignedUsers && assignedUsers.length ? assignedUsers.map((user) => user.id.toString()) : []
+        );
         const user = currentUser ?? aboutMe();
         const [isDropdownOpened, setIsDropdownOpened] = useState(false);
         const assignableGroups = useMemo(() => {
@@ -115,7 +126,7 @@ export const AssignMemberForm = memo(
                 .map((group) => {
                     const groupMembers = group.users.filter(
                         (member) =>
-                            (canRemoveAlreadyAssigned || !assignedUsers.some((assigned) => assigned.id === member.id)) &&
+                            (canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.id === member.id)) &&
                             selected.indexOf(member.id.toString()) === -1 &&
                             allUsers.some((user) => user.id === member.id)
                     );
@@ -141,26 +152,33 @@ export const AssignMemberForm = memo(
         );
 
         useEffect(() => {
-            if (canRemoveAlreadyAssigned && !selected.length) {
+            if (canControlAssignedUsers && !selected.length) {
                 setSelected(assignedUsers.map((member) => member.id.toString()));
             }
         }, []);
+
+        const onSelected = (value: string[]) => {
+            setSelected(value);
+            onValueChange?.(value);
+        };
 
         return (
             <>
                 <MultiSelect
                     selections={allUsers
-                        .filter((member) => canRemoveAlreadyAssigned || !assignedUsers.some((assigned) => assigned.id === member.id))
+                        .filter((member) => canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.id === member.id))
                         .map((member) => ({
                             value: member.id.toString(),
                             label: `${member.firstname} ${member.lastname}`,
                         }))}
+                    selectedValue={selected}
                     createBadgeWrapper={(badge, value) => (
                         <UserAvatar.Root user={allUsers.find((member) => member.id.toString() === value)!} customTrigger={badge}>
                             test
                         </UserAvatar.Root>
                     )}
                     disabled={isValidating}
+                    onValueChange={onSelected}
                     {...multiSelectProps}
                 />
                 <DropdownMenu.Root open={isDropdownOpened} onOpenChange={setIsDropdownOpened}>

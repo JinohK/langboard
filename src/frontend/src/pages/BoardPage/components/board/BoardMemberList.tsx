@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 
 const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
     const [t] = useTranslation();
-    const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
     const [isValidating, setIsValidating] = useState(false);
 
     return (
@@ -23,7 +22,6 @@ const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
                 listAlign: "start",
             }}
             multiSelectProps={{
-                selectedState: [selectedMembers, setSelectedMembers],
                 placeholder: t("card.Select members..."),
                 className: cn(
                     "max-w-[calc(100vw_-_theme(spacing.20))]",
@@ -37,7 +35,7 @@ const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
             allUsers={members}
             assignedUsers={members}
             iconSize="6"
-            canRemoveAlreadyAssigned
+            canControlAssignedUsers
         />
     );
 });

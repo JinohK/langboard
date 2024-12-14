@@ -1,7 +1,6 @@
 import { Button, Checkbox, DropdownMenu, Flex, Label, Popover, Select, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useCardifyCheckitem from "@/controllers/api/card/checkitem/useCardifyCheckitem";
-import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { CheckedState } from "@radix-ui/react-checkbox";
@@ -9,18 +8,17 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler, update } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCheckitem();
-    const { send: sendCardCheckitemCardified } = useCardCheckitemCardifiedHandlers({ socket });
+    const [allColumns] = useState(card.project_all_columns.filter((column) => column.uid !== card.project_archive_column_uid));
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
-        card.column_uid !== card.archive_column_uid ? card.column_uid : card.all_columns[0]?.uid
+        allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
     const [withSubCheckitems, setWithSubCheckitems] = useState<CheckedState>(true);
     const [withAssignMembers, setWithAssignMembers] = useState<CheckedState>(true);
-    const allColumns = card.all_columns.filter((column) => column.uid !== card.archive_column_uid);
 
     const cardify = () => {
         if (isValidating) {
@@ -44,9 +42,6 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
             success: (data) => {
                 checkitem.cardified_uid = data.new_card.uid;
                 update();
-                sendCardCheckitemCardified({
-                    model_id: data.model_id,
-                });
                 return t("card.Cardified the checkitem successfully.");
             },
             finally: () => {
@@ -64,7 +59,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
         }
 
         if (!opened) {
-            setSelectedColumnUID(card.column_uid !== card.archive_column_uid ? card.column_uid : card.all_columns[0]?.uid);
+            setSelectedColumnUID(card.column_uid !== card.project_archive_column_uid ? card.column_uid : card.project_all_columns[0]?.uid);
             setWithSubCheckitems(true);
             setWithAssignMembers(true);
         }

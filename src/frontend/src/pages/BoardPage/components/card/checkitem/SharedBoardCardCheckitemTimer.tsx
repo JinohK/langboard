@@ -6,7 +6,7 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 
 const SharedBoardCardCheckitemTimer = memo(() => {
-    const { socket } = useBoardCard();
+    const { projectUID, socket } = useBoardCard();
     const { checkitem } = useBoardCardCheckitem();
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
     const duration = useMemo(() => {
@@ -23,6 +23,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
     }, [updated]);
     const { on: onCardCheckitemTimerStarted } = useCardCheckitemTimerStartedHandlers({
         socket,
+        projectUID,
         checkitemUID: checkitem.uid,
         callback: (data) => {
             checkitem.timer = data.timer;
@@ -32,6 +33,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
     });
     const { on: onCardCheckitemTimerStopped } = useCardCheckitemTimerStoppedHandlers({
         socket,
+        projectUID,
         checkitemUID: checkitem.uid,
         callback: (data) => {
             checkitem.timer = undefined;

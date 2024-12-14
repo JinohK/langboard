@@ -1,7 +1,7 @@
 from json import loads as json_loads
 from typing import Literal
 from ...Constants import BASE_DIR, PROJECT_NAME
-from ..BaseService import BaseService
+from ...core.service import BaseService
 
 
 _TTemplateNames = Literal["recovery", "signup", "subemail"]

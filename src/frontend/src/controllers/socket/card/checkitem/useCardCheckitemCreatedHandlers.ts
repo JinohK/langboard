@@ -1,24 +1,28 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
 
-export interface ICardCheckitemCreatedRequest extends IModelIdBase {}
+export interface ICardCheckitemCreatedRequest {}
 
 export interface ICardCheckitemCreatedResponse {
     checkitem: ProjectCheckitem.IBoard;
 }
 
 export interface IUseCardCheckitemCreatedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemCreatedResponse> {
-    cardUID?: string;
+    projectUID: string;
+    cardUID: string;
 }
 
-const useCardCheckitemCreatedHandlers = ({ socket, callback, cardUID }: IUseCardCheckitemCreatedHandlersProps) => {
+const useCardCheckitemCreatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCheckitemCreatedHandlersProps) => {
     return useSocketHandler<ICardCheckitemCreatedRequest, ICardCheckitemCreatedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-checkitem-created-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CREATED,
-            params: cardUID ? { uid: cardUID } : undefined,
+            params: { uid: cardUID },
             callback,
             responseConverter: (response) => {
                 response.checkitem.timer = ProjectCheckitemTimer.transformFromApi(response.checkitem.timer);
@@ -31,9 +35,6 @@ const useCardCheckitemCreatedHandlers = ({ socket, callback, cardUID }: IUseCard
 
                 return response;
             },
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.CHECKITEM.CREATED,
         },
     });
 };

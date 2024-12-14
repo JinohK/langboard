@@ -24,9 +24,10 @@ export interface IBoard extends Interface {
 export interface IBoardWithDetails extends Interface {
     deadline_at?: Date;
     column_name: string;
-    all_columns: ProjectColumn.Interface[];
-    archive_column_uid: string;
+    project_all_columns: ProjectColumn.Interface[];
+    project_archive_column_uid: string;
     members: User.Interface[];
+    project_members: User.Interface[];
     relationships: {
         parent_icon?: string;
         parent_name: string;
@@ -38,5 +39,5 @@ export interface IBoardWithDetails extends Interface {
     }[];
     attachments: ProjectCardAttachment.IBoard[];
     checkitems: ProjectCheckitem.IBoard[];
-    project_members: User.Interface[];
+    is_archived: bool;
 }

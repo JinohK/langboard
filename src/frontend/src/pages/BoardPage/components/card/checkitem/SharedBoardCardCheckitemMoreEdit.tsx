@@ -1,19 +1,17 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useChangeCheckitemTitle from "@/controllers/api/card/checkitem/useChangeCheckitemTitle";
-import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeCheckitemTitleMutateAsync } = useChangeCheckitemTitle();
-    const { send: sendCardCheckitemTitleChanged } = useCardCheckitemTitleChangedHandlers({ socket });
     const titleInputId = `board-card-checkitem-title-input-${checkitem.uid}`;
 
     const changeCheckitemTitle = () => {
@@ -43,11 +41,8 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
-            success: (data) => {
+            success: () => {
                 checkitem.title = title;
-                sendCardCheckitemTitleChanged({
-                    model_id: data.model_id,
-                });
                 return t("card.File name changed successfully.");
             },
             finally: () => {

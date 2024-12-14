@@ -48,14 +48,10 @@ const BoardCardCheckitem = memo(
             return subCheckitemsUIDs.map((subCheckitemUID) => subCheckitemsMap[subCheckitemUID]);
         }, [subCheckitemsUIDs, updated]);
         const { mutate: changeSubCheckitemOrderMutate } = useChangeSubCheckitemOrder();
-        const {
-            moveToColumn,
-            removeFromColumn,
-            reorderInColumn,
-            sendRowOrderChanged: sendSubCheckitemOrderChanged,
-        } = useReorderRow({
+        const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
             type: "BoardCardSubCheckitem",
             eventNameParams: { uid: checkitem.uid },
+            topicId: projectUID,
             allRowsMap: subCheckitemsMap,
             rows: subCheckitems,
             columnKey: "checkitem_uid",
@@ -80,6 +76,7 @@ const BoardCardCheckitem = memo(
         };
         const { on: onCardSubCheckitemCreated } = useCardSubCheckitemCreatedHandlers({
             socket,
+            projectUID,
             checkitemUID: checkitem.uid,
             callback: (data) => {
                 subCheckitemsMap[data.checkitem.uid] = data.checkitem;
@@ -88,6 +85,7 @@ const BoardCardCheckitem = memo(
         });
         const { on: onCardCheckitemDeleted } = useCardCheckitemDeletedHandlers({
             socket,
+            projectUID,
             uid: checkitem.uid,
             callback: (data) => {
                 deletedSubCheckitem(data.uid);
@@ -128,13 +126,7 @@ const BoardCardCheckitem = memo(
                 forceUpdate();
 
                 setTimeout(() => {
-                    changeSubCheckitemOrderMutate(form, {
-                        onSuccess: (data) => {
-                            sendSubCheckitemOrderChanged({
-                                model_id: data.model_id,
-                            });
-                        },
-                    });
+                    changeSubCheckitemOrderMutate(form);
                 }, 300);
             },
             onDragOverOrMove: (activeSubCheckitem, index, isForeign) => {

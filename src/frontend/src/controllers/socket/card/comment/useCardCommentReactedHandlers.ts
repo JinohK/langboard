@@ -1,9 +1,9 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCommentReactedRequest extends IModelIdBase {}
+export interface ICardCommentReactedRequest {}
 
 export interface ICardCommentReactedResponse {
     user_id: number;
@@ -13,19 +13,20 @@ export interface ICardCommentReactedResponse {
 }
 
 export interface IUseCardCommentReactedHandlersProps extends IBaseUseSocketHandlersProps<ICardCommentReactedResponse> {
+    projectUID: string;
     cardUID: string;
 }
 
-const useCardCommentReactedHandlers = ({ socket, callback, cardUID }: IUseCardCommentReactedHandlersProps) => {
+const useCardCommentReactedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCommentReactedHandlersProps) => {
     return useSocketHandler<ICardCommentReactedRequest, ICardCommentReactedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-comment-reacted-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.REACTED,
             params: { uid: cardUID },
             callback,
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.COMMENT.REACTED,
         },
     });
 };

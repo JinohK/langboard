@@ -1,7 +1,6 @@
 from typing import cast
-from ...models import User, UserActivity, UserGroup, UserGroupAssignedUser
-from ..BaseService import BaseService
-from .ActivityService import ActivityResult, ActivityService
+from ...core.service import BaseService
+from ...models import User, UserGroup, UserGroupAssignedUser
 from .RevertService import RevertService, RevertType
 
 
@@ -14,10 +13,7 @@ class UserGroupService(BaseService):
     async def get_by_id(self, group_id: int) -> UserGroup | None:
         return await self._get_by(UserGroup, "id", group_id)
 
-    @ActivityService.activity_method(UserActivity, ActivityService.ACTIVITY_TYPES.UserGroupAssignedUser)
-    async def create(
-        self, user: User, name: str, user_ids: list[int] | None = None
-    ) -> tuple[ActivityResult, tuple[UserGroup, str]]:
+    async def create(self, user: User, name: str, user_ids: list[int] | None = None) -> tuple[UserGroup, str]:
         max_order = await self._get_max_order(UserGroup, "user_id", user.id)
         user_ids = user_ids or []
         user_group = UserGroup(user_id=cast(int, user.id), name=name, order=max_order + 1)
@@ -45,20 +41,9 @@ class UserGroupService(BaseService):
                 revert_key=revert_key,
             )
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=user,
-            shared={"user_ids": user_ids},
-            new={"group_name": name},
-            revert_key=revert_key,
-        )
+        return user_group, revert_key
 
-        return activity_result, (user_group, revert_key)
-
-    @ActivityService.activity_method(UserActivity, ActivityService.ACTIVITY_TYPES.UserGroupAssignedUser)
-    async def assign_users(
-        self, user: User, user_group_id: int, target_user_ids: list[int]
-    ) -> tuple[ActivityResult, bool] | None:
+    async def assign_users(self, user: User, user_group_id: int, target_user_ids: list[int]) -> str | None:
         user_group = await self.get_by_id(user_group_id)
         target_users = await self._get_all_by(User, "id", target_user_ids)
         if not user_group or not target_users or user_group.user_id != user.id:
@@ -90,12 +75,4 @@ class UserGroupService(BaseService):
             *[revert_service.create_record_model(assigned_user, RevertType.Delete) for assigned_user in assigned_users]
         )
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=user,
-            shared={"group_name": user_group.name, "user_ids": user_ids},
-            new={},
-            revert_key=revert_key,
-        )
-
-        return activity_result, True
+        return revert_key

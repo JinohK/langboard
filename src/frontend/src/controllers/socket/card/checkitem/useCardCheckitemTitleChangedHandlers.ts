@@ -1,8 +1,8 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCheckitemTitleChangedRequest extends IModelIdBase {}
+export interface ICardCheckitemTitleChangedRequest {}
 
 export interface ICardCheckitemTitleChangedResponse {
     uid: string;
@@ -10,19 +10,20 @@ export interface ICardCheckitemTitleChangedResponse {
 }
 
 export interface IUseCardCheckitemTitleChangedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemTitleChangedResponse> {
-    checkitemUID?: string;
+    projectUID: string;
+    checkitemUID: string;
 }
 
-const useCardCheckitemTitleChangedHandlers = ({ socket, callback, checkitemUID }: IUseCardCheckitemTitleChangedHandlersProps) => {
+const useCardCheckitemTitleChangedHandlers = ({ socket, callback, projectUID, checkitemUID }: IUseCardCheckitemTitleChangedHandlersProps) => {
     return useSocketHandler<ICardCheckitemTitleChangedRequest, ICardCheckitemTitleChangedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-checkitem-title-changed-${checkitemUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.TITLE_CHANGED,
-            params: checkitemUID ? { uid: checkitemUID } : undefined,
+            params: { uid: checkitemUID },
             callback,
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.CHECKITEM.TITLE_CHANGED,
         },
     });
 };

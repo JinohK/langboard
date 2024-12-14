@@ -46,6 +46,10 @@ class BaseBot(metaclass=BotMetadata):
     @abstractmethod
     def bot_name() -> str: ...
 
+    @staticmethod
+    def bot_avatar() -> str | None:
+        return None
+
     def __init__(self):
         if self.__class__ is BaseBot:
             raise TypeError("Can't instantiate abstract class BaseBot")

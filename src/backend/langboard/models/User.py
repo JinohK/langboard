@@ -11,7 +11,7 @@ class User(SoftDeleteModel, table=True):
     firstname: str = Field(nullable=False)
     lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)
-    username: str = Field(default=f"user-{generate_random_string(8)}", nullable=False)
+    username: str = Field(default=f"user-{generate_random_string(8)}", unique=True, nullable=False)
     password: SecretStr = Field(nullable=False, sa_type=SecretStrType)
     industry: str = Field(nullable=False)
     purpose: str = Field(nullable=False)

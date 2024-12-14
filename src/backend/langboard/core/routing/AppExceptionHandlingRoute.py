@@ -2,8 +2,8 @@ from typing import Callable
 from fastapi import Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
-from ...core.routing import JsonResponse
 from ..logger import Logger
+from .JsonResponse import JsonResponse
 
 
 class AppExceptionHandlingRoute(APIRoute):
@@ -35,6 +35,7 @@ class AppExceptionHandlingRoute(APIRoute):
                 return JsonResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"errors": errors})
             except Exception as e:
                 self._logger.exception(e)
+
                 return JsonResponse(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     content={"status": False, "message": "Internal Server Error"},

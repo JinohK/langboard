@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import cast
+from typing import Any, cast
 from fastapi import status
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import AppRouter, JsonResponse, SocketTopic
 from ...core.security import Auth
+from ...core.service import ModelIdService
 from ...core.utils.DateTime import calculate_time_diff_in_seconds
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
@@ -16,37 +17,58 @@ from .RoleFinder import project_role_finder
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def create_checkitem(
+    project_uid: str,
     card_uid: str,
     form: CreateCardCheckitemForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    checkitem = await service.checkitem.create(user, card_uid, form.title, None, form.assignees)
-    api_checkitem = await service.checkitem.convert_api_response(checkitem)
-    model_id = await service.socket.create_model_id(api_checkitem)
-    return JsonResponse(content={"model_id": model_id, "checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
+    result = await service.checkitem.create(user, card_uid, form.title, None, form.assigned_users)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    _, api_checkitem = result.data
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:checkitem:created:{card_uid}",
+        data={"model_id": result.model_id},
+    )
+
+    return JsonResponse(content={"checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/sub-checkitem")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def create_sub_checkitem(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: CreateCardCheckitemForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    checkitem = await service.checkitem.create(user, card_uid, form.title, checkitem_uid, form.assignees)
-    api_checkitem = await service.checkitem.convert_api_response(checkitem)
-    model_id = await service.socket.create_model_id(api_checkitem)
-    return JsonResponse(content={"model_id": model_id, "checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
+    result = await service.checkitem.create(user, card_uid, form.title, checkitem_uid, form.assigned_users)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    _, api_checkitem = result.data
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:sub-checkitem:created:{checkitem_uid}",
+        data={"model_id": result.model_id},
+    )
+
+    return JsonResponse(content={"checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_title(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: CreateCardCheckitemForm,
@@ -56,34 +78,57 @@ async def change_checkitem_title(
     result = await service.checkitem.change_title(user, card_uid, checkitem_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    model_id = await service.socket.create_model_id({"title": form.title, "uid": checkitem_uid})
-    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
+    _, cardified_card = result.data
+
+    model = await ModelIdService.get_model(result.model_id)
+    if model:
+        await AppRouter.publish(
+            topic=SocketTopic.Board,
+            topic_id=project_uid,
+            event_response=f"board:card:checkitem:title:changed:{model["uid"]}",
+            data={"title": model["title"]},
+        )
+
+        if cardified_card:
+            await AppRouter.publish(
+                topic=SocketTopic.Board,
+                topic_id=project_uid,
+                event_response=f"board:card:title:changed:{cardified_card.uid}",
+                data={"title": model["title"]},
+            )
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_order(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: ChangeOrderForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.checkitem.change_order(card_uid, checkitem_uid, form.order)
-    model_id = await service.socket.create_model_id(
-        {
-            "card_uid": card_uid,
-            "uid": checkitem_uid,
-            "order": form.order,
-        }
+    result = await service.checkitem.change_order(card_uid, checkitem_uid, form.order)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:checkitem:order:changed:{card_uid}",
+        data={"model_id": result.model_id},
     )
-    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/sub-checkitem/{sub_checkitem_uid}/order")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_sub_checkitem_order(
+    project_uid: str,
     card_uid: str,
     sub_checkitem_uid: str,
     form: ChangeOrderForm,
@@ -92,42 +137,68 @@ async def change_sub_checkitem_order(
     result = await service.checkitem.change_order(card_uid, sub_checkitem_uid, form.order, form.parent_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    sub_checkitem, original_parent_uid, parent_checkitem = result
-    model = {
-        "from_column_uid": original_parent_uid,
-        "uid": sub_checkitem_uid,
-        "order": sub_checkitem.order,
-    }
-    if original_parent_uid and parent_checkitem and original_parent_uid != parent_checkitem.uid:
-        model["to_column_uid"] = parent_checkitem.uid
-    model_id = await service.socket.create_model_id(model)
-    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
+
+    model = await ModelIdService.get_model(result.model_id)
+    if model:
+        if "to_column_uid" in model:
+            await AppRouter.publish(
+                topic=SocketTopic.Board,
+                topic_id=project_uid,
+                event_response=f"board:card:sub-checkitem:order:changed:{model["to_column_uid"]}",
+                data={"move_type": "to_column", "uid": model["uid"], "order": model["order"]},
+            )
+            await AppRouter.publish(
+                topic=SocketTopic.Board,
+                topic_id=project_uid,
+                event_response=f"board:card:sub-checkitem:order:changed:{model["from_column_uid"]}",
+                data={"move_type": "from_column", "uid": model["uid"], "order": model["order"]},
+            )
+        else:
+            await AppRouter.publish(
+                topic=SocketTopic.Board,
+                topic_id=project_uid,
+                event_response=f"board:card:sub-checkitem:order:changed:{model["from_column_uid"]}",
+                data={"move_type": "in_column", "uid": model["uid"], "order": model["order"]},
+            )
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def cardify_checkitem(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: CardifyCheckitemForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    new_card = await service.checkitem.cardify(
+    result = await service.checkitem.cardify(
         user, card_uid, checkitem_uid, form.column_uid, form.with_sub_checkitems, form.with_assign_users
     )
-    if not new_card:
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    model = await service.card.convert_board_list_api_response(new_card)
-    model_id = await service.socket.create_model_id(
-        {
-            "checkitem_uid": checkitem_uid,
-            "new_card": model,
-        }
-    )
+    _, new_card_api = result.data
+
+    model = await ModelIdService.get_model(result.model_id)
+    if model:
+        await AppRouter.publish(
+            topic=SocketTopic.Board,
+            topic_id=project_uid,
+            event_response=f"board:card:checkitem:cardified:{checkitem_uid}",
+            data=model,
+        )
+        await AppRouter.publish(
+            topic=SocketTopic.Board,
+            topic_id=project_uid,
+            event_response=f"board:card:created:{new_card_api["column_uid"]}",
+            data={"card": model["new_card"]},
+        )
+
     return JsonResponse(
-        content={"model_id": model_id, "new_card": model},
+        content={"new_card": new_card_api},
         status_code=status.HTTP_200_OK,
     )
 
@@ -136,6 +207,7 @@ async def cardify_checkitem(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def delete_checkitem(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     user: User = Auth.scope("api"),
@@ -144,28 +216,32 @@ async def delete_checkitem(
     result = await service.checkitem.delete(user, card_uid, checkitem_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    model = {
-        "uid": checkitem_uid,
-    }
-    if result.checkitem_uid:
-        model["parent_uid"] = result.checkitem_uid
-    else:
-        model["parent_uid"] = card_uid
-    model_id = await service.socket.create_model_id(model)
-    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
+    checkitem = result.data
+    parent_uid = checkitem.checkitem_uid if checkitem.checkitem_uid else checkitem.card_uid
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:checkitem:deleted:{parent_uid}",
+        data={"model_id": result.model_id},
+    )
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/timer/toggle")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def toggle_checkitem_timer(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     timer, acc_time_seconds = await service.checkitem.get_timer(checkitem_uid)
-    if timer:
+    should_start = timer is not None
+    if not should_start:
         timer = await service.checkitem.stop_timer(user, card_uid, checkitem_uid)
         if not timer:
             return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -178,12 +254,18 @@ async def toggle_checkitem_timer(
         if not timer:
             return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    model = {
-        "checkitem_uid": checkitem_uid,
-        "timer": timer.api_response(),
-        "acc_time_seconds": acc_time_seconds,
-    }
-    model_id = await service.socket.create_model_id(model)
-    model.pop("checkitem_uid")
+    model: dict[str, Any] = {"acc_time_seconds": acc_time_seconds}
+    event_name = "started" if should_start else "stopped"
+    if should_start:
+        model["timer"] = timer.api_response()
 
-    return JsonResponse(content={"model_id": model_id, **model}, status_code=status.HTTP_200_OK)
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:checkitem:timer:{event_name}:{checkitem_uid}",
+        data=model,
+    )
+
+    model["timer"] = timer.api_response()
+
+    return JsonResponse(content={**model}, status_code=status.HTTP_200_OK)

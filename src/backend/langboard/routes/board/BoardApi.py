@@ -1,11 +1,11 @@
 from fastapi import Depends, status
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import AppRouter, JsonResponse, SocketTopic
 from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import ChangeColumnOrderForm, ChatHistoryPagination
+from .Models import ChangeColumnNameForm, ChangeColumnOrderForm, ChatHistoryPagination
 from .RoleFinder import project_role_finder
 
 
@@ -65,6 +65,30 @@ async def get_project_cards(
     return JsonResponse(content={"cards": cards, "columns": columns}, status_code=status.HTTP_200_OK)
 
 
+@AppRouter.api.put("/board/{project_uid}/column/{column_uid}/name")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def update_column_name(
+    project_uid: str,
+    column_uid: str,
+    form: ChangeColumnNameForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_column.change_name(user, project_uid, column_uid, form.name)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"column:name:changed:{project_uid}",
+        data={"model_id": result.model_id},
+    )
+
+    return JsonResponse(content={"name": form.name}, status_code=status.HTTP_200_OK)
+
+
 @AppRouter.api.put("/board/{project_uid}/column/{column_uid}/order")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
@@ -75,11 +99,15 @@ async def update_column_order(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.project_column.change_order(user, project_uid, column_uid, form.order)
-    model_id = await service.socket.create_model_id(
-        {
-            "uid": column_uid,
-            "order": form.order,
-        }
+    result = await service.project_column.change_order(user, project_uid, column_uid, form.order)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"column:order:changed:{project_uid}",
+        data={"model_id": result.model_id},
     )
-    return JsonResponse(content={"model_id": model_id}, status_code=status.HTTP_200_OK)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

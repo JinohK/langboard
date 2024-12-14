@@ -12,6 +12,7 @@ from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
 from .core.logger import Logger
 from .Loader import load_modules
+from .services import Service
 
 
 def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
@@ -44,7 +45,7 @@ def _run_app_wrapper(options: RunCommandOptions, is_restarting: bool = False) ->
 
 def _start_queue_bot():
     load_modules("bots", "Bot", log=True)
-    queue = QueueBot()
+    queue = QueueBot(Service)
     run(queue.loop())
 
 

@@ -1,6 +1,5 @@
 import { Button, Flex, IconComponent, Progress } from "@/components/base";
 import useUploadCardAttachment from "@/controllers/api/card/attachment/useUploadCardAttachment";
-import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatBytes } from "@/core/utils/StringUtils";
 import { IAttachedFile } from "@/pages/BoardPage/components/card/action/types";
@@ -22,13 +21,12 @@ interface IBoardCardActionAttachedFileDragData {
 }
 
 const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay }: IBoardCardActionAttachedFileProps) => {
-    const { projectUID, card, socket } = useBoardCard();
+    const { projectUID, card } = useBoardCard();
     const [t] = useTranslation();
     const [isUploading, setIsUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [isError, setIsError] = useState(false);
     const { mutateAsync: uploadCardAttachmentMutateAsync } = useUploadCardAttachment();
-    const { send: sendCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({ socket });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: attachedFile.key,
         data: {
@@ -55,10 +53,6 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
             });
             newFile.order = card.attachments.length;
             card.attachments.push(newFile);
-
-            sendCardAttachmentUploaded({
-                model_id: newFile.model_id,
-            });
         } catch {
             setIsError(true);
         }

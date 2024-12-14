@@ -8,11 +8,13 @@ import { GhostText } from "@/components/plate-ui/ghost-text";
 import { serializeMdNodes, stripMarkdown } from "@/components/Editor/plugins/markdown";
 import TypeUtils from "@/core/utils/TypeUtils";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { generateToken } from "@/core/utils/StringUtils";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { ISocketContext } from "@/core/providers/SocketProvider";
 
 export interface ICreateCopilotPlugins {
-    socket: IConnectedSocket;
+    socket: ISocketContext;
+    eventKey: string;
     events: {
         abort: string;
         send: string;
@@ -20,7 +22,7 @@ export interface ICreateCopilotPlugins {
     };
 }
 
-export const createCopilotPlugins = ({ socket, events }: ICreateCopilotPlugins) => {
+export const createCopilotPlugins = ({ socket, eventKey, events }: ICreateCopilotPlugins) => {
     return [
         CopilotPlugin.configure(({ api: editorApi }) => ({
             options: {
@@ -37,10 +39,16 @@ export const createCopilotPlugins = ({ socket, events }: ICreateCopilotPlugins) 
                         const body = JSON.parse(init.body);
                         const key = generateToken(8);
                         const receiveEventWithKey = `${events.receive}:${key}`;
+                        const copilotEventKey = `plate-copilot-${eventKey}-${key}`;
 
                         const waitResponse = new Promise((resolve) => {
                             const receive = (data: { text: string }) => {
-                                socket.off(receiveEventWithKey, receive);
+                                socket.off({
+                                    topic: ESocketTopic.None,
+                                    event: receiveEventWithKey,
+                                    eventKey: copilotEventKey,
+                                    callback: receive,
+                                });
                                 if (init.signal) {
                                     init.signal!.onabort = null;
                                 }
@@ -49,16 +57,29 @@ export const createCopilotPlugins = ({ socket, events }: ICreateCopilotPlugins) 
 
                             if (init.signal) {
                                 init.signal.onabort = () => {
-                                    socket.send(events.abort, { key });
+                                    socket.send({
+                                        topic: ESocketTopic.None,
+                                        eventName: events.abort,
+                                        data: { key },
+                                    });
                                     receive({ text: "0" });
                                 };
                             }
 
                             if (!init.signal?.aborted) {
-                                socket.on(receiveEventWithKey, receive);
-                                socket.send(events.send, {
-                                    ...body,
-                                    key,
+                                socket.on({
+                                    topic: ESocketTopic.None,
+                                    eventKey: copilotEventKey,
+                                    event: receiveEventWithKey,
+                                    callback: receive,
+                                });
+                                socket.send({
+                                    topic: ESocketTopic.None,
+                                    eventName: events.send,
+                                    data: {
+                                        ...body,
+                                        key,
+                                    },
                                 });
                             }
                         });

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { AutoComplete, Button, Dialog, Floating, Form, Input } from "@/components/base";
 import useCreateProject from "@/controllers/api/dashboard/useCreateProject";
@@ -7,6 +6,7 @@ import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { useRef } from "react";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -15,7 +15,7 @@ export interface ICreateProjectFormDialogProps {
 
 function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const { mutate } = useCreateProject();
     const projectTypeRef = useRef<string>("");
     const projectTypeInputRef = useRef<HTMLInputElement | null>(null);

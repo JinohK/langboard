@@ -1,8 +1,9 @@
 import { lazy } from "react";
-import { Navigate, Route } from "react-router-dom";
+import { Navigate, Outlet, Route } from "react-router-dom";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
+import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
 
 const BoardPage = lazy(() => import("./index"));
 
@@ -15,17 +16,19 @@ function BoardRoute() {
                 element={
                     <AuthGuard>
                         <BoardPage />
+                        <Outlet />
                     </AuthGuard>
                 }
-            />
-            <Route
-                path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")}
-                element={
-                    <AuthGuard>
-                        <BoardPage />
-                    </AuthGuard>
-                }
-            />
+            >
+                <Route
+                    path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")}
+                    element={
+                        <AuthGuard>
+                            <BoardCardPage />
+                        </AuthGuard>
+                    }
+                />
+            </Route>
         </Route>
     );
 }

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -8,10 +8,11 @@ import { ROUTES } from "@/core/routing/constants";
 import EmailPage from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function AccountPage(): JSX.Element {
     const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const location = useLocation();
 
     if (!isAuthenticated()) {

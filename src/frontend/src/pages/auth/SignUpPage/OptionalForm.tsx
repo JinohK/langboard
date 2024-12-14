@@ -8,8 +8,10 @@ import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 import SubmitButton from "@/components/SubmitButton";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const { t } = useTranslation();
     const dataTransferRef = useRef(new DataTransfer());
     const avatarUrlRef = useRef<string | undefined>((values as unknown as Record<string, string>).avatarUrl ?? undefined);
@@ -36,6 +38,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     });
 
     useEffect(() => {
+        setIsLoadingRef.current(false);
         setInitialErrorsWithFocusingElement(["avatar", "affiliation", "position"], initialErrorsRef, setErrors, formRef);
     }, []);
 

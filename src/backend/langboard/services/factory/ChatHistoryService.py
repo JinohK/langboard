@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Any
 from sqlmodel import desc
 from ...core.schema import Pagination
+from ...core.service import BaseService
 from ...models import ChatHistory, User
-from ..BaseService import BaseService
 
 
 class ChatHistoryService(BaseService):

@@ -1,19 +1,17 @@
 from typing import Any, Literal, cast, overload
+from ...core.ai import BotType
+from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
-    CardActivity,
     CardAssignedUser,
     Checkitem,
     CheckitemAssignedUser,
     CheckitemTimer,
     Project,
-    ProjectActivity,
     ProjectColumn,
     User,
 )
-from ..BaseService import BaseService
-from .ActivityService import ActivityResult, ActivityService
 
 
 class CheckitemService(BaseService):
@@ -118,18 +116,14 @@ class CheckitemService(BaseService):
         raw_users = result.all()
         return [user if not is_api else user.api_response() for _, user in raw_users]
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemCreated)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemCreated, no_user_activity=True
-    )
     async def create(
         self,
-        user: User,
+        user_or_bot: User | BotType,
         card_uid: str,
         title: str,
         parent_checkitem_uid: str | None = None,
         assign_user_ids: list[int] | None = None,
-    ) -> tuple[ActivityResult, tuple[ActivityResult, Checkitem]] | None:
+    ) -> ModelIdBaseResult[tuple[Checkitem, dict[str, Any]]] | None:
         card = await self._get_by(Card, "uid", card_uid)
         if card is None:
             return None
@@ -169,55 +163,41 @@ class CheckitemService(BaseService):
                 self._db.insert(checkitem_assigned_user)
             await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=checkitem,
-            shared={
-                "project_id": card.project_id,
-                "card_id": card.id,
-                "parent_checkitem_id": parent_checkitem.id if parent_checkitem_uid else None,
-                "assigned_user_ids": assign_user_ids,
-            },
-            new={"title": title, "card_uid": card_uid},
-        )
+        api_checkitem = await self.convert_api_response(checkitem)
+        model_id = await ModelIdService.create_model_id({"checkitem": api_checkitem})
 
-        return activity_result, (activity_result, checkitem)
+        return ModelIdBaseResult(model_id, (checkitem, api_checkitem))
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemChangedTitle)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemChangedTitle, no_user_activity=True
-    )
     async def change_title(
-        self, user: User, card_uid: str, checkitem_uid: str, title: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, bool]] | None:
+        self, user_or_bot: User | BotType, card_uid: str, checkitem_uid: str, title: str
+    ) -> ModelIdBaseResult[tuple[Checkitem, Card | None]] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if not checkitem or not card:
             return None
 
-        original_title = checkitem.title
+        # original_title = checkitem.title
         checkitem.title = title
+
+        cardified_card = None
+        if checkitem.cardified_uid:
+            cardified_card = await self._get_by(Card, "uid", checkitem.cardified_uid)
+            if cardified_card:
+                cardified_card.title = title
+                await self._db.update(cardified_card)
 
         await self._db.update(checkitem)
         await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=checkitem,
-            shared={
-                "project_id": card.project_id,
-                "card_id": card.id,
-                "checkitem_id": checkitem.id,
-                "parent_checkitem_uid": checkitem.checkitem_uid,
-            },
-            new={"title": title},
-            old={"title": original_title},
-        )
-
-        return activity_result, (activity_result, True)
+        model = {
+            "uid": checkitem_uid,
+            "title": title,
+        }
+        model_id = await ModelIdService.create_model_id(model)
+        return ModelIdBaseResult(model_id, (checkitem, cardified_card))
 
     async def change_order(
         self, card_uid: str, checkitem_uid: str, order: int, parent_checkitem_uid: str = ""
-    ) -> tuple[Checkitem, str | None, Checkitem | None] | None:
+    ) -> ModelIdBaseResult[tuple[Checkitem, str | None, Checkitem | None]] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if not checkitem or not card:
             return None
@@ -269,21 +249,27 @@ class CheckitemService(BaseService):
         await self._db.update(checkitem)
         await self._db.commit()
 
-        return (checkitem, original_parent_uid, parent_checkitem)
+        model = {
+            "uid": checkitem_uid,
+            "order": order,
+        }
+        if is_sub:
+            model["from_column_uid"] = original_parent_uid
+            if original_parent_uid and parent_checkitem and original_parent_uid != parent_checkitem.uid:
+                model["to_column_uid"] = parent_checkitem.uid
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemCardified)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemCardified, no_user_activity=True
-    )
+        model_id = await ModelIdService.create_model_id(model)
+        return ModelIdBaseResult(model_id, (checkitem, original_parent_uid, parent_checkitem))
+
     async def cardify(
         self,
-        user: User,
+        user_or_bot: User | BotType,
         card_uid: str,
         checkitem_uid: str,
         column_uid: str | None = None,
         with_sub_checkitems: bool = False,
         with_assign_users: bool = False,
-    ) -> tuple[ActivityResult, tuple[ActivityResult, Card]] | None:
+    ) -> ModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if (
             not checkitem
@@ -341,28 +327,20 @@ class CheckitemService(BaseService):
 
         checkitem.cardified_uid = new_card.uid
         await self._db.update(checkitem)
+        await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=checkitem,
-            shared={
-                "project_id": card.project_id,
-                "card_id": card.id,
-                "checkitem_id": checkitem.id,
-                "new_card_id": new_card.id,
-            },
-            new={"card_uid": new_card.uid},
+        card_service = self._get_service_by_name("card")
+        api_card = await card_service.convert_board_list_api_response(new_card)
+        model_id = await ModelIdService.create_model_id(
+            {
+                "new_card": api_card,
+            }
         )
+        return ModelIdBaseResult(model_id, (new_card, api_card))
 
-        return activity_result, (activity_result, new_card)
-
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemDeleted)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemDeleted, no_user_activity=True
-    )
     async def delete(
-        self, user: User, card_uid: str, checkitem_uid: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, Checkitem]] | None:
+        self, user_or_bot: User | BotType, card_uid: str, checkitem_uid: str
+    ) -> ModelIdBaseResult[Checkitem] | None:
         checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
         if not checkitem or not card:
             return None
@@ -375,41 +353,23 @@ class CheckitemService(BaseService):
 
         if not checkitem.checkitem_uid:
             sub_checkitems = await self._get_all_by(Checkitem, "checkitem_uid", checkitem_uid)
-            count_sub_checkitems = len(sub_checkitems)
+            # count_sub_checkitems = len(sub_checkitems)
             for sub_checkitem in sub_checkitems:
                 await self.__delete(sub_checkitem)
-        else:
-            count_sub_checkitems = None
+        # else:
+        #     count_sub_checkitems = None
 
         await self.__delete(checkitem)
         await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=checkitem,
-            shared={
-                "project_id": card.project_id,
-                "card_id": card.id,
-                "checkitem_id": checkitem.id,
-                "parent_checkitem_uid": checkitem.checkitem_uid,
-            },
-            new={},
-            old={
-                "title": checkitem.title,
-                "acc_time_seconds": acc_time_seconds,
-                "count_sub_checkitems": count_sub_checkitems,
-            },
-        )
+        model = {
+            "uid": checkitem_uid,
+        }
+        model_id = await ModelIdService.create_model_id(model)
 
-        return activity_result, (activity_result, checkitem)
+        return ModelIdBaseResult(model_id, checkitem)
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemTimerStarted)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemTimerStarted, no_user_activity=True
-    )
-    async def start_timer(
-        self, user: User, card_uid: str, checkitem_uid: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, CheckitemTimer]] | None:
+    async def start_timer(self, user: User, card_uid: str, checkitem_uid: str) -> CheckitemTimer | None:
         result = await self._db.exec(
             self._db.query("select")
             .tables(Checkitem, Card, CheckitemTimer)
@@ -429,22 +389,9 @@ class CheckitemService(BaseService):
         self._db.insert(timer)
         await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=timer,
-            shared={"project_id": card.project_id, "card_id": card.id, "checkitem_id": checkitem.id},
-            new={"started_at": timer.started_at},
-        )
+        return timer
 
-        return activity_result, (activity_result, timer)
-
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemTimerStopped)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCheckitemTimerStopped, no_user_activity=True
-    )
-    async def stop_timer(
-        self, user: User, card_uid: str, checkitem_uid: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, CheckitemTimer]] | None:
+    async def stop_timer(self, user: User, card_uid: str, checkitem_uid: str) -> CheckitemTimer | None:
         result = await self._db.exec(
             self._db.query("select")
             .tables(CheckitemTimer, Checkitem, Card)
@@ -464,14 +411,7 @@ class CheckitemService(BaseService):
         await self._db.update(timer)
         await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=timer,
-            shared={"project_id": card.project_id, "card_id": card.id, "checkitem_id": checkitem.id},
-            new={"stopped_at": timer.stopped_at},
-        )
-
-        return activity_result, (activity_result, timer)
+        return timer
 
     async def __get_with_card(self, card_uid: str, checkitem_uid: str) -> tuple[Checkitem | None, Card | None]:
         result = await self._db.exec(

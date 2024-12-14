@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex, Toast } from "@/components/base";
 import useResendSignUpLink from "@/controllers/api/auth/useResendSignUpLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function CompletePage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t, i18n] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const location = useLocation();
     const { mutate } = useResendSignUpLink();
     const [isResending, setIsResending] = useState(false);
@@ -20,6 +23,8 @@ function CompletePage(): JSX.Element {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
             return;
         }
+
+        setIsLoadingRef.current(false);
     }, []);
 
     const resend = () => {

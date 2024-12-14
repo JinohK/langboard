@@ -1,4 +1,4 @@
-import { Button, DateTimePicker, IconComponent, Toast } from "@/components/base";
+import { Button, DateTimePicker, IconComponent, Skeleton, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import useCardDeadlineChangedHandlers from "@/controllers/socket/card/useCardDeadlineChangedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -9,6 +9,10 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+export function SkeletonBoardCardDeadline() {
+    return <Skeleton className="h-8 w-1/3 gap-2 lg:h-10" />;
+}
+
 const BoardCardDeadline = memo(() => {
     const { projectUID, card, socket, hasRoleAction } = useBoardCard();
     const { t } = useTranslation();
@@ -16,8 +20,9 @@ const BoardCardDeadline = memo(() => {
     const [deadline, setDeadline] = useState<Date | undefined>(card.deadline_at);
     const [isSaving, setIsSaving] = useState(false);
     const editable = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const { on: onCardDeadlineChanged, send: sendCardDeadlineChanged } = useCardDeadlineChangedHandlers({
+    const { on: onCardDeadlineChanged } = useCardDeadlineChangedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             card.deadline_at = data.deadline_at;
@@ -43,8 +48,8 @@ const BoardCardDeadline = memo(() => {
             },
             {
                 onSuccess: (data) => {
+                    card.deadline_at = data.deadline_at;
                     setDeadline(data.deadline_at);
-                    sendCardDeadlineChanged({ model_id: data.model_id });
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

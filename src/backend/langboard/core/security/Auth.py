@@ -175,7 +175,12 @@ class Auth:
                 return status.HTTP_401_UNAUTHORIZED
             access_token = authorization[0]
         else:
-            access_token = authorization
+            if authorization.startswith("Bearer "):
+                access_token = authorization.split("Bearer ")[1]
+            elif authorization.startswith("bearer "):
+                access_token = authorization.split("bearer ")[1]
+            else:
+                access_token = authorization
 
         user = await Auth.get_user_by_token(access_token)
         if isinstance(user, User):
@@ -234,11 +239,11 @@ class Auth:
     @staticmethod
     def _create_access_token(user_id: int) -> str:
         expiry = now() + timedelta(seconds=JWT_AT_EXPIRATION)
-        payload = {"sub": user_id, "exp": expiry}
+        payload = {"sub": str(user_id), "exp": expiry}
         return jwt_encode(payload=payload, key=JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     @staticmethod
     def _create_refresh_token(user_id: int) -> str:
         expiry = now() + timedelta(days=JWT_RT_EXPIRATION)
-        payload = {"sub": user_id, "exp": timegm(expiry.utctimetuple())}
+        payload = {"sub": str(user_id), "exp": timegm(expiry.utctimetuple())}
         return Encryptor.encrypt(json_dumps(payload), JWT_SECRET_KEY)

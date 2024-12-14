@@ -1,4 +1,3 @@
-from .ActivityService import ActivityService
 from .CardAttachmentService import CardAttachmentService
 from .CardCommentService import CardCommentService
 from .CardService import CardService
@@ -10,13 +9,11 @@ from .ProjectService import ProjectService
 from .ReactionService import ReactionService
 from .RevertService import RevertService
 from .RoleService import RoleService
-from .SocketService import SocketService
 from .UserGroupService import UserGroupService
 from .UserService import UserService
 
 
 __all__ = [
-    "ActivityService",
     "CardAttachmentService",
     "CardCommentService",
     "CardService",
@@ -28,7 +25,6 @@ __all__ = [
     "ReactionService",
     "RevertService",
     "RoleService",
-    "SocketService",
     "UserGroupService",
     "UserService",
 ]

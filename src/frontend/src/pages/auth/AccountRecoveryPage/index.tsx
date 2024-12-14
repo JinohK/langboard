@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
@@ -11,11 +11,12 @@ import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function AccountRecoveryPage(): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const [email, setEmail] = useState<string | null>(location.state?.email);
     const [[form, description], setPage] = useState<[JSX.Element | null, string]>([null, ""]);
     const { mutate: validateRecoveryTokenMutate } = useValidateRecoveryToken();

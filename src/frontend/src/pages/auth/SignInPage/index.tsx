@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import { ROUTES } from "@/core/routing/constants";
@@ -8,9 +8,10 @@ import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import { Flex } from "@/components/base";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function SignInPage(): JSX.Element {
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const location = useLocation();
     const [email, setEmail] = useState("");
     const [form, setForm] = useState<JSX.Element>();

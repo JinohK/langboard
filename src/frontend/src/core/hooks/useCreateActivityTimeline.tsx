@@ -1,11 +1,11 @@
 import { IconComponent, Skeleton, Timeline } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { Activity, User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { memo, useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 export interface IActivityTimelineProps {
     activity: Activity.Interface;
@@ -15,7 +15,7 @@ export interface IActivityTimelineProps {
 
 const useCreateActivityTimeline = (type: string, withDiffView: bool = false) => {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = useRef(usePageNavigate());
     const transComponentsRef = useRef<{ readonly [tagName: string]: React.ReactElement }>({
         primary: <span className="font-semibold text-primary" />,
     });
@@ -98,7 +98,7 @@ const useCreateActivityTimeline = (type: string, withDiffView: bool = false) => 
         if (link) {
             headingClassName = "flex items-center gap-2 cursor-pointer transition-all hover:text-primary/75";
             onClick = () => {
-                navigate(link);
+                navigate.current(link);
             };
         }
 

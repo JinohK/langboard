@@ -34,6 +34,7 @@
     "Reverting...": "Reverting...",
     "Deleting...": "Deleting...",
     "Changing...": "Changing...",
+    "Updating...": "Updating...",
     "Starting...": "Starting...",
     "Stopping...": "Stopping...",
     "Add members from group": "Add members from group"
@@ -350,32 +351,6 @@
       }
     }
   },
-  "activity": {
-    "user": {
-      "project": {
-        "created": {
-          "title": "Created a new project",
-          "content": "Created <primary>{{new.project_type}}</primary> project <primary>{{new.title}}</primary>."
-        },
-        "updated": {
-          "title": "Updated a project",
-          "content": "Updated the project <primary>{{shared.project.title}}</primary>."
-        },
-        "assigned_user": {
-          "title": "Assigned a user to a project",
-          "content": "Assigned <primary>{{shared.user.firstname}} {{shared.user.lastname}}</primary> to the project <primary>{{shared.project.title}}</primary>."
-        },
-        "assigned_group": {
-          "title": "Assigned a group to a project",
-          "content": "Assigned <primary>{{shared.group.name}}</primary> to the project <primary>{{shared.project.title}}</primary>."
-        },
-        "unassigned_user": {
-          "title": "Unassigned a user from a project",
-          "content": "Unassigned <primary>{{shared.user.firstname}} {{shared.user.lastname}}</primary> from the project <primary>{{shared.project.title}}</primary>."
-        }
-      }
-    }
-  },
   "dashboard": {
     "Projects": "Projects",
     "tabs": {
@@ -440,6 +415,7 @@
     "Type": "Type",
     "Actions": "Actions",
     "This action cannot be undone.": "This action cannot be undone.",
+    "Card not found.": "Card not found.",
     "Attach a file": "Attach a file",
     "Drag and drop a file here": "Drag and drop a file here",
     "Upload a file": "Upload a file",
@@ -451,6 +427,7 @@
     "Assign members": "Assign members",
     "Select members...": "Select members...",
     "Members": "Members",
+    "Assigned members updated successfully.": "Assigned members updated successfully.",
     "Deadline": "Deadline",
     "Set deadline": "Set deadline",
     "No deadline": "No deadline",

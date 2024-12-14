@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Any, Literal, cast, overload
 from pydantic import BaseModel
 from ...core.ai import BotType
+from ...core.ai.QueueBot import QueueBot, QueueBotModel
 from ...core.schema import Pagination
+from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -10,7 +12,6 @@ from ...models import (
     Checkitem,
     CheckitemAssignedUser,
     Project,
-    ProjectActivity,
     ProjectAssignedUser,
     ProjectColumn,
     ProjectRole,
@@ -19,8 +20,6 @@ from ...models import (
     UserGroupAssignedUser,
 )
 from ...models.BaseRoleModel import ALL_GRANTED
-from ..BaseService import BaseService
-from .ActivityService import ActivityResult, ActivityService
 from .ProjectColumnService import ProjectColumnService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
@@ -174,10 +173,9 @@ class ProjectService(BaseService):
         )
         await self._db.commit()
 
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectCreated)
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
-    ) -> tuple[ActivityResult, Project] | None:
+    ) -> Project | None:
         if not user.id or not title:
             return None
 
@@ -190,26 +188,15 @@ class ProjectService(BaseService):
 
         role_service = self._get_service(RoleService)
         await role_service.project.grant_all(user_id=user.id, project_id=cast(int, project.id))
+        await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=project,
-            shared={"project_uid": project.uid},
-            new=["title", "project_type"],
-        )
-
-        return activity_result, project
+        return project
 
     @overload
-    async def update(self, project: Project, form: dict, user: User) -> str: ...
+    async def update(self, user_or_bot: BotType, project: int, form: dict) -> None: ...
     @overload
-    async def update(self, project: Project, form: dict, user: User, from_bot: Literal[False]) -> str: ...
-    @overload
-    async def update(self, project: int, form: dict, user: None, from_bot: Literal[True]) -> None: ...
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUpdated)
-    async def update(
-        self, project: Project | int, form: dict, user: User | None = None, from_bot: bool = False
-    ) -> tuple[ActivityResult, str | None] | None:
+    async def update(self, user_or_bot: User, project: Project | int, form: dict) -> str | None: ...
+    async def update(self, user_or_bot: User | BotType, project: Project | int, form: dict) -> str | None:
         for immutable_key in ["id", "uid", "owner_id"]:
             if immutable_key in form:
                 form.pop(immutable_key)
@@ -231,25 +218,41 @@ class ProjectService(BaseService):
                 setattr(project, key, value)
 
         activitiy_params = {
+            "user_or_bot": user_or_bot,
             "model": project,
             "shared": {"project_uid": project.uid},
             "new": [*list(form.keys())],
             "old": old_project_record,
         }
 
-        if from_bot:
+        if isinstance(user_or_bot, BotType):
             await self._db.update(project)
-            return ActivityResult(user_or_bot=BotType.Project, **activitiy_params), None
+            await self._db.commit()
+            revert_key = None
+        else:
+            revert_service = self._get_service(RevertService)
+            revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
+            activitiy_params["revert_key"] = revert_key
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
-        activity_result = ActivityResult(user_or_bot=cast(User, user), revert_key=revert_key, **activitiy_params)
-        return activity_result, revert_key
+            QueueBot.add(
+                QueueBotModel(
+                    bot_type=BotType.Project,
+                    bot_data={
+                        "title": project.title,
+                        "description": project.description,
+                        "project_type": project.project_type,
+                    },
+                    service_name=ProjectService.name(),
+                    service_method="update",
+                    params={"project": project.id, "form": {"ai_description": "{output}"}},
+                )
+            )
 
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedUser)
+        return revert_key
+
     async def assign_user(
         self, user: User, project: Project | int, target_user: User | int, grant_actions: list[str] | None = None
-    ) -> tuple[ActivityResult, str] | None:
+    ) -> str | None:
         grant_actions = grant_actions or []
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
         target_user = (
@@ -290,20 +293,11 @@ class ProjectService(BaseService):
             only_commit=True,
         )
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=project,
-            shared={"project_uid": project.uid, "user_ids": [target_user.id], "project_id": project.id},
-            new={},
-            revert_key=revert_key,
-        )
+        return revert_key
 
-        return activity_result, revert_key
-
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectAssignedUser)
     async def assign_group(
         self, user: User, project: Project | int, user_group: UserGroup | int, grant_actions: list[str] | None = None
-    ) -> tuple[ActivityResult, str] | None:
+    ) -> str | None:
         grant_actions = grant_actions or []
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
         user_group = (
@@ -366,22 +360,9 @@ class ProjectService(BaseService):
             only_commit=True,
         )
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=project,
-            shared={"project_uid": project.uid, "user_group_name": user_group.name, "project_id": project.id},
-            new={
-                "user_ids": [assign_user.user_id for assign_user in assign_users],
-            },
-            revert_key=revert_key,
-        )
+        return revert_key
 
-        return activity_result, revert_key
-
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.ProjectUnassignedUser)
-    async def withdraw_user(
-        self, user: User, project: Project | int, target_user: User | int
-    ) -> tuple[ActivityResult, str] | None:
+    async def withdraw_user(self, user: User, project: Project | int, target_user: User | int) -> str | None:
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
         target_user = (
             cast(User, await self._get_by(User, "id", target_user)) if isinstance(target_user, int) else target_user
@@ -400,13 +381,6 @@ class ProjectService(BaseService):
         revert_models = []
         if role:
             revert_models.append(revert_service.create_record_model(role, RevertType.Insert))
-
-        activity_result_params = {
-            "user_or_bot": user,
-            "model": project,
-            "shared": {"project_uid": project.uid, "user_id": target_user.id, "project_id": project.id},
-            "new": {},
-        }
 
         assigned_user = (
             await self._db.exec(
@@ -455,6 +429,5 @@ class ProjectService(BaseService):
 
         if revert_models:
             revert_key = await revert_service.record(*revert_models, only_commit=True)
-            activity_result = ActivityResult(revert_key=revert_key, **activity_result_params)
-            return activity_result, revert_key
+            return revert_key
         return None

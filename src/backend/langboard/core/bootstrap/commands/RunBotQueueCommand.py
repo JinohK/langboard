@@ -1,5 +1,6 @@
 from asyncio import run
 from ....Loader import load_modules
+from ....services import Service
 from ...ai.QueueBot import QueueBot
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 
@@ -35,5 +36,5 @@ class RunQueueBotCommand(BaseCommand):
 
     def execute(self, _: RunQueueBotCommandOptions) -> None:
         load_modules("bots", "Bot", log=True)
-        queue = QueueBot()
+        queue = QueueBot(Service)
         run(queue.loop())

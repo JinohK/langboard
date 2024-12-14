@@ -1,4 +1,5 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
 export interface ICardColumnChangedResponse {
@@ -7,25 +8,20 @@ export interface ICardColumnChangedResponse {
 }
 
 export interface IUseCardColumnChangedHandlersProps extends IBaseUseSocketHandlersProps<ICardColumnChangedResponse> {
+    projectUID: string;
     cardUID: string;
 }
 
-interface IUseCardColumnChangedHandlers {
-    (props: IUseCardColumnChangedHandlersProps): {
-        on: () => { off: () => void };
-    };
-}
-
-const useCardColumnChangedHandlers: IUseCardColumnChangedHandlers = ({ socket, callback, cardUID }) => {
+const useCardColumnChangedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardColumnChangedHandlersProps) => {
     return useSocketHandler({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-column-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED,
             params: { uid: cardUID },
             callback,
-        },
-        sendProps: {
-            name: "",
         },
     });
 };

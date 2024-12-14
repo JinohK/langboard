@@ -21,6 +21,8 @@ const useGetCardDetails = (params: IGetCardDetailsForm, options?: TQueryOptions<
         const url = format(API_ROUTES.BOARD.CARD.GET_DETAILS, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.get(url);
 
+        res.data.card.is_archived = res.data.card.column_uid === res.data.card.project_archive_column_uid;
+
         User.transformFromApi(res.data.card.members);
         User.transformFromApi(res.data.card.project_members);
 

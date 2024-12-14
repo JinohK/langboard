@@ -1,17 +1,18 @@
 import { createContext, useContext, useRef, useState } from "react";
 import { Project, ProjectCard, User } from "@/core/models";
 import { IAuthUser } from "@/core/providers/AuthProvider";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { format } from "@/core/utils/StringUtils";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 
 export interface IBoardCardContext {
     projectUID: string;
     card: ProjectCard.IBoardWithDetails;
     currentUser: IAuthUser;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
-    socket: IConnectedSocket;
+    socket: ISocketContext;
     currentEditor: string;
     setCurrentEditor: (uid: string) => void;
     replyRef: React.MutableRefObject<(targetUser: User.Interface) => void>;
@@ -26,7 +27,6 @@ interface IBoardCardProviderProps {
     card: ProjectCard.IBoardWithDetails;
     currentUser: IAuthUser;
     currentUserRoleActions: Project.TRoleActions[];
-    socket: IConnectedSocket;
     children: React.ReactNode;
 }
 
@@ -35,7 +35,7 @@ const initialContext = {
     card: {} as ProjectCard.IBoardWithDetails,
     currentUser: {} as IAuthUser,
     hasRoleAction: () => false,
-    socket: {} as IConnectedSocket,
+    socket: {} as ISocketContext,
     currentEditor: "",
     setCurrentEditor: () => {},
     replyRef: { current: () => {} },
@@ -45,14 +45,8 @@ const initialContext = {
 
 const BoardCardContext = createContext<IBoardCardContext>(initialContext);
 
-export const BoardCardProvider = ({
-    projectUID,
-    card,
-    currentUser,
-    currentUserRoleActions,
-    socket,
-    children,
-}: IBoardCardProviderProps): React.ReactNode => {
+export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRoleActions, children }: IBoardCardProviderProps): React.ReactNode => {
+    const socket = useSocket();
     const [currentEditor, setCurEditor] = useState<string>("");
     const replyRef = useRef<(targetUser: User.Interface) => void>(() => {});
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
@@ -62,11 +56,21 @@ export const BoardCardProvider = ({
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditor) {
-            socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_STOP_EDITING, { uid: currentEditor });
+            socket.send({
+                topic: ESocketTopic.Board,
+                id: projectUID,
+                eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_STOP_EDITING,
+                data: { uid: currentEditor },
+            });
         }
 
         if (uid) {
-            socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_START_EDITING, { uid });
+            socket.send({
+                topic: ESocketTopic.Board,
+                id: projectUID,
+                eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_START_EDITING,
+                data: { uid },
+            });
         }
 
         setCurEditor(uid);
@@ -82,7 +86,13 @@ export const BoardCardProvider = ({
                 getUsersEditingEvent,
                 (data: { user_ids: number[] }) => {
                     startCallback(data.user_ids);
-                    socket.off(getUsersEditingEvent, events[0][1]);
+                    socket.off({
+                        topic: ESocketTopic.Board,
+                        id: projectUID,
+                        eventKey: `board-card-editor-${getUsersEditingEvent}-${uid}`,
+                        event: getUsersEditingEvent,
+                        callback: events[0][1],
+                    });
                     events.shift();
                 },
             ],
@@ -101,14 +111,31 @@ export const BoardCardProvider = ({
         ];
 
         events.forEach(([event, handler]) => {
-            socket.on(event, handler);
+            socket.on({
+                topic: ESocketTopic.Board,
+                id: projectUID,
+                eventKey: `board-card-editor-${event}-${uid}`,
+                event: event,
+                callback: handler,
+            });
         });
 
-        socket.send(SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_USERS, { uid });
+        socket.send({
+            topic: ESocketTopic.Board,
+            id: projectUID,
+            eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_USERS,
+            data: { uid },
+        });
 
         return () => {
             events.forEach(([event, handler]) => {
-                socket.off(event, handler);
+                socket.off({
+                    topic: ESocketTopic.Board,
+                    id: projectUID,
+                    eventKey: `board-card-editor-${event}-${uid}`,
+                    event,
+                    callback: handler,
+                });
             });
         };
     };
@@ -136,7 +163,7 @@ export const BoardCardProvider = ({
 export const useBoardCard = () => {
     const context = useContext(BoardCardContext);
     if (!context) {
-        throw new Error("useBoardCard must be used within an BoardCardProvider");
+        throw new Error("useBoardCard must be used within a BoardCardProvider");
     }
     return context;
 };

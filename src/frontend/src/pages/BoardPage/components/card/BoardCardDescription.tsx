@@ -1,8 +1,7 @@
-import { Toast } from "@/components/base";
+import { Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
-import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project } from "@/core/models";
@@ -12,6 +11,16 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
+
+export function SkeletonBoardCardDescription() {
+    return (
+        <div>
+            <div className="h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] text-muted-foreground">
+                <Skeleton className="h-[calc(theme(spacing.56)_-_theme(spacing.8))] w-full" />
+            </div>
+        </div>
+    );
+}
 
 function BoardCardDescription(): JSX.Element {
     const { projectUID, card, socket, currentUser, currentEditor, setCurrentEditor, hasRoleAction } = useBoardCard();
@@ -25,9 +34,9 @@ function BoardCardDescription(): JSX.Element {
     };
     const editorName = `${card.uid}-description`;
     const isEditing = useMemo(() => currentEditor === editorName && hasRoleAction(Project.ERoleAction.CARD_UPDATE), [currentEditor]);
-    const { send: sendCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({ socket });
-    const { on: onCardDescriptionChanged, send: sendCardDescriptionChanged } = useCardDescriptionChangedHandlers({
+    const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             card.description = data.description;
@@ -74,7 +83,6 @@ function BoardCardDescription(): JSX.Element {
             },
             success: (data) => {
                 card.description = data.description;
-                sendCardDescriptionChanged({ model_id: data.model_id });
                 return t("card.Description changed successfully.");
             },
             finally: () => {
@@ -145,13 +153,10 @@ function BoardCardDescription(): JSX.Element {
                     className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
                     readOnly={!isEditing}
                     socket={socket}
-                    baseSocketEvent="card"
+                    baseSocketEvent="board:card"
+                    chatEventKey={`card-description-${card.uid}`}
+                    copilotEventKey={`card-description-${card.uid}`}
                     uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
-                    uploadedCallback={(data) => {
-                        sendCardAttachmentUploaded({
-                            model_id: data.model_id,
-                        });
-                    }}
                     setValue={setValue}
                     editorElementRef={editorElementRef}
                 />

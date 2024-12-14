@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button } from "@/components/base";
 import { ISignUpForm } from "@/controllers/api/auth/useSignUp";
@@ -9,11 +9,12 @@ import AdditionalForm from "@/pages/auth/SignUpPage/AdditionalForm";
 import OptionalForm from "@/pages/auth/SignUpPage/OptionalForm";
 import Overview from "@/pages/auth/SignUpPage/Overview";
 import RequiredForm from "@/pages/auth/SignUpPage/RequiredForm";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function SignUpPage(): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const [form, setForm] = useState<JSX.Element>();
     const initialErrorsRef = useRef<Record<string, string>>({});
     const values = location.state ?? {};

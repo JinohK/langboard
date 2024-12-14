@@ -1,21 +1,25 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, User } from "@/core/models";
 
-export interface ICardAttachmentUploadedRequest extends IModelIdBase {}
+export interface ICardAttachmentUploadedRequest {}
 
 export interface ICardAttachmentUploadedResponse {
     attachment: ProjectCardAttachment.IBoard;
 }
 
 export interface IUseCardAttachmentUploadedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentUploadedResponse> {
-    cardUID?: string;
+    projectUID: string;
+    cardUID: string;
 }
 
-const useCardAttachmentUploadedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentUploadedHandlersProps) => {
+const useCardAttachmentUploadedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardAttachmentUploadedHandlersProps) => {
     return useSocketHandler<ICardAttachmentUploadedRequest, ICardAttachmentUploadedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-attachment-uploaded-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,
             params: cardUID ? { uid: cardUID } : undefined,
@@ -25,9 +29,6 @@ const useCardAttachmentUploadedHandlers = ({ socket, callback, cardUID }: IUseCa
                 User.transformFromApi(response.attachment.user);
                 return response;
             },
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,
         },
     });
 };

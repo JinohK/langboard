@@ -1,37 +1,38 @@
-import { Dialog, Flex, Toast } from "@/components/base";
+import { Dialog, Flex, Skeleton, Toast } from "@/components/base";
 import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { useAuth } from "@/core/providers/AuthProvider";
+import { IAuthUser } from "@/core/providers/AuthProvider";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import BoardCardActionList from "@/pages/BoardPage/components/card/action/BoardCardActionList";
-import BoardCardChecklist from "@/pages/BoardPage/components/card/checkitem/BoardCardChecklist";
-import BoardCardColumnName from "@/pages/BoardPage/components/card/BoardCardColumnName";
-import BoardCardDeadline from "@/pages/BoardPage/components/card/BoardCardDeadline";
-import BoardCardDescription from "@/pages/BoardPage/components/card/BoardCardDescription";
-import BoardCardAttachmentList from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentList";
-import BoardCardTitle from "@/pages/BoardPage/components/card/BoardCardTitle";
-import BoardCommentForm from "@/pages/BoardPage/components/card/comment/BoardCommentForm";
-import BoardCommentList from "@/pages/BoardPage/components/card/comment/BoardCommentList";
-import { forwardRef, useEffect } from "react";
+import BoardCardActionList, { SkeletonBoardCardActionList } from "@/pages/BoardPage/components/card/action/BoardCardActionList";
+import BoardCardChecklist, { SkeletonBoardCardChecklist } from "@/pages/BoardPage/components/card/checkitem/BoardCardChecklist";
+import BoardCardColumnName, { SkeletonBoardCardColumnName } from "@/pages/BoardPage/components/card/BoardCardColumnName";
+import BoardCardDeadline, { SkeletonBoardCardDeadline } from "@/pages/BoardPage/components/card/BoardCardDeadline";
+import BoardCardDescription, { SkeletonBoardCardDescription } from "@/pages/BoardPage/components/card/BoardCardDescription";
+import BoardCardAttachmentList, { SkeletonBoardCardAttachmentList } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentList";
+import BoardCardTitle, { SkeletonBoardCardTitle } from "@/pages/BoardPage/components/card/BoardCardTitle";
+import BoardCommentForm, { SkeletonBoardCommentForm } from "@/pages/BoardPage/components/card/comment/BoardCommentForm";
+import BoardCommentList, { SkeletonBoardCommentList } from "@/pages/BoardPage/components/card/comment/BoardCommentList";
+import { forwardRef, memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import BoardCardMemberList from "@/pages/BoardPage/components/card/BoardCardMemberList";
+import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IBoardCardProps {
     projectUID: string;
     cardUID: string;
-    socket: IConnectedSocket;
+    currentUser: IAuthUser;
+    viewportId: string;
 }
 
-function BoardCard({ projectUID, cardUID, socket }: IBoardCardProps): JSX.Element {
-    const { aboutMe } = useAuth();
+const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoardCardProps): JSX.Element => {
     const { data: cardData, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = useRef(usePageNavigate());
 
     useEffect(() => {
         if (!error) {
@@ -41,11 +42,11 @@ function BoardCard({ projectUID, cardUID, socket }: IBoardCardProps): JSX.Elemen
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 
@@ -54,89 +55,125 @@ function BoardCard({ projectUID, cardUID, socket }: IBoardCardProps): JSX.Elemen
 
     return (
         <>
-            {!cardData || !aboutMe() ? (
-                "loading..."
+            {!cardData ? (
+                <SkeletonBoardCard />
             ) : (
                 <BoardCardProvider
                     projectUID={projectUID}
                     card={cardData.card}
-                    currentUser={aboutMe()!}
+                    currentUser={currentUser}
                     currentUserRoleActions={cardData.current_user_role_actions}
-                    socket={socket}
                 >
-                    <BoardCardResult />
+                    <BoardCardResult viewportId={viewportId} />
                 </BoardCardProvider>
             )}
         </>
     );
-}
+});
 
-function BoardCardResult(): JSX.Element {
-    const { projectUID, card, setCurrentEditor } = useBoardCard();
-    const navigate = useNavigate();
-    const viewportId = `board-card-${card.uid}`;
-
-    const close = () => {
-        setCurrentEditor("");
-        navigate(ROUTES.BOARD.MAIN(projectUID), {
-            state: { isSamePage: true },
-        });
-    };
-
+export function SkeletonBoardCard(): JSX.Element {
     return (
-        <Dialog.Root open={true} onOpenChange={close}>
-            <Dialog.Content
-                className="max-w-[100vw] p-4 pb-0 sm:max-w-screen-sm lg:max-w-screen-md"
-                aria-describedby=""
-                withCloseButton={false}
-                viewportId={viewportId}
-                data-card-dialog-content
-            >
-                <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
-                    <BoardCardTitle />
-                    <Dialog.Description>
-                        <BoardCardColumnName />
-                    </Dialog.Description>
-                    <Dialog.CloseButton className="absolute right-0" />
-                </Dialog.Header>
-                <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
-                    <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
-                        <Flex direction={{ initial: "col", sm: "row" }} gap="4">
-                            <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
-                                <BoardCardMemberList members={card.members} />
-                            </BoardCardSection>
-                            <BoardCardSection title="card.Deadline" className="sm:w-1/2">
-                                <BoardCardDeadline />
-                            </BoardCardSection>
-                        </Flex>
-                        <BoardCardSection title="card.Description" className="relative min-h-56">
-                            <BoardCardDescription />
+        <>
+            <Flex direction="col" mb="3" className="sticky top-0 z-[100] space-y-1.5 border-b-2 bg-background pb-3 text-left sm:-top-2 sm:text-left">
+                <SkeletonBoardCardTitle />
+                <Dialog.Description asChild>
+                    <SkeletonBoardCardColumnName />
+                </Dialog.Description>
+                <Skeleton className="absolute right-0 size-6 rounded-sm opacity-70" />
+            </Flex>
+            <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
+                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
+                    <Flex direction={{ initial: "col", sm: "row" }} gap="4">
+                        <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
+                            <SkeletonUserAvatarList count={6} size={{ initial: "sm", lg: "default" }} spacing="none" className="space-x-1" />
                         </BoardCardSection>
-                        {card.attachments.length > 0 && (
-                            <BoardCardSection title="card.Attached files">
-                                <BoardCardAttachmentList />
-                            </BoardCardSection>
-                        )}
-                        {card.checkitems.length > 0 && (
-                            <BoardCardSection title="card.Checklist">
-                                <BoardCardChecklist />
-                            </BoardCardSection>
-                        )}
-                        <BoardCardSection title="card.Comments">
-                            <BoardCommentList viewportId={viewportId} />
+                        <BoardCardSection title="card.Deadline" className="sm:w-1/2">
+                            <SkeletonBoardCardDeadline />
                         </BoardCardSection>
                     </Flex>
-                    <div className="w-full sm:max-w-32">
-                        <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
-                            <BoardCardSection title="card.Actions" titleClassName="mb-2">
-                                <BoardCardActionList />
-                            </BoardCardSection>
-                        </div>
-                    </div>
+                    <BoardCardSection title="card.Description" className="relative min-h-56">
+                        <SkeletonBoardCardDescription />
+                    </BoardCardSection>
+                    <BoardCardSection title="card.Attached files">
+                        <SkeletonBoardCardAttachmentList />
+                    </BoardCardSection>
+                    <BoardCardSection title="card.Checklist">
+                        <SkeletonBoardCardChecklist />
+                    </BoardCardSection>
+                    <BoardCardSection title="card.Comments">
+                        <SkeletonBoardCommentList />
+                    </BoardCardSection>
                 </Flex>
-                <BoardCommentForm />
-            </Dialog.Content>
-        </Dialog.Root>
+                <div className="w-full sm:max-w-32">
+                    <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
+                        <BoardCardSection title="card.Actions" titleClassName="mb-2">
+                            <SkeletonBoardCardActionList />
+                        </BoardCardSection>
+                    </div>
+                </div>
+            </Flex>
+            <SkeletonBoardCommentForm />
+        </>
+    );
+}
+
+function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
+    const { card, setCurrentEditor } = useBoardCard();
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+        return () => {
+            setCurrentEditor("");
+        };
+    }, []);
+
+    return (
+        <>
+            <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
+                <BoardCardTitle />
+                <Dialog.Description>
+                    <BoardCardColumnName />
+                </Dialog.Description>
+                <Dialog.CloseButton className="absolute right-0" />
+            </Dialog.Header>
+            <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
+                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
+                    <Flex direction={{ initial: "col", sm: "row" }} gap="4">
+                        <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
+                            <BoardCardMemberList members={card.members} />
+                        </BoardCardSection>
+                        <BoardCardSection title="card.Deadline" className="sm:w-1/2">
+                            <BoardCardDeadline />
+                        </BoardCardSection>
+                    </Flex>
+                    <BoardCardSection title="card.Description" className="relative min-h-56">
+                        <BoardCardDescription />
+                    </BoardCardSection>
+                    {card.attachments.length > 0 && (
+                        <BoardCardSection title="card.Attached files">
+                            <BoardCardAttachmentList />
+                        </BoardCardSection>
+                    )}
+                    {card.checkitems.length > 0 && (
+                        <BoardCardSection title="card.Checklist">
+                            <BoardCardChecklist />
+                        </BoardCardSection>
+                    )}
+                    <BoardCardSection title="card.Comments">
+                        <BoardCommentList viewportId={viewportId} />
+                    </BoardCardSection>
+                </Flex>
+                <div className="w-full sm:max-w-32">
+                    <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
+                        <BoardCardSection title="card.Actions" titleClassName="mb-2">
+                            <BoardCardActionList />
+                        </BoardCardSection>
+                    </div>
+                </div>
+            </Flex>
+            <BoardCommentForm />
+        </>
     );
 }
 

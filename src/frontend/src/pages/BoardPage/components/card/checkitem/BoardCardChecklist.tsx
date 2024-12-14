@@ -10,11 +10,22 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/BoardCardCheckitem";
 import BoardCardSubCheckitem from "@/pages/BoardPage/components/card/checkitem/BoardCardSubCheckitem";
+import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/SkeletonBoardCardCheckitem";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+
+export function SkeletonBoardCardChecklist() {
+    return (
+        <>
+            <SkeletonBoardCardCheckitem />
+            <SkeletonBoardCardCheckitem />
+            <SkeletonBoardCardCheckitem />
+        </>
+    );
+}
 
 function BoardCardChecklist(): JSX.Element {
     const [t] = useTranslation();
@@ -25,10 +36,10 @@ function BoardCardChecklist(): JSX.Element {
         columns: checkitems,
         setColumns: setCheckitems,
         reorder: reorderCheckitems,
-        sendColumnOrderChanged,
     } = useReorderColumn({
         type: "BoardColumn",
         eventNameParams: { uid: card.uid },
+        topicId: projectUID,
         columns: card.checkitems,
         socket,
     });
@@ -48,6 +59,7 @@ function BoardCardChecklist(): JSX.Element {
     };
     const { on: onCardCheckitemCreated } = useCardCheckitemCreatedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             setCheckitems((prev) => {
@@ -57,6 +69,7 @@ function BoardCardChecklist(): JSX.Element {
     });
     const { on: onCardCheckitemDeleted } = useCardCheckitemDeletedHandlers({
         socket,
+        projectUID,
         uid: card.uid,
         callback: (data) => {
             deletedCheckitem(data.uid);
@@ -82,11 +95,6 @@ function BoardCardChecklist(): JSX.Element {
                 changeCheckitemOrderMutate(
                     { project_uid: projectUID, card_uid: card.uid, checkitem_uid: originalCheckitem.uid, order: index },
                     {
-                        onSuccess: (data) => {
-                            sendColumnOrderChanged({
-                                model_id: data.model_id,
-                            });
-                        },
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {

@@ -39,6 +39,19 @@ class BotRunner:
 
         return BaseBot.__bots__[bot_type].bot_name()
 
+    def get_bot_as_user_api(self, bot_type: BotType) -> dict[str, Any] | None:
+        if bot_type not in BaseBot.__bots__:
+            return None
+
+        return {
+            "id": -1,
+            "firstname": f"{self.get_bot_name(bot_type)} Bot",
+            "lastname": "",
+            "email": "",
+            "username": "",
+            "avatar": BaseBot.__bots__[bot_type].bot_avatar(),
+        }
+
     async def is_available(self, bot_type: BotType) -> bool:
         if bot_type not in BaseBot.__bots__:
             return False

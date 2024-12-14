@@ -58,6 +58,8 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
     const initials = createNameInitials(user.firstname, user.lastname);
     const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+    const isDeletedUser = user.id === 0;
+    const isBot = user.id === -1;
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
@@ -70,7 +72,7 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
         trigger = <Trigger {...props} isOpened={isOpened} setIsOpened={setIsOpened} />;
     }
 
-    if (!children || user.id === 0) {
+    if (!children || isDeletedUser || isBot) {
         return <>{trigger}</>;
     }
 
@@ -122,10 +124,12 @@ const Trigger = memo(
     }: IUserAvatarTriggerProps) => {
         const [t] = useTranslation();
         const initials = createNameInitials(user.firstname, user.lastname);
+        const isDeletedUser = user.id === 0;
+        const isBot = user.id === -1;
 
         const avatarAfterPseudoClassNames = cn(
             "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
-            children && user.id !== 0 ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer" : ""
+            children && !isDeletedUser && !isBot ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer" : ""
         );
 
         const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
@@ -141,7 +145,7 @@ const Trigger = memo(
 
         if (children) {
             avatarRootClassName = cn(avatarRootClassName, avatarAfterPseudoClassNames);
-            if (user.id !== 0) {
+            if (!isDeletedUser && !isBot) {
                 avatarRootOnClick = () => setIsOpened(!isOpened);
             }
         }
@@ -150,7 +154,13 @@ const Trigger = memo(
             <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
                 <Avatar.Image src={user.avatar} />
                 <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                    {initials.length ? initials : <IconComponent icon="user" className="h-[80%] w-[80%]" />}
+                    {isDeletedUser ? (
+                        <IconComponent icon="user" className="h-[80%] w-[80%]" />
+                    ) : isBot ? (
+                        <IconComponent icon="bot" className="h-[80%] w-[80%]" />
+                    ) : (
+                        initials
+                    )}
                 </Avatar.Fallback>
             </Avatar.Root>
         );
@@ -158,7 +168,15 @@ const Trigger = memo(
         let avatarWrapper = avatar;
 
         if (withName) {
-            const names = user.id !== 0 ? `${user.firstname} ${user.lastname}` : t("common.Unknown User");
+            let names: string;
+            if (isDeletedUser) {
+                names = t("common.Unknown User");
+            } else if (isBot) {
+                names = user.firstname;
+            } else {
+                names = `${user.firstname} ${user.lastname}`;
+            }
+
             avatarWrapper = (
                 <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
                     {!noAvatar && avatar}

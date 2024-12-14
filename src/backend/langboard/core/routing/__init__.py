@@ -5,10 +5,11 @@ from .Form import BaseFormModel, form_model
 from .JsonResponse import JsonResponse
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TCachedScopes
+from .SocketManager import SocketManager
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketResponseCode import SocketResponseCode
-from .SocketRouter import SocketRouter
+from .SocketTopic import SocketTopic
 from .WebSocket import WebSocket
 
 
@@ -24,7 +25,8 @@ __all__ = [
     "SocketRequest",
     "SocketResponse",
     "SocketResponseCode",
-    "SocketRouter",
+    "SocketManager",
     "TCachedScopes",
+    "SocketTopic",
     "WebSocket",
 ]

@@ -13,13 +13,13 @@ import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo, useCallback, useEffect, useReducer, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.IBoard & {
-        isOpenedRef?: React.MutableRefObject<bool>;
+        isOpened?: bool;
     };
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
     isOverlay?: bool;
@@ -52,15 +52,15 @@ const DISABLE_DRAGGING_ATTR = "data-drag-disabled";
 
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { project, currentUser, socket, hasRoleAction } = useBoard();
-    if (TypeUtils.isNullOrUndefined(card.isOpenedRef)) {
-        card.isOpenedRef = useRef(false);
+    if (TypeUtils.isNullOrUndefined(card.isOpened)) {
+        card.isOpened = false;
     }
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const isClickedRef = useRef(false);
     const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
         socket,
+        projectUID: project.uid,
         cardUID: card.uid,
         callback: (data) => {
             card.description = data.description;
@@ -83,24 +83,9 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 return;
             }
 
-            const upEvent = type === "mouse" ? "mouseup" : "touchend";
             const targetListener = type === "mouse" ? "onMouseDown" : "onTouchStart";
 
-            const checkIsClick = () => {
-                isClickedRef.current = true;
-                window.removeEventListener(upEvent, checkIsClick);
-            };
-
-            window.addEventListener(upEvent, checkIsClick);
-
-            setTimeout(() => {
-                if (isClickedRef.current) {
-                    return;
-                }
-
-                window.removeEventListener(upEvent, checkIsClick);
-                listeners?.[targetListener]?.(e);
-            }, 150);
+            listeners?.[targetListener]?.(e);
         },
         []
     );
@@ -117,6 +102,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
 
         return () => {
             off();
+            card.isOpened = false;
         };
     }, []);
 
@@ -154,7 +140,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
         };
     }
 
-    let cardInner = <BoardColumnCardInner isClickedRef={isClickedRef} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
+    let cardInner = <BoardColumnCardInner isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
     if (!isOverlay && !isDragging && card.description?.content.trim().length) {
         cardInner = (
@@ -191,19 +177,20 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
 });
 
 interface IBoardColumnCardInnerProps {
+    isDragging: bool;
     card: IBoardColumnCardProps["card"];
-    isClickedRef: React.MutableRefObject<bool>;
     setIsHoverCardHidden: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
-    const { project, socket, filters, hasRoleAction, navigateWithFilters } = useBoard();
+const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
+    const { project, socket, filters, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
     const [title, setTitle] = useState(card.title);
     const [commentCount, setCommentCount] = useState(card.count_comment);
-    const [isOpened, setIsOpened] = useState(card.isOpenedRef!.current);
+    const [isOpened, setIsOpened] = useState(card.isOpened);
     const { on: onCardTitleChanged } = useCardTitleChangedHandlers({
         socket,
+        projectUID: project.uid,
         cardUID: card.uid,
         callback: (data) => {
             card.title = data.title;
@@ -212,6 +199,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
     });
     const { on: onCardCommentAdded } = useCardCommentAddedHandlers({
         socket,
+        projectUID: project.uid,
         cardUID: card.uid,
         callback: () => {
             setCommentCount((count) => {
@@ -222,6 +210,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
     });
     const { on: onCardCommentDeleted } = useCardCommentDeletedHandlers({
         socket,
+        projectUID: project.uid,
         cardUID: card.uid,
         callback: () => {
             setCommentCount((count) => {
@@ -253,18 +242,11 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
     }, []);
 
     const openCard = (e: React.MouseEvent<HTMLDivElement>) => {
-        setTimeout(() => {
-            if (!isClickedRef.current && hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
-                return;
-            }
+        if (isDragging || (e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
+            return;
+        }
 
-            if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                return;
-            }
-
-            isClickedRef.current = false;
-            navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
-        }, 150);
+        navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
     };
 
     const setFilters = (relationshipType: keyof ProjectCard.IBoard["relationships"]) => {
@@ -296,7 +278,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
                 open={isOpened}
                 onOpenChange={(opened) => {
                     setIsOpened(opened);
-                    card.isOpenedRef!.current = opened;
+                    card.isOpened = opened;
                 }}
             >
                 <Card.Header className="relative block py-4">
@@ -327,12 +309,14 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
                                 return null;
                             }
 
+                            const relationshipCount = relationship.length > 99 ? "99" : relationship.length;
+
                             return (
                                 <Button
                                     key={`board-card-relationship-button-${relationshipType}-${card.uid}`}
                                     size="icon-sm"
                                     className={cn(
-                                        "absolute top-1/2 z-20 block -translate-y-1/2 transform rounded-full text-xs",
+                                        "absolute top-1/2 z-20 block -translate-y-1/2 transform rounded-full text-xs hover:bg-primary/70",
                                         relationshipType === "parents" ? "-left-3" : "-right-3"
                                     )}
                                     title={t(`project.${new StringCase(relationshipType).toPascal()}`)}
@@ -340,7 +324,7 @@ const BoardColumnCardInner = memo(({ card, isClickedRef, setIsHoverCardHidden }:
                                     onClick={() => setFilters(relationshipType)}
                                     {...attributes}
                                 >
-                                    +{relationship.length}
+                                    +{relationshipCount}
                                 </Button>
                             );
                         })}

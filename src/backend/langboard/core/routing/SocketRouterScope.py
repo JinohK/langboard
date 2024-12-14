@@ -187,9 +187,7 @@ class SocketRouterScope:
                     TypeError(f"Parameter '{self._param_name}' must be a dict but got {req.data}")
                 )
 
-            value = req.data.get(
-                self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
-            )
+            value = req.data.get(self._param_name, req.from_app.get(self._param_name))
 
             if value in enum_keys:
                 return annotation[value]
@@ -261,28 +259,22 @@ class SocketRouterScope:
 
             data_dict = req.data if isinstance(req.data, dict) else {}
 
-            # if param_name is data or route_data
-            # and req.data, req.route_data or req.from_app doesn't have a key named param_name
+            # if param_name is data
+            # and req.data or req.from_app doesn't have a key named param_name
             # and parameter annotation is dict
-            # and param_name is data and req.data is a dict or param_name is route_data
+            # and param_name is data and req.data is a dict
             if (
-                self._param_name in ("data", "route_data")
-                and self._param_name not in (data_dict | req.route_data | req.from_app)
+                self._param_name == "data"
+                and self._param_name not in (data_dict | req.from_app)
                 and (is_any or annotation is dict)
-                and ((self._param_name == "data" and isinstance(req.data, dict)) or self._param_name == "route_data")
+                and (self._param_name == "data" and isinstance(req.data, dict))
             ):
                 return getattr(req, self._param_name)
 
-            if (
-                self._param_name not in data_dict
-                and self._param_name not in req.route_data
-                and self._param_name not in req.from_app
-            ):
+            if self._param_name not in data_dict and self._param_name not in req.from_app:
                 return None
 
-            raw_data = data_dict.get(
-                self._param_name, req.route_data.get(self._param_name, req.from_app.get(self._param_name))
-            )
+            raw_data = data_dict.get(self._param_name, req.from_app.get(self._param_name))
 
             if is_any or isinstance(raw_data, annotation):
                 return raw_data

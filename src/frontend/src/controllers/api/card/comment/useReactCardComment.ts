@@ -1,6 +1,5 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { API_ROUTES } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
@@ -12,7 +11,7 @@ export interface IReactCardCommentForm {
     reaction: TEmoji;
 }
 
-export interface IReactCardCommentResponse extends IModelIdBase {
+export interface IReactCardCommentResponse {
     is_reacted: bool;
 }
 

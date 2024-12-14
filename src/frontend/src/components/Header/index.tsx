@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import CachedImage from "@/components/CachedImage";
 import NavItems from "@/components/Header/NavItems";
 import { IHeaderProps } from "@/components/Header/types";
@@ -10,15 +9,18 @@ import UserAvatar from "@/components/UserAvatar";
 import { Button, Flex, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { useSocket } from "@/core/providers/SocketProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function Header({ navs }: IHeaderProps) {
     const { isAuthenticated, aboutMe, signOut } = useAuth();
+    const { close } = useSocket();
     const [isOpened, setIsOpen] = useState(false);
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = useRef(usePageNavigate());
 
     const toDashboard = () => {
-        navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
+        navigate.current(ROUTES.DASHBOARD.PROJECTS.ALL);
     };
 
     const separator = <Separator className="h-5" orientation="vertical" />;
@@ -104,11 +106,17 @@ function Header({ navs }: IHeaderProps) {
                             className="mx-1"
                         >
                             <UserAvatar.List>
-                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate(ROUTES.ACCOUNT.PROFILE)}>
+                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.ACCOUNT.PROFILE)}>
                                     {t("myAccount.My Account")}
                                 </UserAvatar.ListItem>
                                 <UserAvatar.ListSeparator />
-                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => signOut()}>
+                                <UserAvatar.ListItem
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        close();
+                                        signOut();
+                                    }}
+                                >
                                     {t("myAccount.Sign out")}
                                 </UserAvatar.ListItem>
                                 <UserAvatar.ListSeparator />

@@ -1,19 +1,17 @@
 import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useDeleteCheckitem from "@/controllers/api/card/checkitem/useDeleteCheckitem";
-import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler, deleted } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: deleteCheckitemMutateAsync } = useDeleteCheckitem();
-    const { send: sendCheckitemDeleted } = useCardCheckitemDeletedHandlers({ socket });
 
     const deleteCheckitem = () => {
         if (isValidating) {
@@ -31,11 +29,8 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
-            success: (data) => {
+            success: () => {
                 deleted(checkitem.uid);
-                sendCheckitemDeleted({
-                    model_id: data.model_id,
-                });
                 return t("card.Checkitem deleted successfully.");
             },
             finally: () => {

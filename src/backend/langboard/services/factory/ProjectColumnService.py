@@ -1,13 +1,11 @@
 from typing import cast
+from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
 from ...models import (
     Card,
     Project,
-    ProjectActivity,
     ProjectColumn,
     User,
 )
-from ..BaseService import BaseService
-from .ActivityService import ActivityResult, ActivityService
 
 
 class ProjectColumnService(BaseService):
@@ -26,16 +24,42 @@ class ProjectColumnService(BaseService):
         count = cast(int, result.one())
         return count
 
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn)
+    async def change_name(
+        self, user: User, project_uid: str, column_uid: str, name: str
+    ) -> ModelIdBaseResult[bool] | None:
+        project = await self._get_by(Project, "uid", project_uid)
+        if not project:
+            return None
+
+        if column_uid == Project.ARCHIVE_COLUMN_UID:
+            # original_name = project.archive_column_name
+            project.archive_column_name = name
+            await self._db.update(project)
+        else:
+            column = await self._get_by(ProjectColumn, "uid", column_uid)
+            if not column or column.project_id != project.id:
+                return None
+            # original_name = column.name
+            column.name = name
+            await self._db.update(column)
+
+        await self._db.commit()
+
+        model_id = await ModelIdService.create_model_id(
+            {
+                "uid": column_uid,
+                "name": name,
+            }
+        )
+
+        return ModelIdBaseResult(model_id, True)
+
     async def change_order(
         self, user: User, project_uid: str, column_uid: str, order: int
-    ) -> tuple[ActivityResult | None, bool]:
-        result = await self._db.exec(
-            self._db.query("select").table(Project).where(Project.column("uid") == project_uid).limit(1)
-        )
-        project = result.first()
+    ) -> ModelIdBaseResult[bool] | None:
+        project = await self._get_by(Project, "uid", project_uid)
         if not project:
-            return None, False
+            return None
 
         result = await self._db.exec(
             self._db.query("select")
@@ -48,7 +72,7 @@ class ProjectColumnService(BaseService):
         columns.insert(project.archive_column_order, project)
 
         if column_uid == Project.ARCHIVE_COLUMN_UID:
-            original_column_order = project.archive_column_order
+            # original_column_order = project.archive_column_order
             target_column = columns.pop(project.archive_column_order)
         else:
             target_column = None
@@ -58,10 +82,10 @@ class ProjectColumnService(BaseService):
                     columns.remove(column)
                     break
             if not target_column:
-                return None, False
-            original_column_order = (
-                target_column.order if isinstance(target_column, ProjectColumn) else project.archive_column_order
-            )
+                return None
+            # original_column_order = (
+            #     target_column.order if isinstance(target_column, ProjectColumn) else project.archive_column_order
+            # )
 
         columns.insert(order, target_column)
 
@@ -72,19 +96,13 @@ class ProjectColumnService(BaseService):
                 column.order = i
             await self._db.update(column)
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=project,
-            shared={
-                "project_uid": project.uid,
-                "column_uid": column_uid,
-            },
-            new={
-                "column_order": order,
-            },
-            old={
-                "column_order": original_column_order,
-            },
+        await self._db.commit()
+
+        model_id = await ModelIdService.create_model_id(
+            {
+                "uid": column_uid,
+                "order": order,
+            }
         )
 
-        return activity_result, True
+        return ModelIdBaseResult(model_id, True)

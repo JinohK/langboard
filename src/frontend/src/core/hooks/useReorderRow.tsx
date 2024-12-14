@@ -1,5 +1,5 @@
 import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/controllers/socket/shared/useRowOrderChangedHandlers";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
+import { ISocketContext } from "@/core/providers/SocketProvider";
 import { useEffect } from "react";
 
 export interface IRow {
@@ -10,17 +10,19 @@ export interface IRow {
 export interface IUseReorderRowProps<TRow extends IRow, TRowColumn extends keyof TRow> {
     type: IUseRowOrderChangedHandlersProps["type"];
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
+    topicId: string;
     allRowsMap: Record<string, TRow>;
     rows: TRow[];
     columnKey: TRowColumn;
     currentColumnId: TRow[TRowColumn];
-    socket: IConnectedSocket;
+    socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
 }
 
 function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
     type,
     eventNameParams,
+    topicId,
     allRowsMap,
     rows,
     columnKey,
@@ -32,6 +34,7 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
     const { on: onRowOrderChanged, send: sendRowOrderChanged } = useRowOrderChangedHandlers({
         socket,
         type,
+        topicId,
         params: eventNameParams,
         callback: (data) => {
             switch (data.move_type) {

@@ -20,11 +20,10 @@ class SocketEvent:
 
     name: str
 
-    def __init__(self, route_path: str, event_name: str, event: TEvent):
+    def __init__(self, event_name: str, event: TEvent):
         self.name = event_name
         self._event = event
         self._event_details = {
-            "route": route_path,
             "event": event_name,
             "func": event.__name__,
         }
@@ -52,7 +51,14 @@ class SocketEvent:
             model_class, actions, role_finder = RoleFilter.get_filtered(self._event)
             role = Role(model_class)
 
-            is_authorized = await role.is_authorized(req.from_app["auth_user_id"], req.route_data, actions, role_finder)
+            params = {}
+            topics = req.socket.get_topics()
+            for topic in topics:
+                if ":" in topic:
+                    key, value = topic.split(":", 1)
+                    params[f"{key}_id"] = value
+
+            is_authorized = await role.is_authorized(req.from_app["auth_user_id"], params, actions, role_finder)
             await role.close()
             if not is_authorized:
                 return SocketStatusCodeException(code=SocketResponseCode.WS_3003_FORBIDDEN, message="Forbidden")

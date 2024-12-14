@@ -1,49 +1,35 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { memo, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { DashboardStyledLayout } from "@/components/Layout";
-import { Progress, Toast } from "@/components/base";
+import { Toast } from "@/components/base";
 import useProjectAvailable from "@/controllers/api/board/useProjectAvailable";
-import { SOCKET_CLIENT_EVENTS, SOCKET_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { IConnectedSocket, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
-import Board from "@/pages/BoardPage/components/board/Board";
+import Board, { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
-import { Project } from "@/core/models";
+import useBoardChatAvailableHandlers from "@/controllers/socket/board/useBoardChatAvailableHandlers";
+import useSocketErrorHandlers from "@/controllers/socket/shared/useSocketErrorHandlers";
+import { useSocket } from "@/core/providers/SocketProvider";
+import { useAuth } from "@/core/providers/AuthProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
-function BoardPageParamChecker(): JSX.Element {
-    const params = useParams();
-    const projectUID = params.projectUID;
-    const cardUID = params.cardUID;
+const BoardPageProxy = memo((): JSX.Element => {
+    const [t] = useTranslation();
+    const socket = useSocket();
+    const navigate = useRef(usePageNavigate()).current;
+    const { aboutMe } = useAuth();
+    const projectUID = location.pathname.split("/")[2];
+    const isChatAvailableRef = useRef(false);
+    const [isReady, setIsReady] = useState(false);
 
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
-    return <BoardPageProxy projectUID={projectUID} cardUID={cardUID} />;
-}
-
-function BoardPageProxy({ projectUID, cardUID }: { projectUID: string; cardUID?: string }): JSX.Element {
-    const [t] = useTranslation();
-    const navigate = useNavigate();
-    const { connect, closeAll } = useSocket();
-    const { data: project, error, isSuccess } = useProjectAvailable({ uid: projectUID });
-    const socketRef = useRef<IConnectedSocket | null>(null);
-    const isChatAvailableRef = useRef(false);
-    const [isReady, setIsReady] = useState(false);
-    const isChatAvailableCallback = useCallback(({ available }: { available: bool }) => {
-        isChatAvailableRef.current = available;
-        setIsReady(true);
-    }, []);
-    const socketErrorCallback = useCallback(() => {
-        Toast.Add.error(t("errors.Internal server error"));
-        closeAll();
-        isChatAvailableRef.current = false;
-        socketRef.current = null;
-    }, []);
+    const { data: project, error } = useProjectAvailable({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -65,71 +51,63 @@ function BoardPageProxy({ projectUID, cardUID }: { projectUID: string; cardUID?:
     }, [error]);
 
     useEffect(() => {
-        if (!isSuccess) {
+        if (!project) {
             return;
         }
 
-        const curSocket = connect(SOCKET_ROUTES.BOARD(projectUID));
+        socket.subscribe(ESocketTopic.Board, projectUID);
 
-        curSocket.on(SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE, isChatAvailableCallback);
-        curSocket.on("error", socketErrorCallback);
+        const { on: onBoardChatAvailable, send: sendBoardChatAvailable } = useBoardChatAvailableHandlers({
+            socket,
+            projectUID,
+            callback: ({ available }: { available: bool }) => {
+                isChatAvailableRef.current = available;
+                setIsReady(() => true);
+            },
+        });
+        const { on: onSocketError } = useSocketErrorHandlers({
+            socket,
+            eventKey: `is-board-chat-available-${projectUID}`,
+            callback: () => {
+                Toast.Add.error(t("errors.Internal server error"));
+                isChatAvailableRef.current = false;
+            },
+        });
 
-        socketRef.current = curSocket;
+        const { off: offBoardChatAvailable } = onBoardChatAvailable();
+        const { off: offSocketError } = onSocketError();
 
-        curSocket.send(SOCKET_CLIENT_EVENTS.BOARD.IS_CHAT_AVAILABLE, {});
+        sendBoardChatAvailable({});
 
         return () => {
-            curSocket.off(SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE, isChatAvailableCallback);
-            curSocket.off("error", socketErrorCallback);
-            closeAll();
-            socketRef.current = null;
+            offBoardChatAvailable();
+            offSocketError();
         };
-    }, [isSuccess]);
+    }, [project]);
+
+    const resizableSidebar =
+        isReady && isChatAvailableRef.current
+            ? {
+                  children: (
+                      <Suspense>
+                          <ChatSidebar uid={project!.uid} />
+                      </Suspense>
+                  ),
+                  initialWidth: 280,
+                  collapsableWidth: 210,
+                  floatingIcon: "message-circle",
+                  floatingTitle: "project.Chat with AI",
+                  floatingFullScreen: true,
+              }
+            : undefined;
 
     return (
         <>
-            {!isReady ? (
-                <Progress indeterminate height="1" />
-            ) : (
-                <BoardPage cardUID={cardUID} project={project!} socket={socketRef.current!} isChatAvailable={isChatAvailableRef.current} />
-            )}
+            <DashboardStyledLayout headerNavs={[]} resizableSidebar={resizableSidebar} noPadding>
+                {!isReady || !aboutMe() ? <SkeletonBoard /> : <Board navigate={navigate} project={project!} currentUser={aboutMe()!} />}
+            </DashboardStyledLayout>
         </>
     );
-}
+});
 
-interface IBoardPageProps {
-    cardUID?: string;
-    project: Project.IBoard;
-    socket: IConnectedSocket;
-    isChatAvailable: bool;
-}
-
-function BoardPage({ cardUID, project, socket, isChatAvailable }: IBoardPageProps): JSX.Element {
-    const resizableSidebar = {
-        children: (
-            <Suspense>
-                <ChatSidebar uid={project.uid} socket={socket} />
-            </Suspense>
-        ),
-        initialWidth: 280,
-        collapsableWidth: 210,
-        floatingIcon: "message-circle",
-        floatingTitle: "project.Chat with AI",
-        floatingFullScreen: true,
-    };
-
-    return (
-        <DashboardStyledLayout headerNavs={[]} resizableSidebar={isChatAvailable ? resizableSidebar : undefined} noPadding>
-            <Suspense>
-                <Board socket={socket} project={project} />
-            </Suspense>
-            {cardUID && (
-                <Suspense>
-                    <BoardCard projectUID={project.uid} cardUID={cardUID} socket={socket} />
-                </Suspense>
-            )}
-        </DashboardStyledLayout>
-    );
-}
-
-export default BoardPageParamChecker;
+export default BoardPageProxy;

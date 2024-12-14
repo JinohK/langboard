@@ -1,32 +1,33 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { IModelIdBase } from "@/controllers/types";
+import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, User } from "@/core/models";
 
-export interface IBoardCardCreatedRequest extends IModelIdBase {}
+export interface IBoardCardCreatedRequest {}
 
 export interface IBoardCardCreatedResponse {
     card: ProjectCard.IBoard;
 }
 
 export interface IUseBoardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardCardCreatedResponse> {
-    columnUID?: string;
+    projectUID: string;
+    columnUID: string;
 }
 
-const useBoardCardCreatedHandlers = ({ socket, callback, columnUID }: IUseBoardCardCreatedHandlersProps) => {
+const useBoardCardCreatedHandlers = ({ socket, callback, projectUID, columnUID }: IUseBoardCardCreatedHandlersProps) => {
     return useSocketHandler<IBoardCardCreatedRequest, IBoardCardCreatedResponse>({
         socket,
+        topic: ESocketTopic.Board,
+        id: projectUID,
+        eventKey: `board-card-created-${columnUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CREATED,
-            params: columnUID ? { uid: columnUID } : undefined,
+            params: { uid: columnUID },
             callback,
             responseConverter: (data) => {
                 User.transformFromApi(data.card.members);
                 return data;
             },
-        },
-        sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CARD.CREATED,
         },
     });
 };

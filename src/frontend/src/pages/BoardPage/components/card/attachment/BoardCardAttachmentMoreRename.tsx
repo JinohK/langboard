@@ -1,7 +1,6 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useChangeCardAttachmentName from "@/controllers/api/card/attachment/useChangeCardAttachmentName";
-import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentNameChangedHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
 import { useState } from "react";
@@ -20,11 +19,10 @@ function BoardCardAttachmentMoreRename({
     sharedErrorHandler,
     update,
 }: IBoardCardAttachmentMoreRenameProps): JSX.Element {
-    const { projectUID, card, socket, sharedClassNames } = useBoardCard();
+    const { projectUID, card, sharedClassNames } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeCardAttachmentNameMutateAsync } = useChangeCardAttachmentName();
-    const { send: sendCardAttachmentNameChanged } = useCardAttachmentNameChangedHandlers({ socket });
     const nameInputId = `board-card-attachment-name-input-${attachment.uid}`;
 
     const changeAttachmentName = () => {
@@ -54,11 +52,8 @@ function BoardCardAttachmentMoreRename({
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
-            success: (data) => {
+            success: () => {
                 attachment.name = name;
-                sendCardAttachmentNameChanged({
-                    model_id: data.model_id,
-                });
                 update();
                 return t("card.File name changed successfully.");
             },

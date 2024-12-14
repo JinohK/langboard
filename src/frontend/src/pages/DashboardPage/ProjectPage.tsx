@@ -1,12 +1,13 @@
 import { InfiniteData } from "@tanstack/react-query";
 import { memo, useEffect, useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { Tabs } from "@/components/base";
 import useGetProjects, { IDashboardProject, IGetProjectsForm, IGetProjectsResponse } from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
 import { makeReactKey } from "@/core/utils/StringUtils";
 import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 interface IProjectPageProps {
     currentTab: IGetProjectsForm["listType"];
@@ -27,8 +28,9 @@ const cachedProjectQueries: Record<
 };
 
 const ProjectPage = memo(({ currentTab, refetchAllStarred, updateScrollArea }: IProjectPageProps): JSX.Element => {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const currentProjectQuery = cachedProjectQueries[currentTab];
     const {
         data: rawProjects,
@@ -55,6 +57,7 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred, updateScrollArea }: I
             currentProjectQuery.data = rawProjects;
             projects.splice(0);
             projects.push(...currentProjectQuery.data.pages.flatMap((page) => page.projects));
+            setIsLoadingRef.current(false);
             forceUpdate();
         }
         updateScrollArea();
@@ -67,7 +70,9 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred, updateScrollArea }: I
                     <Tabs.Trigger
                         value={tab}
                         key={makeReactKey(`dashboard.tabs.${tab}`)}
-                        onClick={() => navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as "ALL" | "STARRED" | "RECENT" | "UNSTARRED"])}
+                        onClick={() => {
+                            navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as "ALL" | "STARRED" | "RECENT" | "UNSTARRED"]);
+                        }}
                     >
                         {t(`dashboard.tabs.${tab}`)}
                     </Tabs.Trigger>

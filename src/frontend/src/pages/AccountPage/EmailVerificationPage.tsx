@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Progress, Toast } from "@/components/base";
 import { SUB_EMAIL_VERIFY_TOKEN_QUERY_NAME } from "@/controllers/api/account/useAddNewEmail";
 import useVerifyNewEmail from "@/controllers/api/account/useVerifyNewEmail";
@@ -8,12 +8,15 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function EmailVerificationPage() {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const { updatedUser } = useAuth();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const { mutate } = useVerifyNewEmail();
 
     useEffect(() => {
@@ -50,6 +53,9 @@ function EmailVerificationPage() {
                     });
 
                     handle(error);
+                },
+                onSettled: () => {
+                    setIsLoadingRef.current(false);
                 },
             }
         );

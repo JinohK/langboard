@@ -5,25 +5,39 @@ import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/use
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardComment, { SkeletonBoardComment } from "@/pages/BoardPage/components/card/comment/BoardComment";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import InfiniteScroll from "react-infinite-scroller";
-import { useNavigate } from "react-router-dom";
 
 export interface IBoardCommentListProps {
     viewportId: string;
+}
+
+export function SkeletonBoardCommentList() {
+    return (
+        <div className="pb-2.5">
+            <div className="flex flex-col gap-4">
+                <SkeletonBoardComment />
+                <SkeletonBoardComment />
+                <SkeletonBoardComment />
+                <SkeletonBoardComment />
+                <SkeletonBoardComment />
+            </div>
+        </div>
+    );
 }
 
 function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
     const { projectUID, card } = useBoardCard();
     const { data: commentsData, error } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = useRef(usePageNavigate());
 
     useEffect(() => {
         if (!error) {
@@ -33,18 +47,18 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 
         handle(error);
     }, [error]);
 
-    return <>{!commentsData ? "loading..." : <BoardCommentListResult viewportId={viewportId} comments={commentsData.comments} />}</>;
+    return <>{!commentsData ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} comments={commentsData.comments} />}</>;
 }
 
 interface IBoardCommentListResultProps extends IBoardCommentListProps {
@@ -52,20 +66,22 @@ interface IBoardCommentListResultProps extends IBoardCommentListProps {
 }
 
 function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCommentListResultProps): JSX.Element {
-    const { card, socket } = useBoardCard();
+    const { projectUID, card, socket } = useBoardCard();
     const [t] = useTranslation();
     const PAGE_SIZE = 10;
     const { items: comments, nextPage, forceUpdate, hasMore } = useInfiniteScrollPager({ allItems: flatComments, size: PAGE_SIZE });
     const { on: onCardCommentAdded } = useCardCommentAddedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             flatComments.unshift(data.comment);
             forceUpdate();
         },
     });
-    const { on: onCardCommentDeleted, send: sendCardCommentDeleted } = useCardCommentDeletedHandlers({
+    const { on: onCardCommentDeleted } = useCardCommentDeletedHandlers({
         socket,
+        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             deletedComment(data.comment_uid);
@@ -82,7 +98,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
         };
     }, []);
 
-    const deletedComment = (commentUID: string, modelId?: string) => {
+    const deletedComment = (commentUID: string) => {
         const index = flatComments.findIndex((c) => c.uid === commentUID);
         if (index === -1) {
             return;
@@ -90,12 +106,6 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
 
         flatComments.splice(index, 1);
         forceUpdate();
-
-        if (!modelId) {
-            return;
-        }
-
-        sendCardCommentDeleted({ model_id: modelId });
     };
 
     return (

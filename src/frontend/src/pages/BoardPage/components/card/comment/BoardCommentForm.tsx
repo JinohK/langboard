@@ -1,4 +1,4 @@
-import { Button, Drawer, Flex, Form } from "@/components/base";
+import { Button, Drawer, Flex, Form, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,9 +13,20 @@ import UserAvatarList from "@/components/UserAvatarList";
 import { cn } from "@/core/utils/ComponentUtils";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
-import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import SubmitButton from "@/components/SubmitButton";
+
+export function SkeletonBoardCommentForm() {
+    return (
+        <div className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] bg-background sm:-bottom-2">
+            <Flex items="center" gap="4" className="rounded-b-lg border-t p-2">
+                <Skeleton className="size-8 overflow-hidden rounded-full" />
+                <div className="w-full cursor-text py-1">
+                    <Skeleton className="h-6 w-1/3" />
+                </div>
+            </Flex>
+        </div>
+    );
+}
 
 function BoardCommentForm(): JSX.Element {
     const { projectUID, card, socket, currentUser, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
@@ -32,8 +43,6 @@ function BoardCommentForm(): JSX.Element {
     const { mutate: addCommentMutate } = useAddCardComment();
     const editorName = `${card.uid}-comment`;
     const isClickedRef = useRef(false);
-    const { send: sendCardCommentAdded } = useCardCommentAddedHandlers({ socket });
-    const { send: sendCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({ socket });
     const onDrawerHandlePointerStart = useCallback(
         (type: "mouse" | "touch") => {
             if (isValidating) {
@@ -132,9 +141,6 @@ function BoardCommentForm(): JSX.Element {
                 content: valueRef.current,
             },
             {
-                onSuccess: (data) => {
-                    sendCardCommentAdded({ model_id: data.model_id });
-                },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});
 
@@ -226,13 +232,10 @@ function BoardCommentForm(): JSX.Element {
                                 mentionableUsers={card.project_members}
                                 className="h-full max-h-[min(50vh,200px)] min-h-[min(50vh,200px)] overflow-y-auto px-6 py-3"
                                 socket={socket}
-                                baseSocketEvent="card"
+                                baseSocketEvent="board:card"
+                                chatEventKey={`card-new-comment-${card.uid}`}
+                                copilotEventKey={`card-new-comment-${card.uid}`}
                                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
-                                uploadedCallback={(data) => {
-                                    sendCardAttachmentUploaded({
-                                        model_id: data.model_id,
-                                    });
-                                }}
                                 setValue={setValue}
                                 editorElementRef={editorElementRef}
                             />

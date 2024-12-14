@@ -3,7 +3,7 @@ from typing import Any, Callable, Sequence, TypeVar, overload
 from sqlalchemy import Delete, Update, func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ..core.db import BaseSqlModel, DbSession
+from ..db import BaseSqlModel, DbSession
 
 
 _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
@@ -17,8 +17,9 @@ class BaseService(ABC):
     @abstractmethod
     def name() -> str: ...
 
-    def __init__(self, get_service: Callable, db: DbSession):
+    def __init__(self, get_service: Callable, get_service_by_name: Callable, db: DbSession):
         self._raw_get_service = get_service
+        self._get_service_by_name = get_service_by_name
         self._db = db
 
     def _get_service(self, service: type[_TService]) -> _TService:
@@ -27,6 +28,13 @@ class BaseService(ABC):
         The purpose is to share services among services.
         """
         return self._raw_get_service(service)
+
+    def _get_service_by_name(self, name: str) -> Any:
+        """This method is from :class:`ServiceFactory`.
+
+        The purpose is to share services among services.
+        """
+        return self._get_service_by_name(name)
 
     @overload
     def paginate(self, statement: Select[_TSelect], page: int, limit: int) -> Select[_TSelect]: ...

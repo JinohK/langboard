@@ -101,15 +101,8 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         if kwargs.get("user_id", None) is not None:
             target_id_column = self._model_class.user_id
             target_id = kwargs["user_id"]
-            if kwargs.get("group_id", None) is not None:
-                kwargs.pop("group_id")
-        elif kwargs.get("group_id", None) is not None:
-            target_id_column = self._model_class.group_id
-            target_id = kwargs["group_id"]
-            if kwargs.get("user_id", None) is not None:
-                kwargs.pop("user_id")
         else:
-            raise ValueError("user_id or group_id is required.")
+            raise ValueError("user_id is required.")
 
         query = self._db.query("select").table(self._model_class).where(target_id_column == target_id)
         filterable_columns = self._model_class.get_filterable_columns(self._model_class)  # type: ignore

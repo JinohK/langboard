@@ -1,24 +1,23 @@
 from datetime import datetime
-from typing import Any, Literal, TypeVar, cast, overload
+from typing import Any, TypeVar, cast, overload
 from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import BotType
+from ...core.db import EditorContentModel
+from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
-    CardActivity,
     CardAssignedUser,
     CardComment,
     CardRelationship,
+    Checkitem,
     GlobalCardRelationshipType,
     Project,
-    ProjectActivity,
     ProjectColumn,
     User,
 )
-from ..BaseService import BaseService
-from .ActivityService import ActivityResult, ActivityService
 from .CardAttachmentService import CardAttachmentService
 from .CheckitemService import CheckitemService
 from .ProjectService import ProjectService
@@ -55,8 +54,8 @@ class CardService(BaseService):
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
         api_card["column_name"] = column.name
-        api_card["archive_column_uid"] = Project.ARCHIVE_COLUMN_UID
-        api_card["all_columns"] = await self._get_service(ProjectService).get_columns(project)
+        api_card["project_archive_column_uid"] = Project.ARCHIVE_COLUMN_UID
+        api_card["project_all_columns"] = await self._get_service(ProjectService).get_columns(project)
 
         checkitem_service = self._get_service(CheckitemService)
         api_card["checkitems"] = await checkitem_service.get_list(card.uid)
@@ -194,11 +193,14 @@ class CardService(BaseService):
         }
         return card_api
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardCreated)
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardCreated, no_user_activity=True)
     async def create(
-        self, user: User, project: Project, column_uid: str, title: str
-    ) -> tuple[ActivityResult, tuple[ActivityResult, Card]] | None:
+        self, user_or_bot: User | BotType, project: Project | int, column_uid: str, title: str
+    ) -> ModelIdBaseResult[Card] | None:
+        if isinstance(project, int):
+            project = cast(Project, await self._get_by(Project, "id", project))
+            if not project:
+                return None
+
         if not project.id or column_uid == Project.ARCHIVE_COLUMN_UID:
             return None
 
@@ -213,26 +215,13 @@ class CardService(BaseService):
         self._db.insert(card)
         await self._db.commit()
 
-        activity_result = ActivityResult(
-            user_or_bot=user,
-            model=card,
-            shared={"project_uid": project.uid},
-            new={"title": title, "column_uid": column_uid},
-        )
+        model_id = await ModelIdService.create_model_id({})
 
-        return activity_result, (activity_result, card)
+        return ModelIdBaseResult(model_id, card)
 
-    @overload
-    async def update(self, card: Card, form: dict, user: User) -> str: ...
-    @overload
-    async def update(self, card: Card, form: dict, user: User, from_bot: Literal[False]) -> str: ...
-    @overload
-    async def update(self, card: int, form: dict, user: None, from_bot: Literal[True]) -> None: ...
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardUpdated)
-    @ActivityService.activity_method(ProjectActivity, ActivityService.ACTIVITY_TYPES.CardUpdated, no_user_activity=True)
     async def update(
-        self, card: Card | int, form: dict, user: User | None = None, from_bot: bool = False
-    ) -> tuple[ActivityResult, tuple[ActivityResult, str | None]] | None:
+        self, user_or_bot: User | BotType, card: Card | int, form: dict
+    ) -> ModelIdBaseResult[tuple[str | None, Checkitem | None]] | None:
         for immutable_key in ["id", "uid", "project_id"]:
             if immutable_key in form:
                 form.pop(immutable_key)
@@ -253,32 +242,33 @@ class CardService(BaseService):
                     old_card_record[key] = old_card_record[key].isoformat()
                 setattr(card, key, value)
 
-        activitiy_params = {
-            "model": card,
-            "shared": {"project_id": card.project_id, "card_uid": card.uid},
-            "new": [*list(form.keys())],
-            "old": old_card_record,
-        }
+        checkitem_cardified_from = None
+        if form.get("title", None):
+            checkitem_cardified_from = await self._get_by(Checkitem, "cardified_uid", card.uid)
+            if checkitem_cardified_from:
+                checkitem_cardified_from.title = card.title
+                await self._db.update(checkitem_cardified_from)
 
-        if from_bot:
+        if isinstance(user_or_bot, BotType):
             await self._db.update(card)
-            activity_result = ActivityResult(user_or_bot=BotType.Project, **activitiy_params)
+            await self._db.commit()
             revert_key = None
         else:
             revert_service = self._get_service(RevertService)
             revert_key = await revert_service.record(revert_service.create_record_model(card, RevertType.Update))
-            activity_result = ActivityResult(user_or_bot=cast(User, user), revert_key=revert_key, **activitiy_params)
-        return activity_result, (activity_result, revert_key)
 
-    @ActivityService.activity_method(CardActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn)
-    @ActivityService.activity_method(
-        ProjectActivity, ActivityService.ACTIVITY_TYPES.CardChangedColumn, no_user_activity=True
-    )
+        model: dict[str, Any] = {}
+        for key in form:
+            model[key] = getattr(card, key)
+            if isinstance(model[key], EditorContentModel):
+                model[key] = model[key].model_dump()
+        model_id = await ModelIdService.create_model_id(model)
+
+        return ModelIdBaseResult(model_id, (revert_key, checkitem_cardified_from))
+
     async def change_order(
         self, user: User, card_uid: str, order: int, column_uid: str = ""
-    ) -> tuple[
-        ActivityResult | None, tuple[ActivityResult | None, tuple[Card, ProjectColumn, ProjectColumn | None] | None]
-    ]:
+    ) -> ModelIdBaseResult[tuple[Card, ProjectColumn, ProjectColumn | None]] | None:
         result = await self._db.exec(
             self._db.query("select")
             .tables(Card, Project, ProjectColumn)
@@ -289,23 +279,23 @@ class CardService(BaseService):
         )
         record = result.first()
         if not record:
-            return None, (None, None)
+            return None
         card, project, original_column = record
 
         original_column_uid = original_column.uid if original_column else Project.ARCHIVE_COLUMN_UID
-        original_column_name = original_column.name if original_column else project.archive_column_name
+        # original_column_name = original_column.name if original_column else project.archive_column_name
         if column_uid:
             if column_uid != Project.ARCHIVE_COLUMN_UID:
                 new_column = await self._get_by(ProjectColumn, "uid", column_uid)
                 if not new_column or new_column.project_id != card.project_id:
-                    return None, (None, None)
+                    return None
 
                 card.archived_at = None
                 card.project_column_uid = column_uid
             else:
                 project = await self._get_by(Project, "id", card.project_id)
                 if not project:
-                    return None, (None, None)
+                    return None
                 card.archived_at = now()
                 card.project_column_uid = None
         else:
@@ -347,32 +337,46 @@ class CardService(BaseService):
 
         card.order = order
         await self._db.update(card)
+        await self._db.commit()
 
-        if column_uid:
-            activity_result = ActivityResult(
-                user_or_bot=user,
-                model=card,
-                shared={
-                    "project_uid": project.uid,
-                },
-                new={
-                    "column_uid": column_uid,
-                    "column_name": (
-                        cast(ProjectColumn, new_column).name
-                        if column_uid != Project.ARCHIVE_COLUMN_UID
-                        else project.archive_column_name
-                    ),
-                },
-                old={
-                    "column_uid": original_column_uid,
-                    "column_name": original_column_name,
-                },
-            )
+        model = {
+            "from_column_uid": original_column.uid,
+            "uid": card.uid,
+            "order": card.order,
+        }
+        if new_column:
+            model["to_column_uid"] = new_column.uid
+            model["column_name"] = new_column.name
+        model_id = await ModelIdService.create_model_id(model)
+        return ModelIdBaseResult(model_id, (card, original_column, new_column))
+
+    async def update_assigned_users(
+        self, user_or_bot: User | BotType, card: Card | int, assign_user_ids: list[int] | None = None
+    ) -> ModelIdBaseResult[list[User]] | None:
+        if isinstance(card, int):
+            card = cast(Card, await self._get_by(Card, "id", card))
+            if not card:
+                return None
+
+        # result = await self._db.exec(
+        #     self._db.query("select").column(CardAssignedUser.user_id).where(CardAssignedUser.card_id == card.id)
+        # )
+        # original_assigned_user_ids = list(result.all())
+
+        await self._db.exec(
+            self._db.query("delete").table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
+        )
+
+        if assign_user_ids:
+            users = await self._get_all_by(User, "id", assign_user_ids)
+            for user in users:
+                self._db.insert(CardAssignedUser(card_id=cast(int, card.id), user_id=cast(int, user.id)))
         else:
-            activity_result = None
-            await self._db.commit()
+            users = []
+        await self._db.commit()
 
-        return activity_result, (activity_result, (card, original_column, new_column))
+        model_id = await ModelIdService.create_model_id({"assigned_users": [user.api_response() for user in users]})
+        return ModelIdBaseResult(model_id, list(users))
 
     @overload
     def __filter_column(self, query: Select[_TSelectParam], column_uid: str) -> Select[_TSelectParam]: ...

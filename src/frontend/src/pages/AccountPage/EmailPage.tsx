@@ -5,8 +5,10 @@ import AddSubEmailForm from "@/pages/AccountPage/components/AddSubEmailForm";
 import EmailList from "@/pages/AccountPage/components/EmailList";
 import PrimaryEmailForm from "@/pages/AccountPage/components/PrimaryEmailForm";
 import { Flex } from "@/components/base";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function EmailPage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const { aboutMe, updatedUser } = useAuth();
     const [isValidating, setIsValidating] = useState(false);
@@ -37,6 +39,10 @@ function EmailPage(): JSX.Element {
             isMounted = false;
         };
     }, [aboutMe, aboutMe()]);
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     return (
         <>

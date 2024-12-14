@@ -1,11 +1,59 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { SOCKET_URL } from "@/constants";
 import { refresh } from "@/core/helpers/Api";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
-import useSocketStore, { ISocketEvent, TEventName } from "@/core/stores/SocketStore";
+import useSocketStore, { ISocketEvent, ISocketStore, TEventName, TSocketAddEventProps, TSocketRemoveEventProps } from "@/core/stores/SocketStore";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { getCookieStore } from "@/core/stores/CookieStore";
+import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+
+interface IBaseRunEventsProps {
+    topic?: ESocketTopic;
+    id?: string;
+    eventName: TEventName;
+    data?: unknown;
+}
+
+interface INoneTopicRunEventsProps extends IBaseRunEventsProps {
+    topic: ESocketTopic.None;
+    id?: never;
+    eventName: Exclude<TEventName, "open" | "close" | "error">;
+}
+
+interface ITopicRunEventsProps extends IBaseRunEventsProps {
+    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    id: string;
+    eventName: Exclude<TEventName, "open" | "close" | "error">;
+}
+
+interface IDefaultEventsRunEventsProps extends IBaseRunEventsProps {
+    topic?: never;
+    id?: never;
+    eventName: "open" | "close" | "error";
+}
+
+type TRunEventsProps = INoneTopicRunEventsProps | ITopicRunEventsProps | IDefaultEventsRunEventsProps;
+
+interface IBaseSocketSendProps {
+    topic?: ESocketTopic;
+    id?: string;
+    eventName: Exclude<TEventName, "open" | "close" | "error">;
+    data: any;
+}
+
+interface INoneTopicSocketSendProps extends IBaseSocketSendProps {
+    topic: ESocketTopic.None;
+    id?: never;
+}
+
+interface ITopicSocketSendProps extends IBaseSocketSendProps {
+    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    id: string;
+}
+
+type TSocketSendProps = INoneTopicSocketSendProps | ITopicSocketSendProps;
 
 export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown> {
     start: ISocketEvent<TStartResponse>;
@@ -13,25 +61,19 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
     end: ISocketEvent<TEndResponse>;
 }
 
-export interface IConnectedSocket {
-    isConnected: () => bool;
-    reconnect: () => IConnectedSocket;
-    on: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: bool };
-    off: <TResponse>(eventName: TEventName, event: ISocketEvent<TResponse>) => { isConnected: bool };
-    send: <TRequest>(eventName: TEventName, data: TRequest) => { isConnected: bool };
-    stream: <TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown>(
-        eventName: TEventName,
-        callbacks: IStreamCallbackMap<TStartResponse, TBufferResponse, TEndResponse>
-    ) => { isConnected: bool };
-    streamOff: <TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown>(
-        eventName: TEventName,
-        callbacks: IStreamCallbackMap<TStartResponse, TBufferResponse, TEndResponse>
-    ) => { isConnected: bool };
-}
-
 export interface ISocketContext {
-    connect: (path: string) => IConnectedSocket;
-    closeAll: () => void;
+    isConnected: () => bool;
+    reconnect: () => void;
+    on: <TResponse>(props: TSocketAddEventProps<TResponse>) => void;
+    off: (props: TSocketRemoveEventProps) => void;
+    send: (props: TSocketSendProps) => { isConnected: bool };
+    stream: <TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown>(
+        props: Omit<TSocketAddEventProps<unknown>, "callback"> & { callbacks: IStreamCallbackMap<TStartResponse, TBufferResponse, TEndResponse> }
+    ) => void;
+    streamOff: (props: Omit<TSocketRemoveEventProps, "callback"> & { callbacks: IStreamCallbackMap<any, any, any> }) => void;
+    subscribe: ISocketStore["subscribe"];
+    unsubscribe: ISocketStore["unsubscribe"];
+    close: ISocketStore["close"];
 }
 
 interface ISocketProviderProps {
@@ -39,159 +81,199 @@ interface ISocketProviderProps {
 }
 
 const initialContext = {
-    connect: () => ({
-        isConnected: () => false,
-        reconnect: () => null!,
-        on: () => ({ isConnected: false }),
-        off: () => ({ isConnected: false }),
-        send: () => ({ isConnected: false }),
-        stream: () => ({ isConnected: false }),
-        streamOff: () => ({ isConnected: false }),
-    }),
-    closeAll: () => {},
+    isConnected: () => false,
+    reconnect: () => initialContext,
+    on: () => {},
+    off: () => {},
+    send: () => ({ isConnected: false }),
+    stream: () => {},
+    streamOff: () => {},
+    subscribe: () => {},
+    unsubscribe: () => {},
+    close: () => {},
 };
 
 const SocketContext = createContext<ISocketContext>(initialContext);
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { getAccessToken, getRefreshToken, signIn } = useAuth();
-    const { getSocket, setSocket, send: sendSocket, close, closeAll } = useSocketStore();
+    const { getAccessToken, getRefreshToken, signIn, isAuthenticated } = useAuth();
+    const { getSocket, createSocket, getStore, addEvent, removeEvent, send: sendSocket, close, subscribe, unsubscribe } = useSocketStore();
+    const cookieStore = getCookieStore();
 
-    const connect = (path: string) => {
-        if (!path.startsWith("/")) {
-            path = `/${path}`;
+    useEffect(() => {
+        if (isAuthenticated()) {
+            if (!isConnected()) {
+                connect();
+            }
         }
+    }, [isAuthenticated]);
 
-        const isConnected = () => {
-            const map = getSocket(path);
-            return !!map && map.socket.readyState !== WebSocket.CLOSING && map.socket.readyState !== WebSocket.CLOSED;
-        };
+    if (!getAccessToken()) {
+        return children;
+    }
 
-        const reconnect = () => {
-            return connect(path);
-        };
+    const isConnected = () => {
+        const socket = getSocket();
+        return !!socket && socket.readyState !== WebSocket.CLOSING && socket.readyState !== WebSocket.CLOSED;
+    };
 
-        const on = ((eventName: TEventName, event: ISocketEvent<unknown>) => {
-            if (!isConnected()) {
-                return { isConnected: false };
-            }
+    const connect = () => {
+        createSocket<Record<string, any>>({
+            accessToken: getAccessToken()!,
+            onOpen: async (event) => {
+                await runEvents({
+                    eventName: "open",
+                    data: event,
+                });
+            },
+            onMessage: async (response) => {
+                if (!response.event) {
+                    console.error("Invalid response");
+                    return;
+                }
 
-            const { events } = getSocket(path);
+                if (!response.topic) {
+                    response.topic = ESocketTopic.None;
+                }
 
-            if (events[eventName]?.includes(event as ISocketEvent<unknown>)) {
-                return { isConnected: true };
-            }
+                await runEvents({
+                    topic: response.topic,
+                    id: response.topic_id,
+                    eventName: response.event,
+                    data: response.data,
+                });
+            },
+            onError: async (event) => {
+                await runEvents({
+                    eventName: "error",
+                    data: event,
+                });
+            },
+            onClose: async (event) => {
+                switch (event.code) {
+                    case ESocketStatus.WS_3001_EXPIRED_TOKEN: {
+                        const token = await refresh();
 
-            if (!events[eventName]) {
-                events[eventName] = [];
-            }
+                        signIn(token, getRefreshToken()!);
+                        reconnect();
+                        return;
+                    }
+                    case ESocketStatus.WS_3000_UNAUTHORIZED:
+                        close();
+                        cookieStore.remove(APP_ACCESS_TOKEN);
+                        cookieStore.remove(APP_REFRESH_TOKEN);
+                        return redirectToSignIn();
+                }
 
-            events[eventName].push(event as ISocketEvent<unknown>);
-            return { isConnected: true };
-        }) as IConnectedSocket["on"];
+                await runEvents({
+                    eventName: "close",
+                    data: event,
+                });
 
-        const off = ((eventName: TEventName, event: ISocketEvent<unknown>) => {
-            if (!isConnected()) {
-                return { isConnected: false };
-            }
+                close();
+            },
+        });
+    };
 
-            const { events } = getSocket(path);
-
-            if (!events[eventName]?.includes(event as ISocketEvent<unknown>)) {
-                return { isConnected: true };
-            }
-
-            const index = events[eventName].indexOf(event as ISocketEvent<unknown>);
-            events[eventName].splice(index, 1);
-            return { isConnected: true };
-        }) as IConnectedSocket["off"];
-
-        const streamOff = ((eventName: TEventName, callbacks: IStreamCallbackMap) => {
-            if (!isConnected()) {
-                return { isConnected: false };
-            }
-
-            off(`${eventName}:start`, callbacks.start);
-            off(`${eventName}:buffer`, callbacks.buffer);
-            off(`${eventName}:end`, callbacks.end);
-
-            return { isConnected: true };
-        }) as IConnectedSocket["streamOff"];
-
-        const send = ((eventName: TEventName, data: unknown) => {
-            if (!isConnected()) {
-                return { isConnected: false };
-            }
-
-            return { isConnected: sendSocket(path, JSON.stringify({ event: eventName, data })) };
-        }) as IConnectedSocket["send"];
-
-        const stream = ((eventName: TEventName, callbacks: IStreamCallbackMap) => {
-            if (!isConnected()) {
-                return { isConnected: false };
-            }
-
-            on(`${eventName}:start`, callbacks.start);
-            on(`${eventName}:buffer`, callbacks.buffer);
-            on(`${eventName}:end`, callbacks.end);
-
-            return { isConnected: true };
-        }) as IConnectedSocket["stream"];
-
-        if (getSocket(path)) {
-            return { isConnected, reconnect, on, off, send, stream, streamOff };
-        }
-
-        setSocket(path, new WebSocket(`${SOCKET_URL}${path}?authorization=${getAccessToken()}`));
-
-        const socketMap = getSocket(path);
-
-        const runEvents = async (eventName: TEventName, data?: unknown) => {
-            const targetEvents = socketMap.events[eventName] ?? [];
+    const runEvents = async (props: TRunEventsProps) => {
+        const { eventName, data } = props;
+        if (eventName === "open" || eventName === "error" || eventName === "close") {
+            const targetEvents = Object.values(socketMap.defaultEvents[eventName] ?? {}).flat();
             for (let i = 0; i < targetEvents.length; ++i) {
                 await targetEvents[i](data);
             }
-        };
+            return;
+        }
 
-        socketMap.socket.onopen = async (event) => {
-            await runEvents("open", event);
-        };
+        const topic = props.topic ?? ESocketTopic.None;
+        const id = topic === ESocketTopic.None ? "none" : props.id!;
 
-        socketMap.socket.onmessage = async (event) => {
-            const response = JSON.parse(event.data);
-            if (!response.event) {
-                console.error("Invalid response");
-                return;
-            }
-
-            await runEvents(response.event, response.data);
-        };
-
-        socketMap.socket.onclose = async (event) => {
-            switch (event.code) {
-                case ESocketStatus.WS_3001_EXPIRED_TOKEN: {
-                    const token = await refresh();
-
-                    signIn(token, getRefreshToken()!);
-                    return reconnect();
-                }
-                case ESocketStatus.WS_3000_UNAUTHORIZED:
-                    return redirectToSignIn();
-            }
-
-            await runEvents("close", { code: event.code });
-
-            close(path);
-        };
-
-        return { isConnected, reconnect, on, off, send, stream, streamOff };
+        const targetEvents = Object.values(socketMap.subscriptions[topic]?.[id]?.[eventName] ?? {}).flat();
+        for (let i = 0; i < targetEvents.length; ++i) {
+            await targetEvents[i](data);
+        }
     };
+
+    const reconnect = () => {
+        connect();
+    };
+
+    const on: ISocketContext["on"] = (props) => {
+        addEvent(props as never);
+    };
+
+    const off: ISocketContext["off"] = (props) => {
+        removeEvent(props);
+    };
+
+    const stream: ISocketContext["stream"] = (props) => {
+        const { callbacks } = props;
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:start`,
+            callback: callbacks.start,
+        });
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:buffer`,
+            callback: callbacks.buffer,
+        });
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:end`,
+            callback: callbacks.end,
+        });
+    };
+
+    const streamOff: ISocketContext["streamOff"] = (props) => {
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:start`,
+            callback: props.callbacks.start,
+        });
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:buffer`,
+            callback: props.callbacks.buffer,
+        });
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:end`,
+            callback: props.callbacks.end,
+        });
+    };
+
+    const send = (props: TSocketSendProps) => {
+        if (!isConnected()) {
+            return { isConnected: false };
+        }
+
+        const { topic, id, eventName, data } = props;
+
+        return { isConnected: sendSocket(JSON.stringify({ event: eventName, topic, topic_id: id, data })) };
+    };
+
+    const socketMap = getStore();
 
     return (
         <SocketContext.Provider
             value={{
-                connect,
-                closeAll,
+                isConnected,
+                reconnect,
+                on,
+                off,
+                send,
+                stream,
+                streamOff,
+                subscribe,
+                unsubscribe,
+                close,
             }}
         >
             {children}
@@ -202,20 +284,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
 export const useSocket = () => {
     const context = useContext(SocketContext);
     if (!context) {
-        throw new Error("useSocket must be used within an SocketProvider");
+        throw new Error("useSocket must be used within a SocketProvider");
     }
     return context;
-};
-
-export const SocketRouteWrapper = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { closeAll } = useSocket();
-    const location = useLocation();
-
-    useEffect(() => {
-        if (!location.state?.isSamePage) {
-            closeAll();
-        }
-    }, [location]);
-
-    return children;
 };

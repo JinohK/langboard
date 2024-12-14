@@ -4,6 +4,7 @@ import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkit
 import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
 import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -15,9 +16,8 @@ import SharedBoardCardCheckitemMore from "@/pages/BoardPage/components/card/chec
 import SharedBoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitemTimer";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { forwardRef, memo, useEffect, useReducer, useState } from "react";
+import { forwardRef, memo, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 interface IBaseSharedBoardCardCheckitemProps<TParent extends bool> extends IFlexProps {
     checkitem: ProjectCheckitem.IBaseBoard;
@@ -44,7 +44,7 @@ const SharedBoardCardCheckitem = memo(
     forwardRef<HTMLDivElement, TSharedBoardCardCheckitemProps>(
         ({ checkitem, attributes, listeners, isParent, isOpenedRef, deleted, ...props }, ref) => {
             const { projectUID, socket, hasRoleAction, sharedClassNames } = useBoardCard();
-            const navigate = useNavigate();
+            const navigate = useRef(usePageNavigate());
             const [t] = useTranslation();
             const [isValidating, setIsValidating] = useState(false);
             const [isTitleOpened, setIsTitleOpened] = useState(false);
@@ -52,6 +52,7 @@ const SharedBoardCardCheckitem = memo(
             const [_, forceUpdate] = useReducer((x) => x + 1, 0);
             const { on: onCardCheckitemCardified } = useCardCheckitemCardifiedHandlers({
                 socket,
+                projectUID,
                 checkitemUID: checkitem.uid,
                 callback: (data) => {
                     checkitem.cardified_uid = data.new_card.uid;
@@ -60,6 +61,7 @@ const SharedBoardCardCheckitem = memo(
             });
             const { on: onCardCheckitemTitleChanged } = useCardCheckitemTitleChangedHandlers({
                 socket,
+                projectUID,
                 checkitemUID: checkitem.uid,
                 callback: (data) => {
                     checkitem.title = data.title;
@@ -68,6 +70,7 @@ const SharedBoardCardCheckitem = memo(
             });
             const { on: onCardCheckitemTimerStarted } = useCardCheckitemTimerStartedHandlers({
                 socket,
+                projectUID,
                 checkitemUID: checkitem.uid,
                 callback: (data) => {
                     checkitem.timer = data.timer;
@@ -77,6 +80,7 @@ const SharedBoardCardCheckitem = memo(
             });
             const { on: onCardCheckitemTimerStopped } = useCardCheckitemTimerStoppedHandlers({
                 socket,
+                projectUID,
                 checkitemUID: checkitem.uid,
                 callback: (data) => {
                     checkitem.timer = undefined;
@@ -104,7 +108,7 @@ const SharedBoardCardCheckitem = memo(
                     return;
                 }
 
-                navigate(ROUTES.BOARD.CARD(projectUID, checkitem.cardified_uid!), { state: { isSamePage: true } });
+                navigate.current(ROUTES.BOARD.CARD(projectUID, checkitem.cardified_uid!));
             };
 
             return (

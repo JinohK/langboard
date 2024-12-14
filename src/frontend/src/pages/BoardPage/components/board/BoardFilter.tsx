@@ -1,4 +1,4 @@
-import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea } from "@/components/base";
+import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { ProjectCard } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
@@ -7,6 +7,10 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+
+export function SkeletonBoardFilter() {
+    return <Skeleton className="h-9 w-7 rounded-md xs:w-14 xs:px-4" />;
+}
 
 function BoardFilter() {
     const { project, cards, filters, filterCard, filterMember, navigateWithFilters } = useBoard();

@@ -63,10 +63,10 @@ import { IAuthUser } from "@/core/providers/AuthProvider";
 import { MediaPlaceholderElement } from "@/components/plate-ui/media-placeholder-element";
 import { MediaVideoElement } from "@/components/plate-ui/media-video-element";
 import { MediaAudioElement } from "@/components/plate-ui/media-audio-element";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
 import { MediaFileElement } from "@/components/plate-ui/media-file-element";
 import { EquationElement } from "@/components/plate-ui/equation-element";
 import { InlineEquationElement } from "@/components/plate-ui/inline-equation-element";
+import { ISocketContext } from "@/core/providers/SocketProvider";
 
 interface IBaseUseCreateEditor {
     currentUser: IAuthUser;
@@ -75,8 +75,10 @@ interface IBaseUseCreateEditor {
     plugins?: PlatePlugin<any>[];
     value?: IEditorContent;
     readOnly?: bool;
-    socket?: IConnectedSocket;
+    socket?: ISocketContext;
     baseSocketEvent?: string;
+    chatEventKey?: string;
+    copilotEventKey?: string;
     uploadPath?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     uploadedCallback?: (respones: any) => void;
@@ -87,6 +89,8 @@ interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     value: IEditorContent;
     socket?: never;
     baseSocketEvent?: never;
+    chatEventKey?: never;
+    copilotEventKey?: never;
     uploadPath?: never;
     uploadedCallback?: never;
 }
@@ -94,8 +98,10 @@ interface IUseReadonlyEditor extends IBaseUseCreateEditor {
 interface IUseEditor extends IBaseUseCreateEditor {
     readOnly?: false;
     value?: IEditorContent;
-    socket: IConnectedSocket;
+    socket: ISocketContext;
     baseSocketEvent: string;
+    chatEventKey: string;
+    copilotEventKey: string;
     uploadPath: string;
 }
 
@@ -182,15 +188,15 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
 };
 
 export const useCreateEditor = (props: TUseCreateEditor) => {
-    const { value, readOnly = false, socket, baseSocketEvent, plugins: customPlugins } = props;
+    const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, plugins: customPlugins } = props;
 
     const reloadPlugins = useCallback(() => {
         const pluginList = [...(readOnly ? viewPlugins : editorPlugins), ...(customPlugins ?? [])];
         if (!readOnly) {
             const { chatEvents, copilotEvents } = createEditorSocketEvents(baseSocketEvent!);
             pluginList.push(
-                ...createAIPlugins({ socket: socket!, events: chatEvents }),
-                ...createCopilotPlugins({ socket: socket!, events: copilotEvents })
+                ...createAIPlugins({ socket: socket!, eventKey: chatEventKey!, events: chatEvents }),
+                ...createCopilotPlugins({ socket: socket!, eventKey: copilotEventKey!, events: copilotEvents })
             );
         }
         return pluginList;

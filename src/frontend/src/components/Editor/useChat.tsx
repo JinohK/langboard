@@ -1,19 +1,21 @@
 "use client";
 
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { IConnectedSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { ISocketContext } from "@/core/providers/SocketProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useChat as useBaseChat } from "ai/react";
 
 export interface IUseChat {
-    socket: IConnectedSocket;
+    socket: ISocketContext;
+    eventKey: string;
     events: {
         send: string;
         stream: string;
     };
 }
 
-export const useChat = ({ socket, events }: IUseChat) => {
+export const useChat = ({ socket, eventKey, events }: IUseChat) => {
     return useBaseChat({
         id: "editor",
         fetch: async (_, init) => {
@@ -23,7 +25,13 @@ export const useChat = ({ socket, events }: IUseChat) => {
 
             const body = JSON.parse(init.body);
 
-            const stream = createStream(socket, events.stream, () => socket.send(events.send, body));
+            const stream = createStream(socket, eventKey, events.stream, () => {
+                socket.send({
+                    topic: ESocketTopic.None,
+                    eventName: events.send,
+                    data: body,
+                });
+            });
 
             return new Response(stream, {
                 headers: {
@@ -35,12 +43,13 @@ export const useChat = ({ socket, events }: IUseChat) => {
     });
 };
 
-const createStream = (socket: IConnectedSocket, streamEvent: string, send: () => void) => {
+const createStream = (socket: ISocketContext, eventKey: string, streamEvent: string, send: () => void) => {
     const encoder = new TextEncoder();
 
     return new ReadableStream({
         async start(controller) {
             const stream = new Promise((resolve) => {
+                const chatEventKey = `plate-chat-${eventKey}`;
                 const streamStart = () => {};
                 const streamBuffer = (data: { message: string }) => {
                     controller.enqueue(encoder.encode(`0:${JSON.stringify(data.message)}\n`));
@@ -59,18 +68,28 @@ const createStream = (socket: IConnectedSocket, streamEvent: string, send: () =>
                     }
 
                     controller.enqueue(`d:${JSON.stringify(endData)}\n`);
-                    socket.streamOff(streamEvent, {
-                        start: streamStart,
-                        buffer: streamBuffer,
-                        end: streamEnd,
+                    socket.streamOff({
+                        topic: ESocketTopic.None,
+                        eventKey: chatEventKey,
+                        event: streamEvent,
+                        callbacks: {
+                            start: streamStart,
+                            buffer: streamBuffer,
+                            end: streamEnd,
+                        },
                     });
                     resolve(undefined);
                 };
 
-                socket.stream(streamEvent, {
-                    start: streamStart,
-                    buffer: streamBuffer,
-                    end: streamEnd,
+                socket.stream({
+                    topic: ESocketTopic.None,
+                    eventKey: chatEventKey,
+                    event: streamEvent,
+                    callbacks: {
+                        start: streamStart,
+                        buffer: streamBuffer,
+                        end: streamEnd,
+                    },
                 });
 
                 send();

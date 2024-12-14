@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Button, Checkbox, Flex, Floating, Form, Label, Toast } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
@@ -11,6 +11,8 @@ import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import SubmitButton from "@/components/SubmitButton";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -21,9 +23,10 @@ export interface IPasswordformProps {
 }
 
 function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPasswordformProps): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigate();
     const [shouldShowPassword, setShouldShowPassword] = useState(false);
     const { mutate } = useSignIn();
     const { signIn } = useAuth();
@@ -68,6 +71,10 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
         },
         useDefaultBadRequestHandler: true,
     });
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     const backToEmail = () => {
         setEmail("");

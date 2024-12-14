@@ -1,5 +1,5 @@
 from json import loads as json_loads
-from typing import Any, Union, cast
+from typing import Any, Union
 from fastapi import status
 from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
@@ -30,41 +30,27 @@ class SocketApp(dict):
         self["subscription"] = self.on_subscription
 
     async def on_upgrade(self, res: Response, req: Request, socket_context) -> None:
-        path = req.get_url()
-        if not isinstance(path, str):
-            res.send(status=status.HTTP_404_NOT_FOUND, end_connection=True)
-            return
-
-        route, route_data = AppRouter.socket.get_route(path)
-        if not route:
-            res.send(status=status.HTTP_404_NOT_FOUND, end_connection=True)
-            return
-        route_data = cast(dict, route_data)
+        AppRouter.set_socketify_app(req.app)
 
         queries = req.get_queries()
         if queries is None:
             res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
             return
-
-        validation_result = await Auth.validate(queries)
-        if isinstance(validation_result, User):
-            pass
-        elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-            res.send(status=status.HTTP_422_UNPROCESSABLE_ENTITY, end_connection=True)
-            return
         else:
-            res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
-            return
-
-        route_path = route_data.pop("route")
+            validation_result = await Auth.validate(queries)
+            if isinstance(validation_result, User):
+                pass
+            elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
+                res.send(status=status.HTTP_422_UNPROCESSABLE_ENTITY, end_connection=True)
+                return
+            else:
+                res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
+                return
 
         auth_token = queries.get("Authorization", queries.get("authorization", None))
         auth_token = auth_token[0] if isinstance(auth_token, list) else auth_token
 
         user_data = {
-            "path": path,
-            "route_path": route_path,
-            "route_data": route_data,
             "auth_user_id": validation_result.id,
             "auth_token": auth_token,
         }
@@ -86,7 +72,7 @@ class SocketApp(dict):
 
         req = self._create_request(ws, user_data)
 
-        await self._run_events(user_data["route_path"], SocketDefaultEvent.Open, req)
+        await self._run_events(SocketDefaultEvent.Open, req)
 
     async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, code: OpCode) -> None:
         user_data = ws.get_user_data()
@@ -110,9 +96,19 @@ class SocketApp(dict):
             return
 
         event = data.pop("event")
-        req = self._create_request(ws, user_data, data.get("data", data))
+        if self._toggle_subscription(ws, event, data):
+            return
 
-        await self._run_events(user_data["route_path"], event, req)
+        event_data = data.get("data", data)
+
+        req = self._create_request(
+            ws,
+            user_data,
+            event_data,
+            from_app={"topic": data.get("topic", None), "topic_id": data.get("topic_id", None)},
+        )
+
+        await self._run_events(event, req)
 
     async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
         user_data = ws.get_user_data()
@@ -127,7 +123,7 @@ class SocketApp(dict):
             from_app={"code": code},
         )
 
-        await self._run_events(user_data["route_path"], SocketDefaultEvent.Close, req)
+        await self._run_events(SocketDefaultEvent.Close, req)
 
     async def on_drain(self, ws: SocketifyWebSocket) -> None:
         user_data = ws.get_user_data()
@@ -140,7 +136,7 @@ class SocketApp(dict):
 
         req = self._create_request(ws, user_data)
 
-        await self._run_events(user_data["route_path"], SocketDefaultEvent.Drain, req)
+        await self._run_events(SocketDefaultEvent.Drain, req)
 
     async def on_subscription(self, ws: SocketifyWebSocket, topic: str, subscriptions, subscriptions_before) -> None:
         user_data = ws.get_user_data()
@@ -161,7 +157,7 @@ class SocketApp(dict):
             },
         )
 
-        await self._run_events(user_data["route_path"], SocketDefaultEvent.Subscription, req)
+        await self._run_events(SocketDefaultEvent.Subscription, req)
 
     def _is_valid_user_data(self, user_data: Any | None) -> bool:
         """Checks if the given user data is valid.
@@ -170,12 +166,6 @@ class SocketApp(dict):
         """
         return (
             isinstance(user_data, dict)
-            and "path" in user_data
-            and isinstance(user_data["path"], str)
-            and "route_data" in user_data
-            and isinstance(user_data["route_data"], dict)
-            and "route_path" in user_data
-            and isinstance(user_data["route_path"], str)
             and "auth_user_id" in user_data
             and isinstance(user_data["auth_user_id"], int)
             and "auth_token" in user_data
@@ -219,13 +209,46 @@ class SocketApp(dict):
         else:
             ws.send({"event": "error", "data": {"message": message, "code": _error_code}})
 
+    def _toggle_subscription(self, ws: SocketifyWebSocket, event: str, data: dict) -> bool:
+        if event != "subscribe" and event != "unsubscribe":
+            return False
+
+        websocket = WebSocket(ws)
+
+        is_subscribe = event == "subscribe"
+        topic = data.get("topic", None)
+        topic_id = data.get("topic_id", None)
+        if not topic or not topic_id:
+            self._send_error(ws, "Invalid data", error_code=SocketResponseCode.WS_4001_INVALID_DATA, should_close=False)
+            return True
+
+        if is_subscribe:
+            topics = websocket.get_topics()
+            for existed_topic in [*topics]:
+                if existed_topic.startswith(f"{topic}:"):
+                    existed_topic, existed_topic_id = existed_topic.split(":")
+                    if existed_topic_id == topic_id:
+                        continue
+                    websocket.unsubscribe(existed_topic)
+                    websocket.send(
+                        event_response=SocketResponse(
+                            event="unsubscribed", topic=existed_topic, topic_id=existed_topic_id
+                        )
+                    )
+            websocket.subscribe(f"{topic}:{topic_id}")
+            websocket.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=topic_id))
+        else:
+            websocket.unsubscribe(f"{topic}:{topic_id}")
+            websocket.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=topic_id))
+
+        return True
+
     def _create_request(
         self, ws: SocketifyWebSocket, user_data: dict, data: dict | list | None = None, from_app: dict | None = None
     ) -> SocketRequest:
         socket = WebSocket(ws)
         req = SocketRequest(
             socket=socket,
-            route_data=user_data["route_data"],
             data=data,
             from_app={
                 **(from_app or {}),
@@ -234,8 +257,8 @@ class SocketApp(dict):
         )
         return req
 
-    async def _run_events(self, route_path: str, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
-        route_events = await AppRouter.socket.get_events(route_path, event_name)
+    async def _run_events(self, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
+        route_events = await AppRouter.socket.get_events(event_name)
         cached_params: TCachedScopes = {}
 
         for event in route_events:
