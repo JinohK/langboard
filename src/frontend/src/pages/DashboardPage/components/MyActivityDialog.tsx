@@ -8,6 +8,7 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import useCreateActivityTimeline from "@/core/hooks/useCreateActivityTimeline";
 import { cn } from "@/core/utils/ComponentUtils";
 import { TimelineVariants } from "@/components/base/Timeline";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 export interface IMyActivityDialogProps {
     opened: bool;
@@ -15,6 +16,7 @@ export interface IMyActivityDialogProps {
 }
 
 function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.Element | null {
+    const { setIsLoadingRef } = usePageLoader();
     const { aboutMe } = useAuth();
     const pageRef = useRef(1);
     const user = aboutMe();
@@ -40,6 +42,10 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
         }
     );
     const userActivityListId = useRef(createShortUUID());
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     useEffect(() => {
         if (rawActivities) {

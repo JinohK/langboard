@@ -12,3 +12,5 @@ export const APP_REFRESH_TOKEN = `refresh_token_${APP_SHORT_NAME}`;
 export const LANGUAGE_LOCALES = ["en-US"];
 
 export const EMAIL_REGEX = /.+@.+\..+/;
+
+export const DISABLE_DRAGGING_ATTR = "data-drag-disabled";

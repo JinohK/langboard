@@ -1,5 +1,4 @@
-import { useReducer, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { memo, useReducer } from "react";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -8,26 +7,22 @@ import { ROUTES } from "@/core/routing/constants";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import CardsPage from "@/pages/DashboardPage/CardsPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
-import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
-import MyActivityDialog from "@/pages/DashboardPage/components/MyActivityDialog";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
-function DashboardPage(): JSX.Element {
+const DashboardPage = memo((): JSX.Element => {
     const navigate = usePageNavigate();
-    const location = useLocation();
-    const [projectFormOpened, setProjectFormOpened] = useState(location.pathname.endsWith("/newproject"));
-    const [activityOpened, setActivityOpened] = useState(location.pathname.endsWith("/myactivity"));
+    const [pageType, tabName] = location.pathname.split("/").slice(2);
     const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
     const [scrollAreaMutable, updateScrollArea] = useReducer((x) => x + 1, 0);
 
     const headerNavs: Record<string, IHeaderNavItem> = {
-        [ROUTES.DASHBOARD.ROUTE]: {
+        projects: {
             name: "dashboard.Projects",
             onClick: () => {
                 navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
-        [ROUTES.DASHBOARD.CARDS]: {
+        cards: {
             name: "dashboard.Cards",
             onClick: () => {
                 navigate(ROUTES.DASHBOARD.CARDS);
@@ -36,16 +31,14 @@ function DashboardPage(): JSX.Element {
         starred: {
             name: "dashboard.Starred",
             subNavs:
-                allStarredProjects?.projects.map((project) => {
-                    return {
-                        name: project.title,
-                        onClick: () => {
-                            navigate(ROUTES.BOARD.MAIN(project.uid));
-                        },
-                    };
-                }) ?? [],
+                allStarredProjects?.projects.map((project) => ({
+                    name: project.title,
+                    onClick: () => {
+                        navigate(ROUTES.BOARD.MAIN(project.uid));
+                    },
+                })) ?? [],
         },
-        [ROUTES.DASHBOARD.TRACKING]: {
+        tacking: {
             name: "dashboard.Tracking",
             onClick: () => {
                 navigate(ROUTES.DASHBOARD.TRACKING);
@@ -58,73 +51,52 @@ function DashboardPage(): JSX.Element {
             icon: "plus",
             name: "dashboard.Create New Project",
             onClick: () => {
-                navigate(`${location.pathname}/newproject`);
-                setProjectFormOpened(true);
+                navigate(`${location.pathname}/new-project`);
             },
         },
         {
             icon: "history",
             name: "dashboard.My Activity",
             onClick: () => {
-                navigate(`${location.pathname}/myactivity`);
-                setActivityOpened(true);
+                navigate(`${location.pathname}/my-activity`);
             },
         },
     ];
 
-    const pathname: string = location.pathname.replace(/\/newproject$/, "").replace(/\/myactivity$/, "");
-
-    if (pathname.startsWith(ROUTES.DASHBOARD.PROJECTS.ROUTE)) {
-        headerNavs[ROUTES.DASHBOARD.ROUTE].active = true;
-    } else {
-        headerNavs[pathname].active = true;
-    }
-
     let pageContent;
-    switch (pathname) {
-        case ROUTES.DASHBOARD.CARDS:
+    switch (pageType) {
+        case "cards":
             pageContent = <CardsPage />;
+            headerNavs.cards.active = true;
             break;
-        case ROUTES.DASHBOARD.TRACKING:
+        case "tracking":
             pageContent = <TrackingPage />;
+            headerNavs.tacking.active = true;
             break;
-        case ROUTES.DASHBOARD.PROJECTS.ALL:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" updateScrollArea={updateScrollArea} />;
-            break;
-        case ROUTES.DASHBOARD.PROJECTS.STARRED:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" updateScrollArea={updateScrollArea} />;
-            break;
-        case ROUTES.DASHBOARD.PROJECTS.RECENT:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" updateScrollArea={updateScrollArea} />;
-            break;
-        case ROUTES.DASHBOARD.PROJECTS.UNSTARRED:
-            pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" updateScrollArea={updateScrollArea} />;
+        case "projects":
+            switch (tabName) {
+                case "all":
+                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" updateScrollArea={updateScrollArea} />;
+                    break;
+                case "starred":
+                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" updateScrollArea={updateScrollArea} />;
+                    break;
+                case "recent":
+                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" updateScrollArea={updateScrollArea} />;
+                    break;
+                case "unstarred":
+                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" updateScrollArea={updateScrollArea} />;
+                    break;
+            }
+            headerNavs.projects.active = true;
             break;
     }
 
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs} scrollAreaMutable={scrollAreaMutable}>
             {pageContent}
-            <CreateProjectFormDialog
-                opened={projectFormOpened}
-                setOpened={(opened: bool) => {
-                    if (!opened) {
-                        navigate(location.pathname.replace(/\/newproject$/, ""));
-                    }
-                    setProjectFormOpened(opened);
-                }}
-            />
-            <MyActivityDialog
-                opened={activityOpened}
-                setOpened={(opened: bool) => {
-                    if (!opened) {
-                        navigate(location.pathname.replace(/\/myactivity$/, ""));
-                    }
-                    setActivityOpened(opened);
-                }}
-            />
         </DashboardStyledLayout>
     );
-}
+});
 
 export default DashboardPage;

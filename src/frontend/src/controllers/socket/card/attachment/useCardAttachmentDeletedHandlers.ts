@@ -17,7 +17,7 @@ const useCardAttachmentDeletedHandlers = ({ socket, callback, projectUID, cardUI
     return useSocketHandler<ICardAttachmentDeletedRequest, ICardAttachmentDeletedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-attachment-deleted-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.DELETED,

@@ -8,8 +8,7 @@ from ...core.storage import Storage, StorageName
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import ChangeAttachmentNameForm, ChangeOrderForm
-from .RoleFinder import project_role_finder
+from .scopes import ChangeAttachmentNameForm, ChangeOrderForm, project_role_finder
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/attachment")

@@ -2,7 +2,8 @@ import { SOCKET_URL } from "@/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { create } from "zustand";
 
-export type TEventName = "open" | "close" | "error" | (string & {});
+export type TDefaultEvents = "open" | "close" | "error";
+export type TEventName = TDefaultEvents | (string & {});
 export interface ISocketEvent<TResponse> {
     (data: TResponse): void;
 }
@@ -25,20 +26,20 @@ interface IBaseSocketAddEventProps<TResponse> {
 
 interface INonTopicSocketAddEventProps<TResponse> extends IBaseSocketAddEventProps<TResponse> {
     topic: ESocketTopic.None;
-    id?: never;
-    event: Exclude<TEventName, "open" | "close" | "error">;
+    topicId?: never;
+    event: Exclude<TEventName, TDefaultEvents>;
 }
 
 interface ITopicSocketAddEventProps<TResponse> extends IBaseSocketAddEventProps<TResponse> {
-    topic: ESocketTopic.Board;
-    id: string;
-    event: Exclude<TEventName, "open" | "close" | "error">;
+    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    topicId: string;
+    event: Exclude<TEventName, TDefaultEvents>;
 }
 
 interface IDefaultSocketAddEventProps<TResponse> extends IBaseSocketAddEventProps<TResponse> {
     topic?: never;
-    id?: never;
-    event: "open" | "close" | "error";
+    topicId?: never;
+    event: TDefaultEvents;
 }
 
 export type TSocketAddEventProps<TResponse> =
@@ -54,20 +55,20 @@ interface IBaseSocketRemoveEventProps {
 
 interface INonTopicSocketRemoveEventProps extends IBaseSocketRemoveEventProps {
     topic: ESocketTopic.None;
-    id?: never;
-    event: Exclude<TEventName, "open" | "close" | "error">;
+    topicId?: never;
+    event: Exclude<TEventName, TDefaultEvents>;
 }
 
 interface ITopicSocketRemoveEventProps extends IBaseSocketRemoveEventProps {
-    topic: ESocketTopic.Board;
-    id: string;
-    event: Exclude<TEventName, "open" | "close" | "error">;
+    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    topicId: string;
+    event: Exclude<TEventName, TDefaultEvents>;
 }
 
 interface IDefaultSocketRemoveEventProps extends IBaseSocketRemoveEventProps {
     topic?: never;
-    id?: never;
-    event: "open" | "close" | "error";
+    topicId?: never;
+    event: TDefaultEvents;
 }
 
 export type TSocketRemoveEventProps = INonTopicSocketRemoveEventProps | ITopicSocketRemoveEventProps | IDefaultSocketRemoveEventProps;
@@ -87,8 +88,8 @@ export interface ISocketStore {
     removeEvent: (props: TSocketRemoveEventProps) => void;
     send: (json: string) => bool;
     close: () => void;
-    subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, id: string) => void;
-    unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, id: string) => void;
+    subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => void;
+    unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => void;
 }
 
 const useSocketStore = create<ISocketStore>(() => {
@@ -117,12 +118,12 @@ const useSocketStore = create<ISocketStore>(() => {
 
         socket = new WebSocket(`${SOCKET_URL}?authorization=${accessToken}`);
         Object.entries(socketMap.subscriptions).forEach(([topic, subscriptions]) => {
-            Object.keys(subscriptions).forEach((id) => {
+            Object.keys(subscriptions).forEach((topicId) => {
                 if (topic === ESocketTopic.None) {
                     return;
                 }
 
-                subscribe(topic as Exclude<ESocketTopic, ESocketTopic.None>, id);
+                subscribe(topic as Exclude<ESocketTopic, ESocketTopic.None>, topicId);
             });
         });
 
@@ -224,16 +225,16 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         const topic = props.topic ?? ESocketTopic.None;
-        const id = topic === ESocketTopic.None ? "none" : props.id!;
+        const topicId = topic === ESocketTopic.None ? "none" : props.topicId!;
         if (!socketMap.subscriptions[topic]) {
             socketMap.subscriptions[topic] = {};
         }
 
-        if (!socketMap.subscriptions[topic][id]) {
-            socketMap.subscriptions[topic][id] = {};
+        if (!socketMap.subscriptions[topic][topicId]) {
+            socketMap.subscriptions[topic][topicId] = {};
         }
 
-        const events = socketMap.subscriptions[topic][id];
+        const events = socketMap.subscriptions[topic][topicId];
         if (!events[event]) {
             events[event] = {};
         }
@@ -261,13 +262,13 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         const topic = props.topic ?? ESocketTopic.None;
-        const id = topic === ESocketTopic.None ? "none" : props.id!;
+        const topicId = topic === ESocketTopic.None ? "none" : props.topicId!;
 
-        if (!socketMap.subscriptions[topic]?.[id]) {
+        if (!socketMap.subscriptions[topic]?.[topicId]) {
             return;
         }
 
-        const events = socketMap.subscriptions[topic][id];
+        const events = socketMap.subscriptions[topic][topicId];
         if (!events[event]?.[eventKey]) {
             return;
         }
@@ -308,12 +309,12 @@ const useSocketStore = create<ISocketStore>(() => {
 
     const close = () => {
         Object.entries(socketMap.subscriptions).forEach(([topic, subscriptions]) => {
-            Object.keys(subscriptions).forEach((id) => {
+            Object.keys(subscriptions).forEach((topicId) => {
                 if (topic === ESocketTopic.None) {
                     return;
                 }
 
-                unsubscribe(topic as Exclude<ESocketTopic, ESocketTopic.None>, id);
+                unsubscribe(topic as Exclude<ESocketTopic, ESocketTopic.None>, topicId);
             });
         });
 
@@ -322,7 +323,7 @@ const useSocketStore = create<ISocketStore>(() => {
         }
     };
 
-    const subscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, id: string) => {
+    const subscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => {
         if (!socket) {
             return;
         }
@@ -331,17 +332,17 @@ const useSocketStore = create<ISocketStore>(() => {
             JSON.stringify({
                 event: "subscribe",
                 topic,
-                topic_id: id,
+                topic_id: topicId,
             })
         );
     };
 
-    const unsubscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, id: string) => {
+    const unsubscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => {
         if (!socket) {
             return;
         }
 
-        if (!socketMap.subscriptions[topic] || !socketMap.subscriptions[topic][id]) {
+        if (!socketMap.subscriptions[topic] || !socketMap.subscriptions[topic][topicId]) {
             return;
         }
 
@@ -349,7 +350,7 @@ const useSocketStore = create<ISocketStore>(() => {
             JSON.stringify({
                 event: "unsubscribe",
                 topic,
-                topic_id: id,
+                topic_id: topicId,
             })
         );
     };

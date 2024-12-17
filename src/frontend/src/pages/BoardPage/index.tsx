@@ -3,11 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router-dom";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { Toast } from "@/components/base";
-import useProjectAvailable from "@/controllers/api/board/useProjectAvailable";
+import useIsProjectAvailable from "@/controllers/api/board/useIsProjectAvailable";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
-import Board, { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useBoardChatAvailableHandlers from "@/controllers/socket/board/useBoardChatAvailableHandlers";
 import useSocketErrorHandlers from "@/controllers/socket/shared/useSocketErrorHandlers";
@@ -15,21 +14,26 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
+import BoardPage from "@/pages/BoardPage/BoardPage";
+import { IHeaderNavItem } from "@/components/Header/types";
+import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
 
-const BoardPageProxy = memo((): JSX.Element => {
+const BoardProxy = memo((): JSX.Element => {
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigate = useRef(usePageNavigate()).current;
+    const navigate = useRef(usePageNavigate());
     const { aboutMe } = useAuth();
-    const projectUID = location.pathname.split("/")[2];
-    const isChatAvailableRef = useRef(false);
+    const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
     const [isReady, setIsReady] = useState(false);
+    const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
+    const [currentPage, setCurrentPage] = useState<"board" | "wiki">(pageRoute === "wiki" ? "wiki" : "board");
 
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
-    const { data: project, error } = useProjectAvailable({ uid: projectUID });
+    const { data, error } = useIsProjectAvailable({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -39,11 +43,11 @@ const BoardPageProxy = memo((): JSX.Element => {
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 
@@ -51,7 +55,7 @@ const BoardPageProxy = memo((): JSX.Element => {
     }, [error]);
 
     useEffect(() => {
-        if (!project) {
+        if (!data) {
             return;
         }
 
@@ -61,7 +65,20 @@ const BoardPageProxy = memo((): JSX.Element => {
             socket,
             projectUID,
             callback: ({ available }: { available: bool }) => {
-                isChatAvailableRef.current = available;
+                if (available) {
+                    setResizableSidebar(() => ({
+                        children: (
+                            <Suspense>
+                                <ChatSidebar uid={projectUID} />
+                            </Suspense>
+                        ),
+                        initialWidth: 280,
+                        collapsableWidth: 210,
+                        floatingIcon: "message-circle",
+                        floatingTitle: "project.Chat with AI",
+                        floatingFullScreen: true,
+                    }));
+                }
                 setIsReady(() => true);
             },
         });
@@ -70,7 +87,6 @@ const BoardPageProxy = memo((): JSX.Element => {
             eventKey: `is-board-chat-available-${projectUID}`,
             callback: () => {
                 Toast.Add.error(t("errors.Internal server error"));
-                isChatAvailableRef.current = false;
             },
         });
 
@@ -83,31 +99,41 @@ const BoardPageProxy = memo((): JSX.Element => {
             offBoardChatAvailable();
             offSocketError();
         };
-    }, [project]);
+    }, [data]);
 
-    const resizableSidebar =
-        isReady && isChatAvailableRef.current
-            ? {
-                  children: (
-                      <Suspense>
-                          <ChatSidebar uid={project!.uid} />
-                      </Suspense>
-                  ),
-                  initialWidth: 280,
-                  collapsableWidth: 210,
-                  floatingIcon: "message-circle",
-                  floatingTitle: "project.Chat with AI",
-                  floatingFullScreen: true,
-              }
-            : undefined;
+    const headerNavs: IHeaderNavItem[] = [
+        {
+            name: "board.Board",
+            onClick: () => {
+                setCurrentPage("board");
+                navigate.current(ROUTES.BOARD.MAIN(projectUID));
+            },
+            active: currentPage === "board",
+        },
+        {
+            name: "board.Wiki",
+            onClick: () => {
+                setCurrentPage("wiki");
+                navigate.current(ROUTES.BOARD.WIKI(projectUID));
+            },
+            active: currentPage === "wiki",
+        },
+    ];
+
+    let pageContent;
+    switch (currentPage) {
+        case "wiki":
+            pageContent = <BoardWikiPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            break;
+        default:
+            pageContent = <BoardPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+    }
 
     return (
-        <>
-            <DashboardStyledLayout headerNavs={[]} resizableSidebar={resizableSidebar} noPadding>
-                {!isReady || !aboutMe() ? <SkeletonBoard /> : <Board navigate={navigate} project={project!} currentUser={aboutMe()!} />}
-            </DashboardStyledLayout>
-        </>
+        <DashboardStyledLayout headerNavs={headerNavs} resizableSidebar={resizableSidebar} noPadding>
+            {isReady ? pageContent : <></>}
+        </DashboardStyledLayout>
     );
 });
 
-export default BoardPageProxy;
+export default BoardProxy;

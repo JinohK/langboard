@@ -16,8 +16,8 @@ export interface IChangeProjectColumnNameResponse {
 const useChangeProjectColumnName = (options?: TMutationOptions<IChangeProjectColumnNameForm, IChangeProjectColumnNameResponse>) => {
     const { mutate } = useQueryMutation();
 
-    const changeCheckitemTitle = async (params: IChangeProjectColumnNameForm) => {
-        const url = format(API_ROUTES.BOARD.CHANGE_COLUMN_NAME, {
+    const changeProjectColumnName = async (params: IChangeProjectColumnNameForm) => {
+        const url = format(API_ROUTES.BOARD.COLUMN.CHANGE_NAME, {
             uid: params.project_uid,
             column_uid: params.column_uid,
         });
@@ -28,7 +28,7 @@ const useChangeProjectColumnName = (options?: TMutationOptions<IChangeProjectCol
         return res.data;
     };
 
-    const result = mutate(["change-project-column-name"], changeCheckitemTitle, {
+    const result = mutate(["change-project-column-name"], changeProjectColumnName, {
         ...options,
         retry: 0,
     });

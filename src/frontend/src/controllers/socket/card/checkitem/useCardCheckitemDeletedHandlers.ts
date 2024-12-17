@@ -17,7 +17,7 @@ const useCardCheckitemDeletedHandlers = ({ socket, callback, projectUID, uid }: 
     return useSocketHandler<ICardCheckitemDeletedRequest, ICardCheckitemDeletedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-checkitem-deleted-${uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.DELETED,

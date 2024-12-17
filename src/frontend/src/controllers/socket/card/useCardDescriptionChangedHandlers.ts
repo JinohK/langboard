@@ -18,7 +18,7 @@ const useCardDescriptionChangedHandlers = ({ socket, callback, projectUID, cardU
     return useSocketHandler<ICardDescriptionChangedRequest, ICardDescriptionChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-description-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.DESCRIPTION_CHANGED,

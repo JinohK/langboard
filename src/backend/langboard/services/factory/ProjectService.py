@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from ...core.ai import BotType
 from ...core.ai.QueueBot import QueueBot, QueueBotModel
 from ...core.schema import Pagination
-from ...core.service import BaseService
+from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -16,11 +16,11 @@ from ...models import (
     ProjectColumn,
     ProjectRole,
     User,
-    UserGroup,
-    UserGroupAssignedUser,
+    UserEmail,
 )
 from ...models.BaseRoleModel import ALL_GRANTED
 from .ProjectColumnService import ProjectColumnService
+from .ProjectInvitationService import ProjectInvitationService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
 
@@ -65,10 +65,10 @@ class ProjectService(BaseService):
         return roles[0].actions if roles else []
 
     @overload
-    async def get_assigned_users(self, project: int) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, project: Project | int, as_api: Literal[False]) -> list[User]: ...
     @overload
-    async def get_assigned_users(self, project: Project) -> list[dict[str, Any]]: ...
-    async def get_assigned_users(self, project: Project | int) -> list[dict[str, Any]]:
+    async def get_assigned_users(self, project: Project | int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, project: Project | int, as_api: bool) -> list[User] | list[dict[str, Any]]:
         result = await self._db.exec(
             self._db.query("select")
             .table(User)
@@ -76,10 +76,10 @@ class ProjectService(BaseService):
             .where(ProjectAssignedUser.project_id == (project.id if isinstance(project, Project) else project))
         )
         raw_users = result.all()
-        users = []
-        for user in raw_users:
-            users.append(user.api_response())
+        if not as_api:
+            return list(raw_users)
 
+        users = [user.api_response() for user in raw_users]
         return users
 
     async def get_dashboard_list(
@@ -250,184 +250,122 @@ class ProjectService(BaseService):
 
         return revert_key
 
-    async def assign_user(
-        self, user: User, project: Project | int, target_user: User | int, grant_actions: list[str] | None = None
-    ) -> str | None:
-        grant_actions = grant_actions or []
+    async def update_assign_users(
+        self, user: User, project: Project | int, lang: str, url: str, token_query_name: str, emails: list[str]
+    ) -> ModelIdBaseResult[dict[str, str]] | None:
         project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
-        target_user = (
-            cast(User, await self._get_by(User, "id", target_user)) if isinstance(target_user, int) else target_user
-        )
-        if not project or not target_user or not project.id or not target_user.id:
-            raise ValueError("Project or user not found")
-
-        if not project.owner_id or project.owner_id == target_user.id:
+        if not project or not project.id:
             return None
 
         result = await self._db.exec(
             self._db.query("select")
-            .count(ProjectAssignedUser, ProjectAssignedUser.id)
-            .where(ProjectAssignedUser.project_id == project.id)
-            .where(ProjectAssignedUser.user_id == target_user.id)
-        )
-        existed = result.one()
-
-        if existed:
-            return None
-
-        assigned_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
-        self._db.insert(assigned_user)
-
-        role_service = self._get_service(RoleService)
-        if grant_actions:
-            role = await role_service.project.grant(
-                actions=grant_actions, user_id=target_user.id, project_id=project.id
-            )
-        else:
-            role = await role_service.project.grant_default(user_id=target_user.id, project_id=project.id)
-
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(assigned_user, RevertType.Delete),
-            revert_service.create_record_model(role, RevertType.Delete if role.is_new() else RevertType.Update),
-            only_commit=True,
-        )
-
-        return revert_key
-
-    async def assign_group(
-        self, user: User, project: Project | int, user_group: UserGroup | int, grant_actions: list[str] | None = None
-    ) -> str | None:
-        grant_actions = grant_actions or []
-        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
-        user_group = (
-            cast(UserGroup, await self._get_by(UserGroup, "id", user_group))
-            if isinstance(user_group, int)
-            else user_group
-        )
-        if not project or not user_group or not project.id or not user_group.id or user_group.user_id != user.id:
-            raise ValueError("Project or user not found")
-
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(User)
-            .join(UserGroupAssignedUser, User.column("id") == UserGroupAssignedUser.column("user_id"))
-        )
-
-        role_service = self._get_service(RoleService)
-        query = (
-            self._db.query("select")
-            .tables(User, ProjectAssignedUser)
-            .join(UserGroupAssignedUser, User.column("id") == UserGroupAssignedUser.user_id)
+            .tables(User, UserEmail, ProjectAssignedUser)
             .outerjoin(
-                ProjectAssignedUser,
-                (User.column("id") == ProjectAssignedUser.user_id) & (ProjectAssignedUser.project_id == project.id),
+                UserEmail,
+                (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
             )
+            .outerjoin(ProjectAssignedUser, (User.column("id") == ProjectAssignedUser.column("user_id")))
             .where(
-                (UserGroupAssignedUser.column("group_id") == user_group.id)
-                & (User.column("id") != project.owner_id)
-                & (User.column("id") != user.id)
+                (User.column("email").in_(emails) | UserEmail.column("email").in_(emails))
+                & (ProjectAssignedUser.column("project_id") == project.id)
             )
         )
+        records = result.all()
 
-        result = await self._db.exec(query)
-        target_users = result.all()
-
-        assign_users: list[ProjectAssignedUser] = []
-        roles: list[ProjectRole] = []
-        for target_user, assigned in target_users:
-            if assigned is not None or target_user.id is None:
+        updated_assigned_users: list[User] = []
+        assigned_user_ids = []
+        inviting_emails: list[str] = [*emails]
+        for target_user, target_subemail, assigned_user in records:
+            if not assigned_user or target_user.id in assigned_user_ids:
                 continue
 
-            assign_user = ProjectAssignedUser(project_id=project.id, user_id=target_user.id)
-            assign_users.append(assign_user)
-            if grant_actions:
-                role = await role_service.project.grant(
-                    actions=grant_actions, user_id=target_user.id, project_id=project.id
+            updated_assigned_users.append(target_user)
+            assigned_user_ids.append(assigned_user.id)
+            if target_subemail.email in inviting_emails:
+                inviting_emails.remove(target_subemail.email)
+            if target_user.email in inviting_emails:
+                inviting_emails.remove(target_user.email)
+
+        prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
+        updated_checkitem_ids: set[int] = set()
+        updated_card_ids: set[int] = set()
+        for prev_assigned_user in prev_assigned_users:
+            if project.owner_id == prev_assigned_user.user_id or prev_assigned_user.id in assigned_user_ids:
+                continue
+
+            checkitem_assigned_users = (
+                await self._db.exec(
+                    self._db.query("select")
+                    .table(CheckitemAssignedUser)
+                    .join(Checkitem, Checkitem.column("id") == CheckitemAssignedUser.column("checkitem_id"))
+                    .join(Card, Card.column("uid") == Checkitem.column("card_uid"))
+                    .where(
+                        (Card.column("project_id") == project.id)
+                        & (CheckitemAssignedUser.column("user_id") == prev_assigned_user.user_id)
+                    )
                 )
-            else:
-                role = await role_service.project.grant_default(user_id=target_user.id, project_id=project.id)
-            roles.append(role)
+            ).all()
+            for checkitem_assigned_user in checkitem_assigned_users:
+                updated_checkitem_ids.add(checkitem_assigned_user.checkitem_id)
+                await self._db.delete(checkitem_assigned_user)
 
-        self._db.insert_all(assign_users)
+            card_assigned_users = (
+                await self._db.exec(
+                    self._db.query("select")
+                    .table(CardAssignedUser)
+                    .join(Card, Card.column("id") == CardAssignedUser.column("card_id"))
+                    .where(
+                        (Card.column("project_id") == project.id)
+                        & (CardAssignedUser.column("user_id") == prev_assigned_user.user_id)
+                    )
+                )
+            ).all()
+            for card_assigned_user in card_assigned_users:
+                updated_card_ids.add(card_assigned_user.card_id)
+                await self._db.delete(card_assigned_user)
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            *[
-                *[revert_service.create_record_model(role, RevertType.Delete) for role in roles],
-                *[revert_service.create_record_model(assign_user, RevertType.Delete) for assign_user in assign_users],
-            ],
-            only_commit=True,
+            await self._db.delete(prev_assigned_user)
+
+        await self._db.commit()
+
+        project_invitation_service = self._get_service(ProjectInvitationService)
+        _, invited_users, urls = await project_invitation_service.invite_emails(
+            user, project, lang, url, token_query_name, inviting_emails
         )
 
-        return revert_key
+        updated_checkitems: dict[str, list[dict[str, Any]]] = {}
+        for checkitem_id in updated_checkitem_ids:
+            checkitem = await self._get_by(Checkitem, "id", checkitem_id)
+            if not checkitem:
+                continue
+            result = await self._db.exec(
+                self._db.query("select")
+                .table(User)
+                .join(CheckitemAssignedUser, User.column("id") == CheckitemAssignedUser.column("user_id"))
+                .where(CheckitemAssignedUser.column("checkitem_id") == checkitem_id)
+            )
+            updated_checkitems[checkitem.uid] = [checkitem_user.api_response() for checkitem_user in result.all()]
 
-    async def withdraw_user(self, user: User, project: Project | int, target_user: User | int) -> str | None:
-        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
-        target_user = (
-            cast(User, await self._get_by(User, "id", target_user)) if isinstance(target_user, int) else target_user
+        updated_cards: dict[str, list[dict[str, Any]]] = {}
+        for card_id in updated_card_ids:
+            card = await self._get_by(Card, "id", card_id)
+            if not card:
+                continue
+            result = await self._db.exec(
+                self._db.query("select")
+                .table(User)
+                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
+                .where(CardAssignedUser.column("card_id") == card_id)
+            )
+            updated_cards[card.uid] = [card_user.api_response() for card_user in result.all()]
+
+        model_id = await ModelIdService.create_model_id(
+            {
+                "project_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
+                "project_invited_users": invited_users,
+                "checkitem_members": updated_checkitems,
+                "card_members": updated_cards,
+            }
         )
-        if not project or not target_user or not project.id or not target_user.id:
-            raise ValueError("Project or user not found")
 
-        if not project.owner_id or project.owner_id == target_user.id:
-            return None
-
-        role_service = self._get_service(RoleService)
-
-        role = await role_service.project.withdraw(user_id=target_user.id, project_id=project.id)
-
-        revert_service = self._get_service(RevertService)
-        revert_models = []
-        if role:
-            revert_models.append(revert_service.create_record_model(role, RevertType.Insert))
-
-        assigned_user = (
-            await self._db.exec(
-                self._db.query("select")
-                .table(ProjectAssignedUser)
-                .where(
-                    (ProjectAssignedUser.column("project_id") == project.id)
-                    & (ProjectAssignedUser.column("user_id") == target_user.id)
-                )
-                .limit(1)
-            )
-        ).first()
-        if assigned_user:
-            await self._db.delete(assigned_user)
-            revert_models.append(revert_service.create_record_model(assigned_user, RevertType.Insert))
-
-        checkitem_assigned_users = (
-            await self._db.exec(
-                self._db.query("select")
-                .table(CheckitemAssignedUser)
-                .join(Checkitem, Checkitem.column("id") == CheckitemAssignedUser.column("checkitem_id"))
-                .join(Card, Card.column("uid") == Checkitem.column("card_uid"))
-                .where(
-                    (Card.column("project_id") == project.id)
-                    & (CheckitemAssignedUser.column("user_id") == target_user.id)
-                )
-            )
-        ).all()
-        for checkitem_assigned_user in checkitem_assigned_users:
-            await self._db.delete(checkitem_assigned_user)
-            revert_models.append(revert_service.create_record_model(checkitem_assigned_user, RevertType.Insert))
-
-        card_assigned_users = (
-            await self._db.exec(
-                self._db.query("select")
-                .table(CardAssignedUser)
-                .join(Card, Card.column("id") == CardAssignedUser.column("card_id"))
-                .where(
-                    (Card.column("project_id") == project.id) & (CardAssignedUser.column("user_id") == target_user.id)
-                )
-            )
-        ).all()
-        for card_assigned_user in card_assigned_users:
-            await self._db.delete(card_assigned_user)
-            revert_models.append(revert_service.create_record_model(card_assigned_user, RevertType.Insert))
-
-        if revert_models:
-            revert_key = await revert_service.record(*revert_models, only_commit=True)
-            return revert_key
-        return None
+        return ModelIdBaseResult(model_id, urls)

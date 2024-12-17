@@ -1,6 +1,7 @@
 import { Button, Checkbox, DropdownMenu, Flex, Label, Popover, Select, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useCardifyCheckitem from "@/controllers/api/card/checkitem/useCardifyCheckitem";
+import { Project } from "@/core/models";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { CheckedState } from "@radix-ui/react-checkbox";
@@ -13,7 +14,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCheckitem();
-    const [allColumns] = useState(card.project_all_columns.filter((column) => column.uid !== card.project_archive_column_uid));
+    const [allColumns] = useState(card.project_all_columns.filter((column) => column.uid !== Project.ARCHIVE_COLUMN_UID));
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
@@ -59,7 +60,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
         }
 
         if (!opened) {
-            setSelectedColumnUID(card.column_uid !== card.project_archive_column_uid ? card.column_uid : card.project_all_columns[0]?.uid);
+            setSelectedColumnUID(card.column_uid !== Project.ARCHIVE_COLUMN_UID ? card.column_uid : card.project_all_columns[0]?.uid);
             setWithSubCheckitems(true);
             setWithAssignMembers(true);
         }

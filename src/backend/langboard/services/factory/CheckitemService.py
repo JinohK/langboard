@@ -29,10 +29,7 @@ class CheckitemService(BaseService):
             .group_by(Checkitem.column("order"))
         )
         raw_checkitems = result.all()
-
-        checkitems = []
-        for raw_checkitem in raw_checkitems:
-            checkitems.append(await self.convert_api_response(raw_checkitem))
+        checkitems = [await self.convert_api_response(raw_checkitem) for raw_checkitem in raw_checkitems]
 
         return checkitems
 
@@ -45,10 +42,7 @@ class CheckitemService(BaseService):
             .group_by(Checkitem.column("order"))
         )
         raw_checkitems = result.all()
-
-        checkitems = []
-        for raw_checkitem in raw_checkitems:
-            checkitems.append(await self.convert_api_response(raw_checkitem))
+        checkitems = [await self.convert_api_response(raw_checkitem) for raw_checkitem in raw_checkitems]
 
         return checkitems
 

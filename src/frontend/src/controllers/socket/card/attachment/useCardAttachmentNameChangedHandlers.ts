@@ -17,7 +17,7 @@ const useCardAttachmentNameChangedHandlers = ({ socket, callback, projectUID, at
     return useSocketHandler<ICardAttachmentNameChangedRequest, ICardAttachmentNameChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-attachment-name-changed-${attachmentUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.NAME_CHANGED,

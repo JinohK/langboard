@@ -21,11 +21,13 @@ function useInfiniteScrollPager<T>({ allItems, size, updater }: IUseInfiniteScro
         }
 
         new Promise((resolve) => {
-            setTimeout(() => {
-                setPage(next);
-                resolve(undefined);
-            }, 1000);
+            setPage(next);
+            resolve(undefined);
         });
+    };
+
+    const toLastPage = () => {
+        setPage(lastPageRef.current);
     };
 
     useEffect(() => {
@@ -39,6 +41,7 @@ function useInfiniteScrollPager<T>({ allItems, size, updater }: IUseInfiniteScro
         items,
         lastPageRef,
         nextPage,
+        toLastPage,
         hasMore,
     };
 }

@@ -18,7 +18,7 @@ const useBoardCardCreatedHandlers = ({ socket, callback, projectUID, columnUID }
     return useSocketHandler<IBoardCardCreatedRequest, IBoardCardCreatedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-created-${columnUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CREATED,

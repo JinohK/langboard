@@ -11,7 +11,7 @@ export interface IColumnOrderChangedResponse {
 }
 
 export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IColumnOrderChangedResponse> {
-    type: "BoardColumn" | "BoardCardAttachment" | "BoardCardCheckitem";
+    type: "BoardColumn" | "BoardCardAttachment" | "BoardCardCheckitem" | "BoardWiki";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -22,7 +22,7 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
     let topic = ESocketTopic.None;
     switch (type) {
         case "BoardColumn":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.COLUMN_ORDER_CHANGED;
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.COLUMN.ORDER_CHANGED;
             topic = ESocketTopic.Board;
             break;
         case "BoardCardAttachment":
@@ -33,12 +33,16 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
             topic = ESocketTopic.Board;
             break;
+        case "BoardWiki":
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;
+            topic = ESocketTopic.BoardWiki;
+            break;
     }
 
     return useSocketHandler<IColumnOrderChangedRequest, IColumnOrderChangedResponse>({
         socket,
         topic,
-        id: topicId,
+        topicId: topicId,
         eventKey: `${new StringCase(type).toKebab()}-column-order-changed`,
         onProps: {
             name: onEventName,

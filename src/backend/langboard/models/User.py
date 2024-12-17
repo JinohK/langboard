@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
 from ..core.db import DateTimeField, ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
@@ -8,6 +8,8 @@ from ..core.utils.String import generate_random_string
 
 
 class User(SoftDeleteModel, table=True):
+    BOT_ID: ClassVar[int] = -1
+    GROUP_EMAIL_ID: ClassVar[int] = -2
     firstname: str = Field(nullable=False)
     lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)

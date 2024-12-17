@@ -70,3 +70,11 @@ class Service(ServiceFactory):
     @property
     def card_attachment(self):
         return self._create_or_get_service(factory.CardAttachmentService)
+
+    @property
+    def project_invitation(self):
+        return self._create_or_get_service(factory.ProjectInvitationService)
+
+    @property
+    def project_wiki(self):
+        return self._create_or_get_service(factory.ProjectWikiService)

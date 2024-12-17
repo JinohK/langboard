@@ -2,10 +2,10 @@ import { createContext, useContext, useRef, useState } from "react";
 import { Project, ProjectCard, User } from "@/core/models";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import { format } from "@/core/utils/StringUtils";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
+import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 
 export interface IBoardCardContext {
     projectUID: string;
@@ -58,7 +58,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRo
         if (currentEditor) {
             socket.send({
                 topic: ESocketTopic.Board,
-                id: projectUID,
+                topicId: projectUID,
                 eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_STOP_EDITING,
                 data: { uid: currentEditor },
             });
@@ -67,7 +67,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRo
         if (uid) {
             socket.send({
                 topic: ESocketTopic.Board,
-                id: projectUID,
+                topicId: projectUID,
                 eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_START_EDITING,
                 data: { uid },
             });
@@ -76,68 +76,19 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRo
         setCurEditor(uid);
     };
 
-    const subscribeEditorSocketEvents = (uid: string, startCallback: (userIds: number[]) => void, stopCallback: (userIds: number[]) => void) => {
-        const getUsersEditingEvent = format(SOCKET_SERVER_EVENTS.BOARD.CARD.EDITOR_USERS, { uid });
-        const startedEditingEvent = format(SOCKET_SERVER_EVENTS.BOARD.CARD.EDITOR_START_EDITING, { uid });
-        const stoppedEditingEvent = format(SOCKET_SERVER_EVENTS.BOARD.CARD.EDITOR_STOP_EDITING, { uid });
-
-        const events: [string, (data: { user_ids: number[] }) => void][] = [
-            [
-                getUsersEditingEvent,
-                (data: { user_ids: number[] }) => {
-                    startCallback(data.user_ids);
-                    socket.off({
-                        topic: ESocketTopic.Board,
-                        id: projectUID,
-                        eventKey: `board-card-editor-${getUsersEditingEvent}-${uid}`,
-                        event: getUsersEditingEvent,
-                        callback: events[0][1],
-                    });
-                    events.shift();
-                },
-            ],
-            [
-                startedEditingEvent,
-                (data: { user_ids: number[] }) => {
-                    startCallback(data.user_ids);
-                },
-            ],
-            [
-                stoppedEditingEvent,
-                (data: { user_ids: number[] }) => {
-                    stopCallback(data.user_ids);
-                },
-            ],
-        ];
-
-        events.forEach(([event, handler]) => {
-            socket.on({
-                topic: ESocketTopic.Board,
-                id: projectUID,
-                eventKey: `board-card-editor-${event}-${uid}`,
-                event: event,
-                callback: handler,
-            });
-        });
-
-        socket.send({
+    const subscribeEditorSocketAllEvents = (uid: string, startCallback: (userIds: number[]) => void, stopCallback: (userIds: number[]) => void) => {
+        return subscribeEditorSocketEvents({
+            socket,
             topic: ESocketTopic.Board,
-            id: projectUID,
-            eventName: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_USERS,
-            data: { uid },
+            topicId: projectUID,
+            onEventNames: SOCKET_SERVER_EVENTS.BOARD.CARD,
+            eventNameFormatMap: { uid },
+            eventKey: `board-card-editor-${uid}`,
+            getUsersSendEvent: SOCKET_CLIENT_EVENTS.BOARD.CARD.EDITOR_USERS,
+            getUsersSendEventData: { uid },
+            startCallback,
+            stopCallback,
         });
-
-        return () => {
-            events.forEach(([event, handler]) => {
-                socket.off({
-                    topic: ESocketTopic.Board,
-                    id: projectUID,
-                    eventKey: `board-card-editor-${event}-${uid}`,
-                    event,
-                    callback: handler,
-                });
-            });
-        };
     };
 
     return (
@@ -151,7 +102,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRo
                 currentEditor,
                 setCurrentEditor,
                 replyRef,
-                subscribeEditorSocketEvents,
+                subscribeEditorSocketEvents: subscribeEditorSocketAllEvents,
                 sharedClassNames,
             }}
         >

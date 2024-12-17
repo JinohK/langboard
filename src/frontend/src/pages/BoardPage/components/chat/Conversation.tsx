@@ -125,14 +125,14 @@ function Conversation({ uid, inputRef, buttonRef, sendChatCallbackRef }: IConver
 
         socket.on({
             topic: ESocketTopic.Board,
-            id: uid,
+            topicId: uid,
             event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
             eventKey: `board-chat-${uid}`,
             callback: sentCallback,
         });
         socket.stream({
             topic: ESocketTopic.Board,
-            id: uid,
+            topicId: uid,
             event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
             eventKey: `board-chat-stream-${uid}`,
             callbacks: streamCallbacks,
@@ -141,14 +141,14 @@ function Conversation({ uid, inputRef, buttonRef, sendChatCallbackRef }: IConver
         return () => {
             socket.off({
                 topic: ESocketTopic.Board,
-                id: uid,
+                topicId: uid,
                 event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
                 eventKey: `board-chat-${uid}`,
                 callback: sentCallback,
             });
             socket.streamOff({
                 topic: ESocketTopic.Board,
-                id: uid,
+                topicId: uid,
                 event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
                 eventKey: `board-chat-stream-${uid}`,
                 callbacks: streamCallbacks,

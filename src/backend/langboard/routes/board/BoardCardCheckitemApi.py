@@ -9,8 +9,7 @@ from ...core.utils.DateTime import calculate_time_diff_in_seconds
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import CardifyCheckitemForm, ChangeOrderForm, CreateCardCheckitemForm
-from .RoleFinder import project_role_finder
+from .scopes import CardifyCheckitemForm, ChangeOrderForm, CreateCardCheckitemForm, project_role_finder
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem")

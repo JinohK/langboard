@@ -1,5 +1,7 @@
 enum ESocketTopic {
     Board = "board",
+    BoardWiki = "board_wiki",
+    BoardWikiPrivate = "board_wiki_private",
     None = "none",
 }
 

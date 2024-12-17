@@ -22,6 +22,8 @@ import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList"
 import { Project } from "@/core/models";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
+import useBoardColumnCreatedHandlers from "@/controllers/socket/board/useBoardColumnCreatedHandlers";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -45,7 +47,7 @@ export function SkeletonBoard() {
             });
         };
 
-        timeout = setTimeout(updateCardCounts, 1000);
+        timeout = setTimeout(updateCardCounts, 2000);
 
         return () => {
             clearTimeout(timeout!);
@@ -125,7 +127,7 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
 });
 
 const BoardResult = memo(() => {
-    const { project, columns: flatColumns, socket } = useBoard();
+    const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const {
         columns,
@@ -180,6 +182,21 @@ const BoardResult = memo(() => {
         },
     });
 
+    useEffect(() => {
+        const { on: onProjectColumnCreated } = useBoardColumnCreatedHandlers({
+            socket,
+            projectUID: project.uid,
+            callback: (data) => {
+                setColumns((prevColumns) => [...prevColumns, data]);
+            },
+        });
+        const { off } = onProjectColumnCreated();
+
+        return () => {
+            off();
+        };
+    }, [columns]);
+
     const scrollHorizontal = (originalEvent: React.MouseEvent<HTMLElement>) => {
         if (originalEvent.target !== originalEvent.currentTarget) {
             return;
@@ -212,7 +229,7 @@ const BoardResult = memo(() => {
     return (
         <>
             <Flex justify="between" px="4" pt="4" wrap="wrap">
-                <BoardMemberList members={project.members} />
+                <BoardMemberList project={project} socket={socket} />
                 <Flex items="center" gap="1">
                     <BoardFilter />
                 </Flex>
@@ -226,6 +243,7 @@ const BoardResult = memo(() => {
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
                             ))}
                         </SortableContext>
+                        {hasRoleAction(Project.ERoleAction.UPDATE) && <BoardColumnAdd />}
                     </Flex>
                     <ScrollArea.Bar orientation="horizontal" />
                 </ScrollArea.Root>

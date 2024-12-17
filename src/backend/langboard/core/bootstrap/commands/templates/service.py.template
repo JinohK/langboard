@@ -1,4 +1,4 @@
-from ..BaseService import BaseService
+from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
 
 
 class {class_name}Service(BaseService):

@@ -24,6 +24,31 @@ class ProjectColumnService(BaseService):
         count = cast(int, result.one())
         return count
 
+    async def create(self, user: User, project_uid: str, name: str) -> ModelIdBaseResult[ProjectColumn] | None:
+        project = await self._get_by(Project, "uid", project_uid)
+        if not project:
+            return None
+
+        max_order = await self._get_max_order(ProjectColumn, "project_id", project.id)
+
+        column = ProjectColumn(
+            project_id=cast(int, project.id),
+            name=name,
+            order=max_order + 2,  # due to the archive column, the order is incremented by 2
+        )
+
+        self._db.insert(column)
+        await self._db.commit()
+
+        model_id = await ModelIdService.create_model_id(
+            {
+                **column.api_response(),
+                "count": 0,
+            }
+        )
+
+        return ModelIdBaseResult(model_id, column)
+
     async def change_name(
         self, user: User, project_uid: str, column_uid: str, name: str
     ) -> ModelIdBaseResult[bool] | None:

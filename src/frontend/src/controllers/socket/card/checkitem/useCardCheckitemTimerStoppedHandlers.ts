@@ -17,7 +17,7 @@ const useCardCheckitemTimerStoppedHandlers = ({ socket, callback, projectUID, ch
     return useSocketHandler<ICardCheckitemTimerStoppedRequest, ICardCheckitemTimerStoppedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-checkitem-timer-stopped-${checkitemUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.TIMER_STOPPED,

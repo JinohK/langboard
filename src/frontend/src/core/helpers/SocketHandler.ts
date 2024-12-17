@@ -1,6 +1,6 @@
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { ISocketContext } from "@/core/providers/SocketProvider";
-import { TEventName } from "@/core/stores/SocketStore";
+import { TDefaultEvents, TEventName } from "@/core/stores/SocketStore";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IBaseUseSocketHandlersProps<TResponse> {
@@ -11,7 +11,7 @@ export interface IBaseUseSocketHandlersProps<TResponse> {
 interface IBaseUseSocketHandlerProps<TResponse, TEvent> {
     socket: ISocketContext;
     topic?: ESocketTopic;
-    id?: string;
+    topicId?: string;
     eventKey: string;
     onProps: {
         name: TEvent;
@@ -25,25 +25,25 @@ interface IBaseUseSocketHandlerProps<TResponse, TEvent> {
     };
 }
 
-interface INoneTopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, "open" | "close" | "error">> {
+interface INoneTopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, TDefaultEvents>> {
     topic: ESocketTopic.None;
-    id?: never;
+    topicId?: never;
     sendProps: {
-        name: Exclude<TEventName, "open" | "close" | "error">;
+        name: Exclude<TEventName, TDefaultEvents>;
         params?: Record<string, string>;
     };
 }
 
-interface ITopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, "open" | "close" | "error">> {
+interface ITopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, TDefaultEvents>> {
     topic: Exclude<ESocketTopic, ESocketTopic.None>;
-    id: string;
+    topicId: string;
 }
 
-interface IDefaultEventsUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, "open" | "close" | "error"> {
+interface IDefaultEventsUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, TDefaultEvents> {
     topic?: never;
-    id?: never;
+    topicId?: never;
     onProps: {
-        name: "open" | "close" | "error";
+        name: TDefaultEvents;
         params?: never;
         callback?: IBaseUseSocketHandlersProps<TResponse>["callback"];
         responseConverter?: never;
@@ -70,7 +70,7 @@ const useSocketHandler = <TRequest, TResponse>(props: TUseSocketHandlerProps<TRe
 
         socket.on<TResponse>({
             topic: props.topic as never,
-            id: props.id,
+            topicId: props.topicId,
             event: eventName,
             eventKey,
             callback: event,
@@ -80,7 +80,7 @@ const useSocketHandler = <TRequest, TResponse>(props: TUseSocketHandlerProps<TRe
             off: () => {
                 socket.off({
                     topic: props.topic as never,
-                    id: props.id,
+                    topicId: props.topicId,
                     event: eventName,
                     eventKey: eventKey,
                     callback: event,
@@ -97,7 +97,7 @@ const useSocketHandler = <TRequest, TResponse>(props: TUseSocketHandlerProps<TRe
         const eventName = sendProps.params ? format(sendProps.name, sendProps.params) : sendProps.name;
         socket.send({
             topic: props.topic as never,
-            id: props.id,
+            topicId: props.topicId,
             eventName,
             data,
         });

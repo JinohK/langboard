@@ -10,7 +10,7 @@ from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, User, UserEmail, UserGroup, UserGroupAssignedUser
+from ...models import Project, ProjectAssignedUser, User, UserEmail, UserGroup, UserGroupAssignedEmail
 from ...models.RevertableRecord import RevertType
 from .RevertService import RevertService
 
@@ -75,12 +75,31 @@ class UserService(BaseService):
             api_group = group.api_response()
             result = await self._db.exec(
                 self._db.query("select")
-                .table(User)
-                .join(UserGroupAssignedUser, UserGroupAssignedUser.column("user_id") == User.column("id"))
-                .where(UserGroupAssignedUser.column("group_id") == group.id)
+                .tables(UserGroupAssignedEmail, User)
+                .outerjoin(UserEmail, UserEmail.column("email") == UserGroupAssignedEmail.column("email"))
+                .outerjoin(
+                    User,
+                    (User.column("email") == UserGroupAssignedEmail.column("email"))
+                    | (User.column("id") == UserEmail.column("user_id")),
+                )
+                .where(UserGroupAssignedEmail.column("group_id") == group.id)
             )
-            users = result.all()
-            api_group["users"] = [user.api_response() for user in users]
+            records = result.all()
+            api_group["users"] = []
+            for assigned_email, user in records:
+                if user:
+                    api_group["users"].append(user.api_response())
+                else:
+                    api_group["users"].append(
+                        {
+                            "id": User.GROUP_EMAIL_ID,
+                            "firstname": assigned_email.email,
+                            "lastname": "",
+                            "email": assigned_email.email,
+                            "username": "",
+                            "avatar": None,
+                        }
+                    )
             groups.append(api_group)
         return groups
 
@@ -88,9 +107,7 @@ class UserService(BaseService):
         if not user.id:
             return []
         raw_subemails = await self._get_all_by(UserEmail, "user_id", user.id)
-        subemails = []
-        for subemail in raw_subemails:
-            subemails.append(subemail.api_response())
+        subemails = [subemail.api_response() for subemail in raw_subemails]
         return subemails
 
     async def get_starred_projects(self, user: User) -> list[dict[str, str]]:
@@ -110,11 +127,8 @@ class UserService(BaseService):
             )
         )
         raw_projects = result.all()
+        projects = [project.api_response() for project in raw_projects]
 
-        projects = []
-
-        for project in raw_projects:
-            projects.append(project.api_response())
         return projects
 
     async def create_token_url(

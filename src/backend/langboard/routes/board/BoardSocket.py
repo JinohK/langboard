@@ -5,7 +5,7 @@ from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .RoleFinder import project_role_finder
+from .scopes import project_role_finder
 
 
 @AppRouter.socket.on("board:chat:available")

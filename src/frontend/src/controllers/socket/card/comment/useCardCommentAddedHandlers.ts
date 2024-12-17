@@ -18,7 +18,7 @@ const useCardCommentAddedHandlers = ({ socket, callback, projectUID, cardUID }: 
     return useSocketHandler<ICardCommentAddedRequest, ICardCommentAddedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-comment-added-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.ADDED,

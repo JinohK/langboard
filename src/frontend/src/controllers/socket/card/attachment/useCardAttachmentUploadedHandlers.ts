@@ -18,7 +18,7 @@ const useCardAttachmentUploadedHandlers = ({ socket, callback, projectUID, cardU
     return useSocketHandler<ICardAttachmentUploadedRequest, ICardAttachmentUploadedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-attachment-uploaded-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,

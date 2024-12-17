@@ -1,4 +1,5 @@
 from typing import Any
+from ...models import User
 from ..utils.decorators import class_instance, singleton
 from .BaseBot import BaseBot
 from .BotResponse import LangchainStreamResponse, LangflowStreamResponse
@@ -44,7 +45,7 @@ class BotRunner:
             return None
 
         return {
-            "id": -1,
+            "id": User.BOT_ID,
             "firstname": f"{self.get_bot_name(bot_type)} Bot",
             "lastname": "",
             "email": "",

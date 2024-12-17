@@ -18,7 +18,7 @@ const useCardCheckitemCardifiedHandlers = ({ socket, callback, projectUID, check
     return useSocketHandler<ICardCheckitemCardifiedRequest, ICardCheckitemCardifiedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-checkitem-cardified-${checkitemUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CARDIFIED,

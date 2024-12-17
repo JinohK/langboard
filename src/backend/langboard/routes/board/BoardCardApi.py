@@ -8,8 +8,31 @@ from ...core.service import ModelIdService
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import AssignUsersForm, ChangeCardDetailsForm, ChangeOrderForm
-from .RoleFinder import project_role_finder
+from .scopes import AssignUsersForm, ChangeCardDetailsForm, ChangeOrderForm, CreateCardForm, project_role_finder
+
+
+@AppRouter.api.post("/board/{project_uid}/card")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardWrite], project_role_finder)
+@AuthFilter.add
+async def create_card(
+    project_uid: str, form: CreateCardForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    result = await service.card.create(user, project, form.column_uid, form.title)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    _, api_card = result.data
+
+    await AppRouter.publish(
+        topic=SocketTopic.Board,
+        topic_id=project_uid,
+        event_response=f"board:card:created:{form.column_uid}",
+        data={"model_id": result.model_id},
+    )
+
+    return JsonResponse(content={"card": api_card}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.get("/board/{project_uid}/card/{card_uid}")
@@ -113,7 +136,7 @@ async def update_card_assigned_users(
     await AppRouter.publish(
         topic=SocketTopic.Board,
         topic_id=project_uid,
-        event_response=f"board:card:assigned_users:changed:{card_uid}",
+        event_response=f"board:card:assigned_users:updated:{card_uid}",
         data={"model_id": result.model_id},
     )
 

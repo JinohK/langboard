@@ -6,7 +6,7 @@ from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from ..board.RoleFinder import project_role_finder
+from ..board.scopes import project_role_finder
 
 
 @AppRouter.api.get("/activity/user")

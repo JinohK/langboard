@@ -25,7 +25,6 @@ export interface IBoardWithDetails extends Interface {
     deadline_at?: Date;
     column_name: string;
     project_all_columns: ProjectColumn.Interface[];
-    project_archive_column_uid: string;
     members: User.Interface[];
     project_members: User.Interface[];
     relationships: {

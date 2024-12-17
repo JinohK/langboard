@@ -1,10 +1,10 @@
 from json import loads as json_loads
-from typing import Literal
+from typing import Literal, overload
 from ...Constants import BASE_DIR, PROJECT_NAME
 from ...core.service import BaseService
 
 
-_TTemplateNames = Literal["recovery", "signup", "subemail"]
+_TTemplateNames = Literal["recovery", "signup", "subemail", "project_invitation"]
 
 
 class EmailService(BaseService):
@@ -13,7 +13,17 @@ class EmailService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "email"
 
-    async def send_template(self, lang: str, to: str, template_name: _TTemplateNames, formats: dict[str, str]) -> bool:
+    @overload
+    async def send_template(
+        self, lang: str, to: str, template_name: _TTemplateNames, formats: dict[str, str]
+    ) -> bool: ...
+    @overload
+    async def send_template(
+        self, lang: str, to: list[str], template_name: _TTemplateNames, formats: dict[str, str]
+    ) -> bool: ...
+    async def send_template(
+        self, lang: str, to: str | list[str], template_name: _TTemplateNames, formats: dict[str, str]
+    ) -> bool:
         subject, template = self.__get_template(lang, template_name)
         subject = self.__create_subject(subject)
         body = template.format_map(formats)  # noqa

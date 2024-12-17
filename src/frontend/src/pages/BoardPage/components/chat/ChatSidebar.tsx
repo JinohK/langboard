@@ -42,7 +42,7 @@ const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
 
         const isSent = socket.send({
             topic: ESocketTopic.Board,
-            id: uid,
+            topicId: uid,
             eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND,
             data: { message: chat },
         }).isConnected;

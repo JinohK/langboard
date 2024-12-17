@@ -17,7 +17,7 @@ const useCardDeadlineChangedHandlers = ({ socket, callback, projectUID, cardUID 
     return useSocketHandler<ICardDeadlineChangedRequest, ICardDeadlineChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-deadline-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.DEADLINE_CHANGED,

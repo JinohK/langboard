@@ -18,7 +18,7 @@ const useCardCheckitemCreatedHandlers = ({ socket, callback, projectUID, cardUID
     return useSocketHandler<ICardCheckitemCreatedRequest, ICardCheckitemCreatedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-checkitem-created-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CREATED,

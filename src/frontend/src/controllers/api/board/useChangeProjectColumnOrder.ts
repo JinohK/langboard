@@ -15,7 +15,7 @@ const useChangeProjectColumnOrder = (options?: TMutationOptions<IChangeProjectCo
     const { mutate } = useQueryMutation();
 
     const changeProjectColumnOrder = async (params: IChangeProjectColumnOrderForm) => {
-        const url = format(API_ROUTES.BOARD.CHANGE_COLUMN_ORDER, { uid: params.project_uid, column_uid: params.column_uid });
+        const url = format(API_ROUTES.BOARD.COLUMN.CHANGE_ORDER, { uid: params.project_uid, column_uid: params.column_uid });
         const res = await api.put(url, {
             order: params.order,
         });

@@ -16,7 +16,7 @@ const useBoardChatAvailableHandlers = ({ socket, callback, projectUID }: IUseBoa
     return useSocketHandler<IBoardChatAvailableRequest, IBoardChatAvailableResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `is-board-chat-available-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE,

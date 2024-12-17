@@ -155,10 +155,10 @@ function BoardCommentForm(): JSX.Element {
     };
 
     const commentingUsers = editingUserIds.filter((id) => id !== currentUser.id);
-    const commentingUsersComp = commentingUsers.length > 0 && (
+    const commentingUsersElement = commentingUsers.length > 0 && (
         <Flex items="center" justify="end" gap="2" mb="1" mr="1">
             <UserAvatarList
-                users={commentingUsers.map((userId) => card.project_members.find((user) => user.id === userId) as User.Interface)}
+                users={commentingUsers.map((userId) => card.project_members.find((user) => user.id === userId)!)}
                 maxVisible={3}
                 size="xs"
                 spacing="1"
@@ -190,7 +190,7 @@ function BoardCommentForm(): JSX.Element {
 
     return (
         <Form.Root className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
-            {commentingUsersComp}
+            {commentingUsersElement}
             <Drawer.Root modal={false} handleOnly repositionInputs={false} open={isOpened} onOpenChange={changeOpenState}>
                 <Drawer.Trigger asChild>
                     <Flex items="center" gap="4" className="rounded-b-lg border-t bg-background p-2">
@@ -217,7 +217,7 @@ function BoardCommentForm(): JSX.Element {
                         )}
                         data-card-comment-form
                     >
-                        <div className="absolute -top-8 right-0">{commentingUsersComp}</div>
+                        <div className="absolute -top-8 right-0">{commentingUsersElement}</div>
                         <Drawer.Handle
                             className="flex h-2 w-full cursor-grab justify-center bg-transparent py-3 text-center"
                             onMouseDown={() => onDrawerHandlePointerStart("mouse")}

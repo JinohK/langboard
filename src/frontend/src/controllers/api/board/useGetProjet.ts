@@ -4,23 +4,24 @@ import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
-export interface IProjectAvailableForm {
+export interface IGetProjectForm {
     uid: string;
 }
 
-const useProjectAvailable = (form: IProjectAvailableForm, options?: TQueryOptions<Project.IBoard>) => {
+const useGetProjet = (form: IGetProjectForm, options?: TQueryOptions<Project.IBoard>) => {
     const { query } = useQueryMutation();
 
-    const isProjectAvailable = async () => {
-        const url = format(API_ROUTES.BOARD.IS_AVAILABLE, { uid: form.uid });
-        const res = await api.post<{ project: Required<Project.IBoard> }>(url);
+    const getProject = async () => {
+        const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
+        const res = await api.get<{ project: Required<Project.IBoard> }>(url);
 
         User.transformFromApi(res.data.project.members);
+        User.transformFromApi(res.data.project.invited_users);
 
         return res.data.project;
     };
 
-    const result = query(["is-project-available"], isProjectAvailable, {
+    const result = query([`get-project-${form.uid}`], getProject, {
         ...options,
         retry: 0,
         refetchInterval: Infinity,
@@ -29,4 +30,4 @@ const useProjectAvailable = (form: IProjectAvailableForm, options?: TQueryOption
     return result;
 };
 
-export default useProjectAvailable;
+export default useGetProjet;

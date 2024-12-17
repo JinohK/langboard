@@ -12,8 +12,10 @@ import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordFor
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function AccountRecoveryPage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();
@@ -51,6 +53,9 @@ function AccountRecoveryPage(): JSX.Element {
                         },
                         onError: () => {
                             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                        },
+                        onSettled: () => {
+                            setIsLoadingRef.current(false);
                         },
                     }
                 );

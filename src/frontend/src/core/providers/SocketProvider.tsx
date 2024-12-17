@@ -11,26 +11,26 @@ import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 
 interface IBaseRunEventsProps {
     topic?: ESocketTopic;
-    id?: string;
+    topicId?: string;
     eventName: TEventName;
     data?: unknown;
 }
 
 interface INoneTopicRunEventsProps extends IBaseRunEventsProps {
     topic: ESocketTopic.None;
-    id?: never;
+    topicId?: never;
     eventName: Exclude<TEventName, "open" | "close" | "error">;
 }
 
 interface ITopicRunEventsProps extends IBaseRunEventsProps {
     topic: Exclude<ESocketTopic, ESocketTopic.None>;
-    id: string;
+    topicId: string;
     eventName: Exclude<TEventName, "open" | "close" | "error">;
 }
 
 interface IDefaultEventsRunEventsProps extends IBaseRunEventsProps {
     topic?: never;
-    id?: never;
+    topicId?: never;
     eventName: "open" | "close" | "error";
 }
 
@@ -38,19 +38,19 @@ type TRunEventsProps = INoneTopicRunEventsProps | ITopicRunEventsProps | IDefaul
 
 interface IBaseSocketSendProps {
     topic?: ESocketTopic;
-    id?: string;
+    topicId?: string;
     eventName: Exclude<TEventName, "open" | "close" | "error">;
     data: any;
 }
 
 interface INoneTopicSocketSendProps extends IBaseSocketSendProps {
     topic: ESocketTopic.None;
-    id?: never;
+    topicId?: never;
 }
 
 interface ITopicSocketSendProps extends IBaseSocketSendProps {
     topic: Exclude<ESocketTopic, ESocketTopic.None>;
-    id: string;
+    topicId: string;
 }
 
 type TSocketSendProps = INoneTopicSocketSendProps | ITopicSocketSendProps;
@@ -138,7 +138,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
 
                 await runEvents({
                     topic: response.topic,
-                    id: response.topic_id,
+                    topicId: response.topic_id,
                     eventName: response.event,
                     data: response.data,
                 });
@@ -186,9 +186,9 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         }
 
         const topic = props.topic ?? ESocketTopic.None;
-        const id = topic === ESocketTopic.None ? "none" : props.id!;
+        const topicId = topic === ESocketTopic.None ? "none" : props.topicId!;
 
-        const targetEvents = Object.values(socketMap.subscriptions[topic]?.[id]?.[eventName] ?? {}).flat();
+        const targetEvents = Object.values(socketMap.subscriptions[topic]?.[topicId]?.[eventName] ?? {}).flat();
         for (let i = 0; i < targetEvents.length; ++i) {
             await targetEvents[i](data);
         }
@@ -254,9 +254,9 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
             return { isConnected: false };
         }
 
-        const { topic, id, eventName, data } = props;
+        const { topic, topicId, eventName, data } = props;
 
-        return { isConnected: sendSocket(JSON.stringify({ event: eventName, topic, topic_id: id, data })) };
+        return { isConnected: sendSocket(JSON.stringify({ event: eventName, topic, topic_id: topicId, data })) };
     };
 
     const socketMap = getStore();

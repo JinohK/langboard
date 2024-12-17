@@ -3,7 +3,8 @@ from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SoftDeleteModel
 from ..core.utils.String import create_short_unique_id
-from .ProjectColumn import Project, ProjectColumn
+from .Project import Project
+from .ProjectColumn import ProjectColumn
 
 
 class Card(SoftDeleteModel, table=True):

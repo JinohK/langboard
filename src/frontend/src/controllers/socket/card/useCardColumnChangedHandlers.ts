@@ -16,7 +16,7 @@ const useCardColumnChangedHandlers = ({ socket, callback, projectUID, cardUID }:
     return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-column-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED,

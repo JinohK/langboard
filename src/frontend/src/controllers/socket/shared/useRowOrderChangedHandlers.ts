@@ -35,7 +35,7 @@ const useRowOrderChangedHandlers = ({ socket, callback, type, params, topicId }:
     return useSocketHandler<IRowOrderChangedRequest, IRowOrderChangedResponse>({
         socket,
         topic,
-        id: topicId,
+        topicId: topicId,
         eventKey: `${new StringCase(type).toKebab()}-row-order-changed`,
         onProps: {
             name: onEventName,

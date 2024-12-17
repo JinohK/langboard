@@ -9,13 +9,13 @@ export interface Interface {
 export interface IBoard extends Interface {
     members: User.Interface[];
     current_user_role_actions: TRoleActions[];
+    invited_users: User.Interface[];
 }
 
 export type TRoleActions = "read" | "write" | "update" | "delete" | "card_write" | "card_update" | "card_delete";
 
 export enum ERoleAction {
     READ = "read",
-    WRITE = "write",
     UPDATE = "update",
     DELETE = "delete",
     CARD_WRITE = "card_write",
@@ -24,3 +24,5 @@ export enum ERoleAction {
 }
 
 export const TYPES = ["SI", "SW", "Other"];
+
+export const ARCHIVE_COLUMN_UID = "archive";

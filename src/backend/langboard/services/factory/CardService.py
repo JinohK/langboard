@@ -15,6 +15,7 @@ from ...models import (
     Checkitem,
     GlobalCardRelationshipType,
     Project,
+    ProjectAssignedUser,
     ProjectColumn,
     User,
 )
@@ -54,14 +55,13 @@ class CardService(BaseService):
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
         api_card["column_name"] = column.name
-        api_card["project_archive_column_uid"] = Project.ARCHIVE_COLUMN_UID
         api_card["project_all_columns"] = await self._get_service(ProjectService).get_columns(project)
 
         checkitem_service = self._get_service(CheckitemService)
         api_card["checkitems"] = await checkitem_service.get_list(card.uid)
 
         project_service = self._get_service(ProjectService)
-        api_card["project_members"] = await project_service.get_assigned_users(card.project_id)
+        api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
 
         card_attachment_service = self._get_service(CardAttachmentService)
         api_card["attachments"] = await card_attachment_service.get_board_list(card_uid)
@@ -73,7 +73,6 @@ class CardService(BaseService):
             .where(CardAssignedUser.column("card_id") == card.id)
         )
         raw_users = result.all()
-
         api_card["members"] = [user.api_response() for user in raw_users]
 
         result = await self._db.exec(
@@ -97,7 +96,6 @@ class CardService(BaseService):
             )
         )
         raw_relationships = result.all()
-
         api_card["relationships"] = []
         for relationship, relationship_type, related_card in raw_relationships:
             api_card["relationships"].append(
@@ -114,7 +112,7 @@ class CardService(BaseService):
         return api_card
 
     async def get_board_list(self, project_uid: str) -> list[dict[str, Any]]:
-        sql_query = (
+        result = await self._db.exec(
             self._db.query("select")
             .tables(
                 Card,
@@ -129,12 +127,8 @@ class CardService(BaseService):
             .order_by(Card.column("order").asc())
             .group_by(Card.column("id"), Card.column("order"))
         )
-
-        result = await self._db.exec(sql_query)
         raw_cards = result.all()
-
         cards = []
-
         for card, count_comment in raw_cards:
             card_api = await self.convert_board_list_api_response(card, count_comment)
             cards.append(card_api)
@@ -195,13 +189,17 @@ class CardService(BaseService):
 
     async def create(
         self, user_or_bot: User | BotType, project: Project | int, column_uid: str, title: str
-    ) -> ModelIdBaseResult[Card] | None:
+    ) -> ModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
         if isinstance(project, int):
             project = cast(Project, await self._get_by(Project, "id", project))
             if not project:
                 return None
 
         if not project.id or column_uid == Project.ARCHIVE_COLUMN_UID:
+            return None
+
+        column = await self._get_by(ProjectColumn, "uid", column_uid)
+        if not column or column.project_id != project.id:
             return None
 
         max_order = await self._get_max_order(Card, "project_id", project.id, {"project_column_uid": column_uid})
@@ -215,9 +213,10 @@ class CardService(BaseService):
         self._db.insert(card)
         await self._db.commit()
 
-        model_id = await ModelIdService.create_model_id({})
+        model = await self.convert_board_list_api_response(card)
+        model_id = await ModelIdService.create_model_id({"card": model})
 
-        return ModelIdBaseResult(model_id, card)
+        return ModelIdBaseResult(model_id, (card, model))
 
     async def update(
         self, user_or_bot: User | BotType, card: Card | int, form: dict
@@ -368,7 +367,16 @@ class CardService(BaseService):
         )
 
         if assign_user_ids:
-            users = await self._get_all_by(User, "id", assign_user_ids)
+            result = await self._db.exec(
+                self._db.query("select")
+                .table(User)
+                .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
+                .where(
+                    (ProjectAssignedUser.column("project_id") == card.project_id)
+                    & (ProjectAssignedUser.column("user_id").in_(assign_user_ids))
+                )
+            )
+            users = result.all()
             for user in users:
                 self._db.insert(CardAssignedUser(card_id=cast(int, card.id), user_id=cast(int, user.id)))
         else:

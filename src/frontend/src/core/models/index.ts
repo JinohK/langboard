@@ -7,4 +7,5 @@ export * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 export * as ProjectCardComment from "@/core/models/ProjectCardComment";
 export * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 export * as ProjectCheckitemTimer from "@/core/models/ProjectCheckitemTimer";
+export * as ProjectWiki from "@/core/models/ProjectWiki";
 export * as User from "@/core/models/User";

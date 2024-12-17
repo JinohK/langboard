@@ -1,6 +1,7 @@
 import { Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
@@ -47,8 +48,6 @@ export const SkeletonBoardColumnCard = memo(() => {
         </Card.Root>
     );
 });
-
-const DISABLE_DRAGGING_ATTR = "data-drag-disabled";
 
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { project, currentUser, socket, hasRoleAction } = useBoard();
@@ -265,6 +264,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
 
     return (
         <Card.Root
+            id={`board-card-${card.uid}`}
             className="relative cursor-pointer"
             onPointerOut={(e) => {
                 const target = e.target as HTMLElement;

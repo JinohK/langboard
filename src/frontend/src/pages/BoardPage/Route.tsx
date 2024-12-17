@@ -5,29 +5,33 @@ import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
 
-const BoardPage = lazy(() => import("./index"));
+const BoardProxy = lazy(() => import("./index"));
+const BoardInvitationPage = lazy(() => import("./BoardInvitationPage"));
 
 function BoardRoute() {
     return (
         <Route path={ROUTES.BOARD.ROUTE} key="route-board">
             <Route index element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />} />
             <Route
+                path={ROUTES.BOARD.INVITATION}
+                element={
+                    <AuthGuard>
+                        <BoardInvitationPage />
+                    </AuthGuard>
+                }
+            />
+            <Route
                 path={ROUTES.BOARD.MAIN(":projectUID")}
                 element={
                     <AuthGuard>
-                        <BoardPage />
+                        <BoardProxy />
                         <Outlet />
                     </AuthGuard>
                 }
             >
-                <Route
-                    path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")}
-                    element={
-                        <AuthGuard>
-                            <BoardCardPage />
-                        </AuthGuard>
-                    }
-                />
+                <Route path={ROUTES.BOARD.WIKI(":projectUID")} element={<></>} />
+                <Route path={ROUTES.BOARD.WIKI_PAGE(":projectUID", ":wikiUID")} element={<></>} />
+                <Route path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")} element={<BoardCardPage />} />
             </Route>
         </Route>
     );

@@ -6,8 +6,7 @@ from ...core.security import Auth
 from ...models import CardCommentReaction, ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .Models import ToggleCardCommentReactionForm
-from .RoleFinder import project_role_finder
+from .scopes import ToggleCardCommentReactionForm, project_role_finder
 
 
 @AppRouter.api.post("/board/{project_uid}/card/{card_uid}/comment")

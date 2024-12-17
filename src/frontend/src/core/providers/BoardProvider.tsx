@@ -59,7 +59,7 @@ const initialContext = {
 const BoardContext = createContext<IBoardContext>(initialContext);
 
 export const BoardProvider = memo(
-    ({ navigate, project, columns, cards, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
+    ({ navigate, project, columns, cards: flatCards, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
         const socket = useSocket();
         const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
         const filters = useMemo(() => {
@@ -69,6 +69,7 @@ export const BoardProvider = memo(
             return newFilters;
         }, [navigated, location, location.search]);
         const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
+        const cards = useMemo(() => flatCards, [flatCards]);
         const cardsMap = useMemo(() => {
             const map: Record<string, ProjectCard.IBoard> = {};
             cards.forEach((card) => {

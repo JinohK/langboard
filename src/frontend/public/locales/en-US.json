@@ -30,6 +30,7 @@
     "Edit": "Edit",
     "Delete": "Delete",
     "Or": "Or",
+    "Adding...": "Adding...",
     "Creating...": "Creating...",
     "Reverting...": "Reverting...",
     "Deleting...": "Deleting...",
@@ -37,7 +38,10 @@
     "Updating...": "Updating...",
     "Starting...": "Starting...",
     "Stopping...": "Stopping...",
-    "Add members from group": "Add members from group"
+    "Add members from group": "Add members from group",
+    "Assign '{email}'": "Assign '{{email}}'",
+    "is editing...": "is editing...",
+    "are editing...": "are editing..."
   },
   "editor": {
     "Accept": "Accept",
@@ -375,6 +379,8 @@
     }
   },
   "board": {
+    "Board": "Board",
+    "Wiki": "Wiki",
     "Filters": "Filters",
     "filters": {
       "Clear": "Clear",
@@ -389,7 +395,14 @@
       "Select members": "Select members",
       "Select cards": "Select cards",
       "Clear selections": "Clear selections"
-    }
+    },
+    "Add column": "Add column",
+    "Add a card": "Add a card",
+    "Add card": "Add card",
+    "Enter a name": "Enter a name",
+    "Enter a title": "Enter a title",
+    "Column added successfully.": "Column added successfully.",
+    "Card added successfully.": "Card added successfully."
   },
   "project": {
     "Project Title": "Project Title",
@@ -403,7 +416,10 @@
     "Parents": "Parents",
     "Children": "Children",
     "Assign members": "Assign members",
+    "invited": "invited",
     "types": { },
+    "Project not found.": "Project not found.",
+    "Assigned members updated and invited new users successfully.": "Assigned members updated and invited new users successfully.",
     "errors": {
       "missing": {
         "title": "Enter a title."
@@ -493,5 +509,15 @@
     "heart": "Heart",
     "rocket": "Rocket",
     "eyes": "Eyes"
+  },
+  "wiki": {
+    "Private": "Private",
+    "Public": "Public",
+    "Can't access this wiki.": "Can't access this wiki.",
+    "Title changed successfully.": "Title changed successfully.",
+    "Content changed successfully.": "Content changed successfully.",
+    "New wiki page created successfully.": "New wiki page created successfully.",
+    "Wiki page deleted successfully.": "Wiki page deleted successfully.",
+    "Wiki page deleted.": "Wiki page deleted."
   }
 }

@@ -18,7 +18,7 @@ const useCardCheckitemTitleChangedHandlers = ({ socket, callback, projectUID, ch
     return useSocketHandler<ICardCheckitemTitleChangedRequest, ICardCheckitemTitleChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-checkitem-title-changed-${checkitemUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.TITLE_CHANGED,

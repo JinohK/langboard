@@ -12,7 +12,7 @@ export interface IMultiSelectItem {
     value: string;
 }
 
-export interface IMultiSelectProps {
+interface IBaseMultiSelectProps {
     selections: IMultiSelectItem[];
     placeholder?: string;
     selectedValue?: string[];
@@ -21,8 +21,25 @@ export interface IMultiSelectProps {
     badgeClassName?: string;
     inputClassName?: string;
     createBadgeWrapper?: (badge: JSX.Element, value: string) => JSX.Element;
+    canCreateNew?: bool;
+    validateCreatedNewValue?: (value: string) => bool;
+    commandItemForNew?: (value: string) => string;
     disabled?: bool;
 }
+
+interface IAllowingCreateNewMultiSelectProps extends IBaseMultiSelectProps {
+    canCreateNew: true;
+    validateCreatedNewValue: (value: string) => bool;
+    commandItemForNew?: (value: string) => string;
+}
+
+interface IDefaultMultiSelectProps extends IBaseMultiSelectProps {
+    canCreateNew?: false;
+    validateCreatedNewValue?: never;
+    commandItemForNew?: never;
+}
+
+export type TMultiSelectProps = IAllowingCreateNewMultiSelectProps | IDefaultMultiSelectProps;
 
 const MultiSelect = React.memo(
     ({
@@ -34,8 +51,11 @@ const MultiSelect = React.memo(
         badgeClassName,
         inputClassName,
         createBadgeWrapper,
+        canCreateNew,
+        validateCreatedNewValue,
+        commandItemForNew,
         disabled,
-    }: IMultiSelectProps) => {
+    }: TMultiSelectProps) => {
         const [wrapper, setWrapper] = React.useState<HTMLDivElement | null>(null);
         const inputRef = React.useRef<HTMLInputElement>(null);
         const [open, setOpen] = React.useState(false);
@@ -132,6 +152,9 @@ const MultiSelect = React.memo(
             "--multiselect-transform-origin": [middlewareData.transformOrigin?.x, middlewareData.transformOrigin?.y].join(" "),
         };
 
+        const isDisabled = (!canCreateNew && !selectables.length) || !!disabled;
+        const isCreatable = canCreateNew && inputValue && validateCreatedNewValue && validateCreatedNewValue(inputValue);
+
         return (
             <Command.Root onKeyDown={handleKeyDown} className={cn("overflow-visible bg-transparent", className)}>
                 <div
@@ -140,10 +163,14 @@ const MultiSelect = React.memo(
                 >
                     <Flex wrap="wrap" gap="1">
                         {selected.map((selectedValue) => {
-                            const selection = selections.find((selection) => selection.value === selectedValue)!;
+                            let selection = selections.find((selection) => selection.value === selectedValue);
+                            if (!selection && canCreateNew) {
+                                selection = { label: selectedValue, value: selectedValue };
+                            }
+
                             let badge = (
                                 <Badge variant="secondary" className={cn("justify-between gap-1 pl-2 pr-1", badgeClassName)}>
-                                    {selection.label}
+                                    {selection!.label}
                                     <button
                                         className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         onKeyDown={(e) => {
@@ -168,7 +195,7 @@ const MultiSelect = React.memo(
                             }
 
                             return (
-                                <span key={selection.value} className="inline-flex">
+                                <span key={selection!.value} className="inline-flex">
                                     {badge}
                                 </span>
                             );
@@ -180,7 +207,7 @@ const MultiSelect = React.memo(
                             onBlur={() => setOpen(false)}
                             onFocus={() => setOpen(true)}
                             placeholder={placeholder}
-                            disabled={!selectables.length || !!disabled}
+                            disabled={isDisabled}
                             className={cn("ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground", inputClassName)}
                         />
                     </Flex>
@@ -189,15 +216,15 @@ const MultiSelect = React.memo(
                     <Command.List
                         style={style}
                         className={cn(
-                            "absolute w-full min-w-max bg-popover text-popover-foreground shadow-md transition-[height]",
+                            "absolute z-50 w-full min-w-max bg-popover text-popover-foreground shadow-md transition-[height]",
                             "max-h-[calc(min(var(--multiselect-available-height)_-_theme(spacing.4),350px))]",
                             "[&>[cmdk-list-sizer]]:w-full",
-                            !open || !selectables.length ? "hidden" : "rounded-md border",
+                            !open || isDisabled ? "hidden" : "rounded-md border",
                             middlewareData.hide?.referenceHidden && "pointer-events-none invisible"
                         )}
                         ref={refs.setFloating}
                     >
-                        {open && selectables.length > 0 ? (
+                        {open && (selectables.length > 0 || isCreatable) ? (
                             <div className="w-full outline-none animate-in">
                                 <Command.Group className="h-full overflow-auto">
                                     {selectables.map((selectable) => (
@@ -217,6 +244,22 @@ const MultiSelect = React.memo(
                                             {selectable.label}
                                         </Command.Item>
                                     ))}
+                                    {isCreatable && (
+                                        <Command.Item
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
+                                            onSelect={() => {
+                                                setInputValue("");
+                                                setSelected((prev) => [...prev, inputValue]);
+                                            }}
+                                            disabled={disabled}
+                                            className={"cursor-pointer"}
+                                        >
+                                            {commandItemForNew ? commandItemForNew(inputValue) : inputValue}
+                                        </Command.Item>
+                                    )}
                                 </Command.Group>
                             </div>
                         ) : null}

@@ -1,12 +1,104 @@
 import { AssignMemberPopover } from "@/components/AssignMemberPopover";
-import { User } from "@/core/models";
+import { Toast } from "@/components/base";
+import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
+import useProjectAssignedUsersUpdatedHandlers, {
+    IProjectAssignedUsersUpdatedResponse,
+} from "@/controllers/socket/board/useProjectAssignedUsersUpdatedHandlers";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { Project, User } from "@/core/models";
+import { ISocketContext } from "@/core/providers/SocketProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
-    const [t] = useTranslation();
+const setInvitedText = (invitedMembers: User.Interface[], invitedText: string) => {
+    for (let i = 0; i < invitedMembers.length; ++i) {
+        const invitedMember = invitedMembers[i];
+        if (invitedMember.lastname.includes(invitedText)) {
+            continue;
+        }
+
+        invitedMember.lastname = invitedMember.lastname.length ? `${invitedMember.lastname} (${invitedText})` : `(${invitedText})`;
+    }
+};
+
+const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; socket: ISocketContext }) => {
+    const [t, i18n] = useTranslation();
+    const [members, setMembers] = useState<User.Interface[]>(project.members);
+    const [invitedMembers, setInvitedMembers] = useState<User.Interface[]>(project.invited_users);
     const [isValidating, setIsValidating] = useState(false);
+    const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
+    const updatedCallback = useCallback(
+        (response: IProjectAssignedUsersUpdatedResponse) => {
+            setInvitedText(response.invited_users, t("project.invited"));
+            project.members = response.assigned_users;
+            project.invited_users = response.invited_users;
+            setMembers(() => response.assigned_users);
+            setInvitedMembers(() => response.invited_users);
+        },
+        [members, invitedMembers]
+    );
+    const { on: onProjectAssignedUsersUpdated } = useProjectAssignedUsersUpdatedHandlers({
+        projectUID: project.uid,
+        socket,
+        callback: updatedCallback,
+    });
+
+    const save = (users: User.Interface[], endCallback: () => void) => {
+        if (isValidating) {
+            return;
+        }
+
+        setIsValidating(true);
+
+        const promise = updateProjectAssignedUsersMutateAsync({
+            uid: project.uid,
+            emails: users.map((user) => user.email),
+            lang: i18n.language,
+        });
+
+        const toastId = Toast.Add.promise(promise, {
+            loading: t("common.Updating..."),
+            error: (error: unknown) => {
+                let message = "";
+                const { handle } = setupApiErrorHandler({
+                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                        message = t("errors.Forbidden");
+                    },
+                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                        message = t("project.Project not found.");
+                    },
+                    nonApiError: () => {
+                        message = t("errors.Unknown error");
+                    },
+                    wildcardError: () => {
+                        message = t("errors.Internal server error");
+                    },
+                });
+
+                handle(error);
+                return message;
+            },
+            success: () => {
+                return t("project.Assigned members updated and invited new users successfully.");
+            },
+            finally: () => {
+                endCallback();
+                setIsValidating(false);
+                Toast.Add.dismiss(toastId);
+            },
+        });
+    };
+
+    useEffect(() => {
+        const { off } = onProjectAssignedUsersUpdated();
+        setInvitedText(invitedMembers, t("project.invited"));
+
+        return () => {
+            off();
+        };
+    }, []);
 
     return (
         <AssignMemberPopover
@@ -14,6 +106,10 @@ const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
                 size: "icon",
                 className: "size-8 xs:size-10",
                 title: t("project.Assign members"),
+            }}
+            popoverContentProps={{
+                className: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
+                align: "start",
             }}
             userAvatarListProps={{
                 maxVisible: 6,
@@ -30,12 +126,14 @@ const BoardMemberList = memo(({ members }: { members: User.Interface[] }) => {
                 ),
                 inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
             }}
-            onSave={(users) => {}}
+            onSave={save}
             isValidating={isValidating}
             allUsers={members}
             assignedUsers={members}
+            newUsers={invitedMembers}
             iconSize="6"
             canControlAssignedUsers
+            canAssignNonMembers
         />
     );
 });

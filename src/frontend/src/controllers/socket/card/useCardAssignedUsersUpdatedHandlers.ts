@@ -18,10 +18,10 @@ const useCardAssignedUsersUpdatedHandlers = ({ socket, callback, projectUID, car
     return useSocketHandler<ICardAssignedUsersUpdateRequest, ICardAssignedUsersUpdatedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-assigned-users-updated-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ASSIGNED_USERS_CHANGED,
+            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ASSIGNED_USERS_UPDATED,
             params: { uid: cardUID },
             callback,
             responseConverter: (response) => {

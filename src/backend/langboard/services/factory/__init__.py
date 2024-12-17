@@ -5,7 +5,9 @@ from .ChatHistoryService import ChatHistoryService
 from .CheckitemService import CheckitemService
 from .EmailService import EmailService
 from .ProjectColumnService import ProjectColumnService
+from .ProjectInvitationService import ProjectInvitationService
 from .ProjectService import ProjectService
+from .ProjectWikiService import ProjectWikiService
 from .ReactionService import ReactionService
 from .RevertService import RevertService
 from .RoleService import RoleService
@@ -21,7 +23,9 @@ __all__ = [
     "CheckitemService",
     "EmailService",
     "ProjectColumnService",
+    "ProjectInvitationService",
     "ProjectService",
+    "ProjectWikiService",
     "ReactionService",
     "RevertService",
     "RoleService",

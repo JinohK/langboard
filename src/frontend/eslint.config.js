@@ -3,6 +3,9 @@ import prettierRecommended from "eslint-plugin-prettier/recommended";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
+/**
+ * @type {import("eslint").Linter.Config}
+ */
 const config = {
     plugins: {
         "react-refresh": reactRefresh,

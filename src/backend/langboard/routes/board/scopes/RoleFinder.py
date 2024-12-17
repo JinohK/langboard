@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 from sqlmodel.sql.expression import SelectOfScalar
-from ...models import Project, ProjectRole
+from ....models import Project, ProjectRole
 
 
 def project_role_finder(

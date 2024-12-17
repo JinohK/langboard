@@ -17,15 +17,12 @@ const useBoardColumnNameChangedHandlers = ({ socket, callback, projectUID }: IUs
     return useSocketHandler<IBoardColumnNameChangedRequest, IBoardColumnNameChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-column-name-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.COLUMN_NAME_CHANGED,
+            name: SOCKET_SERVER_EVENTS.BOARD.COLUMN.NAME_CHANGED,
             params: { uid: projectUID },
             callback,
-        },
-        sendProps: {
-            name: "",
         },
     });
 };

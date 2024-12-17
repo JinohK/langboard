@@ -30,13 +30,18 @@ export const ROUTES = {
     },
     BOARD: {
         ROUTE: "/board",
+        INVITATION: "/board/invitation",
         MAIN: (uid: string) => `/board/${uid}`,
+        WIKI: (uid: string) => `/board/${uid}/wiki`,
+        WIKI_PAGE: (uid: string, wikiUID: string) => `/board/${uid}/wiki/${wikiUID}`,
         CARD: (uid: string, cardUID: string) => `/board/${uid}/${cardUID}`,
     },
     DASHBOARD: {
         ROUTE: "/dashboard",
+        PAGE_TYPE: (type: string) => `/dashboard/${type}`,
         PROJECTS: {
             ROUTE: "/dashboard/projects",
+            TAB: (tab: string) => `/dashboard/projects/${tab}`,
             ALL: "/dashboard/projects/all",
             STARRED: "/dashboard/projects/starred",
             RECENT: "/dashboard/projects/recent",

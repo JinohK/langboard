@@ -17,7 +17,7 @@ const useCardTitleChangedHandlers = ({ socket, callback, projectUID, cardUID }: 
     return useSocketHandler<ICardTitleChangedRequest, ICardTitleChangedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-title-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.TITLE_CHANGED,

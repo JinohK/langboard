@@ -10,6 +10,7 @@ import {
     MouseSensor,
     Over,
     TouchSensor,
+    UniqueIdentifier,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
@@ -29,19 +30,28 @@ export interface IRowDragCallback<TRow extends ISortableData> {
     onDragOverOrMove: (row: TRow, index: number, isForeign: bool) => void;
 }
 
+export interface IMoreDroppableZoneCallbacks<TColumn extends ISortableData, TRow extends ISortableData> {
+    onDragEnd?: (original: TColumn | TRow) => void;
+    onDragOverOrMove?: (active: TColumn | TRow, original: TColumn | TRow) => void;
+}
+
 export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow extends ISortableData> {
     columnDragDataType: string;
     rowDragDataType: string;
     columnCallbacks?: {
         onDragStart?: (activeColumn: TColumn, index: number) => void;
         onDragEnd?: (originalColumn: TColumn, index: number) => void;
+        onDragOverOrMove?: (activeColumn: TColumn, originalColumn: TColumn, index: number) => void;
+        onDragCancel?: (originalColumn: TColumn) => void;
     };
     rowCallbacks?: {
         onDragStart?: (activeRow: TRow, index: number) => void;
         onDragEnd?: (containderId: string, originalRow: TRow, index: number) => void;
         onDragOverOrMove?: (containderId: string, activeRow: TRow, index: number, isForeign: bool) => void;
+        onDragCancel?: (originalRow: TRow) => void;
     };
     transformContainerId: (originalRow: TColumn | TRow) => string;
+    moreDroppableZoneCallbacks?: Record<UniqueIdentifier, IMoreDroppableZoneCallbacks<TColumn, TRow>>;
 }
 
 function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISortableData>({
@@ -50,6 +60,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
     columnCallbacks,
     rowCallbacks,
     transformContainerId,
+    moreDroppableZoneCallbacks,
 }: IUseColumnRowSortableProps<TColumn, TRow>) {
     const [activeColumn, setActiveColumn] = useState<TColumn | null>(null);
     const [activeRow, setActiveRow] = useState<TRow | null>(null);
@@ -63,6 +74,18 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
 
         const data = entry.data.current;
         return data?.type === columnDragDataType || data?.type === rowDragDataType;
+    };
+
+    const cancelCallback = (column: TColumn | null, row: TRow | null) => {
+        if (column) {
+            columnCallbacks?.onDragCancel?.(column);
+            return;
+        }
+
+        if (row) {
+            rowCallbacks?.onDragCancel?.(row);
+            return;
+        }
     };
 
     const sensors = useSensors(
@@ -103,12 +126,17 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         setActiveColumn(null);
         setActiveRow(null);
 
-        if (!hasDraggableData(event.over)) {
+        const overId = event.over?.id;
+        if (overId && moreDroppableZoneCallbacks?.[overId]) {
+            if (originalRow || originalColumn) {
+                moreDroppableZoneCallbacks[overId].onDragEnd?.(originalRow ?? originalColumn!);
+            }
             return;
         }
 
-        const overData = event.over.data.current;
-        if (!overData?.sortable) {
+        const overData = event.over?.data.current;
+        if (!hasDraggableData(event.over) || !overData?.sortable) {
+            cancelCallback(originalColumn, originalRow);
             return;
         }
 
@@ -135,14 +163,31 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
     };
 
     const onDragOverOrMove = (event: DragOverEvent | DragMoveEvent) => {
-        if (!event.over || event.active.id === event.over.id || !hasDraggableData(event.active) || !hasDraggableData(event.over)) {
+        const overId = event.over?.id;
+        if (overId && moreDroppableZoneCallbacks?.[overId]) {
+            if (event.active.data.current) {
+                moreDroppableZoneCallbacks[overId].onDragOverOrMove?.({ ...event.active.data.current.data }, activeRow ?? activeColumn!);
+            }
+            return;
+        }
+
+        if (!event.over || event.active.id === overId || !hasDraggableData(event.active) || !hasDraggableData(event.over)) {
             return;
         }
 
         const activeData = event.active.data.current;
         const overData = event.over.data.current;
 
-        if (activeData?.type === columnDragDataType || activeData?.type !== rowDragDataType || !activeData.sortable || !overData?.sortable) {
+        if (activeData?.type === columnDragDataType) {
+            if (!overData?.sortable) {
+                return;
+            }
+
+            columnCallbacks?.onDragOverOrMove?.({ ...activeData.data }, activeColumn!, overData.sortable.index);
+            return;
+        }
+
+        if (activeData?.type !== rowDragDataType || !activeData.sortable || !overData?.sortable) {
             return;
         }
 
@@ -205,7 +250,16 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         isUpdatingRef.current = false;
     };
 
-    return { activeColumn, activeRow, containerIdRowDragCallbacksRef, sensors, onDragStart, onDragEnd, onDragOverOrMove };
+    const onDragCancel = () => {
+        const originalColumn = activeColumn;
+        const originalRow = activeRow;
+        setActiveColumn(null);
+        setActiveRow(null);
+
+        cancelCallback(originalColumn, originalRow);
+    };
+
+    return { activeColumn, activeRow, containerIdRowDragCallbacksRef, sensors, onDragStart, onDragEnd, onDragOverOrMove, onDragCancel };
 }
 
 export default useColumnRowSortable;

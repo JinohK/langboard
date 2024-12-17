@@ -26,13 +26,7 @@ export const MentionElement = withRef<
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionableUsers.find((user) => user.id.toString() === element.key) ?? {
-        id: 0,
-        email: "",
-        firstname: "",
-        lastname: "",
-        username: "",
-    };
+    const mentionedUser = mentionableUsers.find((user) => user.id.toString() === element.key) ?? User.createUnknownUser();
 
     return (
         <PlateElement

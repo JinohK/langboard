@@ -21,7 +21,7 @@ const useCardCommentReactedHandlers = ({ socket, callback, projectUID, cardUID }
     return useSocketHandler<ICardCommentReactedRequest, ICardCommentReactedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-comment-reacted-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.REACTED,

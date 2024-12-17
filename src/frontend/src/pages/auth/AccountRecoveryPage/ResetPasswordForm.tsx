@@ -9,8 +9,6 @@ import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
 import SubmitButton from "@/components/SubmitButton";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import { useEffect } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IResetPasswordFormProps {
@@ -19,7 +17,6 @@ export interface IResetPasswordFormProps {
 }
 
 function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();
@@ -48,10 +45,6 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     if (!(location.state?.isTwoSidedView ?? true)) {
         const buttons = (

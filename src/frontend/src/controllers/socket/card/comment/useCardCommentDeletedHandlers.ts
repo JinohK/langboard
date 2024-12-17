@@ -17,7 +17,7 @@ const useCardCommentDeletedHandlers = ({ socket, callback, projectUID, cardUID }
     return useSocketHandler<ICardCommentDeletedRequest, ICardCommentDeletedResponse>({
         socket,
         topic: ESocketTopic.Board,
-        id: projectUID,
+        topicId: projectUID,
         eventKey: `board-card-comment-deleted-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.DELETED,

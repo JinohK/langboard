@@ -2,6 +2,7 @@
   "subjects": {
     "recovery": "Reset your password",
     "signup": "Activate your account",
-    "subemail": "Verify your new email"
+    "subemail": "Verify your new email",
+    "project_invitation": "You have been invited to a project"
   }
 }
