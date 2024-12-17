@@ -1,4 +1,4 @@
-import { Toast } from "@/components/base";
+import { Flex, Toast } from "@/components/base";
 import useChangeWikiOrder from "@/controllers/api/wiki/useChangeWikiOrder";
 import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
 import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
@@ -9,7 +9,7 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { IDraggableProjectWiki, TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
 import WikiBin from "@/pages/BoardPage/components/wiki/WikiBin";
-import WikiTab from "@/pages/BoardPage/components/wiki/WikiTab";
+import WikiTab, { SkeletonWikiTab } from "@/pages/BoardPage/components/wiki/WikiTab";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { memo, useEffect, useId, useMemo, useRef } from "react";
@@ -19,6 +19,17 @@ import { useTranslation } from "react-i18next";
 export interface IWikiTabListProps {
     wikiUID: string;
     changeTab: (uid: string) => void;
+}
+
+export function SkeletonWikiTabList() {
+    return (
+        <Flex justify="center" items="center" gap="1" inline h="10" p="1">
+            <SkeletonWikiTab />
+            <SkeletonWikiTab />
+            <SkeletonWikiTab />
+            <SkeletonWikiTab />
+        </Flex>
+    );
 }
 
 const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {

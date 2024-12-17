@@ -1,4 +1,4 @@
-import { Tabs, Tooltip } from "@/components/base";
+import { Skeleton, Tabs, Tooltip } from "@/components/base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { IDraggableProjectWiki } from "@/pages/BoardPage/components/wiki/types";
 import { useSortable } from "@dnd-kit/sortable";
@@ -16,6 +16,10 @@ export interface IWikiTabProps {
 interface IBoardWikiDragData {
     type: "Wiki";
     data: IDraggableProjectWiki;
+}
+
+export function SkeletonWikiTab() {
+    return <Skeleton className="h-8 w-20" />;
 }
 
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {

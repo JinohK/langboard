@@ -1,14 +1,22 @@
-import { Flex, Tabs } from "@/components/base";
+import { Flex, Skeleton, Tabs } from "@/components/base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { ROUTES } from "@/core/routing/constants";
-import WikiContent from "@/pages/BoardPage/components/wiki/WikiContent";
+import WikiContent, { SkeletonWikiContent } from "@/pages/BoardPage/components/wiki/WikiContent";
 import WikiCreateButton from "@/pages/BoardPage/components/wiki/WikiCreateButton";
-import WikiTabList from "@/pages/BoardPage/components/wiki/WikiTabList";
+import WikiTabList, { SkeletonWikiTabList } from "@/pages/BoardPage/components/wiki/WikiTabList";
 import { memo, useEffect, useRef, useState } from "react";
 
 export function SkeletonWikiList() {
-    return <></>;
+    return (
+        <div className="p-2">
+            <Flex items="center" justify="between" gap="1">
+                <SkeletonWikiTabList />
+                <Skeleton className="size-8 rounded-md" />
+            </Flex>
+            <SkeletonWikiContent />
+        </div>
+    );
 }
 
 const WikiList = memo(() => {

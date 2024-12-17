@@ -1,4 +1,4 @@
-import { Flex, Toast } from "@/components/base";
+import { Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
@@ -12,7 +12,7 @@ import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
-import WikiPrivateOption from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
+import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
 import { memo, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,20 @@ import { useTranslation } from "react-i18next";
 export interface IWikiContentProps {
     wiki: ProjectWiki.Interface;
     changeTab: (uid: string) => void;
+}
+
+export function SkeletonWikiContent() {
+    return (
+        <div className="mt-2">
+            <SkeletonWikiPrivateOption />
+            <div className="p-2">
+                <Skeleton className="h-8 w-1/3" />
+            </div>
+            <div className="relative min-h-[calc(100vh_-_theme(spacing.56))] px-6 py-3">
+                <Skeleton className="absolute h-3/5 w-2/5" />
+            </div>
+        </div>
+    );
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {

@@ -1,5 +1,6 @@
 import { AssignMemberPopover } from "@/components/AssignMemberPopover";
-import { Flex, Label, Switch, Toast } from "@/components/base";
+import { Flex, Label, Skeleton, Switch, Toast } from "@/components/base";
+import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
 import useUpdateWikiAssignedUsers from "@/controllers/api/wiki/useUpdateWikiAssignedUsers";
 import useBoardWikiAssignedUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssignedUsersUpdatedHandlers";
@@ -14,6 +15,18 @@ import { useTranslation } from "react-i18next";
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.Interface;
     changeTab: (uid: string) => void;
+}
+
+export function SkeletonWikiPrivateOption() {
+    return (
+        <Flex items="center" gap="2" pl="1">
+            <Flex inline items="center" gap="2">
+                <Skeleton className="h-6 w-11 rounded-full" />
+                <Skeleton className="h-6 w-20" />
+            </Flex>
+            <SkeletonUserAvatarList count={6} size={{ initial: "sm", xs: "default" }} spacing="none" />
+        </Flex>
+    );
 }
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
