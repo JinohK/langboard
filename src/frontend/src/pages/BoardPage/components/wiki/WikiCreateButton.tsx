@@ -6,12 +6,11 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiCreateButtonProps {
-    wikiTabListId: string;
     changeTab: (uid: string) => void;
 }
 
-const WikiCreateButton = memo(({ wikiTabListId, changeTab }: IWikiCreateButtonProps) => {
-    const { projectUID, setWikis } = useBoardWiki();
+const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
+    const { projectUID, setWikis, wikiTabListId } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: createWikiMutateAsync } = useCreateWiki();
 
@@ -56,7 +55,7 @@ const WikiCreateButton = memo(({ wikiTabListId, changeTab }: IWikiCreateButtonPr
     };
 
     return (
-        <Button variant="ghost" size="icon-sm" title={t("wiki.New wiki page")} onClick={createWiki}>
+        <Button variant="ghost" size="icon-sm" title={t("wiki.New wiki page")} titleAlign="end" onClick={createWiki}>
             <IconComponent icon="plus" size="4" />
         </Button>
     );

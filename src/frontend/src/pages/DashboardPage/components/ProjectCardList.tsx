@@ -4,6 +4,7 @@ import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import ProjectCard, { SkeletonProjectCard } from "@/pages/DashboardPage/components/ProjectCard";
+import { Box } from "@/components/base";
 
 export interface IProjectCardListProps {
     curPage: number;
@@ -69,23 +70,29 @@ function ProjectCardList({
                 hasMore={hasMore}
                 threshold={140}
                 loader={
-                    <div className="mt-4" key={createShortUUID()}>
-                        <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-4">{skeletonCards}</div>
-                        <div className="hidden gap-4 sm:grid sm:grid-cols-2 md:hidden lg:grid-cols-4">
+                    <Box mt="4" key={createShortUUID()}>
+                        <Box display={{ initial: "hidden", md: "grid" }} gap="4" className="md:grid-cols-2 lg:grid-cols-4">
+                            {skeletonCards}
+                        </Box>
+                        <Box display={{ initial: "hidden", sm: "grid", md: "hidden" }} gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
                             {skeletonCards[0]}
                             {skeletonCards[1]}
-                        </div>
-                        <div className="grid gap-4 sm:hidden sm:grid-cols-2 lg:grid-cols-4">{skeletonCards[0]}</div>
-                    </div>
+                        </Box>
+                        <Box display={{ initial: "grid", sm: "hidden" }} gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
+                            {skeletonCards[0]}
+                        </Box>
+                    </Box>
                 }
                 initialLoad={false}
                 className={cn("!overflow-y-hidden", className)}
                 useWindow={false}
                 pageStart={1}
             >
-                <div className="mt-4">
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{projectCards}</div>
-                </div>
+                <Box mt="4">
+                    <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
+                        {projectCards}
+                    </Box>
+                </Box>
             </InfiniteScroll>
         </>
     );

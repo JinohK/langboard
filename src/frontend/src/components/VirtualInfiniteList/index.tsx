@@ -1,9 +1,8 @@
 import { Virtualizer, useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Flex, IconComponent } from "@/components/base";
+import { Box, Flex, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
-import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase, createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IVirtualInfiniteListProps<T> {
@@ -175,11 +174,12 @@ function VirtualInfiniteList<T>({
     return (
         <>
             {!items.length && noItemsElement ? (
-                <div className="-scale-y-100">{noItemsElement}</div>
+                <Box className="-scale-y-100">{noItemsElement}</Box>
             ) : (
                 <Flex
                     direction={isReverse ? "col-reverse" : "col"}
-                    className={cn("relative", className)}
+                    position="relative"
+                    className={className}
                     style={{ height: `${virtualizer.getTotalSize()}px` }}
                 >
                     {virtualizer.getVirtualItems().map((row) => {
@@ -191,15 +191,19 @@ function VirtualInfiniteList<T>({
                         };
 
                         return (
-                            <div
-                                className={cn("absolute left-0 top-0 w-full", itemClassName)}
+                            <Box
+                                position="absolute"
+                                left="0"
+                                top="0"
+                                w="full"
+                                className={itemClassName}
                                 style={style}
                                 key={row.key}
                                 data-index={row.index}
                                 ref={virtualizer.measureElement}
                             >
                                 {isLoader && hasNextPage ? loaderRef.current : createItem(item)}
-                            </div>
+                            </Box>
                         );
                     })}
                 </Flex>

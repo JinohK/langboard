@@ -1,9 +1,9 @@
-import { Flex, Skeleton } from "@/components/base";
+import { Box, Flex, Skeleton } from "@/components/base";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 
 function SkeletonBoardCardCheckitem() {
     return (
-        <div className="my-2 snap-center">
+        <Box my="2" className="snap-center">
             <Flex
                 items="center"
                 justify="between"
@@ -12,11 +12,11 @@ function SkeletonBoardCardCheckitem() {
                     initial: "16",
                     md: "12",
                 }}
-                className="w-full"
+                w="full"
             >
                 <Flex items="center" gap="2" w="full" className="truncate">
                     <Flex items="center" gap="1">
-                        <Skeleton className="h-8 w-6 transition-all sm:size-8" />
+                        <Skeleton h="8" w="6" size={{ sm: "8" }} className="transition-all" />
                     </Flex>
                     <Flex
                         direction={{
@@ -37,7 +37,7 @@ function SkeletonBoardCardCheckitem() {
                     </Flex>
                 </Flex>
             </Flex>
-        </div>
+        </Box>
     );
 }
 

@@ -1,3 +1,4 @@
+import { Box } from "@/components/base";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -66,7 +67,7 @@ function BoardCardSubCheckitem({ checkitem, deletedSubCheckitem, isOverlay }: IB
     }
 
     return (
-        <div {...props}>
+        <Box {...props}>
             <SharedBoardCardCheckitem
                 checkitem={checkitem}
                 attributes={attributes}
@@ -74,7 +75,7 @@ function BoardCardSubCheckitem({ checkitem, deletedSubCheckitem, isOverlay }: IB
                 deleted={deletedSubCheckitem}
                 className="ml-2"
             />
-        </div>
+        </Box>
     );
 }
 

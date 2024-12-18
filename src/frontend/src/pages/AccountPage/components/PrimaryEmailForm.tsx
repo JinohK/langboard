@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SubmitButton from "@/components/SubmitButton";
-import { Button, Command, Flex, IconComponent, Popover, Skeleton, Toast } from "@/components/base";
+import { Box, Button, Command, Flex, IconComponent, Popover, Skeleton, Toast } from "@/components/base";
 import useChangePrimaryEmail from "@/controllers/api/account/useChangePrimaryEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -57,13 +57,13 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
     };
 
     return (
-        <div>
+        <Box>
             <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Primary email")}</h4>
             <Flex items="center" gap="2">
                 <Popover.Root open={open} onOpenChange={setOpen}>
                     <Popover.Trigger asChild>
                         <Button variant="outline" role="combobox" aria-expanded={open} className="min-w-64 justify-between" disabled={isValidating}>
-                            {!user ? <Skeleton className="h-4 w-full" /> : (selectedEmail ?? user.email)}
+                            {!user ? <Skeleton h="4" w="full" /> : (selectedEmail ?? user.email)}
                             <IconComponent icon="chevrons-up-down" size="4" className="ml-2 shrink-0 opacity-50" />
                         </Button>
                     </Popover.Trigger>
@@ -109,7 +109,7 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
                     {t("common.Save")}
                 </SubmitButton>
             </Flex>
-        </div>
+        </Box>
     );
 }
 

@@ -1,6 +1,6 @@
 import { memo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Box, Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -80,7 +80,7 @@ const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
 
     return (
         <Flex direction="col" size="full">
-            <div className="relative h-16">
+            <Box position="relative" h="16">
                 <Flex items="center" justify="center" h="full" textSize="lg" className="truncate text-nowrap">
                     {t("project.Chat with AI")}
                 </Flex>
@@ -101,7 +101,7 @@ const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
                         </DropdownMenu.Item>
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
-            </div>
+            </Box>
             <Conversation uid={uid} inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
             <Form.Root className="flex h-12 w-full items-center" onSubmit={sendChat}>
                 <Form.Field name="chat-message" className="mx-1 w-[calc(100%_-_theme(spacing.10))]">

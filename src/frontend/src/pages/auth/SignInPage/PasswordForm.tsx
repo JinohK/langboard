@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Checkbox, Flex, Floating, Form, Label, Toast } from "@/components/base";
+import { Box, Button, Checkbox, Flex, Floating, Form, Label, Toast } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -91,7 +91,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
 
     return (
         <>
-            <div className={className}>
+            <Box className={className}>
                 <h2 className="text-4xl font-normal">{t("signIn.Welcome")}</h2>
                 <Button
                     type="button"
@@ -105,7 +105,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                 >
                     {email}
                 </Button>
-            </div>
+            </Box>
             <Form.Root className={cn("mt-11 xs:mt-0", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="password">
                     <Floating.LabelInput
@@ -118,7 +118,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                     />
                     {errors.password && <FormErrorMessage error={errors.password} icon="circle-alert" />}
                 </Form.Field>
-                <Label className="mt-3 flex cursor-pointer select-none gap-2">
+                <Label display="flex" mt="3" gap="2" cursor="pointer" className="select-none">
                     <Checkbox onClick={() => setShouldShowPassword((prev) => !prev)} disabled={isValidating} />
                     {t("signIn.Show password")}
                 </Label>

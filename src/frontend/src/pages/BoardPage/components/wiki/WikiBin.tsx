@@ -75,10 +75,11 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
         <Flex
             items="center"
             justify="center"
-            className={cn(
-                "fixed bottom-1 left-1/2 size-14 -translate-x-1/2 rounded-full bg-secondary transition-all duration-200",
-                isOver ? "bg-destructive" : "opacity-80"
-            )}
+            position="fixed"
+            bottom="2"
+            size="14"
+            rounded="full"
+            className={cn("left-1/2 -translate-x-1/2 bg-secondary transition-all duration-200", isOver ? "bg-destructive" : "opacity-80")}
             ref={setNodeRef}
         >
             <IconComponent icon="trash-2" size="6" />

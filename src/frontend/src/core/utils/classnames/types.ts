@@ -1,5 +1,6 @@
 export type TSize =
     | "auto"
+    | "px"
     | "0"
     | "0.5"
     | "1"
@@ -34,6 +35,9 @@ export type TSize =
     | "72"
     | "80"
     | "96";
+
+export type TSizeWithNegative = TSize | `-${Exclude<TSize, "auto">}`;
+
 export type TDimensionSize = TSize | "full" | "screen";
 export type TScreenSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type TTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl" | "8xl" | "9xl";

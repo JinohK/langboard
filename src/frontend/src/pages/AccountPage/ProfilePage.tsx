@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import SubmitButton from "@/components/SubmitButton";
-import { Flex, Form, Input, Label, Toast } from "@/components/base";
+import { Box, Flex, Form, Input, Label, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/api/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -68,7 +68,21 @@ function ProfilePage(): JSX.Element {
                 <>
                     <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Profile")}</h2>
                     <Form.Root onSubmit={handleSubmit} ref={formRef}>
-                        <Flex gap="10" mt="11" className="max-md:flex-col max-md:items-center md:justify-center">
+                        <Flex
+                            gap="10"
+                            mt="11"
+                            items={{
+                                initial: "center",
+                                md: "start",
+                            }}
+                            direction={{
+                                initial: "col",
+                                md: "row",
+                            }}
+                            justify={{
+                                md: "center",
+                            }}
+                        >
                             <AvatarUploader
                                 userInitials={createNameInitials(user.firstname, user.lastname)}
                                 initialAvatarUrl={user.avatar}
@@ -82,13 +96,13 @@ function ProfilePage(): JSX.Element {
                                 }}
                             />
                             <Flex direction="col" gap="4" w="full" className="max-w-sm">
-                                <Label className="grid w-full items-center gap-1.5">
-                                    <div>{t("user.Username")}</div>
+                                <Label display="grid" w="full" items="center" gap="1.5">
+                                    <Box>{t("user.Username")}</Box>
                                     <Input disabled defaultValue={user.username} />
                                 </Label>
                                 <Form.Field name="firstname">
-                                    <Label className="grid w-full items-center gap-1.5">
-                                        <div>{t("user.First Name")}</div>
+                                    <Label display="grid" w="full" items="center" gap="1.5">
+                                        <Box>{t("user.First Name")}</Box>
                                         <Form.Control asChild>
                                             <Input autoComplete="firstname" disabled={isValidating} defaultValue={user.firstname} />
                                         </Form.Control>
@@ -96,8 +110,8 @@ function ProfilePage(): JSX.Element {
                                     {errors.firstname && <FormErrorMessage error={errors.firstname} />}
                                 </Form.Field>
                                 <Form.Field name="lastname">
-                                    <Label className="grid w-full items-center gap-1.5">
-                                        <div>{t("user.Last Name")}</div>
+                                    <Label display="grid" w="full" items="center" gap="1.5">
+                                        <Box>{t("user.Last Name")}</Box>
                                         <Form.Control asChild>
                                             <Input autoComplete="lastname" disabled={isValidating} defaultValue={user.lastname} />
                                         </Form.Control>
@@ -105,8 +119,8 @@ function ProfilePage(): JSX.Element {
                                     {errors.lastname && <FormErrorMessage error={errors.lastname} />}
                                 </Form.Field>
                                 <Form.Field name="affiliation">
-                                    <Label className="grid w-full items-center gap-1.5">
-                                        <div>{t("user.Affiliation")}</div>
+                                    <Label display="grid" w="full" items="center" gap="1.5">
+                                        <Box>{t("user.Affiliation")}</Box>
                                         <Form.Control asChild>
                                             <Input
                                                 autoComplete="affiliation"
@@ -118,8 +132,8 @@ function ProfilePage(): JSX.Element {
                                     </Label>
                                 </Form.Field>
                                 <Form.Field name="position">
-                                    <Label className="grid w-full items-center gap-1.5">
-                                        <div>{t("user.Position")}</div>
+                                    <Label display="grid" w="full" items="center" gap="1.5">
+                                        <Box>{t("user.Position")}</Box>
                                         <Form.Control asChild>
                                             <Input
                                                 autoComplete="position"

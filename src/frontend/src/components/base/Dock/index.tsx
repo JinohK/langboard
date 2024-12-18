@@ -23,7 +23,7 @@ const DEFAULT_DISTANCE = 140;
 const DockVariants = tv(
     {
         // eslint-disable-next-line @/max-len
-        base: "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-6 max-md:mt-4 flex w-max gap-2 rounded-2xl border p-2 backdrop-blur-md",
+        base: "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto mt-4 md:mt-6 flex w-max gap-2 rounded-2xl border p-2 backdrop-blur-md",
         variants: {
             size: {
                 xs: "h-8",

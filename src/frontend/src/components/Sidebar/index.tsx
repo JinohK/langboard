@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import NavItems from "@/components/Sidebar/NavItems";
 import { ISidebarProps } from "@/components/Sidebar/types";
-import { Button, Floating, IconComponent } from "@/components/base";
+import { Box, Button, Floating, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 
 function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Actions" }: ISidebarProps) {
@@ -11,16 +11,17 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
 
     return (
         <>
-            <div
+            <Box
+                display={{ md: "grid" }}
+                w="full"
                 className={cn(
-                    "group/sidebar block md:grid",
-                    "h-[calc(100vh_-_theme(spacing.16))] w-full transition-all duration-200 ease-in-out",
+                    "group/sidebar h-[calc(100vh_-_theme(spacing.16))] transition-all duration-200 ease-in-out",
                     "data-[collapsed=true]:grid-cols-[56px_1fr]",
                     "md:data-[collapsed=false]:grid-cols-[220px_1fr] lg:data-[collapsed=false]:grid-cols-[280px_1fr]"
                 )}
                 data-collapsed={isCollapsed}
             >
-                <div className="relative hidden size-full md:block">
+                <Box position="relative" display={{ initial: "hidden", md: "block" }} size="full">
                     <aside
                         className={cn(
                             "sticky z-50 flex size-full flex-col items-start border-r text-sm font-medium",
@@ -38,9 +39,9 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                     >
                         <IconComponent icon={isCollapsed ? "chevron-right" : "chevron-left"} size="8" />
                     </Button>
-                </div>
+                </Box>
                 {main}
-            </div>
+            </Box>
             <Floating.Button.Root>
                 <Floating.Button.Content>
                     <NavItems isFloating navs={navs} />

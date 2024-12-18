@@ -1,4 +1,5 @@
-import { Skeleton, Tabs, Tooltip } from "@/components/base";
+import { Box, Skeleton, Tabs, Tooltip } from "@/components/base";
+import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { IDraggableProjectWiki } from "@/pages/BoardPage/components/wiki/types";
 import { useSortable } from "@dnd-kit/sortable";
@@ -19,12 +20,12 @@ interface IBoardWikiDragData {
 }
 
 export function SkeletonWikiTab() {
-    return <Skeleton className="h-8 w-20" />;
+    return <Skeleton h="8" w={{ initial: "14", sm: "20", md: "28" }} />;
 }
 
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
-    const { canAccessWiki, setTitleMapRef } = useBoardWiki();
+    const { canAccessWiki, setTitleMapRef, disabledReorder, wikiTabListId } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
         data: {
@@ -36,6 +37,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
         },
     });
     const canReorder = canAccessWiki(false, wiki.uid);
+    const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
     const [title, setTitle] = useState(wiki.title);
     setTitleMapRef.current[wiki.uid] = setTitle;
 
@@ -86,19 +88,35 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
         );
     }
 
+    const scrollHorizontal = (event: React.PointerEvent<HTMLElement>) => {
+        if (!disabledReorder) {
+            return;
+        }
+
+        onPointerDown(event);
+    };
+
     return (
-        <div hidden={wiki.isInBin}>
+        <Box hidden={wiki.isInBin}>
             <Tooltip.Provider delayDuration={400}>
                 <Tooltip.Root>
-                    <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={!canReorder} {...props}>
+                    <Tabs.Trigger
+                        value={wiki.uid}
+                        key={`board-wiki-${wiki.uid}-tab`}
+                        disabled={!canReorder}
+                        onPointerDown={scrollHorizontal}
+                        {...props}
+                    >
                         <Tooltip.Trigger asChild>
-                            <span className="max-w-40 truncate">{wiki.forbidden ? t("wiki.Private") : title}</span>
+                            <span className="max-w-40 truncate" onPointerDown={scrollHorizontal}>
+                                {wiki.forbidden ? t("wiki.Private") : title}
+                            </span>
                         </Tooltip.Trigger>
                     </Tabs.Trigger>
                     <Tooltip.Content>{wiki.forbidden ? t("wiki.Private") : title}</Tooltip.Content>
                 </Tooltip.Root>
             </Tooltip.Provider>
-        </div>
+        </Box>
     );
 });
 

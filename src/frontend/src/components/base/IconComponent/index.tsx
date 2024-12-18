@@ -12,9 +12,6 @@ export const IconVariants = tv(
         variants: {
             size: DimensionMap.all,
         },
-        defaultVariants: {
-            size: undefined,
-        },
     },
     {
         responsiveVariants: true,

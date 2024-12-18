@@ -1,11 +1,10 @@
-import { Dialog, Flex, Skeleton, Toast } from "@/components/base";
+import { Box, Dialog, Flex, Skeleton, Toast } from "@/components/base";
 import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { cn } from "@/core/utils/ComponentUtils";
 import BoardCardActionList, { SkeletonBoardCardActionList } from "@/pages/BoardPage/components/card/action/BoardCardActionList";
 import BoardCardChecklist, { SkeletonBoardCardChecklist } from "@/pages/BoardPage/components/card/checkitem/BoardCardChecklist";
 import BoardCardColumnName, { SkeletonBoardCardColumnName } from "@/pages/BoardPage/components/card/BoardCardColumnName";
@@ -74,12 +73,19 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
 export function SkeletonBoardCard(): JSX.Element {
     return (
         <>
-            <Flex direction="col" mb="3" className="sticky top-0 z-[100] space-y-1.5 border-b-2 bg-background pb-3 text-left sm:-top-2 sm:text-left">
+            <Flex
+                direction="col"
+                mb="3"
+                position="sticky"
+                top={{ initial: "0", sm: "-2" }}
+                pb="3"
+                className="z-[100] space-y-1.5 border-b-2 bg-background text-left"
+            >
                 <SkeletonBoardCardTitle />
                 <Dialog.Description asChild>
                     <SkeletonBoardCardColumnName />
                 </Dialog.Description>
-                <Skeleton className="absolute right-0 size-6 rounded-sm opacity-70" />
+                <Skeleton position="absolute" right="0" size="6" rounded="sm" className="opacity-70" />
             </Flex>
             <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
                 <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
@@ -104,13 +110,19 @@ export function SkeletonBoardCard(): JSX.Element {
                         <SkeletonBoardCommentList />
                     </BoardCardSection>
                 </Flex>
-                <div className="w-full sm:max-w-32">
-                    <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
+                <Box w="full" maxW={{ sm: "32" }}>
+                    <Box
+                        z="10"
+                        display="inline-block"
+                        w="full"
+                        position={{ sm: "sticky" }}
+                        className="top-[calc(theme(spacing.16)_+_theme(spacing.3))]"
+                    >
                         <BoardCardSection title="card.Actions" titleClassName="mb-2">
                             <SkeletonBoardCardActionList />
                         </BoardCardSection>
-                    </div>
-                </div>
+                    </Box>
+                </Box>
             </Flex>
             <SkeletonBoardCommentForm />
         </>
@@ -164,13 +176,19 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                         <BoardCommentList viewportId={viewportId} />
                     </BoardCardSection>
                 </Flex>
-                <div className="w-full sm:max-w-32">
-                    <div className="top-[calc(theme(spacing.16)_+_theme(spacing.3))] z-10 inline-block w-full sm:sticky">
+                <Box w="full" maxW={{ sm: "32" }}>
+                    <Box
+                        z="10"
+                        display="inline-block"
+                        w="full"
+                        position={{ sm: "sticky" }}
+                        className="top-[calc(theme(spacing.16)_+_theme(spacing.3))]"
+                    >
                         <BoardCardSection title="card.Actions" titleClassName="mb-2">
                             <BoardCardActionList />
                         </BoardCardSection>
-                    </div>
-                </div>
+                    </Box>
+                </Box>
             </Flex>
             <BoardCommentForm />
         </>
@@ -187,10 +205,12 @@ const BoardCardSection = forwardRef<HTMLDivElement, IBoardCardSectionProps>(
     ({ title, titleClassName, contentClassName, children, ...props }, ref) => {
         const [t] = useTranslation();
         return (
-            <div {...props} ref={ref}>
-                <div className={cn("mb-1", titleClassName)}>{t(title)}</div>
-                <div className={contentClassName}>{children}</div>
-            </div>
+            <Box {...props} ref={ref}>
+                <Box mb="1" className={titleClassName}>
+                    {t(title)}
+                </Box>
+                <Box className={contentClassName}>{children}</Box>
+            </Box>
         );
     }
 );

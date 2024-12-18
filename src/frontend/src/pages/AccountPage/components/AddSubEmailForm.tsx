@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import SubmitButton from "@/components/SubmitButton";
-import { Floating, Form, Toast } from "@/components/base";
+import { Box, Floating, Form, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -52,7 +52,7 @@ function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: I
     });
 
     return (
-        <div>
+        <Box>
             <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Add new email")}</h4>
             <Form.Root className="flex items-start gap-2" onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="new_email">
@@ -70,7 +70,7 @@ function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: I
                     {t("common.Save")}
                 </SubmitButton>
             </Form.Root>
-        </div>
+        </Box>
     );
 }
 

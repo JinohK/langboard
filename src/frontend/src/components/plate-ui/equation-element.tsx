@@ -42,7 +42,7 @@ export const EquationElement = withRef<typeof PlateElement, { element: TEquation
                         <span ref={katexRef} />
                     ) : (
                         <div>
-                            <Flex items="center" gap="2" h="7" w="full" className="whitespace-nowrap text-sm text-muted-foreground">
+                            <Flex items="center" gap="2" h="7" w="full" textSize="sm" className="whitespace-nowrap text-muted-foreground">
                                 <RadicalIcon className="size-6 text-muted-foreground/80" />
                                 {t("editor.Add an equation")}
                             </Flex>

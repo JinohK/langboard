@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { Badge, Command, Flex, IconComponent } from "@/components/base";
+import { Badge, Box, Command, Flex, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useFloating, autoUpdate, offset, shift, limitShift, hide, flip, size } from "@floating-ui/react-dom";
 
@@ -157,8 +157,13 @@ const MultiSelect = React.memo(
 
         return (
             <Command.Root onKeyDown={handleKeyDown} className={cn("overflow-visible bg-transparent", className)}>
-                <div
-                    className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0"
+                <Box
+                    px="3"
+                    py="2"
+                    textSize="sm"
+                    border
+                    rounded="md"
+                    className="group border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0"
                     ref={setWrapper}
                 >
                     <Flex wrap="wrap" gap="1">
@@ -211,8 +216,8 @@ const MultiSelect = React.memo(
                             className={cn("ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground", inputClassName)}
                         />
                     </Flex>
-                </div>
-                <div className="relative mt-2">
+                </Box>
+                <Box position="relative" mt="2">
                     <Command.List
                         style={style}
                         className={cn(
@@ -225,7 +230,7 @@ const MultiSelect = React.memo(
                         ref={refs.setFloating}
                     >
                         {open && (selectables.length > 0 || isCreatable) ? (
-                            <div className="w-full outline-none animate-in">
+                            <Box w="full" className="outline-none animate-in">
                                 <Command.Group className="h-full overflow-auto">
                                     {selectables.map((selectable) => (
                                         <Command.Item
@@ -261,10 +266,10 @@ const MultiSelect = React.memo(
                                         </Command.Item>
                                     )}
                                 </Command.Group>
-                            </div>
+                            </Box>
                         ) : null}
                     </Command.List>
-                </div>
+                </Box>
             </Command.Root>
         );
     }

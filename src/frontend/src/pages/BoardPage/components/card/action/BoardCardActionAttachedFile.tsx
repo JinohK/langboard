@@ -1,4 +1,4 @@
-import { Button, Flex, IconComponent, Progress } from "@/components/base";
+import { Box, Button, Flex, IconComponent, Progress } from "@/components/base";
 import useUploadCardAttachment from "@/controllers/api/card/attachment/useUploadCardAttachment";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatBytes } from "@/core/utils/StringUtils";
@@ -97,18 +97,18 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
                     <IconComponent icon="grip-vertical" size="4" />
                 </Button>
             )}
-            <Flex items="center" justify="center" inline w="12" h="9" className="rounded-sm bg-muted text-xs">
+            <Flex items="center" justify="center" inline w="12" h="9" textSize="xs" rounded="sm" className="bg-muted">
                 {attachedFile.file.name.split(".").at(-1)?.toUpperCase() ?? "FILE"}
             </Flex>
             <Flex direction="col" w="full" className="max-w-[calc(100%_-_theme(spacing.32))]">
-                <div className="truncate">{attachedFile.file.name}</div>
-                <div className="truncate text-xs text-muted-foreground/70">
+                <Box className="truncate">{attachedFile.file.name}</Box>
+                <Box textSize="xs" className="truncate text-muted-foreground/70">
                     {!isUploading ? (
                         formatBytes(attachedFile.file.size, { decimals: 1 })
                     ) : (
                         <Progress value={progress} height="2" indicatorClassName={isError ? "bg-destructive" : ""} />
                     )}
-                </div>
+                </Box>
             </Flex>
             {!isUploading && (
                 <Button variant="destructive" size="icon-sm" className="size-6" disabled={isUploading} onClick={() => deleteFile(attachedFile.key)}>

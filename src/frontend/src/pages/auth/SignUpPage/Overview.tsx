@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar, Button, Card, Flex, Toast } from "@/components/base";
+import { Avatar, Box, Button, Card, Flex, Toast } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -101,7 +101,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
     return (
         <>
             <Card.Root className="relative">
-                <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary" />
+                <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary" />
                 <Card.Header className="relative space-y-0 bg-transparent">
                     <Avatar.Root className="absolute top-10" size="2xl">
                         <Avatar.Image src={(values as unknown as Record<string, string>).avatarUrl} alt="" />

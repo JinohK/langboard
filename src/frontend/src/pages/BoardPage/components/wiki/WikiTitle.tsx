@@ -1,4 +1,4 @@
-import { Textarea, Toast } from "@/components/base";
+import { Box, Textarea, Toast } from "@/components/base";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import useBoardWikiTitleChangedHandlers from "@/controllers/socket/wiki/useBoardWikiTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -125,9 +125,9 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
     };
 
     return (
-        <div className="p-2">
+        <Box p="2">
             {!isEditing ? (
-                <h1 className="min-h-8 cursor-text text-xl md:text-2xl" onClick={() => changeMode("edit")}>
+                <h1 className="min-h-8 cursor-text break-all text-xl md:text-2xl" onClick={() => changeMode("edit")}>
                     {wiki.title}
                 </h1>
             ) : (
@@ -161,7 +161,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                     }}
                 />
             )}
-        </div>
+        </Box>
     );
 });
 

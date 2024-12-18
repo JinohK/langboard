@@ -98,12 +98,12 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
                         </Select.Root>
                     )}
                     {isParent && (
-                        <Label className="flex cursor-pointer items-center gap-1">
+                        <Label display="flex" cursor="pointer" items="center" gap="1">
                             <Checkbox checked={withSubCheckitems} onCheckedChange={setWithSubCheckitems} disabled={isValidating} />
                             {t("card.Cardify with Sub Checkitems")}
                         </Label>
                     )}
-                    <Label className="flex cursor-pointer items-center gap-1">
+                    <Label display="flex" cursor="pointer" items="center" gap="1">
                         <Checkbox checked={withAssignMembers} onCheckedChange={setWithAssignMembers} disabled={isValidating} />
                         {t("card.Cardify with Assign Members")}
                     </Label>

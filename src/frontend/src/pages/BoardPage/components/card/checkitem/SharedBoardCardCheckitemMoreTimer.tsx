@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
+import { Box, Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useToggleCheckitemTimer from "@/controllers/api/card/checkitem/useToggleCheckitemTimer";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
@@ -63,9 +63,9 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
                 </DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
-                <div className="mb-1 text-center text-sm font-semibold sm:text-base">
+                <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
                     {t(`card.Are you sure you want to ${checkitem.timer ? "stop" : "start"} the timer?`)}
-                </div>
+                </Box>
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

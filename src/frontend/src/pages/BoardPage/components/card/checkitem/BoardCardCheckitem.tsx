@@ -1,4 +1,4 @@
-import { Collapsible } from "@/components/base";
+import { Box, Collapsible } from "@/components/base";
 import useChangeSubCheckitemOrder, { IChangeSubCheckitemOrderForm } from "@/controllers/api/card/checkitem/useChangeSubCheckitemOrder";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import useCardSubCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardSubCheckitemCreatedHandlers";
@@ -181,7 +181,7 @@ const BoardCardCheckitem = memo(
         }
 
         return (
-            <div id={checkitemId} {...props}>
+            <Box id={checkitemId} {...props}>
                 <Collapsible.Root
                     open={checkitem.isOpenedRef.current}
                     onOpenChange={(opened) => {
@@ -205,7 +205,7 @@ const BoardCardCheckitem = memo(
                         deletedSubCheckitem={deletedSubCheckitem}
                     />
                 </Collapsible.Root>
-            </div>
+            </Box>
         );
     }
 );

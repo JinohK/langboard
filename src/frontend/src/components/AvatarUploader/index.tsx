@@ -3,7 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { VariantProps } from "tailwind-variants";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Avatar, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
+import { Avatar, Box, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
 
 export interface IAvatarUploaderProps {
@@ -98,15 +98,19 @@ function AvatarUploader({
     };
 
     return (
-        <div className="relative">
+        <Box position="relative">
             <Form.Field {...getRootProps({ name })}>
-                <Flex justify="center" className="relative cursor-pointer transition-all duration-200 hover:opacity-80">
+                <Flex justify="center" position="relative" cursor="pointer" className="transition-all duration-200 hover:opacity-80">
                     {isDragActive && (
                         <Flex
                             items="center"
                             justify="center"
                             size="full"
-                            className="absolute left-0 top-0 z-50 border-2 border-dashed border-primary bg-background"
+                            position="absolute"
+                            left="0"
+                            top="0"
+                            z="50"
+                            className="border-2 border-dashed border-primary bg-background"
                         >
                             {t("user.Drop avatar here")}
                         </Flex>
@@ -160,7 +164,7 @@ function AvatarUploader({
                     )}
                 </Dock.Root>
             )}
-        </div>
+        </Box>
     );
 }
 

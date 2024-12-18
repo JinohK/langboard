@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Flex, Floating, Form } from "@/components/base";
+import { Box, Button, Flex, Floating, Form } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -64,10 +64,12 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
 
     return (
         <>
-            <div className={className}>
+            <Box className={className}>
                 <h2 className="text-4xl font-normal">{t("signIn.Sign in")}</h2>
-                <div className="mt-4 text-base">{t("signIn.Use your {app} Account")}</div>
-            </div>
+                <Box mt="4" textSize="base">
+                    {t("signIn.Use your {app} Account")}
+                </Box>
+            </Box>
             <Form.Root className={cn("mt-11 xs:mt-0", className)} onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="email">
                     <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />

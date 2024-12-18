@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
+import { Box, Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import useDeleteCheckitem from "@/controllers/api/card/checkitem/useDeleteCheckitem";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
@@ -56,13 +56,17 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
                 </DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
-                <div className="mb-1 text-center text-sm font-semibold sm:text-base">{t("card.Are you sure you want to delete this checkitem?")}</div>
+                <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
+                    {t("card.Are you sure you want to delete this checkitem?")}
+                </Box>
                 {isParent && (
-                    <div className="max-w-full text-center text-sm font-bold text-red-500">
+                    <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
                         {t("card.All sub-checkitems will be deleted as well.")}
-                    </div>
+                    </Box>
                 )}
-                <div className="max-w-full text-center text-sm font-bold text-red-500">{t("card.This action cannot be undone.")}</div>
+                <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
+                    {t("card.This action cannot be undone.")}
+                </Box>
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

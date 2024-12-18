@@ -1,4 +1,4 @@
-import { Flex, ScrollArea, Toast } from "@/components/base";
+import { Box, Flex, ScrollArea, Toast } from "@/components/base";
 import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
 import useGetCards from "@/controllers/api/board/useGetCards";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -24,6 +24,7 @@ import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
 import useBoardColumnCreatedHandlers from "@/controllers/socket/board/useBoardColumnCreatedHandlers";
+import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -64,15 +65,15 @@ export function SkeletonBoard() {
                 </Flex>
             </Flex>
 
-            <div className="relative h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))] overflow-hidden">
-                <div className="h-full w-full rounded-[inherit]">
+            <Box position="relative" h="full" className="max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))] overflow-hidden">
+                <Box size="full" className="rounded-[inherit]">
                     <Flex direction="row" items="start" gap="10" p="4">
                         {cardCounts.map((count) => (
                             <SkeletonBoardColumn key={createShortUUID()} cardCount={count} />
                         ))}
                     </Flex>
-                </div>
-            </div>
+                </Box>
+            </Box>
         </>
     );
 }
@@ -142,6 +143,8 @@ const BoardResult = memo(() => {
     });
     const columnUIDs = useMemo(() => columns.map((col) => col.uid), [columns]);
     const dndContextId = useId();
+    const viewportId = `board-viewport-${project.uid}`;
+    const { onPointerDown } = useGrabbingScrollHorizontal(viewportId);
     const { mutate: changeProjectColumnOrderMutate } = useChangeProjectColumnOrder();
     const {
         activeColumn,
@@ -197,35 +200,6 @@ const BoardResult = memo(() => {
         };
     }, [columns]);
 
-    const scrollHorizontal = (originalEvent: React.MouseEvent<HTMLElement>) => {
-        if (originalEvent.target !== originalEvent.currentTarget) {
-            return;
-        }
-
-        document.documentElement.style.cursor = "grabbing";
-        document.documentElement.style.userSelect = "none";
-        const target = originalEvent.currentTarget;
-        const viewport = target.closest<HTMLDivElement>("[data-radix-scroll-area-viewport]")!;
-        const originalMouseX = originalEvent.pageX;
-        const originalScrollLeft = viewport.scrollLeft;
-
-        const moveEvent = (event: MouseEvent) => {
-            const x = event.pageX;
-            const walkX = x - originalMouseX;
-            viewport.scrollLeft = originalScrollLeft - walkX;
-        };
-
-        const upEvent = () => {
-            document.documentElement.style.cursor = "";
-            document.documentElement.style.userSelect = "";
-            window.removeEventListener("mousemove", moveEvent);
-            window.removeEventListener("mouseup", upEvent);
-        };
-
-        window.addEventListener("mousemove", moveEvent);
-        window.addEventListener("mouseup", upEvent);
-    };
-
     return (
         <>
             <Flex justify="between" px="4" pt="4" wrap="wrap">
@@ -236,8 +210,8 @@ const BoardResult = memo(() => {
             </Flex>
 
             <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragMove={onDragOverOrMove}>
-                <ScrollArea.Root className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
-                    <Flex direction="row" items="start" gap="10" p="4" onMouseDown={scrollHorizontal}>
+                <ScrollArea.Root viewportId={viewportId} className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
+                    <Flex direction="row" items="start" gap="10" p="4" onPointerDown={onPointerDown}>
                         <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />

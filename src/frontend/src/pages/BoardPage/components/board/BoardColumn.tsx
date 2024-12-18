@@ -1,4 +1,4 @@
-import { Card, Flex, ScrollArea, Skeleton } from "@/components/base";
+import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/api/board/useChangeCardOrder";
 import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
@@ -25,16 +25,16 @@ export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
         <Card.Root className="my-1 w-80 flex-shrink-0 border-transparent">
             <Card.Header className="flex flex-row items-start space-y-0 pb-1 pt-4 text-left font-semibold">
-                <Skeleton className="h-6 w-1/3" />
+                <Skeleton h="6" className="w-1/3" />
             </Card.Header>
             <Card.Content className="flex max-h-[calc(100vh_-_theme(spacing.52))] flex-grow flex-col gap-2 overflow-hidden p-3">
-                <div className="overflow-hidden pb-2.5">
+                <Box pb="2.5" className="overflow-hidden">
                     <Flex direction="col" gap="3">
                         {Array.from({ length: cardCount }).map(() => (
                             <SkeletonBoardColumnCard key={createShortUUID()} />
                         ))}
                     </Flex>
-                </div>
+                </Box>
             </Card.Content>
         </Card.Root>
     );

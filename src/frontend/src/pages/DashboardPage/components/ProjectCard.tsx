@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
+import { Box, Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
 import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -21,8 +21,8 @@ export const SkeletonProjectCard = memo(() => {
     for (let i = 0; i < 6; ++i) {
         cards.push({
             type: null,
-            subcards: <Skeleton className="inline-block h-3.5 w-3/4" />,
-            color: <Skeleton className="inline-block h-0.5 w-full rounded-full" />,
+            subcards: <Skeleton display="inline-block" h="3.5" className="w-3/4" />,
+            color: <Skeleton display="inline-block" h="0.5" w="full" rounded="full" />,
         });
     }
 
@@ -30,17 +30,17 @@ export const SkeletonProjectCard = memo(() => {
         <Card.Root className="border-transparent shadow-transparent">
             <Card.Header className="relative block pt-5">
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
-                    <Skeleton className="inline-block h-3.5 w-1/2" />
+                    <Skeleton display="inline-block" h="3.5" className="w-1/2" />
                 </Card.Title>
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">
-                    <Skeleton className="inline-block h-4 w-3/4" />
+                    <Skeleton display="inline-block" h="4" className="w-3/4" />
                 </Card.Title>
-                <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block size-9 rounded-md" />
+                <Skeleton position="absolute" right="2.5" top="1" display="inline-block" size="9" />
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
                 {cards.map((card) => (
-                    <Flex direction="col" items="center" gap="0.5" className="min-w-5" key={createShortUUID()}>
+                    <Flex direction="col" items="center" gap="0.5" minW="5" key={createShortUUID()}>
                         {card.subcards}
                         {card.color}
                     </Flex>
@@ -134,10 +134,13 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProj
                     <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
                         <Tooltip.Root>
                             <Tooltip.Trigger asChild>
-                                <Flex direction="col" gap="0.5" className="min-w-5 text-center">
+                                <Flex direction="col" gap="0.5" minW="5" className="text-center">
                                     <span className="text-sm font-semibold">{column.count}</span>
-                                    <div
-                                        className="inline-block h-0.5 w-full rounded-full"
+                                    <Box
+                                        display="inline-block"
+                                        h="0.5"
+                                        w="full"
+                                        rounded="full"
                                         style={{ background: new ColorGenerator(column.name).generateRandomColor() }}
                                     />
                                 </Flex>

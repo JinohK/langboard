@@ -8,6 +8,7 @@ const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>
         <Flex
             direction="col"
             items="center"
+            z="10"
             className={cn(
                 "group-data-[fullscreen=false]/floating:absolute group-data-[fullscreen=false]/floating:bottom-16",
                 "group-data-[fullscreen=false]/floating:w-full group-data-[fullscreen=false]/floating:gap-1.5",
@@ -20,7 +21,7 @@ const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>
                 "group-data-[fullscreen=true]/floating:bg-background",
                 "group-data-[expanded=true]/floating:-translate-y-0 group-data-[expanded=true]/floating:scale-x-100",
                 "group-data-[expanded=true]/floating:opacity-90 [&>*]:group-data-[expanded=true]/floating:opacity-100",
-                "z-10 translate-y-full scale-x-0 opacity-0 transition-all duration-300 ease-out",
+                "translate-y-full scale-x-0 opacity-0 transition-all duration-300 ease-out",
                 className
             )}
             {...props}

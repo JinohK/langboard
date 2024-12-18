@@ -1,4 +1,4 @@
-import { Button, Collapsible, Flex, IconComponent, Tooltip } from "@/components/base";
+import { Box, Button, Collapsible, Flex, IconComponent, Tooltip } from "@/components/base";
 import { IFlexProps } from "@/components/base/Flex";
 import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
 import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
@@ -195,9 +195,9 @@ const SharedBoardCardCheckitem = memo(
                                             setIsValidating={setIsValidating}
                                         />
                                     </Flex>
-                                    <div className="block md:hidden">
+                                    <Box display={{ initial: "block", md: "hidden" }}>
                                         <SharedBoardCardCheckitemTimer />
-                                    </div>
+                                    </Box>
                                 </Flex>
                                 <Tooltip.Provider delayDuration={400}>
                                     <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
@@ -210,9 +210,9 @@ const SharedBoardCardCheckitem = memo(
                             </Flex>
                         </Flex>
                         <Flex items="center" gap="1.5">
-                            <div className="hidden md:block">
+                            <Box display={{ initial: "hidden", md: "block" }}>
                                 <SharedBoardCardCheckitemTimer />
-                            </div>
+                            </Box>
                             {canEdit && (
                                 <Flex items="center">
                                     {isParent && <SharedBoardCardCheckitemAddSub />}

@@ -9,6 +9,7 @@ import {
     KeyboardSensor,
     MouseSensor,
     Over,
+    PointerSensor,
     TouchSensor,
     UniqueIdentifier,
     useSensor,
@@ -89,13 +90,24 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
     };
 
     const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                delay: 100,
+                tolerance: 5,
+            },
+        }),
         useSensor(MouseSensor, {
             activationConstraint: {
                 delay: 100,
-                distance: 0.001,
+                tolerance: 5,
             },
         }),
-        useSensor(TouchSensor),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 100,
+                tolerance: 5,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: createCoordinateGetter(columnDragDataType),
         })

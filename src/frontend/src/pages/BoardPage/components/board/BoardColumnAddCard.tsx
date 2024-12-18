@@ -1,4 +1,4 @@
-import { Textarea } from "@/components/base";
+import { Box, Textarea } from "@/components/base";
 import { useBoardAddCard } from "@/core/providers/BoardAddCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useState } from "react";
@@ -25,8 +25,15 @@ const BoardColumnAddCard = memo(() => {
     }
 
     return (
-        <div
-            className="-mb-2.5 mt-3 max-h-28 overflow-y-auto rounded-md bg-secondary/70 py-1 pl-2 pr-1"
+        <Box
+            mt="3"
+            maxH="28"
+            py="1"
+            pl="2"
+            pr="1"
+            rounded="md"
+            mb="-2.5"
+            className="overflow-y-auto bg-secondary/70"
             {...{ [disableChangeModeAttr]: true }}
             onClick={(e) => {
                 if ((e.target as HTMLElement) === e.currentTarget) {
@@ -63,7 +70,7 @@ const BoardColumnAddCard = memo(() => {
                     }, 0);
                 }}
             />
-        </div>
+        </Box>
     );
 });
 

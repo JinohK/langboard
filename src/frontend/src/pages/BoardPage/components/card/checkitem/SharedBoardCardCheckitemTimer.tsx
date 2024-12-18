@@ -4,6 +4,7 @@ import { add as addDate, intervalToDuration, differenceInSeconds, Duration } fro
 import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
+import { Box } from "@/components/base";
 
 const SharedBoardCardCheckitemTimer = memo(() => {
     const { projectUID, socket } = useBoardCard();
@@ -75,7 +76,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
         };
     }, []);
 
-    return <div className="text-xs sm:text-sm">{formatDuration(duration)}</div>;
+    return <Box textSize={{ initial: "xs", sm: "sm" }}>{formatDuration(duration)}</Box>;
 });
 
 const formatDuration = (duration: Duration) => {

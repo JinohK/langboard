@@ -38,6 +38,7 @@ export const API_ROUTES = {
     BOARD: {
         GET: "/board/{uid}",
         IS_AVAILABLE: "/board/{uid}/available",
+        CAN_USE_SETTINGS: "/board/{uid}/settings/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
         GET_CARDS: "/board/{uid}/cards",

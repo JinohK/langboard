@@ -5,7 +5,7 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useEffect, useState } from "react";
 
 export function SkeletonBoardCardColumnName() {
-    return <Skeleton className="h-5 w-1/6" />;
+    return <Skeleton h="5" className="w-1/6" />;
 }
 
 function BoardCardColumnName(): JSX.Element {

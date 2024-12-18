@@ -27,13 +27,12 @@ export function SkeletonWikiTabList() {
             <SkeletonWikiTab />
             <SkeletonWikiTab />
             <SkeletonWikiTab />
-            <SkeletonWikiTab />
         </Flex>
     );
 }
 
 const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
-    const { projectUID, wikis: flatWikis, setWikis: setFlatWikis, socket, currentUser } = useBoardWiki();
+    const { projectUID, wikis: flatWikis, setWikis: setFlatWikis, socket, currentUser, disabledReorder } = useBoardWiki();
     const [t] = useTranslation();
     const { mutate: changeWikiOrderMutate } = useChangeWikiOrder();
     const moreDroppableZoneCallbacksRef = useRef<TMoreWikiTabDropzonCallbacks>({});
@@ -179,7 +178,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
             onDragOver={onDragOverOrMove}
             onDragCancel={onDragCancel}
         >
-            <SortableContext items={wikisUIDs} strategy={horizontalListSortingStrategy}>
+            <SortableContext items={wikisUIDs} strategy={horizontalListSortingStrategy} disabled={disabledReorder}>
                 {wikis.map((wiki) => (
                     <WikiTab key={`board-wiki-${wiki.uid}-tab`} changeTab={changeTab} wiki={wiki} />
                 ))}

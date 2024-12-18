@@ -1,4 +1,4 @@
-import { Button, Card, ScrollArea, Toast } from "@/components/base";
+import { Box, Button, Card, ScrollArea, Toast } from "@/components/base";
 import useCreateProjectColumn from "@/controllers/api/board/useCreateProjectColumn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -98,7 +98,7 @@ const BoardColumnAdd = memo(() => {
                     </Card.Header>
                     <ScrollArea.Root>
                         <Card.Content className="flex max-h-[calc(100vh_-_theme(spacing.52))] flex-grow flex-col gap-2 p-3">
-                            <div className="pb-2.5" />
+                            <Box pb="2.5" />
                         </Card.Content>
                     </ScrollArea.Root>
                 </Card.Root>

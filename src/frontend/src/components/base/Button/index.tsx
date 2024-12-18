@@ -42,10 +42,11 @@ export const ButtonVariants = tv(
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof ButtonVariants> {
     asChild?: bool;
     titleSide?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["side"];
+    titleAlign?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["align"];
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant, size, title, titleSide, isMenu, asChild = false, ...props }, ref) => {
+    ({ className, variant, size, title, titleSide, titleAlign, isMenu, asChild = false, ...props }, ref) => {
         const Comp = asChild ? Slot : "button";
         const btn = <Comp className={cn(ButtonVariants({ variant, size, isMenu, className }))} ref={ref} {...props} />;
         if (!title) {
@@ -55,7 +56,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 <Tooltip.Provider delayDuration={400}>
                     <Tooltip.Root>
                         <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
-                        <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>
+                        <Tooltip.Content side={titleSide} align={titleAlign}>
+                            {title}
+                        </Tooltip.Content>
                     </Tooltip.Root>
                 </Tooltip.Provider>
             );

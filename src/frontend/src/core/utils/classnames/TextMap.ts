@@ -15,3 +15,15 @@ export const size: Record<TTextSize, string> = {
     "8xl": "text-8xl",
     "9xl": "text-9xl",
 };
+
+export const weight = {
+    thin: "font-thin",
+    extralight: "font-extralight",
+    light: "font-light",
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+    extrabold: "font-extrabold",
+    black: "font-black",
+};

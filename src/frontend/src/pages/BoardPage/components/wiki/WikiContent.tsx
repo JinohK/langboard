@@ -1,4 +1,4 @@
-import { Flex, Skeleton, Toast } from "@/components/base";
+import { Box, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
@@ -24,15 +24,15 @@ export interface IWikiContentProps {
 
 export function SkeletonWikiContent() {
     return (
-        <div className="mt-2">
+        <Box mt="2">
             <SkeletonWikiPrivateOption />
-            <div className="p-2">
-                <Skeleton className="h-8 w-1/3" />
-            </div>
-            <div className="relative min-h-[calc(100vh_-_theme(spacing.56))] px-6 py-3">
-                <Skeleton className="absolute h-3/5 w-2/5" />
-            </div>
-        </div>
+            <Box p="2">
+                <Skeleton h="8" className="w-2/3 md:w-1/3" />
+            </Box>
+            <Box position="relative" px="6" py="3" className="min-h-[calc(100vh_-_theme(spacing.56))]">
+                <Skeleton position="absolute" className="h-3/5 w-4/5 md:w-3/5" />
+            </Box>
+        </Box>
     );
 }
 
@@ -173,10 +173,10 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const editingUsers = editingUserIds.filter((id) => id !== currentUser.id);
 
     return (
-        <div>
+        <Box className="max-h-[calc(100vh_-_theme(spacing.36))] overflow-y-auto">
             <WikiPrivateOption wiki={wiki} changeTab={changeTab} />
             <WikiTitle wiki={wiki} />
-            <div
+            <Box
                 onPointerDown={(e) => {
                     const target = e.target as HTMLElement;
                     if (isEditing || !target.closest("[data-wiki-content]")) {
@@ -193,7 +193,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                         }
                     }, 50);
                 }}
-                className="relative"
+                position="relative"
                 data-wiki-content
             >
                 <PlateEditor
@@ -202,7 +202,9 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     mentionableUsers={projectMembers}
                     className={cn(
                         "h-full px-6 py-3",
-                        isEditing ? "min-h-[calc(100vh_-_theme(spacing.56))]" : "min-h-[calc(100vh_-_theme(spacing.44)_-_theme(spacing.3))]"
+                        isEditing
+                            ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))] min-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))]"
+                            : "min-h-[calc(100vh_-_theme(spacing.56))]"
                     )}
                     readOnly={!isEditing}
                     socket={socket}
@@ -214,7 +216,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     editorElementRef={editorElementRef}
                 />
                 {editingUsers.length > 0 && (
-                    <Flex items="center" justify="end" gap="2" mb="1" mr="1" className="fixed bottom-1 right-2">
+                    <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">
                         <UserAvatarList
                             users={editingUsers.map((userId) => projectMembers.find((user) => user.id === userId)!)}
                             maxVisible={3}
@@ -225,8 +227,8 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                         <span className="text-muted-foreground/70">{t(`common.${editingUsers.length === 1 ? "is" : "are"} editing...`)}</span>
                     </Flex>
                 )}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 });
 

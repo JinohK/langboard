@@ -2,7 +2,7 @@ import { createContext, useContext, useRef, useState } from "react";
 import { Progress } from "@/components/base";
 
 export interface IPageLoaderContext {
-    setIsLoadingRef: React.MutableRefObject<(isLoading: boolean) => void>;
+    setIsLoadingRef: React.MutableRefObject<(isLoading: bool) => void>;
 }
 
 interface IPageLoaderProps {
@@ -23,7 +23,7 @@ const PageLoader = ({ setIsLoadingRef }: { setIsLoadingRef: IPageLoaderContext["
 };
 
 export const PageLoaderdProvider = ({ children }: IPageLoaderProps): React.ReactNode => {
-    const setIsLoadingRef = useRef<(isLoading: boolean) => void>(() => {});
+    const setIsLoadingRef = useRef<(isLoading: bool) => void>(() => {});
 
     return (
         <PageLoaderContext.Provider

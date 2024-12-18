@@ -1,4 +1,4 @@
-import { Button, Flex, HoverCard, ScrollArea, Separator, Skeleton } from "@/components/base";
+import { Box, Button, Flex, HoverCard, ScrollArea, Separator, Skeleton } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
 import UserAvatar, { TUserAvatarProps } from "@/components/UserAvatar";
 import { User } from "@/core/models";
@@ -26,7 +26,7 @@ export const SkeletonUserAvatarList = ({ count, size, spacing = "none", classNam
     return (
         <Flex className={cn("rtl:space-x-reverse", SPACING_MAP[spacing])}>
             {Array.from({ length: count }).map(() => (
-                <Skeleton key={createShortUUID()} className={cn("inline-block", AvatarVariants({ size }), className)} />
+                <Skeleton key={createShortUUID()} display="inline-block" className={cn(AvatarVariants({ size }), className)} />
             ))}
         </Flex>
     );
@@ -46,7 +46,7 @@ const UserAvatarList = memo(
             const moreUsersCount = users.length - maxVisible;
 
             return (
-                <Flex className={cn("relative rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...props}>
+                <Flex position="relative" className={cn("rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...props}>
                     {users.slice(0, maxVisible).map((user) => (
                         <UserAvatar.Root
                             key={`user-avatar-${user.username}-${createShortUUID()}`}
@@ -91,7 +91,7 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
             </HoverCard.Trigger>
             <HoverCard.Content className="z-50 w-auto p-0" align="end">
                 <ScrollArea.Root>
-                    <div className="max-h-52 min-w-40 py-1">
+                    <Box maxH="52" minW="40" py="1">
                         {users.slice(maxVisible).map((user) => (
                             <Fragment key={`user-avatar-${user.username}-${createShortUUID()}`}>
                                 <UserAvatar.Root
@@ -108,7 +108,7 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
                                 <Separator className="my-1 h-px bg-muted" />
                             </Fragment>
                         ))}
-                    </div>
+                    </Box>
                 </ScrollArea.Root>
             </HoverCard.Content>
         </HoverCard.Root>

@@ -7,6 +7,7 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ChatMessage, { IChatMessageProps } from "@/pages/BoardPage/components/chat/ChatMessage";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocket } from "@/core/providers/SocketProvider";
+import { Box } from "@/components/base";
 
 export interface IConversationProps {
     uid: string;
@@ -172,7 +173,7 @@ function Conversation({ uid, inputRef, buttonRef, sendChatCallbackRef }: IConver
     };
 
     return (
-        <div className="h-[calc(100%_-_theme(spacing.28))] overflow-y-auto" ref={conversationRef}>
+        <Box className="h-[calc(100%_-_theme(spacing.28))] overflow-y-auto" ref={conversationRef}>
             <VirtualInfiniteList
                 status={status}
                 items={messages}
@@ -191,7 +192,7 @@ function Conversation({ uid, inputRef, buttonRef, sendChatCallbackRef }: IConver
                 }
                 virtualizerRef={virtualizerRef}
             />
-        </div>
+        </Box>
     );
 }
 

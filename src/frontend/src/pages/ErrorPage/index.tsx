@@ -24,7 +24,7 @@ function ErrorPage(): JSX.Element {
     }, []);
 
     return (
-        <Flex direction="col" items="center" justify="center" className="max-h-screen min-h-screen">
+        <Flex direction="col" items="center" justify="center" maxH="screen" minH="screen">
             <h1 className="max-xs:text-2xl flex items-center gap-3 text-4xl font-bold text-gray-600">
                 {errorCode.toString()}
                 <Separator className="mt-1 h-8 w-0.5" orientation="vertical" />

@@ -1,4 +1,4 @@
-import { Button, Drawer, Flex, Form, Skeleton } from "@/components/base";
+import { Box, Button, Drawer, Flex, Form, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -10,21 +10,24 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { User } from "@/core/models";
 import { API_ROUTES } from "@/controllers/constants";
 import UserAvatarList from "@/components/UserAvatarList";
-import { cn } from "@/core/utils/ComponentUtils";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import SubmitButton from "@/components/SubmitButton";
 
 export function SkeletonBoardCommentForm() {
     return (
-        <div className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] bg-background sm:-bottom-2">
-            <Flex items="center" gap="4" className="rounded-b-lg border-t p-2">
-                <Skeleton className="size-8 overflow-hidden rounded-full" />
-                <div className="w-full cursor-text py-1">
-                    <Skeleton className="h-6 w-1/3" />
-                </div>
+        <Box
+            position="sticky"
+            bottom={{ initial: "0", sm: "-2" }}
+            className="-ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] bg-background"
+        >
+            <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t">
+                <Skeleton size="8" rounded="full" className="overflow-hidden" />
+                <Box w="full" cursor="text" py="1">
+                    <Skeleton h="6" className="w-1/3" />
+                </Box>
             </Flex>
-        </div>
+        </Box>
     );
 }
 
@@ -193,11 +196,11 @@ function BoardCommentForm(): JSX.Element {
             {commentingUsersElement}
             <Drawer.Root modal={false} handleOnly repositionInputs={false} open={isOpened} onOpenChange={changeOpenState}>
                 <Drawer.Trigger asChild>
-                    <Flex items="center" gap="4" className="rounded-b-lg border-t bg-background p-2">
+                    <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t bg-background">
                         <UserAvatar.Root user={currentUser} avatarSize="sm" />
-                        <div className="w-full cursor-text py-1">
+                        <Box w="full" cursor="text" py="1">
                             {t("card.Add a comment as {firstname} {lastname}", { firstname: currentUser.firstname, lastname: currentUser.lastname })}
-                        </div>
+                        </Box>
                     </Flex>
                 </Drawer.Trigger>
                 <Drawer.Content
@@ -212,20 +215,25 @@ function BoardCommentForm(): JSX.Element {
                     <Drawer.Title hidden />
                     <Flex
                         direction="col"
-                        className={cn(
-                            "relative mx-auto w-full max-w-[100vw] rounded-t-[10px] border bg-background pt-4 sm:max-w-screen-sm lg:max-w-screen-md"
-                        )}
+                        position="relative"
+                        mx="auto"
+                        w="full"
+                        pt="4"
+                        border
+                        className="max-w-[100vw] rounded-t-[10px] bg-background sm:max-w-screen-sm lg:max-w-screen-md"
                         data-card-comment-form
                     >
-                        <div className="absolute -top-8 right-0">{commentingUsersElement}</div>
+                        <Box position="absolute" right="0" className="-top-8">
+                            {commentingUsersElement}
+                        </Box>
                         <Drawer.Handle
                             className="flex h-2 w-full cursor-grab justify-center bg-transparent py-3 text-center"
                             onMouseDown={() => onDrawerHandlePointerStart("mouse")}
                             onTouchStart={() => onDrawerHandlePointerStart("touch")}
                         >
-                            <div className="inline-block h-2 w-[100px] rounded-full bg-muted" />
+                            <Box display="inline-block" h="2" rounded="full" className="w-[100px] bg-muted" />
                         </Drawer.Handle>
-                        <div className="relative w-full border-b">
+                        <Box position="relative" w="full" className="border-b">
                             <PlateEditor
                                 value={valueRef.current}
                                 currentUser={currentUser}
@@ -239,7 +247,7 @@ function BoardCommentForm(): JSX.Element {
                                 setValue={setValue}
                                 editorElementRef={editorElementRef}
                             />
-                        </div>
+                        </Box>
                         <Flex items="center" gap="2" justify="start" p="1">
                             <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
                                 {t("common.Save")}

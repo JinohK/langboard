@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 export function SkeletonBoardCardTitle() {
     return (
         <Dialog.Title>
-            <Skeleton className="h-8 w-1/3" />
+            <Skeleton h="8" className="w-1/3" />
         </Dialog.Title>
     );
 }

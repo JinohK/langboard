@@ -2,8 +2,7 @@ import { forwardRef } from "react";
 import CachedImage from "@/components/CachedImage";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import { cn } from "@/core/utils/ComponentUtils";
-import { Flex } from "@/components/base";
+import { Box, Flex } from "@/components/base";
 
 interface IBaseFormOnlyLayoutProps {
     size?: "default" | "sm" | "lg";
@@ -66,8 +65,8 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
             const { wrapper, width } = createTwoSidedSizeClassNames(size);
             content = (
                 <Flex className={wrapper}>
-                    <div className={width}>{leftSide}</div>
-                    <div className={width}>{rightSide}</div>
+                    <Box className={width}>{leftSide}</Box>
+                    <Box className={width}>{rightSide}</Box>
                 </Flex>
             );
         } else {
@@ -75,30 +74,30 @@ const FormOnlyLayout = forwardRef<HTMLDivElement, TFormOnlyLayoutProps>(
         }
 
         return (
-            <Flex direction="col" items="center" justify="center" h={{ initial: "screen", xs: "auto" }} className="min-h-screen">
-                <div className={cn("w-full", widthClassName)} ref={ref} {...props}>
+            <Flex direction="col" items="center" justify="center" h={{ initial: "screen", xs: "auto" }} minH="screen">
+                <Box w="full" className={widthClassName} ref={ref} {...props}>
                     <Flex
                         direction="col"
                         justify={{
                             initial: "between",
                             xs: "normal",
                         }}
-                        className="h-full xs:h-auto"
+                        h={{ initial: "full", xs: "auto" }}
                     >
-                        <div className="max-sm:p-6 xs:rounded-2xl xs:border-2 xs:border-border sm:p-9">
+                        <Box p={{ initial: "6", sm: "9" }} border={{ xs: "2" }} rounded={{ xs: "2xl" }} className="xs:border-border">
                             {useLogo && (
-                                <div className="mb-6">
+                                <Box mb="6">
                                     <CachedImage src="/images/logo.png" alt="Logo" size="9" />
-                                </div>
+                                </Box>
                             )}
                             {content}
-                        </div>
-                        <div className="max-sm:p-4 sm:mt-2">
+                        </Box>
+                        <Box p={{ initial: "4", sm: "0" }} mt={{ sm: "2" }}>
                             <LanguageSwitcher variant="ghost" triggerType="text" />
                             <ThemeSwitcher variant="ghost" triggerType="text" />
-                        </div>
+                        </Box>
                     </Flex>
-                </div>
+                </Box>
             </Flex>
         );
     }

@@ -9,7 +9,7 @@ import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardFilter() {
-    return <Skeleton className="h-9 w-7 rounded-md xs:w-14 xs:px-4" />;
+    return <Skeleton h="9" w={{ initial: "7", xs: "14" }} px={{ xs: "4" }} />;
 }
 
 function BoardFilter() {
@@ -68,7 +68,7 @@ function BoardFilter() {
             <Popover.Content align="end" className="max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.4))]">
                 <ScrollArea.Root>
                     <Flex direction="col" gap="4" className="max-h-[calc(100vh_-_theme(spacing.40))]">
-                        <Label className="block">
+                        <Label display="block">
                             <span>{t("board.filters.Keyword")}</span>
                             <Input
                                 className="mx-1 mt-2 w-[calc(100%_-_theme(spacing.2))]"
@@ -168,7 +168,7 @@ const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterNam
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start" className="flex flex-col gap-2 p-0">
                 <ScrollArea.Root>
-                    <Flex direction="col" pr="2.5" className="relative max-h-64 min-w-56">
+                    <Flex direction="col" pr="2.5" position="relative" maxH="64" minW="56">
                         {createFilterItems()}
                         {countSelections > 0 && (
                             <Button
@@ -211,7 +211,7 @@ const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) 
     };
 
     return (
-        <Label className="flex cursor-pointer items-center gap-2 p-3 hover:bg-accent">
+        <Label display="flex" cursor="pointer" items="center" gap="2" p="3" className="hover:bg-accent">
             <Checkbox name={name} checked={checked} onCheckedChange={setFilterCards} />
             {children}
         </Label>

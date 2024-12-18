@@ -39,7 +39,7 @@ export function EquationInput({ isInline, isOpened, setIsOpened }: EquationInput
     }, [textareaProps.value]);
 
     return (
-        <Flex items="start" justify="between" gap="2" className="w-80 max-w-[calc(100vw-24px)]">
+        <Flex items="start" justify="between" gap="2" w="80" className="max-w-[calc(100vw-24px)]">
             <Textarea
                 className="max-h-[50vh] min-h-[60px] resize-none border-none p-0 font-mono text-sm focus-visible:ring-transparent"
                 placeholder="E = mc^2"

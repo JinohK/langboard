@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import PasswordInput from "@/components/PasswordInput";
 import SubmitButton from "@/components/SubmitButton";
-import { Flex, Form, Toast } from "@/components/base";
+import { Box, Flex, Form, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/api/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
@@ -38,7 +38,7 @@ function PasswordPage(): JSX.Element {
             <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("user.Password")}</h2>
             <Form.Root className="mt-11" onSubmit={handleSubmit} ref={formRef}>
                 <Flex justify="center">
-                    <div className="w-full max-w-sm">
+                    <Box w="full" className="max-w-sm">
                         <PasswordInput
                             name="current_password"
                             label={t("user.Current password")}
@@ -63,7 +63,7 @@ function PasswordPage(): JSX.Element {
                             isValidating={isValidating}
                             error={errors["password-confirm"]}
                         />
-                    </div>
+                    </Box>
                 </Flex>
                 <Flex items="center" justify="center" gap="8" mt="16">
                     <SubmitButton type="submit" isValidating={isValidating}>

@@ -19,8 +19,11 @@ export interface IBoardWikiContext {
     currentUser: IAuthUser;
     currentEditor: string;
     setCurrentEditor: (uid: string) => void;
-    canAccessWiki: (shouldNavigate: boolean, uid?: string) => boolean;
+    canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
     setTitleMapRef: React.MutableRefObject<Record<string, (title: string) => void>>;
+    disabledReorder: bool;
+    setDisabledReorder: React.Dispatch<React.SetStateAction<bool>>;
+    wikiTabListId: string;
 }
 
 interface IBoardWikiProps {
@@ -44,6 +47,9 @@ const initialContext = {
     setCurrentEditor: () => {},
     canAccessWiki: () => false,
     setTitleMapRef: { current: {} },
+    disabledReorder: true,
+    setDisabledReorder: () => {},
+    wikiTabListId: "",
 };
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
@@ -60,7 +66,9 @@ export const BoardWikiProvider = ({
     const [wikis, setWikis] = useState<ProjectWiki.Interface[]>(flatWikis);
     const [t] = useTranslation();
     const [currentEditor, setCurEditor] = useState<string>("");
+    const [disabledReorder, setDisabledReorder] = useState<bool>(true);
     const setTitleMapRef = useRef<Record<string, (title: string) => void>>({});
+    const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditor) {
@@ -116,6 +124,9 @@ export const BoardWikiProvider = ({
                 setCurrentEditor,
                 canAccessWiki,
                 setTitleMapRef,
+                disabledReorder,
+                setDisabledReorder,
+                wikiTabListId,
             }}
         >
             {children}

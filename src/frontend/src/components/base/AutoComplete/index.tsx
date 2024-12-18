@@ -7,6 +7,7 @@ import Skeleton from "@/components/base/Skeleton";
 import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
 import Flex from "@/components/base/Flex";
+import Box from "@/components/base/Box";
 
 export interface IAutorCompleteProps {
     selectedValue: string;
@@ -89,9 +90,9 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                         <Command.List>
                             {isLoading && (
                                 <CommandPrimitive.Loading>
-                                    <div className="p-1">
-                                        <Skeleton className="h-6 w-full" />
-                                    </div>
+                                    <Box p="1">
+                                        <Skeleton h="6" w="full" />
+                                    </Box>
                                 </CommandPrimitive.Loading>
                             )}
                             {items.length > 0 && !isLoading ? (

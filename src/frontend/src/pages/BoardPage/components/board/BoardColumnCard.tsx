@@ -1,4 +1,4 @@
-import { Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
+import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
@@ -36,13 +36,13 @@ export const SkeletonBoardColumnCard = memo(() => {
         <Card.Root className="border-transparent shadow-transparent">
             <Card.Header className="relative block py-4">
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">
-                    <Skeleton className="inline-block h-4 w-3/4" />
+                    <Skeleton display="inline-block" h="4" className="w-3/4" />
                 </Card.Title>
-                <Skeleton className="absolute right-2.5 top-1 mt-0 inline-block size-8 rounded-md" />
+                <Skeleton position="absolute" right="2.5" top="1" display="inline-block" size="8" />
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
-                <Skeleton className="inline-block h-3.5 w-6" />
+                <Skeleton display="inline-block" h="3.5" w="6" />
                 <SkeletonUserAvatarList count={2} size="sm" />
             </Card.Footer>
         </Card.Root>
@@ -153,7 +153,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 }}
             >
                 <HoverCard.Trigger asChild>
-                    <div>{cardInner}</div>
+                    <Box>{cardInner}</Box>
                 </HoverCard.Trigger>
                 <HoverCard.Content
                     side="right"
@@ -163,16 +163,16 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                     hidden={isHoverCardHidden}
                 >
                     <ScrollArea.Root>
-                        <div className="max-h-[calc(100vh-_theme(spacing.4))] break-all p-4 [&_img]:max-w-full">
+                        <Box p="4" className="max-h-[calc(100vh-_theme(spacing.4))] break-all [&_img]:max-w-full">
                             <PlateEditor value={card.description} mentionableUsers={project.members} currentUser={currentUser} readOnly />
-                        </div>
+                        </Box>
                     </ScrollArea.Root>
                 </HoverCard.Content>
             </HoverCard.Root>
         );
     }
 
-    return <div {...props}>{cardInner}</div>;
+    return <Box {...props}>{cardInner}</Box>;
 });
 
 interface IBoardColumnCardInnerProps {

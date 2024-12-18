@@ -1,7 +1,6 @@
 import { useState } from "react";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Floating, Form, IconComponent } from "@/components/base";
-import { cn } from "@/core/utils/ComponentUtils";
+import { Box, Floating, Form, IconComponent } from "@/components/base";
 
 interface IBasePasswordInputProps {
     name: string;
@@ -41,7 +40,7 @@ function PasswordInput({
     const [shouldShow, setShouldShow] = useState(false);
 
     const comp = (
-        <div className={cn("relative", className)}>
+        <Box position="relative" className={className}>
             <Floating.LabelInput
                 type={shouldShow ? "text" : "password"}
                 name={name}
@@ -58,7 +57,7 @@ function PasswordInput({
                 className="absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer transition-all [&:not(:hover)]:text-gray-600"
                 onClick={() => setShouldShow(!shouldShow)}
             />
-        </div>
+        </Box>
     );
 
     if (isFormControl) {

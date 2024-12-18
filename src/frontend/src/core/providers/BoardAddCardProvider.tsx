@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export interface IBoardAddCardContext {
     isAddingCard: bool;
-    setIsAddingCard: (isAddingCard: boolean) => void;
+    setIsAddingCard: (isAddingCard: bool) => void;
     isValidating: bool;
     changeMode: (mode: "create" | "view") => void;
     scrollToBottom: () => void;

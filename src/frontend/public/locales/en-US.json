@@ -381,6 +381,7 @@
   "board": {
     "Board": "Board",
     "Wiki": "Wiki",
+    "Settings": "Settings",
     "Filters": "Filters",
     "filters": {
       "Clear": "Clear",
@@ -513,6 +514,8 @@
   "wiki": {
     "Private": "Private",
     "Public": "Public",
+    "Toggle reorder mode": "Toggle reorder mode",
+    "New wiki page": "New wiki page",
     "Can't access this wiki.": "Can't access this wiki.",
     "Title changed successfully.": "Title changed successfully.",
     "Content changed successfully.": "Content changed successfully.",

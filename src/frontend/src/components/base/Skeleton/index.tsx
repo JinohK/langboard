@@ -1,26 +1,9 @@
+import Box, { TBoxProps } from "@/components/base/Box";
 import { cn } from "@/core/utils/ComponentUtils";
+import { forwardRef } from "react";
 
-interface IBaseSkeletonProps {
-    as?: "div" | "span";
-}
-
-interface IDivSkeletonProps extends IBaseSkeletonProps, React.HTMLAttributes<HTMLDivElement> {
-    as?: "div";
-}
-
-interface ISpanSkeletonProps extends IBaseSkeletonProps, React.HTMLAttributes<HTMLSpanElement> {
-    as: "span";
-}
-
-export type TSkeletonProps = IDivSkeletonProps | ISpanSkeletonProps;
-
-function Skeleton({ as = "div", className, ...props }: TSkeletonProps) {
-    const classNames = cn("animate-pulse rounded-md bg-primary/10", className);
-    if (as === "span") {
-        return <span className={classNames} {...props} />;
-    } else {
-        return <div className={classNames} {...props} />;
-    }
-}
+const Skeleton = forwardRef<React.ElementRef<"div">, TBoxProps>(({ as = "div", className, ...props }, ref) => {
+    return <Box as={as} className={cn("animate-pulse rounded-md bg-primary/10", className)} {...props} ref={ref} />;
+});
 
 export default Skeleton;

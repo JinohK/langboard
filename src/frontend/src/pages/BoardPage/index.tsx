@@ -18,6 +18,20 @@ import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyled
 import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
 import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
+import useCanUseProjectSettings from "@/controllers/api/board/useCanUseProjectSettings";
+import BoardSettings from "@/pages/BoardPage/BoardSettings";
+import TypeUtils from "@/core/utils/TypeUtils";
+
+const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
+    switch (pageRoute) {
+        case "wiki":
+            return "wiki";
+        case "settings":
+            return "settings";
+        default:
+            return "board";
+    }
+};
 
 const BoardProxy = memo((): JSX.Element => {
     const [t] = useTranslation();
@@ -27,13 +41,15 @@ const BoardProxy = memo((): JSX.Element => {
     const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
     const [isReady, setIsReady] = useState(false);
     const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
-    const [currentPage, setCurrentPage] = useState<"board" | "wiki">(pageRoute === "wiki" ? "wiki" : "board");
+    const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
+    const [canUseSettings, setCanUseSettings] = useState<bool | undefined>(undefined);
 
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
     const { data, error } = useIsProjectAvailable({ uid: projectUID });
+    const { mutate: canUseProjectSettingsMutate } = useCanUseProjectSettings({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -95,6 +111,18 @@ const BoardProxy = memo((): JSX.Element => {
 
         sendBoardChatAvailable({});
 
+        canUseProjectSettingsMutate(
+            {},
+            {
+                onSuccess: () => {
+                    setCanUseSettings(true);
+                },
+                onError: () => {
+                    setCanUseSettings(false);
+                },
+            }
+        );
+
         return () => {
             offBoardChatAvailable();
             offSocketError();
@@ -118,6 +146,18 @@ const BoardProxy = memo((): JSX.Element => {
             },
             active: currentPage === "wiki",
         },
+        ...(canUseSettings
+            ? [
+                  {
+                      name: "board.Settings",
+                      onClick: () => {
+                          setCurrentPage("settings");
+                          navigate.current(ROUTES.BOARD.SETTINGS(projectUID));
+                      },
+                      active: currentPage === "settings",
+                  },
+              ]
+            : []),
     ];
 
     let pageContent;
@@ -125,8 +165,19 @@ const BoardProxy = memo((): JSX.Element => {
         case "wiki":
             pageContent = <BoardWikiPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
             break;
+        case "settings":
+            if (canUseSettings) {
+                pageContent = <BoardSettings navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            } else if (TypeUtils.isUndefined(canUseSettings)) {
+                pageContent = <></>;
+            } else {
+                Toast.Add.error(t("errors.Forbidden"));
+                return <Navigate to={ROUTES.BOARD.MAIN(projectUID)} replace />;
+            }
+            break;
         default:
             pageContent = <BoardPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            break;
     }
 
     return (

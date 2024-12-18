@@ -1,6 +1,7 @@
 import { TSize } from "@/core/utils/classnames/types";
 
 export const all: Record<Exclude<TSize, "auto">, string> = {
+    px: "gap-px",
     "0": "gap-0",
     "0.5": "gap-0.5",
     "1": "gap-1",
@@ -38,6 +39,7 @@ export const all: Record<Exclude<TSize, "auto">, string> = {
 };
 
 export const x: Record<Exclude<TSize, "auto">, string> = {
+    px: "gap-x-px",
     "0": "gap-x-0",
     "0.5": "gap-x-0.5",
     "1": "gap-x-1",
@@ -75,6 +77,7 @@ export const x: Record<Exclude<TSize, "auto">, string> = {
 };
 
 export const y: Record<Exclude<TSize, "auto">, string> = {
+    px: "gap-y-px",
     "0": "gap-y-0",
     "0.5": "gap-y-0.5",
     "1": "gap-y-1",

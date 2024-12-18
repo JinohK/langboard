@@ -1,4 +1,4 @@
-import { Flex, Toast } from "@/components/base";
+import { Box, Flex, Toast } from "@/components/base";
 import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
@@ -21,15 +21,15 @@ export interface IBoardCommentListProps {
 
 export function SkeletonBoardCommentList() {
     return (
-        <div className="pb-2.5">
-            <div className="flex flex-col gap-4">
+        <Box pb="2.5">
+            <Flex direction="col" gap="4">
                 <SkeletonBoardComment />
                 <SkeletonBoardComment />
                 <SkeletonBoardComment />
                 <SkeletonBoardComment />
                 <SkeletonBoardComment />
-            </div>
-        </div>
+            </Flex>
+        </Box>
     );
 }
 
@@ -120,7 +120,11 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
             useWindow={false}
             pageStart={1}
         >
-            {comments.length === 0 && <div className="text-sm text-accent-foreground/50">{t("card.No comments")}</div>}
+            {comments.length === 0 && (
+                <Box textSize="sm" className="text-accent-foreground/50">
+                    {t("card.No comments")}
+                </Box>
+            )}
             <Flex direction="col" gap="4">
                 {comments.map((comment) => {
                     return <BoardComment key={`${card.uid}-${comment.uid}`} comment={comment} deletedComment={deletedComment} />;

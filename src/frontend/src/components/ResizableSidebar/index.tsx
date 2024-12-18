@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Floating, IconComponent } from "@/components/base";
+import { Box, Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ScreenMap } from "@/core/utils/VariantUtils";
@@ -106,9 +106,16 @@ function ResizableSidebar({
 
     return (
         <>
-            <div className="block h-[calc(100vh_-_theme(spacing.16))] w-full transition-all duration-200 ease-in-out md:flex">
-                <div
-                    className="group/sidebar relative hidden size-full border-r transition-all data-[resizing=true]:transition-none md:block"
+            <Box
+                display={{ initial: "block", md: "flex" }}
+                w="full"
+                className="h-[calc(100vh_-_theme(spacing.16))] transition-all duration-200 ease-in-out"
+            >
+                <Box
+                    position="relative"
+                    display={{ initial: "hidden", md: "block" }}
+                    size="full"
+                    className="group/sidebar border-r transition-all data-[resizing=true]:transition-none"
                     style={{ maxWidth: `${initialWidth}px` }}
                     data-collapsed={isCollapsed ? "true" : "false"}
                     id={sidebarId}
@@ -121,10 +128,15 @@ function ResizableSidebar({
                         {!isMobile && children}
                     </aside>
 
-                    <div
+                    <Box
+                        position="absolute"
+                        top="0"
+                        z="50"
+                        h="full"
+                        cursor="e-resize"
                         className={cn(
-                            "resizer absolute right-[-1px] top-0 z-50 h-full w-[3px] cursor-e-resize",
-                            "bg-transparent opacity-85 transition-colors duration-200 ease-in-out hover:bg-primary data-[selected=true]:bg-primary"
+                            "resizer -right-px w-[3px] bg-transparent opacity-85 transition-colors",
+                            "duration-200 ease-in-out hover:bg-primary data-[selected=true]:bg-primary"
                         )}
                         onMouseDown={startResizing}
                     />
@@ -142,9 +154,9 @@ function ResizableSidebar({
                     >
                         <IconComponent icon={isCollapsed ? "chevron-right" : "chevron-left"} size="8" />
                     </Button>
-                </div>
+                </Box>
                 {main}
-            </div>
+            </Box>
             <Floating.Button.Root fullScreen={floatingFullScreen}>
                 <Floating.Button.Content>
                     {floatingFullScreen && <Floating.Button.CloseButton />}

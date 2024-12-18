@@ -2,6 +2,7 @@ import { TSize } from "@/core/utils/classnames/types";
 
 export const all: Record<TSize, string> = {
     auto: "p-auto",
+    px: "p-px",
     "0": "p-0",
     "0.5": "p-0.5",
     "1": "p-1",
@@ -40,6 +41,7 @@ export const all: Record<TSize, string> = {
 
 export const left: Record<TSize, string> = {
     auto: "pl-auto",
+    px: "pl-px",
     "0": "pl-0",
     "0.5": "pl-0.5",
     "1": "pl-1",
@@ -78,6 +80,7 @@ export const left: Record<TSize, string> = {
 
 export const right: Record<TSize, string> = {
     auto: "pr-auto",
+    px: "pr-px",
     "0": "pr-0",
     "0.5": "pr-0.5",
     "1": "pr-1",
@@ -116,6 +119,7 @@ export const right: Record<TSize, string> = {
 
 export const top: Record<TSize, string> = {
     auto: "pt-auto",
+    px: "pt-px",
     "0": "pt-0",
     "0.5": "pt-0.5",
     "1": "pt-1",
@@ -154,6 +158,7 @@ export const top: Record<TSize, string> = {
 
 export const bottom: Record<TSize, string> = {
     auto: "pb-auto",
+    px: "pb-px",
     "0": "pb-0",
     "0.5": "pb-0.5",
     "1": "pb-1",
@@ -192,6 +197,7 @@ export const bottom: Record<TSize, string> = {
 
 export const x: Record<TSize, string> = {
     auto: "px-auto",
+    px: "px-px",
     "0": "px-0",
     "0.5": "px-0.5",
     "1": "px-1",
@@ -230,6 +236,7 @@ export const x: Record<TSize, string> = {
 
 export const y: Record<TSize, string> = {
     auto: "py-auto",
+    px: "py-px",
     "0": "py-0",
     "0.5": "py-0.5",
     "1": "py-1",

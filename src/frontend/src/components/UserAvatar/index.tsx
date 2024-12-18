@@ -1,7 +1,7 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import React, { forwardRef, memo, useState } from "react";
-import { Avatar, Card, Flex, HoverCard, IconComponent, Separator } from "@/components/base";
+import { Avatar, Box, Card, Flex, HoverCard, IconComponent, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
@@ -81,9 +81,9 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
             <HoverCard.Trigger asChild>
                 <span>{trigger}</span>
             </HoverCard.Trigger>
-            <HoverCard.Content className="z-50 w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
+            <HoverCard.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
                 <Card.Root className="relative">
-                    <div className="absolute left-0 top-0 h-24 w-full rounded-t-lg bg-primary/50" />
+                    <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">
                             <Avatar.Image src={user.avatar} />
@@ -191,19 +191,19 @@ const Trigger = memo(
     }
 );
 
-const List = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(({ children, className, ...props }, ref) => {
+const List = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (
-        <div className={cn("w-full", className)} ref={ref} {...props}>
+        <Box w="full" className={className} ref={ref} {...props}>
             {children}
-        </div>
+        </Box>
     );
 });
 
-const ListLabel = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(({ children, className, ...props }, ref) => {
+const ListLabel = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (
-        <div className={cn("px-5 py-2 text-sm font-semibold", className)} ref={ref} {...props}>
+        <Box px="5" py="2" textSize="sm" weight="semibold" className={className} ref={ref} {...props}>
             {children}
-        </div>
+        </Box>
     );
 });
 
@@ -214,8 +214,10 @@ const ListItem = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeo
             px="5"
             py="2"
             textSize="sm"
+            position="relative"
+            cursor="default"
             className={cn(
-                "relative cursor-default select-none outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                "select-none outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                 className
             )}
             ref={ref}

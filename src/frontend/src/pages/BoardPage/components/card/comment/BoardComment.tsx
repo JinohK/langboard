@@ -1,4 +1,4 @@
-import { Button, Flex, Separator, Skeleton, Toast } from "@/components/base";
+import { Box, Button, Flex, Separator, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import SubmitButton from "@/components/SubmitButton";
 import UserAvatar from "@/components/UserAvatar";
@@ -19,16 +19,16 @@ import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardComment(): JSX.Element {
     return (
-        <div className="mt-4 grid grid-cols-[theme(spacing.8),1fr] gap-2">
-            <Skeleton className="size-8 rounded-full" />
+        <Box mt="4" display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
+            <Skeleton size="8" rounded="full" />
             <Flex direction="col" gap="1">
                 <Flex gap="1" items="center">
-                    <Skeleton className="h-5 w-24" />
-                    <Skeleton className="h-4 w-36" />
+                    <Skeleton h="5" w="24" />
+                    <Skeleton h="4" w="36" />
                 </Flex>
-                <Skeleton className="h-12 w-1/2 rounded-lg rounded-ss-none" />
+                <Skeleton h="12" rounded="lg" className="w-1/2 rounded-ss-none" />
             </Flex>
-        </div>
+        </Box>
     );
 }
 
@@ -173,7 +173,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
     };
 
     return (
-        <div className="grid grid-cols-[theme(spacing.8),1fr] gap-2">
+        <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
             <UserAvatar.Root avatarSize="sm" user={comment.user}>
                 <UserAvatar.List>
                     <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
@@ -198,10 +198,10 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                     </span>
                 </Flex>
                 <Flex
-                    className={cn(
-                        "rounded-lg rounded-ss-none bg-accent/70 px-3 py-1.5",
-                        isEditing ? "rounded-lg border bg-transparent p-0" : "w-fit max-w-full"
-                    )}
+                    px="3"
+                    py="1.5"
+                    rounded="lg"
+                    className={cn("rounded-ss-none bg-accent/70", isEditing ? "border bg-transparent p-0" : "w-fit max-w-full")}
                 >
                     <PlateEditor
                         value={comment.content}
@@ -281,7 +281,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                     )}
                 </Flex>
             </Flex>
-        </div>
+        </Box>
     );
 }
 

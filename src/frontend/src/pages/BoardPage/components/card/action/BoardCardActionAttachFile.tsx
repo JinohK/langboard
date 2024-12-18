@@ -1,4 +1,4 @@
-import { Button, Flex, IconComponent, Input, Popover, ScrollArea, Toast } from "@/components/base";
+import { Box, Button, Flex, IconComponent, Input, Popover, ScrollArea, Toast } from "@/components/base";
 import SubmitButton from "@/components/SubmitButton";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -96,30 +96,39 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAtta
             </Popover.Trigger>
             <Popover.Content align="end" className="w-[min(theme(spacing.96),80vw)]">
                 <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />
-                <div className="mb-2 text-sm font-semibold">{t("card.Attach a file")}</div>
+                <Box mb="2" textSize="sm" weight="semibold">
+                    {t("card.Attach a file")}
+                </Box>
                 <ScrollArea.Root className="border border-dashed p-2">
-                    <div className="relative h-[min(theme(spacing.36),35vh)] select-none" {...getRootProps()}>
+                    <Box position="relative" className="h-[min(theme(spacing.36),35vh)] select-none" {...getRootProps()}>
                         {isDragActive && (
                             <Flex
                                 items="center"
                                 justify="center"
                                 size="full"
-                                className="absolute left-0 top-0 z-50 border-2 border-dashed border-primary bg-background"
+                                position="absolute"
+                                left="0"
+                                top="0"
+                                z="50"
+                                border="2"
+                                className="border-dashed border-primary bg-background"
                             >
                                 {t("card.Drop a file here")}
                             </Flex>
                         )}
                         {!attachedFiles.length ? (
-                            <Flex items="center" justify="center" size="full" className="absolute left-0 top-0">
+                            <Flex items="center" justify="center" size="full" position="absolute" left="0" top="0">
                                 {t("card.Drag and drop a file here")}
                             </Flex>
                         ) : (
                             <BoardCardActionAttachedFileList attachedFiles={attachedFiles} deleteFile={deleteFile} update={forceUpdate} />
                         )}
-                    </div>
+                    </Box>
                 </ScrollArea.Root>
                 <Flex items="center" justify="center" direction="col" gap="1" mt="2" className="select-none">
-                    <div className="ml-2 text-center text-sm text-muted-foreground/70">{t("common.Or")}</div>
+                    <Box ml="2" textSize="sm" className="text-center text-muted-foreground/70">
+                        {t("common.Or")}
+                    </Box>
                     <Button
                         variant="secondary"
                         size="sm"

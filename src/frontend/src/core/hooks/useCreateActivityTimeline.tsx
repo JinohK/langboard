@@ -64,16 +64,16 @@ const useCreateActivityTimeline = (type: string, withDiffView: bool = false) => 
     const SkeletonActivity = memo(() => (
         <Timeline.Item status="done" className="gap-x-2">
             <Timeline.Heading>
-                <Skeleton as="span" className="block h-6 w-44" />
+                <Skeleton as="span" h="6" w="44" display="block" />
             </Timeline.Heading>
             <Timeline.Dot
                 status="custom"
-                customIcon={<Skeleton as="span" className="inline-block size-8 rounded-full" />}
+                customIcon={<Skeleton as="span" size="8" rounded="full" display="inline-block" />}
                 className="size-8 border-none"
             />
             <Timeline.Line done className="animate-pulse rounded-md bg-primary/10" />
             <Timeline.Content>
-                <Skeleton as="span" className="block h-14 w-56" />
+                <Skeleton as="span" h="14" w="56" display="block" />
             </Timeline.Content>
         </Timeline.Item>
     ));

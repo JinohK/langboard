@@ -3,12 +3,25 @@
 import * as LabelPrimitive from "@radix-ui/react-label";
 import * as React from "react";
 import { type VariantProps, tv } from "tailwind-variants";
-import { DimensionMap, extractVariantProps, FlexMap, GapMap, MarginMap, PaddingMap, TextMap } from "@/core/utils/VariantUtils";
+import {
+    BorderMap,
+    CursorMap,
+    DimensionMap,
+    DisplayMap,
+    extractVariantProps,
+    FlexMap,
+    GapMap,
+    MarginMap,
+    PaddingMap,
+    PositionMap,
+    TextMap,
+} from "@/core/utils/VariantUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export const LabelVariants = tv({
     base: "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
     variants: {
+        display: DisplayMap.all,
         direction: FlexMap.direction,
         wrap: FlexMap.wrap,
         items: FlexMap.items,
@@ -18,6 +31,10 @@ export const LabelVariants = tv({
         gapY: GapMap.y,
         w: DimensionMap.width,
         h: DimensionMap.height,
+        maxW: DimensionMap.maxWidth,
+        maxH: DimensionMap.maxHeight,
+        minW: DimensionMap.minWidth,
+        minH: DimensionMap.minHeight,
         size: DimensionMap.all,
         p: PaddingMap.all,
         pl: PaddingMap.left,
@@ -34,12 +51,18 @@ export const LabelVariants = tv({
         mx: MarginMap.x,
         my: MarginMap.y,
         textSize: TextMap.size,
-        flex: {
-            true: "flex",
-        },
-        "inline-flex": {
-            true: "inline-flex",
-        },
+        weight: TextMap.weight,
+        position: PositionMap.position,
+        top: PositionMap.top,
+        right: PositionMap.right,
+        bottom: PositionMap.bottom,
+        left: PositionMap.left,
+        insetX: PositionMap.insetX,
+        insetY: PositionMap.insetY,
+        z: PositionMap.zIndex,
+        cursor: CursorMap.all,
+        border: BorderMap.width,
+        rounded: BorderMap.rounded,
     },
 });
 

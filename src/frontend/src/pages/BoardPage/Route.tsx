@@ -31,6 +31,8 @@ function BoardRoute() {
             >
                 <Route path={ROUTES.BOARD.WIKI(":projectUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.WIKI_PAGE(":projectUID", ":wikiUID")} element={<></>} />
+                <Route path={ROUTES.BOARD.SETTINGS(":projectUID")} element={<></>} />
+                <Route path={ROUTES.BOARD.SETTINGS_PAGE(":projectUID", ":page")} element={<></>} />
                 <Route path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")} element={<BoardCardPage />} />
             </Route>
         </Route>

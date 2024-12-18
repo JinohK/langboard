@@ -16,16 +16,16 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
     const skeletonEmails = (
         <>
             <Flex gap="3" p="3">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-6 w-1/3" />
+                <Skeleton h="6" w="16" />
+                <Skeleton h="6" className="w-1/3" />
             </Flex>
             <Separator />
             <Flex items="center" justify="between" p="3">
                 <Flex gap="3" w="full">
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-1/3" />
+                    <Skeleton h="6" w="16" />
+                    <Skeleton h="6" className="w-1/3" />
                 </Flex>
-                <Skeleton className="size-8" />
+                <Skeleton size="8" />
             </Flex>
         </>
     );

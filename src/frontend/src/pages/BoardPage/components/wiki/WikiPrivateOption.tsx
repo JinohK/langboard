@@ -19,12 +19,12 @@ export interface IWikiPrivateOptionProps {
 
 export function SkeletonWikiPrivateOption() {
     return (
-        <Flex items="center" gap="2" pl="1">
+        <Flex items="center" gap="4" pl="1" h="8" justify={{ initial: "between", sm: "start" }}>
             <Flex inline items="center" gap="2">
-                <Skeleton className="h-6 w-11 rounded-full" />
-                <Skeleton className="h-6 w-20" />
+                <Skeleton h="6" w="11" rounded="full" />
+                <Skeleton h="6" w="20" />
             </Flex>
-            <SkeletonUserAvatarList count={6} size={{ initial: "sm", xs: "default" }} spacing="none" />
+            <SkeletonUserAvatarList count={4} size="sm" spacing="none" />
         </Flex>
     );
 }
@@ -183,8 +183,8 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     };
 
     return (
-        <Flex items="center" gap="2">
-            <Label inline-flex items="center" gap="2" className="cursor-pointer">
+        <Flex items="center" gap="4" h="8">
+            <Label display="inline-flex" cursor="pointer" items="center" gap="2">
                 <Switch checked={isPrivate} onCheckedChange={savePrivateState} />
                 <span>{t(`wiki.${isPrivate ? "Private" : "Public"}`)}</span>
             </Label>
@@ -192,7 +192,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 <AssignMemberPopover
                     popoverButtonProps={{
                         size: "icon",
-                        className: "size-8 xs:size-10",
+                        className: "size-8",
                         title: t("project.Assign members"),
                     }}
                     popoverContentProps={{
@@ -200,8 +200,8 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                         align: "start",
                     }}
                     userAvatarListProps={{
-                        maxVisible: 6,
-                        size: { initial: "sm", xs: "default" },
+                        maxVisible: 4,
+                        size: "sm",
                         spacing: "3",
                         listAlign: "start",
                     }}

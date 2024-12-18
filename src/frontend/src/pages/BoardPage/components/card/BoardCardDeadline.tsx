@@ -10,7 +10,7 @@ import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDeadline() {
-    return <Skeleton className="h-8 w-1/3 gap-2 lg:h-10" />;
+    return <Skeleton h={{ initial: "8", lg: "10" }} className="w-1/3" />;
 }
 
 const BoardCardDeadline = memo(() => {

@@ -1,4 +1,4 @@
-import { Button, IconComponent, Input, Popover } from "@/components/base";
+import { Box, Button, IconComponent, Input, Popover } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useState } from "react";
@@ -34,8 +34,10 @@ const BoardCardActionShare = memo(({ buttonClassName }: BoardCardActionShareProp
                 </Button>
             </Popover.Trigger>
             <Popover.Content align="end">
-                <div className="mb-2 text-sm font-semibold">{t("card.Share this card")}</div>
-                <div className="relative">
+                <Box mb="2" textSize="sm" weight="semibold">
+                    {t("card.Share this card")}
+                </Box>
+                <Box position="relative">
                     <Input
                         value={link}
                         readOnly
@@ -50,7 +52,7 @@ const BoardCardActionShare = memo(({ buttonClassName }: BoardCardActionShareProp
                             className={cn("absolute right-2 top-1/2 -translate-y-1/2", isCopied && "text-green-500")}
                         />
                     )}
-                </div>
+                </Box>
             </Popover.Content>
         </Popover.Root>
     );

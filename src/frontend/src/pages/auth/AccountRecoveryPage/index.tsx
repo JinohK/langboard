@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { FormOnlyLayout } from "@/components/Layout";
-import { Button } from "@/components/base";
+import { Box, Button } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSendResetLink";
 import useValidateRecoveryToken from "@/controllers/api/auth/useValidateRecoveryToken";
@@ -126,7 +126,9 @@ function AccountRecoveryPage(): JSX.Element {
         const leftSide = (
             <>
                 <h2 className="text-4xl font-normal">{t("accountRecovery.Password recovery")}</h2>
-                <div className="mt-4 text-base">{description}</div>
+                <Box mt="4" textSize="base">
+                    {description}
+                </Box>
                 <Button type="button" variant="outline" size="sm" className="mt-4" onClick={backToSignin} title={`Sign in with ${email}`}>
                     {email}
                 </Button>

@@ -1,4 +1,4 @@
-import { Skeleton, Toast } from "@/components/base";
+import { Box, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
@@ -14,11 +14,11 @@ import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDescription() {
     return (
-        <div>
-            <div className="h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] text-muted-foreground">
-                <Skeleton className="h-[calc(theme(spacing.56)_-_theme(spacing.8))] w-full" />
-            </div>
-        </div>
+        <Box>
+            <Box h="full" className="min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] text-muted-foreground">
+                <Skeleton w="full" className="h-[calc(theme(spacing.56)_-_theme(spacing.8))]" />
+            </Box>
+        </Box>
     );
 }
 
@@ -126,7 +126,7 @@ function BoardCardDescription(): JSX.Element {
     }, [currentEditor]);
 
     return (
-        <div
+        <Box
             onPointerDown={(e) => {
                 const target = e.target as HTMLElement;
                 if (isEditing || !target.closest("[data-card-description]")) {
@@ -161,11 +161,11 @@ function BoardCardDescription(): JSX.Element {
                     editorElementRef={editorElementRef}
                 />
             ) : (
-                <div className="h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] cursor-text text-sm text-muted-foreground">
+                <Box h="full" cursor="text" textSize="sm" className="min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] text-muted-foreground">
                     {t("card.No description")}
-                </div>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 }
 

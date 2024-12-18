@@ -5,7 +5,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 export interface IBoardChatAvailableRequest {}
 
 export interface IBoardChatAvailableResponse {
-    available: boolean;
+    available: bool;
 }
 
 export interface IUseBoardChatAvailableHandlersProps extends IBaseUseSocketHandlersProps<IBoardChatAvailableResponse> {

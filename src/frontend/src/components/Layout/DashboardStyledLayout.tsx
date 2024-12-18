@@ -5,7 +5,7 @@ import ResizableSidebar, { IResizableSidebarProps } from "@/components/Resizable
 import Sidebar from "@/components/Sidebar";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { cn } from "@/core/utils/ComponentUtils";
-import { Flex, ScrollArea } from "@/components/base";
+import { Box, Flex, ScrollArea } from "@/components/base";
 
 interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;
@@ -50,9 +50,11 @@ const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutP
         }
 
         return (
-            <Flex direction="col" w="full" className="min-h-screen" ref={ref} {...props}>
+            <Flex direction="col" w="full" minH="screen" ref={ref} {...props}>
                 {headerNavs && <Header navs={headerNavs} />}
-                <div className="min-h-[calc(100vh_-_theme(spacing.16))] w-full overflow-y-auto">{sidebar}</div>
+                <Box w="full" className="min-h-[calc(100vh_-_theme(spacing.16))] overflow-y-auto">
+                    {sidebar}
+                </Box>
             </Flex>
         );
     }
