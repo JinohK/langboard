@@ -3,8 +3,10 @@ import InfiniteScroll from "react-infinite-scroller";
 import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
+export interface ICardsPageProps {}
+
 let curPage = 1;
-function CardsPage(): JSX.Element {
+function CardsPage(props: ICardsPageProps): JSX.Element {
     // TODO: Card, Implemnting the table
     const [cards, setCards] = useState<
         {

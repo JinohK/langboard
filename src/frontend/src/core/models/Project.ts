@@ -1,4 +1,5 @@
 import * as User from "@/core/models/User";
+import * as ProjectColumn from "@/core/models/ProjectColumn";
 
 export interface Interface {
     uid: string;
@@ -6,10 +7,20 @@ export interface Interface {
     project_type: string;
 }
 
+export interface IDashboard extends Interface {
+    starred: bool;
+    columns: ProjectColumn.IDashboard[];
+}
+
 export interface IBoard extends Interface {
     members: User.Interface[];
     current_user_role_actions: TRoleActions[];
     invited_users: User.Interface[];
+}
+
+export interface IBoardWithDetails extends IBoard {
+    description: string;
+    ai_description: string;
 }
 
 export type TRoleActions = "read" | "write" | "update" | "delete" | "card_write" | "card_update" | "card_delete";

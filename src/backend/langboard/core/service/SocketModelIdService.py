@@ -8,10 +8,10 @@ _TModel = TypeVar("_TModel")
 
 
 @staticclass
-class ModelIdService:
+class SocketModelIdService:
     @staticmethod
     async def create_model_id(cachable_data: Any) -> str:
-        model_id = ModelIdService.__create_id()
+        model_id = SocketModelIdService.__create_id()
         await Cache.set(model_id, cachable_data, ttl=300)
         return model_id
 

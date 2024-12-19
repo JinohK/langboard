@@ -1,9 +1,7 @@
 from fastapi import File, UploadFile, status
-from pydantic import BaseModel
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse, SocketTopic
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...core.service import ModelIdService
 from ...core.storage import Storage, StorageName
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
@@ -40,15 +38,9 @@ async def create_wiki(
     result = await service.project_wiki.create(user, project_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    _, api_wiki = result.data
 
-    _, api_wiki = result
-
-    await AppRouter.publish(
-        topic=SocketTopic.BoardWiki,
-        topic_id=project_uid,
-        event_response=f"board:wiki:created:{project_uid}",
-        data={"wiki": api_wiki},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={"wiki": api_wiki}, status_code=status.HTTP_200_OK)
 
@@ -70,47 +62,24 @@ async def change_wiki_details(
             continue
         form_dict[key] = value
 
-    wiki = await service.project_wiki.get_by_uid(wiki_uid)
-    if not wiki:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    result = await service.project_wiki.update(user, wiki, form_dict)
+    result = await service.project_wiki.update(user, project_uid, wiki_uid, form_dict)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    updated, revert_key, assigned_users = result.data
-    if not updated:
+
+    if result is True:
         response = {}
-        for key in form_dict:
-            response[key] = form_dict[key]
-            if isinstance(response[key], BaseModel):
-                response[key] = response[key].model_dump()
-        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
-
-    if not revert_key:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    response = {}
-    model = await ModelIdService.get_model(result.model_id)
-    if model:
-        for key in model:
+        for key in form.model_fields:
             if ["title", "content"].count(key) == 0:
                 continue
-            value = model[key]
-            response[key] = value
-            if wiki.is_public:
-                await AppRouter.publish(
-                    topic=SocketTopic.BoardWiki,
-                    topic_id=project_uid,
-                    event_response=f"board:wiki:{key}:changed:{wiki_uid}",
-                    data={key: value},
-                )
-            else:
-                for assigned_user in assigned_users:
-                    await AppRouter.publish(
-                        topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=assigned_user.username,
-                        event_response=f"board:wiki:{key}:changed:{wiki_uid}",
-                        data={key: value},
-                    )
+            value = getattr(form, key)
+            if value is None:
+                continue
+            response[key] = service.project_wiki._convert_to_python(value)
+        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+
+    _, response = result.data
+
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
@@ -128,36 +97,8 @@ async def change_wiki_public(
     result = await service.project_wiki.change_public(user, project_uid, wiki_uid, form.is_public)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    wiki, project, _ = result.data
 
-    model = await ModelIdService.get_model(result.model_id)
-    if model:
-        wiki_public_model = model["public"]
-        wiki_private_model = model["private"]
-        if wiki.is_public:
-            await AppRouter.publish(
-                topic=SocketTopic.BoardWiki,
-                topic_id=project_uid,
-                event_response=f"board:wiki:public:changed:{wiki_uid}",
-                data={"wiki": wiki_public_model},
-            )
-        else:
-            project_members = await service.project.get_assigned_users(project, as_api=False)
-            for project_member in project_members:
-                if project_member.is_admin or project_member.id == user.id:
-                    await AppRouter.publish(
-                        topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=project_member.username,
-                        event_response=f"board:wiki:public:changed:{wiki_uid}",
-                        data={"wiki": wiki_public_model},
-                    )
-                else:
-                    await AppRouter.publish(
-                        topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=project_member.username,
-                        event_response=f"board:wiki:public:changed:{wiki_uid}",
-                        data={"wiki": wiki_private_model},
-                    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -175,42 +116,8 @@ async def update_wiki_assigned_users(
     result = await service.project_wiki.update_assigned_users(user, project_uid, wiki_uid, form.assigned_users)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    _, _, prev_assigned_users, assigned_users = result.data
 
-    model = await ModelIdService.get_model(result.model_id)
-    if model:
-        wiki_public_model = model["public"]
-        wiki_private_model = model["private"]
-
-        all_users: list[User] = []
-        all_user_ids: list[int | None] = []
-        assigned_user_ids = [assigned_user.id for assigned_user in assigned_users]
-        for prev_assigned_user in prev_assigned_users:
-            if prev_assigned_user.id in all_user_ids:
-                continue
-            all_users.append(prev_assigned_user)
-            all_user_ids.append(prev_assigned_user.id)
-        for assigned_user in assigned_users:
-            if assigned_user.id in all_user_ids:
-                continue
-            all_users.append(assigned_user)
-            all_user_ids.append(assigned_user.id)
-
-        for all_user in all_users:
-            if all_user.is_admin or all_user.id in assigned_user_ids:
-                await AppRouter.publish(
-                    topic=SocketTopic.BoardWikiPrivate,
-                    topic_id=assigned_user.username,
-                    event_response=f"board:wiki:assigned_users:changed:{wiki_uid}",
-                    data={"wiki": wiki_public_model},
-                )
-            else:
-                await AppRouter.publish(
-                    topic=SocketTopic.BoardWikiPrivate,
-                    topic_id=assigned_user.username,
-                    event_response=f"board:wiki:assigned_users:changed:{wiki_uid}",
-                    data={"wiki": wiki_private_model},
-                )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -228,12 +135,7 @@ async def change_wiki_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.BoardWiki,
-        topic_id=project_uid,
-        event_response=f"board:wiki:order:changed:{project_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -278,11 +180,6 @@ async def delete_wiki(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.BoardWiki,
-        topic_id=project_uid,
-        event_response=f"board:wiki:deleted:{project_uid}",
-        data={"uid": wiki_uid},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

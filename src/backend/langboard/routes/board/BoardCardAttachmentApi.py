@@ -2,7 +2,7 @@ from typing import cast
 from fastapi import File, UploadFile, status
 from ...core.db import DbSession
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse, SocketTopic
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth, Role
 from ...core.storage import Storage, StorageName
 from ...models import ProjectRole, User
@@ -28,16 +28,11 @@ async def upload_card_attachment(
     if not file_model:
         return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    result = await service.card_attachment.create(user, card_uid, file_model)
+    result = await service.card_attachment.create(user, project_uid, card_uid, file_model)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:attachment:uploaded:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(
         content={**result.data.api_response(), "user": user.api_response()},
@@ -55,16 +50,11 @@ async def change_attachment_order(
     form: ChangeOrderForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.card_attachment.change_order(card_uid, attachment_uid, form.order)
+    result = await service.card_attachment.change_order(project_uid, card_uid, attachment_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:attachment:order:changed:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -92,16 +82,13 @@ async def change_card_attachment_name(
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.card_attachment.change_name(user, card_uid, card_attachment, form.attachment_name)
+    result = await service.card_attachment.change_name(
+        user, project_uid, card_uid, card_attachment, form.attachment_name
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:attachment:name:changed:{card_attachment.uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -128,15 +115,10 @@ async def delete_card_attachment(
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.card_attachment.delete(user, card_uid, card_attachment)
+    result = await service.card_attachment.delete(user, project_uid, card_uid, card_attachment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:attachment:deleted:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

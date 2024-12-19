@@ -1,9 +1,9 @@
 from fastapi import status
 from ...core.db import EditorContentModel
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse, SocketTopic
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import CardCommentReaction, ProjectRole, User
+from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ToggleCardCommentReactionForm, project_role_finder
@@ -19,16 +19,11 @@ async def add_card_comment(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.card_comment.create(user, card_uid, comment)
+    result = await service.card_comment.create(user, project_uid, card_uid, comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:comment:added:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
@@ -49,16 +44,11 @@ async def update_card_comment(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     if card_comment.user_id != user.id and not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    result = await service.card_comment.update(user, card_comment, comment)
+    result = await service.card_comment.update(user, project_uid, card_uid, card_comment, comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:comment:updated:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -78,16 +68,11 @@ async def delete_card_comment(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     if card_comment.user_id != user.id and not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    result = await service.card_comment.delete(user, card_comment)
+    result = await service.card_comment.delete(user, project_uid, card_uid, card_comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:comment:deleted:{card_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -106,18 +91,10 @@ async def react_card_comment(
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    is_reacted = await service.reaction.toggle(user, CardCommentReaction, card_comment.uid, form.reaction)
+    result = await service.card_comment.toggle_reaction(user, project_uid, card_uid, card_comment, form.reaction)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:card:comment:reacted:{card_uid}",
-        data={
-            "user_id": user.id,
-            "comment_uid": comment_uid,
-            "reaction": form.reaction,
-            "is_reacted": is_reacted,
-        },
-    )
+    await AppRouter.publish_with_socket_model(result)
 
-    return JsonResponse(content={"is_reacted": is_reacted}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"is_reacted": result.data}, status_code=status.HTTP_200_OK)

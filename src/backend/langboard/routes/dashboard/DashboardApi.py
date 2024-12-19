@@ -1,11 +1,10 @@
-from fastapi import Depends, status
+from fastapi import status
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
-from ...core.schema import Pagination
 from ...core.security import Auth
 from ...models import User
 from ...services import Service
-from .DashboardProject import DashboardProjectCreateForm, DashboardProjectListResponse
+from .DashboardProject import DashboardProjectCreateForm
 
 
 @AppRouter.api.get("/dashboard/user/projects/starred")
@@ -19,22 +18,18 @@ async def get_starred_projects(
     return JsonResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/dashboard/projects/{list_type}", response_model=DashboardProjectListResponse)
+@AppRouter.api.get("/dashboard/projects")
 @AuthFilter.add
 async def get_projects(
-    list_type: str,
-    query: Pagination = Depends(),
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
-) -> JsonResponse | DashboardProjectListResponse:
-    if list_type not in ["all", "starred", "recent", "unstarred"]:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+) -> JsonResponse:
+    response = {}
+    for list_type in ["all", "starred", "recent", "unstarred"]:
+        projects = await service.project.get_dashboard_list(user, list_type)
+        response[list_type] = projects
 
-    projects = await service.project.get_dashboard_list(user, list_type, query)
-
-    response = DashboardProjectListResponse(projects=projects)
-
-    return response
+    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/dashboard/projects/new")

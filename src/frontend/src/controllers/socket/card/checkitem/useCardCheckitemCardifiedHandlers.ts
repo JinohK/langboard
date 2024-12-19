@@ -6,7 +6,7 @@ import { ProjectCard, User } from "@/core/models";
 export interface ICardCheckitemCardifiedRequest {}
 
 export interface ICardCheckitemCardifiedResponse {
-    new_card: ProjectCard.IBoard;
+    card: ProjectCard.IBoard;
 }
 
 export interface IUseCardCheckitemCardifiedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemCardifiedResponse> {
@@ -25,7 +25,7 @@ const useCardCheckitemCardifiedHandlers = ({ socket, callback, projectUID, check
             params: { uid: checkitemUID },
             callback,
             responseConverter: (response) => {
-                User.transformFromApi(response.new_card.members);
+                User.transformFromApi(response.card.members);
                 return response;
             },
         },

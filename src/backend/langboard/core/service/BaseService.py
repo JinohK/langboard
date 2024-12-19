@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Any, Callable, Sequence, TypeVar, overload
+from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.sql.expression import Select, SelectOfScalar
@@ -142,3 +144,18 @@ class BaseService(ABC):
             await self._db.commit()
 
         return max_order
+
+    async def _get_by_param(
+        self, model_class: type[_TBaseModel], self_or_id_or_uid: _TBaseModel | int | str
+    ) -> _TBaseModel | None:
+        if isinstance(self_or_id_or_uid, model_class):
+            return self_or_id_or_uid
+        if isinstance(self_or_id_or_uid, int):
+            return await self._get_by(model_class, "id", self_or_id_or_uid)
+        return await self._get_by(model_class, "uid", self_or_id_or_uid)
+
+    def _convert_to_python(self, data: Any) -> Any:
+        if isinstance(data, BaseModel):
+            return data.model_dump()
+        elif isinstance(data, datetime):
+            return data.isoformat()

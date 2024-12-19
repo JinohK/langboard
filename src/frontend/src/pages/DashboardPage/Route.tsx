@@ -4,16 +4,9 @@ import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import ModalPage from "@/pages/DashboardPage/ModalPage";
 
-const DashboardPage = lazy(() => import("./index"));
+const DashboardProxy = lazy(() => import("./index"));
 
 function DashboardRoute() {
-    const mainElement = (
-        <AuthGuard>
-            <DashboardPage />
-            <Outlet />
-        </AuthGuard>
-    );
-
     const createModalRoutePath = (type: string, modal: string, tabName?: string) => {
         if (tabName) {
             return ROUTES.DASHBOARD.PROJECTS.TAB(`${tabName}/${modal}`);
@@ -32,24 +25,23 @@ function DashboardRoute() {
     };
 
     return (
-        <Route path={ROUTES.DASHBOARD.ROUTE} key="route-dashboard">
-            <Route
-                index
-                element={
-                    <AuthGuard>
-                        <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />
-                    </AuthGuard>
-                }
-            />
-            <Route path={ROUTES.DASHBOARD.CARDS} element={mainElement}>
-                {createModalRoutes("cards")}
-            </Route>
-            <Route path={ROUTES.DASHBOARD.TRACKING} element={mainElement}>
-                {createModalRoutes("tracking")}
-            </Route>
-            <Route path={ROUTES.DASHBOARD.PROJECTS.TAB(":tabType")} element={mainElement}>
-                {createModalRoutes("projects", ":tabType")}
-            </Route>
+        <Route
+            path={ROUTES.DASHBOARD.ROUTE}
+            key="route-dashboard"
+            element={
+                <AuthGuard>
+                    <DashboardProxy />
+                    <Outlet />
+                </AuthGuard>
+            }
+        >
+            <Route index element={<Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />} />
+            <Route path={ROUTES.DASHBOARD.CARDS} element={<></>} />
+            <Route path={ROUTES.DASHBOARD.TRACKING} element={<></>} />
+            <Route path={ROUTES.DASHBOARD.PROJECTS.TAB(":tabType")} element={<></>} />
+            {createModalRoutes("cards")}
+            {createModalRoutes("tracking")}
+            {createModalRoutes("projects", ":tabType")}
         </Route>
     );
 }

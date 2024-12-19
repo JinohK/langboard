@@ -97,11 +97,22 @@ export const API_ROUTES = {
 } as const;
 
 export const SOCKET_SERVER_EVENTS = {
+    DASHBOARD: {
+        COLUMN: {
+            CREATED: "dashboard:column:created",
+            NAME_CHANGED: "dashboard:column:name:changed",
+            ORDER_CHANGED: "dashboard:column:order:changed",
+        },
+        CARD: {
+            CREATED: "dashboard:card:created",
+            ORDER_CHANGED: "dashboard:card:order:changed",
+        },
+    },
     BOARD: {
         IS_CHAT_AVAILABLE: "board:chat:available",
         CHAT_SENT: "board:chat:sent",
         CHAT_STREAM: "board:chat:stream",
-        ASSIGNED_USERS_UPDATED: "board:assigned_users:updated:{uid}",
+        ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         COLUMN: {
             CREATED: "board:column:created:{uid}",
             NAME_CHANGED: "board:column:name:changed:{uid}",
@@ -113,7 +124,7 @@ export const SOCKET_SERVER_EVENTS = {
             TITLE_CHANGED: "board:card:title:changed:{uid}",
             DEADLINE_CHANGED: "board:card:deadline:changed:{uid}",
             DESCRIPTION_CHANGED: "board:card:description:changed:{uid}",
-            ASSIGNED_USERS_UPDATED: "board:card:assigned_users:updated:{uid}",
+            ASSIGNED_USERS_UPDATED: "board:card:assigned-users:updated:{uid}",
             EDITOR_USERS: "board:card:editor:users:{uid}",
             EDITOR_START_EDITING: "board:card:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:card:editor:stop:{uid}",
@@ -133,7 +144,7 @@ export const SOCKET_SERVER_EVENTS = {
                 CREATED: "board:card:checkitem:created:{uid}",
                 TITLE_CHANGED: "board:card:checkitem:title:changed:{uid}",
                 ORDER_CHANGED: "board:card:checkitem:order:changed:{uid}",
-                ASSIGNED_USERS_UPDATED: "board:card:checkitem:assigned_users:updated:{uid}",
+                ASSIGNED_USERS_UPDATED: "board:card:checkitem:assigned-users:updated:{uid}",
                 CARDIFIED: "board:card:checkitem:cardified:{uid}",
                 DELETED: "board:card:checkitem:deleted:{uid}",
                 TIMER_STARTED: "board:card:checkitem:timer:started:{uid}",
@@ -152,7 +163,7 @@ export const SOCKET_SERVER_EVENTS = {
             TITLE_CHANGED: "board:wiki:title:changed:{uid}",
             CONTENT_CHANGED: "board:wiki:content:changed:{uid}",
             PUBLIC_CHANGED: "board:wiki:public:changed:{uid}",
-            ASSIGNED_USERS_UPDATED: "board:wiki:assigned_users:updated:{uid}",
+            ASSIGNED_USERS_UPDATED: "board:wiki:assigned-users:updated:{uid}",
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",
             DELETED: "board:wiki:deleted:{uid}",
         },

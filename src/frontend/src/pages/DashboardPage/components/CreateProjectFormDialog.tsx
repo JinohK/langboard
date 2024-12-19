@@ -53,7 +53,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     </Dialog.Header>
                     <Form.Field name="title">
                         <Floating.LabelInput
-                            label={t("project.Project Title")}
+                            label={t("project.Project title")}
                             isFormControl
                             autoFocus
                             autoComplete="off"
@@ -64,7 +64,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                     </Form.Field>
                     <Form.Field name="description">
                         <Floating.LabelTextarea
-                            label={t("project.Project Description")}
+                            label={t("project.Project description")}
                             isFormControl
                             autoComplete="off"
                             className="mt-4"
@@ -82,7 +82,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                                 label: t(project_type === "Other" ? "common.Other" : `project.types.${project_type}`),
                             }))}
                             emptyMessage={projectTypeRef.current ?? ""}
-                            placeholder={t("project.Project Type")}
+                            placeholder={t("project.Project type")}
                             className="mt-4"
                         />
                         {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}

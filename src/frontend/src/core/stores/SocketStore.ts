@@ -78,6 +78,7 @@ export interface ISocketMap {
     defaultEvents: TEventMap;
     sendingQueue: string[];
     sendingQueueTimeout?: NodeJS.Timeout;
+    subscribedCallbackQueue: Partial<Record<ESocketTopic, Record<string, (() => void)[]>>>;
 }
 
 export interface ISocketStore {
@@ -88,7 +89,7 @@ export interface ISocketStore {
     removeEvent: (props: TSocketRemoveEventProps) => void;
     send: (json: string) => bool;
     close: () => void;
-    subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => void;
+    subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => void;
     unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => void;
 }
 
@@ -97,6 +98,7 @@ const useSocketStore = create<ISocketStore>(() => {
         subscriptions: {},
         defaultEvents: {},
         sendingQueue: [],
+        subscribedCallbackQueue: {},
     };
     let socket: WebSocket | null = null;
 
@@ -170,6 +172,11 @@ const useSocketStore = create<ISocketStore>(() => {
                 if (!socketMap.subscriptions[topic][response.topic_id]) {
                     socketMap.subscriptions[topic][response.topic_id] = {};
                 }
+
+                if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][response.topic_id]) {
+                    socketMap.subscribedCallbackQueue[topic][response.topic_id].forEach((cb) => cb());
+                    delete socketMap.subscribedCallbackQueue[topic][response.topic_id];
+                }
                 return;
             }
 
@@ -184,6 +191,10 @@ const useSocketStore = create<ISocketStore>(() => {
                 }
 
                 delete socketMap.subscriptions[topic][response.topic_id];
+
+                if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][response.topic_id]) {
+                    delete socketMap.subscribedCallbackQueue[topic][response.topic_id];
+                }
                 return;
             }
 
@@ -323,10 +334,26 @@ const useSocketStore = create<ISocketStore>(() => {
         }
     };
 
-    const subscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => {
+    const subscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => {
         if (!socket) {
             return;
         }
+
+        if (callback) {
+            if (!socketMap.subscribedCallbackQueue[topic]) {
+                socketMap.subscribedCallbackQueue[topic] = {};
+            }
+
+            if (!socketMap.subscribedCallbackQueue[topic][topicId]) {
+                socketMap.subscribedCallbackQueue[topic][topicId] = [];
+            }
+
+            if (!socketMap.subscribedCallbackQueue[topic][topicId].includes(callback)) {
+                socketMap.subscribedCallbackQueue[topic][topicId].push(callback);
+            }
+        }
+
+        console.log(socketMap);
 
         send(
             JSON.stringify({
@@ -338,11 +365,7 @@ const useSocketStore = create<ISocketStore>(() => {
     };
 
     const unsubscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => {
-        if (!socket) {
-            return;
-        }
-
-        if (!socketMap.subscriptions[topic] || !socketMap.subscriptions[topic][topicId]) {
+        if (!socket || !socketMap.subscriptions[topic] || !socketMap.subscriptions[topic][topicId]) {
             return;
         }
 

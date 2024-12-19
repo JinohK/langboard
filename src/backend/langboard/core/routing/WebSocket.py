@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Self, overload
 from socketify import OpCode, SendStatus
 from socketify import WebSocket as SocketifyWebSocket
-from ..service import ModelIdService
+from ..service import SocketModelIdService
 from .SocketResponse import SocketResponse
 from .SocketTopic import SocketTopic
 
@@ -151,7 +151,7 @@ class WebSocket(SocketifyWebSocket):
 
         if "model_id" in (response_model.data or {}):
             model_id = response_model.data.pop("model_id")
-            data = await ModelIdService.get_model(model_id)
+            data = await SocketModelIdService.get_model(model_id)
             response_model.data.update(data)
 
         if isinstance(topic, Enum):

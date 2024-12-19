@@ -1,9 +1,14 @@
-from typing import Any, cast
+from typing import Any, cast, overload
 from ...core.ai import BotRunner, BotType
 from ...core.db import EditorContentModel
-from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
-from ...models import Card, CardComment, CardCommentReaction, User
+from ...core.routing import SocketTopic
+from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...models import Card, CardComment, CardCommentReaction, Project, User
 from .ReactionService import ReactionService
+from .Types import TCardParam, TCommentParam, TProjectParam
+
+
+_SOCKET_PREFIX = "board:card:comment"
 
 
 class CardCommentService(BaseService):
@@ -45,12 +50,14 @@ class CardCommentService(BaseService):
     async def create(
         self,
         user_or_bot: User | BotType,
-        card_uid: str,
+        project: TProjectParam,
+        card: TCardParam,
         content: EditorContentModel | dict[str, Any],
-    ) -> ModelIdBaseResult[tuple[CardComment, dict[str, Any]]] | None:
-        card = await self._get_by(Card, "uid", card_uid)
-        if not card:
+    ) -> SocketModelIdBaseResult[tuple[CardComment, dict[str, Any]]] | None:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
             return None
+        project, card, _ = params
 
         if isinstance(content, dict):
             content = EditorContentModel(**content)
@@ -77,21 +84,29 @@ class CardCommentService(BaseService):
         )
         api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.uid)
 
-        model_id = await ModelIdService.create_model_id({"comment": api_comment, "card_uid": card_uid})
+        model_id = await SocketModelIdService.create_model_id({"comment": api_comment, "card_uid": card.uid})
 
-        return ModelIdBaseResult(model_id, (comment, api_comment))
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.uid,
+            event=f"{_SOCKET_PREFIX}:added:{card.uid}",
+            data_keys=["comment", "card_uid"],
+        )
+
+        return SocketModelIdBaseResult(model_id, (comment, api_comment), publish_model)
 
     async def update(
-        self, user_or_bot: User | BotType, comment: CardComment | int, content: EditorContentModel | dict[str, Any]
-    ) -> ModelIdBaseResult[CardComment] | None:
-        if isinstance(comment, int):
-            comment = cast(CardComment, await self._get_by(CardComment, "id", comment))
-            if not comment:
-                return None
-
-        card = await self._get_by(Card, "uid", comment.card_uid)
-        if not card:
+        self,
+        user_or_bot: User | BotType,
+        project: TProjectParam,
+        card: TCardParam,
+        comment: TCommentParam,
+        content: EditorContentModel | dict[str, Any],
+    ) -> SocketModelIdBaseResult[CardComment] | None:
+        params = await self.__get_records_by_params(project, card, comment)
+        if not params:
             return None
+        project, card, comment = params
 
         if isinstance(content, dict):
             content = EditorContentModel(**content)
@@ -101,7 +116,7 @@ class CardCommentService(BaseService):
         await self._db.update(comment)
         await self._db.commit()
 
-        model_id = await ModelIdService.create_model_id(
+        model_id = await SocketModelIdService.create_model_id(
             {
                 "content": content.model_dump(),
                 "card_uid": comment.card_uid,
@@ -109,27 +124,111 @@ class CardCommentService(BaseService):
                 "commented_at": comment.updated_at,
             }
         )
-        return ModelIdBaseResult(model_id, comment)
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.uid,
+            event=f"{_SOCKET_PREFIX}:updated:{card.uid}",
+            data_keys=["content", "card_uid", "uid", "commented_at"],
+        )
+
+        return SocketModelIdBaseResult(model_id, comment, publish_model)
 
     async def delete(
-        self, user_or_bot: User | BotType, comment: CardComment | int
-    ) -> ModelIdBaseResult[CardComment] | None:
-        if isinstance(comment, int):
-            comment = cast(CardComment, await self._get_by(CardComment, "id", comment))
-            if not comment:
-                return None
-
-        card = await self._get_by(Card, "uid", comment.card_uid)
-        if not card:
+        self,
+        user_or_bot: User | BotType,
+        project: TProjectParam,
+        card: TCardParam,
+        comment: TCommentParam,
+    ) -> SocketModelIdBaseResult[CardComment] | None:
+        params = await self.__get_records_by_params(project, card, comment)
+        if not params:
             return None
+        project, card, comment = params
 
         await self._db.delete(comment)
         await self._db.commit()
 
-        model_id = await ModelIdService.create_model_id(
+        model_id = await SocketModelIdService.create_model_id(
             {
-                "card_uid": comment.card_uid,
+                "card_uid": card.uid,
                 "comment_uid": comment.uid,
             }
         )
-        return ModelIdBaseResult(model_id, comment)
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.uid,
+            event=f"{_SOCKET_PREFIX}:deleted:{card.uid}",
+            data_keys=["card_uid", "comment_uid"],
+        )
+
+        return SocketModelIdBaseResult(model_id, comment, publish_model)
+
+    async def toggle_reaction(
+        self,
+        user_or_bot: User | BotType,
+        project: TProjectParam,
+        card: TCardParam,
+        comment: TCommentParam,
+        reaction: str,
+    ) -> SocketModelIdBaseResult[bool] | None:
+        params = await self.__get_records_by_params(project, card, comment)
+        if not params:
+            return None
+        project, card, comment = params
+
+        reaction_service = self._get_service(ReactionService)
+        is_reacted = await reaction_service.toggle(user_or_bot, CardCommentReaction, comment.uid, reaction)
+
+        model = {
+            "comment_uid": comment.uid,
+            "reaction": reaction,
+            "is_reacted": is_reacted,
+        }
+
+        if isinstance(user_or_bot, User):
+            model["user_id"] = user_or_bot.id
+        else:
+            model["bot_type"] = user_or_bot.name
+
+        model_id = await SocketModelIdService.create_model_id(model)
+
+        data_keys = ["comment_uid", "reaction", "is_reacted"]
+        if isinstance(user_or_bot, User):
+            data_keys.append("user_id")
+        else:
+            data_keys.append("bot_type")
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.uid,
+            event=f"{_SOCKET_PREFIX}:reacted:{card.uid}",
+            data_keys=data_keys,
+        )
+
+        return SocketModelIdBaseResult(model_id, is_reacted, publish_model)
+
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam
+    ) -> tuple[Project, Card, None] | None: ...
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, comment: TCommentParam
+    ) -> tuple[Project, Card, CardComment] | None: ...
+    async def __get_records_by_params(  # type: ignore
+        self, project: TProjectParam, card: TCardParam, comment: TCommentParam | None = None
+    ):
+        project = cast(Project, await self._get_by_param(Project, project))
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card or not project or card.project_id != project.id:
+            return None
+
+        comment = None
+        if comment:
+            comment = cast(CardComment, await self._get_by_param(CardComment, comment))
+            if not comment or comment.card_uid != card.uid:
+                return None
+
+        return project, card, comment

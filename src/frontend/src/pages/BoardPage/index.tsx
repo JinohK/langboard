@@ -48,7 +48,7 @@ const BoardProxy = memo((): JSX.Element => {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
-    const { data, error } = useIsProjectAvailable({ uid: projectUID });
+    const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
     const { mutate: canUseProjectSettingsMutate } = useCanUseProjectSettings({ uid: projectUID });
 
     useEffect(() => {
@@ -71,7 +71,7 @@ const BoardProxy = memo((): JSX.Element => {
     }, [error]);
 
     useEffect(() => {
-        if (!data) {
+        if (!data || isFetching) {
             return;
         }
 
@@ -127,7 +127,7 @@ const BoardProxy = memo((): JSX.Element => {
             offBoardChatAvailable();
             offSocketError();
         };
-    }, [data]);
+    }, [isFetching]);
 
     const headerNavs: IHeaderNavItem[] = [
         {

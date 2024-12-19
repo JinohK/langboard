@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Progress } from "@/components/base";
 
 export interface IPageLoaderContext {
@@ -24,6 +24,18 @@ const PageLoader = ({ setIsLoadingRef }: { setIsLoadingRef: IPageLoaderContext["
 
 export const PageLoaderdProvider = ({ children }: IPageLoaderProps): React.ReactNode => {
     const setIsLoadingRef = useRef<(isLoading: bool) => void>(() => {});
+
+    useEffect(() => {
+        const onLocationChange = () => {
+            setIsLoadingRef.current(true);
+        };
+
+        window.addEventListener("popstate", onLocationChange);
+
+        return () => {
+            window.removeEventListener("popstate", onLocationChange);
+        };
+    }, []);
 
     return (
         <PageLoaderContext.Provider

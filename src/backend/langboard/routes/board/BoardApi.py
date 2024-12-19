@@ -1,8 +1,7 @@
 from fastapi import Depends, status
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse, SocketTopic
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...core.service import ModelIdService
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
@@ -103,28 +102,7 @@ async def update_project_member(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    model = await ModelIdService.get_model(result.model_id)
-    if model:
-        await AppRouter.publish(
-            topic=SocketTopic.Board,
-            topic_id=project_uid,
-            event_response=f"board:assigned_users:updated:{project_uid}",
-            data={"assigned_users": model["project_members"], "invited_users": model["project_invited_users"]},
-        )
-        for checkitem_uid in model["checkitem_members"]:
-            await AppRouter.publish(
-                topic=SocketTopic.Board,
-                topic_id=project_uid,
-                event_response=f"board:card:checkitem:assigned_users:updated:{project_uid}",
-                data={"assigned_users": model["checkitem_members"][checkitem_uid]},
-            )
-        for card_uid in model["card_members"]:
-            await AppRouter.publish(
-                topic=SocketTopic.Board,
-                topic_id=project_uid,
-                event_response=f"board:card:assigned_users:updated:{project_uid}",
-                data={"assigned_users": model["card_members"][card_uid]},
-            )
+    await AppRouter.publish_with_socket_model(result)
 
     # TODO: Email, Remove urls after implementing email sending
     return JsonResponse(content={"urls": result.data}, status_code=status.HTTP_200_OK)
@@ -141,11 +119,6 @@ async def accept_project_invitation(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
-    project, _, _ = result.data
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project.uid,
-        event_response=f"board:assigned_users:updated:{project.uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
+
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

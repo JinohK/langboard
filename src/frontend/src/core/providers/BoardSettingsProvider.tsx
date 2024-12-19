@@ -7,13 +7,13 @@ import { NavigateFunction } from "react-router-dom";
 export interface IBoardSettingsContext {
     navigate: NavigateFunction;
     socket: ISocketContext;
-    project: Project.IBoard;
+    project: Project.IBoardWithDetails;
     currentUser: IAuthUser;
 }
 
 interface IBoardSettingsProps {
     navigate: NavigateFunction;
-    project: Project.IBoard;
+    project: Project.IBoardWithDetails;
     currentUser: IAuthUser;
     children: React.ReactNode;
 }
@@ -21,7 +21,7 @@ interface IBoardSettingsProps {
 const initialContext = {
     navigate: () => {},
     socket: {} as ISocketContext,
-    project: {} as Project.IBoard,
+    project: {} as Project.IBoardWithDetails,
     currentUser: {} as IAuthUser,
 };
 

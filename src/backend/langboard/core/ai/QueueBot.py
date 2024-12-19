@@ -8,7 +8,7 @@ from ...Constants import QUEUE_BOT_DIR
 from ..db import DbSession
 from ..logger import Logger
 from ..routing import AppRouter
-from ..service import ModelIdBaseResult, ServiceFactory
+from ..service import ServiceFactory, SocketModelIdBaseResult
 from ..utils.DateTime import now
 from ..utils.String import create_short_unique_id
 from .BotRunner import BotRunner
@@ -152,16 +152,11 @@ class QueueBot:
             return
 
     async def __run_socket(self, queue_bot_model: QueueBotModel, result: Any) -> None:
-        if not isinstance(result, ModelIdBaseResult) or not queue_bot_model.socket_model:
+        if not isinstance(result, SocketModelIdBaseResult) or not queue_bot_model.socket_model:
             return
 
         try:
-            await AppRouter.publish(
-                topic=queue_bot_model.socket_model.topic,
-                topic_id=queue_bot_model.socket_model.topic_id,
-                event_response=queue_bot_model.socket_model.event,
-                data={"model_id": result.model_id},
-            )
+            await AppRouter.publish_with_socket_model(result)
         except Exception:
             pass
 

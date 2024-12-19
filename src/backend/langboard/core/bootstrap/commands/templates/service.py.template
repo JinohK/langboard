@@ -1,4 +1,4 @@
-from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
+from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 
 
 class {class_name}Service(BaseService):

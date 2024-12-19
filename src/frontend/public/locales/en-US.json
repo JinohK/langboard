@@ -406,9 +406,9 @@
     "Card added successfully.": "Card added successfully."
   },
   "project": {
-    "Project Title": "Project Title",
-    "Project Description": "Project Description",
-    "Project Type": "Project Type",
+    "Project title": "Project title",
+    "Project description": "Project description",
+    "Project type": "Project type",
     "Chat with AI": "Chat with AI",
     "Clear chat": "Clear chat",
     "Ask anything to {app} AI!": "Ask anything to {{app}} AI!",
@@ -425,6 +425,10 @@
       "missing": {
         "title": "Enter a title."
       }
+    },
+    "settings": {
+      "Basic info": "Basic info",
+      "Label": "Label"
     }
   },
   "card": {

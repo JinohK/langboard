@@ -3,8 +3,8 @@ from typing import Any, Literal, cast, overload
 from pydantic import BaseModel
 from ...core.ai import BotType
 from ...core.ai.QueueBot import QueueBot, QueueBotModel
-from ...core.schema import Pagination
-from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
+from ...core.routing import SocketTopic
+from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -23,6 +23,7 @@ from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
+from .Types import TProjectParam
 
 
 class ProjectService(BaseService):
@@ -65,13 +66,17 @@ class ProjectService(BaseService):
         return roles[0].actions if roles else []
 
     @overload
-    async def get_assigned_users(self, project: Project | int, as_api: Literal[False]) -> list[User]: ...
+    async def get_assigned_users(
+        self, project: Project | int, as_api: Literal[False]
+    ) -> list[tuple[User, ProjectAssignedUser]]: ...
     @overload
     async def get_assigned_users(self, project: Project | int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
-    async def get_assigned_users(self, project: Project | int, as_api: bool) -> list[User] | list[dict[str, Any]]:
+    async def get_assigned_users(
+        self, project: Project | int, as_api: bool
+    ) -> list[tuple[User, ProjectAssignedUser]] | list[dict[str, Any]]:
         result = await self._db.exec(
             self._db.query("select")
-            .table(User)
+            .tables(User, ProjectAssignedUser)
             .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
             .where(ProjectAssignedUser.project_id == (project.id if isinstance(project, Project) else project))
         )
@@ -79,11 +84,11 @@ class ProjectService(BaseService):
         if not as_api:
             return list(raw_users)
 
-        users = [user.api_response() for user in raw_users]
+        users = [user.api_response() for user, _ in raw_users]
         return users
 
     async def get_dashboard_list(
-        self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str, pagination: Pagination
+        self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str
     ) -> list[dict[str, Any]]:
         if list_type not in ["all", "starred", "recent", "unstarred"]:
             return []
@@ -108,7 +113,6 @@ class ProjectService(BaseService):
             sql_query = sql_query.where(ProjectAssignedUser.column("starred") == False)  # noqa
 
         sql_query = sql_query.order_by(*descs)
-        sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
         sql_query = sql_query.group_by(*group_bys)
 
         result = await self._db.exec(sql_query)
@@ -123,7 +127,7 @@ class ProjectService(BaseService):
             project_dict["starred"] = assigned_user.starred
             project_dict["columns"] = [
                 {
-                    "name": column["name"],
+                    **column,
                     "count": await column_service.count_cards(cast(int, project.id), column["uid"]),
                 }
                 for column in columns
@@ -137,8 +141,7 @@ class ProjectService(BaseService):
             self._db.query("select")
             .columns(ProjectAssignedUser.starred, Project.id)
             .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.project_id)
-            .where(Project.column("uid") == uid)
-            .where(ProjectAssignedUser.column("user_id") == user.id)
+            .where((Project.column("uid") == uid) & (ProjectAssignedUser.column("user_id") == user.id))
             .limit(1)
         )
         starred, project_id = result.first() or (None, None)
@@ -251,10 +254,10 @@ class ProjectService(BaseService):
         return revert_key
 
     async def update_assign_users(
-        self, user: User, project: Project | int, lang: str, url: str, token_query_name: str, emails: list[str]
-    ) -> ModelIdBaseResult[dict[str, str]] | None:
-        project = cast(Project, await self.get_by_id(project)) if isinstance(project, int) else project
-        if not project or not project.id:
+        self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
+    ) -> SocketModelIdBaseResult[dict[str, str]] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
             return None
 
         result = await self._db.exec(
@@ -333,39 +336,48 @@ class ProjectService(BaseService):
             user, project, lang, url, token_query_name, inviting_emails
         )
 
-        updated_checkitems: dict[str, list[dict[str, Any]]] = {}
+        model_id = await SocketModelIdService.create_model_id(
+            {
+                "project_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
+                "project_invited_users": invited_users,
+            }
+        )
+
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"board:assigned-users:updated:{project.uid}",
+                data_keys=["assigned_users", "invited_users"],
+            )
+        ]
+
+        checkitem_service = self._get_service_by_name("checkitem")
         for checkitem_id in updated_checkitem_ids:
             checkitem = await self._get_by(Checkitem, "id", checkitem_id)
             if not checkitem:
                 continue
-            result = await self._db.exec(
-                self._db.query("select")
-                .table(User)
-                .join(CheckitemAssignedUser, User.column("id") == CheckitemAssignedUser.column("user_id"))
-                .where(CheckitemAssignedUser.column("checkitem_id") == checkitem_id)
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Board,
+                    topic_id=project.uid,
+                    event=f"board:card:checkitem:assigned-users:updated:{project.uid}",
+                    extra_data={"assigned_users": await checkitem_service.get_assigned_users(checkitem, as_api=True)},
+                )
             )
-            updated_checkitems[checkitem.uid] = [checkitem_user.api_response() for checkitem_user in result.all()]
 
-        updated_cards: dict[str, list[dict[str, Any]]] = {}
+        card_service = self._get_service_by_name("card")
         for card_id in updated_card_ids:
             card = await self._get_by(Card, "id", card_id)
             if not card:
                 continue
-            result = await self._db.exec(
-                self._db.query("select")
-                .table(User)
-                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
-                .where(CardAssignedUser.column("card_id") == card_id)
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Board,
+                    topic_id=project.uid,
+                    event=f"board:card:assigned-users:updated:{project.uid}",
+                    extra_data={"assigned_users": await card_service.get_assigned_users(card, as_api=True)},
+                )
             )
-            updated_cards[card.uid] = [card_user.api_response() for card_user in result.all()]
 
-        model_id = await ModelIdService.create_model_id(
-            {
-                "project_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
-                "project_invited_users": invited_users,
-                "checkitem_members": updated_checkitems,
-                "card_members": updated_cards,
-            }
-        )
-
-        return ModelIdBaseResult(model_id, urls)
+        return SocketModelIdBaseResult(model_id, urls, publish_models)

@@ -1,4 +1,4 @@
-import { memo, useReducer } from "react";
+import { memo, useReducer, useRef } from "react";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -8,24 +8,29 @@ import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import CardsPage from "@/pages/DashboardPage/CardsPage";
 import TrackingPage from "@/pages/DashboardPage/TrackingPage";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { Navigate } from "react-router-dom";
+import { DashboardProvider } from "@/core/providers/DashboardProvider";
+import { useAuth } from "@/core/providers/AuthProvider";
 
-const DashboardPage = memo((): JSX.Element => {
-    const navigate = usePageNavigate();
+const DashboardProxy = memo((): JSX.Element => {
+    const navigate = useRef(usePageNavigate());
     const [pageType, tabName] = location.pathname.split("/").slice(2);
     const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
-    const [scrollAreaMutable, updateScrollArea] = useReducer((x) => x + 1, 0);
+    const scrollAreaUpdater = useReducer((x) => x + 1, 0);
+    const [scrollAreaMutable] = scrollAreaUpdater;
+    const { aboutMe } = useAuth();
 
     const headerNavs: Record<string, IHeaderNavItem> = {
         projects: {
             name: "dashboard.Projects",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
+                navigate.current(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
         cards: {
             name: "dashboard.Cards",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.CARDS);
+                navigate.current(ROUTES.DASHBOARD.CARDS);
             },
         },
         starred: {
@@ -34,14 +39,14 @@ const DashboardPage = memo((): JSX.Element => {
                 allStarredProjects?.projects.map((project) => ({
                     name: project.title,
                     onClick: () => {
-                        navigate(ROUTES.BOARD.MAIN(project.uid));
+                        navigate.current(ROUTES.BOARD.MAIN(project.uid));
                     },
                 })) ?? [],
         },
         tacking: {
             name: "dashboard.Tracking",
             onClick: () => {
-                navigate(ROUTES.DASHBOARD.TRACKING);
+                navigate.current(ROUTES.DASHBOARD.TRACKING);
             },
         },
     };
@@ -51,14 +56,14 @@ const DashboardPage = memo((): JSX.Element => {
             icon: "plus",
             name: "dashboard.Create New Project",
             onClick: () => {
-                navigate(`${location.pathname}/new-project`);
+                navigate.current(`${location.pathname}/new-project`);
             },
         },
         {
             icon: "history",
             name: "dashboard.My Activity",
             onClick: () => {
-                navigate(`${location.pathname}/my-activity`);
+                navigate.current(`${location.pathname}/my-activity`);
             },
         },
     ];
@@ -76,27 +81,27 @@ const DashboardPage = memo((): JSX.Element => {
         case "projects":
             switch (tabName) {
                 case "all":
-                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="all" updateScrollArea={updateScrollArea} />;
-                    break;
                 case "starred":
-                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="starred" updateScrollArea={updateScrollArea} />;
-                    break;
                 case "recent":
-                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="recent" updateScrollArea={updateScrollArea} />;
-                    break;
                 case "unstarred":
-                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab="unstarred" updateScrollArea={updateScrollArea} />;
+                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab={tabName} scrollAreaUpdater={scrollAreaUpdater} />;
                     break;
+                default:
+                    return <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />;
             }
             headerNavs.projects.active = true;
             break;
+        default:
+            return <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />;
     }
 
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs} scrollAreaMutable={scrollAreaMutable}>
-            {pageContent}
+            <DashboardProvider navigate={navigate.current} currentUser={aboutMe()!}>
+                {pageContent}
+            </DashboardProvider>
         </DashboardStyledLayout>
     );
 });
 
-export default DashboardPage;
+export default DashboardProxy;

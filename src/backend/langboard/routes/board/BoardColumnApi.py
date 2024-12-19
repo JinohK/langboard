@@ -1,6 +1,6 @@
 from fastapi import status
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse, SocketTopic
+from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
@@ -21,12 +21,7 @@ async def create_column(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:column:created:{project_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -45,12 +40,7 @@ async def update_column_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:column:name:changed:{project_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={"name": form.name}, status_code=status.HTTP_200_OK)
 
@@ -69,11 +59,6 @@ async def update_column_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish(
-        topic=SocketTopic.Board,
-        topic_id=project_uid,
-        event_response=f"board:column:order:changed:{project_uid}",
-        data={"model_id": result.model_id},
-    )
+    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

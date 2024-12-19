@@ -1,98 +1,87 @@
-import { InfiniteData } from "@tanstack/react-query";
-import { memo, useEffect, useReducer } from "react";
+import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Tabs } from "@/components/base";
-import useGetProjects, { IDashboardProject, IGetProjectsForm, IGetProjectsResponse } from "@/controllers/api/dashboard/useGetProjects";
+import { Toast } from "@/components/base";
+import useGetProjects, { IGetProjectsResponse } from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
-import { makeReactKey } from "@/core/utils/StringUtils";
-import ProjectCardList from "@/pages/DashboardPage/components/ProjectCardList";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { useDashboard } from "@/core/providers/DashboardProvider";
+import { useSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { PROJECT_TABS } from "@/pages/DashboardPage/constants";
+import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
 
 interface IProjectPageProps {
-    currentTab: IGetProjectsForm["listType"];
+    currentTab: keyof IGetProjectsResponse;
     refetchAllStarred: () => Promise<unknown>;
-    updateScrollArea: React.DispatchWithoutAction;
+    scrollAreaUpdater: [number, React.DispatchWithoutAction];
 }
 
-const MAX_PROJECTS_PER_PAGE = 16;
-const TABS: IGetProjectsForm["listType"][] = ["all", "starred", "recent", "unstarred"];
-const cachedProjectQueries: Record<
-    IGetProjectsForm["listType"],
-    { params: IGetProjectsForm; data: InfiniteData<IGetProjectsResponse, IGetProjectsForm> }
-> = {
-    all: { params: { listType: "all", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
-    starred: { params: { listType: "starred", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
-    recent: { params: { listType: "recent", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
-    unstarred: { params: { listType: "unstarred", page: 1, limit: MAX_PROJECTS_PER_PAGE }, data: { pages: [], pageParams: [] } },
-};
-
-const ProjectPage = memo(({ currentTab, refetchAllStarred, updateScrollArea }: IProjectPageProps): JSX.Element => {
-    const { setIsLoadingRef } = usePageLoader();
+const ProjectPage = memo(({ currentTab, refetchAllStarred, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
+    const { navigate } = useDashboard();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
-    const currentProjectQuery = cachedProjectQueries[currentTab];
-    const {
-        data: rawProjects,
-        fetchNextPage,
-        hasNextPage,
-        refetch,
-    } = useGetProjects(currentProjectQuery.params, {
-        getNextPageParam: (lastPage, _, lastPageParam) => {
-            if (lastPage.projects.length === lastPageParam.limit) {
-                return {
-                    ...lastPageParam,
-                    page: lastPageParam.page + 1,
-                };
-            } else {
-                return undefined;
-            }
-        },
-    });
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const projects: IDashboardProject[] = currentProjectQuery.data.pages.flatMap((page) => page.projects);
+    const socket = useSocket();
+    const { data, isFetching, error, refetch } = useGetProjects();
 
     useEffect(() => {
-        if (rawProjects) {
-            currentProjectQuery.data = rawProjects;
-            projects.splice(0);
-            projects.push(...currentProjectQuery.data.pages.flatMap((page) => page.projects));
-            setIsLoadingRef.current(false);
-            forceUpdate();
+        if (!error) {
+            return;
         }
-        updateScrollArea();
-    }, [rawProjects]);
+
+        const { handle } = setupApiErrorHandler({
+            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                Toast.Add.error(t("errors.Forbidden"));
+                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            },
+            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                Toast.Add.error(t("dashboard.errors.Project not found"));
+                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            },
+        });
+
+        handle(error);
+    }, [error]);
+
+    useEffect(() => {
+        if (!data || isFetching) {
+            return;
+        }
+
+        const subscribedProjects: Record<string, bool> = {};
+        for (let i = 0; i < PROJECT_TABS.length; ++i) {
+            const tab = PROJECT_TABS[i];
+            for (let j = 0; j < data[tab].length; ++j) {
+                const project = data[tab][j];
+                if (subscribedProjects[project.uid]) {
+                    continue;
+                }
+
+                subscribedProjects[project.uid] = true;
+                socket.subscribe(ESocketTopic.Dashboard, project.uid);
+            }
+        }
+
+        return () => {
+            Object.keys(subscribedProjects).forEach((uid) => {
+                socket.unsubscribe(ESocketTopic.Dashboard, uid);
+            });
+        };
+    }, [isFetching]);
 
     return (
-        <Tabs.Root value={currentTab}>
-            <Tabs.List className="grid w-full grid-cols-4">
-                {TABS.map((tab) => (
-                    <Tabs.Trigger
-                        value={tab}
-                        key={makeReactKey(`dashboard.tabs.${tab}`)}
-                        onClick={() => {
-                            navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as "ALL" | "STARRED" | "RECENT" | "UNSTARRED"]);
-                        }}
-                    >
-                        {t(`dashboard.tabs.${tab}`)}
-                    </Tabs.Trigger>
-                ))}
-            </Tabs.List>
-            <Tabs.Content value={currentTab}>
-                {projects.length === 0 ? (
-                    <h2 className="pb-3 text-center text-lg text-accent-foreground">{t("dashboard.No projects found")}</h2>
-                ) : (
-                    <ProjectCardList
-                        curPage={currentProjectQuery.data.pageParams.length}
-                        projects={projects}
-                        hasMore={hasNextPage}
-                        refetchAllStarred={refetchAllStarred}
-                        refetchProjects={refetch}
-                        fetchNextPage={fetchNextPage}
-                    />
-                )}
-            </Tabs.Content>
-        </Tabs.Root>
+        <>
+            {!data ? (
+                <SkeletonProjecTabs />
+            ) : (
+                <ProjectTabs
+                    currentTab={currentTab}
+                    refetchAllStarred={refetchAllStarred}
+                    refetchAllProjects={refetch}
+                    scrollAreaUpdater={scrollAreaUpdater}
+                    projects={data}
+                />
+            )}
+        </>
     );
 });
 

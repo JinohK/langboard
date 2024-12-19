@@ -5,7 +5,9 @@ import { ProjectColumn } from "@/core/models";
 
 export interface IBoardColumnCreatedRequest {}
 
-export interface IBoardColumnCreatedResponse extends ProjectColumn.Interface {}
+export interface IBoardColumnCreatedResponse {
+    column: ProjectColumn.Interface;
+}
 
 export interface IUseBoardColumnCreatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardColumnCreatedResponse> {
     projectUID: string;

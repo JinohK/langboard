@@ -2,38 +2,22 @@ import { isAxiosError } from "axios";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { TInfiniteQueryOptions, TQueryFunction, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
 
-export interface IGetProjectsForm {
-    listType: "all" | "starred" | "recent" | "unstarred";
-    page: number;
-    limit: number;
-}
-
-export interface IDashboardProject extends Project.Interface {
-    starred: bool;
-    columns: {
-        name: string;
-        count: number;
-    }[];
-}
-
 export interface IGetProjectsResponse {
-    projects: IDashboardProject[];
+    all: Project.IDashboard[];
+    starred: Project.IDashboard[];
+    recent: Project.IDashboard[];
+    unstarred: Project.IDashboard[];
 }
 
-const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOptions<IGetProjectsResponse, IGetProjectsForm>) => {
-    const { infiniteQuery } = useQueryMutation();
+const useGetProjects = (options?: TQueryOptions<IGetProjectsResponse>) => {
+    const { query } = useQueryMutation();
 
-    const getProjects: TQueryFunction<IGetProjectsResponse, IGetProjectsForm> = async ({ pageParam }) => {
+    const getProjects = async () => {
         try {
-            const res = await api.get(`${API_ROUTES.DASHBOARD.PROJECTS}/${pageParam.listType}`, {
-                params: {
-                    page: pageParam.page,
-                    limit: pageParam.limit,
-                },
-            });
+            const res = await api.get(`${API_ROUTES.DASHBOARD.PROJECTS}`);
 
             return res.data;
         } catch (e) {
@@ -47,28 +31,12 @@ const useGetProjects = (params: IGetProjectsForm, options?: TInfiniteQueryOption
         }
     };
 
-    const nextPageParam = options?.getNextPageParam;
-    delete options?.getNextPageParam;
-    delete options?.initialPageParam;
-
-    const result = infiniteQuery<IGetProjectsResponse, IGetProjectsForm>(
-        [`get-dashboard-projects-${params.listType}`],
-        getProjects,
-        (lastPage, allPages, lastPageParam, allPageParams) => {
-            if (nextPageParam) {
-                return nextPageParam(lastPage, allPages, lastPageParam, allPageParams);
-            }
-
-            return lastPageParam;
-        },
-        params,
-        {
-            ...options,
-            retry: false,
-            staleTime: Infinity,
-        }
-    );
-
+    const result = query(["get-dashboard-projects"], getProjects, {
+        ...options,
+        retry: 0,
+        refetchInterval: Infinity,
+        refetchOnWindowFocus: false,
+    });
     return result;
 };
 

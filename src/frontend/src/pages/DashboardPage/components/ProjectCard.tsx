@@ -1,20 +1,20 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
-import { IDashboardProject } from "@/controllers/api/dashboard/useGetProjects";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
-
-export interface IProjectCardListProps {
-    project: IDashboardProject;
-    refetchAllStarred: () => Promise<unknown>;
-    refetchProjects: () => Promise<unknown>;
-}
+import { Project } from "@/core/models";
+import { useDashboard } from "@/core/providers/DashboardProvider";
+import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/useDashboardCardCreatedHandlers";
+import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardCardOrderChangedHandlers";
+import useDashboardColumnCreatedHandlers from "@/controllers/socket/dashboard/useDashboardColumnCreatedHandlers";
+import useDashboardColumnNameChangedHandlers from "@/controllers/socket/dashboard/useDashboardColumnNameChangedHandlers";
+import useDashboardColumnOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardColumnOrderChangedHandlers";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export const SkeletonProjectCard = memo(() => {
     const cards = [];
@@ -50,11 +50,99 @@ export const SkeletonProjectCard = memo(() => {
     );
 });
 
-const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProjectCardListProps): JSX.Element => {
+export interface IProjectCardProps {
+    project: Project.IDashboard;
+    refetchAllStarred: () => Promise<unknown>;
+    refetchAllProjects: () => Promise<unknown>;
+}
+
+const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IProjectCardProps): JSX.Element => {
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const { navigate, socket } = useDashboard();
     const { mutate } = useToggleStarProject();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [columns, setColumns] = useState(project.columns);
+    const { on: onDashboardColumnCreated } = useDashboardColumnCreatedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setColumns((prev) => prev.filter((column) => column.uid !== data.column.uid).concat(data.column));
+        },
+    });
+    const { on: onDashboardColumnNameChanged } = useDashboardColumnNameChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setColumns((prev) => {
+                const targetColumn = prev.find((column) => column.uid === data.uid);
+                if (targetColumn) {
+                    targetColumn.name = data.name;
+                }
+                return [...prev];
+            });
+        },
+    });
+    const { on: onDashboardColumnOrderChanged } = useDashboardColumnOrderChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setColumns((prev) => {
+                const targetColumn = prev.find((column) => column.uid === data.uid);
+                if (targetColumn) {
+                    return arrayMove(prev, targetColumn.order, data.order).map((column, index) => {
+                        column.order = index;
+                        return column;
+                    });
+                }
+
+                return [...prev];
+            });
+        },
+    });
+    const { on: onDashboardCardCreated } = useDashboardCardCreatedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setColumns((prev) => {
+                const targetColumn = prev.find((column) => column.uid === data.column_uid);
+                if (targetColumn) {
+                    targetColumn.count += 1;
+                }
+                return [...prev];
+            });
+        },
+    });
+    const { on: onDashboardCardOrderChanged } = useDashboardCardOrderChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setColumns((prev) => {
+                const fromColumn = prev.find((column) => column.uid === data.from_column_uid);
+                const toColumn = prev.find((column) => column.uid === data.to_column_uid);
+                if (fromColumn && toColumn) {
+                    fromColumn.count -= 1;
+                    toColumn.count += 1;
+                }
+                return [...prev];
+            });
+        },
+    });
+
+    useEffect(() => {
+        const { off: offDashboardColumnCreated } = onDashboardColumnCreated();
+        const { off: offDashboardColumnNameChanged } = onDashboardColumnNameChanged();
+        const { off: offDashboardColumnOrderChanged } = onDashboardColumnOrderChanged();
+        const { off: offDashboardCardCreated } = onDashboardCardCreated();
+        const { off: offDashboardCardOrderChanged } = onDashboardCardOrderChanged();
+
+        return () => {
+            offDashboardColumnCreated();
+            offDashboardColumnNameChanged();
+            offDashboardColumnOrderChanged();
+            offDashboardCardCreated();
+            offDashboardCardOrderChanged();
+        };
+    }, []);
 
     const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {
         if (!project) {
@@ -72,7 +160,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProj
             },
             {
                 onSuccess: async () => {
-                    await Promise.all([refetchAllStarred(), refetchProjects()]);
+                    await Promise.all([refetchAllStarred(), refetchAllProjects()]);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
@@ -130,7 +218,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchProjects }: IProj
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
-                {project.columns.map((column) => (
+                {columns.map((column) => (
                     <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
                         <Tooltip.Root>
                             <Tooltip.Trigger asChild>

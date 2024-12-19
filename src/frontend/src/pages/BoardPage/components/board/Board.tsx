@@ -190,7 +190,7 @@ const BoardResult = memo(() => {
             socket,
             projectUID: project.uid,
             callback: (data) => {
-                setColumns((prevColumns) => [...prevColumns, data]);
+                setColumns((prevColumns) => [...prevColumns, data.column]);
             },
         });
         const { off } = onProjectColumnCreated();

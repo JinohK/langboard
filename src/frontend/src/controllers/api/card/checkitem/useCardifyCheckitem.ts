@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCard, User } from "@/core/models";
+import { User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICardifyCheckitemForm {
@@ -14,7 +14,7 @@ export interface ICardifyCheckitemForm {
 }
 
 export interface ICardifyCheckitemResponse {
-    new_card: ProjectCard.IBoard;
+    card_uid: string;
 }
 
 const useCardifyCheckitem = (options?: TMutationOptions<ICardifyCheckitemForm, ICardifyCheckitemResponse>) => {
@@ -32,7 +32,7 @@ const useCardifyCheckitem = (options?: TMutationOptions<ICardifyCheckitemForm, I
             with_assign_users: params.with_assign_users,
         });
 
-        User.transformFromApi(res.data.new_card.members);
+        User.transformFromApi(res.data.card.members);
 
         return res.data;
     };

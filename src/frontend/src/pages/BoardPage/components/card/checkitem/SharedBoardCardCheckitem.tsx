@@ -55,7 +55,7 @@ const SharedBoardCardCheckitem = memo(
                 projectUID,
                 checkitemUID: checkitem.uid,
                 callback: (data) => {
-                    checkitem.cardified_uid = data.new_card.uid;
+                    checkitem.cardified_uid = data.card.uid;
                     forceUpdate();
                 },
             });

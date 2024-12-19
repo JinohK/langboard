@@ -1,6 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import BotType
-from ...core.service import BaseService, ModelIdBaseResult, ModelIdService
+from ...core.routing import SocketTopic
+from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -12,6 +13,11 @@ from ...models import (
     ProjectColumn,
     User,
 )
+from .Types import TCardParam, TCheckitemParam, TProjectParam
+
+
+_SOCKET_PREFIX = "board:card:checkitem"
+_SOCKET_PREFIX_SUB = "board:card:sub-checkitem"
 
 
 class CheckitemService(BaseService):
@@ -53,13 +59,14 @@ class CheckitemService(BaseService):
             if not cardified_card:
                 checkitem_dict["cardified"] = None
         timer, acc_time_seconds = await self.get_timer(checkitem.uid)
-        checkitem_dict["assigned_members"] = await self.get_assigned_users(cast(int, checkitem.id), True)
+        checkitem_dict["assigned_members"] = await self.get_assigned_users(cast(int, checkitem.id), as_api=True)
         checkitem_dict["timer"] = timer.api_response() if timer else None
         checkitem_dict["acc_time_seconds"] = acc_time_seconds
         if not checkitem.checkitem_uid:
             checkitem_dict["sub_checkitems"] = await self.get_sublist(checkitem.uid)
         return checkitem_dict
 
+    # TODO: Timer, will be changed
     @overload
     async def get_timer(self, checkitem_uid: str) -> tuple[CheckitemTimer | None, int]: ...
     @overload
@@ -95,32 +102,40 @@ class CheckitemService(BaseService):
         return timer, acc_time_seconds
 
     @overload
-    async def get_assigned_users(self, checkitem_id: int) -> list[User]: ...
+    async def get_assigned_users(
+        self, checkitem_id: int, as_api: Literal[False]
+    ) -> list[tuple[User, CheckitemAssignedUser]]: ...
     @overload
-    async def get_assigned_users(self, checkitem_id: int, is_api: Literal[False]) -> list[User]: ...
-    @overload
-    async def get_assigned_users(self, checkitem_id: int, is_api: Literal[True]) -> list[dict[str, Any]]: ...
-    async def get_assigned_users(self, checkitem_id: int, is_api: bool = False) -> list[User | dict[str, Any]]:  # type: ignore
+    async def get_assigned_users(self, checkitem_id: int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(
+        self, checkitem_id: int, as_api: bool
+    ) -> list[tuple[User, CheckitemAssignedUser]] | list[dict[str, Any]]:
         result = await self._db.exec(
             self._db.query("select")
-            .tables(CheckitemAssignedUser, User)
-            .join(User, CheckitemAssignedUser.column("user_id") == User.column("id"))
+            .tables(User, CheckitemAssignedUser)
+            .join(CheckitemAssignedUser, CheckitemAssignedUser.column("user_id") == User.column("id"))
             .where(CheckitemAssignedUser.column("checkitem_id") == checkitem_id)
         )
         raw_users = result.all()
-        return [user if not is_api else user.api_response() for _, user in raw_users]
+        if not as_api:
+            return list(raw_users)
+
+        users = [user.api_response() for user, _ in raw_users]
+        return users
 
     async def create(
         self,
         user_or_bot: User | BotType,
-        card_uid: str,
+        project: TProjectParam,
+        card: TCardParam,
         title: str,
         parent_checkitem_uid: str | None = None,
         assign_user_ids: list[int] | None = None,
-    ) -> ModelIdBaseResult[tuple[Checkitem, dict[str, Any]]] | None:
-        card = await self._get_by(Card, "uid", card_uid)
-        if card is None:
+    ) -> SocketModelIdBaseResult[tuple[Checkitem, dict[str, Any]]] | None:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
             return None
+        project, card, _ = params
 
         max_order_where_clauses = None
         if parent_checkitem_uid is not None:
@@ -129,10 +144,10 @@ class CheckitemService(BaseService):
                 return None
             max_order_where_clauses = {"checkitem_uid": parent_checkitem_uid}
 
-        max_order = await self._get_max_order(Checkitem, "card_uid", card_uid, max_order_where_clauses)
+        max_order = await self._get_max_order(Checkitem, "card_uid", card.uid, max_order_where_clauses)
 
         checkitem = Checkitem(
-            card_uid=card_uid,
+            card_uid=card.uid,
             checkitem_uid=parent_checkitem_uid,
             title=title,
             order=max_order + 1,
@@ -141,8 +156,8 @@ class CheckitemService(BaseService):
         await self._db.commit()
 
         if parent_checkitem_uid:
-            existed_assign_users = await self.get_assigned_users(cast(int, parent_checkitem.id))
-            for user in existed_assign_users:
+            existed_assign_users = await self.get_assigned_users(cast(int, parent_checkitem.id), as_api=False)
+            for user, _ in existed_assign_users:
                 checkitem_assigned_user = CheckitemAssignedUser(
                     checkitem_id=cast(int, checkitem.id), user_id=cast(int, user.id)
                 )
@@ -158,16 +173,37 @@ class CheckitemService(BaseService):
             await self._db.commit()
 
         api_checkitem = await self.convert_api_response(checkitem)
-        model_id = await ModelIdService.create_model_id({"checkitem": api_checkitem})
+        model_id = await SocketModelIdService.create_model_id({"checkitem": api_checkitem})
 
-        return ModelIdBaseResult(model_id, (checkitem, api_checkitem))
+        if not parent_checkitem_uid:
+            publish_model = SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"{_SOCKET_PREFIX}:created:{card.uid}",
+                data_keys="checkitem",
+            )
+        else:
+            publish_model = SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"{_SOCKET_PREFIX_SUB}:created:{parent_checkitem_uid}",
+                data_keys="checkitem",
+            )
+
+        return SocketModelIdBaseResult(model_id, (checkitem, api_checkitem), publish_model)
 
     async def change_title(
-        self, user_or_bot: User | BotType, card_uid: str, checkitem_uid: str, title: str
-    ) -> ModelIdBaseResult[tuple[Checkitem, Card | None]] | None:
-        checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
-        if not checkitem or not card:
+        self,
+        user_or_bot: User | BotType,
+        project: TProjectParam,
+        card: TCardParam,
+        checkitem: TCheckitemParam,
+        title: str,
+    ) -> SocketModelIdBaseResult[tuple[Checkitem, Card | None]] | None:
+        params = await self.__get_records_by_params(project, card, checkitem)
+        if not params:
             return None
+        project, card, checkitem = params
 
         # original_title = checkitem.title
         checkitem.title = title
@@ -183,24 +219,49 @@ class CheckitemService(BaseService):
         await self._db.commit()
 
         model = {
-            "uid": checkitem_uid,
+            "uid": checkitem.uid,
             "title": title,
         }
-        model_id = await ModelIdService.create_model_id(model)
-        return ModelIdBaseResult(model_id, (checkitem, cardified_card))
+        model_id = await SocketModelIdService.create_model_id(model)
+
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"{_SOCKET_PREFIX}:title:changed:{checkitem.uid}",
+                data_keys="title",
+            )
+        ]
+        if cardified_card:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Board,
+                    topic_id=project.uid,
+                    event=f"{_SOCKET_PREFIX}:title:changed:{cardified_card.uid}",
+                    data_keys="title",
+                )
+            )
+
+        return SocketModelIdBaseResult(model_id, (checkitem, cardified_card), publish_models)
 
     async def change_order(
-        self, card_uid: str, checkitem_uid: str, order: int, parent_checkitem_uid: str = ""
-    ) -> ModelIdBaseResult[tuple[Checkitem, str | None, Checkitem | None]] | None:
-        checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
-        if not checkitem or not card:
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        checkitem: TCheckitemParam,
+        order: int,
+        parent_checkitem_uid: str = "",
+    ) -> SocketModelIdBaseResult[tuple[Checkitem, str | None, Checkitem | None]] | None:
+        params = await self.__get_records_by_params(project, card, checkitem)
+        if not params:
             return None
+        project, card, checkitem = params
 
         original_parent_uid = checkitem.checkitem_uid
         original_order = checkitem.order
 
         is_sub = original_parent_uid is not None
-        shared_update_query = self._db.query("update").table(Checkitem).where(Checkitem.column("card_uid") == card_uid)
+        shared_update_query = self._db.query("update").table(Checkitem).where(Checkitem.column("card_uid") == card.uid)
 
         parent_checkitem = None
         if is_sub:
@@ -244,34 +305,70 @@ class CheckitemService(BaseService):
         await self._db.commit()
 
         model = {
-            "uid": checkitem_uid,
+            "uid": checkitem.uid,
             "order": order,
         }
-        if is_sub:
-            model["from_column_uid"] = original_parent_uid
-            if original_parent_uid and parent_checkitem and original_parent_uid != parent_checkitem.uid:
-                model["to_column_uid"] = parent_checkitem.uid
 
-        model_id = await ModelIdService.create_model_id(model)
-        return ModelIdBaseResult(model_id, (checkitem, original_parent_uid, parent_checkitem))
+        model_id = await SocketModelIdService.create_model_id(model)
+
+        publish_models: list[SocketPublishModel] = []
+        if not is_sub:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Board,
+                    topic_id=project.uid,
+                    event=f"{_SOCKET_PREFIX}:order:changed:{card.uid}",
+                    data_keys=["uid", "order"],
+                )
+            )
+        else:
+            if original_parent_uid and parent_checkitem and original_parent_uid != parent_checkitem.uid:
+                publish_models.extend(
+                    [
+                        SocketPublishModel(
+                            topic=SocketTopic.Board,
+                            topic_id=project.uid,
+                            event=f"{_SOCKET_PREFIX_SUB}:order:changed:{parent_checkitem.uid}",
+                            data_keys=["uid", "order"],
+                            extra_data={"move_type": "to_column"},
+                        ),
+                        SocketPublishModel(
+                            topic=SocketTopic.Board,
+                            topic_id=project.uid,
+                            event=f"{_SOCKET_PREFIX_SUB}:order:changed:{original_parent_uid}",
+                            data_keys=["uid", "order"],
+                            extra_data={"move_type": "from_column"},
+                        ),
+                    ]
+                )
+            else:
+                publish_models.append(
+                    SocketPublishModel(
+                        topic=SocketTopic.Board,
+                        topic_id=project.uid,
+                        event=f"{_SOCKET_PREFIX_SUB}:order:changed:{original_parent_uid}",
+                        data_keys=["uid", "order"],
+                        extra_data={"move_type": "in_column"},
+                    )
+                )
+
+        return SocketModelIdBaseResult(model_id, (checkitem, original_parent_uid, parent_checkitem), publish_models)
 
     async def cardify(
         self,
         user_or_bot: User | BotType,
-        card_uid: str,
-        checkitem_uid: str,
+        project: TProjectParam,
+        card: TCardParam,
+        checkitem: TCheckitemParam,
         column_uid: str | None = None,
         with_sub_checkitems: bool = False,
         with_assign_users: bool = False,
-    ) -> ModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
-        checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
-        if (
-            not checkitem
-            or not card
-            or checkitem.cardified_uid
-            or column_uid == Project.ARCHIVE_COLUMN_UID
-            or card.archived_at
-        ):
+    ) -> SocketModelIdBaseResult[Card] | None:
+        params = await self.__get_records_by_params(project, card, checkitem)
+        if not params:
+            return None
+        project, card, checkitem = params
+        if checkitem.cardified_uid or column_uid == Project.ARCHIVE_COLUMN_UID or card.archived_at:
             return None
 
         if column_uid:
@@ -293,7 +390,7 @@ class CheckitemService(BaseService):
         await self._db.commit()
 
         if not checkitem.checkitem_uid and with_sub_checkitems:
-            sub_checkitems = await self._get_all_by(Checkitem, "checkitem_uid", checkitem_uid)
+            sub_checkitems = await self._get_all_by(Checkitem, "checkitem_uid", checkitem.uid)
             for sub_checkitem in sub_checkitems:
                 new_sub_checkitem = Checkitem(
                     card_uid=new_card.uid,
@@ -304,8 +401,8 @@ class CheckitemService(BaseService):
                 await self._db.commit()
 
                 if with_assign_users:
-                    existed_assign_users = await self.get_assigned_users(cast(int, sub_checkitem.id))
-                    for user in existed_assign_users:
+                    existed_assign_users = await self.get_assigned_users(cast(int, sub_checkitem.id), as_api=False)
+                    for user, _ in existed_assign_users:
                         checkitem_assigned_user = CheckitemAssignedUser(
                             checkitem_id=cast(int, new_sub_checkitem.id), user_id=cast(int, user.id)
                         )
@@ -313,8 +410,8 @@ class CheckitemService(BaseService):
                     await self._db.commit()
 
         if with_assign_users:
-            existed_assign_users = await self.get_assigned_users(cast(int, checkitem.id))
-            for user in existed_assign_users:
+            existed_assign_users = await self.get_assigned_users(cast(int, checkitem.id), as_api=False)
+            for user, _ in existed_assign_users:
                 checkitem_assigned_user = CardAssignedUser(card_id=cast(int, new_card.id), user_id=cast(int, user.id))
                 self._db.insert(checkitem_assigned_user)
             await self._db.commit()
@@ -325,19 +422,41 @@ class CheckitemService(BaseService):
 
         card_service = self._get_service_by_name("card")
         api_card = await card_service.convert_board_list_api_response(new_card)
-        model_id = await ModelIdService.create_model_id(
+        model_id = await SocketModelIdService.create_model_id(
             {
-                "new_card": api_card,
+                "card": api_card,
             }
         )
-        return ModelIdBaseResult(model_id, (new_card, api_card))
+
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"{_SOCKET_PREFIX}:cardified:{checkitem.uid}",
+                data_keys="card",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=project.uid,
+                event=f"board:card:created:{new_card.project_column_uid}",
+                data_keys="card",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.Dashboard,
+                topic_id=project.uid,
+                event="dashboard:card:created",
+                extra_data={"column_uid": new_card.project_column_uid},
+            ),
+        ]
+        return SocketModelIdBaseResult(model_id, new_card, publish_models)
 
     async def delete(
-        self, user_or_bot: User | BotType, card_uid: str, checkitem_uid: str
-    ) -> ModelIdBaseResult[Checkitem] | None:
-        checkitem, card = await self.__get_with_card(card_uid, checkitem_uid)
-        if not checkitem or not card:
+        self, user_or_bot: User | BotType, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
+    ) -> SocketModelIdBaseResult[Checkitem] | None:
+        params = await self.__get_records_by_params(project, card, checkitem)
+        if not params:
             return None
+        project, card, checkitem = params
 
         timer, acc_time_seconds = await self.get_timer(checkitem.uid)
         if timer:
@@ -346,7 +465,7 @@ class CheckitemService(BaseService):
             )
 
         if not checkitem.checkitem_uid:
-            sub_checkitems = await self._get_all_by(Checkitem, "checkitem_uid", checkitem_uid)
+            sub_checkitems = await self._get_all_by(Checkitem, "checkitem_uid", checkitem.uid)
             # count_sub_checkitems = len(sub_checkitems)
             for sub_checkitem in sub_checkitems:
                 await self.__delete(sub_checkitem)
@@ -357,12 +476,21 @@ class CheckitemService(BaseService):
         await self._db.commit()
 
         model = {
-            "uid": checkitem_uid,
+            "uid": checkitem.uid,
         }
-        model_id = await ModelIdService.create_model_id(model)
+        model_id = await SocketModelIdService.create_model_id(model)
 
-        return ModelIdBaseResult(model_id, checkitem)
+        parent_uid = checkitem.checkitem_uid if checkitem.checkitem_uid else checkitem.card_uid
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.uid,
+            event=f"{_SOCKET_PREFIX}:deleted:{parent_uid}",
+            data_keys="uid",
+        )
 
+        return SocketModelIdBaseResult(model_id, checkitem, publish_model)
+
+    # TODO: Timer, will be changed
     async def start_timer(self, user: User, card_uid: str, checkitem_uid: str) -> CheckitemTimer | None:
         result = await self._db.exec(
             self._db.query("select")
@@ -385,6 +513,7 @@ class CheckitemService(BaseService):
 
         return timer
 
+    # TODO: Timer, will be changed
     async def stop_timer(self, user: User, card_uid: str, checkitem_uid: str) -> CheckitemTimer | None:
         result = await self._db.exec(
             self._db.query("select")
@@ -407,15 +536,7 @@ class CheckitemService(BaseService):
 
         return timer
 
-    async def __get_with_card(self, card_uid: str, checkitem_uid: str) -> tuple[Checkitem | None, Card | None]:
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(Checkitem, Card)
-            .join(Card, Checkitem.column("card_uid") == Card.column("uid"))
-            .where((Checkitem.column("uid") == checkitem_uid) & (Card.column("uid") == card_uid))
-        )
-        return result.first() or (None, None)
-
+    # TODO: Timer, will be changed
     async def __delete(self, checkitem: Checkitem):
         result = await self._db.exec(
             self._db.query("select")
@@ -431,3 +552,27 @@ class CheckitemService(BaseService):
             await self._db.update(running_timer)
 
         await self._db.delete(checkitem)
+
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam
+    ) -> tuple[Project, Card, None] | None: ...
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
+    ) -> tuple[Project, Card, Checkitem] | None: ...
+    async def __get_records_by_params(  # type: ignore
+        self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam | None = None
+    ):
+        project = cast(Project, await self._get_by_param(Project, project))
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card or not project or card.project_id != project.id:
+            return None
+
+        checkitem = None
+        if checkitem:
+            checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
+            if not checkitem or checkitem.card_uid != card.uid:
+                return None
+
+        return project, card, checkitem

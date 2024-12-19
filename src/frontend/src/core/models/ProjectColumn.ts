@@ -4,4 +4,8 @@ export interface Interface {
     order: number;
 }
 
+export interface IDashboard extends Interface {
+    count: number;
+}
+
 export const TYPES = ["SI", "SW"];

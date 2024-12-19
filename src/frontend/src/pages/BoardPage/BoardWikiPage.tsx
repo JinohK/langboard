@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
     const socket = useSocket();
-    const { data: data, error } = useGetWikis({ project_uid: projectUID });
+    const { data, isFetching, error } = useGetWikis({ project_uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -36,7 +36,7 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
     }, [error]);
 
     useEffect(() => {
-        if (!data) {
+        if (!data || isFetching) {
             return;
         }
 
@@ -47,7 +47,7 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
             socket.unsubscribe(ESocketTopic.BoardWiki, projectUID);
             socket.unsubscribe(ESocketTopic.BoardWikiPrivate, currentUser.username);
         };
-    }, [data]);
+    }, [isFetching]);
 
     return (
         <>

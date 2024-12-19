@@ -41,7 +41,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: (data) => {
-                checkitem.cardified_uid = data.new_card.uid;
+                checkitem.cardified_uid = data.card_uid;
                 update();
                 return t("card.Cardified the checkitem successfully.");
             },

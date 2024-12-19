@@ -3,8 +3,10 @@ import InfiniteScroll from "react-infinite-scroller";
 import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 
+export interface ITrackingPageProps {}
+
 let curPage = 1;
-function TrackingPage(): JSX.Element {
+function TrackingPage(props: ITrackingPageProps): JSX.Element {
     // TODO: Card, Implemnting the table
     const [subcards, setSubcards] = useState<
         {
