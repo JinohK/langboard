@@ -42,7 +42,7 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
             {
                 onSuccess: (data) => {
                     updatedUser();
-                    const toastId = Toast.Add.success(t("myAccount.Email deleted successfully."), {
+                    const toastId = Toast.Add.success(t("myAccount.successes.Email deleted successfully."), {
                         actions: [createRevertToastButton(data.revert_key, () => toastId)],
                     });
                 },
@@ -69,7 +69,7 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
             { is_resend: true, new_email: email, lang: i18n.language },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("myAccount.Please check your inbox to verify your email."));
+                    Toast.Add.success(t("myAccount.successes.Please check your inbox to verify your email."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

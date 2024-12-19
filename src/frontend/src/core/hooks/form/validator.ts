@@ -101,7 +101,7 @@ export const validate = (
         const result = validate(schemaValue as undefined, value, form);
         if (!result) {
             if (key === "custom" && schema.custom) {
-                return schema.custom!.errorKey;
+                return `custom:${schema.custom!.errorKey}`;
             }
             return key;
         }

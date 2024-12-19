@@ -67,7 +67,7 @@ const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; so
                         message = t("errors.Forbidden");
                     },
                     [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("project.Project not found.");
+                        message = t("project.errors.Project not found.");
                     },
                     nonApiError: () => {
                         message = t("errors.Unknown error");

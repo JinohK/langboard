@@ -103,7 +103,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
             {
                 onSuccess: () => {
                     comment.content = { ...valueRef.current };
-                    Toast.Add.success(t("card.Comment updated successfully."));
+                    Toast.Add.success(t("card.successes.Comment updated successfully."));
                     cancelEditing();
                 },
                 onError: (error) => {
@@ -112,7 +112,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                             Toast.Add.error(t("errors.Forbidden"));
                         },
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("card.Comment not found."));
+                            Toast.Add.error(t("card.errors.Comment not found."));
                         },
                     });
 
@@ -148,7 +148,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                         message = t("errors.Forbidden");
                     },
                     [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("card.Comment not found.");
+                        message = t("card.errors.Comment not found.");
                     },
                     nonApiError: () => {
                         message = t("errors.Unknown error");
@@ -163,7 +163,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
             },
             success: () => {
                 deletedComment(comment.uid);
-                return t("card.Comment deleted successfully.");
+                return t("card.successes.Comment deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

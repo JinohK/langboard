@@ -29,7 +29,7 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
                 onSuccess: (data) => {
                     setTimeout(() => {
                         updatedUser();
-                        const toastId = Toast.Add.success(t("myAccount.Primary email updated successfully."), {
+                        const toastId = Toast.Add.success(t("myAccount.successes.Primary email updated successfully."), {
                             actions: [createRevertToastButton(data.revert_key, () => toastId)],
                         });
                     }, 0);

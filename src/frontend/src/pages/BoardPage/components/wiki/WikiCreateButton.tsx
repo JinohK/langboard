@@ -46,7 +46,7 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
                     });
                     changeTab(data.wiki.uid);
                 }, 0);
-                return t("wiki.New wiki page created successfully.");
+                return t("wiki.successes.New wiki page created successfully.");
             },
             finally: () => {
                 Toast.Add.dismiss(toastId);

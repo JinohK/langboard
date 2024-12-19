@@ -84,7 +84,7 @@ function BoardCardTitle(): JSX.Element {
             },
             success: (data) => {
                 card.title = data.title;
-                return t("card.Description changed successfully.");
+                return t("card.successes.Title changed successfully.");
             },
             finally: () => {
                 setIsEditing(false);

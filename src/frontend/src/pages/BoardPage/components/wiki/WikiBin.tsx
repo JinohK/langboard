@@ -49,7 +49,7 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
                 },
                 success: () => {
                     setWikis((prev) => prev.filter((wiki) => wiki.uid !== originalWiki.uid));
-                    return t("wiki.Wiki page deleted successfully.");
+                    return t("wiki.successes.Wiki page deleted successfully.");
                 },
                 finally: () => {
                     Toast.Add.dismiss(toastId);

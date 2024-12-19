@@ -29,7 +29,7 @@ function BoardCardAttachmentMore({
                 message = t("errors.Forbidden");
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                message = t("card.File not found.");
+                message = t("card.errors.File not found.");
             },
             nonApiError: () => {
                 message = t("errors.Unknown error");

@@ -26,6 +26,7 @@ export interface IAuthContext {
     removeTokens: () => void;
     signOut: () => void;
     aboutMe: () => IAuthUser | null;
+    updated: number;
 }
 
 interface IAuthProviderProps {
@@ -41,6 +42,7 @@ const initialContext = {
     removeTokens: () => {},
     signOut: () => {},
     aboutMe: () => null,
+    updated: 0,
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
@@ -101,6 +103,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
             );
 
             userRef.current = response.data.user;
+            update();
             return;
         };
 
@@ -147,6 +150,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 removeTokens,
                 signOut,
                 aboutMe,
+                updated,
             }}
         >
             {children}

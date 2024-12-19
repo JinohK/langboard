@@ -22,7 +22,7 @@ function PasswordPage(): JSX.Element {
         },
         mutate,
         mutateOnSuccess: () => {
-            Toast.Add.success(t("myAccount.Password updated successfully."));
+            Toast.Add.success(t("myAccount.successes.Password updated successfully."));
             formRef.current?.reset();
             updatedUser();
         },

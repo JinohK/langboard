@@ -42,7 +42,7 @@ function BoardCardAttachmentMoreDelete({
             error: sharedErrorHandler,
             success: () => {
                 deletedAttachment(attachment.uid);
-                return t("card.File deleted successfully.");
+                return t("card.successes.File deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

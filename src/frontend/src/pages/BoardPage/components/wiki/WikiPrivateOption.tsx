@@ -66,7 +66,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         callback: (data) => {
             updateWiki(data.wiki);
             if (data.wiki.forbidden) {
-                Toast.Add.error(t("wiki.Can't access this wiki."));
+                Toast.Add.error(t("wiki.errors.Can't access this wiki."));
                 changeTab("");
             } else {
                 setIsPrivate(!data.wiki.is_public);
@@ -82,7 +82,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         callback: (data) => {
             updateWiki(data.wiki);
             if (data.wiki.forbidden) {
-                Toast.Add.error(t("wiki.Can't access this wiki."));
+                Toast.Add.error(t("wiki.errors.Can't access this wiki."));
                 changeTab("");
             } else {
                 setIsPrivate(!data.wiki.is_public);

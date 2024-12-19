@@ -84,7 +84,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
         callback: (data) => {
             setFlatWikis((prev) => prev.filter((wiki) => wiki.uid !== data.uid));
             if (wikiUID === data.uid) {
-                Toast.Add.info(t("wiki.Wiki page deleted."));
+                Toast.Add.info(t("wiki.Wiki page has been deleted."));
                 changeTab("");
             }
         },

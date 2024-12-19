@@ -38,7 +38,7 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
                 }
                 checkitem.acc_time_seconds = data.acc_time_seconds;
                 update();
-                return t(`card.Timer ${isStopped ? "stopped" : "started"} successfully.`);
+                return t(`card.successes.Timer ${isStopped ? "stopped" : "started"} successfully.`);
             },
             finally: () => {
                 setIsValidating(false);

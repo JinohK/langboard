@@ -124,7 +124,7 @@ export const BoardAddCarddProvider = ({ columnUID, viewportId, toLastPage, creat
                     const card = document.getElementById(`board-card-${data.card.uid}`)!;
                     card.click();
                 }, 0);
-                return t("board.Card added successfully.");
+                return t("board.successes.Card added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

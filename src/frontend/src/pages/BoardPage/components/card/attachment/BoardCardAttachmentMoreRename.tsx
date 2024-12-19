@@ -55,7 +55,7 @@ function BoardCardAttachmentMoreRename({
             success: () => {
                 attachment.name = name;
                 update();
-                return t("card.File name changed successfully.");
+                return t("card.successes.File name changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

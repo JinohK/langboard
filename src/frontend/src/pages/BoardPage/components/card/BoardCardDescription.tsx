@@ -83,7 +83,7 @@ function BoardCardDescription(): JSX.Element {
             },
             success: (data) => {
                 card.description = data.description;
-                return t("card.Description changed successfully.");
+                return t("card.successes.Description changed successfully.");
             },
             finally: () => {
                 setCurrentEditor("");

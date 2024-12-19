@@ -327,12 +327,14 @@
     "Unverified": "Unverified",
     "Search email...": "Search email...",
     "Resend": "Resend",
-    "Profile updated successfully.": "Profile updated successfully.",
-    "Please check your inbox to verify your email.": "Please check your inbox to verify your email.",
-    "The email verified successfully.": "The email verified successfully.",
-    "Email deleted successfully.": "Email deleted successfully.",
-    "Primary email updated successfully.": "Primary email updated successfully.",
-    "Password updated successfully.": "Password updated successfully.",
+    "successes": {
+      "Profile updated successfully.": "Profile updated successfully.",
+      "Please check your inbox to verify your email.": "Please check your inbox to verify your email.",
+      "The email verified successfully.": "The email verified successfully.",
+      "Email deleted successfully.": "Email deleted successfully.",
+      "Primary email updated successfully.": "Primary email updated successfully.",
+      "Password updated successfully.": "Password updated successfully."
+    },
     "errors": {
       "Cannot delete primary email.": "Cannot delete primary email..",
       "The email is not verified yet.": "The email is not verified yet.",
@@ -349,9 +351,12 @@
         "password-confirm": "Enter a new password confirmation."
       },
       "invalid": {
-        "new_email": "Email already exists. Try another one.",
+        "new_email": "Enter a valid email address.",
         "current_password": "Wrong current password. Try again.",
         "password-confirm": "Wrong password confirmation. Try again."
+      },
+      "exists": {
+        "new_email": "Email already exists. Try another one."
       }
     }
   },
@@ -366,14 +371,11 @@
     "Star this project": "Star this project",
     "Unstar this project": "Unstar this project",
     "No projects found": "No projects found",
-
     "Cards": "Cards",
     "Starred": "Starred",
     "Tracking": "Tracking",
-
     "Create New Project": "Create New Project",
     "My Activity": "My Activity",
-
     "errors": {
       "Project not found": "Project not found"
     }
@@ -402,8 +404,10 @@
     "Add card": "Add card",
     "Enter a name": "Enter a name",
     "Enter a title": "Enter a title",
-    "Column added successfully.": "Column added successfully.",
-    "Card added successfully.": "Card added successfully."
+    "successes": {
+      "Column added successfully.": "Column added successfully.",
+      "Card added successfully.": "Card added successfully."
+    }
   },
   "project": {
     "Project title": "Project title",
@@ -419,9 +423,12 @@
     "Assign members": "Assign members",
     "invited": "invited",
     "types": { },
-    "Project not found.": "Project not found.",
     "Assigned members updated and invited new users successfully.": "Assigned members updated and invited new users successfully.",
+    "successes": {
+      "Column name changed successfully.": "Column name changed successfully."
+    },
     "errors": {
+      "Project not found.": "Project not found.",
       "missing": {
         "title": "Enter a title."
       }
@@ -435,57 +442,43 @@
     "Title": "Title",
     "Type": "Type",
     "Actions": "Actions",
-    "This action cannot be undone.": "This action cannot be undone.",
-    "Card not found.": "Card not found.",
     "Attach a file": "Attach a file",
     "Drag and drop a file here": "Drag and drop a file here",
     "Upload a file": "Upload a file",
     "Drop a file here": "Drop a file here",
-    "Files have been uploaded successfully.": "Files have been uploaded successfully.",
     "Activity": "Activity",
     "Share": "Share",
     "Share this card": "Share this card",
     "Assign members": "Assign members",
     "Select members...": "Select members...",
     "Members": "Members",
-    "Assigned members updated successfully.": "Assigned members updated successfully.",
     "Deadline": "Deadline",
     "Set deadline": "Set deadline",
     "No deadline": "No deadline",
     "Description": "Description",
     "No description": "No description",
-    "Description changed successfully.": "Description changed successfully.",
     "Attached files": "Attached files",
-    "File not found.": "File not found.",
-    "File name changed successfully.": "File name changed successfully.",
-    "File deleted successfully.": "File deleted successfully.",
     "Rename": "Rename",
     "File name": "File name",
     "Are you sure you want to delete this file?": "Are you sure you want to delete this file?",
     "Checklist": "Checklist",
     "Go to cardified card": "Go to cardified card",
     "Add sub-checkitem": "Add sub-checkitem",
-    "Sub-checkitem created successfully.": "Sub-checkitem created successfully.",
     "Edit title": "Edit title",
-    "Checkitem not found.": "Checkitem not found.",
-    "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
     "Cardify": "Cardify",
     "Select Column": "Select Column",
     "Cardify with Sub Checkitems": "Cardify with Sub Checkitems",
     "Cardify with Assign Members": "Cardify with Assign Members",
-    "Cardified the checkitem successfully.": "Cardified the checkitem successfully.",
     "Start timer": "Start timer",
     "Stop timer": "Stop timer",
     "Start": "Start",
     "Stop": "Stop",
     "Are you sure you want to start the timer?": "Are you sure you want to start the timer?",
     "Are you sure you want to stop the timer?": "Are you sure you want to stop the timer?",
-    "Timer started successfully.": "Timer started successfully.",
-    "Timer stopped successfully.": "Timer stopped successfully.",
     "Checkitem title": "Checkitem title",
     "Are you sure you want to delete this checkitem?": "Are you sure you want to delete this checkitem?",
     "All sub-checkitems will be deleted as well.": "All sub-checkitems will be deleted as well.",
-    "Checkitem deleted successfully.": "Checkitem deleted successfully.",
+    "This action cannot be undone.": "This action cannot be undone.",
     "Comments": "Comments",
     "edited": "edited",
     "React comment": "React comment",
@@ -499,9 +492,28 @@
     "Show all checklist ({checkitems} hidden)": "Show all checklist ({{checkitems}} hidden)",
     "is commenting...": "is commenting...",
     "are commenting...": "are commenting...",
-    "Comment not found.": "Comment not found.",
-    "Comment updated successfully.": "Comment updated successfully.",
-    "Comment deleted successfully.": "Comment deleted successfully."
+    "successes": {
+      "Title changed successfully.": "Title changed successfully.",
+      "Files have been uploaded successfully.": "Files have been uploaded successfully.",
+      "Assigned members updated successfully.": "Assigned members updated successfully.",
+      "Description changed successfully.": "Description changed successfully.",
+      "File name changed successfully.": "File name changed successfully.",
+      "File deleted successfully.": "File deleted successfully.",
+      "Sub-checkitem created successfully.": "Sub-checkitem created successfully.",
+      "Cardified the checkitem successfully.": "Cardified the checkitem successfully.",
+      "Timer started successfully.": "Timer started successfully.",
+      "Timer stopped successfully.": "Timer stopped successfully.",
+      "Checkitem deleted successfully.": "Checkitem deleted successfully.",
+      "Comment updated successfully.": "Comment updated successfully.",
+      "Comment deleted successfully.": "Comment deleted successfully."
+    },
+    "errors": {
+      "Card not found.": "Card not found.",
+      "File not found.": "File not found.",
+      "Checkitem not found.": "Checkitem not found.",
+      "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
+      "Comment not found.": "Comment not found."
+    }
   },
   "reaction": {
     "React": "React",
@@ -520,11 +532,15 @@
     "Public": "Public",
     "Toggle reorder mode": "Toggle reorder mode",
     "New wiki page": "New wiki page",
-    "Can't access this wiki.": "Can't access this wiki.",
-    "Title changed successfully.": "Title changed successfully.",
-    "Content changed successfully.": "Content changed successfully.",
-    "New wiki page created successfully.": "New wiki page created successfully.",
-    "Wiki page deleted successfully.": "Wiki page deleted successfully.",
-    "Wiki page deleted.": "Wiki page deleted."
+    "Wiki page has been deleted.": "Wiki page has been deleted.",
+    "successes": {
+      "Title changed successfully.": "Title changed successfully.",
+      "Content changed successfully.": "Content changed successfully.",
+      "New wiki page created successfully.": "New wiki page created successfully.",
+      "Wiki page deleted successfully.": "Wiki page deleted successfully."
+    },
+    "errors": {
+      "Can't access this wiki.": "Can't access this wiki."
+    }
   }
 }

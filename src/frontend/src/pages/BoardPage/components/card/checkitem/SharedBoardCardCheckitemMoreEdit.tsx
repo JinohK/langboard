@@ -25,7 +25,7 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
         const title = titleInput.value.trim();
 
         if (!title) {
-            Toast.Add.error(t("card.Checkitem title cannot be empty."));
+            Toast.Add.error(t("card.errors.Checkitem title cannot be empty."));
             setIsValidating(false);
             titleInput.focus();
             return;
@@ -43,7 +43,7 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
             error: sharedErrorHandler,
             success: () => {
                 checkitem.title = title;
-                return t("card.File name changed successfully.");
+                return t("card.successes.Title changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

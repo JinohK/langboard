@@ -94,7 +94,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
             success: (data) => {
                 wiki.title = data.title;
                 setTitleMapRef.current[wiki.uid]?.(data.title);
-                return t("wiki.Title changed successfully.");
+                return t("wiki.successes.Title changed successfully.");
             },
             finally: () => {
                 setIsEditing(false);

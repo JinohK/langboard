@@ -18,6 +18,9 @@ export const convertValidationName = (key: string) => {
         case "mimeType":
         case "value_error":
         default:
+            if (key.startsWith("custom:")) {
+                return key.replace("custom:", "");
+            }
             return "invalid";
     }
 };

@@ -54,7 +54,7 @@ export const BoardCardCheckitemProvider = ({
                 message = t("errors.Forbidden");
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                message = t("card.Checkitem not found.");
+                message = t("card.errors.Checkitem not found.");
             },
             nonApiError: () => {
                 message = t("errors.Unknown error");

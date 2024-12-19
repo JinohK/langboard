@@ -90,7 +90,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
             success: (data) => {
                 column.name = data.name;
                 setColumnName(data.name);
-                return t("card.Description changed successfully.");
+                return t("project.successes.Column name changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

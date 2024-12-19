@@ -43,7 +43,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
             success: (data) => {
                 checkitem.cardified_uid = data.card_uid;
                 update();
-                return t("card.Cardified the checkitem successfully.");
+                return t("card.successes.Cardified the checkitem successfully.");
             },
             finally: () => {
                 setIsValidating(false);

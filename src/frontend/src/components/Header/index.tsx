@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CachedImage from "@/components/CachedImage";
 import NavItems from "@/components/Header/NavItems";
@@ -13,11 +13,16 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function Header({ navs }: IHeaderProps) {
-    const { isAuthenticated, aboutMe, signOut } = useAuth();
+    const { aboutMe, signOut, updated } = useAuth();
     const { close } = useSocket();
     const [isOpened, setIsOpen] = useState(false);
     const [t] = useTranslation();
     const navigate = useRef(usePageNavigate());
+    const [currentUser, setCurrentUser] = useState(aboutMe());
+
+    useEffect(() => {
+        setCurrentUser(aboutMe());
+    }, [updated]);
 
     const toDashboard = () => {
         navigate.current(ROUTES.DASHBOARD.PROJECTS.ALL);
@@ -94,11 +99,11 @@ function Header({ navs }: IHeaderProps) {
                 <LanguageSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
                 {separator}
                 <ThemeSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
-                {isAuthenticated() && aboutMe() ? (
+                {currentUser ? (
                     <>
                         {separator}
                         <UserAvatar.Root
-                            user={aboutMe()!}
+                            user={currentUser}
                             listAlign="end"
                             avatarSize={{
                                 initial: "sm",

@@ -31,7 +31,7 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
             error: sharedErrorHandler,
             success: () => {
                 deleted(checkitem.uid);
-                return t("card.Checkitem deleted successfully.");
+                return t("card.successes.Checkitem deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

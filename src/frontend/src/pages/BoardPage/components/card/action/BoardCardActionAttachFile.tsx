@@ -52,7 +52,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAtta
         setIsValidating(true);
 
         Promise.all([...attachedFiles.map((attachedFile) => attachedFile.upload?.())]).finally(() => {
-            Toast.Add.success(t("card.Files have been uploaded successfully."));
+            Toast.Add.success(t("card.successes.Files have been uploaded successfully."));
             setIsValidating(false);
             changeOpenedState(false);
             forceUpdate();

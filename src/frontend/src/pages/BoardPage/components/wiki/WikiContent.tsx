@@ -104,7 +104,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             },
             success: (data) => {
                 wiki.content = data.content;
-                return t("wiki.Content changed successfully.");
+                return t("wiki.successes.Content changed successfully.");
             },
             finally: () => {
                 setCurrentEditor("");

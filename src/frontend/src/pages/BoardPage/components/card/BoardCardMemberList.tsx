@@ -56,7 +56,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
                         message = t("errors.Forbidden");
                     },
                     [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("card.Card not found.");
+                        message = t("card.errors.Card not found.");
                     },
                     nonApiError: () => {
                         message = t("errors.Unknown error");
@@ -70,7 +70,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
                 return message;
             },
             success: () => {
-                return t("card.Assigned members updated successfully.");
+                return t("card.successes.Assigned members updated successfully.");
             },
             finally: () => {
                 endCallback();

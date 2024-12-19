@@ -34,7 +34,7 @@ function SharedBoardCardCheckitemAddSub({
         const title = titleInput.value.trim();
 
         if (!title) {
-            Toast.Add.error(t("card.Checkitem title cannot be empty."));
+            Toast.Add.error(t("card.errors.Checkitem title cannot be empty."));
             setIsValidating(false);
             titleInput.focus();
             return;
@@ -52,7 +52,7 @@ function SharedBoardCardCheckitemAddSub({
             loading: t("common.Creating..."),
             error: sharedErrorHandler,
             success: () => {
-                return t("card.Sub-checkitem created successfully.");
+                return t("card.successes.Sub-checkitem created successfully.");
             },
             finally: () => {
                 setIsValidating(false);
