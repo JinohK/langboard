@@ -16,10 +16,11 @@ export interface IAutorCompleteProps {
     isLoading?: bool;
     emptyMessage: string;
     placeholder: string;
+    disabled?: bool;
     className?: string;
 }
 
-function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, className }: IAutorCompleteProps) {
+function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, disabled, className }: IAutorCompleteProps) {
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(selectedValue);
 
@@ -49,6 +50,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
         <Flex items="center" className={className}>
             <Popover.Root open={open} onOpenChange={setOpen}>
                 <Command.Root
+                    className="focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-0"
                     shouldFilter={false}
                     onKeyDown={(e) => {
                         if (!open) {
@@ -73,7 +75,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                                 setOpen(false);
                             }}
                         >
-                            <Input placeholder={placeholder} />
+                            <Input placeholder={placeholder} disabled={disabled} />
                         </CommandPrimitive.Input>
                     </Popover.Trigger>
                     {!open && <Command.List aria-hidden="true" className="hidden" />}

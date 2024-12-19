@@ -8,6 +8,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useRef } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import SubmitButton from "@/components/SubmitButton";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -26,7 +27,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
         schema: {
             title: { required: true },
             description: {},
-            project_type: {},
+            project_type: { required: true },
         },
         mutate,
         mutateOnSuccess: (data) => {
@@ -39,7 +40,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
         setIsLoadingRef.current(false);
     }, []);
 
-    const setIndustry = (value: string) => {
+    const setProjectType = (value: string) => {
         projectTypeRef.current = value;
         projectTypeInputRef.current!.value = value;
     };
@@ -76,24 +77,27 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                         <Input type="hidden" name="project_type" value={projectTypeRef.current} ref={projectTypeInputRef} />
                         <AutoComplete
                             selectedValue=""
-                            onValueChange={setIndustry}
+                            onValueChange={setProjectType}
                             items={Project.TYPES.map((project_type) => ({
                                 value: project_type,
                                 label: t(project_type === "Other" ? "common.Other" : `project.types.${project_type}`),
                             }))}
                             emptyMessage={projectTypeRef.current ?? ""}
                             placeholder={t("project.Project type")}
+                            disabled={isValidating}
                             className="mt-4"
                         />
                         {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}
                     </Form.Field>
                     <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                         <Dialog.Close asChild>
-                            <Button type="button" variant="destructive">
+                            <Button type="button" variant="destructive" disabled={isValidating}>
                                 {t("common.Cancel")}
                             </Button>
                         </Dialog.Close>
-                        <Button type="submit">{t("common.Create")}</Button>
+                        <SubmitButton type="submit" isValidating={isValidating}>
+                            {t("common.Create")}
+                        </SubmitButton>
                     </Dialog.Footer>
                 </Form.Root>
             </Dialog.Content>

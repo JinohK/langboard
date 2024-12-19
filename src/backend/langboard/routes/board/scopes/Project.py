@@ -18,3 +18,10 @@ class AcceptProjectInvitationForm(BaseFormModel):
 
 class ChatHistoryPagination(Pagination):
     current_date: datetime
+
+
+@form_model
+class UpdateProjectDetailsForm(BaseFormModel):
+    title: str
+    description: str | None = None
+    project_type: str = "Other"

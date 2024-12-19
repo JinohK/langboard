@@ -9,7 +9,6 @@ import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useBoardChatAvailableHandlers from "@/controllers/socket/board/useBoardChatAvailableHandlers";
-import useSocketErrorHandlers from "@/controllers/socket/shared/useSocketErrorHandlers";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
@@ -43,13 +42,33 @@ const BoardProxy = memo((): JSX.Element => {
     const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
     const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
     const [canUseSettings, setCanUseSettings] = useState<bool | undefined>(undefined);
-
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
     const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
     const { mutate: canUseProjectSettingsMutate } = useCanUseProjectSettings({ uid: projectUID });
+    const { on: onBoardChatAvailable, send: sendBoardChatAvailable } = useBoardChatAvailableHandlers({
+        socket,
+        projectUID,
+        callback: ({ available }: { available: bool }) => {
+            if (available) {
+                setResizableSidebar(() => ({
+                    children: (
+                        <Suspense>
+                            <ChatSidebar uid={projectUID} />
+                        </Suspense>
+                    ),
+                    initialWidth: 280,
+                    collapsableWidth: 210,
+                    floatingIcon: "message-circle",
+                    floatingTitle: "project.Chat with AI",
+                    floatingFullScreen: true,
+                }));
+            }
+            setIsReady(() => true);
+        },
+    });
 
     useEffect(() => {
         if (!error) {
@@ -75,41 +94,14 @@ const BoardProxy = memo((): JSX.Element => {
             return;
         }
 
-        socket.subscribe(ESocketTopic.Board, projectUID);
+        const offs: (() => void)[] = [];
 
-        const { on: onBoardChatAvailable, send: sendBoardChatAvailable } = useBoardChatAvailableHandlers({
-            socket,
-            projectUID,
-            callback: ({ available }: { available: bool }) => {
-                if (available) {
-                    setResizableSidebar(() => ({
-                        children: (
-                            <Suspense>
-                                <ChatSidebar uid={projectUID} />
-                            </Suspense>
-                        ),
-                        initialWidth: 280,
-                        collapsableWidth: 210,
-                        floatingIcon: "message-circle",
-                        floatingTitle: "project.Chat with AI",
-                        floatingFullScreen: true,
-                    }));
-                }
-                setIsReady(() => true);
-            },
+        socket.subscribe(ESocketTopic.Board, projectUID, () => {
+            offs.push(onBoardChatAvailable().off);
+
+            sendBoardChatAvailable({});
         });
-        const { on: onSocketError } = useSocketErrorHandlers({
-            socket,
-            eventKey: `is-board-chat-available-${projectUID}`,
-            callback: () => {
-                Toast.Add.error(t("errors.Internal server error"));
-            },
-        });
-
-        const { off: offBoardChatAvailable } = onBoardChatAvailable();
-        const { off: offSocketError } = onSocketError();
-
-        sendBoardChatAvailable({});
+        socket.subscribe(ESocketTopic.Project, projectUID);
 
         canUseProjectSettingsMutate(
             {},
@@ -124,8 +116,11 @@ const BoardProxy = memo((): JSX.Element => {
         );
 
         return () => {
-            offBoardChatAvailable();
-            offSocketError();
+            for (let i = 0; i < offs.length; ++i) {
+                offs[i]();
+            }
+            socket.unsubscribe(ESocketTopic.Board, projectUID);
+            socket.unsubscribe(ESocketTopic.Project, projectUID);
         };
     }, [isFetching]);
 

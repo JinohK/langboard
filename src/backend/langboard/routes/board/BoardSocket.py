@@ -32,7 +32,10 @@ async def project_chat(
     stream_or_str = await BotRunner.run(BotType.ProjectChat, {"message": message})
     if not stream_or_str:
         return SocketResponse(
-            event="board:chat:available", topic=SocketTopic.Board.value, topic_id=project_uid, data={"available": False}
+            event="board:chat:available",
+            topic=SocketTopic.Board.value,
+            topic_id=project_uid,
+            data={"available": False},
         )
 
     user_message = await service.chat_history.create("project", message, filterable=project_uid, sender_id=user.id)

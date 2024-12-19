@@ -16,18 +16,18 @@ from pydantic import BaseModel
 from typing_extensions import _AnnotatedAlias
 from ...Constants import PROJECT_NAME
 from ..logger import Logger
-from .Exception import SocketRouterScopeException
+from .Exception import SocketManagerScopeException
 from .SocketRequest import SocketRequest
 from .WebSocket import WebSocket
 
 
 TGenerator = GeneratorType | AsyncGeneratorType
 _TModel = TypeVar("_TModel", bound=BaseModel)
-_TScopeCreator = Callable[[SocketRequest], Coroutine[Any, Any, Any | SocketRouterScopeException]]
+_TScopeCreator = Callable[[SocketRequest], Coroutine[Any, Any, Any | SocketManagerScopeException]]
 
 
-class SocketRouterScope:
-    """Creates a scope for the socket route handler to be used in :class:`socketify.SocketApp` routes."""
+class SocketManagerScope:
+    """Creates a scope for the socket manager handler to be used in :class:`socketify.SocketApp` manager."""
 
     _BOOL_TRUE_VALUES = set([1, "1", "true", "True"])
     _BOOL_FALSE_VALUES = set([0, "0", "false", "False"])
@@ -77,7 +77,7 @@ class SocketRouterScope:
             self._create_scope = await self._create_data_scope(self.annotation)
         return self
 
-    async def __call__(self, req: SocketRequest) -> Any | SocketRouterScopeException:
+    async def __call__(self, req: SocketRequest) -> Any | SocketManagerScopeException:
         result = await self._create_scope(req)
         if isinstance(result, AsyncGeneratorType):
             self._generators.append((self.use_cache, result))
@@ -96,7 +96,7 @@ class SocketRouterScope:
         if isinstance(metadata, Depends):
             self.use_cache = metadata.use_cache
             if metadata.dependency is None:
-                return await SocketRouterScope(
+                return await SocketManagerScope(
                     self._generators,
                     self._param_name,
                     Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=arg),
@@ -104,7 +104,7 @@ class SocketRouterScope:
                 ).init()
             return await self._create_depends_scope(metadata)
         else:
-            return await SocketRouterScope(
+            return await SocketManagerScope(
                 self._generators,
                 self._param_name,
                 Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=arg),
@@ -112,7 +112,7 @@ class SocketRouterScope:
             ).init()
 
     async def _create_union_scope(self, annotation: UnionType | _UnionGenericAlias) -> _TScopeCreator:
-        union_type_creators: list[SocketRouterScope] = []
+        union_type_creators: list[SocketManagerScope] = []
         does_allow_none = NoneType in annotation.__args__
         if Any in annotation.__args__:
             return await self._create_data_scope(Any)
@@ -121,7 +121,7 @@ class SocketRouterScope:
             if union_type is NoneType:
                 continue
 
-            creator = await SocketRouterScope(
+            creator = await SocketManagerScope(
                 self._generators,
                 self._param_name,
                 Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=union_type),
@@ -130,7 +130,7 @@ class SocketRouterScope:
 
             union_type_creators.append(creator)
 
-        async def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+        async def create_scope(req: SocketRequest) -> Any | SocketManagerScopeException:
             for creator in union_type_creators:
                 scope = await creator(req)
                 if isinstance(scope, creator.annotation):
@@ -149,14 +149,14 @@ class SocketRouterScope:
         args: tuple = annotation.__args__
         does_allow_none = None in args
 
-        creators: list[SocketRouterScope] = []
+        creators: list[SocketManagerScope] = []
         allowed_value_types = set([int, bool, str, bytes, Enum, NoneType])
         for arg in args:
             if not any(isinstance(arg, value_type) for value_type in allowed_value_types):
                 raise TypeError(f"Literal type arguments must be a value of {allowed_value_types} but got {arg}.")
 
             creators.append(
-                await SocketRouterScope(
+                await SocketManagerScope(
                     self._generators,
                     self._param_name,
                     Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=type(arg)),
@@ -164,7 +164,7 @@ class SocketRouterScope:
                 ).init()
             )
 
-        async def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+        async def create_scope(req: SocketRequest) -> Any | SocketManagerScopeException:
             for creator in creators:
                 value = await creator(req)
                 if value is not None and value in args:
@@ -181,7 +181,7 @@ class SocketRouterScope:
         enum_keys = set([enum.name for enum in annotation])
         enum_values = set([enum.value for enum in annotation])
 
-        async def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+        async def create_scope(req: SocketRequest) -> Any | SocketManagerScopeException:
             if not isinstance(req.data, dict):
                 return self._convert_scope_exception(
                     TypeError(f"Parameter '{self._param_name}' must be a dict but got {req.data}")
@@ -205,7 +205,7 @@ class SocketRouterScope:
 
     async def _create_depends_scope(self, default: Depends) -> _TScopeCreator:
         if default.dependency is None:
-            return await SocketRouterScope(
+            return await SocketManagerScope(
                 self._generators,
                 self._param_name,
                 Parameter(self._param_name, Parameter.POSITIONAL_ONLY, annotation=self.annotation),
@@ -216,7 +216,7 @@ class SocketRouterScope:
         depend_params = signature(dependency).parameters
         depend_param_creators: dict[str, _TScopeCreator] = {}
         for param_name in depend_params:
-            depend_param_creators[param_name] = await SocketRouterScope(
+            depend_param_creators[param_name] = await SocketManagerScope(
                 self._generators, param_name, depend_params[param_name], self._event_details
             ).init()
 
@@ -242,7 +242,7 @@ class SocketRouterScope:
         return create_scope
 
     async def _create_model_scope(self, model: type[_TModel]) -> _TScopeCreator:
-        async def create_scope(req: SocketRequest) -> _TModel | SocketRouterScopeException:
+        async def create_scope(req: SocketRequest) -> _TModel | SocketManagerScopeException:
             try:
                 return model.model_validate(req.data)
             except Exception as e:
@@ -253,7 +253,7 @@ class SocketRouterScope:
     async def _create_data_scope(self, annotation: Any | type) -> _TScopeCreator:
         is_any = annotation is Any
 
-        async def create_scope(req: SocketRequest) -> Any | SocketRouterScopeException:
+        async def create_scope(req: SocketRequest) -> Any | SocketManagerScopeException:
             if isinstance(req.data, list) and self._param_name == "data" and (is_any or annotation is list):
                 return req.data
 
@@ -280,9 +280,9 @@ class SocketRouterScope:
                 return raw_data
 
             if annotation is bool:
-                if raw_data in SocketRouterScope._BOOL_TRUE_VALUES:
+                if raw_data in SocketManagerScope._BOOL_TRUE_VALUES:
                     return True
-                elif raw_data in SocketRouterScope._BOOL_FALSE_VALUES:
+                elif raw_data in SocketManagerScope._BOOL_FALSE_VALUES:
                     return False
                 else:
                     return None
@@ -294,5 +294,5 @@ class SocketRouterScope:
 
         return create_scope
 
-    def _convert_scope_exception(self, exception: Exception) -> SocketRouterScopeException:
-        return SocketRouterScopeException(param=self._param_name, exception=exception, **self._event_details)
+    def _convert_scope_exception(self, exception: Exception) -> SocketManagerScopeException:
+        return SocketManagerScopeException(param=self._param_name, exception=exception, **self._event_details)

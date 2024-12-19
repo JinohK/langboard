@@ -2,8 +2,8 @@ from enum import Enum
 from inspect import Parameter
 from types import NoneType
 from typing import Any, Union
-from langboard.core.routing.Exception import SocketRouterScopeException
-from langboard.core.routing.SocketRouterScope import SocketRouterScope
+from langboard.core.routing.Exception import SocketManagerScopeException
+from langboard.core.routing.SocketManagerScope import SocketManagerScope
 from .....helpers.mocks import MockSocketifyWebSocket
 from .BaseScopeTest import BaseScopeTest
 from .ScopeTestModel import ScopeTestModel
@@ -127,17 +127,17 @@ class UnionScope(BaseScopeTest):
                 bit_or_param = Parameter(
                     model.param_name, Parameter.POSITIONAL_OR_KEYWORD, annotation=bit_or_union_type
                 )
-                scope = SocketRouterScope(model.param_name, param, self._event_details)
-                bit_or_scope = SocketRouterScope(model.param_name, bit_or_param, self._event_details)
+                scope = SocketManagerScope(model.param_name, param, self._event_details)
+                bit_or_scope = SocketManagerScope(model.param_name, bit_or_param, self._event_details)
                 result = scope(request)
                 bit_or_result = bit_or_scope(request)
 
                 if issubclass(expected_type, Exception):
-                    assert isinstance(result, SocketRouterScopeException)
+                    assert isinstance(result, SocketManagerScopeException)
                     assert isinstance(result.raw_exception, expected_type)
                     assert result.raw_exception.args[0] == expected
 
-                    assert isinstance(bit_or_result, SocketRouterScopeException)
+                    assert isinstance(bit_or_result, SocketManagerScopeException)
                     assert isinstance(bit_or_result.raw_exception, expected_type)
                     assert bit_or_result.raw_exception.args[0] == expected
                 else:

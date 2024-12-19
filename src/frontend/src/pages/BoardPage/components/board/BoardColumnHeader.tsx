@@ -1,7 +1,7 @@
 import { Input, Toast } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeProjectColumnName from "@/controllers/api/board/useChangeProjectColumnName";
-import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/useBoardColumnNameChangedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -22,7 +22,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const inputRef = useRef<HTMLInputElement | null>(null);
     const [columnName, setColumnName] = useState(column.name);
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
-    const { on: onBoardColumnNameChanged } = useBoardColumnNameChangedHandlers({
+    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -37,7 +37,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
 
     useEffect(() => {
-        const { off } = onBoardColumnNameChanged();
+        const { off } = onProjectColumnNameChanged();
 
         return () => {
             off();

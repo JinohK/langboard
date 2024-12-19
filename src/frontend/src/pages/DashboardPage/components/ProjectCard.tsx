@@ -11,10 +11,12 @@ import { Project } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/useDashboardCardCreatedHandlers";
 import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardCardOrderChangedHandlers";
-import useDashboardColumnCreatedHandlers from "@/controllers/socket/dashboard/useDashboardColumnCreatedHandlers";
-import useDashboardColumnNameChangedHandlers from "@/controllers/socket/dashboard/useDashboardColumnNameChangedHandlers";
-import useDashboardColumnOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardColumnOrderChangedHandlers";
+import useProjectColumnCreatedHandlers from "@/controllers/socket/project/useProjectColumnCreatedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
+import useProjectColumnOrderChangedHandlers from "@/controllers/socket/project/useProjectColumnOrderChangedHandlers";
 import { arrayMove } from "@dnd-kit/sortable";
+import useProjectTitleChangedHandlers from "@/controllers/socket/project/useProjectTitleChangedHandlers";
+import useProjectTypeChangedHandlers from "@/controllers/socket/project/useProjectTypeChangedHandlers";
 
 export const SkeletonProjectCard = memo(() => {
     const cards = [];
@@ -61,15 +63,33 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
     const { navigate, socket } = useDashboard();
     const { mutate } = useToggleStarProject();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [title, setTitle] = useState(project.title);
+    const [projectType, setProjectType] = useState(project.project_type);
     const [columns, setColumns] = useState(project.columns);
-    const { on: onDashboardColumnCreated } = useDashboardColumnCreatedHandlers({
+    const { on: onProjectTitleChanged } = useProjectTitleChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            project.title = data.title;
+            setTitle(data.title);
+        },
+    });
+    const { on: onProjectTypeChanged } = useProjectTypeChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            project.project_type = data.project_type;
+            setProjectType(data.project_type);
+        },
+    });
+    const { on: onProjectColumnCreated } = useProjectColumnCreatedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
             setColumns((prev) => prev.filter((column) => column.uid !== data.column.uid).concat(data.column));
         },
     });
-    const { on: onDashboardColumnNameChanged } = useDashboardColumnNameChangedHandlers({
+    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -82,7 +102,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             });
         },
     });
-    const { on: onDashboardColumnOrderChanged } = useDashboardColumnOrderChangedHandlers({
+    const { on: onProjectColumnOrderChanged } = useProjectColumnOrderChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -129,16 +149,20 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
     });
 
     useEffect(() => {
-        const { off: offDashboardColumnCreated } = onDashboardColumnCreated();
-        const { off: offDashboardColumnNameChanged } = onDashboardColumnNameChanged();
-        const { off: offDashboardColumnOrderChanged } = onDashboardColumnOrderChanged();
+        const { off: offProjectTitleChanged } = onProjectTitleChanged();
+        const { off: offProjectTypeChanged } = onProjectTypeChanged();
+        const { off: offProjectColumnCreated } = onProjectColumnCreated();
+        const { off: offProjectColumnNameChanged } = onProjectColumnNameChanged();
+        const { off: offProjectColumnOrderChanged } = onProjectColumnOrderChanged();
         const { off: offDashboardCardCreated } = onDashboardCardCreated();
         const { off: offDashboardCardOrderChanged } = onDashboardCardOrderChanged();
 
         return () => {
-            offDashboardColumnCreated();
-            offDashboardColumnNameChanged();
-            offDashboardColumnOrderChanged();
+            offProjectTitleChanged();
+            offProjectTypeChanged();
+            offProjectColumnCreated();
+            offProjectColumnNameChanged();
+            offProjectColumnOrderChanged();
             offDashboardCardCreated();
             offDashboardCardOrderChanged();
         };
@@ -190,9 +214,9 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
         <Card.Root className="cursor-pointer" onClick={toBoard}>
             <Card.Header className="relative block pt-5">
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
-                    {t(project.project_type === "Other" ? "common.Other" : `project.types.${project.project_type}`)}
+                    {t(projectType === "Other" ? "common.Other" : `project.types.${projectType}`)}
                 </Card.Title>
-                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{project.title}</Card.Title>
+                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
                 <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
                     <Tooltip.Root>
                         <Tooltip.Trigger asChild>

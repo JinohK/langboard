@@ -8,7 +8,7 @@ from langboard.core.routing import (
     TCachedScopes,
     WebSocket,
 )
-from langboard.core.routing.Exception import SocketEventException, SocketRouterScopeException
+from langboard.core.routing.Exception import SocketEventException, SocketManagerScopeException
 from langboard.core.utils.String import concat
 from pytest import mark
 from ....helpers.fixtures import ServerFixture
@@ -53,7 +53,7 @@ class TestSocketEvent(ServerFixture):
         for event in events:
             result = await event.run({}, req)
 
-            assert isinstance(result, SocketRouterScopeException)
+            assert isinstance(result, SocketManagerScopeException)
             assert result._route == "/"
             assert result._event == SocketDefaultEvent.Open.value
             assert result._func == "route_event_async" or result._func == "route_event_sync"

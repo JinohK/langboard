@@ -3,11 +3,11 @@ from types import AsyncGeneratorType
 from typing import Any, Callable, Coroutine, Self
 from ..filter import RoleFilter
 from ..security import Role
-from .Exception import SocketEventException, SocketRouterScopeException, SocketStatusCodeException
+from .Exception import SocketEventException, SocketManagerScopeException, SocketStatusCodeException
+from .SocketManagerScope import SocketManagerScope, TGenerator
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketResponseCode import SocketResponseCode
-from .SocketRouterScope import SocketRouterScope, TGenerator
 
 
 TEvent = Callable[..., SocketResponse | None | Coroutine[Any, Any, SocketResponse | None]]
@@ -30,17 +30,17 @@ class SocketEvent:
 
     async def init(self) -> "Self":
         params = signature(self._event).parameters
-        self._scope_creators: dict[str, SocketRouterScope] = {}
+        self._scope_creators: dict[str, SocketManagerScope] = {}
         self._generators: list[tuple[bool, TGenerator]] = []
         for scope_name in params:
-            self._scope_creators[scope_name] = await SocketRouterScope(
+            self._scope_creators[scope_name] = await SocketManagerScope(
                 self._generators, scope_name, params[scope_name], self._event_details
             ).init()
         return self
 
     async def run(
         self, cached_scopes: TCachedScopes, req: SocketRequest
-    ) -> SocketResponse | SocketRouterScopeException | SocketStatusCodeException | SocketEventException | None:
+    ) -> SocketResponse | SocketManagerScopeException | SocketStatusCodeException | SocketEventException | None:
         """Runs the socket event.
 
         :param cached_scopes: The cached scopes.
@@ -82,7 +82,7 @@ class SocketEvent:
                 return response
             else:
                 return None
-        except SocketRouterScopeException as e:
+        except SocketManagerScopeException as e:
             return e
         except Exception as e:
             return SocketEventException(exception=e, **self._event_details)

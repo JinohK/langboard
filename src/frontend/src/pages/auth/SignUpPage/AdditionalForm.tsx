@@ -59,6 +59,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                     onValueChange={setIndustry}
                     items={User.INDUSTRIES.map((industry) => ({ value: industry, label: t(`signUp.industries.${industry}`) }))}
                     emptyMessage={industryRef.current ?? ""}
+                    disabled={isValidating}
                     placeholder={t("user.What industry are you in?")}
                 />
                 {errors.industry && <FormErrorMessage error={errors.industry} icon="circle-alert" />}
@@ -70,6 +71,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                     onValueChange={setPurpose}
                     items={User.PURPOSES.map((purpose) => ({ value: purpose, label: t(`signUp.purposes.${purpose}`) }))}
                     emptyMessage={purposeRef.current ?? ""}
+                    disabled={isValidating}
                     placeholder={t("user.What is your purpose for using {app}?")}
                 />
                 {errors.purpose && <FormErrorMessage error={errors.purpose} icon="circle-alert" />}

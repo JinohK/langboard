@@ -41,7 +41,7 @@ class SocketEventException(EventBaseSocketException):
         return concat("\t", "\n\t".join(messages), "\n")
 
 
-class SocketRouterScopeException(EventBaseSocketException[_TException], Generic[_TException]):
+class SocketManagerScopeException(EventBaseSocketException[_TException], Generic[_TException]):
     raw_exception: _TException
 
     def __init__(self, route: str, event: str, func: str, param: str, exception: _TException) -> None:

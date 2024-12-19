@@ -1,5 +1,5 @@
 from json import loads as json_loads
-from typing import Any, Union
+from typing import Any, Union, cast
 from fastapi import status
 from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
@@ -13,7 +13,7 @@ from ..routing import (
     TCachedScopes,
     WebSocket,
 )
-from ..routing.Exception import SocketEventException, SocketRouterScopeException, SocketStatusCodeException
+from ..routing.Exception import SocketEventException, SocketManagerScopeException, SocketStatusCodeException
 from ..security import Auth
 from ..utils.decorators import thread_safe_singleton
 
@@ -96,7 +96,7 @@ class SocketApp(dict):
             return
 
         event = data.pop("event")
-        if self._toggle_subscription(ws, event, data):
+        if await self._toggle_subscription(ws, event, data, user_data):
             return
 
         event_data = data.get("data", data)
@@ -209,7 +209,7 @@ class SocketApp(dict):
         else:
             ws.send({"event": "error", "data": {"message": message, "code": _error_code}})
 
-    def _toggle_subscription(self, ws: SocketifyWebSocket, event: str, data: dict) -> bool:
+    async def _toggle_subscription(self, ws: SocketifyWebSocket, event: str, data: dict, user_data: Any) -> bool:
         if event != "subscribe" and event != "unsubscribe":
             return False
 
@@ -223,6 +223,22 @@ class SocketApp(dict):
             return True
 
         if is_subscribe:
+            validator = AppRouter.socket.get_subscription_validator(topic)
+            user = cast(User, await Auth.get_user_by_id(user_data["auth_user_id"]))
+            if validator:
+                if not await validator(topic_id, user):  # type: ignore
+                    return True
+
+            if topic.lower().endswith("_private"):
+                if user.username != topic_id:
+                    self._send_error(
+                        ws,
+                        "Forbidden",
+                        error_code=SocketResponseCode.WS_3003_FORBIDDEN,
+                        should_close=False,
+                    )
+                    return True
+
             topics = websocket.get_topics()
             for existed_topic in [*topics]:
                 if existed_topic.startswith(f"{topic}:"):
@@ -282,7 +298,7 @@ class SocketApp(dict):
                 )
                 return
 
-            if isinstance(response, SocketRouterScopeException):
+            if isinstance(response, SocketManagerScopeException):
                 self._send_error(
                     req.socket, str(response.raw_exception), SocketResponseCode.WS_4001_INVALID_DATA, should_close=False
                 )

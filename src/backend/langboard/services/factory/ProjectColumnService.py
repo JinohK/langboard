@@ -47,25 +47,23 @@ class ProjectColumnService(BaseService):
         self._db.insert(column)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"column": column.api_response()})
+        model_id = await SocketModelIdService.create_model_id(
+            {
+                "column": {
+                    **column.api_response(),
+                    "count": 0,
+                }
+            }
+        )
 
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=project.uid,
-                event=f"{_SOCKET_PREFIX}:created:{project.uid}",
-                data_keys="column",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=project.uid,
-                event="dashboard:column:created",
-                data_keys="column",
-                extra_data={"count": 0},
-            ),
-        ]
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Project,
+            topic_id=project.uid,
+            event=f"project:column:created:{project.uid}",
+            data_keys="column",
+        )
 
-        return SocketModelIdBaseResult(model_id, column, publish_models)
+        return SocketModelIdBaseResult(model_id, column, publish_model)
 
     async def change_name(
         self, user: User, project: TProjectParam, column: TColumnParam, name: str
@@ -97,22 +95,14 @@ class ProjectColumnService(BaseService):
             }
         )
 
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=project.uid,
-                event=f"{_SOCKET_PREFIX}:name:changed:{project.uid}",
-                data_keys=["uid", "name"],
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=project.uid,
-                event="dashboard:column:name:changed",
-                data_keys=["uid", "name"],
-            ),
-        ]
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Project,
+            topic_id=project.uid,
+            event=f"project:column:name:changed:{project.uid}",
+            data_keys=["uid", "name"],
+        )
 
-        return SocketModelIdBaseResult(model_id, True, publish_models)
+        return SocketModelIdBaseResult(model_id, True, publish_model)
 
     async def change_order(
         self, user: User, project: TProjectParam, project_column: TColumnParam, order: int
@@ -168,19 +158,11 @@ class ProjectColumnService(BaseService):
             }
         )
 
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=project.uid,
-                event=f"{_SOCKET_PREFIX}:order:changed:{project.uid}",
-                data_keys=["uid", "order"],
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=project.uid,
-                event="dashboard:column:order:changed",
-                data_keys=["uid", "order"],
-            ),
-        ]
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Project,
+            topic_id=project.uid,
+            event=f"project:column:order:changed:{project.uid}",
+            data_keys=["uid", "order"],
+        )
 
-        return SocketModelIdBaseResult(model_id, True, publish_models)
+        return SocketModelIdBaseResult(model_id, True, publish_model)

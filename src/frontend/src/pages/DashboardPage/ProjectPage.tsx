@@ -57,13 +57,13 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred, scrollAreaUpdater }: 
                 }
 
                 subscribedProjects[project.uid] = true;
-                socket.subscribe(ESocketTopic.Dashboard, project.uid);
+                socket.subscribe(ESocketTopic.Project, project.uid);
             }
         }
 
         return () => {
             Object.keys(subscribedProjects).forEach((uid) => {
-                socket.unsubscribe(ESocketTopic.Dashboard, uid);
+                socket.unsubscribe(ESocketTopic.Project, uid);
             });
         };
     }, [isFetching]);

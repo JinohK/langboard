@@ -12,7 +12,7 @@ export interface Interface {
 
 export interface IBoard extends Interface {
     user: User.Interface;
-    reactions: Partial<Record<TEmoji, number[]>>;
+    reactions: Partial<Record<TEmoji, (number | string)[]>>;
 }
 
 export const transformFromApi = <TComment extends Interface | Interface[]>(

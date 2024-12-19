@@ -442,9 +442,9 @@ class CheckitemService(BaseService):
                 data_keys="card",
             ),
             SocketPublishModel(
-                topic=SocketTopic.Dashboard,
+                topic=SocketTopic.Project,
                 topic_id=project.uid,
-                event="dashboard:card:created",
+                event=f"dashboard:card:created:{project.uid}",
                 extra_data={"column_uid": new_card.project_column_uid},
             ),
         ]

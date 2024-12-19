@@ -225,9 +225,9 @@ class CardService(BaseService):
                 data_keys="card",
             ),
             SocketPublishModel(
-                topic=SocketTopic.Dashboard,
+                topic=SocketTopic.Project,
                 topic_id=project.uid,
-                event="dashboard:card:created",
+                event=f"dashboard:card:created{project.uid}",
                 extra_data={"column_uid": column.uid},
             ),
         ]
@@ -275,7 +275,7 @@ class CardService(BaseService):
 
         model: dict[str, Any] = {}
         for key in form:
-            if key not in mutable_keys:
+            if key not in mutable_keys or key not in old_card_record:
                 continue
             model[key] = self._convert_to_python(getattr(card, key))
         model_id = await SocketModelIdService.create_model_id(model)
@@ -403,7 +403,7 @@ class CardService(BaseService):
                         data_keys=["to_column_uid", "column_name"],
                     ),
                     SocketPublishModel(
-                        topic=SocketTopic.Dashboard,
+                        topic=SocketTopic.Project,
                         topic_id=project.uid,
                         event="dashboard:card:order:changed",
                         extra_data={"from_column_uid": original_column_uid, "to_column_uid": new_column.uid},

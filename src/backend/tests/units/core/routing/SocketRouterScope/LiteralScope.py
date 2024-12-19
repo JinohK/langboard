@@ -1,8 +1,8 @@
 from enum import Enum
 from types import NoneType
 from typing import Literal
-from langboard.core.routing.Exception import SocketRouterScopeException
-from langboard.core.routing.SocketRouterScope import SocketRouterScope
+from langboard.core.routing.Exception import SocketManagerScopeException
+from langboard.core.routing.SocketManagerScope import SocketManagerScope
 from pytest import raises
 from .BaseScopeTest import BaseScopeTest
 from .ScopeTestModel import ScopeTestModel
@@ -37,7 +37,7 @@ class LiteralScope(BaseScopeTest):
         )
 
         with raises(TypeError) as e:
-            SocketRouterScope(model.param_name, model.create_parameter(), self._event_details)
+            SocketManagerScope(model.param_name, model.create_parameter(), self._event_details)
 
         assert isinstance(e.value, model.expected_type)  # type: ignore
         assert e.value.args[0] == model.expected
@@ -86,7 +86,7 @@ class LiteralScope(BaseScopeTest):
                 result = scope(request)
 
                 if issubclass(expected_type, Exception):
-                    assert isinstance(result, SocketRouterScopeException)
+                    assert isinstance(result, SocketManagerScopeException)
                     assert isinstance(result.raw_exception, expected_type)
                     assert result.raw_exception.args[0] == expected
                 else:

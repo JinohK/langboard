@@ -15,11 +15,12 @@ export interface IUseDashboardCardCreatedHandlersProps extends IBaseUseSocketHan
 const useDashboardCardCreatedHandlers = ({ socket, callback, projectUID }: IUseDashboardCardCreatedHandlersProps) => {
     return useSocketHandler<IDashboardCardCreatedRequest, IDashboardCardCreatedResponse>({
         socket,
-        topic: ESocketTopic.Dashboard,
+        topic: ESocketTopic.Project,
         topicId: projectUID,
         eventKey: `dashboard-card-created-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.CREATED,
+            params: { uid: projectUID },
             callback,
         },
     });

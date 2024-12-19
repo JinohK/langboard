@@ -22,8 +22,8 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
     let topic = ESocketTopic.None;
     switch (type) {
         case "BoardColumn":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.COLUMN.ORDER_CHANGED;
-            topic = ESocketTopic.Board;
+            onEventName = SOCKET_SERVER_EVENTS.PROJECT.COLUMN.ORDER_CHANGED;
+            topic = ESocketTopic.Project;
             break;
         case "BoardCardAttachment":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;

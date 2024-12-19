@@ -7,6 +7,7 @@ from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import project_role_finder
+from .scopes.Project import UpdateProjectDetailsForm
 
 
 @AppRouter.api.post("/board/{project_uid}/settings/available")
@@ -50,3 +51,21 @@ async def get_project_details(
                 service.project_invitation.convert_none_user_api_response(invitation.email)
             )
     return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/details")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def change_project_details(
+    project_uid: str, form: UpdateProjectDetailsForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    result = await service.project.update(user, project_uid, form.model_dump())
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if result is True:
+        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

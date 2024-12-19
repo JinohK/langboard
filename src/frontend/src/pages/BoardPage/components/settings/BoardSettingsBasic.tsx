@@ -1,22 +1,77 @@
-import { Box, Flex, Input, Label, Textarea } from "@/components/base";
+import { AutoComplete, Box, Flex, Form, Input, Label, Textarea } from "@/components/base";
+import FormErrorMessage from "@/components/FormErrorMessage";
+import SubmitButton from "@/components/SubmitButton";
+import useChangeProjectDetails from "@/controllers/api/board/settings/useChangeProjectDetails";
+import useForm from "@/core/hooks/form/useForm";
+import { Project } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo } from "react";
+import { memo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardSettingsBasic = memo(() => {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
+    const { mutate } = useChangeProjectDetails(project.uid);
+    const projectTypeRef = useRef<string>(project.project_type);
+    const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
+    const { errors, isValidating, handleSubmit, formRef } = useForm({
+        errorLangPrefix: "project.errors",
+        schema: {
+            title: { required: true },
+            description: {},
+            project_type: { required: true },
+        },
+        mutate,
+        useDefaultBadRequestHandler: true,
+    });
+
+    const setProjectType = (value: string) => {
+        projectTypeRef.current = value;
+        projectTypeInputRef.current!.value = value;
+    };
 
     return (
         <Flex direction="col" py="4" gap="4" items="center">
-            <Label display="inline-grid" items="center" gap="1.5" w="full" maxW="64">
-                <Box>{t("project.Project title")}</Box>
-                <Input defaultValue={project.title} />
-            </Label>
-            <Label display="inline-grid" items="center" gap="1.5">
-                <Box>{t("project.Project description")}</Box>
-                <Textarea defaultValue={project.description} />
-            </Label>
+            <Form.Root className="flex w-full max-w-96 flex-col gap-3" onSubmit={handleSubmit} ref={formRef}>
+                <Label display="inline-grid" items="center" gap="2" w="full">
+                    <Box>{t("project.Project title")}</Box>
+                    <Form.Field name="title">
+                        <Form.Control asChild>
+                            <Input defaultValue={project.title} disabled={isValidating} />
+                        </Form.Control>
+                    </Form.Field>
+                </Label>
+                {errors.title && <FormErrorMessage error={errors.title} icon="circle-alert" />}
+                <Label display="inline-grid" items="center" gap="2" w="full">
+                    <Box>{t("project.Project description")}</Box>
+                    <Form.Field name="description">
+                        <Form.Control asChild>
+                            <Textarea defaultValue={project.description} disabled={isValidating} resize="none" className="max-h-36 min-h-36" />
+                        </Form.Control>
+                    </Form.Field>
+                </Label>
+                <Form.Field name="project_type">
+                    <Label display="inline-grid" items="center" gap="2" w="full">
+                        <Box>{t("project.Project type")}</Box>
+                        <Input type="hidden" name="project_type" value={projectTypeRef.current} ref={projectTypeInputRef} />
+                        <AutoComplete
+                            selectedValue={project.project_type}
+                            onValueChange={setProjectType}
+                            items={Project.TYPES.map((project_type) => ({
+                                value: project_type,
+                                label: t(project_type === "Other" ? "common.Other" : `project.types.${project_type}`),
+                            }))}
+                            emptyMessage={projectTypeRef.current ?? ""}
+                            disabled={isValidating}
+                            placeholder={t("project.Project type")}
+                        />
+                    </Label>
+                    {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}
+                </Form.Field>
+                <SubmitButton type="submit" isValidating={isValidating}>
+                    {t("common.Save")}
+                </SubmitButton>
+            </Form.Root>
         </Flex>
     );
 });

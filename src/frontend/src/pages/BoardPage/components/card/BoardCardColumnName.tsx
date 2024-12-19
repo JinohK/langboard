@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/base";
-import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/useBoardColumnNameChangedHandlers";
 import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColumnChangedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useEffect, useState } from "react";
 
@@ -21,7 +21,7 @@ function BoardCardColumnName(): JSX.Element {
             setColumnName(data.column_name);
         },
     });
-    const { on: onBoardColumnNameChanged } = useBoardColumnNameChangedHandlers({
+    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
         socket,
         projectUID,
         callback: (data) => {
@@ -36,11 +36,11 @@ function BoardCardColumnName(): JSX.Element {
 
     useEffect(() => {
         const { off: offCardColumnChanged } = onCardColumnChanged();
-        const { off: offBoardColumnNameChanged } = onBoardColumnNameChanged();
+        const { off: offProjectColumnNameChanged } = onProjectColumnNameChanged();
 
         return () => {
             offCardColumnChanged();
-            offBoardColumnNameChanged();
+            offProjectColumnNameChanged();
         };
     }, []);
 

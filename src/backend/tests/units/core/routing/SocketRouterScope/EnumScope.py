@@ -1,5 +1,5 @@
 from enum import Enum
-from langboard.core.routing.Exception import SocketRouterScopeException
+from langboard.core.routing.Exception import SocketManagerScopeException
 from .BaseScopeTest import BaseScopeTest
 from .ScopeTestModel import ScopeTestModel
 
@@ -37,7 +37,7 @@ class EnumScope(BaseScopeTest):
             scope = model.create_scope(self._event_details)
             result = scope(request)
 
-            assert isinstance(result, SocketRouterScopeException)
+            assert isinstance(result, SocketManagerScopeException)
             assert isinstance(result.raw_exception, TypeError)
             assert result.raw_exception.args[0] == f"Parameter 'enum' must be a dict but got {model.req_data}"
 

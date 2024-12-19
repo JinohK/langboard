@@ -1,4 +1,4 @@
-from langboard.core.routing.Exception import SocketRouterScopeException
+from langboard.core.routing.Exception import SocketManagerScopeException
 from pydantic import BaseModel
 from pydantic_core import ValidationError
 from .....helpers.mocks import MockSocketifyWebSocket
@@ -46,7 +46,7 @@ class ModelScope(BaseScopeTest):
             result = scope(request)
 
             if model.is_exception:
-                assert isinstance(result, SocketRouterScopeException)
+                assert isinstance(result, SocketManagerScopeException)
                 assert isinstance(result.raw_exception, model.expected_type)  # type: ignore
 
                 errors = result.raw_exception.errors()

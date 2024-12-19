@@ -59,7 +59,6 @@ function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: I
                     <Floating.LabelInput
                         label={t("user.Email")}
                         isFormControl
-                        autoFocus
                         autoComplete="email"
                         disabled={isValidating}
                         className="h-9 w-64 py-2"

@@ -163,6 +163,13 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                         cookieStore.remove(APP_ACCESS_TOKEN);
                         cookieStore.remove(APP_REFRESH_TOKEN);
                         return redirectToSignIn();
+                    case ESocketStatus.WS_1006_ABNORMAL_CLOSURE:
+                        setTimeout(() => {
+                            if (isAuthenticated()) {
+                                reconnect();
+                            }
+                        }, 5000);
+                        return;
                 }
 
                 await runEvents({

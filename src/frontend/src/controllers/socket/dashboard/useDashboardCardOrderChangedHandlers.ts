@@ -16,11 +16,12 @@ export interface IUseDashboardCardOrderChangedHandlersProps extends IBaseUseSock
 const useDashboardCardOrderChangedHandlers = ({ socket, callback, projectUID }: IUseDashboardCardOrderChangedHandlersProps) => {
     return useSocketHandler<IDashboardCardOrderChangedRequest, IDashboardCardOrderChangedResponse>({
         socket,
-        topic: ESocketTopic.Dashboard,
+        topic: ESocketTopic.Project,
         topicId: projectUID,
         eventKey: `dashboard-card-order-changed-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.ORDER_CHANGED,
+            params: { uid: projectUID },
             callback,
         },
     });

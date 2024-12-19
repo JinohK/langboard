@@ -92,20 +92,29 @@ export const API_ROUTES = {
             UPDATE_ASSIGNED_USERS: "/board/{uid}/wiki/{wiki_uid}/assigned-users",
             DELETE: "/board/{uid}/wiki/{wiki_uid}",
         },
+        SETTINGS: {
+            UPDATE_PROJECT_DETAILS: "/board/{uid}/settings/details",
+        },
     },
     REVERT: (path: string) => `/revert/${path}`,
 } as const;
 
 export const SOCKET_SERVER_EVENTS = {
-    DASHBOARD: {
+    PROJECT: {
+        TITLE_CHANGED: "project:title:changed:{uid}",
+        DESCRIPTION_CHANGED: "project:description:changed:{uid}",
+        TYPE_CHANGED: "project:project_type:changed:{uid}",
+        AI_DESCRIPTION_CHANGED: "project:ai_description:changed:{uid}",
         COLUMN: {
-            CREATED: "dashboard:column:created",
-            NAME_CHANGED: "dashboard:column:name:changed",
-            ORDER_CHANGED: "dashboard:column:order:changed",
+            CREATED: "project:column:created:{uid}",
+            NAME_CHANGED: "project:column:name:changed:{uid}",
+            ORDER_CHANGED: "project:column:order:changed:{uid}",
         },
+    },
+    DASHBOARD: {
         CARD: {
-            CREATED: "dashboard:card:created",
-            ORDER_CHANGED: "dashboard:card:order:changed",
+            CREATED: "dashboard:card:created:{uid}",
+            ORDER_CHANGED: "dashboard:card:order:changed:{uid}",
         },
     },
     BOARD: {
@@ -113,11 +122,6 @@ export const SOCKET_SERVER_EVENTS = {
         CHAT_SENT: "board:chat:sent",
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
-        COLUMN: {
-            CREATED: "board:column:created:{uid}",
-            NAME_CHANGED: "board:column:name:changed:{uid}",
-            ORDER_CHANGED: "board:column:order:changed:{uid}",
-        },
         CARD: {
             CREATED: "board:card:created:{uid}",
             ORDER_CHANGED: "board:card:order:changed:{uid}",

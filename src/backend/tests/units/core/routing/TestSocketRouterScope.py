@@ -4,10 +4,10 @@ from typing import Generator
 from fastapi import Depends as DependsFunc
 from fastapi.params import Depends
 from langboard.core.routing import SocketRequest, WebSocket
-from langboard.core.routing.SocketRouterScope import SocketRouterScope
+from langboard.core.routing.SocketManagerScope import SocketManagerScope
 from pytest import ExceptionInfo, mark, raises
 from ....helpers.mocks import MockSocketifyWebSocket
-from .SocketRouterScope import (
+from .SocketManagerScope import (
     AnnotatedScope,
     DataScope,
     DependsScope,
@@ -19,7 +19,7 @@ from .SocketRouterScope import (
 )
 
 
-class TestSocketRouterScope(AnnotatedScope, DataScope, DependsScope, EnumScope, LiteralScope, ModelScope, UnionScope):
+class TestSocketManagerScope(AnnotatedScope, DataScope, DependsScope, EnumScope, LiteralScope, ModelScope, UnionScope):
     _event_details = {
         "route": "route",
         "event": "event",
@@ -34,7 +34,7 @@ class TestSocketRouterScope(AnnotatedScope, DataScope, DependsScope, EnumScope, 
         params = signature(wrong_func).parameters
         for scope_name in params:
             with raises(ValueError) as e:
-                SocketRouterScope(scope_name, params[scope_name], self._event_details)
+                SocketManagerScope(scope_name, params[scope_name], self._event_details)
             errors.append(e)
 
         for error in errors:
@@ -52,7 +52,7 @@ class TestSocketRouterScope(AnnotatedScope, DataScope, DependsScope, EnumScope, 
         for model in models:
             param = model.create_parameter()
             with raises(TypeError) as e:
-                SocketRouterScope(model.param_name, param, self._event_details)
+                SocketManagerScope(model.param_name, param, self._event_details)
             errors[model.param_name] = e
 
         for scope_name in errors:
@@ -103,7 +103,7 @@ class TestSocketRouterScope(AnnotatedScope, DataScope, DependsScope, EnumScope, 
 
         for model in models:
             param = model.create_parameter()
-            scope = SocketRouterScope(model.param_name, param, self._event_details)
+            scope = SocketManagerScope(model.param_name, param, self._event_details)
 
             assert scope._event_details == self._event_details
             assert scope._param_name == param.name

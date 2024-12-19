@@ -125,7 +125,7 @@ class ProjectWikiService(BaseService):
 
         mutable_keys = ["title", "content"]
 
-        old_card_record = {}
+        old_wiki_record = {}
         for key in mutable_keys:
             if key not in form or not hasattr(wiki, key):
                 continue
@@ -133,10 +133,10 @@ class ProjectWikiService(BaseService):
             new_value = form[key]
             if old_value == new_value:
                 continue
-            old_card_record[key] = self._convert_to_python(old_value)
+            old_wiki_record[key] = self._convert_to_python(old_value)
             setattr(wiki, key, new_value)
 
-        if not old_card_record:
+        if not old_wiki_record:
             return True
 
         if isinstance(user_or_bot, BotType):
@@ -149,7 +149,7 @@ class ProjectWikiService(BaseService):
 
         model: dict[str, Any] = {}
         for key in form:
-            if key not in mutable_keys:
+            if key not in mutable_keys or key not in old_wiki_record:
                 continue
             model[key] = self._convert_to_python(getattr(wiki, key))
         model_id = await SocketModelIdService.create_model_id(model)

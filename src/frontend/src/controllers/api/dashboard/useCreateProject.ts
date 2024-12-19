@@ -5,7 +5,7 @@ import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation
 interface ICreateProjectForm {
     title: string;
     description?: string;
-    project_type?: string;
+    project_type: string;
 }
 
 interface ICreateProjectResponse {

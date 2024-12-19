@@ -1,6 +1,4 @@
-from datetime import datetime
 from typing import Any, Literal, cast, overload
-from pydantic import BaseModel
 from ...core.ai import BotType
 from ...core.ai.QueueBot import QueueBot, QueueBotModel
 from ...core.routing import SocketTopic
@@ -136,6 +134,22 @@ class ProjectService(BaseService):
 
         return projects
 
+    async def is_assigned(self, user: User, project: TProjectParam) -> bool:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return False
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectAssignedUser)
+            .where(
+                (ProjectAssignedUser.column("project_id") == project.id)
+                & (ProjectAssignedUser.column("user_id") == user.id)
+            )
+            .limit(1)
+        )
+        return bool(result.first())
+
     async def toggle_star(self, user: User, uid: str, commit: bool = True) -> bool:
         result = await self._db.exec(
             self._db.query("select")
@@ -195,38 +209,28 @@ class ProjectService(BaseService):
 
         return project
 
-    @overload
-    async def update(self, user_or_bot: BotType, project: int, form: dict) -> None: ...
-    @overload
-    async def update(self, user_or_bot: User, project: Project | int, form: dict) -> str | None: ...
-    async def update(self, user_or_bot: User | BotType, project: Project | int, form: dict) -> str | None:
-        for immutable_key in ["id", "uid", "owner_id"]:
-            if immutable_key in form:
-                form.pop(immutable_key)
-
-        if isinstance(project, int):
-            project = cast(Project, await self.get_by_id(project))
-            if not project:
-                return None
+    async def update(
+        self, user_or_bot: User | BotType, project: TProjectParam, form: dict
+    ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return None
 
         old_project_record = {}
+        mutable_keys = ["title", "description", "project_type", "ai_description"]
 
-        for key, value in form.items():
-            if hasattr(project, key):
-                old_project_record[key] = getattr(project, key)
-                if isinstance(old_project_record[key], BaseModel):
-                    old_project_record[key] = old_project_record[key].model_dump()
-                elif isinstance(old_project_record[key], datetime):
-                    old_project_record[key] = old_project_record[key].isoformat()
-                setattr(project, key, value)
+        for key in mutable_keys:
+            if key not in form or not hasattr(project, key):
+                continue
+            old_value = getattr(project, key)
+            new_value = form[key]
+            if old_value == new_value:
+                continue
+            old_project_record[key] = self._convert_to_python(old_value)
+            setattr(project, key, new_value)
 
-        activitiy_params = {
-            "user_or_bot": user_or_bot,
-            "model": project,
-            "shared": {"project_uid": project.uid},
-            "new": [*list(form.keys())],
-            "old": old_project_record,
-        }
+        if not old_project_record:
+            return True
 
         if isinstance(user_or_bot, BotType):
             await self._db.update(project)
@@ -235,7 +239,6 @@ class ProjectService(BaseService):
         else:
             revert_service = self._get_service(RevertService)
             revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
-            activitiy_params["revert_key"] = revert_key
 
             QueueBot.add(
                 QueueBotModel(
@@ -251,7 +254,25 @@ class ProjectService(BaseService):
                 )
             )
 
-        return revert_key
+        model: dict[str, Any] = {}
+        for key in form:
+            if key not in mutable_keys or key not in old_project_record:
+                continue
+            model[key] = self._convert_to_python(getattr(project, key))
+        model_id = await SocketModelIdService.create_model_id(model)
+
+        publish_models: list[SocketPublishModel] = []
+        for key in model:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Project,
+                    topic_id=project.uid,
+                    event=f"project:{key}:changed:{project.uid}",
+                    data_keys=key,
+                )
+            )
+
+        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
 
     async def update_assign_users(
         self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]

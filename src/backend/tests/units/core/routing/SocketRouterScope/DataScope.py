@@ -1,7 +1,7 @@
 from types import NoneType
 from typing import Any
-from langboard.core.routing.Exception import SocketRouterScopeException
-from langboard.core.routing.SocketRouterScope import SocketRouterScope
+from langboard.core.routing.Exception import SocketManagerScopeException
+from langboard.core.routing.SocketManagerScope import SocketManagerScope
 from pydantic import BaseModel
 from .BaseScopeTest import BaseScopeTest
 from .ScopeTestModel import ScopeTestModel
@@ -151,7 +151,7 @@ class DataScope(BaseScopeTest):
             ),
         ]
 
-        for true_type in SocketRouterScope._BOOL_TRUE_VALUES:
+        for true_type in SocketManagerScope._BOOL_TRUE_VALUES:
             models.append(
                 ScopeTestModel(
                     param_name="bool",
@@ -162,7 +162,7 @@ class DataScope(BaseScopeTest):
                 )
             )
 
-        for false_type in SocketRouterScope._BOOL_FALSE_VALUES:
+        for false_type in SocketManagerScope._BOOL_FALSE_VALUES:
             models.append(
                 ScopeTestModel(
                     param_name="bool",
@@ -179,7 +179,7 @@ class DataScope(BaseScopeTest):
             result = scope(request)
 
             if model.is_exception:
-                assert isinstance(result, SocketRouterScopeException), str(model)
+                assert isinstance(result, SocketManagerScopeException), str(model)
                 assert str(result).count(f"{model.expected_type.__name__}: {model.expected}") == 1, str(model)  # type: ignore
                 assert str(result.raw_exception) == model.expected, str(model)
             else:

@@ -285,6 +285,13 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         events[event][eventKey] = events[event][eventKey].filter((cb) => cb !== callback);
+        if (!events[event][eventKey].length) {
+            delete events[event][eventKey];
+        }
+
+        if (!Object.keys(events[event]).length) {
+            delete events[event];
+        }
     };
 
     const send = (json: string) => {
@@ -352,8 +359,6 @@ const useSocketStore = create<ISocketStore>(() => {
                 socketMap.subscribedCallbackQueue[topic][topicId].push(callback);
             }
         }
-
-        console.log(socketMap);
 
         send(
             JSON.stringify({

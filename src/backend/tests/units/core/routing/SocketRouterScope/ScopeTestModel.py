@@ -1,7 +1,7 @@
 from inspect import Parameter
 from typing import Any
 from langboard.core.routing import SocketRequest, WebSocket
-from langboard.core.routing.SocketRouterScope import SocketRouterScope
+from langboard.core.routing.SocketManagerScope import SocketManagerScope
 from langboard.core.utils.String import capitalize_all_words
 from pydantic import BaseModel
 from .....helpers.mocks import MockSocketifyWebSocket
@@ -70,7 +70,7 @@ class ScopeTestModel(BaseModel):
 
     def create_scope(self, event_details: dict[str, str]):
         parameter = self.create_parameter()
-        return SocketRouterScope(self.param_name, parameter, event_details)
+        return SocketManagerScope(self.param_name, parameter, event_details)
 
     def _make_repr_name(self, name: str, remove: str | None = None) -> str:
         return capitalize_all_words((name.replace(remove, "") if remove else name).replace("_", " "))

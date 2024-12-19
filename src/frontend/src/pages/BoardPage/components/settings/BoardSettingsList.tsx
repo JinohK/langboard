@@ -17,7 +17,7 @@ const BoardSettingsList = memo(() => {
     }, []);
 
     return (
-        <Flex direction="col" gap="3" p={{ initial: "4", md: "6", lg: "8" }}>
+        <Flex direction="col" gap="3" p={{ initial: "4", md: "6", lg: "8" }} items="center">
             <BoardSettingsSection title="project.settings.Basic info">
                 <BoardSettingsBasic />
             </BoardSettingsSection>
@@ -37,7 +37,7 @@ const BoardSettingsSection = memo(({ title, children }: IBoardSettingsSectionPro
     const [t] = useTranslation();
 
     return (
-        <Box>
+        <Box w="full" className="max-w-screen-sm">
             <h2 className="scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight">{t(title)}</h2>
             {children}
         </Box>
