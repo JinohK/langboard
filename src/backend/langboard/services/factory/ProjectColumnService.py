@@ -1,16 +1,12 @@
-from typing import cast
+from typing import Any, cast
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
-from ...models import (
-    Card,
-    Project,
-    ProjectColumn,
-    User,
-)
+from ...models import Card, Project, ProjectColumn
 from .Types import TColumnParam, TProjectParam
 
 
-_SOCKET_PREFIX = "board:column"
+_SOCKET_PREFIX = "project:column"
 
 
 class ProjectColumnService(BaseService):
@@ -19,14 +15,45 @@ class ProjectColumnService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project_column"
 
-    async def count_cards(self, project_id: int, column_uid: str) -> int:
-        sql_query = self._db.query("select").count(Card, Card.id).where(Card.column("project_id") == project_id)
-        if column_uid == Project.ARCHIVE_COLUMN_UID:
+    async def get_list(self, project: TProjectParam) -> list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectColumn)
+            .where(ProjectColumn.column("project_id") == project.id)
+            .order_by(ProjectColumn.column("order").asc())
+            .group_by(ProjectColumn.column("order"))
+        )
+        raw_columns = result.all()
+        columns = [raw_column.api_response() for raw_column in raw_columns]
+        columns.insert(
+            project.archive_column_order,
+            {
+                "uid": Project.ARCHIVE_COLUMN_UID,
+                "name": project.archive_column_name,
+                "order": project.archive_column_order,
+            },
+        )
+        return columns
+
+    async def count_cards(self, project: TProjectParam, column_id: SnowflakeID | str) -> int:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return 0
+        column_id = (
+            SnowflakeID.from_short_code(column_id)
+            if isinstance(column_id, str) and column_id != Project.ARCHIVE_COLUMN_UID
+            else column_id
+        )
+        sql_query = self._db.query("select").count(Card, Card.id).where(Card.column("project_id") == project.id)
+        if column_id == Project.ARCHIVE_COLUMN_UID:
             sql_query = sql_query.where(Card.column("archived_at") != None)  # noqa
         else:
-            sql_query = sql_query.where(Card.column("project_column_uid") == column_uid)
+            sql_query = sql_query.where(Card.column("project_column_id") == column_id)
         result = await self._db.exec(sql_query)
-        count = cast(int, result.one())
+        count = result.one()
         return count
 
     async def create(
@@ -39,7 +66,7 @@ class ProjectColumnService(BaseService):
         max_order = await self._get_max_order(ProjectColumn, "project_id", project.id)
 
         column = ProjectColumn(
-            project_id=cast(int, project.id),
+            project_id=project.id,
             name=name,
             order=max_order + 2,  # due to the archive column, the order is incremented by 2
         )
@@ -58,8 +85,8 @@ class ProjectColumnService(BaseService):
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Project,
-            topic_id=project.uid,
-            event=f"project:column:created:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:created:{project.get_uid()}",
             data_keys="column",
         )
 
@@ -76,7 +103,7 @@ class ProjectColumnService(BaseService):
             # original_name = project.archive_column_name
             project.archive_column_name = name
             await self._db.update(project)
-            column_uid = Project.ARCHIVE_COLUMN_UID
+            column_id = Project.ARCHIVE_COLUMN_UID
         else:
             column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
             if not column or column.project_id != project.id:
@@ -84,21 +111,21 @@ class ProjectColumnService(BaseService):
             # original_name = column.name
             column.name = name
             await self._db.update(column)
-            column_uid = column.uid
+            column_id = column.id
 
         await self._db.commit()
 
         model_id = await SocketModelIdService.create_model_id(
             {
-                "uid": column_uid,
+                "uid": Project.ARCHIVE_COLUMN_UID if isinstance(column_id, str) else column_id.to_short_code(),
                 "name": name,
             }
         )
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Project,
-            topic_id=project.uid,
-            event=f"project:column:name:changed:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:name:changed:{project.get_uid()}",
             data_keys=["uid", "name"],
         )
 
@@ -130,7 +157,7 @@ class ProjectColumnService(BaseService):
             if not project_column or project_column.project_id != project.id:
                 return None
             for column in columns:
-                if column.uid == project_column.uid:
+                if column.id == project_column.id:
                     target_column = column
                     columns.remove(column)
                     break
@@ -153,15 +180,17 @@ class ProjectColumnService(BaseService):
 
         model_id = await SocketModelIdService.create_model_id(
             {
-                "uid": project_column.uid if isinstance(project_column, ProjectColumn) else Project.ARCHIVE_COLUMN_UID,
+                "uid": project_column.get_uid()
+                if isinstance(project_column, ProjectColumn)
+                else Project.ARCHIVE_COLUMN_UID,
                 "order": order,
             }
         )
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Project,
-            topic_id=project.uid,
-            event=f"project:column:order:changed:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:order:changed:{project.get_uid()}",
             data_keys=["uid", "order"],
         )
 

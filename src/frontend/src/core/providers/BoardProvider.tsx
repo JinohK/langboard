@@ -154,9 +154,9 @@ export const BoardProvider = memo(
             }
 
             for (let i = 0; i < filters.members.length; ++i) {
-                const userId = filters.members[i];
-                let user = project.members.find((member) => member.id.toString() === userId);
-                if (userId === "me") {
+                const userUID = filters.members[i];
+                let user = project.members.find((member) => member.uid === userUID);
+                if (userUID === "me") {
                     user = currentUser;
                 }
 

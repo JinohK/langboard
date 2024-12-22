@@ -1,8 +1,8 @@
 from fastapi import status
+from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import User
 from ...services import Service
 from .DashboardProject import DashboardProjectCreateForm
 
@@ -43,7 +43,7 @@ async def create_project(
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
-    return JsonResponse(content={"project_uid": project.uid}, status_code=status.HTTP_201_CREATED)
+    return JsonResponse(content={"project_uid": project.get_uid()}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put("/dashboard/projects/{project_uid}/star")

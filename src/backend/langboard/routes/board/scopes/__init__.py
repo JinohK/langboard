@@ -3,10 +3,15 @@ from .Card import ChangeCardDetailsForm, CreateCardForm
 from .Checkitem import CardifyCheckitemForm, CreateCardCheckitemForm
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
-from .Project import AcceptProjectInvitationForm, ChatHistoryPagination, InviteProjectMemberForm
+from .Project import (
+    AcceptProjectInvitationForm,
+    ChatHistoryPagination,
+    InviteProjectMemberForm,
+    UpdateProjectDetailsForm,
+)
 from .RoleFinder import project_role_finder
 from .Shared import AssignUsersForm, ChangeColumnOrderForm, ChangeOrderForm
-from .Wiki import ChangeWikiDetailsForm, WikiForm
+from .Wiki import ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
 __all__ = [
@@ -18,6 +23,7 @@ __all__ = [
     "CreateCardForm",
     "ChangeCardDetailsForm",
     "InviteProjectMemberForm",
+    "UpdateProjectDetailsForm",
     "AcceptProjectInvitationForm",
     "ChatHistoryPagination",
     "ChangeAttachmentNameForm",
@@ -26,4 +32,5 @@ __all__ = [
     "CardifyCheckitemForm",
     "WikiForm",
     "ChangeWikiDetailsForm",
+    "ChangeWikiPublicForm",
 ]

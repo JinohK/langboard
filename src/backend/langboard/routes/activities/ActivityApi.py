@@ -1,9 +1,10 @@
 from fastapi import Depends, status
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema.Pagination import Pagination
 from ...core.security import Auth
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from ..board.scopes import project_role_finder

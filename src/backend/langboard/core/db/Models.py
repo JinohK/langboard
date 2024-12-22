@@ -7,7 +7,8 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
 from ..utils.DateTime import now
 from ..utils.String import pascal_to_snake
-from .ColumnTypes import DateTimeField
+from .ColumnTypes import DateTimeField, SnowflakeIDField
+from .SnowflakeID import SnowflakeID
 
 
 _TColumnType = TypeVar("_TColumnType")
@@ -19,7 +20,7 @@ class BaseSqlModel(ABC, SQLModel):
     __changes__: ClassVar[dict[str, dict[str, Any]]] = {}
     __pydantic_post_init__ = "model_post_init"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: SnowflakeID = SnowflakeIDField(primary_key=True)
     created_at: datetime = DateTimeField(default=now, nullable=False)
     updated_at: datetime = DateTimeField(default=now, nullable=False, onupdate=True)
 
@@ -63,7 +64,7 @@ class BaseSqlModel(ABC, SQLModel):
         return str(self)
 
     def __eq__(self, target: object) -> bool:
-        return isinstance(target, self.__class__) and self.id is not None and self.id == target.id
+        return isinstance(target, self.__class__) and self.id != 0 and self.id == target.id
 
     def __ne__(self, target: object) -> bool:
         return not self.__eq__(target)
@@ -141,7 +142,13 @@ class BaseSqlModel(ABC, SQLModel):
         """Checks if the object is new and has not been saved to the database."""
         if not isinstance(self, BaseSqlModel):
             return False
-        return self.id is None
+        return self.id == 0
+
+    def get_uid(self) -> str:
+        """Get the short code of the object's ID."""
+        if not isinstance(self, BaseSqlModel):
+            return ""
+        return self.id.to_short_code()
 
     def has_changes(self) -> bool:
         """Check if the object has changes."""

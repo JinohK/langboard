@@ -4,7 +4,7 @@ import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation
 import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 
-export interface ISignUpForm extends Omit<User.Interface, "id" | "username" | "avatar" | "groups"> {
+export interface ISignUpForm extends Omit<User.Interface, "uid" | "username" | "avatar" | "groups"> {
     password: string;
     industry: string;
     purpose: string;

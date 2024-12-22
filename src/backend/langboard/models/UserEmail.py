@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import Any
 from sqlmodel import Field
-from ..core.db import DateTimeField, SoftDeleteModel
-from .User import User
+from ..core.db import DateTimeField, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 
 
 class UserEmail(SoftDeleteModel, table=True):
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
     email: str = Field(nullable=False)
     verified_at: datetime | None = DateTimeField(default=None, nullable=True)
 

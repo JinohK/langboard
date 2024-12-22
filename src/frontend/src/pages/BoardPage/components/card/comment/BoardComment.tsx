@@ -8,13 +8,13 @@ import { API_ROUTES } from "@/controllers/constants";
 import useCardCommentUpdatedHandlers from "@/controllers/socket/card/comment/useCardCommentUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, ProjectCardComment } from "@/core/models";
+import { Project, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format, formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCommentReaction from "@/pages/BoardPage/components/card/comment/BoardCommentReaction";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { memo, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardComment(): JSX.Element {
@@ -37,15 +37,15 @@ export interface IBoardCommentProps {
     deletedComment: (commentUID: string) => void;
 }
 
-function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Element {
-    const { projectUID, card, socket, currentUser, hasRoleAction, currentEditor, setCurrentEditor, replyRef } = useBoardCard();
+const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX.Element => {
+    const { projectUID, card, socket, currentUser, hasRoleAction, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
+    const [isEditing, setIsEditing] = useState(false);
     const [t, i18n] = useTranslation();
     const valueRef = useRef<IEditorContent>(comment.content);
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
     const editorElementRef = useRef<HTMLDivElement | null>(null);
-    const isEditing = currentEditor === comment.uid;
     const [isValidating, setIsValidating] = useState(false);
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
@@ -67,6 +67,13 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
             }
         },
     });
+    const canEdit = currentUser.uid === comment.user.uid || currentUser.is_admin;
+
+    editorsRef.current[comment.uid] = (editing: bool) => {
+        if (canEdit) {
+            setIsEditing(editing);
+        }
+    };
 
     useEffect(() => {
         const { off } = onCardCommentUpdated();
@@ -88,7 +95,13 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
 
         setIsValidating(true);
 
-        if (comment.content === valueRef.current) {
+        if (!valueRef.current.content.trim().length) {
+            Toast.Add.error(t("card.errors.Comment content cannot be empty."));
+            setIsValidating(false);
+            return;
+        }
+
+        if (comment.content.content.trim() === valueRef.current.content.trim()) {
             setIsValidating(false);
             return;
         }
@@ -232,8 +245,9 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                         <>
                             <BoardCommentReaction comment={comment} />
                             {hasRoleAction(Project.ERoleAction.READ) &&
-                                currentUser.id !== comment.user.id &&
-                                card.project_members.find((user) => user.id === comment.user.id) && (
+                                currentUser.uid !== comment.user.uid &&
+                                User.isValidUser(currentUser) &&
+                                card.project_members.find((user) => user.uid === comment.user.uid) && (
                                     <>
                                         <Separator orientation="vertical" className="h-1/2" />
                                         <Button
@@ -246,7 +260,7 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
                                         </Button>
                                     </>
                                 )}
-                            {(currentUser.id === comment.user.id || currentUser.is_admin) && (
+                            {canEdit && (
                                 <>
                                     <Separator orientation="vertical" className="h-1/2" />
                                     <Button
@@ -283,6 +297,6 @@ function BoardComment({ comment, deletedComment }: IBoardCommentProps): JSX.Elem
             </Flex>
         </Box>
     );
-}
+});
 
 export default BoardComment;

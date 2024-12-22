@@ -1,13 +1,11 @@
 from typing import Any
-from sqlmodel import Field
-from ..core.db import BaseSqlModel
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 from .ProjectWiki import ProjectWiki
-from .User import User
 
 
 class ProjectWikiAssignedUser(BaseSqlModel, table=True):
-    project_wiki_id: int = Field(foreign_key=ProjectWiki.expr("id"), nullable=False)
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
+    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
 
     def api_response(self) -> dict[str, Any]:
         return {}

@@ -6,6 +6,7 @@ from .CheckitemService import CheckitemService
 from .EmailService import EmailService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
+from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
 from .ProjectWikiService import ProjectWikiService
 from .ReactionService import ReactionService
@@ -24,6 +25,7 @@ __all__ = [
     "EmailService",
     "ProjectColumnService",
     "ProjectInvitationService",
+    "ProjectLabelService",
     "ProjectService",
     "ProjectWikiService",
     "ReactionService",

@@ -8,7 +8,7 @@ export interface ICreateCheckitemForm {
     project_uid: string;
     card_uid: string;
     title: string;
-    assigned_users?: number[];
+    assigned_users?: string[];
 }
 
 export interface ICreateCheckitemResponse {

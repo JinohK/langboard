@@ -1,5 +1,7 @@
+from asyncio import run as asyncio_run
 from ....Loader import load_modules
-from ...ai import BaseBot, BotType
+from ...ai import BaseBot, Bot, BotType
+from ...db import DbSession
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from .CommandUtils import create_bot_py, format_template
 
@@ -58,6 +60,8 @@ class CreateBotCommand(BaseCommand):
 
         create_bot_py(bot_type.name, code)
 
+        asyncio_run(self.__create_bot_config(bot_type))
+
     def __get_available_bots(self) -> list[tuple[str, str]]:
         load_modules("bots", "Bot", log=False)
         available_bots = [(bot_type.name, bot_type.value) for bot_type in BotType]
@@ -65,3 +69,10 @@ class CreateBotCommand(BaseCommand):
             if (bot_type.name, bot_type.value) in available_bots:
                 available_bots.remove((bot_type.name, bot_type.value))
         return available_bots
+
+    async def __create_bot_config(self, bot_type: BotType) -> None:
+        db = DbSession()
+        bot = Bot(bot_type=bot_type, display_name=bot_type.name)
+        db.insert(bot)
+        await db.commit()
+        await db.close()

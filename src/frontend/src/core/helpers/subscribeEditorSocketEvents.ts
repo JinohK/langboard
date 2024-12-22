@@ -3,7 +3,7 @@ import { ISocketContext } from "@/core/providers/SocketProvider";
 import { format } from "@/core/utils/StringUtils";
 
 interface IEventCallback {
-    user_ids: number[];
+    user_uids: string[];
 }
 
 interface IBaseSubscribeEditorSocketEventsProps {
@@ -19,8 +19,8 @@ interface IBaseSubscribeEditorSocketEventsProps {
     eventKey: string;
     getUsersSendEvent: string;
     getUsersSendEventData?: Record<string, unknown>;
-    startCallback: (userIds: IEventCallback["user_ids"]) => void;
-    stopCallback: (userIds: IEventCallback["user_ids"]) => void;
+    startCallback: (userUIDs: IEventCallback["user_uids"]) => void;
+    stopCallback: (userUIDs: IEventCallback["user_uids"]) => void;
 }
 
 interface INoneTopicSubscribeEditorSocketEventsProps extends IBaseSubscribeEditorSocketEventsProps {
@@ -55,7 +55,7 @@ const subscribeEditorSocketEvents = ({
         [
             getUsersEditingEvent,
             (data: IEventCallback) => {
-                startCallback(data.user_ids);
+                startCallback(data.user_uids);
                 socket.off({
                     topic: topic as never,
                     topicId,
@@ -69,13 +69,13 @@ const subscribeEditorSocketEvents = ({
         [
             startedEditingEvent,
             (data: IEventCallback) => {
-                startCallback(data.user_ids);
+                startCallback(data.user_uids);
             },
         ],
         [
             stoppedEditingEvent,
             (data: IEventCallback) => {
-                stopCallback(data.user_ids);
+                stopCallback(data.user_uids);
             },
         ],
     ];

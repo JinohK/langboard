@@ -1,10 +1,10 @@
 from datetime import datetime
 from fastapi import status
-from ...core.db import EditorContentModel
+from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import AssignUsersForm, ChangeCardDetailsForm, ChangeOrderForm, CreateCardForm, project_role_finder
@@ -16,7 +16,7 @@ from .scopes import AssignUsersForm, ChangeCardDetailsForm, ChangeOrderForm, Cre
 async def get_card_detail(
     project_uid: str, card_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    card = await service.card.get_details(card_uid)
+    card = await service.card.get_details(project_uid, card_uid)
     project = await service.project.get_by_uid(project_uid)
     if card is None or project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

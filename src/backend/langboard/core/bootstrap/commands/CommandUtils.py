@@ -32,7 +32,7 @@ def format_template(file_name: str, formats: dict[str, str]) -> str:
 def update_init_py(target_dir: Path, init_path: Path) -> None:
     existed_names: list[str] = []
     for file in target_dir.glob("*.py"):
-        if file.name.count("__") > 1 or file.name.startswith("Base"):
+        if file.name.count("__") > 1 or file.name.startswith("Base") or file.name.replace(".py", "").endswith("Types"):
             continue
 
         existed_names.append(file.stem)

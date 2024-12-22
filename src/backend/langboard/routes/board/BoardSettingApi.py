@@ -1,13 +1,13 @@
 from fastapi import status
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import project_role_finder
-from .scopes.Project import UpdateProjectDetailsForm
+from .scopes import UpdateProjectDetailsForm, project_role_finder
 
 
 @AppRouter.api.post("/board/{project_uid}/settings/available")

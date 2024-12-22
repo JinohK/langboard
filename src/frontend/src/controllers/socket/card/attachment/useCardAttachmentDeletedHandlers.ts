@@ -9,15 +9,14 @@ export interface ICardAttachmentDeletedResponse {
 }
 
 export interface IUseCardAttachmentDeletedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentDeletedResponse> {
-    projectUID: string;
     cardUID: string;
 }
 
-const useCardAttachmentDeletedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardAttachmentDeletedHandlersProps) => {
+const useCardAttachmentDeletedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentDeletedHandlersProps) => {
     return useSocketHandler<ICardAttachmentDeletedRequest, ICardAttachmentDeletedResponse>({
         socket,
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
         eventKey: `board-card-attachment-deleted-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.DELETED,

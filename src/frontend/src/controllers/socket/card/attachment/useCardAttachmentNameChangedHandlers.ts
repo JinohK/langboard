@@ -9,15 +9,15 @@ export interface ICardAttachmentNameChangedResponse {
 }
 
 export interface IUseCardAttachmentNameChangedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentNameChangedResponse> {
-    projectUID: string;
+    cardUID: string;
     attachmentUID: string;
 }
 
-const useCardAttachmentNameChangedHandlers = ({ socket, callback, projectUID, attachmentUID }: IUseCardAttachmentNameChangedHandlersProps) => {
+const useCardAttachmentNameChangedHandlers = ({ socket, callback, cardUID, attachmentUID }: IUseCardAttachmentNameChangedHandlersProps) => {
     return useSocketHandler<ICardAttachmentNameChangedRequest, ICardAttachmentNameChangedResponse>({
         socket,
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
         eventKey: `board-card-attachment-name-changed-${attachmentUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.NAME_CHANGED,

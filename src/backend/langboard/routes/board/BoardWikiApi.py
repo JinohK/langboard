@@ -1,13 +1,20 @@
 from fastapi import File, UploadFile, status
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import AssignUsersForm, ChangeOrderForm, ChangeWikiDetailsForm, WikiForm, project_role_finder
-from .scopes.Wiki import ChangeWikiPublicForm
+from .scopes import (
+    AssignUsersForm,
+    ChangeOrderForm,
+    ChangeWikiDetailsForm,
+    ChangeWikiPublicForm,
+    WikiForm,
+    project_role_finder,
+)
 
 
 @AppRouter.api.get("/board/{project_uid}/wikis")

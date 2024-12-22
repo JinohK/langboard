@@ -1,8 +1,9 @@
+import { IBaseModel } from "@/core/models/Base";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-export interface Interface {
-    id: number;
+export interface Interface extends Omit<IBaseModel, "uid"> {
+    uid: string | "0" | "-1" | "-2";
     firstname: string;
     lastname: string;
     email: string;
@@ -13,8 +14,48 @@ export interface Interface {
 export const INDUSTRIES: string[] = ["Industry 1"];
 export const PURPOSES: string[] = ["Purpose 1"];
 
-export const BOT_ID = -1;
-export const GROUP_EMAIL_ID = -2;
+export const BOT_UID = "-1";
+export const GROUP_EMAIL_UID = "-2";
+
+export const isPresentableUnknownUser = (user: Interface): bool => {
+    return !isNaN(Number(user.uid)) && Number(user.uid) < 0;
+};
+
+export const isValidUser = (user: Interface): bool => {
+    return TypeUtils.isString(user.uid) && !isPresentableUnknownUser(user);
+};
+
+export const filterValidUserUIDs = (users: Interface[]): string[] => {
+    return users.map((user) => user.uid).filter((uid) => isValidUser({ uid } as Interface)) as string[];
+};
+
+export const isDeletedUser = (user: Interface): bool => {
+    return user.uid === "0";
+};
+
+export const isBot = (user: Interface): bool => {
+    return user.uid === BOT_UID;
+};
+
+export const createUnknownUser = (): Interface => {
+    return {
+        uid: "0",
+        firstname: "",
+        lastname: "",
+        email: "",
+        username: "",
+    };
+};
+
+export const createNoneEmailUser = (email: string): Interface => {
+    return {
+        uid: GROUP_EMAIL_UID,
+        firstname: email,
+        lastname: "",
+        email,
+        username: "",
+    };
+};
 
 export const transformFromApi = <TUser extends Interface | Interface[]>(users: TUser): TUser extends Interface ? Interface : Interface[] => {
     if (!TypeUtils.isArray(users)) {
@@ -27,32 +68,4 @@ export const transformFromApi = <TUser extends Interface | Interface[]>(users: T
     }
 
     return users as unknown as TUser extends Interface ? Interface : Interface[];
-};
-
-export const isPresentableUnknownUser = (user: Interface): bool => {
-    return user.id < 0;
-};
-
-export const isBot = (user: Interface): bool => {
-    return user.id === BOT_ID;
-};
-
-export const createUnknownUser = (): Interface => {
-    return {
-        id: 0,
-        firstname: "",
-        lastname: "",
-        email: "",
-        username: "",
-    };
-};
-
-export const createNoneEmailUser = (email: string): Interface => {
-    return {
-        id: GROUP_EMAIL_ID,
-        firstname: email,
-        lastname: "",
-        email,
-        username: "",
-    };
 };

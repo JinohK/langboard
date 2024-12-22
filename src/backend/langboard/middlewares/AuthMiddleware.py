@@ -3,10 +3,10 @@ from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
+from ..core.db import User
 from ..core.filter import AuthFilter, FilterMiddleware
 from ..core.routing import JsonResponse
 from ..core.security import Auth
-from ..models import User
 
 
 class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):

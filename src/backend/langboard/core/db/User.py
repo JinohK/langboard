@@ -2,14 +2,15 @@ from datetime import datetime
 from typing import Any, ClassVar
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
-from ..core.db import DateTimeField, ModelColumnType, SecretStr, SecretStrType, SoftDeleteModel
-from ..core.storage import FileModel
-from ..core.utils.String import generate_random_string
+from ..storage import FileModel
+from ..utils.String import generate_random_string
+from .ColumnTypes import DateTimeField, ModelColumnType, SecretStr, SecretStrType
+from .Models import SoftDeleteModel
 
 
 class User(SoftDeleteModel, table=True):
-    BOT_ID: ClassVar[int] = -1
-    GROUP_EMAIL_ID: ClassVar[int] = -2
+    BOT_UID: ClassVar[str] = "-1"
+    GROUP_EMAIL_UID: ClassVar[str] = "-2"
     firstname: str = Field(nullable=False)
     lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)
@@ -34,22 +35,26 @@ class User(SoftDeleteModel, table=True):
 
     def api_response(self) -> dict[str, Any]:
         if self.deleted_at is not None:
-            return {
-                "id": 0,
-                "firstname": "",
-                "lastname": "",
-                "email": "",
-                "username": "",
-                "avatar": None,
-            }
+            return User.create_unknown_user_api_response()
 
         return {
-            "id": self.id,
+            "uid": self.get_uid(),
             "firstname": self.firstname,
             "lastname": self.lastname,
             "email": self.email,
             "username": self.username,
             "avatar": self.avatar.path if self.avatar else None,
+        }
+
+    @staticmethod
+    def create_unknown_user_api_response() -> dict[str, Any]:
+        return {
+            "uid": "0",
+            "firstname": "",
+            "lastname": "",
+            "email": "",
+            "username": "",
+            "avatar": None,
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

@@ -1,23 +1,20 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import ModelColumnType, SoftDeleteModel
+from ..core.db import ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 from ..core.storage import FileModel
-from ..core.utils.String import create_short_unique_id
 from .ProjectWiki import ProjectWiki
-from .User import User
 
 
 class ProjectWikiAttachment(SoftDeleteModel, table=True):
-    uid: str = Field(default_factory=lambda: create_short_unique_id(10), unique=True, nullable=False)
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
-    wiki_uid: str = Field(foreign_key=ProjectWiki.expr("uid"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
+    wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False)
     filename: str = Field(nullable=False)
     file: FileModel = Field(sa_type=ModelColumnType(FileModel))
     order: int = Field(default=0)
 
     def api_response(self) -> dict[str, Any]:
         return {
-            "uid": self.uid,
+            "uid": self.get_uid(),
             "name": self.filename,
             "url": self.file.path,
             "order": self.order,
@@ -25,4 +22,4 @@ class ProjectWikiAttachment(SoftDeleteModel, table=True):
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["uid", "user_id", "wiki_uid", "filename", "file"]
+        return ["user_id", "wiki_id", "filename", "file"]

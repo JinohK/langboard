@@ -11,12 +11,10 @@ import Conversation from "@/pages/BoardPage/components/chat/Conversation";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useBoardChat } from "@/core/providers/BoardChatProvider";
 
-export interface IChatSidebarProps {
-    uid: string;
-}
-
-const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
+const ChatSidebar = memo((): JSX.Element => {
+    const { projectUID: uid } = useBoardChat();
     const [t] = useTranslation();
     const navigate = useRef(usePageNavigate());
     const socket = useSocket();
@@ -102,7 +100,7 @@ const ChatSidebar = memo(({ uid }: IChatSidebarProps): JSX.Element => {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </Box>
-            <Conversation uid={uid} inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
+            <Conversation inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
             <Form.Root className="flex h-12 w-full items-center" onSubmit={sendChat}>
                 <Form.Field name="chat-message" className="mx-1 w-[calc(100%_-_theme(spacing.10))]">
                     <Form.Control asChild>

@@ -14,6 +14,7 @@ from ..utils.DateTime import now
 from .BaseSqlBuilder import BaseSqlBuilder
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
+from .SnowflakeID import SnowflakeID
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
@@ -78,6 +79,7 @@ class DbSession(BaseSqlBuilder):
         """
         if not obj.is_new():
             return
+        obj.id = SnowflakeID()
         session = self._get_session(DbSessionRole.Insert)
         session.add(obj)
 
@@ -86,9 +88,8 @@ class DbSession(BaseSqlBuilder):
 
         :param objs: The objects to be inserted; must be a subclass of :class:`BaseSqlModel`.
         """
-        session = self._get_session(DbSessionRole.Insert)
-        insertable_objs = [obj for obj in objs if obj.is_new()]
-        session.add_all(insertable_objs)
+        for obj in objs:
+            self.insert(obj)
 
     async def update(self, obj: BaseSqlModel):
         """Updates an object in the database if it is not new.

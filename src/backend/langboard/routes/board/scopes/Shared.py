@@ -3,7 +3,7 @@ from ....core.routing import BaseFormModel, form_model
 
 @form_model
 class AssignUsersForm(BaseFormModel):
-    assigned_users: list[int]
+    assigned_users: list[str]
 
 
 @form_model

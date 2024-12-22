@@ -44,7 +44,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
         const promise = updateCardAssignedUsersMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            assigned_users: users.map((user) => user.id),
+            assigned_users: User.filterValidUserUIDs(users),
         });
 
         const toastId = Toast.Add.promise(promise, {

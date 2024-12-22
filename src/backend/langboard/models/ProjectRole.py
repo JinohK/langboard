@@ -1,6 +1,5 @@
 from enum import Enum
-from sqlmodel import Field
-from .BaseRoleModel import BaseRoleModel
+from .BaseRoleModel import BaseRoleModel, SnowflakeID, SnowflakeIDField
 from .Project import Project
 
 
@@ -14,7 +13,7 @@ class ProjectRoleAction(Enum):
 
 
 class ProjectRole(BaseRoleModel, table=True):
-    project_id: int = Field(foreign_key=Project.expr("id"), nullable=False)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
 
     @staticmethod
     def get_default_actions() -> list[Enum]:

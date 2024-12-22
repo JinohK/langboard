@@ -3,6 +3,9 @@ from random import randint, shuffle
 from .DateTime import now
 
 
+BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
 def concat(*strs: str) -> str:
     """Concatenates the strings into one string.
 
@@ -32,8 +35,7 @@ def generate_random_string(length: int) -> str:
     Returns:
         str: The generated string.
     """
-    chars = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    return "".join(chars[randint(0, len(chars) - 1)] for _ in range(length))
+    return "".join(BASE62_ALPHABET[randint(0, len(BASE62_ALPHABET) - 1)] for _ in range(length))
 
 
 def make_fullname(first_name: str, last_name: str) -> str:

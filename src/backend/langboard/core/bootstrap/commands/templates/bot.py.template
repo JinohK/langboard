@@ -15,10 +15,6 @@ class {bot_type}Bot(BaseBot):
         """DO NOT EDIT THIS METHOD"""
         return BotType.{bot_type}
 
-    @staticmethod
-    def bot_name() -> str:
-        return "Bot Name"
-
     async def run(self, data: dict[str, Any]) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
         data_model = create_bot_data_model({bot_type}Bot.bot_type(), data)
         # Do something

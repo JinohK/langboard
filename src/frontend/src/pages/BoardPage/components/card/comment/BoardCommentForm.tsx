@@ -1,7 +1,7 @@
 import { Box, Button, Drawer, Flex, Form, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { createDataText } from "@/components/Editor/plugins/markdown";
@@ -13,6 +13,7 @@ import UserAvatarList from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import SubmitButton from "@/components/SubmitButton";
+import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 
 export function SkeletonBoardCommentForm() {
     return (
@@ -31,8 +32,8 @@ export function SkeletonBoardCommentForm() {
     );
 }
 
-function BoardCommentForm(): JSX.Element {
-    const { projectUID, card, socket, currentUser, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
+const BoardCommentForm = memo((): JSX.Element => {
+    const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
     const [t] = useTranslation();
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {
@@ -42,10 +43,11 @@ function BoardCommentForm(): JSX.Element {
     const editorElementRef = useRef<HTMLDivElement | null>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const [editingUserIds, setEditingUserIds] = useState<number[]>([]);
+    const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const { mutate: addCommentMutate } = useAddCardComment();
     const editorName = `${card.uid}-comment`;
     const isClickedRef = useRef(false);
+    const { stopEditing } = useStopEditingClickOutside("[data-card-comment-form]", () => setCurrentEditor(""));
     const onDrawerHandlePointerStart = useCallback(
         (type: "mouse" | "touch") => {
             if (isValidating) {
@@ -63,7 +65,7 @@ function BoardCommentForm(): JSX.Element {
 
             setTimeout(() => {
                 if (isClickedRef.current) {
-                    changeOpenState(false);
+                    setCurrentEditor("");
                     return;
                 }
 
@@ -74,7 +76,7 @@ function BoardCommentForm(): JSX.Element {
     );
 
     replyRef.current = (targetUser: User.Interface) => {
-        if (isValidating) {
+        if (isValidating || !User.isValidUser(targetUser)) {
             return;
         }
 
@@ -84,7 +86,7 @@ function BoardCommentForm(): JSX.Element {
         }
 
         setValue({
-            content: createDataText("mention", [targetUser.id.toString(), targetUser.username]),
+            content: createDataText("mention", [targetUser.uid, targetUser.username]),
         });
 
         setTimeout(() => {
@@ -97,11 +99,11 @@ function BoardCommentForm(): JSX.Element {
     useEffect(() => {
         const unsubscribe = subscribeEditorSocketEvents(
             editorName,
-            (userIds) => {
-                setEditingUserIds(userIds);
+            (userUIDs) => {
+                setEditingUserUIDs(userUIDs);
             },
-            (userIds) => {
-                setEditingUserIds(userIds);
+            (userUIDs) => {
+                setEditingUserUIDs(userUIDs);
             }
         );
 
@@ -121,14 +123,14 @@ function BoardCommentForm(): JSX.Element {
                 }
                 setValue({ content: "" });
                 setIsOpened(opened);
-                setCurrentEditor("");
             }, 450);
             return;
         }
 
         setIsOpened(opened);
-        setCurrentEditor(editorName);
     };
+
+    editorsRef.current[editorName] = changeOpenState;
 
     const saveComment = () => {
         if (isValidating) {
@@ -151,17 +153,17 @@ function BoardCommentForm(): JSX.Element {
                 },
                 onSettled: () => {
                     setIsValidating(false);
-                    changeOpenState(false);
+                    setCurrentEditor("");
                 },
             }
         );
     };
 
-    const commentingUsers = editingUserIds.filter((id) => id !== currentUser.id);
+    const commentingUsers = editingUserUIDs.filter((uid) => uid !== currentUser.uid);
     const commentingUsersElement = commentingUsers.length > 0 && (
         <Flex items="center" justify="end" gap="2" mb="1" mr="1">
             <UserAvatarList
-                users={commentingUsers.map((userId) => card.project_members.find((user) => user.id === userId)!)}
+                users={commentingUsers.map((userUID) => card.project_members.find((user) => user.uid === userUID)!)}
                 maxVisible={3}
                 size="xs"
                 spacing="1"
@@ -176,25 +178,25 @@ function BoardCommentForm(): JSX.Element {
             return;
         }
 
-        const target = e.target as HTMLElement;
-        if (
-            target.hasAttribute("data-scroll-area-scrollbar") ||
-            target.closest("[data-scroll-area-scrollbar]") ||
-            target.closest("[data-sonner-toast]") ||
-            target.closest("[data-card-comment-form]") ||
-            target.closest("[data-radix-popper-content-wrapper") || // Editor's dropdown menu
-            target.closest("[data-radix-alert-dialog-content-wrapper]") // Editor's alert dialog
-        ) {
-            return;
-        }
-
-        changeOpenState(false);
+        stopEditing(e);
     };
 
     return (
         <Form.Root className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
             {commentingUsersElement}
-            <Drawer.Root modal={false} handleOnly repositionInputs={false} open={isOpened} onOpenChange={changeOpenState}>
+            <Drawer.Root
+                modal={false}
+                handleOnly
+                repositionInputs={false}
+                open={isOpened}
+                onOpenChange={(opened: bool) => {
+                    if (opened) {
+                        setCurrentEditor(editorName);
+                    } else {
+                        setCurrentEditor("");
+                    }
+                }}
+            >
                 <Drawer.Trigger asChild>
                     <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t bg-background">
                         <UserAvatar.Root user={currentUser} avatarSize="sm" />
@@ -252,7 +254,7 @@ function BoardCommentForm(): JSX.Element {
                             <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
                                 {t("common.Save")}
                             </SubmitButton>
-                            <Button variant="secondary" onClick={() => changeOpenState(false)} disabled={isValidating}>
+                            <Button variant="secondary" onClick={() => setCurrentEditor("")} disabled={isValidating}>
                                 {t("common.Cancel")}
                             </Button>
                         </Flex>
@@ -261,6 +263,6 @@ function BoardCommentForm(): JSX.Element {
             </Drawer.Root>
         </Form.Root>
     );
-}
+});
 
 export default BoardCommentForm;

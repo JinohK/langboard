@@ -1,7 +1,8 @@
 from typing import Any
-from ...models import User
+from ..db import DbSession
 from ..utils.decorators import class_instance, singleton
 from .BaseBot import BaseBot
+from .Bot import Bot
 from .BotResponse import LangchainStreamResponse, LangflowStreamResponse
 from .BotType import BotType
 
@@ -34,24 +35,20 @@ class BotRunner:
             return
         await bot.abort(task_id)
 
-    def get_bot_name(self, bot_type: BotType) -> str | None:
+    async def get_bot_config(self, bot_type: BotType, db: DbSession | None = None) -> Bot | None:
         if bot_type not in BaseBot.__bots__:
             return None
 
-        return BaseBot.__bots__[bot_type].bot_name()
+        should_close = db is None
+        if should_close:
+            db = DbSession()
 
-    def get_bot_as_user_api(self, bot_type: BotType) -> dict[str, Any] | None:
-        if bot_type not in BaseBot.__bots__:
-            return None
+        result = await db.exec(db.query("select").table(Bot).where(Bot.column("bot_type") == bot_type))
 
-        return {
-            "id": User.BOT_ID,
-            "firstname": f"{self.get_bot_name(bot_type)} Bot",
-            "lastname": "",
-            "email": "",
-            "username": "",
-            "avatar": BaseBot.__bots__[bot_type].bot_avatar(),
-        }
+        if should_close:
+            await db.close()
+
+        return result.first()
 
     async def is_available(self, bot_type: BotType) -> bool:
         if bot_type not in BaseBot.__bots__:

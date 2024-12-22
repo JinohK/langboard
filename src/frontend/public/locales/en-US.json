@@ -512,7 +512,8 @@
       "File not found.": "File not found.",
       "Checkitem not found.": "Checkitem not found.",
       "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
-      "Comment not found.": "Comment not found."
+      "Comment not found.": "Comment not found.",
+      "Comment content cannot be empty.": "Comment content cannot be empty."
     }
   },
   "reaction": {
@@ -533,6 +534,7 @@
     "Toggle reorder mode": "Toggle reorder mode",
     "New wiki page": "New wiki page",
     "Wiki page has been deleted.": "Wiki page has been deleted.",
+    "No content": "No content",
     "successes": {
       "Title changed successfully.": "Title changed successfully.",
       "Content changed successfully.": "Content changed successfully.",

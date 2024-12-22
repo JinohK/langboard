@@ -6,7 +6,7 @@ import { format } from "@/core/utils/StringUtils";
 export interface IUpdateCardAssignedUsersForm {
     project_uid: string;
     card_uid: string;
-    assigned_users: number[];
+    assigned_users: string[];
 }
 
 export interface IUpdateCardAssignedUsersResponse {}

@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Any
 from sqlmodel import desc
+from ...core.db import SnowflakeID, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
-from ...models import ChatHistory, User
+from ...models import ChatHistory
+from .Types import TUserParam
 
 
 class ChatHistoryService(BaseService):
@@ -49,16 +51,18 @@ class ChatHistoryService(BaseService):
         history_type: str,
         message: str,
         filterable: str | None = None,
-        sender_id: int | None = None,
-        receiver_id: int | None = None,
+        sender: TUserParam | None = None,
+        receiver: TUserParam | None = None,
         commit: bool = True,
     ) -> ChatHistory:
+        sender = await self._get_by_param(User, sender) if sender else None
+        receiver = await self._get_by_param(User, receiver) if receiver else None
         chat_history = ChatHistory(
             history_type=history_type,
             message=message,
-            filterable=filterable,
-            sender_id=sender_id,
-            receiver_id=receiver_id,
+            filterable=SnowflakeID.from_short_code(filterable) if filterable else None,
+            sender_id=sender.id if sender else None,
+            receiver_id=receiver.id if receiver else None,
         )
 
         self._db.insert(chat_history)
@@ -87,7 +91,7 @@ class ChatHistoryService(BaseService):
         )
 
         if filterable is not None:
-            sql_query = sql_query.where(ChatHistory.column("filterable") == filterable)
+            sql_query = sql_query.where(ChatHistory.column("filterable") == SnowflakeID.from_short_code(filterable))
 
         await self._db.exec(sql_query)
         if commit:

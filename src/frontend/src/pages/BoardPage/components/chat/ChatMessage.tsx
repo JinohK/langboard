@@ -1,6 +1,8 @@
 import { Box, Flex, IconComponent } from "@/components/base";
+import CachedImage from "@/components/CachedImage";
 import Markdown from "@/components/Markdown";
 import { ChatMessageModel } from "@/core/models";
+import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export interface IChatMessageProps extends ChatMessageModel.Interface {
@@ -9,10 +11,23 @@ export interface IChatMessageProps extends ChatMessageModel.Interface {
 }
 
 function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, className }: IChatMessageProps): JSX.Element {
+    const { bot } = useBoardChat();
+
+    let botAvatar;
+    if (isReceived) {
+        if (bot.avatar) {
+            botAvatar = <CachedImage src={bot.avatar} size="full" />;
+        } else {
+            botAvatar = <IconComponent icon={icon} size="full" className="flex items-center justify-center text-xs" />;
+        }
+    }
+
     return (
         <Flex direction={isReceived ? "row" : "row-reverse"} className={className} id={`chat-${uid}`}>
             {isReceived && (
-                <IconComponent icon={icon} size="8" className="mr-2 mt-1 flex items-center justify-center rounded-full bg-muted text-xs" />
+                <Box size="8" className="mr-2 mt-1 rounded-full bg-muted">
+                    {botAvatar}
+                </Box>
             )}
             <Box
                 py="2"

@@ -101,8 +101,8 @@ class AppRouter:
                     if key in model:
                         data[key] = model[key]
 
-            if publish_model.extra_data:
-                data.update(publish_model.extra_data)
+            if publish_model.custom_data:
+                data.update(publish_model.custom_data)
 
             if isinstance(publish_model.topic, SocketTopic) or isinstance(publish_model.topic, str):
                 topic = publish_model.topic

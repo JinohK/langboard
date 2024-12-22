@@ -7,6 +7,7 @@ import useBoardWikiContentChangedHandlers from "@/controllers/socket/wiki/useBoa
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
+import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
@@ -37,12 +38,12 @@ export function SkeletonWikiContent() {
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
-    const { projectUID, projectMembers, currentUser, socket, currentEditor, setCurrentEditor } = useBoardWiki();
+    const { projectUID, projectMembers, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const isEditing = currentEditor === wiki.uid;
-    const [editingUserIds, setEditingUserIds] = useState<number[]>([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const valueRef = useRef<IEditorContent>(wiki.content);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
     const setValue = (value: IEditorContent) => {
@@ -69,13 +70,14 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             forceUpdate();
         },
     });
+    const { stopEditing } = useStopEditingClickOutside("[data-wiki-content]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (mode === "edit") {
             setCurrentEditor(wiki.uid);
             return;
         }
 
-        if (valueRef.current.content.trim() === (wiki.content?.content ?? "").trim()) {
+        if ((valueRef.current?.content ?? "").trim() === (wiki.content?.content ?? "").trim()) {
             setCurrentEditor("");
             return;
         }
@@ -113,6 +115,10 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
         });
     };
 
+    editorsRef.current[wiki.uid] = (editing: bool) => {
+        setIsEditing(editing);
+    };
+
     useEffect(() => {
         const { off: offBoardWikiContentChanged } = onBoardWikiContentChanged();
         const { off: offBoardPrivateWikiContentChanged } = onBoardPrivateWikiContentChanged();
@@ -135,8 +141,8 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 eventKey: `wiki-content-editor-${wiki.uid}`,
                 getUsersSendEvent: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_USERS,
                 getUsersSendEventData: { uid: wiki.uid },
-                startCallback: (userIds) => setEditingUserIds(userIds),
-                stopCallback: (userIds) => setEditingUserIds(userIds),
+                startCallback: (userUIDs) => setEditingUserUIDs(userUIDs),
+                stopCallback: (userUIDs) => setEditingUserUIDs(userUIDs),
             });
         }, 0);
 
@@ -146,31 +152,18 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     }, [subscribeEditorSocketEvents]);
 
     useEffect(() => {
-        const stopEditing = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (
-                !isEditing ||
-                target.hasAttribute("data-scroll-area-scrollbar") ||
-                target.closest("[data-scroll-area-scrollbar]") ||
-                target.closest("[data-sonner-toast]") ||
-                target.closest("[data-wiki-content]") ||
-                target.closest("[data-radix-popper-content-wrapper") || // Editor's dropdown menu
-                target.closest("[data-radix-alert-dialog-content-wrapper]") // Editor's alert dialog
-            ) {
-                return;
-            }
-
-            changeMode("view");
-        };
+        if (!isEditing) {
+            return;
+        }
 
         window.addEventListener("pointerdown", stopEditing);
 
         return () => {
             window.removeEventListener("pointerdown", stopEditing);
         };
-    }, [currentEditor]);
+    }, [isEditing]);
 
-    const editingUsers = editingUserIds.filter((id) => id !== currentUser.id);
+    const editingUsers = editingUserUIDs.filter((uid) => uid !== currentUser.uid);
 
     return (
         <Box className="max-h-[calc(100vh_-_theme(spacing.36))] overflow-y-auto">
@@ -211,6 +204,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     baseSocketEvent="board:wiki"
                     chatEventKey={`wiki-content-${wiki.uid}`}
                     copilotEventKey={`wiki-content-${wiki.uid}`}
+                    placeholder={!isEditing ? t("wiki.No content") : undefined}
                     uploadPath={format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: projectUID, wiki_uid: wiki.uid })}
                     setValue={setValue}
                     editorElementRef={editorElementRef}
@@ -218,7 +212,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 {editingUsers.length > 0 && (
                     <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">
                         <UserAvatarList
-                            users={editingUsers.map((userId) => projectMembers.find((user) => user.id === userId)!)}
+                            users={editingUsers.map((userUID) => projectMembers.find((user) => user.uid === userUID)!)}
                             maxVisible={3}
                             size="xs"
                             spacing="1"

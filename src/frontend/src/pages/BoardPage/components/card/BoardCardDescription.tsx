@@ -4,12 +4,13 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { memo, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDescription() {
@@ -22,9 +23,10 @@ export function SkeletonBoardCardDescription() {
     );
 }
 
-function BoardCardDescription(): JSX.Element {
-    const { projectUID, card, socket, currentUser, currentEditor, setCurrentEditor, hasRoleAction } = useBoardCard();
+const BoardCardDescription = memo((): JSX.Element => {
+    const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
+    const [isEditing, setIsEditing] = useState(false);
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
@@ -33,7 +35,6 @@ function BoardCardDescription(): JSX.Element {
         descriptionRef.current = value;
     };
     const editorName = `${card.uid}-description`;
-    const isEditing = useMemo(() => currentEditor === editorName && hasRoleAction(Project.ERoleAction.CARD_UPDATE), [currentEditor]);
     const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
         socket,
         projectUID,
@@ -44,6 +45,7 @@ function BoardCardDescription(): JSX.Element {
             forceUpdate();
         },
     });
+    const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
             return;
@@ -92,6 +94,12 @@ function BoardCardDescription(): JSX.Element {
         });
     };
 
+    editorsRef.current[editorName] = (editing: bool) => {
+        if (hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+            setIsEditing(editing);
+        }
+    };
+
     useEffect(() => {
         const { off } = onCardDescriptionChanged();
 
@@ -101,29 +109,16 @@ function BoardCardDescription(): JSX.Element {
     }, []);
 
     useEffect(() => {
-        const stopEditing = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (
-                !isEditing ||
-                target.hasAttribute("data-scroll-area-scrollbar") ||
-                target.closest("[data-scroll-area-scrollbar]") ||
-                target.closest("[data-sonner-toast]") ||
-                target.closest("[data-card-description]") ||
-                target.closest("[data-radix-popper-content-wrapper") || // Editor's dropdown menu
-                target.closest("[data-radix-alert-dialog-content-wrapper]") // Editor's alert dialog
-            ) {
-                return;
-            }
-
-            changeMode("view");
-        };
+        if (!isEditing) {
+            return;
+        }
 
         window.addEventListener("pointerdown", stopEditing);
 
         return () => {
             window.removeEventListener("pointerdown", stopEditing);
         };
-    }, [currentEditor]);
+    }, [isEditing]);
 
     return (
         <Box
@@ -145,28 +140,23 @@ function BoardCardDescription(): JSX.Element {
             }}
             data-card-description
         >
-            {isEditing || !!descriptionRef.current.content.trim().length ? (
-                <PlateEditor
-                    value={descriptionRef.current}
-                    mentionableUsers={card.project_members}
-                    currentUser={currentUser}
-                    className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
-                    readOnly={!isEditing}
-                    socket={socket}
-                    baseSocketEvent="board:card"
-                    chatEventKey={`card-description-${card.uid}`}
-                    copilotEventKey={`card-description-${card.uid}`}
-                    uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
-                    setValue={setValue}
-                    editorElementRef={editorElementRef}
-                />
-            ) : (
-                <Box h="full" cursor="text" textSize="sm" className="min-h-[calc(theme(spacing.56)_-_theme(spacing.8))] text-muted-foreground">
-                    {t("card.No description")}
-                </Box>
-            )}
+            <PlateEditor
+                value={descriptionRef.current}
+                mentionableUsers={card.project_members}
+                currentUser={currentUser}
+                className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
+                socket={socket}
+                readOnly={!isEditing}
+                baseSocketEvent="board:card"
+                chatEventKey={`card-description-${card.uid}`}
+                copilotEventKey={`card-description-${card.uid}`}
+                uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
+                placeholder={!isEditing ? t("card.No description") : undefined}
+                setValue={setValue}
+                editorElementRef={editorElementRef}
+            />
         </Box>
     );
-}
+});
 
 export default BoardCardDescription;

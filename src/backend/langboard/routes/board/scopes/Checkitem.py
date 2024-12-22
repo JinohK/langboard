@@ -4,7 +4,7 @@ from ....core.routing import BaseFormModel, form_model
 @form_model
 class CreateCardCheckitemForm(BaseFormModel):
     title: str
-    assigned_users: list[int] | None = None
+    assigned_users: list[str] | None = None
 
 
 @form_model

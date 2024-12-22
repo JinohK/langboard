@@ -1,13 +1,12 @@
 from datetime import datetime
 from typing import Any
-from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField
+from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField
 from ..core.utils.DateTime import now
 from .Checkitem import Checkitem
 
 
 class CheckitemTimer(BaseSqlModel, table=True):
-    checkitem_uid: str = Field(foreign_key=Checkitem.expr("uid"), nullable=False)
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False)
     started_at: datetime = DateTimeField(default=now, nullable=False)
     stopped_at: datetime | None = DateTimeField(default=None, nullable=True)
 
@@ -18,4 +17,4 @@ class CheckitemTimer(BaseSqlModel, table=True):
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["checkitem_uid", "started_at", "stopped_at"]
+        return ["checkitem_id", "started_at", "stopped_at"]

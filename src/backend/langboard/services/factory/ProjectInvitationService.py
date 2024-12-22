@@ -4,13 +4,15 @@ from typing import Any, cast
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
+from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, ProjectInvitation, User, UserEmail
+from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail
 from .EmailService import EmailService
 from .RoleService import RoleService
+from .Types import TProjectParam
 from .UserService import UserService
 
 
@@ -20,7 +22,10 @@ class ProjectInvitationService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project_invitation"
 
-    async def get_invited_users(self, project: Project | int) -> list[tuple[ProjectInvitation, User | None]]:
+    async def get_invited_users(self, project: TProjectParam) -> list[tuple[ProjectInvitation, User | None]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(ProjectInvitation, User)
@@ -34,17 +39,16 @@ class ProjectInvitationService(BaseService):
                 (User.column("email") == ProjectInvitation.column("email"))
                 | (User.column("id") == UserEmail.column("user_id")),
             )
-            .where(ProjectInvitation.column("project_id") == (project.id if isinstance(project, Project) else project))
+            .where(ProjectInvitation.column("project_id") == project.id)
         )
         return list(result.all())
 
     async def invite_emails(
-        self, user: User, project: Project | int, lang: str, url: str, token_query_name: str, emails: list[str]
+        self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
     ) -> tuple[bool, list[dict[str, Any]], dict[str, str]]:
-        if isinstance(project, int):
-            project = cast(Project, await self._get_by(Project, "id", project))
-            if not project:
-                return False, {}
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return False, {}
 
         result = await self._db.exec(
             self._db.query("select")
@@ -123,7 +127,7 @@ class ProjectInvitationService(BaseService):
                 email_should_invite if isinstance(email_should_invite, tuple) else (None, email_should_invite)
             )
             primary_email = email_or_list[0] if isinstance(email_or_list, list) else email_or_list
-            invitation = ProjectInvitation(project_id=cast(int, project.id), email=primary_email)
+            invitation = ProjectInvitation(project_id=project.id, email=primary_email)
             self._db.insert(invitation)
             await self._db.commit()
 
@@ -168,7 +172,7 @@ class ProjectInvitationService(BaseService):
         if not invitation:
             return None
 
-        project = await self._get_by(Project, "id", invitation.project_id)
+        project = await self._get_by_param(Project, invitation.project_id)
         if not project:
             return None
 
@@ -177,7 +181,7 @@ class ProjectInvitationService(BaseService):
             if invitation.email not in subemails:
                 return None
 
-        assign_user = ProjectAssignedUser(project_id=invitation.project_id, user_id=cast(int, user.id))
+        assign_user = ProjectAssignedUser(project_id=invitation.project_id, user_id=user.id)
 
         await self._db.delete(invitation)
         self._db.insert(assign_user)
@@ -214,8 +218,8 @@ class ProjectInvitationService(BaseService):
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"board:assigned-users:updated:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"board:assigned-users:updated:{project.get_uid()}",
             data_keys=["assigned_users", "invited_users"],
         )
 
@@ -223,7 +227,7 @@ class ProjectInvitationService(BaseService):
 
     def convert_none_user_api_response(self, email: str) -> dict[str, Any]:
         return {
-            "id": User.GROUP_EMAIL_ID,
+            "id": User.GROUP_EMAIL_UID,
             "firstname": email,
             "lastname": "",
             "email": email,

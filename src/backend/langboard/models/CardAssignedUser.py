@@ -1,12 +1,10 @@
-from sqlmodel import Field
-from ..core.db import BaseSqlModel
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 from .Card import Card
-from .User import User
 
 
 class CardAssignedUser(BaseSqlModel, table=True):
-    card_id: int = Field(foreign_key=Card.expr("id"), nullable=False)
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
 
     def api_response(self):
         return {}

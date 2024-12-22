@@ -42,7 +42,7 @@ export function SkeletonBoardCardAttachment() {
 }
 
 function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
-    const { projectUID, socket, currentUser, hasRoleAction } = useBoardCard();
+    const { card, socket, currentUser, hasRoleAction } = useBoardCard();
     const [t, i18n] = useTranslation();
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const mimeType = mimeTypes.lookup(attachment.url) || "file";
@@ -59,7 +59,7 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
     const [isValidating, setIsValidating] = useState(false);
     const { on: onCardAttachmentNameChanged } = useCardAttachmentNameChangedHandlers({
         socket,
-        projectUID,
+        cardUID: card.uid,
         attachmentUID: attachment.uid,
         callback: (data) => {
             attachment.name = data.name;
@@ -67,7 +67,7 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
         },
     });
     const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const canEdit = currentUser.id === attachment.user.id || hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canEdit = currentUser.uid === attachment.user.uid || hasRoleAction(Project.ERoleAction.CARD_UPDATE);
 
     useEffect(() => {
         const { off } = onCardAttachmentNameChanged();

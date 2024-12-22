@@ -9,7 +9,7 @@ export interface ICreateSubCheckitemForm {
     card_uid: string;
     checkitem_uid: string;
     title: string;
-    assigned_users?: number[];
+    assigned_users?: string[];
 }
 
 export interface ICreateSubCheckitemResponse {

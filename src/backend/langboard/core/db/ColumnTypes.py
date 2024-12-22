@@ -1,12 +1,45 @@
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 from pydantic import BaseModel, SecretStr
+from pydantic_core import PydanticUndefined as Undefined
 from sqlalchemy import JSON, DateTime
-from sqlalchemy.types import TEXT, TypeDecorator
+from sqlalchemy.types import TEXT, BigInteger, TypeDecorator
 from sqlmodel import Field
 from ..utils.DateTime import now
+from .SnowflakeID import SnowflakeID
 
 
 TModelColumn = TypeVar("TModelColumn", bound=BaseModel)
+
+
+class SnowflakeIDType(TypeDecorator):
+    cache_ok = True
+    impl = BigInteger
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return int(SnowflakeID())
+        if isinstance(value, SnowflakeID):
+            return int(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return SnowflakeID(value)
+        return value
+
+
+def SnowflakeIDField(
+    primary_key: bool = False, foreign_key: Any = Undefined, nullable: bool = True, index: bool = False
+) -> Any:
+    default_value = None if nullable and not primary_key else SnowflakeID(0)
+    return Field(
+        default=default_value,
+        primary_key=primary_key,
+        foreign_key=foreign_key,
+        sa_type=SnowflakeIDType,
+        nullable=nullable,
+        index=index,
+    )
 
 
 def ModelColumnType(_model_type: type[TModelColumn]):

@@ -11,7 +11,7 @@ class SocketPublishModel(BaseModel):
     topic_id: str
     event: str
     data_keys: list[str] | str | None = None
-    extra_data: dict[str, Any] | None = None
+    custom_data: dict[str, Any] | None = None
 
 
 class SocketModelIdBaseResult(Generic[_TData]):

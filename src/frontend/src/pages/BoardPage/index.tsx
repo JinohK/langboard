@@ -8,7 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useBoardChatAvailableHandlers from "@/controllers/socket/board/useBoardChatAvailableHandlers";
+import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/useIsBoardChatAvailableHandlers";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
@@ -20,6 +20,7 @@ import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
 import useCanUseProjectSettings from "@/controllers/api/board/useCanUseProjectSettings";
 import BoardSettings from "@/pages/BoardPage/BoardSettings";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
 
 const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -48,15 +49,17 @@ const BoardProxy = memo((): JSX.Element => {
 
     const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
     const { mutate: canUseProjectSettingsMutate } = useCanUseProjectSettings({ uid: projectUID });
-    const { on: onBoardChatAvailable, send: sendBoardChatAvailable } = useBoardChatAvailableHandlers({
+    const { on: onIsBoardChatAvailable, send: sendIsBoardChatAvailable } = useIsBoardChatAvailableHandlers({
         socket,
         projectUID,
-        callback: ({ available }: { available: bool }) => {
-            if (available) {
+        callback: (data) => {
+            if (data.available) {
                 setResizableSidebar(() => ({
                     children: (
                         <Suspense>
-                            <ChatSidebar uid={projectUID} />
+                            <BoardChatProvider projectUID={projectUID} bot={data.bot}>
+                                <ChatSidebar />
+                            </BoardChatProvider>
                         </Suspense>
                     ),
                     initialWidth: 280,
@@ -97,9 +100,9 @@ const BoardProxy = memo((): JSX.Element => {
         const offs: (() => void)[] = [];
 
         socket.subscribe(ESocketTopic.Board, projectUID, () => {
-            offs.push(onBoardChatAvailable().off);
+            offs.push(onIsBoardChatAvailable().off);
 
-            sendBoardChatAvailable({});
+            sendIsBoardChatAvailable({});
         });
         socket.subscribe(ESocketTopic.Project, projectUID);
 

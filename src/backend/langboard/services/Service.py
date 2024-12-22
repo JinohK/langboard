@@ -78,3 +78,7 @@ class Service(ServiceFactory):
     @property
     def project_wiki(self):
         return self._create_or_get_service(factory.ProjectWikiService)
+
+    @property
+    def project_label(self):
+        return self._create_or_get_service(factory.ProjectLabelService)

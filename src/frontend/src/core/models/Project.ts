@@ -1,8 +1,8 @@
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
+import { IBaseModel } from "@/core/models/Base";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     title: string;
     project_type: string;
 }

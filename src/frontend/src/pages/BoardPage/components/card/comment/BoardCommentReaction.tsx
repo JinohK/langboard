@@ -25,7 +25,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
                 return;
             }
 
-            toggleReaction(data.user_id, data.reaction, data.is_reacted);
+            toggleReaction(data.user_uid, data.reaction, data.is_reacted);
         },
     });
 
@@ -53,7 +53,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
             },
             {
                 onSuccess: (data) => {
-                    toggleReaction(currentUser.id, reaction, data.is_reacted);
+                    toggleReaction(currentUser.uid, reaction, data.is_reacted);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});
@@ -67,17 +67,17 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
         );
     };
 
-    const toggleReaction = (userId: number, reaction: TEmoji, isReacted: bool) => {
+    const toggleReaction = (userUID: string, reaction: TEmoji, isReacted: bool) => {
         if (isReacted) {
             setReactions((prev) => {
                 const newReactions = { ...prev };
-                newReactions[reaction] = newReactions[reaction] ? [...newReactions[reaction].filter((uid) => uid !== userId), userId] : [userId];
+                newReactions[reaction] = newReactions[reaction] ? [...newReactions[reaction].filter((uid) => uid !== userUID), userUID] : [userUID];
                 return newReactions;
             });
         } else {
             setReactions((prev) => {
                 const newReactions = { ...prev };
-                newReactions[reaction] = newReactions[reaction]?.filter((uid) => uid !== userId);
+                newReactions[reaction] = newReactions[reaction]?.filter((uid) => uid !== userUID);
                 return newReactions;
             });
         }
@@ -87,7 +87,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
         <ReactionCounter
             reactions={reactions}
             isActiveReaction={(_, data) => {
-                return data.includes(currentUser.id);
+                return data.includes(currentUser.uid);
             }}
             toggleCallback={submitToggleReaction}
             disabled={isValidating}

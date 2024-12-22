@@ -1,7 +1,9 @@
 from typing import cast
+from ...core.db import User
 from ...core.service import BaseService
-from ...models import User, UserGroup, UserGroupAssignedEmail
+from ...models import UserGroup, UserGroupAssignedEmail
 from .RevertService import RevertService, RevertType
+from .Types import TUserGroupParam
 
 
 class UserGroupService(BaseService):
@@ -16,7 +18,7 @@ class UserGroupService(BaseService):
     async def create(self, user: User, name: str, emails: list[str] | None = None) -> tuple[UserGroup, str]:
         max_order = await self._get_max_order(UserGroup, "user_id", user.id)
         emails = emails or []
-        user_group = UserGroup(user_id=cast(int, user.id), name=name, order=max_order + 1)
+        user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(revert_service.create_record_model(user_group, RevertType.Delete))
@@ -25,7 +27,7 @@ class UserGroupService(BaseService):
             assigned_emails = []
 
             for email in set(emails):
-                assigned_emails.append(UserGroupAssignedEmail(group_id=cast(int, user_group.id), email=email))
+                assigned_emails.append(UserGroupAssignedEmail(group_id=user_group.id, email=email))
 
             await revert_service.record(
                 *[
@@ -37,21 +39,21 @@ class UserGroupService(BaseService):
 
         return user_group, revert_key
 
-    async def update_assigned_emails(self, user: User, user_group_id: int, emails: list[str]) -> str | None:
-        user_group = await self.get_by_id(user_group_id)
+    async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> str | None:
+        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
             return None
 
-        prev_assigned_emails = await self._get_all_by(UserGroupAssignedEmail, "group_id", user_group_id)
+        prev_assigned_emails = await self._get_all_by(UserGroupAssignedEmail, "group_id", user_group.id)
         await self._db.exec(
             self._db.query("delete")
             .table(UserGroupAssignedEmail)
-            .where(UserGroupAssignedEmail.column("group_id") == user_group_id)
+            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
         )
 
         assigned_emails = []
         for email in set(emails):
-            assigned_emails.append(UserGroupAssignedEmail(group_id=user_group_id, email=email))
+            assigned_emails.append(UserGroupAssignedEmail(group_id=user_group.id, email=email))
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(

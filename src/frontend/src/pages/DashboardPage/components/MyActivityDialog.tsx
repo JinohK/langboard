@@ -54,7 +54,7 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
                     ...prev,
                     ...rawActivities.pages
                         .flatMap((page) => page.activities)
-                        .filter((activity) => !prev.some((prevActivity) => prevActivity.id === activity.id)),
+                        .filter((activity) => !prev.some((prevActivity) => prevActivity.uid === activity.uid)),
                 ];
             });
             setActivities(rawActivities.pages.flatMap((page) => page.activities));

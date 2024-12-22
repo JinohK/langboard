@@ -13,7 +13,7 @@ export interface IAuthUser extends User.Interface {
     purpose: string;
     affiliation?: string;
     position?: string;
-    user_groups: { id: number; name: string; users: User.Interface[] }[];
+    user_groups: { uid: string; name: string; users: User.Interface[] }[];
     subemails: { email: string; verified_at: string }[];
 }
 

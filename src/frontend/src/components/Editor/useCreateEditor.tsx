@@ -150,7 +150,7 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
             mentionableUsers,
             prefix: "@",
             renderLabel: (mentionable) => {
-                const user = mentionableUsers.find((val) => val.id.toString() === (mentionable as Record<string, string>).key);
+                const user = mentionableUsers.find((val) => val.uid === (mentionable as Record<string, string>).key);
                 if (user) {
                     return `${user.firstname} ${user.lastname}`;
                 } else {

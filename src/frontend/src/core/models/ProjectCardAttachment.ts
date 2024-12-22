@@ -1,9 +1,9 @@
+import { IBaseModel } from "@/core/models/Base";
 import * as User from "@/core/models/User";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     name: string;
     url: string;
     order: number;

@@ -1,8 +1,7 @@
 import * as User from "@/core/models/User";
-import { IEditorContent } from "@/core/models/Base";
+import { IBaseModel, IEditorContent } from "@/core/models/Base";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     title: string;
     content: IEditorContent;
     order: number;

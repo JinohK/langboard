@@ -108,10 +108,10 @@ class RevertService(BaseService):
                 if not only_commit:
                     self._db.insert(model.unsaved_model)
                 await self._db.commit()
-                target_id = cast(int, model.unsaved_model.id)
+                target_id = model.unsaved_model.id
                 prev_record = {}
             elif model.revert_type == RevertType.Insert:
-                target_id = cast(int, model.unsaved_model.id)
+                target_id = model.unsaved_model.id
                 prev_record = model.unsaved_model.model_dump()
                 if model.purge:
                     is_purged = True
@@ -119,7 +119,7 @@ class RevertService(BaseService):
                     await self._db.delete(model.unsaved_model, purge=model.purge)  # type: ignore
                 await self._db.commit()
             else:
-                target_id = cast(int, model.unsaved_model.id)
+                target_id = model.unsaved_model.id
                 prev_record = model.unsaved_model.changes_dict
                 if not only_commit:
                     await self._db.update(model.unsaved_model)

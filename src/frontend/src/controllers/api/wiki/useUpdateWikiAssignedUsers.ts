@@ -6,7 +6,7 @@ import { format } from "@/core/utils/StringUtils";
 export interface IUpdateWikiAssignedUsersForm {
     project_uid: string;
     wiki_uid: string;
-    assigned_users: number[];
+    assigned_users: string[];
 }
 
 export interface IUpdateWikiAssignedUsersResponse {}

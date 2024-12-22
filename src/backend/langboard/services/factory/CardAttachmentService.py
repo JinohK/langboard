@@ -1,8 +1,9 @@
 from typing import Any, cast, overload
+from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.storage import FileModel
-from ...models import Card, CardAttachment, Project, User
+from ...models import Card, CardAttachment, Project
 from .Types import TAttachmentParam, TCardParam, TProjectParam
 
 
@@ -16,14 +17,17 @@ class CardAttachmentService(BaseService):
         return "card_attachment"
 
     async def get_by_uid(self, uid: str) -> CardAttachment | None:
-        return await self._get_by(CardAttachment, "uid", uid)
+        return await self._get_by_param(CardAttachment, uid)
 
-    async def get_board_list(self, card_uid: str) -> list[dict[str, Any]]:
+    async def get_board_list(self, card: TCardParam) -> list[dict[str, Any]]:
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(CardAttachment, User)
             .join(User, CardAttachment.column("user_id") == User.column("id"))
-            .where(CardAttachment.column("card_uid") == card_uid)
+            .where(CardAttachment.column("card_id") == card.id)
             .order_by(CardAttachment.column("order").asc(), CardAttachment.column("id").desc())
             .group_by(CardAttachment.column("id"), CardAttachment.column("order"))
         )
@@ -42,11 +46,11 @@ class CardAttachmentService(BaseService):
             return None
         project, card, _ = params
 
-        max_order = await self._get_max_order(CardAttachment, "card_uid", card.uid)
+        max_order = await self._get_max_order(CardAttachment, "card_id", card.id)
 
         card_attachment = CardAttachment(
-            user_id=cast(int, user.id),
-            card_uid=card.uid,
+            user_id=user.id,
+            card_id=card.id,
             filename=attachment.original_filename,
             file=attachment,
             order=max_order + 1,
@@ -56,13 +60,19 @@ class CardAttachmentService(BaseService):
         await self._db.commit()
 
         model_id = await SocketModelIdService.create_model_id(
-            {"attachment": {**card_attachment.api_response(), "user": user.api_response(), "card_uid": card.uid}}
+            {
+                "attachment": {
+                    **card_attachment.api_response(),
+                    "user": user.api_response(),
+                    "card_uid": card.get_uid(),
+                }
+            }
         )
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"{_SOCKET_PREFIX}:uploaded:{card.uid}",
+            topic=SocketTopic.BoardCard,
+            topic_id=card.get_uid(),
+            event=f"{_SOCKET_PREFIX}:uploaded",
             data_keys="attachment",
         )
 
@@ -77,9 +87,7 @@ class CardAttachmentService(BaseService):
         project, card, card_attachment = params
 
         original_order = card_attachment.order
-        update_query = (
-            self._db.query("update").table(CardAttachment).where(CardAttachment.column("card_uid") == card.uid)
-        )
+        update_query = self._db.query("update").table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
         if original_order < order:
             update_query = update_query.values({CardAttachment.order: CardAttachment.order - 1}).where(
                 (CardAttachment.column("order") <= order) & (CardAttachment.column("order") > original_order)
@@ -94,17 +102,12 @@ class CardAttachmentService(BaseService):
         await self._db.update(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "uid": card_attachment.uid,
-                "order": order,
-            }
-        )
+        model_id = await SocketModelIdService.create_model_id({"uid": card_attachment.get_uid(), "order": order})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"{_SOCKET_PREFIX}:order:changed:{card.uid}",
+            topic=SocketTopic.BoardCard,
+            topic_id=card.get_uid(),
+            event=f"{_SOCKET_PREFIX}:order:changed",
             data_keys=["uid", "order"],
         )
 
@@ -124,16 +127,12 @@ class CardAttachmentService(BaseService):
         await self._db.update(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "name": name,
-            }
-        )
+        model_id = await SocketModelIdService.create_model_id({"name": name})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"{_SOCKET_PREFIX}:name:changed:{card_attachment.uid}",
+            topic=SocketTopic.BoardCard,
+            topic_id=card.get_uid(),
+            event=f"{_SOCKET_PREFIX}:name:changed:{card_attachment.get_uid()}",
             data_keys="name",
         )
 
@@ -152,24 +151,19 @@ class CardAttachmentService(BaseService):
             .table(CardAttachment)
             .values({CardAttachment.order: CardAttachment.order - 1})
             .where(
-                (CardAttachment.column("order") > card_attachment.order)
-                & (CardAttachment.column("card_uid") == card.uid)
+                (CardAttachment.column("order") > card_attachment.order) & (CardAttachment.column("card_id") == card.id)
             )
         )
 
         await self._db.delete(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "uid": card_attachment.uid,
-            }
-        )
+        model_id = await SocketModelIdService.create_model_id({"uid": card_attachment.get_uid()})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"{_SOCKET_PREFIX}:deleted:{card.uid}",
+            topic=SocketTopic.BoardCard,
+            topic_id=card.get_uid(),
+            event=f"{_SOCKET_PREFIX}:deleted",
             data_keys="uid",
         )
 
@@ -191,10 +185,11 @@ class CardAttachmentService(BaseService):
         if not card or not project or card.project_id != project.id:
             return None
 
-        card_attachment = None
         if card_attachment:
             card_attachment = cast(CardAttachment, await self._get_by_param(CardAttachment, card_attachment))
-            if not card_attachment or card_attachment.card_uid != card.uid:
+            if not card_attachment or card_attachment.card_id != card.id:
                 return None
+        else:
+            card_attachment = None
 
         return project, card, card_attachment

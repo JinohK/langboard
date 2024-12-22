@@ -35,8 +35,7 @@ function BoardCardAttachmentList(): JSX.Element {
         reorder: reorderColumns,
     } = useReorderColumn({
         type: "BoardCardAttachment",
-        eventNameParams: { uid: card.uid },
-        topicId: projectUID,
+        topicId: card.uid,
         columns: card.attachments,
         socket,
     });
@@ -47,7 +46,6 @@ function BoardCardAttachmentList(): JSX.Element {
     };
     const { on: onCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({
         socket,
-        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             setAttachments((prev) => {
@@ -62,7 +60,6 @@ function BoardCardAttachmentList(): JSX.Element {
     });
     const { on: onCardAttachmentDeleted } = useCardAttachmentDeletedHandlers({
         socket,
-        projectUID,
         cardUID: card.uid,
         callback: (data) => {
             deletedAttachment(data.uid);

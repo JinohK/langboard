@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ..db import BaseSqlModel, DbSession
+from ..db import BaseSqlModel, DbSession, SnowflakeID
 
 
 _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
@@ -146,13 +146,15 @@ class BaseService(ABC):
         return max_order
 
     async def _get_by_param(
-        self, model_class: type[_TBaseModel], self_or_id_or_uid: _TBaseModel | int | str
+        self, model_class: type[_TBaseModel], id_param: _TBaseModel | SnowflakeID | int | str
     ) -> _TBaseModel | None:
-        if isinstance(self_or_id_or_uid, model_class):
-            return self_or_id_or_uid
-        if isinstance(self_or_id_or_uid, int):
-            return await self._get_by(model_class, "id", self_or_id_or_uid)
-        return await self._get_by(model_class, "uid", self_or_id_or_uid)
+        if isinstance(id_param, model_class):
+            return id_param
+        if isinstance(id_param, SnowflakeID) or isinstance(id_param, int):
+            return await self._get_by(model_class, "id", id_param)
+        if isinstance(id_param, str):
+            return await self._get_by(model_class, "id", SnowflakeID.from_short_code(id_param))
+        return None
 
     def _convert_to_python(self, data: Any) -> Any:
         if isinstance(data, BaseModel):

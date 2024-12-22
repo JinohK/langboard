@@ -1,6 +1,6 @@
-from ...core.ai import BotType
+from ...core.ai import BotRunner, BotType
+from ...core.db import SnowflakeID, User
 from ...core.service import BaseService
-from ...models import User
 from ...models.BaseReactionModel import BaseReactionModel
 
 
@@ -10,23 +10,27 @@ class ReactionService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "reaction"
 
-    async def get_all(self, model_class: type[BaseReactionModel], target_id: int | str) -> dict[str, list[int | str]]:
+    async def get_all(self, model_class: type[BaseReactionModel], target_id: SnowflakeID) -> dict[str, list[str]]:
         result = await self._db.exec(
             self._db.query("select")
-            .columns(model_class.reaction_type, model_class.column("user_id"), model_class.column("bot_type"))
+            .tables(model_class, User)
+            .outerjoin(User, model_class.column("user_id") == User.column("id"))
             .where(model_class.column(model_class.get_target_column_name()) == target_id)
             .group_by(model_class.column("reaction_type"))
         )
-        raw_reactions = result.all()
+        records = result.all()
 
-        reactions = {}
-        for reaction_type, user_id, bot_type in raw_reactions:
+        reactions: dict[str, list[str]] = {}
+        for reaction, reacted_user in records:
+            reaction_type = reaction.reaction_type
             if reaction_type not in reactions:
                 reactions[reaction_type] = []
-            if user_id:
-                reactions[reaction_type].append(user_id)
-            elif bot_type:
-                reactions[reaction_type].append(bot_type.name)
+            if reacted_user:
+                reactions[reaction_type].append(reacted_user.get_fullname())
+            elif reaction.bot_type:
+                bot = await BotRunner.get_bot_config(reaction.bot_type)
+                if bot:
+                    reactions[reaction_type].append(bot.display_name)
 
         return reactions
 
@@ -34,7 +38,7 @@ class ReactionService(BaseService):
         self,
         user_or_bot: User | BotType,
         model_class: type[BaseReactionModel],
-        target_id: int | str,
+        target_id: SnowflakeID,
         reaction_type: str,
     ) -> bool:
         user_or_bot_column = (

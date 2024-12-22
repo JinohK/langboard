@@ -1,9 +1,10 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import BotType
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.storage import FileModel
-from ...models import Project, ProjectWiki, ProjectWikiAssignedUser, ProjectWikiAttachment, User
+from ...models import Project, ProjectWiki, ProjectWikiAssignedUser, ProjectWikiAttachment
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
 from .Types import TProjectParam, TWikiParam
@@ -16,14 +17,16 @@ class ProjectWikiService(BaseService):
         return "project_wiki"
 
     async def get_by_uid(self, uid: str) -> ProjectWiki | None:
-        return await self._get_by(ProjectWiki, "uid", uid)
+        return await self._get_by_param(ProjectWiki, uid)
 
-    async def get_board_list(self, user: User, project_uid: str) -> list[dict[str, Any]]:
+    async def get_board_list(self, user: User, project: TProjectParam) -> list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .table(ProjectWiki)
-            .join(Project, ProjectWiki.column("project_id") == Project.id)
-            .where(Project.column("uid") == project_uid)
+            .where(ProjectWiki.column("project_id") == project.id)
             .order_by(ProjectWiki.column("order").asc())
             .group_by(ProjectWiki.column("id"), ProjectWiki.column("order"))
         )
@@ -51,21 +54,21 @@ class ProjectWikiService(BaseService):
 
     @overload
     async def get_assigned_users(
-        self, wiki: ProjectWiki | int, as_api: Literal[False]
+        self, wiki: TWikiParam, as_api: Literal[False]
     ) -> list[tuple[User, ProjectWikiAssignedUser]]: ...
     @overload
-    async def get_assigned_users(self, wiki: ProjectWiki | int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, wiki: TWikiParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_assigned_users(
-        self, wiki: ProjectWiki | int, as_api: bool
+        self, wiki: TWikiParam, as_api: bool
     ) -> list[tuple[User, ProjectWikiAssignedUser]] | list[dict[str, Any]]:
+        wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
+        if not wiki:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(User, ProjectWikiAssignedUser)
             .join(ProjectWikiAssignedUser, User.column("id") == ProjectWikiAssignedUser.column("user_id"))
-            .where(
-                ProjectWikiAssignedUser.column("project_wiki_id")
-                == (wiki.id if isinstance(wiki, ProjectWiki) else wiki)
-            )
+            .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
         )
         raw_users = result.all()
         if not as_api:
@@ -76,7 +79,7 @@ class ProjectWikiService(BaseService):
 
     def convert_to_private_api_response(self, wiki: ProjectWiki) -> dict[str, Any]:
         return {
-            "uid": wiki.uid,
+            "uid": wiki.get_uid(),
             "title": "",
             "content": None,
             "order": wiki.order,
@@ -96,7 +99,7 @@ class ProjectWikiService(BaseService):
         max_order = await self._get_max_order(ProjectWiki, "project_id", project.id)
 
         wiki = ProjectWiki(
-            project_id=cast(int, project.id),
+            project_id=project.id,
             title=title,
             order=max_order + 1,
         )
@@ -108,8 +111,8 @@ class ProjectWikiService(BaseService):
         model_id = await SocketModelIdService.create_model_id({"wiki": api_wiki})
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
-            topic_id=project.uid,
-            event=f"board:wiki:created:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"board:wiki:created:{project.get_uid()}",
             data_keys="wiki",
         )
 
@@ -162,8 +165,8 @@ class ProjectWikiService(BaseService):
                 publish_models.append(
                     SocketPublishModel(
                         topic=SocketTopic.BoardWiki,
-                        topic_id=project.uid,
-                        event=f"board:wiki:{key}:changed:{wiki.uid}",
+                        topic_id=project.get_uid(),
+                        event=f"board:wiki:{key}:changed:{wiki.get_uid()}",
                         data_keys=key,
                     )
                 )
@@ -172,8 +175,8 @@ class ProjectWikiService(BaseService):
                     publish_models.append(
                         SocketPublishModel(
                             topic=SocketTopic.BoardWikiPrivate,
-                            topic_id=assigned_user.username,
-                            event=f"board:wiki:{key}:changed:{wiki.uid}",
+                            topic_id=assigned_user.get_uid(),
+                            event=f"board:wiki:{key}:changed:{wiki.get_uid()}",
                             data_keys=key,
                         )
                     )
@@ -197,8 +200,8 @@ class ProjectWikiService(BaseService):
             )
         else:
             assigned_user = ProjectWikiAssignedUser(
-                project_wiki_id=cast(int, wiki.id),
-                user_id=cast(int, user.id),
+                project_wiki_id=wiki.id,
+                user_id=user.id,
             )
 
             self._db.insert(assigned_user)
@@ -206,11 +209,7 @@ class ProjectWikiService(BaseService):
         await self._db.update(wiki)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "fake": True,
-            }
-        )
+        model_id = await SocketModelIdService.create_model_id({"fake": True})
 
         public_wiki = {
             **wiki.api_response(),
@@ -222,9 +221,9 @@ class ProjectWikiService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.BoardWiki,
-                    topic_id=project.uid,
-                    event=f"board:wiki:public:changed:{wiki.uid}",
-                    extra_data={"wiki": public_wiki},
+                    topic_id=project.get_uid(),
+                    event=f"board:wiki:public:changed:{wiki.get_uid()}",
+                    custom_data={"wiki": public_wiki},
                 )
             )
         else:
@@ -235,16 +234,16 @@ class ProjectWikiService(BaseService):
                 publish_models.append(
                     SocketPublishModel(
                         topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=project_member.username,
-                        event=f"board:wiki:public:changed:{wiki.uid}",
-                        extra_data={"wiki": public_wiki if is_public_user else private_wiki},
+                        topic_id=project_member.get_uid(),
+                        event=f"board:wiki:public:changed:{wiki.get_uid()}",
+                        custom_data={"wiki": public_wiki if is_public_user else private_wiki},
                     )
                 )
 
         return SocketModelIdBaseResult(model_id, (wiki, project, [user] if not wiki.is_public else []), publish_models)
 
     async def update_assigned_users(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, assigned_user_ids: list[int]
+        self, user: User, project: TProjectParam, wiki: TWikiParam, assigned_user_uids: list[str]
     ) -> SocketModelIdBaseResult[tuple[ProjectWiki, Project]] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
@@ -253,7 +252,9 @@ class ProjectWikiService(BaseService):
 
         project_service = self._get_service(ProjectService)
         project_assigned_users = await project_service.get_assigned_users(project, as_api=False)
-        project_assigned_user_ids = [project_assigned_user.id for project_assigned_user, _ in project_assigned_users]
+        project_assigned_user_uids = [
+            project_assigned_user.get_uid() for project_assigned_user, _ in project_assigned_users
+        ]
 
         prev_assigned_users = await self.get_assigned_users(wiki, as_api=False)
 
@@ -263,11 +264,14 @@ class ProjectWikiService(BaseService):
             .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
         )
 
-        for assigned_user_id in assigned_user_ids:
-            if assigned_user_id not in project_assigned_user_ids:
+        assigned_user_ids: list[SnowflakeID] = []
+        for assigned_user_uid in assigned_user_uids:
+            if assigned_user_uid not in project_assigned_user_uids:
                 continue
+            assigned_user_id = SnowflakeID.from_short_code(assigned_user_uid)
+            assigned_user_ids.append(assigned_user_id)
             assigned_user = ProjectWikiAssignedUser(
-                project_wiki_id=cast(int, wiki.id),
+                project_wiki_id=wiki.id,
                 user_id=assigned_user_id,
             )
             self._db.insert(assigned_user)
@@ -284,11 +288,7 @@ class ProjectWikiService(BaseService):
             prev_cur_users.append(assigned_user)
             prev_cur_user_ids.append(assigned_user.id)
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "fake": True,
-            }
-        )
+        model_id = await SocketModelIdService.create_model_id({"fake": True})
 
         public_wiki = {
             **wiki.api_response(),
@@ -301,9 +301,9 @@ class ProjectWikiService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.BoardWikiPrivate,
-                    topic_id=prev_cur_user.username,
-                    event=f"board:wiki:assigned-users:changed:{wiki.uid}",
-                    extra_data={"wiki": public_wiki if is_public_user else private_wiki},
+                    topic_id=prev_cur_user.get_uid(),
+                    event=f"board:wiki:assigned-users:changed:{wiki.get_uid()}",
+                    custom_data={"wiki": public_wiki if is_public_user else private_wiki},
                 )
             )
 
@@ -330,12 +330,17 @@ class ProjectWikiService(BaseService):
 
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": wiki.uid, "order": wiki.order})
+        model_id = await SocketModelIdService.create_model_id(
+            {
+                "uid": wiki.get_uid(),
+                "order": wiki.order,
+            }
+        )
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
-            topic_id=project.uid,
-            event=f"board:wiki:order:changed:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"board:wiki:order:changed:{project.get_uid()}",
             data_keys=["uid", "order"],
         )
 
@@ -349,11 +354,11 @@ class ProjectWikiService(BaseService):
             return None
         project, wiki = params
 
-        max_order = await self._get_max_order(ProjectWikiAttachment, "wiki_uid", wiki.uid)
+        max_order = await self._get_max_order(ProjectWikiAttachment, "wiki_id", wiki.id)
 
         wiki_attachment = ProjectWikiAttachment(
-            user_id=cast(int, user.id),
-            wiki_uid=wiki.uid,
+            user_id=user.id,
+            wiki_id=wiki.id,
             filename=attachment.original_filename,
             file=attachment,
             order=max_order + 1,
@@ -363,7 +368,13 @@ class ProjectWikiService(BaseService):
         await self._db.commit()
 
         model_id = await SocketModelIdService.create_model_id(
-            {"attachment": {**wiki_attachment.api_response(), "user": user.api_response(), "wiki_uid": wiki.uid}}
+            {
+                "attachment": {
+                    **wiki_attachment.api_response(),
+                    "user": user.api_response(),
+                    "wiki_uid": wiki.get_uid(),
+                }
+            }
         )
 
         return SocketModelIdBaseResult(model_id, wiki_attachment, [])
@@ -379,12 +390,12 @@ class ProjectWikiService(BaseService):
         await self._db.delete(wiki)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": wiki.uid})
+        model_id = await SocketModelIdService.create_model_id({"uid": wiki.get_uid()})
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
-            topic_id=project.uid,
-            event=f"board:wiki:deleted:{project.uid}",
+            topic_id=project.get_uid(),
+            event=f"board:wiki:deleted:{project.get_uid()}",
             data_keys=["uid"],
         )
 
@@ -403,10 +414,11 @@ class ProjectWikiService(BaseService):
         if not project:
             return None
 
-        wiki = None
         if wiki:
             wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
             if not wiki or wiki.project_id != project.id:
                 return None
+        else:
+            wiki = None
 
         return project, wiki

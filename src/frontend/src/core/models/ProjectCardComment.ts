@@ -1,10 +1,9 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import * as User from "@/core/models/User";
-import { IEditorContent } from "@/core/models/Base";
+import { IBaseModel, IEditorContent } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     content: IEditorContent;
     is_edited: bool;
     commented_at: Date;

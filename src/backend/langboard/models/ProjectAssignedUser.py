@@ -1,14 +1,13 @@
 from datetime import datetime
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField
+from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField, User
 from ..core.utils.DateTime import now
 from .Project import Project
-from .User import User
 
 
 class ProjectAssignedUser(BaseSqlModel, table=True):
-    project_id: int = Field(foreign_key=Project.expr("id"), nullable=False)
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
     starred: bool = Field(default=False, nullable=False)
     last_viewed_at: datetime = DateTimeField(default=now, nullable=False)
 

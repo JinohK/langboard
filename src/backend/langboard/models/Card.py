@@ -1,16 +1,14 @@
 from datetime import datetime
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SoftDeleteModel
-from ..core.utils.String import create_short_unique_id
+from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
 from .Project import Project
 from .ProjectColumn import ProjectColumn
 
 
 class Card(SoftDeleteModel, table=True):
-    uid: str = Field(default_factory=lambda: create_short_unique_id(10), unique=True, nullable=False)
-    project_id: int = Field(foreign_key=Project.expr("id"), nullable=False)
-    project_column_uid: str | None = Field(foreign_key=ProjectColumn.expr("uid"), nullable=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
+    project_column_id: SnowflakeID | None = SnowflakeIDField(foreign_key=ProjectColumn.expr("id"), nullable=True)
     title: str = Field(nullable=False)
     description: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
     ai_description: str | None = Field(default=None, sa_type=TEXT)
@@ -20,8 +18,8 @@ class Card(SoftDeleteModel, table=True):
 
     def api_response(self):
         return {
-            "uid": self.uid,
-            "column_uid": self.project_column_uid,
+            "uid": self.get_uid(),
+            "column_uid": self.project_column_id.to_short_code() if self.project_column_id else None,
             "title": self.title,
             "description": self.description.model_dump() if self.description else None,
             "ai_description": self.ai_description,
@@ -29,4 +27,4 @@ class Card(SoftDeleteModel, table=True):
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["uid", "project_id", "project_column_uid", "title", "deadline_at", "order", "archived_at"]
+        return ["project_id", "project_column_id", "title", "deadline_at", "order", "archived_at"]

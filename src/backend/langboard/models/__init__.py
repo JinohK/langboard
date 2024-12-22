@@ -1,4 +1,5 @@
 from .Card import Card
+from .CardAssignedProjectLabel import CardAssignedProjectLabel
 from .CardAssignedUser import CardAssignedUser
 from .CardAttachment import CardAttachment
 from .CardComment import CardComment
@@ -13,12 +14,12 @@ from .Project import Project
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectColumn import ProjectColumn
 from .ProjectInvitation import ProjectInvitation
+from .ProjectLabel import ProjectLabel
 from .ProjectRole import ProjectRole
 from .ProjectWiki import ProjectWiki
 from .ProjectWikiAssignedUser import ProjectWikiAssignedUser
 from .ProjectWikiAttachment import ProjectWikiAttachment
 from .RevertableRecord import RevertableRecord
-from .User import User
 from .UserEmail import UserEmail
 from .UserGroup import UserGroup
 from .UserGroupAssignedEmail import UserGroupAssignedEmail
@@ -27,6 +28,7 @@ from .UserNotification import UserNotification
 
 __all__ = [
     "Card",
+    "CardAssignedProjectLabel",
     "CardAssignedUser",
     "CardAttachment",
     "CardComment",
@@ -41,12 +43,12 @@ __all__ = [
     "ProjectAssignedUser",
     "ProjectColumn",
     "ProjectInvitation",
+    "ProjectLabel",
     "ProjectRole",
     "ProjectWiki",
     "ProjectWikiAssignedUser",
     "ProjectWikiAttachment",
     "RevertableRecord",
-    "User",
     "UserEmail",
     "UserGroup",
     "UserGroupAssignedEmail",

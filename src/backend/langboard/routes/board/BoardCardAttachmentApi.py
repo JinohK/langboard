@@ -1,11 +1,10 @@
-from typing import cast
 from fastapi import File, UploadFile, status
-from ...core.db import DbSession
+from ...core.db import DbSession, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth, Role
 from ...core.storage import Storage, StorageName
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ChangeAttachmentNameForm, ChangeOrderForm, project_role_finder
@@ -78,7 +77,7 @@ async def change_card_attachment_name(
     if card_attachment.user_id != user.id and not user.is_admin:
         role_filter = Role(ProjectRole, db)
         if not await role_filter.is_authorized(
-            cast(int, user.id), {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
@@ -111,7 +110,7 @@ async def delete_card_attachment(
     if card_attachment.user_id != user.id and not user.is_admin:
         role_filter = Role(ProjectRole, db)
         if not await role_filter.is_authorized(
-            cast(int, user.id), {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 

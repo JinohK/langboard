@@ -2,10 +2,9 @@ import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as User from "@/core/models/User";
-import { IEditorContent } from "@/core/models/Base";
+import { IBaseModel, IEditorContent } from "@/core/models/Base";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     column_uid: string;
     title: string;
     description?: IEditorContent;

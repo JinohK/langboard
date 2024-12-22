@@ -45,7 +45,7 @@ function SharedBoardCardCheckitemAddSub({
             card_uid: card.uid,
             checkitem_uid: checkitem.uid,
             title,
-            assigned_users: selectedMembers.map((id) => parseInt(id)),
+            assigned_users: selectedMembers,
         });
 
         const toastId = Toast.Add.promise(promise, {

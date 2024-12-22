@@ -17,7 +17,7 @@ export interface IBoardWikiContext {
     setWikis: React.Dispatch<React.SetStateAction<ProjectWiki.Interface[]>>;
     projectMembers: User.Interface[];
     currentUser: IAuthUser;
-    currentEditor: string;
+    editorsRef: React.MutableRefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
     canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
     setTitleMapRef: React.MutableRefObject<Record<string, (title: string) => void>>;
@@ -43,7 +43,7 @@ const initialContext = {
     setWikis: () => {},
     projectMembers: [],
     currentUser: {} as IAuthUser,
-    currentEditor: "",
+    editorsRef: { current: {} },
     setCurrentEditor: () => {},
     canAccessWiki: () => false,
     setTitleMapRef: { current: {} },
@@ -65,19 +65,21 @@ export const BoardWikiProvider = ({
     const socket = useSocket();
     const [wikis, setWikis] = useState<ProjectWiki.Interface[]>(flatWikis);
     const [t] = useTranslation();
-    const [currentEditor, setCurEditor] = useState<string>("");
+    const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
+    const currentEditorRef = useRef<string>("");
     const [disabledReorder, setDisabledReorder] = useState<bool>(true);
     const setTitleMapRef = useRef<Record<string, (title: string) => void>>({});
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
 
     const setCurrentEditor = (uid: string) => {
-        if (currentEditor) {
+        if (currentEditorRef.current) {
             socket.send({
                 topic: ESocketTopic.BoardWiki,
                 topicId: projectUID,
                 eventName: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_STOP_EDITING,
-                data: { uid: currentEditor },
+                data: { uid: currentEditorRef.current },
             });
+            editorsRef.current[currentEditorRef.current]?.(false);
         }
 
         if (uid) {
@@ -87,9 +89,10 @@ export const BoardWikiProvider = ({
                 eventName: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_START_EDITING,
                 data: { uid },
             });
+            editorsRef.current[uid]?.(true);
         }
 
-        setCurEditor(uid);
+        currentEditorRef.current = uid;
     };
 
     const canAccessWiki = (shouldNavigate: bool, uid?: string) => {
@@ -120,7 +123,7 @@ export const BoardWikiProvider = ({
                 setWikis,
                 projectMembers,
                 currentUser,
-                currentEditor,
+                editorsRef,
                 setCurrentEditor,
                 canAccessWiki,
                 setTitleMapRef,

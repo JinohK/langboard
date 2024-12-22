@@ -1,5 +1,5 @@
 from typing import Any, Callable, Coroutine, cast
-from ...models import User
+from ..db import User
 from .SocketDefaultEvent import SocketDefaultEvent
 from .SocketEvent import SocketEvent, TEvent
 from .SocketTopic import SocketTopic

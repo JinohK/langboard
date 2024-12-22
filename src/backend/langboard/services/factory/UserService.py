@@ -4,13 +4,14 @@ from typing import Any
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
+from ...core.db import SnowflakeID, User
 from ...core.security import Auth
 from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, User, UserEmail, UserGroup, UserGroupAssignedEmail
+from ...models import Project, ProjectAssignedUser, UserEmail, UserGroup, UserGroupAssignedEmail
 from ...models.RevertableRecord import RevertType
 from .RevertService import RevertService
 
@@ -59,7 +60,7 @@ class UserService(BaseService):
         await self._db.commit()
         return user
 
-    async def create_subemail(self, user_id: int, email: str) -> UserEmail:
+    async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
         self._db.insert(user_email)
         await self._db.commit()
@@ -92,7 +93,7 @@ class UserService(BaseService):
                 else:
                     api_group["users"].append(
                         {
-                            "id": User.GROUP_EMAIL_ID,
+                            "uid": User.GROUP_EMAIL_UID,
                             "firstname": assigned_email.email,
                             "lastname": "",
                             "email": assigned_email.email,

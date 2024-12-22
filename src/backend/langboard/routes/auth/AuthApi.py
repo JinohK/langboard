@@ -1,11 +1,11 @@
-from typing import Annotated, cast
+from typing import Annotated
 from fastapi import Header, status
 from jwt import ExpiredSignatureError
+from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
-from ...models import User
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
 
@@ -43,7 +43,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
     if not user.activated_at:
         return JsonResponse(content={}, status_code=status.HTTP_423_LOCKED)
 
-    access_token, refresh_token = Auth.authenticate(cast(int, user.id))
+    access_token, refresh_token = Auth.authenticate(user.id)
 
     return SignInResponse(access_token=access_token, refresh_token=refresh_token)
 

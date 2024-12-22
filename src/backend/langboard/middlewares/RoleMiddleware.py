@@ -1,10 +1,10 @@
 from fastapi import status
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
+from ..core.db import User
 from ..core.filter import FilterMiddleware, RoleFilter
 from ..core.routing import JsonResponse
 from ..core.security import Role
-from ..models import User
 
 
 class RoleMiddleware(FilterMiddleware):

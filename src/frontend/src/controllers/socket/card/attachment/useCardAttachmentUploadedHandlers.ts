@@ -10,15 +10,14 @@ export interface ICardAttachmentUploadedResponse {
 }
 
 export interface IUseCardAttachmentUploadedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentUploadedResponse> {
-    projectUID: string;
     cardUID: string;
 }
 
-const useCardAttachmentUploadedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardAttachmentUploadedHandlersProps) => {
+const useCardAttachmentUploadedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentUploadedHandlersProps) => {
     return useSocketHandler<ICardAttachmentUploadedRequest, ICardAttachmentUploadedResponse>({
         socket,
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
         eventKey: `board-card-attachment-uploaded-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,

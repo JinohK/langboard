@@ -152,7 +152,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         const promise = updateWikiAssignedUsersMutateAsync({
             project_uid: projectUID,
             wiki_uid: wiki.uid,
-            assigned_users: users.map((user) => user.id),
+            assigned_users: User.filterValidUserUIDs(users),
         });
 
         const toastId = Toast.Add.promise(promise, {

@@ -1,6 +1,5 @@
-from ...core.db import DbSession
+from ...core.db import DbSession, User
 from ...core.routing import AppRouter, SocketTopic
-from ...models import User
 from ...services import Service
 
 

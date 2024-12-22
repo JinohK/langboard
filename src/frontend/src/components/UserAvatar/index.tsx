@@ -58,7 +58,7 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
     const initials = createNameInitials(user.firstname, user.lastname);
     const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
-    const isDeletedUser = user.id === 0;
+    const isDeletedUser = User.isDeletedUser(user);
     const isPresentableUnknownUser = User.isPresentableUnknownUser(user);
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
@@ -124,7 +124,7 @@ const Trigger = memo(
     }: IUserAvatarTriggerProps) => {
         const [t] = useTranslation();
         const initials = createNameInitials(user.firstname, user.lastname);
-        const isDeletedUser = user.id === 0;
+        const isDeletedUser = User.isDeletedUser(user);
         const isPresentableUnknownUser = User.isPresentableUnknownUser(user);
 
         const avatarAfterPseudoClassNames = cn(

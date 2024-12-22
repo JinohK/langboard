@@ -27,7 +27,7 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
             break;
         case "BoardCardAttachment":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;
-            topic = ESocketTopic.Board;
+            topic = ESocketTopic.BoardCard;
             break;
         case "BoardCardCheckitem":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;

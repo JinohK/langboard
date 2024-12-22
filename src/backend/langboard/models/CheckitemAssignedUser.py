@@ -1,13 +1,11 @@
 from typing import Any
-from sqlmodel import Field
-from ..core.db import BaseSqlModel
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 from .Checkitem import Checkitem
-from .User import User
 
 
 class CheckitemAssignedUser(BaseSqlModel, table=True):
-    checkitem_id: int = Field(foreign_key=Checkitem.expr("id"), nullable=False)
-    user_id: int = Field(foreign_key=User.expr("id"), nullable=False)
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
 
     def api_response(self) -> dict[str, Any]:
         return {}

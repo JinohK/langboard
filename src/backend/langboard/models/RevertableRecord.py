@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField
+from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField
 from ..core.utils.DateTime import now
 from ..core.utils.String import create_short_unique_id
 
@@ -15,7 +15,7 @@ class RevertType(Enum):
 
 class RevertableRecord(BaseSqlModel, table=True):
     revert_key: str = Field(nullable=False)
-    target_id: int = Field(nullable=False)
+    target_id: SnowflakeID = SnowflakeIDField(nullable=False)
     table_name: str = Field(nullable=False)
     column_values: dict = Field(default="", sa_type=JSON)
     file_column_names: list[str] | None = Field(default=None, sa_type=JSON)

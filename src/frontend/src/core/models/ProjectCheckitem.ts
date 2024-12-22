@@ -1,8 +1,8 @@
+import { IBaseModel } from "@/core/models/Base";
 import * as ProjectCheckitemTimer from "@/core/models/ProjectCheckitemTimer";
 import * as User from "@/core/models/User";
 
-export interface Interface {
-    uid: string;
+export interface Interface extends IBaseModel {
     title: string;
     cardified_uid?: string;
     order: number;

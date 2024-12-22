@@ -6,7 +6,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 export interface ICardCommentReactedRequest {}
 
 export interface ICardCommentReactedResponse {
-    user_id: number;
+    user_uid: string;
     comment_uid: string;
     reaction: TEmoji;
     is_reacted: bool;

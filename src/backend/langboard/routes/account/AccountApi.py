@@ -1,12 +1,11 @@
-from typing import cast
 from fastapi import File, UploadFile, status
 from ...core.caching import Cache
+from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.routing.Exception import InvalidError, InvalidException
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
-from ...models import User
 from ...services import Service
 from .Form import AddNewEmailForm, ChangePasswordForm, EmailForm, UpdateProfileForm, VerifyNewEmailForm
 
@@ -40,7 +39,7 @@ async def add_new_email(
         if existed_user:
             raise InvalidException(InvalidError(loc="body", field="new_email", inputs=form.model_dump()))
 
-        await service.user.create_subemail(cast(int, user.id), form.new_email)
+        await service.user.create_subemail(user.id, form.new_email)
     else:
         if not existed_user or existed_user.id != user.id or not subemail:
             return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

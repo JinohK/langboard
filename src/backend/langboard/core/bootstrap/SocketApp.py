@@ -3,7 +3,7 @@ from typing import Any, Union, cast
 from fastapi import status
 from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
-from ...models import User
+from ..db import User
 from ..routing import (
     AppRouter,
     SocketDefaultEvent,
@@ -31,6 +31,8 @@ class SocketApp(dict):
 
     async def on_upgrade(self, res: Response, req: Request, socket_context) -> None:
         AppRouter.set_socketify_app(req.app)
+
+        req.preserve()
 
         queries = req.get_queries()
         if queries is None:

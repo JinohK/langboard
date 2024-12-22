@@ -1,9 +1,9 @@
 from fastapi import status
-from ...core.db import EditorContentModel
+from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ToggleCardCommentReactionForm, project_role_finder

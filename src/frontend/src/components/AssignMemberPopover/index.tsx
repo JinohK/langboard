@@ -180,13 +180,13 @@ export const AssignMemberForm = memo(
                         return null;
                     }
 
-                    return { id: group.id, name: group.name, members: groupMembers };
+                    return { uid: group.uid, name: group.name, members: groupMembers };
                 })
                 .filter((group) => group !== null);
         }, [assignedUsers, selected, allUsers]);
         const addGroupMembers = useCallback(
-            (groupId: number) => {
-                const group = assignableGroups.find((group) => group.id === groupId);
+            (groupUID: string) => {
+                const group = assignableGroups.find((group) => group.uid === groupUID);
                 if (!group) {
                     return;
                 }
@@ -257,7 +257,7 @@ export const AssignMemberForm = memo(
                     <DropdownMenu.Content>
                         <DropdownMenu.Group>
                             {assignableGroups.map((group) => (
-                                <DropdownMenu.Item key={`group-${group.name}-${createShortUUID()}`} onClick={() => addGroupMembers(group.id)}>
+                                <DropdownMenu.Item key={`group-${group.name}-${createShortUUID()}`} onClick={() => addGroupMembers(group.uid)}>
                                     {group.name}
                                 </DropdownMenu.Item>
                             ))}

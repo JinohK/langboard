@@ -43,10 +43,6 @@ class BaseBot(metaclass=BotMetadata):
     def bot_type() -> BotType: ...
 
     @staticmethod
-    @abstractmethod
-    def bot_name() -> str: ...
-
-    @staticmethod
     def bot_avatar() -> str | None:
         return None
 

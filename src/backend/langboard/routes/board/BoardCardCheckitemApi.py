@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Any, cast
 from fastapi import status
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse, SocketTopic
 from ...core.security import Auth
 from ...core.utils.DateTime import calculate_time_diff_in_seconds
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import CardifyCheckitemForm, ChangeOrderForm, CreateCardCheckitemForm, project_role_finder
@@ -131,7 +132,7 @@ async def cardify_checkitem(
     await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(
-        content={"card_uid": cardified_card.uid},
+        content={"card_uid": cardified_card.get_uid()},
         status_code=status.HTTP_200_OK,
     )
 

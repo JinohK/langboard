@@ -33,14 +33,14 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
             const userList: (User.Interface & { key: string; text: string })[] = [];
             for (let i = 0; i < mentionableUsers.length; ++i) {
                 const user = mentionableUsers[i];
-                if (user.id === currentUser.id) {
+                if (user.uid === currentUser.uid || !User.isValidUser(user)) {
                     continue;
                 }
 
                 userList.push({
                     ...user,
                     text: user.username,
-                    key: user.id.toString(),
+                    key: user.uid,
                 });
             }
             return userList;

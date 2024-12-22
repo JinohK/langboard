@@ -1,3 +1,4 @@
+from typing import cast
 from pydantic import Field
 from socketify import AppOptions
 from ..BaseCommand import BaseCommand, BaseCommandOptions
@@ -5,7 +6,7 @@ from ..WebSocketOptions import WebSocketOptions
 
 
 class RunCommandOptions(BaseCommandOptions):
-    uds: str = Field(default=None, description="Bind to a UNIX domain socket")
+    uds: str = cast(str, Field(default=None, description="Bind to a UNIX domain socket"))
     workers: int = Field(default=1, description="Number of workers to run")
     lifespan: bool = Field(default=True, description="Lifespan implementation", short="lfsp")  # type: ignore
     ws_deflate: bool = Field(default=False, description="Enable permessage-deflate extension", short="wd")  # type: ignore
@@ -41,9 +42,12 @@ class RunCommandOptions(BaseCommandOptions):
     ssl_certfile: str = Field(default=None, description="SSL certificate file", short="ssl-cert")  # type: ignore
     ssl_keyfile_pass: str = Field(default=None, description="SSL keyfile password", short="ssl-pass")  # type: ignore
     ssl_ca_certs: str = Field(default=None, description="CA certificates file", short="ssl-ca")  # type: ignore
-    ssl_ciphers: str = Field(
-        default=None,
-        description="Ciphers to use (see stdlib ssl module's) (default: TLSv1)",
+    ssl_ciphers: str = cast(
+        str,
+        Field(
+            default=None,
+            description="Ciphers to use (see stdlib ssl module's) (default: TLSv1)",
+        ),
     )
     task_factory_maxitems: int = Field(default=100000, description="Task factory max items")
     watch: bool = Field(default=False, description="Watch for changes", short="w")  # type: ignore

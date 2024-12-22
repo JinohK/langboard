@@ -11,9 +11,8 @@ from jwt import encode as jwt_encode
 from pkg_resources import require
 from starlette.datastructures import Headers
 from ...Constants import JWT_ALGORITHM, JWT_AT_EXPIRATION, JWT_RT_EXPIRATION, JWT_SECRET_KEY, PROJECT_NAME
-from ...models import User
 from ..caching import Cache
-from ..db import DbSession
+from ..db import DbSession, SnowflakeID, User
 from ..filter import AuthFilter
 from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from ..routing.SocketRequest import SocketRequest
@@ -25,7 +24,7 @@ from ..utils.Encryptor import Encryptor
 @staticclass
 class Auth:
     @staticmethod
-    def authenticate(user_id: int) -> tuple[str, str]:
+    def authenticate(user_id: SnowflakeID) -> tuple[str, str]:
         """Authenticates the user and returns the access and refresh tokens.
 
         :param user_id: The user ID.

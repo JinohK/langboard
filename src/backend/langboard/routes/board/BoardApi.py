@@ -1,8 +1,9 @@
 from fastapi import Depends, status
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import ProjectRole, User
+from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import AcceptProjectInvitationForm, ChatHistoryPagination, InviteProjectMemberForm, project_role_finder
@@ -78,7 +79,7 @@ async def get_project_cards(
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    columns = await service.project.get_columns(project)
+    columns = await service.project_column.get_list(project)
     cards = await service.card.get_board_list(project_uid)
     return JsonResponse(content={"cards": cards, "columns": columns}, status_code=status.HTTP_200_OK)
 

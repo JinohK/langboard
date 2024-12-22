@@ -2,6 +2,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import BotType
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
@@ -15,10 +16,10 @@ from ...models import (
     Project,
     ProjectAssignedUser,
     ProjectColumn,
-    User,
 )
 from .CardAttachmentService import CardAttachmentService
 from .CheckitemService import CheckitemService
+from .ProjectColumnService import ProjectColumnService
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
 from .Types import TCardParam, TColumnParam, TProjectParam
@@ -34,37 +35,38 @@ class CardService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "card"
 
-    async def get_by_id(self, card_id: int | None) -> Card | None:
-        return await self._get_by(Card, "id", card_id)
+    async def get_by_uid(self, uid: str) -> Card | None:
+        return await self._get_by_param(Card, uid)
 
-    async def get_by_uid(self, card_uid: str | None) -> Card | None:
-        return await self._get_by(Card, "uid", card_uid)
-
-    async def get_details(self, card_uid: str) -> dict[str, Any] | None:
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(Card, ProjectColumn, Project)
-            .join(ProjectColumn, Card.column("project_column_uid") == ProjectColumn.column("uid"))
-            .join(Project, Card.column("project_id") == Project.column("id"))
-            .where(Card.column("uid") == card_uid)
-        )
-        card, column, project = result.first() or (None, None, None)
-        if not card or not column or not project:
+    async def get_details(self, project: TProjectParam, card: TCardParam) -> dict[str, Any] | None:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
             return None
+        project, card = params
+
+        if card.project_column_id:
+            column = await self._get_by_param(ProjectColumn, card.project_column_id)
+            if not column:
+                return None
+            column_name = column.name
+        else:
+            column_name = project.archive_column_name
 
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
-        api_card["column_name"] = column.name
-        api_card["project_all_columns"] = await self._get_service(ProjectService).get_columns(project)
+        api_card["column_name"] = column_name
+
+        project_column_service = self._get_service(ProjectColumnService)
+        api_card["project_all_columns"] = await project_column_service.get_list(project)
 
         checkitem_service = self._get_service(CheckitemService)
-        api_card["checkitems"] = await checkitem_service.get_list(card.uid)
+        api_card["checkitems"] = await checkitem_service.get_list(card)
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
 
         card_attachment_service = self._get_service(CardAttachmentService)
-        api_card["attachments"] = await card_attachment_service.get_board_list(card_uid)
+        api_card["attachments"] = await card_attachment_service.get_board_list(card)
 
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
 
@@ -77,15 +79,15 @@ class CardService(BaseService):
             )
             .join(
                 Card,
-                (CardRelationship.column("card_uid_parent") == Card.column("uid"))
-                | (CardRelationship.column("card_uid_child") == Card.column("uid")),
+                (CardRelationship.column("card_id_parent") == Card.column("id"))
+                | (CardRelationship.column("card_id_child") == Card.column("id")),
             )
             .where(
                 (
-                    (CardRelationship.column("card_uid_parent") == card_uid)
-                    | (CardRelationship.column("card_uid_child") == card_uid)
+                    (CardRelationship.column("card_id_parent") == card.id)
+                    | (CardRelationship.column("card_id_child") == card.id)
                 )
-                & (Card.column("uid") != card_uid)
+                & (Card.column("id") != card.id)
             )
         )
         raw_relationships = result.all()
@@ -98,13 +100,16 @@ class CardService(BaseService):
                     "child_icon": relationship_type.child_icon,
                     "child_name": relationship_type.child_name,
                     "description": relationship_type.description or "",
-                    "is_parent": relationship.card_uid_parent == card_uid,
+                    "is_parent": relationship.card_id_parent == card.id,
                     "related_card": related_card.api_response(),
                 }
             )
         return api_card
 
-    async def get_board_list(self, project_uid: str) -> list[dict[str, Any]]:
+    async def get_board_list(self, project: TProjectParam) -> list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(
@@ -114,9 +119,9 @@ class CardService(BaseService):
             .join(Project, Card.column("project_id") == Project.column("id"))
             .outerjoin(
                 CardComment,
-                (Card.column("uid") == CardComment.column("card_uid")) & (CardComment.column("deleted_at") == None),  # noqa
+                (Card.column("id") == CardComment.column("card_id")) & (CardComment.column("deleted_at") == None),  # noqa
             )
-            .where(Project.column("uid") == project_uid)
+            .where(Project.column("id") == project.id)
             .order_by(Card.column("order").asc())
             .group_by(Card.column("id"), Card.column("order"))
         )
@@ -130,18 +135,21 @@ class CardService(BaseService):
 
     @overload
     async def get_assigned_users(
-        self, card: Card | int, as_api: Literal[False]
+        self, card: TCardParam, as_api: Literal[False]
     ) -> list[tuple[User, CardAssignedUser]]: ...
     @overload
-    async def get_assigned_users(self, card: Card | int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_assigned_users(
-        self, card: Card | int, as_api: bool
+        self, card: TCardParam, as_api: bool
     ) -> list[tuple[User, CardAssignedUser]] | list[dict[str, Any]]:
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(User, CardAssignedUser)
             .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
-            .where(CardAssignedUser.card_id == (card.id if isinstance(card, Card) else card))
+            .where(CardAssignedUser.column("id") == card.id)
         )
         raw_users = result.all()
         if not as_api:
@@ -153,7 +161,7 @@ class CardService(BaseService):
     async def convert_board_list_api_response(self, card: Card, count_comment: int | None = None) -> dict[str, Any]:
         if count_comment is None:
             sql_query = (
-                self._db.query("select").count(CardComment, "id").where(CardComment.column("card_uid") == card.uid)
+                self._db.query("select").count(CardComment, "id").where(CardComment.column("card_id") == card.id)
             )
 
             result = await self._db.exec(sql_query)
@@ -167,8 +175,8 @@ class CardService(BaseService):
                 CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
             )
             .where(
-                (CardRelationship.column("card_uid_parent") == card.uid)
-                | (CardRelationship.column("card_uid_child") == card.uid)
+                (CardRelationship.column("card_id_parent") == card.id)
+                | (CardRelationship.column("card_id_child") == card.id)
             )
         )
 
@@ -178,10 +186,10 @@ class CardService(BaseService):
         parents = []
         children = []
         for relationship in raw_relationship:
-            if relationship.card_uid_parent == card.uid:
-                children.append(relationship.card_uid_child)
+            if relationship.card_id_parent == card.id:
+                children.append(relationship.card_id_child)
             else:
-                parents.append(relationship.card_uid_parent)
+                parents.append(relationship.card_id_parent)
 
         card_api = card.api_response()
         card_api["count_comment"] = count_comment
@@ -203,11 +211,11 @@ class CardService(BaseService):
         if not column or column.project_id != project.id:
             return None
 
-        max_order = await self._get_max_order(Card, "project_id", project.id, {"project_column_uid": column.uid})
+        max_order = await self._get_max_order(Card, "project_id", project.id, {"project_column_id": column.id})
 
         card = Card(
-            project_id=cast(int, project.id),
-            project_column_uid=column.uid,
+            project_id=project.id,
+            project_column_id=column.id,
             title=title,
             order=max_order + 1,
         )
@@ -220,15 +228,15 @@ class CardService(BaseService):
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.uid,
-                event=f"{_SOCKET_PREFIX}:created:{column.uid}",
+                topic_id=project.get_uid(),
+                event=f"{_SOCKET_PREFIX}:created:{column.get_uid()}",
                 data_keys="card",
             ),
             SocketPublishModel(
                 topic=SocketTopic.Project,
-                topic_id=project.uid,
-                event=f"dashboard:card:created{project.uid}",
-                extra_data={"column_uid": column.uid},
+                topic_id=project.get_uid(),
+                event=f"dashboard:card:created{project.get_uid()}",
+                custom_data={"column_uid": column.get_uid()},
             ),
         ]
 
@@ -260,7 +268,7 @@ class CardService(BaseService):
 
         checkitem_cardified_from = None
         if form.get("title", None):
-            checkitem_cardified_from = await self._get_by(Checkitem, "cardified_uid", card.uid)
+            checkitem_cardified_from = await self._get_by(Checkitem, "cardified_id", card.id)
             if checkitem_cardified_from:
                 checkitem_cardified_from.title = card.title
                 await self._db.update(checkitem_cardified_from)
@@ -285,8 +293,8 @@ class CardService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.uid,
-                    event=f"{_SOCKET_PREFIX}:{key}:changed:{card.uid}",
+                    topic_id=project.get_uid(),
+                    event=f"{_SOCKET_PREFIX}:{key}:changed:{card.get_uid()}",
                     data_keys=key,
                 )
             )
@@ -294,8 +302,8 @@ class CardService(BaseService):
                 publish_models.append(
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.uid,
-                        event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.uid}",
+                        topic_id=project.get_uid(),
+                        event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
                         data_keys="title",
                     )
                 )
@@ -311,25 +319,26 @@ class CardService(BaseService):
         project, card = params
 
         original_column = None
-        if card.project_column_uid:
-            original_column = await self._get_by(ProjectColumn, "uid", card.project_column_uid)
+        if card.project_column_id:
+            original_column = await self._get_by_param(ProjectColumn, card.project_column_id)
             if not original_column or original_column.project_id != project.id:
                 return None
 
-        original_column_uid = original_column.uid if original_column else Project.ARCHIVE_COLUMN_UID
+        original_column_id = original_column.id if original_column else Project.ARCHIVE_COLUMN_UID
         # original_column_name = original_column.name if original_column else project.archive_column_name
         new_column = None
+        new_column_id = SnowflakeID.from_short_code(column_uid)
         if column_uid:
             if column_uid != Project.ARCHIVE_COLUMN_UID:
-                new_column = await self._get_by(ProjectColumn, "uid", column_uid)
+                new_column = await self._get_by_param(ProjectColumn, column_uid)
                 if not new_column or new_column.project_id != card.project_id:
                     return None
 
                 card.archived_at = None
-                card.project_column_uid = column_uid
+                card.project_column_id = new_column_id
             else:
                 card.archived_at = now()
-                card.project_column_uid = None
+                card.project_column_id = None
 
         original_order = card.order
 
@@ -341,13 +350,13 @@ class CardService(BaseService):
         if column_uid:
             update_query = self.__filter_column(
                 shared_update_query.values({Card.order: Card.order - 1}).where(Card.column("order") >= original_order),
-                original_column_uid,
+                original_column_id,
             )
             await self._db.exec(update_query)
 
             update_query = self.__filter_column(
                 (shared_update_query.values({Card.order: Card.order + 1}).where(Card.column("order") >= order)),
-                column_uid,
+                new_column_id,
             )
             await self._db.exec(update_query)
         else:
@@ -362,7 +371,7 @@ class CardService(BaseService):
                     (Card.column("order") >= order) & (Card.column("order") < original_order)
                 )
 
-            update_query = self.__filter_column(update_query, original_column_uid)
+            update_query = self.__filter_column(update_query, original_column_id)
             await self._db.exec(update_query)
 
         card.order = order
@@ -370,11 +379,11 @@ class CardService(BaseService):
         await self._db.commit()
 
         model = {
-            "uid": card.uid,
+            "uid": card.get_uid(),
             "order": card.order,
         }
         if new_column:
-            model["to_column_uid"] = new_column.uid
+            model["to_column_uid"] = new_column.get_uid()
             model["column_name"] = new_column.name
         model_id = await SocketModelIdService.create_model_id(model)
 
@@ -384,29 +393,32 @@ class CardService(BaseService):
                 [
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.uid,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{new_column.uid}",
+                        topic_id=project.get_uid(),
+                        event=f"{_SOCKET_PREFIX}:order:changed:{new_column.get_uid()}",
                         data_keys=["uid", "order"],
-                        extra_data={"move_type": "to_column"},
+                        custom_data={"move_type": "to_column"},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.uid,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
+                        topic_id=project.get_uid(),
+                        event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
                         data_keys=["uid", "order"],
-                        extra_data={"move_type": "from_column"},
+                        custom_data={"move_type": "from_column"},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.uid,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{card.uid}",
+                        topic_id=project.get_uid(),
+                        event=f"{_SOCKET_PREFIX}:order:changed:{card.get_uid()}",
                         data_keys=["to_column_uid", "column_name"],
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Project,
-                        topic_id=project.uid,
+                        topic_id=project.get_uid(),
                         event="dashboard:card:order:changed",
-                        extra_data={"from_column_uid": original_column_uid, "to_column_uid": new_column.uid},
+                        custom_data={
+                            "from_column_uid": original_column_id,
+                            "to_column_uid": new_column.get_uid(),
+                        },
                     ),
                 ]
             )
@@ -414,10 +426,10 @@ class CardService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.uid,
-                    event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
+                    topic_id=project.get_uid(),
+                    event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
                     data_keys=["uid", "order"],
-                    extra_data={"move_type": "in_column"},
+                    custom_data={"move_type": "in_column"},
                 )
             )
 
@@ -428,7 +440,7 @@ class CardService(BaseService):
         user_or_bot: User | BotType,
         project: TProjectParam,
         card: TCardParam,
-        assign_user_ids: list[int] | None = None,
+        assign_user_uids: list[str] | None = None,
     ) -> SocketModelIdBaseResult[list[User]] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
@@ -444,19 +456,20 @@ class CardService(BaseService):
             self._db.query("delete").table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
         )
 
-        if assign_user_ids:
+        if assign_user_uids:
+            assigned_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
             result = await self._db.exec(
                 self._db.query("select")
                 .table(User)
                 .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
                 .where(
-                    (ProjectAssignedUser.column("project_id") == card.project_id)
-                    & (ProjectAssignedUser.column("user_id").in_(assign_user_ids))
+                    (ProjectAssignedUser.column("project_uid") == card.project_id)
+                    & (ProjectAssignedUser.column("user_id").in_(assigned_user_ids))
                 )
             )
             users = result.all()
             for user in users:
-                self._db.insert(CardAssignedUser(card_id=cast(int, card.id), user_id=cast(int, user.id)))
+                self._db.insert(CardAssignedUser(card_id=card.id, user_id=user.id))
         else:
             users = []
         await self._db.commit()
@@ -467,31 +480,31 @@ class CardService(BaseService):
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
-            topic_id=project.uid,
-            event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.uid}",
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.get_uid()}",
             data_keys="assigned_users",
         )
 
         return SocketModelIdBaseResult(model_id, list(users), publish_model)
 
     @overload
-    def __filter_column(self, query: Select[_TSelectParam], column_uid: str) -> Select[_TSelectParam]: ...
+    def __filter_column(self, query: Select[_TSelectParam], column_id: SnowflakeID | str) -> Select[_TSelectParam]: ...
     @overload
     def __filter_column(
-        self, query: SelectOfScalar[_TSelectParam], column_uid: str
+        self, query: SelectOfScalar[_TSelectParam], column_id: SnowflakeID | str
     ) -> SelectOfScalar[_TSelectParam]: ...
     @overload
-    def __filter_column(self, query: Update, column_uid: str) -> Update: ...
+    def __filter_column(self, query: Update, column_id: SnowflakeID | str) -> Update: ...
     @overload
-    def __filter_column(self, query: Delete, column_uid: str) -> Delete: ...
+    def __filter_column(self, query: Delete, column_id: SnowflakeID | str) -> Delete: ...
     def __filter_column(
         self,
         query: Select[_TSelectParam] | SelectOfScalar[_TSelectParam] | Update | Delete,
-        column_uid: str,
+        column_id: SnowflakeID | str,
     ):
-        if column_uid == Project.ARCHIVE_COLUMN_UID:
+        if column_id == Project.ARCHIVE_COLUMN_UID:
             return query.where(Card.column("archived_at") != None)  # noqa
-        return query.where(Card.column("project_column_uid") == column_uid)
+        return query.where(Card.column("project_column_id") == column_id)
 
     async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
         project = cast(Project, await self._get_by_param(Project, project))

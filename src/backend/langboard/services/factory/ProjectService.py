@@ -1,6 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import BotType
 from ...core.ai.QueueBot import QueueBot, QueueBotModel
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
@@ -11,14 +12,13 @@ from ...models import (
     CheckitemAssignedUser,
     Project,
     ProjectAssignedUser,
-    ProjectColumn,
     ProjectRole,
-    User,
     UserEmail,
 )
 from ...models.BaseRoleModel import ALL_GRANTED
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
+from .ProjectLabelService import ProjectLabelService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
 from .Types import TProjectParam
@@ -30,53 +30,33 @@ class ProjectService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project"
 
-    async def get_by_id(self, project_id: int) -> Project | None:
-        return await self._get_by(Project, "id", project_id)
-
     async def get_by_uid(self, uid: str) -> Project | None:
-        return await self._get_by(Project, "uid", uid)
-
-    async def get_columns(self, project: Project) -> list[dict[str, Any]]:
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectColumn)
-            .where(ProjectColumn.column("project_id") == project.id)
-            .order_by(ProjectColumn.column("order").asc())
-            .group_by(ProjectColumn.column("order"))
-        )
-        raw_columns = result.all()
-        columns = [raw_column.api_response() for raw_column in raw_columns]
-        columns.insert(
-            project.archive_column_order,
-            {
-                "uid": Project.ARCHIVE_COLUMN_UID,
-                "name": project.archive_column_name,
-                "order": project.archive_column_order,
-            },
-        )
-        return columns
+        return await self._get_by_param(Project, uid)
 
     async def get_user_role_actions(self, user: User, project: Project) -> list[str]:
         if user.is_admin:
             return [ALL_GRANTED]
         role_service = self._get_service(RoleService)
-        roles = await role_service.project.get_roles(user_id=user.id, project_id=cast(int, project.id))
+        roles = await role_service.project.get_roles(user_id=user.id, project_id=project.id)
         return roles[0].actions if roles else []
 
     @overload
     async def get_assigned_users(
-        self, project: Project | int, as_api: Literal[False]
+        self, project: TProjectParam, as_api: Literal[False]
     ) -> list[tuple[User, ProjectAssignedUser]]: ...
     @overload
-    async def get_assigned_users(self, project: Project | int, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_assigned_users(
-        self, project: Project | int, as_api: bool
+        self, project: TProjectParam, as_api: bool
     ) -> list[tuple[User, ProjectAssignedUser]] | list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
         result = await self._db.exec(
             self._db.query("select")
             .tables(User, ProjectAssignedUser)
             .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
-            .where(ProjectAssignedUser.project_id == (project.id if isinstance(project, Project) else project))
+            .where(ProjectAssignedUser.project_id == project.id)
         )
         raw_users = result.all()
         if not as_api:
@@ -120,13 +100,13 @@ class ProjectService(BaseService):
 
         projects = []
         for project, assigned_user in raw_projects:
-            columns = await self.get_columns(project)
+            columns = await column_service.get_list(project)
             project_dict = project.api_response()
             project_dict["starred"] = assigned_user.starred
             project_dict["columns"] = [
                 {
                     **column,
-                    "count": await column_service.count_cards(cast(int, project.id), column["uid"]),
+                    "count": await column_service.count_cards(project.id, column["uid"]),
                 }
                 for column in columns
             ]
@@ -155,7 +135,10 @@ class ProjectService(BaseService):
             self._db.query("select")
             .columns(ProjectAssignedUser.starred, Project.id)
             .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.project_id)
-            .where((Project.column("uid") == uid) & (ProjectAssignedUser.column("user_id") == user.id))
+            .where(
+                (Project.column("id") == SnowflakeID.from_short_code(uid))
+                & (ProjectAssignedUser.column("user_id") == user.id)
+            )
             .limit(1)
         )
         starred, project_id = result.first() or (None, None)
@@ -200,11 +183,13 @@ class ProjectService(BaseService):
         self._db.insert(project)
         await self._db.commit()
 
-        assigned_user = ProjectAssignedUser(project_id=cast(int, project.id), user_id=user.id)
+        await self._get_service(ProjectLabelService).create_defaults(project)
+
+        assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
         self._db.insert(assigned_user)
 
         role_service = self._get_service(RoleService)
-        await role_service.project.grant_all(user_id=user.id, project_id=cast(int, project.id))
+        await role_service.project.grant_all(user_id=user.id, project_id=project.id)
         await self._db.commit()
 
         return project
@@ -266,8 +251,8 @@ class ProjectService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Project,
-                    topic_id=project.uid,
-                    event=f"project:{key}:changed:{project.uid}",
+                    topic_id=project.get_uid(),
+                    event=f"project:{key}:changed:{project.get_uid()}",
                     data_keys=key,
                 )
             )
@@ -291,7 +276,7 @@ class ProjectService(BaseService):
             .outerjoin(ProjectAssignedUser, (User.column("id") == ProjectAssignedUser.column("user_id")))
             .where(
                 (User.column("email").in_(emails) | UserEmail.column("email").in_(emails))
-                & (ProjectAssignedUser.column("project_id") == project.id)
+                | (ProjectAssignedUser.column("project_id") == project.id)
             )
         )
         records = result.all()
@@ -311,8 +296,8 @@ class ProjectService(BaseService):
                 inviting_emails.remove(target_user.email)
 
         prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
-        updated_checkitem_ids: set[int] = set()
-        updated_card_ids: set[int] = set()
+        updated_checkitem_ids: set[SnowflakeID] = set()
+        updated_card_ids: set[SnowflakeID] = set()
         for prev_assigned_user in prev_assigned_users:
             if project.owner_id == prev_assigned_user.user_id or prev_assigned_user.id in assigned_user_ids:
                 continue
@@ -322,7 +307,7 @@ class ProjectService(BaseService):
                     self._db.query("select")
                     .table(CheckitemAssignedUser)
                     .join(Checkitem, Checkitem.column("id") == CheckitemAssignedUser.column("checkitem_id"))
-                    .join(Card, Card.column("uid") == Checkitem.column("card_uid"))
+                    .join(Card, Card.column("id") == Checkitem.column("card_id"))
                     .where(
                         (Card.column("project_id") == project.id)
                         & (CheckitemAssignedUser.column("user_id") == prev_assigned_user.user_id)
@@ -367,8 +352,8 @@ class ProjectService(BaseService):
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.uid,
-                event=f"board:assigned-users:updated:{project.uid}",
+                topic_id=project.get_uid(),
+                event=f"board:assigned-users:updated:{project.get_uid()}",
                 data_keys=["assigned_users", "invited_users"],
             )
         ]
@@ -381,9 +366,9 @@ class ProjectService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.uid,
-                    event=f"board:card:checkitem:assigned-users:updated:{project.uid}",
-                    extra_data={"assigned_users": await checkitem_service.get_assigned_users(checkitem, as_api=True)},
+                    topic_id=project.get_uid(),
+                    event=f"board:card:checkitem:assigned-users:updated:{project.get_uid()}",
+                    custom_data={"assigned_users": await checkitem_service.get_assigned_users(checkitem, as_api=True)},
                 )
             )
 
@@ -395,9 +380,9 @@ class ProjectService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.uid,
-                    event=f"board:card:assigned-users:updated:{project.uid}",
-                    extra_data={"assigned_users": await card_service.get_assigned_users(card, as_api=True)},
+                    topic_id=project.get_uid(),
+                    event=f"board:card:assigned-users:updated:{project.get_uid()}",
+                    custom_data={"assigned_users": await card_service.get_assigned_users(card, as_api=True)},
                 )
             )
 

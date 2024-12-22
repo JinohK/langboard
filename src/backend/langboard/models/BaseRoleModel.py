@@ -2,8 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel
-from .User import User
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 
 
 ALL_GRANTED = "*"
@@ -11,7 +10,7 @@ ALL_GRANTED = "*"
 
 class BaseRoleModel(BaseSqlModel):
     actions: list[str] = Field(default=[ALL_GRANTED], sa_type=JSON)
-    user_id: int | None = Field(default=None, foreign_key=User.expr("id"), nullable=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
 
     @staticmethod
     @abstractmethod

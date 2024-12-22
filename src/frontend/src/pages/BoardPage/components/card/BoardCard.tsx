@@ -20,6 +20,8 @@ import BoardCardMemberList from "@/pages/BoardPage/components/card/BoardCardMemb
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -29,8 +31,9 @@ export interface IBoardCardProps {
 }
 
 const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoardCardProps): JSX.Element => {
-    const { data: cardData, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
+    const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
+    const socket = useSocket();
     const navigate = useRef(usePageNavigate());
 
     useEffect(() => {
@@ -51,6 +54,18 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
 
         handle(error);
     }, [error]);
+
+    useEffect(() => {
+        if (!cardData || isFetching) {
+            return;
+        }
+
+        socket.subscribe(ESocketTopic.BoardCard, cardUID);
+
+        return () => {
+            socket.unsubscribe(ESocketTopic.BoardCard, cardUID);
+        };
+    }, [isFetching]);
 
     return (
         <>
