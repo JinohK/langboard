@@ -1,5 +1,6 @@
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
+import * as ProjectLabel from "@/core/models/ProjectLabel";
 import { IBaseModel } from "@/core/models/Base";
 
 export interface Interface extends IBaseModel {
@@ -16,6 +17,7 @@ export interface IBoard extends Interface {
     members: User.Interface[];
     current_user_role_actions: TRoleActions[];
     invited_users: User.Interface[];
+    labels: ProjectLabel.Interface[];
 }
 
 export interface IBoardWithDetails extends IBoard {

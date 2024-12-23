@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/base";
 import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColumnChangedHandlers";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function SkeletonBoardCardColumnName() {
     return <Skeleton h="5" className="w-1/6" />;
@@ -11,7 +12,7 @@ export function SkeletonBoardCardColumnName() {
 function BoardCardColumnName(): JSX.Element {
     const { projectUID, card, socket } = useBoardCard();
     const [columnName, setColumnName] = useState(card.column_name);
-    const { on: onCardColumnChanged } = useCardColumnChangedHandlers({
+    const cardColumnChangedHandler = useCardColumnChangedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -21,7 +22,7 @@ function BoardCardColumnName(): JSX.Element {
             setColumnName(data.column_name);
         },
     });
-    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
+    const projectColumnNameChangedHandler = useProjectColumnNameChangedHandlers({
         socket,
         projectUID,
         callback: (data) => {
@@ -33,16 +34,7 @@ function BoardCardColumnName(): JSX.Element {
             setColumnName(data.name);
         },
     });
-
-    useEffect(() => {
-        const { off: offCardColumnChanged } = onCardColumnChanged();
-        const { off: offProjectColumnNameChanged } = onProjectColumnNameChanged();
-
-        return () => {
-            offCardColumnChanged();
-            offProjectColumnNameChanged();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers: [cardColumnChangedHandler, projectColumnNameChangedHandler] });
 
     return <>{columnName}</>;
 }

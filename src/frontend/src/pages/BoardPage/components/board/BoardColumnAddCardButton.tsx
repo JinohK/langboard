@@ -1,5 +1,4 @@
-import { Button, Flex, IconComponent } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Button, Flex, IconComponent, SubmitButton } from "@/components/base";
 import { useBoardAddCard } from "@/core/providers/BoardAddCardProvider";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";

@@ -7,7 +7,13 @@ from ...models import ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import UpdateProjectDetailsForm, project_role_finder
+from .scopes import (
+    ChangeColumnOrderForm,
+    CreateProjectLabelForm,
+    UpdateProjectDetailsForm,
+    UpdateProjectLabelDetailsForm,
+    project_role_finder,
+)
 
 
 @AppRouter.api.post("/board/{project_uid}/settings/available")
@@ -32,24 +38,13 @@ async def can_use_settings(
 async def get_project_details(
     project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    project = await service.project.get_by_uid(project_uid)
-    if project is None:
+    result = await service.project.get_details(user, project_uid)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    await service.project.set_last_view(user, project)
-    response = project.api_response()
+    project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
-    response["members"] = await service.project.get_assigned_users(project, as_api=True)
-    response["current_user_role_actions"] = await service.project.get_user_role_actions(user, project)
-    response["invited_users"] = []
-    invited_users = await service.project_invitation.get_invited_users(project)
-    for invitation, invited_user in invited_users:
-        if invited_user:
-            response["invited_users"].append(invited_user.api_response())
-        else:
-            response["invited_users"].append(
-                service.project_invitation.convert_none_user_api_response(invitation.email)
-            )
+
     return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
 
 
@@ -65,6 +60,94 @@ async def change_project_details(
 
     if result is True:
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/board/{project_uid}/settings/label")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def create_label_details(
+    project_uid: str,
+    form: CreateProjectLabelForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_label.create(user, project_uid, form.name, form.color, form.description)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    _, api_label = result.data
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={"label": api_label}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/label/{label_uid}/details")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def change_label_details(
+    project_uid: str,
+    label_uid: str,
+    form: UpdateProjectLabelDetailsForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_label.update(user, project_uid, label_uid, form.model_dump())
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if result is True:
+        response = {}
+        for key in form.model_fields:
+            if ["name", "color", "description"].count(key) == 0:
+                continue
+            value = getattr(form, key)
+            if value is None:
+                continue
+            response[key] = service.card._convert_to_python(value)
+        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+
+    _, response = result.data
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/label/{label_uid}/order")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def change_label_order(
+    project_uid: str,
+    label_uid: str,
+    form: ChangeColumnOrderForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_label.change_order(user, project_uid, label_uid, form.order)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if result is True:
+        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/board/{project_uid}/settings/label/{label_uid}")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def delete_label(
+    project_uid: str, label_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    result = await service.project_label.delete(user, project_uid, label_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     await AppRouter.publish_with_socket_model(result)
 

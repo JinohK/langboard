@@ -5,6 +5,7 @@ import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -13,7 +14,7 @@ import BoardCardSubCheckitem from "@/pages/BoardPage/components/card/checkitem/B
 import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/SkeletonBoardCardCheckitem";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +38,7 @@ function BoardCardChecklist(): JSX.Element {
         setColumns: setCheckitems,
         reorder: reorderCheckitems,
     } = useReorderColumn({
-        type: "BoardColumn",
+        type: "BoardCardCheckitem",
         eventNameParams: { uid: card.uid },
         topicId: projectUID,
         columns: card.checkitems,
@@ -57,7 +58,7 @@ function BoardCardChecklist(): JSX.Element {
     const deletedCheckitem = (uid: string) => {
         setCheckitems((prev) => prev.filter((checkitem) => checkitem.uid !== uid));
     };
-    const { on: onCardCheckitemCreated } = useCardCheckitemCreatedHandlers({
+    const checkitemCreatedHandler = useCardCheckitemCreatedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -67,7 +68,7 @@ function BoardCardChecklist(): JSX.Element {
             });
         },
     });
-    const { on: onCardCheckitemDeleted } = useCardCheckitemDeletedHandlers({
+    const checkitemDeletedHandler = useCardCheckitemDeletedHandlers({
         socket,
         projectUID,
         uid: card.uid,
@@ -75,6 +76,7 @@ function BoardCardChecklist(): JSX.Element {
             deletedCheckitem(data.uid);
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [checkitemCreatedHandler, checkitemDeletedHandler] });
     const {
         activeColumn: activeCheckitem,
         activeRow: activeSubCheckitem,
@@ -115,16 +117,6 @@ function BoardCardChecklist(): JSX.Element {
             return `board-checkitem-${(checkitem as ProjectCheckitem.IBoardSub).checkitem_uid ?? checkitem.uid}`;
         },
     });
-
-    useEffect(() => {
-        const { off: offCardCheckitemCreated } = onCardCheckitemCreated();
-        const { off: offCardCheckitemDeleted } = onCardCheckitemDeleted();
-
-        return () => {
-            offCardCheckitemCreated();
-            offCardCheckitemDeleted();
-        };
-    }, []);
 
     return (
         <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>

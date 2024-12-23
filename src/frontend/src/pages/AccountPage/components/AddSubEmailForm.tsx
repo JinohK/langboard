@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import SubmitButton from "@/components/SubmitButton";
-import { Box, Floating, Form, Toast } from "@/components/base";
+import { Box, Floating, Form, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";

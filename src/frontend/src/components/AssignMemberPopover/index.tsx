@@ -1,5 +1,5 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { Button, ButtonProps, DropdownMenu, Flex, IconComponent, Popover } from "@/components/base";
+import { Button, ButtonProps, DropdownMenu, Flex, IconComponent, Popover, SubmitButton } from "@/components/base";
 import UserAvatarList, { IUserAvatarListProps, SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IAuthUser, useAuth } from "@/core/providers/AuthProvider";
@@ -9,7 +9,6 @@ import MultiSelect, { TMultiSelectProps } from "@/components/MultiSelect";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
-import SubmitButton from "@/components/SubmitButton";
 import { EMAIL_REGEX } from "@/constants";
 
 export interface IAssignMemberPopoverProps {

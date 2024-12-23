@@ -5,7 +5,7 @@ from .CardComment import CardComment
 
 
 class CardCommentReaction(BaseReactionModel, table=True):
-    comment_id: SnowflakeID = SnowflakeIDField(foreign_key=CardComment.expr("id"), nullable=False)
+    comment_id: SnowflakeID = SnowflakeIDField(foreign_key=CardComment.expr("id"), nullable=False, index=True)
 
     @staticmethod
     def get_target_column_name() -> str:

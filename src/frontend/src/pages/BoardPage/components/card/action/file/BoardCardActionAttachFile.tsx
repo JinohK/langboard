@@ -1,9 +1,8 @@
-import { Box, Button, Flex, IconComponent, Input, Popover, ScrollArea, Toast } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Box, Button, Flex, IconComponent, Input, Popover, ScrollArea, SubmitButton, Toast } from "@/components/base";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { createUUID } from "@/core/utils/StringUtils";
-import BoardCardActionAttachedFileList from "@/pages/BoardPage/components/card/action/BoardCardActionAttachedFileList";
+import BoardCardActionAttachedFileList from "@/pages/BoardPage/components/card/action/file/BoardCardActionAttachedFileList";
 import { IAttachedFile, ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useMemo, useReducer, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -65,6 +64,10 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAtta
     };
 
     const changeOpenedState = (opened: bool) => {
+        if (isValidating) {
+            return;
+        }
+
         if (!opened) {
             Object.keys(attachedFileMap.current).forEach((key) => {
                 delete attachedFileMap.current[key];

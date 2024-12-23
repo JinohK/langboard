@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Button, Checkbox, Flex, Floating, Form, Label, Toast } from "@/components/base";
+import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton, Toast } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -10,7 +10,6 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 

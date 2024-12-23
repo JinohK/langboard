@@ -1,6 +1,5 @@
-import { Box, Button, Flex, Separator, Skeleton, Toast } from "@/components/base";
+import { Box, Button, Flex, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
-import SubmitButton from "@/components/SubmitButton";
 import UserAvatar from "@/components/UserAvatar";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
@@ -8,13 +7,14 @@ import { API_ROUTES } from "@/controllers/constants";
 import useCardCommentUpdatedHandlers from "@/controllers/socket/card/comment/useCardCommentUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format, formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCommentReaction from "@/pages/BoardPage/components/card/comment/BoardCommentReaction";
-import { memo, useEffect, useReducer, useRef, useState } from "react";
+import { memo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardComment(): JSX.Element {
@@ -50,7 +50,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();
-    const { on: onCardCommentUpdated } = useCardCommentUpdatedHandlers({
+    const handlers = useCardCommentUpdatedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -67,6 +67,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
             }
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const canEdit = currentUser.uid === comment.user.uid || currentUser.is_admin;
 
     editorsRef.current[comment.uid] = (editing: bool) => {
@@ -74,14 +75,6 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
             setIsEditing(editing);
         }
     };
-
-    useEffect(() => {
-        const { off } = onCardCommentUpdated();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     const cancelEditing = () => {
         setValue(comment.content);

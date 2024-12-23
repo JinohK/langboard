@@ -7,7 +7,14 @@ from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import AssignUsersForm, ChangeCardDetailsForm, ChangeOrderForm, CreateCardForm, project_role_finder
+from .scopes import (
+    AssignUsersForm,
+    ChangeCardDetailsForm,
+    ChangeOrderForm,
+    CreateCardForm,
+    UpdateCardLabelsForm,
+    project_role_finder,
+)
 
 
 @AppRouter.api.get("/board/{project_uid}/card/{card_uid}")
@@ -123,6 +130,25 @@ async def change_card_order(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card.change_order(user, project_uid, card_uid, form.order, form.parent_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/labels")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@AuthFilter.add
+async def update_card_labels(
+    project_uid: str,
+    card_uid: str,
+    form: UpdateCardLabelsForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.card.update_labels(user, project_uid, card_uid, form.labels)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

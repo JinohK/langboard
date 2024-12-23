@@ -389,13 +389,15 @@
       "Clear": "Clear",
       "Keyword": "Keyword",
       "Members": "Members",
-      "labels": {
+      "Labels": "Labels",
+      "relationships": {
         "parents": "Parents of",
         "children": "Children of"
       },
       "No members assigned": "No members assigned",
       "Assigned to me": "Assigned to me",
       "Select members": "Select members",
+      "Select labels": "Select labels",
       "Select cards": "Select cards",
       "Clear selections": "Clear selections"
     },
@@ -435,13 +437,34 @@
     },
     "settings": {
       "Basic info": "Basic info",
-      "Label": "Label"
+      "Label": "Label",
+      "Add a label": "Add a label",
+      "Label name": "Label name",
+      "Rename": "Rename",
+      "Change description": "Change description",
+      "Description": "Description",
+      "Are you sure you want to delete this label?": "Are you sure you want to delete this label?",
+      "This action cannot be undone.": "This action cannot be undone.",
+      "successes": {
+        "Label added successfully.": "Label added successfully.",
+        "Label name changed successfully.": "Label name changed successfully.",
+        "Color changed successfully.": "Color changed successfully.",
+        "Description changed successfully.": "Description changed successfully.",
+        "Label deleted successfully.": "Label deleted successfully."
+      },
+      "errors": {
+        "Label not found.": "Label not found.",
+        "Label name cannot be empty.": "Label name cannot be empty.",
+        "Color cannot be empty.": "Color cannot be empty.",
+        "Description cannot be empty.": "Description cannot be empty."
+      }
     }
   },
   "card": {
     "Title": "Title",
     "Type": "Type",
     "Actions": "Actions",
+    "Set label": "Set label",
     "Attach a file": "Attach a file",
     "Drag and drop a file here": "Drag and drop a file here",
     "Upload a file": "Upload a file",
@@ -494,6 +517,7 @@
     "are commenting...": "are commenting...",
     "successes": {
       "Title changed successfully.": "Title changed successfully.",
+      "Labels updated successfully.": "Labels updated successfully.",
       "Files have been uploaded successfully.": "Files have been uploaded successfully.",
       "Assigned members updated successfully.": "Assigned members updated successfully.",
       "Description changed successfully.": "Description changed successfully.",
@@ -510,6 +534,7 @@
     "errors": {
       "Card not found.": "Card not found.",
       "File not found.": "File not found.",
+      "File name cannot be empty.": "File name cannot be empty.",
       "Checkitem not found.": "Checkitem not found.",
       "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
       "Comment not found.": "Comment not found.",

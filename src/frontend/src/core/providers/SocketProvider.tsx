@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { refresh } from "@/core/helpers/Api";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
@@ -62,6 +62,7 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
 }
 
 export interface ISocketContext {
+    subscribedTopics: ESocketTopic[];
     isConnected: () => bool;
     reconnect: () => void;
     on: <TResponse>(props: TSocketAddEventProps<TResponse>) => void;
@@ -81,6 +82,7 @@ interface ISocketProviderProps {
 }
 
 const initialContext = {
+    subscribedTopics: [],
     isConnected: () => false,
     reconnect: () => initialContext,
     on: () => {},
@@ -97,8 +99,19 @@ const SocketContext = createContext<ISocketContext>(initialContext);
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
     const { getAccessToken, getRefreshToken, signIn, isAuthenticated } = useAuth();
-    const { getSocket, createSocket, getStore, addEvent, removeEvent, send: sendSocket, close, subscribe, unsubscribe } = useSocketStore();
+    const {
+        getSocket,
+        createSocket,
+        getStore,
+        addEvent,
+        removeEvent,
+        send: sendSocket,
+        close,
+        subscribe: baseSubscribe,
+        unsubscribe: baseUnsubscribe,
+    } = useSocketStore();
     const cookieStore = getCookieStore();
+    const [subscribedTopics, setSubscribedTopics] = useState<ESocketTopic[]>([]);
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -179,6 +192,20 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
 
                 close();
             },
+        });
+    };
+
+    const subscribe: ISocketStore["subscribe"] = (topic, topicId, callback) => {
+        baseSubscribe(topic, topicId, () => {
+            setSubscribedTopics((prev) => prev.filter((t) => t !== topic).concat(topic));
+            callback?.();
+        });
+    };
+
+    const unsubscribe: ISocketStore["unsubscribe"] = (topic, topicId, callback) => {
+        baseUnsubscribe(topic, topicId, () => {
+            setSubscribedTopics((prev) => prev.filter((t) => t !== topic));
+            callback?.();
         });
     };
 
@@ -271,6 +298,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
     return (
         <SocketContext.Provider
             value={{
+                subscribedTopics,
                 isConnected,
                 reconnect,
                 on,

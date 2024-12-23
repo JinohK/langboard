@@ -2,14 +2,13 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import PasswordInput from "@/components/PasswordInput";
-import { Flex, Floating, Form } from "@/components/base";
+import { Flex, Floating, Form, SubmitButton } from "@/components/base";
 import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {

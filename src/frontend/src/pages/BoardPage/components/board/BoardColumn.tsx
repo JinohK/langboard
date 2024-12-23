@@ -5,6 +5,7 @@ import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCard
 import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useReorderRow from "@/core/hooks/useReorderRow";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCarddProvider } from "@/core/providers/BoardAddCardProvider";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -53,7 +54,18 @@ interface IBoardColumnDragData {
 
 const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
     const { setIsLoadingRef } = usePageLoader();
-    const { project, filters, socket, cards: allCards, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardRelationships } = useBoard();
+    const {
+        project,
+        filters,
+        socket,
+        cards: allCards,
+        cardsMap,
+        hasRoleAction,
+        filterCard,
+        filterCardMember,
+        filterCardLabels,
+        filterCardRelationships,
+    } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [updated, forceUpdate] = updater;
     const PAGE_SIZE = 20;
@@ -62,6 +74,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             .filter((cardUID) => cardsMap[cardUID].column_uid === column.uid)
             .filter((cardUID) => filterCard(cardsMap[cardUID]))
             .filter((cardUID) => filterCardMember(cardsMap[cardUID]))
+            .filter((cardUID) => filterCardLabels(cardsMap[cardUID]))
             .filter((cardUID) => filterCardRelationships(cardsMap[cardUID]))
             .sort((a, b) => cardsMap[a].order - cardsMap[b].order);
     }, [filters, updated]);
@@ -90,7 +103,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
         socket,
         updater,
     });
-    const { on: onBoardCardCreated } = useBoardCardCreatedHandlers({
+    const handlers = useBoardCardCreatedHandlers({
         socket,
         projectUID: project.uid,
         columnUID: column.uid,
@@ -98,6 +111,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             createdCard(data.card);
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: column.uid,
         data: {
@@ -167,13 +181,8 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     };
 
     useEffect(() => {
-        const { off } = onBoardCardCreated();
         setIsLoadingRef.current(false);
-
-        return () => {
-            off();
-        };
-    }, []);
+    }, [cardUIDs]);
 
     const style = {
         transition,

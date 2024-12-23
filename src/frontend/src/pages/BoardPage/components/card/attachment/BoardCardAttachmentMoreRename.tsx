@@ -1,5 +1,4 @@
-import { Button, DropdownMenu, Flex, Floating, Popover, Toast } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Button, DropdownMenu, Flex, Floating, Popover, SubmitButton, Toast } from "@/components/base";
 import useChangeCardAttachmentName from "@/controllers/api/card/attachment/useChangeCardAttachmentName";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
@@ -36,7 +35,7 @@ function BoardCardAttachmentMoreRename({
         const name = nameInput.value.trim();
 
         if (!name) {
-            Toast.Add.error(t("card.File name cannot be empty."));
+            Toast.Add.error(t("card.errors.File name cannot be empty."));
             setIsValidating(false);
             nameInput.focus();
             return;

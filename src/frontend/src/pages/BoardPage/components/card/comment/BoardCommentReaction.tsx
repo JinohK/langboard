@@ -3,9 +3,10 @@ import ReactionCounter from "@/components/ReactionCounter";
 import useReactCardComment from "@/controllers/api/card/comment/useReactCardComment";
 import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export interface IBoardCommentReactionProps {
     comment: ProjectCardComment.IBoard;
@@ -16,7 +17,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
     const [reactions, setReactions] = useState(comment.reactions);
     const { mutate: reactCardCommentMutate } = useReactCardComment();
     const [isValidating, setIsValidating] = useState(false);
-    const { on: onCardCommentReacted } = useCardCommentReactedHandlers({
+    const handlers = useCardCommentReactedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -28,14 +29,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
             toggleReaction(data.user_uid, data.reaction, data.is_reacted);
         },
     });
-
-    useEffect(() => {
-        const { off } = onCardCommentReacted();
-
-        return () => {
-            off();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers });
 
     const submitToggleReaction = (reaction: TEmoji) => {
         if (isValidating) {

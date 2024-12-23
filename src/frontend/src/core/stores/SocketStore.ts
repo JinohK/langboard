@@ -79,6 +79,7 @@ export interface ISocketMap {
     sendingQueue: string[];
     sendingQueueTimeout?: NodeJS.Timeout;
     subscribedCallbackQueue: Partial<Record<ESocketTopic, Record<string, (() => void)[]>>>;
+    unsubscribedCallbackQueue: Partial<Record<ESocketTopic, Record<string, (() => void)[]>>>;
 }
 
 export interface ISocketStore {
@@ -90,7 +91,7 @@ export interface ISocketStore {
     send: (json: string) => bool;
     close: () => void;
     subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => void;
-    unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => void;
+    unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => void;
 }
 
 const useSocketStore = create<ISocketStore>(() => {
@@ -99,6 +100,7 @@ const useSocketStore = create<ISocketStore>(() => {
         defaultEvents: {},
         sendingQueue: [],
         subscribedCallbackQueue: {},
+        unsubscribedCallbackQueue: {},
     };
     let socket: WebSocket | null = null;
 
@@ -194,6 +196,11 @@ const useSocketStore = create<ISocketStore>(() => {
 
                 if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][response.topic_id]) {
                     delete socketMap.subscribedCallbackQueue[topic][response.topic_id];
+                }
+
+                if (socketMap.unsubscribedCallbackQueue[topic] && socketMap.unsubscribedCallbackQueue[topic][response.topic_id]) {
+                    socketMap.unsubscribedCallbackQueue[topic][response.topic_id].forEach((cb) => cb());
+                    delete socketMap.unsubscribedCallbackQueue[topic][response.topic_id];
                 }
                 return;
             }
@@ -369,9 +376,23 @@ const useSocketStore = create<ISocketStore>(() => {
         );
     };
 
-    const unsubscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string) => {
+    const unsubscribe = (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => {
         if (!socket || !socketMap.subscriptions[topic] || !socketMap.subscriptions[topic][topicId]) {
             return;
+        }
+
+        if (callback) {
+            if (!socketMap.unsubscribedCallbackQueue[topic]) {
+                socketMap.unsubscribedCallbackQueue[topic] = {};
+            }
+
+            if (!socketMap.unsubscribedCallbackQueue[topic][topicId]) {
+                socketMap.unsubscribedCallbackQueue[topic][topicId] = [];
+            }
+
+            if (!socketMap.unsubscribedCallbackQueue[topic][topicId].includes(callback)) {
+                socketMap.unsubscribedCallbackQueue[topic][topicId].push(callback);
+            }
         }
 
         send(

@@ -6,7 +6,7 @@ from .Checkitem import Checkitem
 
 
 class CheckitemTimer(BaseSqlModel, table=True):
-    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False)
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False, index=True)
     started_at: datetime = DateTimeField(default=now, nullable=False)
     stopped_at: datetime | None = DateTimeField(default=None, nullable=True)
 

@@ -3,10 +3,11 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import useCardDeadlineChangedHandlers from "@/controllers/socket/card/useCardDeadlineChangedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDeadline() {
@@ -20,7 +21,7 @@ const BoardCardDeadline = memo(() => {
     const [deadline, setDeadline] = useState<Date | undefined>(card.deadline_at);
     const [isSaving, setIsSaving] = useState(false);
     const editable = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const { on: onCardDeadlineChanged } = useCardDeadlineChangedHandlers({
+    const handlers = useCardDeadlineChangedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -29,6 +30,7 @@ const BoardCardDeadline = memo(() => {
             setDeadline(data.deadline_at);
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const changeDeadline = (date: Date | undefined) => {
         if (!editable) {
             return;
@@ -66,14 +68,6 @@ const BoardCardDeadline = memo(() => {
             }
         );
     };
-
-    useEffect(() => {
-        const { off } = onCardDeadlineChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     return (
         <>

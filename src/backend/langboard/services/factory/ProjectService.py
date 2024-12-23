@@ -114,6 +114,27 @@ class ProjectService(BaseService):
 
         return projects
 
+    async def get_details(self, user: User, project: TProjectParam) -> tuple[Project, dict[str, Any]] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return None
+
+        response = project.api_response()
+        response["members"] = await self.get_assigned_users(project, as_api=True)
+        response["current_user_role_actions"] = await self.get_user_role_actions(user, project)
+        response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
+
+        invitation_service = self._get_service(ProjectInvitationService)
+        response["invited_users"] = []
+        invited_users = await invitation_service.get_invited_users(project)
+        for invitation, invited_user in invited_users:
+            if invited_user:
+                response["invited_users"].append(invited_user.api_response())
+            else:
+                response["invited_users"].append(invitation_service.convert_none_user_api_response(invitation.email))
+
+        return project, response
+
     async def is_assigned(self, user: User, project: TProjectParam) -> bool:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
@@ -183,7 +204,7 @@ class ProjectService(BaseService):
         self._db.insert(project)
         await self._db.commit()
 
-        await self._get_service(ProjectLabelService).create_defaults(project)
+        await self._get_service(ProjectLabelService).init_defaults(project)
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
         self._db.insert(assigned_user)
@@ -209,7 +230,7 @@ class ProjectService(BaseService):
                 continue
             old_value = getattr(project, key)
             new_value = form[key]
-            if old_value == new_value:
+            if old_value == new_value or new_value is None:
                 continue
             old_project_record[key] = self._convert_to_python(old_value)
             setattr(project, key, new_value)
@@ -240,8 +261,8 @@ class ProjectService(BaseService):
             )
 
         model: dict[str, Any] = {}
-        for key in form:
-            if key not in mutable_keys or key not in old_project_record:
+        for key in mutable_keys:
+            if key not in form or key not in old_project_record:
                 continue
             model[key] = self._convert_to_python(getattr(project, key))
         model_id = await SocketModelIdService.create_model_id(model)

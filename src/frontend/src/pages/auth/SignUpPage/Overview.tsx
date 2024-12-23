@@ -1,13 +1,12 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar, Box, Button, Card, Flex, Toast } from "@/components/base";
+import { Avatar, Box, Button, Card, Flex, SubmitButton, Toast } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 

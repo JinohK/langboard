@@ -25,22 +25,11 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 async def get_project(
     project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    project = await service.project.get_by_uid(project_uid)
-    if project is None:
+    result = await service.project.get_details(user, project_uid)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    project, response = result
     await service.project.set_last_view(user, project)
-    response = project.api_response()
-    response["members"] = await service.project.get_assigned_users(project, as_api=True)
-    response["current_user_role_actions"] = await service.project.get_user_role_actions(user, project)
-    response["invited_users"] = []
-    invited_users = await service.project_invitation.get_invited_users(project)
-    for invitation, invited_user in invited_users:
-        if invited_user:
-            response["invited_users"].append(invited_user.api_response())
-        else:
-            response["invited_users"].append(
-                service.project_invitation.convert_none_user_api_response(invitation.email)
-            )
     return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
 
 

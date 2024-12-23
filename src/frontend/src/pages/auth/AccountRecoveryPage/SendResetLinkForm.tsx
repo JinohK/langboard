@@ -2,12 +2,11 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Button, Flex, Floating, Form, Toast } from "@/components/base";
+import { Button, Flex, Floating, Form, SubmitButton, Toast } from "@/components/base";
 import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 

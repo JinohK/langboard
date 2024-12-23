@@ -8,6 +8,7 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
@@ -49,7 +50,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const { on: onBoardWikiContentChanged } = useBoardWikiContentChangedHandlers({
+    const boardWikiContentChangedHandler = useBoardWikiContentChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -59,7 +60,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             forceUpdate();
         },
     });
-    const { on: onBoardPrivateWikiContentChanged } = useBoardWikiContentChangedHandlers({
+    const boardPrivateWikiContentChangedHandler = useBoardWikiContentChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -70,6 +71,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [boardWikiContentChangedHandler, boardPrivateWikiContentChangedHandler] });
     const { stopEditing } = useStopEditingClickOutside("[data-wiki-content]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (mode === "edit") {
@@ -118,16 +120,6 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     editorsRef.current[wiki.uid] = (editing: bool) => {
         setIsEditing(editing);
     };
-
-    useEffect(() => {
-        const { off: offBoardWikiContentChanged } = onBoardWikiContentChanged();
-        const { off: offBoardPrivateWikiContentChanged } = onBoardPrivateWikiContentChanged();
-
-        return () => {
-            offBoardWikiContentChanged();
-            offBoardPrivateWikiContentChanged();
-        };
-    }, []);
 
     useEffect(() => {
         let unsubscribe: () => void = () => {};

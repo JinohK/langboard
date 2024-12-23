@@ -4,10 +4,11 @@ import useUpdateCardAssignedUsers from "@/controllers/api/card/useUpdateCardAssi
 import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Interface[] }) => {
@@ -16,7 +17,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
     const [members, setMembers] = useState<User.Interface[]>(flatMembers);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers();
-    const { on: onCardAssignedUsersUpdated } = useCardAssignedUsersUpdatedHandlers({
+    const handlers = useCardAssignedUsersUpdatedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -25,14 +26,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
             setMembers(data.assigned_users);
         },
     });
-
-    useEffect(() => {
-        const { off } = onCardAssignedUsersUpdated();
-
-        return () => {
-            off();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers });
 
     const onSave = (users: User.Interface[], endCallback: () => void) => {
         if (isValidating) {

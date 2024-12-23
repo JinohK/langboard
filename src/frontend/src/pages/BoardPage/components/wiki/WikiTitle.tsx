@@ -2,10 +2,11 @@ import { Box, Textarea, Toast } from "@/components/base";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import useBoardWikiTitleChangedHandlers from "@/controllers/socket/wiki/useBoardWikiTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useReducer, useRef, useState } from "react";
+import { memo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiTitleProps {
@@ -21,7 +22,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const canEdit = canAccessWiki(false, wiki.uid);
     const [height, setHeight] = useState(0);
-    const { on: onBoardWikiTitleChanged } = useBoardWikiTitleChangedHandlers({
+    const boardWikiTitleChangedHandler = useBoardWikiTitleChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -31,7 +32,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
             forceUpdate();
         },
     });
-    const { on: onBoardPrivateWikiTitleChanged } = useBoardWikiTitleChangedHandlers({
+    const boardPrivateWikiTitleChangedHandler = useBoardWikiTitleChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -42,6 +43,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [boardWikiTitleChangedHandler, boardPrivateWikiTitleChangedHandler] });
     const changeMode = (mode: "edit" | "view") => {
         if (!canEdit) {
             return;
@@ -102,16 +104,6 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
             },
         });
     };
-
-    useEffect(() => {
-        const { off: offBoardWikiTitleChanged } = onBoardWikiTitleChanged();
-        const { off: offBoardPrivateWikiTitleChanged } = onBoardPrivateWikiTitleChanged();
-
-        return () => {
-            offBoardWikiTitleChanged();
-            offBoardPrivateWikiTitleChanged();
-        };
-    }, []);
 
     const measureTextAreaHeight = () => {
         const cloned = textareaRef.current!.cloneNode(true) as HTMLTextAreaElement;

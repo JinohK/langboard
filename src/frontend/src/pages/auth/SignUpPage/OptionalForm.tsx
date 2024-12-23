@@ -1,13 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
-import { Button, Flex, Form, Input } from "@/components/base";
+import { Button, Flex, Form, Input, SubmitButton } from "@/components/base";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {

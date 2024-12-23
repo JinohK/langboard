@@ -6,10 +6,11 @@ import useUpdateWikiAssignedUsers from "@/controllers/api/wiki/useUpdateWikiAssi
 import useBoardWikiAssignedUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssignedUsersUpdatedHandlers";
 import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki, User } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiPrivateOptionProps {
@@ -48,7 +49,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             })
         );
     };
-    const { on: onBoardWikiPublicChanged } = useBoardWikiPublicChangedHandlers({
+    const boardWikiPublicChangedHandler = useBoardWikiPublicChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -58,7 +59,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             setAssignedUsers(data.wiki.assigned_members ?? []);
         },
     });
-    const { on: onBoardPrivateWikiPublicChanged } = useBoardWikiPublicChangedHandlers({
+    const boardPrivateWikiPublicChangedHandler = useBoardWikiPublicChangedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -74,7 +75,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             }
         },
     });
-    const { on: onBoardPrivateWikiAssignedUsersUpdated } = useBoardWikiAssignedUsersUpdatedHandlers({
+    const boardPrivateWikiAssignedUsersUpdatedHandler = useBoardWikiAssignedUsersUpdatedHandlers({
         socket,
         projectUID,
         wikiUID: wiki.uid,
@@ -90,18 +91,10 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             }
         },
     });
-
-    useEffect(() => {
-        const { off: offBoardWikiPublicChanged } = onBoardWikiPublicChanged();
-        const { off: offBoardPrivateWikiPublicChanged } = onBoardPrivateWikiPublicChanged();
-        const { off: offBoardPrivateWikiAssignedUsersUpdated } = onBoardPrivateWikiAssignedUsersUpdated();
-
-        return () => {
-            offBoardWikiPublicChanged();
-            offBoardPrivateWikiPublicChanged();
-            offBoardPrivateWikiAssignedUsersUpdated();
-        };
-    }, []);
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [boardWikiPublicChangedHandler, boardPrivateWikiPublicChangedHandler, boardPrivateWikiAssignedUsersUpdatedHandler],
+    });
 
     const savePrivateState = (privateState: bool) => {
         if (isValidating || privateState === isPrivate) {

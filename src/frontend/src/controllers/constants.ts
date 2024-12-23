@@ -56,6 +56,7 @@ export const API_ROUTES = {
             GET_DETAILS: "/board/{uid}/card/{card_uid}",
             CHANGE_DETAILS: "/board/{uid}/card/{card_uid}/details",
             UPDATE_ASSIGNED_USERS: "/board/{uid}/card/{card_uid}/assigned-users",
+            UPDATE_LABELS: "/board/{uid}/card/{card_uid}/labels",
             ATTACHMENT: {
                 UPLOAD: "/board/{uid}/card/{card_uid}/attachment",
                 CHANGE_NAME: "/board/{uid}/card/{card_uid}/attachment/{attachment_uid}/name",
@@ -93,7 +94,13 @@ export const API_ROUTES = {
             DELETE: "/board/{uid}/wiki/{wiki_uid}",
         },
         SETTINGS: {
-            UPDATE_PROJECT_DETAILS: "/board/{uid}/settings/details",
+            UPDATE_DETAILS: "/board/{uid}/settings/details",
+            LABEL: {
+                CREATE: "/board/{uid}/settings/label",
+                CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
+                CHANGE_ORDER: "/board/{uid}/settings/label/{label_uid}/order",
+                DELETE: "/board/{uid}/settings/label/{label_uid}",
+            },
         },
     },
     REVERT: (path: string) => `/revert/${path}`,
@@ -109,6 +116,14 @@ export const SOCKET_SERVER_EVENTS = {
             CREATED: "project:column:created:{uid}",
             NAME_CHANGED: "project:column:name:changed:{uid}",
             ORDER_CHANGED: "project:column:order:changed:{uid}",
+        },
+        LABEL: {
+            CREATED: "project:label:created:{uid}",
+            NAME_CHANGED: "project:label:name:changed:{uid}",
+            COLOR_CHANGED: "project:label:color:changed:{uid}",
+            DESCRIPTION_CHANGED: "project:label:description:changed:{uid}",
+            ORDER_CHANGED: "project:label:order:changed:{uid}",
+            DELETED: "project:label:deleted:{uid}",
         },
     },
     DASHBOARD: {
@@ -129,6 +144,7 @@ export const SOCKET_SERVER_EVENTS = {
             DEADLINE_CHANGED: "board:card:deadline:changed:{uid}",
             DESCRIPTION_CHANGED: "board:card:description:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:card:assigned-users:updated:{uid}",
+            LABELS_UPDATED: "board:card:labels:updated:{uid}",
             EDITOR_USERS: "board:card:editor:users:{uid}",
             EDITOR_START_EDITING: "board:card:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:card:editor:stop:{uid}",

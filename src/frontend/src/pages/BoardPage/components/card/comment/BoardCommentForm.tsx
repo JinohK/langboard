@@ -1,4 +1,4 @@
-import { Box, Button, Drawer, Flex, Form, Skeleton } from "@/components/base";
+import { Box, Button, Drawer, Flex, Form, Skeleton, SubmitButton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -12,7 +12,6 @@ import { API_ROUTES } from "@/controllers/constants";
 import UserAvatarList from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import SubmitButton from "@/components/SubmitButton";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 
 export function SkeletonBoardCommentForm() {

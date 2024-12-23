@@ -1,5 +1,15 @@
 from ...core.db import User
-from ...models import Card, CardAttachment, CardComment, Checkitem, Project, ProjectColumn, ProjectWiki, UserGroup
+from ...models import (
+    Card,
+    CardAttachment,
+    CardComment,
+    Checkitem,
+    Project,
+    ProjectColumn,
+    ProjectLabel,
+    ProjectWiki,
+    UserGroup,
+)
 
 
 TProjectParam = Project | int | str
@@ -11,3 +21,4 @@ TCheckitemParam = Checkitem | int | str
 TWikiParam = ProjectWiki | int | str
 TUserParam = User | int | str
 TUserGroupParam = UserGroup | int | str
+TProjectLabelParam = ProjectLabel | int | str

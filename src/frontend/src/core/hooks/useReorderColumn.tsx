@@ -1,7 +1,8 @@
 import useColumnOrderChangedHandlers, { IUseColumnOrderChangedHandlersProps } from "@/controllers/socket/shared/useColumnOrderChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export interface IColumn {
     uid: string;
@@ -24,7 +25,7 @@ function useReorderColumn<TColumn extends IColumn>({
     socket,
 }: IUseReorderColumnProps<TColumn>) {
     const [columns, setColumns] = useState<TColumn[]>(flatColumns);
-    const { on: onColumnOrderChanged, send: sendColumnOrderChanged } = useColumnOrderChangedHandlers({
+    const handlers = useColumnOrderChangedHandlers({
         socket,
         type,
         topicId,
@@ -39,14 +40,7 @@ function useReorderColumn<TColumn extends IColumn>({
             );
         },
     });
-
-    useEffect(() => {
-        const { off } = onColumnOrderChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers });
 
     const reorder = (column: TColumn, newIndex: number) => {
         if (column.order === newIndex) {
@@ -57,7 +51,7 @@ function useReorderColumn<TColumn extends IColumn>({
         return true;
     };
 
-    return { columns, setColumns, reorder, sendColumnOrderChanged };
+    return { columns, setColumns, reorder, sendColumnOrderChanged: handlers.send };
 }
 
 export default useReorderColumn;

@@ -5,7 +5,9 @@ from .GlobalCardRelationshipType import GlobalCardRelationshipType
 
 
 class CardRelationship(BaseSqlModel, table=True):
-    relation_type_id: SnowflakeID = SnowflakeIDField(foreign_key=GlobalCardRelationshipType.expr("id"), nullable=False)
+    relation_type_id: SnowflakeID = SnowflakeIDField(
+        foreign_key=GlobalCardRelationshipType.expr("id"), nullable=False, index=True
+    )
     card_id_parent: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     card_id_child: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
 

@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
-import SubmitButton from "@/components/SubmitButton";
-import { Badge, Card, Flex, IconComponent, Separator, Skeleton, Toast } from "@/components/base";
+import { Badge, Card, Flex, IconComponent, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import useDeleteSubEmail from "@/controllers/api/account/useDeleteSubEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";

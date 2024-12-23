@@ -22,6 +22,7 @@ import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
+import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -97,9 +98,11 @@ export function SkeletonBoardCard(): JSX.Element {
                 className="z-[100] space-y-1.5 border-b-2 bg-background text-left"
             >
                 <SkeletonBoardCardTitle />
-                <Dialog.Description asChild>
-                    <SkeletonBoardCardColumnName />
-                </Dialog.Description>
+                <Flex gap="3">
+                    <Dialog.Description asChild>
+                        <SkeletonBoardCardColumnName />
+                    </Dialog.Description>
+                </Flex>
                 <Skeleton position="absolute" right="0" size="6" rounded="sm" className="opacity-70" />
             </Flex>
             <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
@@ -159,9 +162,12 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
         <>
             <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
                 <BoardCardTitle />
-                <Dialog.Description>
-                    <BoardCardColumnName />
-                </Dialog.Description>
+                <Flex gap="3">
+                    <Dialog.Description>
+                        <BoardCardColumnName />
+                    </Dialog.Description>
+                    <BoardCardLabelList />
+                </Flex>
                 <Dialog.CloseButton className="absolute right-0" />
             </Dialog.Header>
             <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>

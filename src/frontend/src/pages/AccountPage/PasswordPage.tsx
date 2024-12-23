@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import PasswordInput from "@/components/PasswordInput";
-import SubmitButton from "@/components/SubmitButton";
-import { Box, Flex, Form, Toast } from "@/components/base";
+import { Box, Flex, Form, SubmitButton, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/api/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";

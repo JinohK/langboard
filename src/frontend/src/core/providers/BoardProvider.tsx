@@ -1,5 +1,5 @@
 import { createContext, memo, useContext, useMemo, useReducer } from "react";
-import { Project, ProjectCard, ProjectColumn, User } from "@/core/models";
+import { Project, ProjectCard, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import { IAuthUser } from "@/core/providers/AuthProvider";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -9,6 +9,7 @@ import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 export interface IFilterMap {
     keyword?: string[];
     members?: string[];
+    labels?: string[];
     parents?: string[];
     children?: string[];
 }
@@ -24,8 +25,10 @@ export interface IBoardContext {
     filters: IFilterMap;
     navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
     filterMember: (member: User.Interface) => bool;
+    filterLabel: (label: ProjectLabel.Interface) => bool;
     filterCard: (card: ProjectCard.IBoard) => bool;
     filterCardMember: (card: ProjectCard.IBoard) => bool;
+    filterCardLabels: (card: ProjectCard.IBoard) => bool;
     filterCardRelationships: (card: ProjectCard.IBoard) => bool;
 }
 
@@ -51,8 +54,10 @@ const initialContext = {
     filters: {},
     navigateWithFilters: () => {},
     filterMember: () => true,
+    filterLabel: () => true,
     filterCard: () => true,
     filterCardMember: () => true,
+    filterCardLabels: () => true,
     filterCardRelationships: () => true,
 };
 
@@ -92,6 +97,9 @@ export const BoardProvider = memo(
         const navigateWithFilters = (to?: To, options?: NavigateOptions) => {
             if (filters.members) {
                 filters.members = filters.members.filter((member, index) => filters.members!.indexOf(member) === index);
+            }
+            if (filters.labels) {
+                filters.labels = filters.labels.filter((label, index) => filters.labels!.indexOf(label) === index);
             }
             if (filters.parents) {
                 filters.parents = filters.parents.filter((parent, index) => filters.parents!.indexOf(parent) === index);
@@ -135,6 +143,15 @@ export const BoardProvider = memo(
             );
         };
 
+        const filterLabel = (label: ProjectLabel.Interface) => {
+            const keyword = filters.keyword?.join(",");
+            if (!keyword) {
+                return true;
+            }
+
+            return label.name.toLowerCase().includes(keyword.toLowerCase()) || label.description.toLowerCase().includes(keyword.toLowerCase());
+        };
+
         const filterCard = (card: ProjectCard.IBoard) => {
             const keyword = filters.keyword?.join(",");
             if (!keyword) {
@@ -170,6 +187,14 @@ export const BoardProvider = memo(
             }
 
             return false;
+        };
+
+        const filterCardLabels = (card: ProjectCard.IBoard) => {
+            if (!filters.labels?.length) {
+                return true;
+            }
+
+            return !!card.labels.length && filters.labels.some((labelUID) => card.labels.includes(labelUID));
         };
 
         const filterCardRelationships = (card: ProjectCard.IBoard) => {
@@ -214,8 +239,10 @@ export const BoardProvider = memo(
                     filters,
                     navigateWithFilters,
                     filterMember,
+                    filterLabel,
                     filterCard,
                     filterCardMember,
+                    filterCardLabels,
                     filterCardRelationships,
                 }}
             >
@@ -243,7 +270,7 @@ const transformStringFilters = (rawFilters: string | null): IFilterMap => {
                 return;
             }
 
-            if (!["keyword", "members", "parents", "children"].includes(key)) {
+            if (!["keyword", "members", "labels", "parents", "children"].includes(key)) {
                 return;
             }
 

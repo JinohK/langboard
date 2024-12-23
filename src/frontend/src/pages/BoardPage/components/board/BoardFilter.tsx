@@ -1,11 +1,19 @@
 import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
+import useProjectLabelCreatedHandlers from "@/controllers/socket/project/label/useProjectLabelCreatedHandlers";
+import useProjectLabelDeletedHandlers from "@/controllers/socket/project/label/useProjectLabelDeletedHandlers";
+import useProjectLabelOrderChangedHandlers from "@/controllers/socket/project/label/useProjectLabelOrderChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCard } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import BoardFilterLabel from "@/pages/BoardPage/components/board/BoardFilterLabel";
+import { arrayMove } from "@dnd-kit/sortable";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardFilter() {
@@ -13,8 +21,53 @@ export function SkeletonBoardFilter() {
 }
 
 function BoardFilter() {
-    const { project, cards, filters, filterCard, filterMember, navigateWithFilters } = useBoard();
+    const { setIsLoadingRef } = usePageLoader();
+    const { project, cards, socket, filters, filterCard, filterMember, filterLabel, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
+    const [labels, setLabels] = useState(project.labels);
+    const projectLabelCreatedHandler = useProjectLabelCreatedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setLabels((prev) => {
+                const newLabels = prev.filter((label) => label.uid !== data.label.uid).concat(data.label);
+                project.labels = newLabels;
+                return newLabels;
+            });
+        },
+    });
+    const projectLabelOrderChangedHandler = useProjectLabelOrderChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            const label = labels.find((label) => label.uid === data.uid);
+            if (!label) {
+                return;
+            }
+
+            setLabels((prev) => {
+                const newLabels = arrayMove(prev, label.order, data.order).map((col, i) => ({ ...col, order: i }));
+                project.labels = newLabels;
+                return newLabels;
+            });
+        },
+    });
+    const projectLabelDeletedHandler = useProjectLabelDeletedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            setLabels((prev) => {
+                const newLabels = prev.filter((label) => label.uid !== data.uid);
+                project.labels = newLabels;
+                return newLabels;
+            });
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers: [projectLabelCreatedHandler, projectLabelOrderChangedHandler, projectLabelDeletedHandler] });
+
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, []);
 
     const setFilterKeyword = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (!filters.keyword) {
@@ -29,7 +82,7 @@ function BoardFilter() {
 
         filters.keyword = keyword.split(",");
 
-        navigateWithFilters();
+        navigateWithFilters(ROUTES.BOARD.MAIN(project.uid));
     };
 
     const countAppliedFilters =
@@ -43,8 +96,10 @@ function BoardFilter() {
         Object.keys(filters).forEach((filterName) => {
             delete filters[filterName as keyof IFilterMap];
         });
-        navigateWithFilters();
+        navigateWithFilters(ROUTES.BOARD.MAIN(project.uid));
     };
+
+    const filteredLabels = labels.filter((label) => filterLabel(label));
 
     return (
         <Popover.Root>
@@ -101,9 +156,33 @@ function BoardFilter() {
                                 />
                             </Flex>
                         </Flex>
+                        <Flex direction="col">
+                            <Label>{t("board.filters.Labels")}</Label>
+                            <Flex direction="col" pt="1">
+                                {filteredLabels.slice(0, 2).map((label) => (
+                                    <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
+                                        <BoardFilterLabel label={label} />
+                                    </BoardFilterItem>
+                                ))}
+                                {filteredLabels.length > 2 && (
+                                    <BoardExtendedFilter
+                                        filterLangLabel="Select labels"
+                                        uncountableItems={filteredLabels.slice(0, 2).map((label) => label.uid)}
+                                        filterName="labels"
+                                        createFilterItems={() =>
+                                            filteredLabels.slice(2).map((label) => (
+                                                <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
+                                                    <BoardFilterLabel label={label} />
+                                                </BoardFilterItem>
+                                            ))
+                                        }
+                                    />
+                                )}
+                            </Flex>
+                        </Flex>
                         {(["parents", "children"] as (keyof IFilterMap)[]).map((relationship) => (
                             <Flex direction="col" key={`board-filter-${relationship}`}>
-                                <Label>{t(`board.filters.labels.${relationship}`)}</Label>
+                                <Label>{t(`board.filters.relationships.${relationship}`)}</Label>
                                 <BoardExtendedFilter
                                     filterLangLabel="Select cards"
                                     filterName={relationship}
@@ -137,7 +216,7 @@ interface IBoardFilterExtendedProps {
 }
 
 const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterName, createFilterItems }: IBoardFilterExtendedProps) => {
-    const { filters, navigateWithFilters } = useBoard();
+    const { project, filters, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
 
     const countSelections = filters[filterName]?.filter((v) => !(uncountableItems ?? []).includes(v)).length ?? 0;
@@ -145,7 +224,7 @@ const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterNam
     const clearSelection = () => {
         filters[filterName] = [];
 
-        navigateWithFilters();
+        navigateWithFilters(ROUTES.BOARD.MAIN(project.uid));
     };
 
     return (
@@ -193,7 +272,7 @@ interface IBoardFilterItemProps {
 }
 
 const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) => {
-    const { filters, navigateWithFilters } = useBoard();
+    const { project, filters, navigateWithFilters } = useBoard();
     const checked = useMemo(() => !!filters[name] && filters[name].includes(value), [filters, filters[name]]);
 
     const setFilterCards = (checked: CheckedState) => {
@@ -207,7 +286,7 @@ const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) 
             filters[name] = filters[name].filter((filter) => filter !== value);
         }
 
-        navigateWithFilters();
+        navigateWithFilters(ROUTES.BOARD.MAIN(project.uid));
     };
 
     return (

@@ -5,6 +5,7 @@ import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiD
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { IDraggableProjectWiki, TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
@@ -39,7 +40,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
     const {
         columns: wikis,
         setColumns: setWikis,
-        reorder: reorderColumns,
+        reorder: reorderWikis,
     } = useReorderColumn<IDraggableProjectWiki>({
         type: "BoardWiki",
         eventNameParams: { uid: projectUID },
@@ -49,7 +50,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
     });
     const wikisUIDs = useMemo(() => wikis.map((wiki) => wiki.uid), [wikis]);
     const dndContextId = useId();
-    const { on: onBoardWikiCreated } = useBoardWikiCreatedHandlers({
+    const boardWikiCreatedHandler = useBoardWikiCreatedHandlers({
         socket,
         projectUID,
         callback: (data) => {
@@ -63,7 +64,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
             });
         },
     });
-    const { on: onBoardPrivateWikiCreated } = useBoardWikiCreatedHandlers({
+    const boardPrivateWikiCreatedHandler = useBoardWikiCreatedHandlers({
         socket,
         projectUID,
         username: currentUser.username,
@@ -78,7 +79,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
             });
         },
     });
-    const { on: onBoardWikiDeletedHandlers } = useBoardWikiDeletedHandlers({
+    const boardWikiDeletedHandlersHandler = useBoardWikiDeletedHandlers({
         socket,
         projectUID,
         callback: (data) => {
@@ -89,6 +90,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
             }
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [boardWikiCreatedHandler, boardPrivateWikiCreatedHandler, boardWikiDeletedHandlersHandler] });
     const {
         activeColumn: activeWiki,
         sensors,
@@ -106,7 +108,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
                     delete targetWiki.isInBin;
                 }
 
-                if (!reorderColumns(orignalWiki, index)) {
+                if (!reorderWikis(orignalWiki, index)) {
                     return;
                 }
 
@@ -152,18 +154,6 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
         transformContainerId: () => "",
         moreDroppableZoneCallbacks: moreDroppableZoneCallbacksRef.current,
     });
-
-    useEffect(() => {
-        const { off: offBoardWikiCreated } = onBoardWikiCreated();
-        const { off: offBoardPrivateWikiCreated } = onBoardPrivateWikiCreated();
-        const { off: offBoardWikiDeletedHandlers } = onBoardWikiDeletedHandlers();
-
-        return () => {
-            offBoardWikiCreated();
-            offBoardPrivateWikiCreated();
-            offBoardWikiDeletedHandlers();
-        };
-    }, []);
 
     useEffect(() => {
         setWikis(flatWikis);

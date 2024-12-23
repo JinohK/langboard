@@ -1,7 +1,7 @@
 import { Flex } from "@/components/base";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import TypeUtils from "@/core/utils/TypeUtils";
-import BoardCardActionAttachedFile from "@/pages/BoardPage/components/card/action/BoardCardActionAttachedFile";
+import BoardCardActionAttachedFile from "@/pages/BoardPage/components/card/action/file/BoardCardActionAttachedFile";
 import { IAttachedFile } from "@/pages/BoardPage/components/card/action/types";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";

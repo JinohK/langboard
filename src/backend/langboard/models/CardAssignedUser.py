@@ -3,8 +3,8 @@ from .Card import Card
 
 
 class CardAssignedUser(BaseSqlModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False)
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
 
     def api_response(self):
         return {}

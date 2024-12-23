@@ -1,6 +1,5 @@
 import { AssignMemberForm } from "@/components/AssignMemberPopover";
-import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, Toast } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useCreateSubCheckitem from "@/controllers/api/card/checkitem/useCreateSubCheckitem";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";

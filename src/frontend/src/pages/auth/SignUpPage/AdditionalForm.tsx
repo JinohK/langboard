@@ -1,14 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { AutoComplete, Button, Flex, Form, Input } from "@/components/base";
+import { AutoComplete, Button, Flex, Form, Input, SubmitButton } from "@/components/base";
 import { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import useForm from "@/core/hooks/form/useForm";
 import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {

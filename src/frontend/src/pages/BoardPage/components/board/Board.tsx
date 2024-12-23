@@ -24,7 +24,8 @@ import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
-import useProjectColumnCreatedHandlers from "@/controllers/socket/project/useProjectColumnCreatedHandlers";
+import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -135,7 +136,7 @@ const BoardResult = memo(() => {
         setColumns,
         reorder: reorderColumns,
     } = useReorderColumn({
-        type: "BoardColumn",
+        type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
         columns: flatColumns,
@@ -146,6 +147,15 @@ const BoardResult = memo(() => {
     const viewportId = `board-viewport-${project.uid}`;
     const { onPointerDown } = useGrabbingScrollHorizontal(viewportId);
     const { mutate: changeProjectColumnOrderMutate } = useChangeProjectColumnOrder();
+    const handlers = useProjectColumnCreatedHandlers({
+        socket,
+        projectUID: project.uid,
+        callback: (data) => {
+            delete (data.column as unknown as Record<string, unknown>).count;
+            setColumns((prevColumns) => [...prevColumns, data.column]);
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers, dependencies: [columns] });
     const {
         activeColumn,
         activeRow: activeCard,
@@ -184,22 +194,6 @@ const BoardResult = memo(() => {
             return `board-column-${(columnOrCard as IBoardColumnCardProps["card"]).column_uid ?? columnOrCard.uid}`;
         },
     });
-
-    useEffect(() => {
-        const { on: onProjectColumnCreated } = useProjectColumnCreatedHandlers({
-            socket,
-            projectUID: project.uid,
-            callback: (data) => {
-                delete (data.column as unknown as Record<string, unknown>).count;
-                setColumns((prevColumns) => [...prevColumns, data.column]);
-            },
-        });
-        const { off } = onProjectColumnCreated();
-
-        return () => {
-            off();
-        };
-    }, [columns]);
 
     return (
         <>

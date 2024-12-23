@@ -11,7 +11,7 @@ export interface IColumnOrderChangedResponse {
 }
 
 export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IColumnOrderChangedResponse> {
-    type: "BoardColumn" | "BoardCardAttachment" | "BoardCardCheckitem" | "BoardWiki";
+    type: "ProjectColumn" | "BoardCardAttachment" | "BoardCardCheckitem" | "BoardWiki" | "ProjectLabel";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -21,7 +21,7 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
     const sendEventName = "";
     let topic = ESocketTopic.None;
     switch (type) {
-        case "BoardColumn":
+        case "ProjectColumn":
             onEventName = SOCKET_SERVER_EVENTS.PROJECT.COLUMN.ORDER_CHANGED;
             topic = ESocketTopic.Project;
             break;
@@ -36,6 +36,10 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
         case "BoardWiki":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;
             topic = ESocketTopic.BoardWiki;
+            break;
+        case "ProjectLabel":
+            onEventName = SOCKET_SERVER_EVENTS.PROJECT.LABEL.ORDER_CHANGED;
+            topic = ESocketTopic.Project;
             break;
     }
 

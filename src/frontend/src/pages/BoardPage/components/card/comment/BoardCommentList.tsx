@@ -6,6 +6,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -70,7 +71,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
     const [t] = useTranslation();
     const PAGE_SIZE = 10;
     const { items: comments, nextPage, forceUpdate, hasMore } = useInfiniteScrollPager({ allItems: flatComments, size: PAGE_SIZE });
-    const { on: onCardCommentAdded } = useCardCommentAddedHandlers({
+    const commentAddedHandler = useCardCommentAddedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -79,7 +80,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
             forceUpdate();
         },
     });
-    const { on: onCardCommentDeleted } = useCardCommentDeletedHandlers({
+    const commentDeletedHandler = useCardCommentDeletedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -87,16 +88,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
             deletedComment(data.comment_uid);
         },
     });
-
-    useEffect(() => {
-        const { off: offCardCommentAdded } = onCardCommentAdded();
-        const { off: offCardCommentDeleted } = onCardCommentDeleted();
-
-        return () => {
-            offCardCommentAdded();
-            offCardCommentDeleted();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers: [commentAddedHandler, commentDeletedHandler] });
 
     const deletedComment = (commentUID: string) => {
         const index = flatComments.findIndex((c) => c.uid === commentUID);

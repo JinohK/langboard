@@ -1,6 +1,6 @@
 import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/controllers/socket/shared/useRowOrderChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ISocketContext } from "@/core/providers/SocketProvider";
-import { useEffect } from "react";
 
 export interface IRow {
     uid: string;
@@ -31,7 +31,7 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
     updater,
 }: IUseReorderRowProps<TRow, TRowColumn>) {
     const [_, forceUpdate] = updater;
-    const { on: onRowOrderChanged, send: sendRowOrderChanged } = useRowOrderChangedHandlers({
+    const handlers = useRowOrderChangedHandlers({
         socket,
         type,
         topicId,
@@ -52,14 +52,7 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
             forceUpdate();
         },
     });
-
-    useEffect(() => {
-        const { off } = onRowOrderChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
+    useSwitchSocketHandlers({ socket, handlers });
 
     const moveToColumn = <TRowColumn extends keyof TRow>(uid: string, index: number, columnId: TRow[TRowColumn]) => {
         let isUpdated = false;
@@ -105,7 +98,7 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
         allRowsMap[uid].order = index;
     };
 
-    return { moveToColumn, removeFromColumn, reorderInColumn, sendRowOrderChanged };
+    return { moveToColumn, removeFromColumn, reorderInColumn, sendRowOrderChanged: handlers.send };
 }
 
 export default useReorderRow;

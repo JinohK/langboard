@@ -2,10 +2,11 @@ import { Dialog, Skeleton, Textarea, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardTitle() {
@@ -25,7 +26,7 @@ function BoardCardTitle(): JSX.Element {
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const [height, setHeight] = useState(0);
-    const { on: onCardTitleChanged } = useCardTitleChangedHandlers({
+    const handlers = useCardTitleChangedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -34,6 +35,8 @@ function BoardCardTitle(): JSX.Element {
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
+
     const changeMode = (mode: "edit" | "view") => {
         if (!canEdit) {
             return;
@@ -92,14 +95,6 @@ function BoardCardTitle(): JSX.Element {
             },
         });
     };
-
-    useEffect(() => {
-        const { off } = onCardTitleChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     const measureTextAreaHeight = () => {
         const cloned = textareaRef.current!.cloneNode(true) as HTMLTextAreaElement;

@@ -1,7 +1,7 @@
 import { Box, Flex } from "@/components/base";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
-import BoardSettingsLabel from "@/pages/BoardPage/components/settings/BoardSettingsLabel";
+import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,7 +22,7 @@ const BoardSettingsList = memo(() => {
                 <BoardSettingsBasic />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
-                <BoardSettingsLabel />
+                <BoardSettingsLabelList />
             </BoardSettingsSection>
         </Flex>
     );

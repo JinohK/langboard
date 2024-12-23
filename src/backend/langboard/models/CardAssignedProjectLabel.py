@@ -5,8 +5,8 @@ from .ProjectLabel import ProjectLabel
 
 
 class CardAssignedProjectLabel(BaseSqlModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False)
-    project_label_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectLabel.expr("id"), nullable=False)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    project_label_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectLabel.expr("id"), nullable=False, index=True)
 
     def api_response(self) -> dict[str, Any]:
         return {}

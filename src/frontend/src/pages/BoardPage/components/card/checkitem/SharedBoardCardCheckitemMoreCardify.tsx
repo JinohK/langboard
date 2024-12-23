@@ -1,5 +1,4 @@
-import { Button, Checkbox, DropdownMenu, Flex, Label, Popover, Select, Toast } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Button, Checkbox, DropdownMenu, Flex, Label, Popover, Select, SubmitButton, Toast } from "@/components/base";
 import useCardifyCheckitem from "@/controllers/api/card/checkitem/useCardifyCheckitem";
 import { Project } from "@/core/models";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";

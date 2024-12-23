@@ -5,6 +5,7 @@ import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/chec
 import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -16,7 +17,7 @@ import SharedBoardCardCheckitemMore from "@/pages/BoardPage/components/card/chec
 import SharedBoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitemTimer";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { forwardRef, memo, useEffect, useReducer, useRef, useState } from "react";
+import { forwardRef, memo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface IBaseSharedBoardCardCheckitemProps<TParent extends bool> extends IFlexProps {
@@ -50,7 +51,7 @@ const SharedBoardCardCheckitem = memo(
             const [isTitleOpened, setIsTitleOpened] = useState(false);
             const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
             const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-            const { on: onCardCheckitemCardified } = useCardCheckitemCardifiedHandlers({
+            const checkitemCardifiedHandler = useCardCheckitemCardifiedHandlers({
                 socket,
                 projectUID,
                 checkitemUID: checkitem.uid,
@@ -59,7 +60,7 @@ const SharedBoardCardCheckitem = memo(
                     forceUpdate();
                 },
             });
-            const { on: onCardCheckitemTitleChanged } = useCardCheckitemTitleChangedHandlers({
+            const checkitemTitleChangedHandler = useCardCheckitemTitleChangedHandlers({
                 socket,
                 projectUID,
                 checkitemUID: checkitem.uid,
@@ -68,7 +69,7 @@ const SharedBoardCardCheckitem = memo(
                     forceUpdate();
                 },
             });
-            const { on: onCardCheckitemTimerStarted } = useCardCheckitemTimerStartedHandlers({
+            const checkitemTimerStartedHandler = useCardCheckitemTimerStartedHandlers({
                 socket,
                 projectUID,
                 checkitemUID: checkitem.uid,
@@ -78,7 +79,7 @@ const SharedBoardCardCheckitem = memo(
                     forceUpdate();
                 },
             });
-            const { on: onCardCheckitemTimerStopped } = useCardCheckitemTimerStoppedHandlers({
+            const checkitemTimerStoppedHandler = useCardCheckitemTimerStoppedHandlers({
                 socket,
                 projectUID,
                 checkitemUID: checkitem.uid,
@@ -88,20 +89,10 @@ const SharedBoardCardCheckitem = memo(
                     forceUpdate();
                 },
             });
-
-            useEffect(() => {
-                const { off: offCardCheckitemCardified } = onCardCheckitemCardified();
-                const { off: offCardCheckitemTitleChanged } = onCardCheckitemTitleChanged();
-                const { off: offCardCheckitemTimerStarted } = onCardCheckitemTimerStarted();
-                const { off: offCardCheckitemTimerStopped } = onCardCheckitemTimerStopped();
-
-                return () => {
-                    offCardCheckitemCardified();
-                    offCardCheckitemTitleChanged();
-                    offCardCheckitemTimerStarted();
-                    offCardCheckitemTimerStopped();
-                };
-            }, []);
+            useSwitchSocketHandlers({
+                socket,
+                handlers: [checkitemCardifiedHandler, checkitemTitleChangedHandler, checkitemTimerStartedHandler, checkitemTimerStoppedHandler],
+            });
 
             const toCardifiedCard = () => {
                 if (!checkitem.cardified_uid) {

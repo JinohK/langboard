@@ -5,7 +5,7 @@ from .Project import Project
 
 
 class ProjectInvitation(BaseSqlModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     email: str = Field(nullable=False)
 
     def api_response(self) -> dict[str, Any]:

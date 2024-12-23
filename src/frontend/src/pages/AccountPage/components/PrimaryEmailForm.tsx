@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import SubmitButton from "@/components/SubmitButton";
-import { Box, Button, Command, Flex, IconComponent, Popover, Skeleton, Toast } from "@/components/base";
+import { Box, Button, Command, Flex, IconComponent, Popover, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useChangePrimaryEmail from "@/controllers/api/account/useChangePrimaryEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";

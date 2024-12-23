@@ -1,13 +1,14 @@
 import { Box, Button, Flex, IconComponent, Skeleton } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
 import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentNameChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCardAttachmentMore from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMore";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useReducer, useState } from "react";
+import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import mimeTypes from "react-native-mime-types";
 import { tv } from "tailwind-variants";
@@ -57,7 +58,7 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
         },
     });
     const [isValidating, setIsValidating] = useState(false);
-    const { on: onCardAttachmentNameChanged } = useCardAttachmentNameChangedHandlers({
+    const handlers = useCardAttachmentNameChangedHandlers({
         socket,
         cardUID: card.uid,
         attachmentUID: attachment.uid,
@@ -66,16 +67,9 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const canEdit = currentUser.uid === attachment.user.uid || hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-
-    useEffect(() => {
-        const { off } = onCardAttachmentNameChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     const style = {
         transition,

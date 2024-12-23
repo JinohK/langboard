@@ -1,6 +1,5 @@
-import { AutoComplete, Box, Flex, Form, Input, Label, Textarea } from "@/components/base";
+import { AutoComplete, Box, Flex, Form, Input, Label, SubmitButton, Textarea } from "@/components/base";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import SubmitButton from "@/components/SubmitButton";
 import useChangeProjectDetails from "@/controllers/api/board/settings/useChangeProjectDetails";
 import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";

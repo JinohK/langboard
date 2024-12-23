@@ -32,6 +32,8 @@ class SnowflakeID(int):
 
     @staticmethod
     def from_short_code(short_code: str) -> "SnowflakeID":
+        if not short_code or len(short_code) != SnowflakeID.FIXED_SHORT_CODE_LENGTH:
+            return SnowflakeID(0)
         decoded_int = SnowflakeID.__base62_decode(short_code[::-1])
         original_value = SnowflakeID.__reverse_hex(decoded_int)
         return SnowflakeID(original_value)

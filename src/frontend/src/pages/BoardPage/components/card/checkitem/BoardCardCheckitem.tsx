@@ -4,6 +4,7 @@ import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem
 import useCardSubCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardSubCheckitemCreatedHandlers";
 import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
 import useReorderRow from "@/core/hooks/useReorderRow";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -12,7 +13,7 @@ import BoardCardSubCheckitem from "@/pages/BoardPage/components/card/checkitem/B
 import SharedBoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitem";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useEffect, useMemo, useReducer, useRef } from "react";
+import { memo, useMemo, useReducer, useRef } from "react";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardCheckitemProps {
@@ -74,7 +75,7 @@ const BoardCardCheckitem = memo(
             delete subCheckitemsMap[uid];
             forceUpdate();
         };
-        const { on: onCardSubCheckitemCreated } = useCardSubCheckitemCreatedHandlers({
+        const subCheckitemCreatedHandler = useCardSubCheckitemCreatedHandlers({
             socket,
             projectUID,
             checkitemUID: checkitem.uid,
@@ -83,7 +84,7 @@ const BoardCardCheckitem = memo(
                 forceUpdate();
             },
         });
-        const { on: onCardCheckitemDeleted } = useCardCheckitemDeletedHandlers({
+        const checkitemDeletedHandler = useCardCheckitemDeletedHandlers({
             socket,
             projectUID,
             uid: checkitem.uid,
@@ -91,16 +92,7 @@ const BoardCardCheckitem = memo(
                 deletedSubCheckitem(data.uid);
             },
         });
-
-        useEffect(() => {
-            const { off: offCardSubCheckitemCreated } = onCardSubCheckitemCreated();
-            const { off: offCardCheckitemDeleted } = onCardCheckitemDeleted();
-
-            return () => {
-                offCardSubCheckitemCreated();
-                offCardCheckitemDeleted();
-            };
-        }, []);
+        useSwitchSocketHandlers({ socket, handlers: [subCheckitemCreatedHandler, checkitemDeletedHandler] });
 
         callbacksRef.current[checkitemId] = {
             onDragEnd: (originalSubCheckitem, index) => {

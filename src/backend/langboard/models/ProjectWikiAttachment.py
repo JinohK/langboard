@@ -6,8 +6,8 @@ from .ProjectWiki import ProjectWiki
 
 
 class ProjectWikiAttachment(SoftDeleteModel, table=True):
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
-    wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False, index=True)
     filename: str = Field(nullable=False)
     file: FileModel = Field(sa_type=ModelColumnType(FileModel))
     order: int = Field(default=0)

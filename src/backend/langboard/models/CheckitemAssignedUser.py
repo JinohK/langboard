@@ -4,8 +4,8 @@ from .Checkitem import Checkitem
 
 
 class CheckitemAssignedUser(BaseSqlModel, table=True):
-    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False)
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
 
     def api_response(self) -> dict[str, Any]:
         return {}

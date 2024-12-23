@@ -5,7 +5,7 @@ from ..core.db import DateTimeField, SnowflakeID, SnowflakeIDField, SoftDeleteMo
 
 
 class UserEmail(SoftDeleteModel, table=True):
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
     email: str = Field(nullable=False)
     verified_at: datetime | None = DateTimeField(default=None, nullable=True)
 

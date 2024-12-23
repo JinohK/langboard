@@ -6,6 +6,7 @@ import useProjectAssignedUsersUpdatedHandlers, {
 } from "@/controllers/socket/board/useProjectAssignedUsersUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, User } from "@/core/models";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -39,11 +40,16 @@ const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; so
         },
         [members, invitedMembers]
     );
-    const { on: onProjectAssignedUsersUpdated } = useProjectAssignedUsersUpdatedHandlers({
+    const handlers = useProjectAssignedUsersUpdatedHandlers({
         projectUID: project.uid,
         socket,
         callback: updatedCallback,
     });
+    useSwitchSocketHandlers({ socket, handlers });
+
+    useEffect(() => {
+        setInvitedText(invitedMembers, t("project.invited"));
+    }, []);
 
     const save = (users: User.Interface[], endCallback: () => void) => {
         if (isValidating) {
@@ -90,15 +96,6 @@ const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; so
             },
         });
     };
-
-    useEffect(() => {
-        const { off } = onProjectAssignedUsersUpdated();
-        setInvitedText(invitedMembers, t("project.invited"));
-
-        return () => {
-            off();
-        };
-    }, []);
 
     return (
         <AssignMemberPopover

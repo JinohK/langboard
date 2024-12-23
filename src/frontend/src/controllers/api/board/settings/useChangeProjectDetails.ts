@@ -15,7 +15,7 @@ const useChangeProjectDetails = (projectUID: string, options?: TMutationOptions<
     const { mutate } = useQueryMutation();
 
     const changeProjectDetails = async (params: IChangeProjectDetailsForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.UPDATE_PROJECT_DETAILS, { uid: projectUID });
+        const url = format(API_ROUTES.BOARD.SETTINGS.UPDATE_DETAILS, { uid: projectUID });
         const res = await api.put(url, params);
 
         return res.data;

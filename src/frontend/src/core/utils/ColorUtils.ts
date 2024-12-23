@@ -2,6 +2,38 @@ const HRANGE: [number, number] = [0, 360];
 const SRANGE: [number, number] = [40, 60];
 const LRANGE: [number, number] = [40, 60];
 
+export const hexToRgb = (hex: string): [number, number, number] => {
+    const hexWithoutHash = hex.replace("#", "");
+
+    const r = parseInt(hexWithoutHash.slice(0, 2), 16);
+    const g = parseInt(hexWithoutHash.slice(2, 4), 16);
+    const b = parseInt(hexWithoutHash.slice(4, 6), 16);
+
+    return [r, g, b];
+};
+
+export const getTextColorFromHex = (hex: string): "#000" | "#fff" => {
+    if (hex.includes("#")) {
+        hex = hex.replace("#", "");
+    }
+
+    if (hex.length === 4) {
+        hex = hex
+            .split("")
+            .map((char) => char + char)
+            .join("");
+    }
+
+    const [r, g, b] = hexToRgb(hex);
+    const o = Math.round((r * 299 + g * 587 + b * 114) / 1000);
+
+    if (o > 125) {
+        return "#000";
+    } else {
+        return "#fff";
+    }
+};
+
 export class ColorGenerator {
     #input: string;
 
@@ -24,7 +56,7 @@ export class ColorGenerator {
 
         const hex = this.#hslToHex(h, s, l);
 
-        return [hex, this.#getTextColorFromHex(hex)];
+        return [hex, getTextColorFromHex(hex)];
     }
 
     #hashCodeToRgb() {
@@ -36,27 +68,6 @@ export class ColorGenerator {
         const c = (hash & 0x00ffffff).toString(16).toUpperCase();
 
         return "00000".substring(0, 6 - c.length) + c;
-    }
-
-    #getTextColorFromHex(hex: string): "#000" | "#fff" {
-        const [r, g, b] = this.#hexToRgb(hex);
-        const o = Math.round((r * 299 + g * 587 + b * 114) / 1000);
-
-        if (o > 125) {
-            return "#000";
-        } else {
-            return "#fff";
-        }
-    }
-
-    #hexToRgb(hex: string): [number, number, number] {
-        const hexWithoutHash = hex.replace("#", "");
-
-        const r = parseInt(hexWithoutHash.slice(0, 2), 16);
-        const g = parseInt(hexWithoutHash.slice(2, 4), 16);
-        const b = parseInt(hexWithoutHash.slice(4, 6), 16);
-
-        return [r, g, b];
     }
 
     #hslToHex(h: number, s: number, l: number): string {

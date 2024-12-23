@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, Callable, Sequence, TypeVar, overload
 from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ..db import BaseSqlModel, DbSession, SnowflakeID
 
@@ -63,7 +62,7 @@ class BaseService(ABC):
         sql_query = self._db.query("select").table(model_class)
         if not isinstance(values, list):
             values = [values]
-        sql_query = self._where_in(sql_query, model_class.column(column), values)
+        sql_query = sql_query.where(model_class.column(column).in_(values))
         result = await self._db.exec(sql_query)
         return result.all()
 
@@ -86,23 +85,6 @@ class BaseService(ABC):
         if arg in model_class.model_fields and value is not None:
             statement = statement.where(model_class.column(arg) == value)
         return self._where_recursive(statement, model_class, **kwargs)
-
-    @overload
-    def _where_in(
-        self, statement: Select[_TSelect], column: InstrumentedAttribute, values: Any | list[Any]
-    ) -> Select[_TSelect]: ...
-    @overload
-    def _where_in(
-        self, statement: SelectOfScalar[_TSelect], column: InstrumentedAttribute, values: Any | list[Any]
-    ) -> SelectOfScalar[_TSelect]: ...
-    @overload
-    def _where_in(self, statement: Update, column: InstrumentedAttribute, values: Any | list[Any]) -> Update: ...
-    @overload
-    def _where_in(self, statement: Delete, column: InstrumentedAttribute, values: Any | list[Any]) -> Delete: ...
-    def _where_in(self, statement: _TStatement, column: InstrumentedAttribute, values: Any | list[Any]) -> _TStatement:
-        if len(values) > 1:
-            return statement.where(column.in_(values))
-        return statement.where(column == values[0])
 
     async def _get_max_order(
         self, model_class: type[_TBaseModel], column: str, value: Any, where_clauses: dict[str, Any] | None = None
@@ -161,3 +143,4 @@ class BaseService(ABC):
             return data.model_dump()
         elif isinstance(data, datetime):
             return data.isoformat()
+        return data

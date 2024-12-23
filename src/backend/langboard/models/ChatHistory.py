@@ -5,8 +5,8 @@ from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 
 class ChatHistory(SoftDeleteModel, table=True):
     filterable: SnowflakeID | None = SnowflakeIDField(nullable=True)
-    sender_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
-    receiver_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
+    sender_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
+    receiver_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
     history_type: str = Field(nullable=False)
     message: str = Field(nullable=False)
 

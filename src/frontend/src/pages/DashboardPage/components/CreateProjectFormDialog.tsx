@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { AutoComplete, Button, Dialog, Floating, Form, Input } from "@/components/base";
+import { AutoComplete, Button, Dialog, Floating, Form, Input, SubmitButton } from "@/components/base";
 import useCreateProject from "@/controllers/api/dashboard/useCreateProject";
 import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";
@@ -8,7 +8,6 @@ import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useRef } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import SubmitButton from "@/components/SubmitButton";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;

@@ -4,7 +4,7 @@ from .UserGroup import UserGroup
 
 
 class UserGroupAssignedEmail(BaseSqlModel, table=True):
-    group_id: SnowflakeID = SnowflakeIDField(foreign_key=UserGroup.expr("id"), nullable=False)
+    group_id: SnowflakeID = SnowflakeIDField(foreign_key=UserGroup.expr("id"), nullable=False, index=True)
     email: str = Field(nullable=False)
 
     def api_response(self):

@@ -5,13 +5,14 @@ import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachm
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardAttachment, { SkeletonBoardCardAttachment } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +33,7 @@ function BoardCardAttachmentList(): JSX.Element {
     const {
         columns: attachments,
         setColumns: setAttachments,
-        reorder: reorderColumns,
+        reorder: reorderAttachments,
     } = useReorderColumn({
         type: "BoardCardAttachment",
         topicId: card.uid,
@@ -44,7 +45,7 @@ function BoardCardAttachmentList(): JSX.Element {
     const deletedAttachment = (uid: string) => {
         setAttachments((prev) => prev.filter((attachment) => attachment.uid !== uid));
     };
-    const { on: onCardAttachmentUploaded } = useCardAttachmentUploadedHandlers({
+    const attachmentUploadedHandler = useCardAttachmentUploadedHandlers({
         socket,
         cardUID: card.uid,
         callback: (data) => {
@@ -58,13 +59,14 @@ function BoardCardAttachmentList(): JSX.Element {
             });
         },
     });
-    const { on: onCardAttachmentDeleted } = useCardAttachmentDeletedHandlers({
+    const attachmentDeletedHandler = useCardAttachmentDeletedHandlers({
         socket,
         cardUID: card.uid,
         callback: (data) => {
             deletedAttachment(data.uid);
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [attachmentUploadedHandler, attachmentDeletedHandler] });
     const {
         activeColumn: activeAttachment,
         sensors,
@@ -76,7 +78,7 @@ function BoardCardAttachmentList(): JSX.Element {
         rowDragDataType: "FakeAttachment",
         columnCallbacks: {
             onDragEnd: (originalAttachment, index) => {
-                if (!reorderColumns(originalAttachment, index)) {
+                if (!reorderAttachments(originalAttachment, index)) {
                     return;
                 }
 
@@ -102,16 +104,6 @@ function BoardCardAttachmentList(): JSX.Element {
         transformContainerId: () => "",
     });
     const [isOpened, setIsOpened] = useState(false);
-
-    useEffect(() => {
-        const { off: offCardAttachmentUploaded } = onCardAttachmentUploaded();
-        const { off: offCardAttachmentDeleted } = onCardAttachmentDeleted();
-
-        return () => {
-            offCardAttachmentUploaded();
-            offCardAttachmentDeleted();
-        };
-    }, []);
 
     return (
         <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>

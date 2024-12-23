@@ -6,6 +6,7 @@ import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCa
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCard } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -57,7 +58,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
+    const handlers = useCardDescriptionChangedHandlers({
         socket,
         projectUID: project.uid,
         cardUID: card.uid,
@@ -66,6 +67,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
         data: {
@@ -97,12 +99,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     }, []);
 
     useEffect(() => {
-        const { off } = onCardDescriptionChanged();
-
-        return () => {
-            off();
-            card.isOpened = false;
-        };
+        card.isOpened = false;
     }, []);
 
     const style = {
@@ -187,7 +184,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
     const [title, setTitle] = useState(card.title);
     const [commentCount, setCommentCount] = useState(card.count_comment);
     const [isOpened, setIsOpened] = useState(card.isOpened);
-    const { on: onCardTitleChanged } = useCardTitleChangedHandlers({
+    const cardTitleChangedHandler = useCardTitleChangedHandlers({
         socket,
         projectUID: project.uid,
         cardUID: card.uid,
@@ -196,7 +193,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             setTitle(data.title);
         },
     });
-    const { on: onCardCommentAdded } = useCardCommentAddedHandlers({
+    const commentAddedHandler = useCardCommentAddedHandlers({
         socket,
         projectUID: project.uid,
         cardUID: card.uid,
@@ -207,7 +204,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             });
         },
     });
-    const { on: onCardCommentDeleted } = useCardCommentDeletedHandlers({
+    const commentDeletedHandler = useCardCommentDeletedHandlers({
         socket,
         projectUID: project.uid,
         cardUID: card.uid,
@@ -218,6 +215,8 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             });
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [cardTitleChangedHandler, commentAddedHandler, commentDeletedHandler] });
+
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
         onPointerEnter: (e: React.PointerEvent) => {
@@ -227,18 +226,6 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             }
         },
     };
-
-    useEffect(() => {
-        const { off: offCardTitleChanged } = onCardTitleChanged();
-        const { off: offCardCommentAdded } = onCardCommentAdded();
-        const { off: offCardCommentDeleted } = onCardCommentDeleted();
-
-        return () => {
-            offCardTitleChanged();
-            offCardCommentAdded();
-            offCardCommentDeleted();
-        };
-    }, []);
 
     const openCard = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isDragging || (e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {

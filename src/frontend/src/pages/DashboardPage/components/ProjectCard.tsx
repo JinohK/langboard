@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
@@ -11,12 +11,13 @@ import { Project } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/useDashboardCardCreatedHandlers";
 import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardCardOrderChangedHandlers";
-import useProjectColumnCreatedHandlers from "@/controllers/socket/project/useProjectColumnCreatedHandlers";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
-import useProjectColumnOrderChangedHandlers from "@/controllers/socket/project/useProjectColumnOrderChangedHandlers";
+import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
+import useProjectColumnOrderChangedHandlers from "@/controllers/socket/project/column/useProjectColumnOrderChangedHandlers";
 import { arrayMove } from "@dnd-kit/sortable";
 import useProjectTitleChangedHandlers from "@/controllers/socket/project/useProjectTitleChangedHandlers";
 import useProjectTypeChangedHandlers from "@/controllers/socket/project/useProjectTypeChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 export const SkeletonProjectCard = memo(() => {
     const cards = [];
@@ -66,7 +67,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
     const [title, setTitle] = useState(project.title);
     const [projectType, setProjectType] = useState(project.project_type);
     const [columns, setColumns] = useState(project.columns);
-    const { on: onProjectTitleChanged } = useProjectTitleChangedHandlers({
+    const projectTitleChangedHandler = useProjectTitleChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -74,7 +75,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             setTitle(data.title);
         },
     });
-    const { on: onProjectTypeChanged } = useProjectTypeChangedHandlers({
+    const projectTypeChangedHandler = useProjectTypeChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -82,14 +83,14 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             setProjectType(data.project_type);
         },
     });
-    const { on: onProjectColumnCreated } = useProjectColumnCreatedHandlers({
+    const projectColumnCreatedHandler = useProjectColumnCreatedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
             setColumns((prev) => prev.filter((column) => column.uid !== data.column.uid).concat(data.column));
         },
     });
-    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
+    const projectColumnNameChangedHandler = useProjectColumnNameChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -102,7 +103,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             });
         },
     });
-    const { on: onProjectColumnOrderChanged } = useProjectColumnOrderChangedHandlers({
+    const projectColumnOrderChangedHandler = useProjectColumnOrderChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -119,7 +120,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             });
         },
     });
-    const { on: onDashboardCardCreated } = useDashboardCardCreatedHandlers({
+    const dashboardCardCreatedHandler = useDashboardCardCreatedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -132,7 +133,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             });
         },
     });
-    const { on: onDashboardCardOrderChanged } = useDashboardCardOrderChangedHandlers({
+    const dashboardCardOrderChangedHandler = useDashboardCardOrderChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -147,26 +148,18 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
             });
         },
     });
-
-    useEffect(() => {
-        const { off: offProjectTitleChanged } = onProjectTitleChanged();
-        const { off: offProjectTypeChanged } = onProjectTypeChanged();
-        const { off: offProjectColumnCreated } = onProjectColumnCreated();
-        const { off: offProjectColumnNameChanged } = onProjectColumnNameChanged();
-        const { off: offProjectColumnOrderChanged } = onProjectColumnOrderChanged();
-        const { off: offDashboardCardCreated } = onDashboardCardCreated();
-        const { off: offDashboardCardOrderChanged } = onDashboardCardOrderChanged();
-
-        return () => {
-            offProjectTitleChanged();
-            offProjectTypeChanged();
-            offProjectColumnCreated();
-            offProjectColumnNameChanged();
-            offProjectColumnOrderChanged();
-            offDashboardCardCreated();
-            offDashboardCardOrderChanged();
-        };
-    }, []);
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [
+            projectTitleChangedHandler,
+            projectTypeChangedHandler,
+            projectColumnCreatedHandler,
+            projectColumnNameChangedHandler,
+            projectColumnOrderChangedHandler,
+            dashboardCardCreatedHandler,
+            dashboardCardOrderChangedHandler,
+        ],
+    });
 
     const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {
         if (!project) {

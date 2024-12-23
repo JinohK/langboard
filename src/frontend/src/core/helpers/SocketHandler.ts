@@ -104,6 +104,8 @@ const useSocketHandler = <TRequest, TResponse>(props: TUseSocketHandlerProps<TRe
     };
 
     return {
+        topic: props.topic,
+        topicId: props.topicId,
         send,
         on,
     };

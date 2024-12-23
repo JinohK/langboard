@@ -1,12 +1,13 @@
 import { Input, Toast } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeProjectColumnName from "@/controllers/api/board/useChangeProjectColumnName";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/useProjectColumnNameChangedHandlers";
+import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardColumnHeaderProps {
@@ -22,7 +23,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const inputRef = useRef<HTMLInputElement | null>(null);
     const [columnName, setColumnName] = useState(column.name);
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
-    const { on: onProjectColumnNameChanged } = useProjectColumnNameChangedHandlers({
+    const handlers = useProjectColumnNameChangedHandlers({
         socket,
         projectUID: project.uid,
         callback: (data) => {
@@ -34,15 +35,8 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
             setColumnName(data.name);
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
-
-    useEffect(() => {
-        const { off } = onProjectColumnNameChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     const changeMode = (mode: "edit" | "view") => {
         if (isDragging || !canEdit) {

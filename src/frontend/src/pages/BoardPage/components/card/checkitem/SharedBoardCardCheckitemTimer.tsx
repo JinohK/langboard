@@ -5,6 +5,7 @@ import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/chec
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 import { Box } from "@/components/base";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 const SharedBoardCardCheckitemTimer = memo(() => {
     const { projectUID, socket } = useBoardCard();
@@ -22,7 +23,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
             end: addDate(now, { seconds: timerSeconds }),
         });
     }, [updated]);
-    const { on: onCardCheckitemTimerStarted } = useCardCheckitemTimerStartedHandlers({
+    const checkitemTimerStartedHandler = useCardCheckitemTimerStartedHandlers({
         socket,
         projectUID,
         checkitemUID: checkitem.uid,
@@ -32,7 +33,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
             forceUpdate();
         },
     });
-    const { on: onCardCheckitemTimerStopped } = useCardCheckitemTimerStoppedHandlers({
+    const checkitemTimerStoppedHandler = useCardCheckitemTimerStoppedHandlers({
         socket,
         projectUID,
         checkitemUID: checkitem.uid,
@@ -42,6 +43,7 @@ const SharedBoardCardCheckitemTimer = memo(() => {
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers: [checkitemTimerStartedHandler, checkitemTimerStoppedHandler] });
 
     useEffect(() => {
         let timerTimeout: NodeJS.Timeout | undefined;
@@ -64,15 +66,9 @@ const SharedBoardCardCheckitemTimer = memo(() => {
 
         updateTimer();
 
-        const { off: offCardCheckitemTimerStarted } = onCardCheckitemTimerStarted();
-        const { off: offCardCheckitemTimerStopped } = onCardCheckitemTimerStopped();
-
         return () => {
             clearTimeout(timerTimeout);
             timerTimeout = undefined;
-
-            offCardCheckitemTimerStarted();
-            offCardCheckitemTimerStopped();
         };
     }, []);
 

@@ -8,6 +8,7 @@ from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdS
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
+    CardAssignedProjectLabel,
     CardAssignedUser,
     CardComment,
     CardRelationship,
@@ -16,10 +17,12 @@ from ...models import (
     Project,
     ProjectAssignedUser,
     ProjectColumn,
+    ProjectLabel,
 )
 from .CardAttachmentService import CardAttachmentService
 from .CheckitemService import CheckitemService
 from .ProjectColumnService import ProjectColumnService
+from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
 from .Types import TCardParam, TColumnParam, TProjectParam
@@ -67,6 +70,10 @@ class CardService(BaseService):
 
         card_attachment_service = self._get_service(CardAttachmentService)
         api_card["attachments"] = await card_attachment_service.get_board_list(card)
+
+        project_label_service = self._get_service(ProjectLabelService)
+        api_card["project_labels"] = await project_label_service.get_all(project, as_api=True)
+        api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
 
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
 
@@ -160,27 +167,28 @@ class CardService(BaseService):
 
     async def convert_board_list_api_response(self, card: Card, count_comment: int | None = None) -> dict[str, Any]:
         if count_comment is None:
-            sql_query = (
+            result = await self._db.exec(
                 self._db.query("select").count(CardComment, "id").where(CardComment.column("card_id") == card.id)
             )
-
-            result = await self._db.exec(sql_query)
             count_comment = result.one()
 
-        sql_query = (
-            self._db.query("select")
-            .table(CardRelationship)
-            .join(
-                GlobalCardRelationshipType,
-                CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
-            )
-            .where(
-                (CardRelationship.column("card_id_parent") == card.id)
-                | (CardRelationship.column("card_id_child") == card.id)
+        project_label_service = self._get_service(ProjectLabelService)
+        raw_labels = await project_label_service.get_all_by_card(card, as_api=False)
+
+        result = await self._db.exec(
+            (
+                self._db.query("select")
+                .table(CardRelationship)
+                .join(
+                    GlobalCardRelationshipType,
+                    CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
+                )
+                .where(
+                    (CardRelationship.column("card_id_parent") == card.id)
+                    | (CardRelationship.column("card_id_child") == card.id)
+                )
             )
         )
-
-        result = await self._db.exec(sql_query)
         raw_relationship = result.all()
 
         parents = []
@@ -198,6 +206,7 @@ class CardService(BaseService):
             "parents": parents,
             "children": children,
         }
+        card_api["labels"] = [label.get_uid() for label in raw_labels]
         return card_api
 
     async def create(
@@ -486,6 +495,56 @@ class CardService(BaseService):
         )
 
         return SocketModelIdBaseResult(model_id, list(users), publish_model)
+
+    async def update_labels(
+        self, user_or_bot: User | BotType, project: TProjectParam, card: TCardParam, label_uids: list[str]
+    ) -> SocketModelIdBaseResult[bool] | None:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
+            return None
+        project, card = params
+
+        project_label_service = self._get_service(ProjectLabelService)
+        is_bot = isinstance(user_or_bot, BotType)
+
+        # result = await self._db.exec(
+        #     self._db.query("select")
+        #     .column(ProjectLabel.id)
+        #     .join(ProjectLabel, ProjectLabel.column("id") == Card.column("id"))
+        #     .where(Card.column("id") == card.id)
+        # )
+        # original_label_ids = list(result.all())
+
+        query = (
+            self._db.query("delete")
+            .table(CardAssignedProjectLabel)
+            .where(CardAssignedProjectLabel.column("card_id") == card.id)
+        )
+        if not is_bot:
+            bot_labels = await project_label_service.get_all_bot(project)
+            bot_label_ids = [label.id for label in bot_labels]
+            query = query.where(CardAssignedProjectLabel.column("project_label_id").not_in(bot_label_ids))
+        await self._db.exec(query)
+
+        for label_uid in label_uids:
+            label = await self._get_by_param(ProjectLabel, label_uid)
+            if not label or label.project_id != project.id or (not is_bot and label.is_bot):
+                return None
+            self._db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
+        await self._db.commit()
+
+        labels = await project_label_service.get_all_by_card(card, as_api=True)
+
+        model_id = await SocketModelIdService.create_model_id({"labels": labels})
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:labels:updated:{card.get_uid()}",
+            data_keys="labels",
+        )
+
+        return SocketModelIdBaseResult(model_id, True, publish_model)
 
     @overload
     def __filter_column(self, query: Select[_TSelectParam], column_id: SnowflakeID | str) -> Select[_TSelectParam]: ...

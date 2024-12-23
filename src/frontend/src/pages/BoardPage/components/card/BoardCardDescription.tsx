@@ -5,6 +5,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -35,7 +36,7 @@ const BoardCardDescription = memo((): JSX.Element => {
         descriptionRef.current = value;
     };
     const editorName = `${card.uid}-description`;
-    const { on: onCardDescriptionChanged } = useCardDescriptionChangedHandlers({
+    const handlers = useCardDescriptionChangedHandlers({
         socket,
         projectUID,
         cardUID: card.uid,
@@ -45,6 +46,7 @@ const BoardCardDescription = memo((): JSX.Element => {
             forceUpdate();
         },
     });
+    useSwitchSocketHandlers({ socket, handlers });
     const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
@@ -99,14 +101,6 @@ const BoardCardDescription = memo((): JSX.Element => {
             setIsEditing(editing);
         }
     };
-
-    useEffect(() => {
-        const { off } = onCardDescriptionChanged();
-
-        return () => {
-            off();
-        };
-    }, []);
 
     useEffect(() => {
         if (!isEditing) {

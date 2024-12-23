@@ -5,7 +5,7 @@ from .Card import Card
 
 
 class Checkitem(SoftDeleteModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     checkitem_id: SnowflakeID | None = SnowflakeIDField(foreign_key="checkitem.id", nullable=True)
     cardified_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
     title: str = Field(nullable=False)

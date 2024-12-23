@@ -5,7 +5,7 @@ from .Project import Project
 
 
 class ProjectWiki(SoftDeleteModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     title: str = Field(nullable=False)
     content: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
     order: int = Field(default=0, nullable=False)

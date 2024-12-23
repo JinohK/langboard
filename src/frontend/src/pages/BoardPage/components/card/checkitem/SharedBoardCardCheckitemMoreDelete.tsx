@@ -1,5 +1,4 @@
-import { Box, Button, DropdownMenu, Flex, Popover, Toast } from "@/components/base";
-import SubmitButton from "@/components/SubmitButton";
+import { Box, Button, DropdownMenu, Flex, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteCheckitem from "@/controllers/api/card/checkitem/useDeleteCheckitem";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";

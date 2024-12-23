@@ -1,13 +1,12 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Button, Flex, Floating, Form } from "@/components/base";
+import { Box, Button, Flex, Floating, Form, SubmitButton } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
-import SubmitButton from "@/components/SubmitButton";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useEffect } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";

@@ -6,8 +6,8 @@ from .Project import Project
 
 
 class ProjectAssignedUser(BaseSqlModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False)
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
     starred: bool = Field(default=False, nullable=False)
     last_viewed_at: datetime = DateTimeField(default=now, nullable=False)
 
