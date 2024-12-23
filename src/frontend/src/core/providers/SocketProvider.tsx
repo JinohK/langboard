@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { refresh } from "@/core/helpers/Api";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
@@ -61,8 +61,13 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
     end: ISocketEvent<TEndResponse>;
 }
 
+type TSocketTopicNotifier = (isSubscribed: bool) => void;
+
+interface ISocketTopicNotifierMap {
+    [key: string]: TSocketTopicNotifier;
+}
+
 export interface ISocketContext {
-    subscribedTopics: ESocketTopic[];
     isConnected: () => bool;
     reconnect: () => void;
     on: <TResponse>(props: TSocketAddEventProps<TResponse>) => void;
@@ -74,6 +79,8 @@ export interface ISocketContext {
     streamOff: (props: Omit<TSocketRemoveEventProps, "callback"> & { callbacks: IStreamCallbackMap<any, any, any> }) => void;
     subscribe: ISocketStore["subscribe"];
     unsubscribe: ISocketStore["unsubscribe"];
+    subscribeTopicNotifier: (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => void;
+    unsubscribeTopicNotifier: (topic: ESocketTopic, key: string) => void;
     close: ISocketStore["close"];
 }
 
@@ -92,6 +99,8 @@ const initialContext = {
     streamOff: () => {},
     subscribe: () => {},
     unsubscribe: () => {},
+    subscribeTopicNotifier: () => {},
+    unsubscribeTopicNotifier: () => {},
     close: () => {},
 };
 
@@ -111,7 +120,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         unsubscribe: baseUnsubscribe,
     } = useSocketStore();
     const cookieStore = getCookieStore();
-    const [subscribedTopics, setSubscribedTopics] = useState<ESocketTopic[]>([]);
+    const subscribedTopicNotifiersRef = useRef<Partial<Record<ESocketTopic, ISocketTopicNotifierMap>>>({});
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -197,16 +206,40 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
 
     const subscribe: ISocketStore["subscribe"] = (topic, topicId, callback) => {
         baseSubscribe(topic, topicId, () => {
-            setSubscribedTopics((prev) => prev.filter((t) => t !== topic).concat(topic));
+            if (subscribedTopicNotifiersRef.current[topic]) {
+                Object.values(subscribedTopicNotifiersRef.current[topic]).forEach((notifier) => notifier(true));
+            }
             callback?.();
         });
     };
 
     const unsubscribe: ISocketStore["unsubscribe"] = (topic, topicId, callback) => {
         baseUnsubscribe(topic, topicId, () => {
-            setSubscribedTopics((prev) => prev.filter((t) => t !== topic));
+            if (subscribedTopicNotifiersRef.current[topic]) {
+                Object.values(subscribedTopicNotifiersRef.current[topic]).forEach((notifier) => notifier(false));
+            }
             callback?.();
         });
+    };
+
+    const subscribeTopicNotifier = (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => {
+        if (!subscribedTopicNotifiersRef.current[topic]) {
+            subscribedTopicNotifiersRef.current[topic] = {};
+        }
+
+        if (subscribedTopicNotifiersRef.current[topic][key]) {
+            return;
+        }
+
+        subscribedTopicNotifiersRef.current[topic][key] = notifier;
+    };
+
+    const unsubscribeTopicNotifier = (topic: ESocketTopic, key: string) => {
+        if (!subscribedTopicNotifiersRef.current[topic]) {
+            return;
+        }
+
+        delete subscribedTopicNotifiersRef.current[topic][key];
     };
 
     const runEvents = async (props: TRunEventsProps) => {
@@ -298,7 +331,6 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
     return (
         <SocketContext.Provider
             value={{
-                subscribedTopics,
                 isConnected,
                 reconnect,
                 on,
@@ -308,6 +340,8 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                 streamOff,
                 subscribe,
                 unsubscribe,
+                subscribeTopicNotifier,
+                unsubscribeTopicNotifier,
                 close,
             }}
         >

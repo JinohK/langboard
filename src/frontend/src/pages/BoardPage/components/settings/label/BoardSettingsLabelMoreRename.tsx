@@ -1,5 +1,7 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, SubmitButton, Toast } from "@/components/base";
 import useChangeProjectLabelDetails from "@/controllers/api/board/settings/useChangeProjectLabelDetails";
+import useProjectLabelNameChangedHandlers from "@/controllers/socket/project/label/useProjectLabelNameChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardSettingsLabel } from "@/core/providers/BoardSettingsLabelProvider";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/settings/label/types";
@@ -10,11 +12,22 @@ export interface IBoardSettingsLabelMoreRenameProps extends IBoardSettingsLabelR
 
 function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreRenameProps): JSX.Element {
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
-    const { project } = useBoardSettings();
+    const { project, socket } = useBoardSettings();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("name");
+    const [labelName, setLabelName] = useState(label.name);
     const nameInputId = `project-label-name-input-${label.uid}`;
+    const handlers = useProjectLabelNameChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        labelUID: label.uid,
+        callback: (data) => {
+            label.name = data.name;
+            setLabelName(data.name);
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers });
 
     const changeLabelName = () => {
         if (isValidating) {
@@ -71,7 +84,7 @@ function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened }: IBoardSettingsLab
                 <Floating.LabelInput
                     label={t("project.settings.Label name")}
                     id={nameInputId}
-                    defaultValue={label.name}
+                    defaultValue={labelName}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             changeLabelName();

@@ -1,5 +1,7 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, SubmitButton, Toast } from "@/components/base";
 import useChangeProjectLabelDetails from "@/controllers/api/board/settings/useChangeProjectLabelDetails";
+import useProjectLabelDescriptionChangedHandlers from "@/controllers/socket/project/label/useProjectLabelDescriptionChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardSettingsLabel } from "@/core/providers/BoardSettingsLabelProvider";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/settings/label/types";
@@ -9,12 +11,23 @@ import { useTranslation } from "react-i18next";
 export interface IBoardSettingsLabelMoreChangeDescriptionProps extends IBoardSettingsLabelRelatedProps {}
 
 function BoardSettingsLabelMoreChangeDescription({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreChangeDescriptionProps): JSX.Element {
-    const { project } = useBoardSettings();
+    const { project, socket } = useBoardSettings();
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const descriptionInputId = `project-label-description-input-${label.uid}`;
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("description");
+    const [labelDescription, setLabelDescription] = useState(label.description);
+    const handlers = useProjectLabelDescriptionChangedHandlers({
+        socket,
+        projectUID: project.uid,
+        labelUID: label.uid,
+        callback: (data) => {
+            label.description = data.description;
+            setLabelDescription(data.description);
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers });
 
     const changeLabelDescription = () => {
         if (isValidating) {
@@ -71,7 +84,7 @@ function BoardSettingsLabelMoreChangeDescription({ setIsMoreMenuOpened }: IBoard
                 <Floating.LabelInput
                     label={t("project.settings.Description")}
                     id={descriptionInputId}
-                    defaultValue={label.description}
+                    defaultValue={labelDescription}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             changeLabelDescription();
