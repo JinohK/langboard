@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardAttachmentDeletedRequest {}
-
 export interface ICardAttachmentDeletedResponse {
     uid: string;
 }
@@ -13,7 +11,7 @@ export interface IUseCardAttachmentDeletedHandlersProps extends IBaseUseSocketHa
 }
 
 const useCardAttachmentDeletedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentDeletedHandlersProps) => {
-    return useSocketHandler<ICardAttachmentDeletedRequest, ICardAttachmentDeletedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,

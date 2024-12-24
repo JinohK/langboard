@@ -82,3 +82,7 @@ class Service(ServiceFactory):
     @property
     def project_label(self):
         return self._create_or_get_service(factory.ProjectLabelService)
+
+    @property
+    def card_relationship(self):
+        return self._create_or_get_service(factory.CardRelationshipService)

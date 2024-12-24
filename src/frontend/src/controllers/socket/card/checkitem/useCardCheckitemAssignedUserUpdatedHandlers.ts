@@ -3,10 +3,8 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { User } from "@/core/models";
 
-export interface ICardCheckitemAssignedUsersUpdateRequest {}
-
 export interface ICardCheckitemAssignedUsersUpdatedResponse {
-    assigned_users: User.Interface[];
+    assigned_members: User.Interface[];
 }
 
 export interface IUseCardCheckitemAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemAssignedUsersUpdatedResponse> {
@@ -20,7 +18,7 @@ const useCardCheckitemAssignedUsersUpdatedHandlers = ({
     projectUID,
     checkitemUID,
 }: IUseCardCheckitemAssignedUsersUpdatedHandlersProps) => {
-    return useSocketHandler<ICardCheckitemAssignedUsersUpdateRequest, ICardCheckitemAssignedUsersUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,
@@ -30,7 +28,7 @@ const useCardCheckitemAssignedUsersUpdatedHandlers = ({
             params: { uid: projectUID },
             callback,
             responseConverter: (response) => {
-                User.transformFromApi(response.assigned_users);
+                User.transformFromApi(response.assigned_members);
                 return response;
             },
         },

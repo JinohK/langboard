@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IProjectLabelDeletedRequest {}
-
 export interface IProjectLabelDeletedResponse {
     uid: string;
 }
@@ -13,7 +11,7 @@ export interface IUseProjectLabelDeletedHandlersProps extends IBaseUseSocketHand
 }
 
 const useProjectLabelDeletedHandlers = ({ socket, callback, projectUID }: IUseProjectLabelDeletedHandlersProps) => {
-    return useSocketHandler<IProjectLabelDeletedRequest, IProjectLabelDeletedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

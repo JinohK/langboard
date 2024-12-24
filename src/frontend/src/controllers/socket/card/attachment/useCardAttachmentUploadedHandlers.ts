@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, User } from "@/core/models";
 
-export interface ICardAttachmentUploadedRequest {}
-
 export interface ICardAttachmentUploadedResponse {
     attachment: ProjectCardAttachment.IBoard;
 }
@@ -14,7 +12,7 @@ export interface IUseCardAttachmentUploadedHandlersProps extends IBaseUseSocketH
 }
 
 const useCardAttachmentUploadedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentUploadedHandlersProps) => {
-    return useSocketHandler<ICardAttachmentUploadedRequest, ICardAttachmentUploadedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,

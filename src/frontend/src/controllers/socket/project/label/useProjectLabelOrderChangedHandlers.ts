@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IProjectLabelOrderChangedRequest {}
-
 export interface IProjectLabelOrderChangedResponse {
     uid: string;
     order: number;
@@ -14,7 +12,7 @@ export interface IUseProjectLabelOrderChangedHandlersProps extends IBaseUseSocke
 }
 
 const useProjectLabelOrderChangedHandlers = ({ socket, callback, projectUID }: IUseProjectLabelOrderChangedHandlersProps) => {
-    return useSocketHandler<IProjectLabelOrderChangedRequest, IProjectLabelOrderChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

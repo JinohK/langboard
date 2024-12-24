@@ -32,6 +32,7 @@ export interface IBoardCardProps {
 }
 
 const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoardCardProps): JSX.Element => {
+    const { setIsLoadingRef } = usePageLoader();
     const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
     const socket = useSocket();
@@ -61,6 +62,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
             return;
         }
 
+        setIsLoadingRef.current(false);
         socket.subscribe(ESocketTopic.BoardCard, cardUID);
 
         return () => {
@@ -148,11 +150,9 @@ export function SkeletonBoardCard(): JSX.Element {
 }
 
 function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
     const { card, setCurrentEditor } = useBoardCard();
 
     useEffect(() => {
-        setIsLoadingRef.current(false);
         return () => {
             setCurrentEditor("");
         };

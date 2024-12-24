@@ -24,19 +24,19 @@ const setInvitedText = (invitedMembers: User.Interface[], invitedText: string) =
     }
 };
 
-const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; socket: ISocketContext }) => {
+const BoardMemberList = memo(({ project, socket, isSelectCardView }: { project: Project.IBoard; socket: ISocketContext; isSelectCardView: bool }) => {
     const [t, i18n] = useTranslation();
     const [members, setMembers] = useState<User.Interface[]>(project.members);
-    const [invitedMembers, setInvitedMembers] = useState<User.Interface[]>(project.invited_users);
+    const [invitedMembers, setInvitedMembers] = useState<User.Interface[]>(project.invited_members);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
     const updatedCallback = useCallback(
         (response: IProjectAssignedUsersUpdatedResponse) => {
-            setInvitedText(response.invited_users, t("project.invited"));
-            project.members = response.assigned_users;
-            project.invited_users = response.invited_users;
-            setMembers(() => response.assigned_users);
-            setInvitedMembers(() => response.invited_users);
+            setInvitedText(response.invited_members, t("project.invited"));
+            project.members = response.assigned_members;
+            project.invited_members = response.invited_members;
+            setMembers(() => response.assigned_members);
+            setInvitedMembers(() => response.invited_members);
         },
         [members, invitedMembers]
     );
@@ -101,7 +101,7 @@ const BoardMemberList = memo(({ project, socket }: { project: Project.IBoard; so
         <AssignMemberPopover
             popoverButtonProps={{
                 size: "icon",
-                className: "size-8 xs:size-10",
+                className: cn("size-8 xs:size-10", isSelectCardView ? "hidden" : ""),
                 title: t("project.Assign members"),
             }}
             popoverContentProps={{

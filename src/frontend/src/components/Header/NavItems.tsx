@@ -28,6 +28,7 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
                             <Accordion.Trigger
                                 className={cn("py-2", item.active ? activatedClass : deactivatedClass, shardClass)}
                                 disabled={subProps.navs.length === 0}
+                                hidden={item.hidden}
                             >
                                 {t(item.name)}
                             </Accordion.Trigger>
@@ -42,7 +43,11 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
                 itemComponent = (
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
-                            <NavigationMenu.Trigger data-active={item.active ? true : null} disabled={subProps.navs.length === 0}>
+                            <NavigationMenu.Trigger
+                                data-active={item.active ? true : null}
+                                disabled={subProps.navs.length === 0}
+                                hidden={item.hidden}
+                            >
                                 {t(item.name)}
                             </NavigationMenu.Trigger>
                         </DropdownMenu.Trigger>
@@ -92,7 +97,13 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
             }
         }
 
-        return isMobile ? itemComponent : <NavigationMenu.Item key={key}>{itemComponent}</NavigationMenu.Item>;
+        return isMobile ? (
+            itemComponent
+        ) : (
+            <NavigationMenu.Item key={key} hidden={item.hidden}>
+                {itemComponent}
+            </NavigationMenu.Item>
+        );
     });
 }
 

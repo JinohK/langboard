@@ -15,6 +15,7 @@ export interface IResizableSidebarProps {
     floatingIcon?: string;
     floatingTitle?: string;
     floatingFullScreen?: bool;
+    hidden?: bool;
 }
 
 function ResizableSidebar({
@@ -26,6 +27,7 @@ function ResizableSidebar({
     floatingIcon = "plus",
     floatingTitle = "common.Actions",
     floatingFullScreen = false,
+    hidden,
 }: IResizableSidebarProps) {
     const isResizing = useRef(false);
     const [t] = useTranslation();
@@ -113,12 +115,13 @@ function ResizableSidebar({
             >
                 <Box
                     position="relative"
-                    display={{ initial: "hidden", md: "block" }}
+                    display={{ initial: "hidden", md: hidden ? "hidden" : "block" }}
                     size="full"
                     className="group/sidebar border-r transition-all data-[resizing=true]:transition-none"
                     style={{ maxWidth: `${initialWidth}px` }}
                     data-collapsed={isCollapsed ? "true" : "false"}
                     id={sidebarId}
+                    hidden={hidden}
                 >
                     <aside
                         className={cn(
@@ -157,7 +160,7 @@ function ResizableSidebar({
                 </Box>
                 {main}
             </Box>
-            <Floating.Button.Root fullScreen={floatingFullScreen}>
+            <Floating.Button.Root fullScreen={floatingFullScreen} hidden={hidden}>
                 <Floating.Button.Content>
                     {floatingFullScreen && <Floating.Button.CloseButton />}
                     {isMobile && children}

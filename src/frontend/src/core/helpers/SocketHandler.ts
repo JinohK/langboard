@@ -56,7 +56,7 @@ export type TUseSocketHandlerProps<TResponse> =
     | ITopicUseSocketHandlerProps<TResponse>
     | IDefaultEventsUseSocketHandlerProps<TResponse>;
 
-const useSocketHandler = <TRequest, TResponse>(props: TUseSocketHandlerProps<TResponse>) => {
+const useSocketHandler = <TResponse, TRequest = unknown>(props: TUseSocketHandlerProps<TResponse>) => {
     const { socket, onProps, sendProps, eventKey } = props;
     const on = () => {
         const eventName = onProps.params ? format(onProps.name, onProps.params) : onProps.name;

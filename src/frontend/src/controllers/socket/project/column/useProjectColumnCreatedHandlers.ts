@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 
-export interface IProjectColumnCreatedRequest {}
-
 export interface IProjectColumnCreatedResponse {
     column: ProjectColumn.IDashboard;
 }
@@ -14,7 +12,7 @@ export interface IUseProjectColumnCreatedHandlersProps extends IBaseUseSocketHan
 }
 
 const useProjectColumnCreatedHandlers = ({ socket, callback, projectUID }: IUseProjectColumnCreatedHandlersProps) => {
-    return useSocketHandler<IProjectColumnCreatedRequest, IProjectColumnCreatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

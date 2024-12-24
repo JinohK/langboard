@@ -63,7 +63,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         socket,
         projectUID,
         wikiUID: wiki.uid,
-        username: currentUser.username,
+        userUID: currentUser.uid,
         callback: (data) => {
             updateWiki(data.wiki);
             if (data.wiki.forbidden) {
@@ -79,7 +79,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         socket,
         projectUID,
         wikiUID: wiki.uid,
-        username: currentUser.username,
+        userUID: currentUser.uid,
         callback: (data) => {
             updateWiki(data.wiki);
             if (data.wiki.forbidden) {

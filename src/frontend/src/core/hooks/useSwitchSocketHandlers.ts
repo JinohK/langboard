@@ -34,7 +34,7 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
                     if (isSubscribed) {
                         newTopics.push(topic);
                     }
-                    return newTopics;
+                    return [...newTopics];
                 });
             });
         }
@@ -64,6 +64,8 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
             }
         };
     }, [subscribedTopics, ...(dependencies ?? [])]);
+
+    return { subscribedTopics };
 };
 
 export default useSwitchSocketHandlers;

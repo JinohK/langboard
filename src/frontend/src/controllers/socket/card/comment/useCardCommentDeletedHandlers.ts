@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCommentDeletedRequest {}
-
 export interface ICardCommentDeletedResponse {
     comment_uid: string;
 }
@@ -14,7 +12,7 @@ export interface IUseCardCommentDeletedHandlersProps extends IBaseUseSocketHandl
 }
 
 const useCardCommentDeletedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCommentDeletedHandlersProps) => {
-    return useSocketHandler<ICardCommentDeletedRequest, ICardCommentDeletedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

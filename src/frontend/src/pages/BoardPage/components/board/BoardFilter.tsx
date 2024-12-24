@@ -63,7 +63,10 @@ function BoardFilter() {
             });
         },
     });
-    useSwitchSocketHandlers({ socket, handlers: [projectLabelCreatedHandler, projectLabelOrderChangedHandler, projectLabelDeletedHandler] });
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [projectLabelCreatedHandler, projectLabelOrderChangedHandler, projectLabelDeletedHandler],
+    });
 
     useEffect(() => {
         setIsLoadingRef.current(false);

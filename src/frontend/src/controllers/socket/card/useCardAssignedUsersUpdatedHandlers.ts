@@ -3,10 +3,8 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { User } from "@/core/models";
 
-export interface ICardAssignedUsersUpdateRequest {}
-
 export interface ICardAssignedUsersUpdatedResponse {
-    assigned_users: User.Interface[];
+    assigned_members: User.Interface[];
 }
 
 export interface IUseCardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<ICardAssignedUsersUpdatedResponse> {
@@ -15,7 +13,7 @@ export interface IUseCardAssignedUsersUpdatedHandlersProps extends IBaseUseSocke
 }
 
 const useCardAssignedUsersUpdatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardAssignedUsersUpdatedHandlersProps) => {
-    return useSocketHandler<ICardAssignedUsersUpdateRequest, ICardAssignedUsersUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,
@@ -25,7 +23,7 @@ const useCardAssignedUsersUpdatedHandlers = ({ socket, callback, projectUID, car
             params: { uid: cardUID },
             callback,
             responseConverter: (response) => {
-                User.transformFromApi(response.assigned_users);
+                User.transformFromApi(response.assigned_members);
                 return response;
             },
         },

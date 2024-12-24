@@ -4,6 +4,7 @@ export interface IHeaderNavItem {
     href?: string;
     onClick?: () => void;
     active?: bool;
+    hidden?: bool;
 }
 
 export interface IHeaderProps {

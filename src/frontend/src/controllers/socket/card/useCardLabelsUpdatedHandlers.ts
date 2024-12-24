@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 
-export interface ICardLabelsUpdateRequest {}
-
 export interface ICardLabelsUpdatedResponse {
     labels: ProjectLabel.Interface[];
 }
@@ -15,7 +13,7 @@ export interface IUseCardLabelsUpdatedHandlersProps extends IBaseUseSocketHandle
 }
 
 const useCardLabelsUpdatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardLabelsUpdatedHandlersProps) => {
-    return useSocketHandler<ICardLabelsUpdateRequest, ICardLabelsUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

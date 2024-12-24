@@ -57,6 +57,7 @@ export const API_ROUTES = {
             CHANGE_DETAILS: "/board/{uid}/card/{card_uid}/details",
             UPDATE_ASSIGNED_USERS: "/board/{uid}/card/{card_uid}/assigned-users",
             UPDATE_LABELS: "/board/{uid}/card/{card_uid}/labels",
+            UPDATE_RELATIONSHIPS: "/board/{uid}/card/{card_uid}/relationships",
             ATTACHMENT: {
                 UPLOAD: "/board/{uid}/card/{card_uid}/attachment",
                 CHANGE_NAME: "/board/{uid}/card/{card_uid}/attachment/{attachment_uid}/name",
@@ -144,6 +145,7 @@ export const SOCKET_SERVER_EVENTS = {
             DEADLINE_CHANGED: "board:card:deadline:changed:{uid}",
             DESCRIPTION_CHANGED: "board:card:description:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:card:assigned-users:updated:{uid}",
+            RELATIONSHIPS_UPDATED: "board:card:relationships:updated:{uid}",
             LABELS_UPDATED: "board:card:labels:updated:{uid}",
             EDITOR_USERS: "board:card:editor:users:{uid}",
             EDITOR_START_EDITING: "board:card:editor:start:{uid}",

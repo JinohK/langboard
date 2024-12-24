@@ -22,8 +22,8 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
         projectUID,
         cardUID: card.uid,
         callback: (data) => {
-            card.members = data.assigned_users;
-            setMembers(data.assigned_users);
+            card.members = data.assigned_members;
+            setMembers(data.assigned_members);
         },
     });
     useSwitchSocketHandlers({ socket, handlers });

@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IDashboardCardCreatedRequest {}
-
 export interface IDashboardCardCreatedResponse {
     column_uid: string;
 }
@@ -13,7 +11,7 @@ export interface IUseDashboardCardCreatedHandlersProps extends IBaseUseSocketHan
 }
 
 const useDashboardCardCreatedHandlers = ({ socket, callback, projectUID }: IUseDashboardCardCreatedHandlersProps) => {
-    return useSocketHandler<IDashboardCardCreatedRequest, IDashboardCardCreatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

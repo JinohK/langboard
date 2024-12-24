@@ -13,6 +13,7 @@ from .scopes import (
     ChangeOrderForm,
     CreateCardForm,
     UpdateCardLabelsForm,
+    UpdateCardRelationshipsForm,
     project_role_finder,
 )
 
@@ -149,6 +150,25 @@ async def update_card_labels(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card.update_labels(user, project_uid, card_uid, form.labels)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/relationships")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@AuthFilter.add
+async def update_card_relationships(
+    project_uid: str,
+    card_uid: str,
+    form: UpdateCardRelationshipsForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.card_relationship.update(user, project_uid, card_uid, form.is_parent, form.relationships)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

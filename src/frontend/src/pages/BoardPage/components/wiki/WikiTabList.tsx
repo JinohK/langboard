@@ -67,7 +67,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
     const boardPrivateWikiCreatedHandler = useBoardWikiCreatedHandlers({
         socket,
         projectUID,
-        username: currentUser.username,
+        userUID: currentUser.uid,
         callback: (data) => {
             setFlatWikis((prev) => {
                 const newWikis = [...prev];
@@ -90,7 +90,10 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
             }
         },
     });
-    useSwitchSocketHandlers({ socket, handlers: [boardWikiCreatedHandler, boardPrivateWikiCreatedHandler, boardWikiDeletedHandlersHandler] });
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [boardWikiCreatedHandler, boardPrivateWikiCreatedHandler, boardWikiDeletedHandlersHandler],
+    });
     const {
         activeColumn: activeWiki,
         sensors,

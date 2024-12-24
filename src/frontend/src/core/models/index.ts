@@ -1,6 +1,7 @@
 export * as Activity from "@/core/models/Activity";
 export * as BotModel from "@/core/models/BotModel";
 export * as ChatMessageModel from "@/core/models/ChatMessageModel";
+export * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 export * as Project from "@/core/models/Project";
 export * as ProjectCard from "@/core/models/ProjectCard";
 export * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";

@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IProjectColumnOrderChangedRequest {}
-
 export interface IProjectColumnOrderChangedResponse {
     uid: string;
     order: number;
@@ -14,7 +12,7 @@ export interface IUseProjectColumnOrderChangedHandlersProps extends IBaseUseSock
 }
 
 const useProjectColumnOrderChangedHandlers = ({ socket, callback, projectUID }: IUseProjectColumnOrderChangedHandlersProps) => {
-    return useSocketHandler<IProjectColumnOrderChangedRequest, IProjectColumnOrderChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

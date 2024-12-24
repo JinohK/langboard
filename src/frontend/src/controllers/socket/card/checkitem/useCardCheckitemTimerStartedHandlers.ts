@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitemTimer } from "@/core/models";
 
-export interface ICardCheckitemTimerStartedRequest {}
-
 export interface ICardCheckitemTimerStartedResponse {
     timer: ProjectCheckitemTimer.Interface;
     acc_time_seconds: number;
@@ -16,7 +14,7 @@ export interface IUseCardCheckitemTimerStartedHandlersProps extends IBaseUseSock
 }
 
 const useCardCheckitemTimerStartedHandlers = ({ socket, callback, projectUID, checkitemUID }: IUseCardCheckitemTimerStartedHandlersProps) => {
-    return useSocketHandler<ICardCheckitemTimerStartedRequest, ICardCheckitemTimerStartedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

@@ -125,13 +125,13 @@ class ProjectService(BaseService):
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
 
         invitation_service = self._get_service(ProjectInvitationService)
-        response["invited_users"] = []
+        response["invited_members"] = []
         invited_users = await invitation_service.get_invited_users(project)
         for invitation, invited_user in invited_users:
             if invited_user:
-                response["invited_users"].append(invited_user.api_response())
+                response["invited_members"].append(invited_user.api_response())
             else:
-                response["invited_users"].append(invitation_service.convert_none_user_api_response(invitation.email))
+                response["invited_members"].append(invitation_service.convert_none_user_api_response(invitation.email))
 
         return project, response
 
@@ -268,12 +268,13 @@ class ProjectService(BaseService):
         model_id = await SocketModelIdService.create_model_id(model)
 
         publish_models: list[SocketPublishModel] = []
+        topic_id = project.get_uid()
         for key in model:
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Project,
-                    topic_id=project.get_uid(),
-                    event=f"project:{key}:changed:{project.get_uid()}",
+                    topic_id=topic_id,
+                    event=f"project:{key}:changed:{topic_id}",
                     data_keys=key,
                 )
             )
@@ -365,17 +366,18 @@ class ProjectService(BaseService):
 
         model_id = await SocketModelIdService.create_model_id(
             {
-                "project_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
-                "project_invited_users": invited_users,
+                "assigned_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
+                "invited_members": invited_users,
             }
         )
 
+        topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
-                event=f"board:assigned-users:updated:{project.get_uid()}",
-                data_keys=["assigned_users", "invited_users"],
+                topic_id=topic_id,
+                event=f"board:assigned-users:updated:{topic_id}",
+                data_keys=["assigned_members", "invited_members"],
             )
         ]
 
@@ -387,9 +389,11 @@ class ProjectService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.get_uid(),
-                    event=f"board:card:checkitem:assigned-users:updated:{project.get_uid()}",
-                    custom_data={"assigned_users": await checkitem_service.get_assigned_users(checkitem, as_api=True)},
+                    topic_id=topic_id,
+                    event=f"board:card:checkitem:assigned-users:updated:{topic_id}",
+                    custom_data={
+                        "assigned_members": await checkitem_service.get_assigned_users(checkitem, as_api=True)
+                    },
                 )
             )
 
@@ -401,9 +405,9 @@ class ProjectService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.get_uid(),
-                    event=f"board:card:assigned-users:updated:{project.get_uid()}",
-                    custom_data={"assigned_users": await card_service.get_assigned_users(card, as_api=True)},
+                    topic_id=topic_id,
+                    event=f"board:card:assigned-users:updated:{topic_id}",
+                    custom_data={"assigned_members": await card_service.get_assigned_users(card, as_api=True)},
                 )
             )
 

@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IProjectColumnNameChangedRequest {}
-
 export interface IProjectColumnNameChangedResponse {
     uid: string;
     name: string;
@@ -14,7 +12,7 @@ export interface IUseProjectColumnNameChangedHandlersProps extends IBaseUseSocke
 }
 
 const useProjectColumnNameChangedHandlers = ({ socket, callback, projectUID }: IUseProjectColumnNameChangedHandlersProps) => {
-    return useSocketHandler<IProjectColumnNameChangedRequest, IProjectColumnNameChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

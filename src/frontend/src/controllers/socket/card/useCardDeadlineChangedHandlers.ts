@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardDeadlineChangedRequest {}
-
 export interface ICardDeadlineChangedResponse {
     deadline_at: Date;
 }
@@ -14,7 +12,7 @@ export interface IUseCardDeadlineChangedHandlersProps extends IBaseUseSocketHand
 }
 
 const useCardDeadlineChangedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardDeadlineChangedHandlersProps) => {
-    return useSocketHandler<ICardDeadlineChangedRequest, ICardDeadlineChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

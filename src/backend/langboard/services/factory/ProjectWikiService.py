@@ -159,14 +159,16 @@ class ProjectWikiService(BaseService):
 
         assigned_users = await self.get_assigned_users(wiki, as_api=False)
 
+        topic_id = project.get_uid()
+        wiki_uid = wiki.get_uid()
         publish_models: list[SocketPublishModel] = []
         for key in model:
             if wiki.is_public:
                 publish_models.append(
                     SocketPublishModel(
                         topic=SocketTopic.BoardWiki,
-                        topic_id=project.get_uid(),
-                        event=f"board:wiki:{key}:changed:{wiki.get_uid()}",
+                        topic_id=topic_id,
+                        event=f"board:wiki:{key}:changed:{wiki_uid}",
                         data_keys=key,
                     )
                 )
@@ -176,7 +178,7 @@ class ProjectWikiService(BaseService):
                         SocketPublishModel(
                             topic=SocketTopic.BoardWikiPrivate,
                             topic_id=assigned_user.get_uid(),
-                            event=f"board:wiki:{key}:changed:{wiki.get_uid()}",
+                            event=f"board:wiki:{key}:changed:{wiki_uid}",
                             data_keys=key,
                         )
                     )
@@ -216,13 +218,14 @@ class ProjectWikiService(BaseService):
             "assigned_members": [user.api_response()] if not wiki.is_public else [],
         }
         private_wiki = self.convert_to_private_api_response(wiki)
+        wiki_uid = wiki.get_uid()
         publish_models: list[SocketPublishModel] = []
         if wiki.is_public:
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.BoardWiki,
                     topic_id=project.get_uid(),
-                    event=f"board:wiki:public:changed:{wiki.get_uid()}",
+                    event=f"board:wiki:public:changed:{wiki_uid}",
                     custom_data={"wiki": public_wiki},
                 )
             )
@@ -235,7 +238,7 @@ class ProjectWikiService(BaseService):
                     SocketPublishModel(
                         topic=SocketTopic.BoardWikiPrivate,
                         topic_id=project_member.get_uid(),
-                        event=f"board:wiki:public:changed:{wiki.get_uid()}",
+                        event=f"board:wiki:public:changed:{wiki_uid}",
                         custom_data={"wiki": public_wiki if is_public_user else private_wiki},
                     )
                 )
@@ -295,6 +298,7 @@ class ProjectWikiService(BaseService):
             "assigned_members": [user.api_response()] if not wiki.is_public else [],
         }
         private_wiki = self.convert_to_private_api_response(wiki)
+        wiki_uid = wiki.get_uid()
         publish_models: list[SocketPublishModel] = []
         for prev_cur_user in prev_cur_users:
             is_public_user = prev_cur_user.is_admin or prev_cur_user.id in assigned_user_ids
@@ -302,7 +306,7 @@ class ProjectWikiService(BaseService):
                 SocketPublishModel(
                     topic=SocketTopic.BoardWikiPrivate,
                     topic_id=prev_cur_user.get_uid(),
-                    event=f"board:wiki:assigned-users:changed:{wiki.get_uid()}",
+                    event=f"board:wiki:assigned-users:changed:{wiki_uid}",
                     custom_data={"wiki": public_wiki if is_public_user else private_wiki},
                 )
             )

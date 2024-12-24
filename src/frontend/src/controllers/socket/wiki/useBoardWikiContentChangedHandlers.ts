@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { IEditorContent } from "@/core/models/Base";
 
-export interface IBoardWikiContentChangedRequest {}
-
 export interface IBoardWikiContentChangedResponse {
     content: IEditorContent;
 }
@@ -12,14 +10,14 @@ export interface IBoardWikiContentChangedResponse {
 export interface IUseBoardWikiContentChangedHandlersProps extends IBaseUseSocketHandlersProps<IBoardWikiContentChangedResponse> {
     projectUID: string;
     wikiUID: string;
-    username?: string;
+    userUID?: string;
 }
 
-const useBoardWikiContentChangedHandlers = ({ socket, callback, projectUID, wikiUID, username }: IUseBoardWikiContentChangedHandlersProps) => {
-    const topic = username ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
-    const topicId = username ?? projectUID;
+const useBoardWikiContentChangedHandlers = ({ socket, callback, projectUID, wikiUID, userUID }: IUseBoardWikiContentChangedHandlersProps) => {
+    const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
+    const topicId = userUID ?? projectUID;
 
-    return useSocketHandler<IBoardWikiContentChangedRequest, IBoardWikiContentChangedResponse>({
+    return useSocketHandler({
         socket,
         topic,
         topicId,

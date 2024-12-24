@@ -20,6 +20,7 @@ from ...models import (
     ProjectLabel,
 )
 from .CardAttachmentService import CardAttachmentService
+from .CardRelationshipService import CardRelationshipService
 from .CheckitemService import CheckitemService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
@@ -77,40 +78,11 @@ class CardService(BaseService):
 
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(CardRelationship, GlobalCardRelationshipType, Card)
-            .join(
-                GlobalCardRelationshipType,
-                CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
-            )
-            .join(
-                Card,
-                (CardRelationship.column("card_id_parent") == Card.column("id"))
-                | (CardRelationship.column("card_id_child") == Card.column("id")),
-            )
-            .where(
-                (
-                    (CardRelationship.column("card_id_parent") == card.id)
-                    | (CardRelationship.column("card_id_child") == card.id)
-                )
-                & (Card.column("id") != card.id)
-            )
-        )
-        raw_relationships = result.all()
-        api_card["relationships"] = []
-        for relationship, relationship_type, related_card in raw_relationships:
-            api_card["relationships"].append(
-                {
-                    "parent_icon": relationship_type.parent_icon,
-                    "parent_name": relationship_type.parent_name,
-                    "child_icon": relationship_type.child_icon,
-                    "child_name": relationship_type.child_name,
-                    "description": relationship_type.description or "",
-                    "is_parent": relationship.card_id_parent == card.id,
-                    "related_card": related_card.api_response(),
-                }
-            )
+        global_relationships = await self._get_all(GlobalCardRelationshipType)
+        api_card["global_relationships"] = [relationship.api_response() for relationship in global_relationships]
+
+        card_relationship_service = self._get_service(CardRelationshipService)
+        api_card["relationships"] = await card_relationship_service.get_all_by_card(project, card, as_api=True)
         return api_card
 
     async def get_board_list(self, project: TProjectParam) -> list[dict[str, Any]]:
@@ -298,11 +270,12 @@ class CardService(BaseService):
         model_id = await SocketModelIdService.create_model_id(model)
 
         publish_models: list[SocketPublishModel] = []
+        topic_id = project.get_uid()
         for key in model:
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.get_uid(),
+                    topic_id=topic_id,
                     event=f"{_SOCKET_PREFIX}:{key}:changed:{card.get_uid()}",
                     data_keys=key,
                 )
@@ -311,7 +284,7 @@ class CardService(BaseService):
                 publish_models.append(
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.get_uid(),
+                        topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
                         data_keys="title",
                     )
@@ -397,32 +370,33 @@ class CardService(BaseService):
         model_id = await SocketModelIdService.create_model_id(model)
 
         publish_models: list[SocketPublishModel] = []
+        topic_id = project.get_uid()
         if new_column:
             publish_models.extend(
                 [
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.get_uid(),
+                        topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:order:changed:{new_column.get_uid()}",
                         data_keys=["uid", "order"],
                         custom_data={"move_type": "to_column"},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.get_uid(),
+                        topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
                         data_keys=["uid", "order"],
                         custom_data={"move_type": "from_column"},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
-                        topic_id=project.get_uid(),
+                        topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:order:changed:{card.get_uid()}",
                         data_keys=["to_column_uid", "column_name"],
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Project,
-                        topic_id=project.get_uid(),
+                        topic_id=topic_id,
                         event="dashboard:card:order:changed",
                         custom_data={
                             "from_column_uid": original_column_id,
@@ -435,7 +409,7 @@ class CardService(BaseService):
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
-                    topic_id=project.get_uid(),
+                    topic_id=topic_id,
                     event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
                     data_keys=["uid", "order"],
                     custom_data={"move_type": "in_column"},
@@ -484,14 +458,14 @@ class CardService(BaseService):
         await self._db.commit()
 
         model_id = await SocketModelIdService.create_model_id(
-            {"assigned_users": [user.api_response() for user in users]}
+            {"assigned_members": [user.api_response() for user in users]}
         )
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.get_uid()}",
-            data_keys="assigned_users",
+            data_keys="assigned_members",
         )
 
         return SocketModelIdBaseResult(model_id, list(users), publish_model)

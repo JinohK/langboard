@@ -5,6 +5,7 @@ import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/co
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectColumn } from "@/core/models";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useRef, useState } from "react";
@@ -16,6 +17,7 @@ export interface IBoardColumnHeaderProps {
 }
 
 const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps) => {
+    const { selectCardViewType } = useBoardRelationshipController();
     const { project, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
@@ -39,7 +41,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
 
     const changeMode = (mode: "edit" | "view") => {
-        if (isDragging || !canEdit) {
+        if (isDragging || !canEdit || !!selectCardViewType) {
             return;
         }
 

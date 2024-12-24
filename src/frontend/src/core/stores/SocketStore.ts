@@ -73,6 +73,12 @@ interface IDefaultSocketRemoveEventProps extends IBaseSocketRemoveEventProps {
 
 export type TSocketRemoveEventProps = INonTopicSocketRemoveEventProps | ITopicSocketRemoveEventProps | IDefaultSocketRemoveEventProps;
 
+type TSocketTopicNotifier = (isSubscribed: bool) => void;
+
+interface ISocketTopicNotifierMap {
+    [key: string]: TSocketTopicNotifier;
+}
+
 export interface ISocketMap {
     subscriptions: Partial<Record<ESocketTopic, TSocketSubscriptionMap>>;
     defaultEvents: TEventMap;
@@ -80,6 +86,8 @@ export interface ISocketMap {
     sendingQueueTimeout?: NodeJS.Timeout;
     subscribedCallbackQueue: Partial<Record<ESocketTopic, Record<string, (() => void)[]>>>;
     unsubscribedCallbackQueue: Partial<Record<ESocketTopic, Record<string, (() => void)[]>>>;
+    subscribedTopicNotifiers: Partial<Record<ESocketTopic, ISocketTopicNotifierMap>>;
+    subscribedTopics: ESocketTopic[];
 }
 
 export interface ISocketStore {
@@ -92,6 +100,8 @@ export interface ISocketStore {
     close: () => void;
     subscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => void;
     unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None>, topicId: string, callback?: () => void) => void;
+    subscribeTopicNotifier: (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => void;
+    unsubscribeTopicNotifier: (topic: ESocketTopic, key: string) => void;
 }
 
 const useSocketStore = create<ISocketStore>(() => {
@@ -101,6 +111,8 @@ const useSocketStore = create<ISocketStore>(() => {
         sendingQueue: [],
         subscribedCallbackQueue: {},
         unsubscribedCallbackQueue: {},
+        subscribedTopicNotifiers: {},
+        subscribedTopics: [],
     };
     let socket: WebSocket | null = null;
 
@@ -161,51 +173,21 @@ const useSocketStore = create<ISocketStore>(() => {
             }
 
             const response = JSON.parse(event.data);
+            if (response.event !== "subscribed" && response.event !== "unsubscribed") {
+                await onMessage(response);
+                return;
+            }
+
+            const topic = response.topic as ESocketTopic;
+            if (!topic || !response.topic_id) {
+                return;
+            }
+
             if (response.event === "subscribed") {
-                if (!response.topic || !response.topic_id) {
-                    return;
-                }
-
-                const topic = response.topic as ESocketTopic;
-                if (!socketMap.subscriptions[topic]) {
-                    socketMap.subscriptions[topic] = {};
-                }
-
-                if (!socketMap.subscriptions[topic][response.topic_id]) {
-                    socketMap.subscriptions[topic][response.topic_id] = {};
-                }
-
-                if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][response.topic_id]) {
-                    socketMap.subscribedCallbackQueue[topic][response.topic_id].forEach((cb) => cb());
-                    delete socketMap.subscribedCallbackQueue[topic][response.topic_id];
-                }
-                return;
+                subscribedCallback(topic, response.topic_id);
+            } else {
+                unsubscribedCallback(topic, response.topic_id);
             }
-
-            if (response.event === "unsubscribed") {
-                if (!response.topic || !response.topic_id) {
-                    return;
-                }
-
-                const topic = response.topic as ESocketTopic;
-                if (!socketMap.subscriptions[topic]) {
-                    return;
-                }
-
-                delete socketMap.subscriptions[topic][response.topic_id];
-
-                if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][response.topic_id]) {
-                    delete socketMap.subscribedCallbackQueue[topic][response.topic_id];
-                }
-
-                if (socketMap.unsubscribedCallbackQueue[topic] && socketMap.unsubscribedCallbackQueue[topic][response.topic_id]) {
-                    socketMap.unsubscribedCallbackQueue[topic][response.topic_id].forEach((cb) => cb());
-                    delete socketMap.unsubscribedCallbackQueue[topic][response.topic_id];
-                }
-                return;
-            }
-
-            await onMessage(response);
         };
 
         socket.onerror = async (event) => {
@@ -218,6 +200,53 @@ const useSocketStore = create<ISocketStore>(() => {
 
         return socket;
     }) as ISocketStore["createSocket"];
+
+    const subscribedCallback = (topic: ESocketTopic, topicId: string) => {
+        if (!socketMap.subscribedTopics.includes(topic)) {
+            socketMap.subscribedTopics.push(topic);
+        }
+
+        if (!socketMap.subscriptions[topic]) {
+            socketMap.subscriptions[topic] = {};
+        }
+
+        if (!socketMap.subscriptions[topic][topicId]) {
+            socketMap.subscriptions[topic][topicId] = {};
+        }
+
+        if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][topicId]) {
+            socketMap.subscribedCallbackQueue[topic][topicId].forEach((cb) => cb());
+            delete socketMap.subscribedCallbackQueue[topic][topicId];
+        }
+
+        if (socketMap.subscribedTopicNotifiers[topic] && socketMap.subscribedTopicNotifiers[topic][topicId]) {
+            Object.values(socketMap.subscribedTopicNotifiers[topic]).forEach((notifier) => notifier(true));
+        }
+    };
+
+    const unsubscribedCallback = (topic: ESocketTopic, topicId: string) => {
+        const subscribedTopicIndex = socketMap.subscribedTopics.indexOf(topic);
+        if (subscribedTopicIndex !== -1) {
+            socketMap.subscribedTopics.splice(subscribedTopicIndex, 1);
+        }
+
+        if (socketMap.subscriptions[topic]) {
+            delete socketMap.subscriptions[topic][topicId];
+        }
+
+        if (socketMap.subscribedCallbackQueue[topic] && socketMap.subscribedCallbackQueue[topic][topicId]) {
+            delete socketMap.subscribedCallbackQueue[topic][topicId];
+        }
+
+        if (socketMap.unsubscribedCallbackQueue[topic] && socketMap.unsubscribedCallbackQueue[topic][topicId]) {
+            socketMap.unsubscribedCallbackQueue[topic][topicId].forEach((cb) => cb());
+            delete socketMap.unsubscribedCallbackQueue[topic][topicId];
+        }
+
+        if (socketMap.subscribedTopicNotifiers[topic] && socketMap.subscribedTopicNotifiers[topic][topicId]) {
+            Object.values(socketMap.subscribedTopicNotifiers[topic]).forEach((notifier) => notifier(true));
+        }
+    };
 
     const getStore = () => {
         return socketMap;
@@ -404,7 +433,42 @@ const useSocketStore = create<ISocketStore>(() => {
         );
     };
 
-    return { getSocket, createSocket, getStore, addEvent, removeEvent, send, close, subscribe, unsubscribe };
+    const subscribeTopicNotifier = (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => {
+        if (!socketMap.subscribedTopicNotifiers[topic]) {
+            socketMap.subscribedTopicNotifiers[topic] = {};
+        }
+
+        if (socketMap.subscribedTopicNotifiers[topic][key]) {
+            return;
+        }
+
+        socketMap.subscribedTopicNotifiers[topic][key] = notifier;
+        if (socketMap.subscribedTopics.includes(topic)) {
+            notifier(true);
+        }
+    };
+
+    const unsubscribeTopicNotifier = (topic: ESocketTopic, key: string) => {
+        if (!socketMap.subscribedTopicNotifiers[topic]) {
+            return;
+        }
+
+        delete socketMap.subscribedTopicNotifiers[topic][key];
+    };
+
+    return {
+        getSocket,
+        createSocket,
+        getStore,
+        addEvent,
+        removeEvent,
+        send,
+        close,
+        subscribe,
+        unsubscribe,
+        subscribeTopicNotifier,
+        unsubscribeTopicNotifier,
+    };
 });
 
 export default useSocketStore;

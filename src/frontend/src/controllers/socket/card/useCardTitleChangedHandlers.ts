@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardTitleChangedRequest {}
-
 export interface ICardTitleChangedResponse {
     title: string;
 }
@@ -14,7 +12,7 @@ export interface IUseCardTitleChangedHandlersProps extends IBaseUseSocketHandler
 }
 
 const useCardTitleChangedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardTitleChangedHandlersProps) => {
-    return useSocketHandler<ICardTitleChangedRequest, ICardTitleChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

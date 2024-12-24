@@ -56,6 +56,10 @@ class BaseService(ABC):
         )
         return result.first()
 
+    async def _get_all(self, model_class: type[_TBaseModel]) -> Sequence[_TBaseModel]:
+        result = await self._db.exec(self._db.query("select").table(model_class))
+        return result.all()
+
     async def _get_all_by(
         self, model_class: type[_TBaseModel], column: str, values: Any | list[Any]
     ) -> Sequence[_TBaseModel]:

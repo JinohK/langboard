@@ -1,33 +1,22 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, SubmitButton, Toast } from "@/components/base";
 import useChangeProjectLabelDetails from "@/controllers/api/board/settings/useChangeProjectLabelDetails";
-import useProjectLabelNameChangedHandlers from "@/controllers/socket/project/label/useProjectLabelNameChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardSettingsLabel } from "@/core/providers/BoardSettingsLabelProvider";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/settings/label/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsLabelMoreRenameProps extends IBoardSettingsLabelRelatedProps {}
+export interface IBoardSettingsLabelMoreRenameProps extends IBoardSettingsLabelRelatedProps {
+    labelName: string;
+}
 
-function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreRenameProps): JSX.Element {
+function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened, labelName }: IBoardSettingsLabelMoreRenameProps): JSX.Element {
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
-    const { project, socket } = useBoardSettings();
+    const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("name");
-    const [labelName, setLabelName] = useState(label.name);
     const nameInputId = `project-label-name-input-${label.uid}`;
-    const handlers = useProjectLabelNameChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.name = data.name;
-            setLabelName(data.name);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
     const changeLabelName = () => {
         if (isValidating) {

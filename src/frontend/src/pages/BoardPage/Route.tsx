@@ -4,6 +4,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
+import { BoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 
 const BoardProxy = lazy(() => import("./index"));
 const BoardInvitationPage = lazy(() => import("./BoardInvitationPage"));
@@ -24,8 +25,10 @@ function BoardRoute() {
                 path={ROUTES.BOARD.MAIN(":projectUID")}
                 element={
                     <AuthGuard>
-                        <BoardProxy />
-                        <Outlet />
+                        <BoardRelationshipController>
+                            <BoardProxy />
+                            <Outlet />
+                        </BoardRelationshipController>
                     </AuthGuard>
                 }
             >

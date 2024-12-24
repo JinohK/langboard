@@ -204,15 +204,15 @@ class ProjectInvitationService(BaseService):
         updated_invited_users = await self.get_invited_users(invitation.project_id)
 
         model = {
-            "assigned_users": [user.api_response() for user in updated_users],
-            "invited_users": [],
+            "assigned_members": [user.api_response() for user in updated_users],
+            "invited_members": [],
         }
 
         for invitation, invited_user in updated_invited_users:
             if invited_user:
-                model["invited_users"].append(invited_user.api_response())
+                model["invited_members"].append(invited_user.api_response())
             else:
-                model["invited_users"].append(self.convert_none_user_api_response(invitation.email))
+                model["invited_members"].append(self.convert_none_user_api_response(invitation.email))
 
         model_id = await SocketModelIdService.create_model_id(model)
 
@@ -220,7 +220,7 @@ class ProjectInvitationService(BaseService):
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:assigned-users:updated:{project.get_uid()}",
-            data_keys=["assigned_users", "invited_users"],
+            data_keys=["assigned_members", "invited_members"],
         )
 
         return SocketModelIdBaseResult(model_id, (project, updated_users, updated_invited_users), publish_model)

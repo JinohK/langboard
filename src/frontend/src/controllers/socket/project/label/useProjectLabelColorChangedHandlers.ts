@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IProjectLabelColorChangedRequest {}
-
 export interface IProjectLabelColorChangedResponse {
     color: string;
 }
@@ -14,7 +12,7 @@ export interface IUseProjectLabelColorChangedHandlersProps extends IBaseUseSocke
 }
 
 const useProjectLabelColorChangedHandlers = ({ socket, callback, projectUID, labelUID }: IUseProjectLabelColorChangedHandlersProps) => {
-    return useSocketHandler<IProjectLabelColorChangedRequest, IProjectLabelColorChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

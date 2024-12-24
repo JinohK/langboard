@@ -64,7 +64,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
         socket,
         projectUID,
         wikiUID: wiki.uid,
-        username: currentUser.username,
+        userUID: currentUser.uid,
         callback: (data) => {
             wiki.content = data.content;
             setValue(data.content);

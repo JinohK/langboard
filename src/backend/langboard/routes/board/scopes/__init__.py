@@ -1,5 +1,5 @@
 from .Attachment import ChangeAttachmentNameForm
-from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm
+from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm, UpdateCardRelationshipsForm
 from .Checkitem import CardifyCheckitemForm, CreateCardCheckitemForm
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
@@ -23,6 +23,7 @@ __all__ = [
     "ColumnForm",
     "CreateCardForm",
     "UpdateCardLabelsForm",
+    "UpdateCardRelationshipsForm",
     "ChangeCardDetailsForm",
     "InviteProjectMemberForm",
     "UpdateProjectDetailsForm",

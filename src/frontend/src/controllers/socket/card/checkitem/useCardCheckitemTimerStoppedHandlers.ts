@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface ICardCheckitemTimerStoppedRequest {}
-
 export interface ICardCheckitemTimerStoppedResponse {
     acc_time_seconds: number;
 }
@@ -14,7 +12,7 @@ export interface IUseCardCheckitemTimerStoppedHandlersProps extends IBaseUseSock
 }
 
 const useCardCheckitemTimerStoppedHandlers = ({ socket, callback, projectUID, checkitemUID }: IUseCardCheckitemTimerStoppedHandlersProps) => {
-    return useSocketHandler<ICardCheckitemTimerStoppedRequest, ICardCheckitemTimerStoppedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

@@ -1,3 +1,4 @@
+import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
@@ -22,6 +23,12 @@ export interface IBoard extends Interface {
     };
 }
 
+export interface IRelationship extends Omit<GlobalRelationshipType.Interface, "uid"> {
+    relationship_type_uid: string;
+    is_parent: bool;
+    related_card: Interface;
+}
+
 export interface IBoardWithDetails extends Interface {
     deadline_at?: Date;
     column_name: string;
@@ -30,15 +37,8 @@ export interface IBoardWithDetails extends Interface {
     project_members: User.Interface[];
     project_labels: ProjectLabel.Interface[];
     labels: ProjectLabel.Interface[];
-    relationships: {
-        parent_icon?: string;
-        parent_name: string;
-        child_icon?: string;
-        child_name: string;
-        description: string;
-        is_parent: bool;
-        related_card: Interface;
-    }[];
+    global_relationships: GlobalRelationshipType.Interface[];
+    relationships: IRelationship[];
     attachments: ProjectCardAttachment.IBoard[];
     checkitems: ProjectCheckitem.IBoard[];
     is_archived: bool;

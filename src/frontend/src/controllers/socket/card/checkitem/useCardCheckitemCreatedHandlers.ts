@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
 
-export interface ICardCheckitemCreatedRequest {}
-
 export interface ICardCheckitemCreatedResponse {
     checkitem: ProjectCheckitem.IBoard;
 }
@@ -15,7 +13,7 @@ export interface IUseCardCheckitemCreatedHandlersProps extends IBaseUseSocketHan
 }
 
 const useCardCheckitemCreatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCheckitemCreatedHandlersProps) => {
-    return useSocketHandler<ICardCheckitemCreatedRequest, ICardCheckitemCreatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

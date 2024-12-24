@@ -9,7 +9,7 @@ import useGetProjetDetails from "@/controllers/api/board/useGetProjectDetails";
 import BoardSettingsList, { SkeletonSettingsList } from "@/pages/BoardPage/components/settings/BoardSettingsList";
 import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
 
-const BoardSettings = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
+const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
     const { data: project, error } = useGetProjetDetails({ uid: projectUID });
 
@@ -45,4 +45,4 @@ const BoardSettings = memo(({ navigate, projectUID, currentUser }: IBoardRelated
     );
 });
 
-export default BoardSettings;
+export default BoardSettingsPage;

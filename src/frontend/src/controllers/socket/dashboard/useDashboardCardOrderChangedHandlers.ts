@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IDashboardCardOrderChangedRequest {}
-
 export interface IDashboardCardOrderChangedResponse {
     from_column_uid: string;
     to_column_uid: string;
@@ -14,7 +12,7 @@ export interface IUseDashboardCardOrderChangedHandlersProps extends IBaseUseSock
 }
 
 const useDashboardCardOrderChangedHandlers = ({ socket, callback, projectUID }: IUseDashboardCardOrderChangedHandlersProps) => {
-    return useSocketHandler<IDashboardCardOrderChangedRequest, IDashboardCardOrderChangedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Project,
         topicId: projectUID,

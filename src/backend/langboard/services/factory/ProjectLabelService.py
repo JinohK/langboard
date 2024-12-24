@@ -119,16 +119,14 @@ class ProjectLabelService(BaseService):
         model = label.api_response()
         model_id = await SocketModelIdService.create_model_id({"label": model})
 
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Project,
-                topic_id=project.get_uid(),
-                event=f"{_SOCKET_PREFIX}:created:{project.get_uid()}",
-                data_keys="label",
-            ),
-        ]
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Project,
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:created:{project.get_uid()}",
+            data_keys="label",
+        )
 
-        return SocketModelIdBaseResult(model_id, (label, model), publish_models)
+        return SocketModelIdBaseResult(model_id, (label, model), publish_model)
 
     async def update(
         self, user_or_bot: User | BotType, project: TProjectParam, label: TProjectLabelParam, form: dict
@@ -170,11 +168,12 @@ class ProjectLabelService(BaseService):
         model_id = await SocketModelIdService.create_model_id(model)
 
         publish_models: list[SocketPublishModel] = []
+        topic_id = project.get_uid()
         for key in model:
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Project,
-                    topic_id=project.get_uid(),
+                    topic_id=topic_id,
                     event=f"{_SOCKET_PREFIX}:{key}:changed:{label.get_uid()}",
                     data_keys=key,
                 )
@@ -234,16 +233,14 @@ class ProjectLabelService(BaseService):
 
         model_id = await SocketModelIdService.create_model_id({"uid": label.get_uid()})
 
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Project,
-                topic_id=project.get_uid(),
-                event=f"{_SOCKET_PREFIX}:deleted:{project.get_uid()}",
-                data_keys="uid",
-            ),
-        ]
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Project,
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:deleted:{project.get_uid()}",
+            data_keys="uid",
+        )
 
-        return SocketModelIdBaseResult(model_id, True, publish_models)
+        return SocketModelIdBaseResult(model_id, True, publish_model)
 
     async def __get_records_by_params(self, project: TProjectParam, label: TProjectLabelParam):
         project = cast(Project, await self._get_by_param(Project, project))

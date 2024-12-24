@@ -45,54 +45,61 @@ const CloseButton = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Clo
     )
 );
 
-const Content = React.forwardRef<
-    React.ElementRef<typeof DialogPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { viewportId?: string; withCloseButton?: bool }
->(({ className, children, viewportId, withCloseButton = true, onPointerDownOutside, ...props }, ref) => {
-    const onOverlayClick = (
-        event:
-            | React.PointerEvent<HTMLDivElement>
-            | CustomEvent<{
-                  originalEvent: PointerEvent;
-              }>
-    ) => {
-        const target = event.target as HTMLElement;
-        if (
-            target.hasAttribute("data-scroll-area-scrollbar") ||
-            target.closest("[data-scroll-area-scrollbar]") ||
-            target.closest("[data-sonner-toast]")
-        ) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-    };
+interface IContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+    viewportId?: string;
+    withCloseButton?: bool;
+    overlayClassName?: string;
+    disableOverlayClick?: bool;
+}
 
-    return (
-        <Portal>
-            <Overlay onPointerDown={onOverlayClick}>
-                <ScrollArea.Root className="size-full" viewportClassName="max-h-screen sm:py-2" viewportId={viewportId}>
-                    <Flex justify="center" items="center" size="full">
-                        <DialogPrimitive.Content
-                            ref={ref}
-                            className={cn(
-                                "relative w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 focus-visible:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-                                className
-                            )}
-                            onPointerDownOutside={(e) => {
-                                onOverlayClick(e);
-                                onPointerDownOutside?.(e);
-                            }}
-                            {...props}
-                        >
-                            {withCloseButton && <CloseButton className="absolute right-2 top-2 z-50" />}
-                            {children}
-                        </DialogPrimitive.Content>
-                    </Flex>
-                </ScrollArea.Root>
-            </Overlay>
-        </Portal>
-    );
-});
+const Content = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, IContentProps>(
+    ({ className, children, viewportId, withCloseButton = true, overlayClassName, disableOverlayClick, onPointerDownOutside, ...props }, ref) => {
+        const onOverlayClick = (
+            event:
+                | React.PointerEvent<HTMLDivElement>
+                | CustomEvent<{
+                      originalEvent: PointerEvent;
+                  }>
+        ) => {
+            const target = event.target as HTMLElement;
+            if (
+                disableOverlayClick ||
+                target.hasAttribute("data-scroll-area-scrollbar") ||
+                target.closest("[data-scroll-area-scrollbar]") ||
+                target.closest("[data-sonner-toast]")
+            ) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+
+        return (
+            <Portal>
+                <Overlay onPointerDown={onOverlayClick} className={overlayClassName}>
+                    <ScrollArea.Root className="size-full" viewportClassName="max-h-screen sm:py-2" viewportId={viewportId}>
+                        <Flex justify="center" items="center" size="full">
+                            <DialogPrimitive.Content
+                                ref={ref}
+                                className={cn(
+                                    "relative w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 focus-visible:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+                                    className
+                                )}
+                                onPointerDownOutside={(e) => {
+                                    onOverlayClick(e);
+                                    onPointerDownOutside?.(e);
+                                }}
+                                {...props}
+                            >
+                                {withCloseButton && <CloseButton className="absolute right-2 top-2 z-50" />}
+                                {children}
+                            </DialogPrimitive.Content>
+                        </Flex>
+                    </ScrollArea.Root>
+                </Overlay>
+            </Portal>
+        );
+    }
+);
 Content.displayName = DialogPrimitive.Content.displayName;
 
 const Header = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

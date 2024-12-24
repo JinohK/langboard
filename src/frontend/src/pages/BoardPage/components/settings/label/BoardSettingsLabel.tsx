@@ -122,7 +122,7 @@ const BoardSettingsLabel = memo(({ label, deletedLabel, isOverlay }: IBoardSetti
                         </Tooltip.Provider>
                     </Flex>
                 </Flex>
-                <BoardSettingsLabelMore deletedLabel={deletedLabel} />
+                <BoardSettingsLabelMore labelName={labelName} labelDescription={labelDescription} deletedLabel={deletedLabel} />
             </Flex>
         </BoardSettingsLabelProvider>
     );

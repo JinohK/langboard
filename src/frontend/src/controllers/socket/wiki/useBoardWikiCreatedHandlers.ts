@@ -3,22 +3,20 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectWiki, User } from "@/core/models";
 
-export interface IBoardWikiCreatedRequest {}
-
 export interface IBoardWikiCreatedResponse {
     wiki: ProjectWiki.Interface;
 }
 
 export interface IUseBoardWikiCreatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardWikiCreatedResponse> {
     projectUID: string;
-    username?: string;
+    userUID?: string;
 }
 
-const useBoardWikiCreatedHandlers = ({ socket, callback, projectUID, username }: IUseBoardWikiCreatedHandlersProps) => {
-    const topic = username ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
-    const topicId = username ?? projectUID;
+const useBoardWikiCreatedHandlers = ({ socket, callback, projectUID, userUID }: IUseBoardWikiCreatedHandlersProps) => {
+    const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
+    const topicId = userUID ?? projectUID;
 
-    return useSocketHandler<IBoardWikiCreatedRequest, IBoardWikiCreatedResponse>({
+    return useSocketHandler({
         socket,
         topic,
         topicId,

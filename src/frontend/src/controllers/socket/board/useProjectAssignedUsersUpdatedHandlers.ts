@@ -3,11 +3,9 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { User } from "@/core/models";
 
-export interface IProjectAssignedUsersUpdateRequest {}
-
 export interface IProjectAssignedUsersUpdatedResponse {
-    assigned_users: User.Interface[];
-    invited_users: User.Interface[];
+    assigned_members: User.Interface[];
+    invited_members: User.Interface[];
 }
 
 export interface IUseProjectAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<IProjectAssignedUsersUpdatedResponse> {
@@ -15,7 +13,7 @@ export interface IUseProjectAssignedUsersUpdatedHandlersProps extends IBaseUseSo
 }
 
 const useProjectAssignedUsersUpdatedHandlers = ({ socket, callback, projectUID }: IUseProjectAssignedUsersUpdatedHandlersProps) => {
-    return useSocketHandler<IProjectAssignedUsersUpdateRequest, IProjectAssignedUsersUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,
@@ -25,8 +23,8 @@ const useProjectAssignedUsersUpdatedHandlers = ({ socket, callback, projectUID }
             params: { uid: projectUID },
             callback,
             responseConverter: (response) => {
-                User.transformFromApi(response.assigned_users);
-                User.transformFromApi(response.invited_users);
+                User.transformFromApi(response.assigned_members);
+                User.transformFromApi(response.invited_members);
                 return response;
             },
         },

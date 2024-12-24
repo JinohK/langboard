@@ -16,7 +16,7 @@ const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptio
         const res = await api.get<{ project: Required<Project.IBoardWithDetails> }>(url);
 
         User.transformFromApi(res.data.project.members);
-        User.transformFromApi(res.data.project.invited_users);
+        User.transformFromApi(res.data.project.invited_members);
 
         return res.data.project;
     };

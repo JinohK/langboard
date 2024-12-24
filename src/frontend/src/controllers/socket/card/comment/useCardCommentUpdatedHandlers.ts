@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { IEditorContent } from "@/core/models/Base";
 
-export interface ICardCommentUpdatedRequest {}
-
 export interface ICardCommentUpdatedResponse {
     comment_uid: string;
     content: IEditorContent;
@@ -17,7 +15,7 @@ export interface IUseCardCommentUpdatedHandlersProps extends IBaseUseSocketHandl
 }
 
 const useCardCommentUpdatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCommentUpdatedHandlersProps) => {
-    return useSocketHandler<ICardCommentUpdatedRequest, ICardCommentUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

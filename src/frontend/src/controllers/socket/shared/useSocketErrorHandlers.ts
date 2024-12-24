@@ -5,7 +5,7 @@ export interface IUseSocketErrorHandlersProps extends IBaseUseSocketHandlersProp
 }
 
 const useSocketErrorHandlers = ({ socket, callback, eventKey }: IUseSocketErrorHandlersProps) => {
-    return useSocketHandler<{}, ErrorEvent>({
+    return useSocketHandler<ErrorEvent>({
         socket,
         eventKey,
         onProps: {

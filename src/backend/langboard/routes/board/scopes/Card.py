@@ -17,3 +17,9 @@ class ChangeCardDetailsForm(BaseFormModel):
 @form_model
 class UpdateCardLabelsForm(BaseFormModel):
     labels: list[str]
+
+
+@form_model
+class UpdateCardRelationshipsForm(BaseFormModel):
+    is_parent: bool
+    relationships: list[tuple[str, str]]

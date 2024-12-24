@@ -7,10 +7,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsLabelMoreProps {
+    labelName: string;
+    labelDescription: string;
     deletedLabel: (uid: string) => void;
 }
 
-function BoardSettingsLabelMore({ deletedLabel }: IBoardSettingsLabelMoreProps): JSX.Element {
+function BoardSettingsLabelMore({ labelName, labelDescription, deletedLabel }: IBoardSettingsLabelMoreProps): JSX.Element {
     const { isValidating } = useBoardSettingsLabel();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
@@ -33,8 +35,8 @@ function BoardSettingsLabelMore({ deletedLabel }: IBoardSettingsLabelMoreProps):
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 <DropdownMenu.Group>
-                    <BoardSettingsLabelMoreRename setIsMoreMenuOpened={setIsOpened} />
-                    <BoardSettingsLabelMoreChangeDescription setIsMoreMenuOpened={setIsOpened} />
+                    <BoardSettingsLabelMoreRename setIsMoreMenuOpened={setIsOpened} labelName={labelName} />
+                    <BoardSettingsLabelMoreChangeDescription setIsMoreMenuOpened={setIsOpened} labelDescription={labelDescription} />
                     <BoardSettingsLabelMoreDelete setIsMoreMenuOpened={setIsOpened} deletedLabel={deletedLabel} />
                 </DropdownMenu.Group>
             </DropdownMenu.Content>

@@ -2,8 +2,6 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 
-export interface IBoardWikiDeletedRequest {}
-
 export interface IBoardWikiDeletedResponse {
     uid: string;
 }
@@ -13,7 +11,7 @@ export interface IUseBoardWikiDeletedHandlersProps extends IBaseUseSocketHandler
 }
 
 const useBoardWikiDeletedHandlers = ({ socket, callback, projectUID }: IUseBoardWikiDeletedHandlersProps) => {
-    return useSocketHandler<IBoardWikiDeletedRequest, IBoardWikiDeletedResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.BoardWiki,
         topicId: projectUID,

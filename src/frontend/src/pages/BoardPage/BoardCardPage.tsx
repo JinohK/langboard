@@ -1,7 +1,9 @@
 import { Dialog } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { ROUTES } from "@/core/routing/constants";
+import { cn } from "@/core/utils/ComponentUtils";
 import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
 import { memo, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -9,8 +11,8 @@ import { Navigate, useNavigate } from "react-router-dom";
 const BoardCardPage = memo(() => {
     const navigate = useRef(useNavigate());
     const { aboutMe } = useAuth();
-    const projectUID = location.pathname.split("/")[2];
-    const cardUID = location.pathname.split("/")[3];
+    const [projectUID, cardUID] = location.pathname.split("/").slice(2);
+    const { selectCardViewType } = useBoardRelationshipController();
     const viewportId = "board-card-dialog";
 
     if (!projectUID || !cardUID) {
@@ -26,10 +28,12 @@ const BoardCardPage = memo(() => {
             {aboutMe() && (
                 <Dialog.Root open={!!cardUID} onOpenChange={close}>
                     <Dialog.Content
-                        className="max-w-[100vw] p-4 pb-0 sm:max-w-screen-sm lg:max-w-screen-md"
+                        className={cn("max-w-[100vw] p-4 pb-0 sm:max-w-screen-sm lg:max-w-screen-md", !!selectCardViewType && "hidden")}
                         aria-describedby=""
                         withCloseButton={false}
                         viewportId={viewportId}
+                        overlayClassName={selectCardViewType ? "hidden" : ""}
+                        disableOverlayClick={!!selectCardViewType}
                         data-card-dialog-content
                     >
                         {cardUID && <BoardCard projectUID={projectUID} cardUID={cardUID} currentUser={aboutMe()!} viewportId={viewportId} />}

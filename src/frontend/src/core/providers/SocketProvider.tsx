@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { refresh } from "@/core/helpers/Api";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
@@ -61,12 +61,6 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
     end: ISocketEvent<TEndResponse>;
 }
 
-type TSocketTopicNotifier = (isSubscribed: bool) => void;
-
-interface ISocketTopicNotifierMap {
-    [key: string]: TSocketTopicNotifier;
-}
-
 export interface ISocketContext {
     isConnected: () => bool;
     reconnect: () => void;
@@ -79,8 +73,8 @@ export interface ISocketContext {
     streamOff: (props: Omit<TSocketRemoveEventProps, "callback"> & { callbacks: IStreamCallbackMap<any, any, any> }) => void;
     subscribe: ISocketStore["subscribe"];
     unsubscribe: ISocketStore["unsubscribe"];
-    subscribeTopicNotifier: (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => void;
-    unsubscribeTopicNotifier: (topic: ESocketTopic, key: string) => void;
+    subscribeTopicNotifier: ISocketStore["subscribeTopicNotifier"];
+    unsubscribeTopicNotifier: ISocketStore["unsubscribeTopicNotifier"];
     close: ISocketStore["close"];
 }
 
@@ -118,9 +112,10 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         close,
         subscribe: baseSubscribe,
         unsubscribe: baseUnsubscribe,
+        subscribeTopicNotifier,
+        unsubscribeTopicNotifier,
     } = useSocketStore();
     const cookieStore = getCookieStore();
-    const subscribedTopicNotifiersRef = useRef<Partial<Record<ESocketTopic, ISocketTopicNotifierMap>>>({});
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -205,41 +200,11 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
     };
 
     const subscribe: ISocketStore["subscribe"] = (topic, topicId, callback) => {
-        baseSubscribe(topic, topicId, () => {
-            if (subscribedTopicNotifiersRef.current[topic]) {
-                Object.values(subscribedTopicNotifiersRef.current[topic]).forEach((notifier) => notifier(true));
-            }
-            callback?.();
-        });
+        baseSubscribe(topic, topicId, callback);
     };
 
     const unsubscribe: ISocketStore["unsubscribe"] = (topic, topicId, callback) => {
-        baseUnsubscribe(topic, topicId, () => {
-            if (subscribedTopicNotifiersRef.current[topic]) {
-                Object.values(subscribedTopicNotifiersRef.current[topic]).forEach((notifier) => notifier(false));
-            }
-            callback?.();
-        });
-    };
-
-    const subscribeTopicNotifier = (topic: ESocketTopic, key: string, notifier: TSocketTopicNotifier) => {
-        if (!subscribedTopicNotifiersRef.current[topic]) {
-            subscribedTopicNotifiersRef.current[topic] = {};
-        }
-
-        if (subscribedTopicNotifiersRef.current[topic][key]) {
-            return;
-        }
-
-        subscribedTopicNotifiersRef.current[topic][key] = notifier;
-    };
-
-    const unsubscribeTopicNotifier = (topic: ESocketTopic, key: string) => {
-        if (!subscribedTopicNotifiersRef.current[topic]) {
-            return;
-        }
-
-        delete subscribedTopicNotifiersRef.current[topic][key];
+        baseUnsubscribe(topic, topicId, callback);
     };
 
     const runEvents = async (props: TRunEventsProps) => {

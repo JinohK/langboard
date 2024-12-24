@@ -116,7 +116,7 @@ const BoardCardDescription = memo((): JSX.Element => {
 
     return (
         <Box
-            onPointerDown={(e) => {
+            onClick={(e) => {
                 const target = e.target as HTMLElement;
                 if (isEditing || !target.closest("[data-card-description]")) {
                     return;

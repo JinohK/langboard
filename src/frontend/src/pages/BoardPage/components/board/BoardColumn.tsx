@@ -8,6 +8,7 @@ import useReorderRow from "@/core/hooks/useReorderRow";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCarddProvider } from "@/core/providers/BoardAddCardProvider";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -53,6 +54,7 @@ interface IBoardColumnDragData {
 }
 
 const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
+    const { selectCardViewType } = useBoardRelationshipController();
     const { setIsLoadingRef } = usePageLoader();
     const {
         project,
@@ -201,7 +203,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
 
     let rootProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
     let headerProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (hasRoleAction(Project.ERoleAction.UPDATE)) {
+    if (hasRoleAction(Project.ERoleAction.UPDATE) || !selectCardViewType) {
         rootProps = {
             style,
             className: variants({
@@ -236,6 +238,9 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                 ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.1))]"
                                 : "max-h-[calc(100vh_-_theme(spacing.52)_-_theme(spacing.1))]"
                         )}
+                        onWheel={(e) => {
+                            e.stopPropagation();
+                        }}
                     >
                         <InfiniteScroll
                             getScrollParent={() => document.getElementById(columnId)}

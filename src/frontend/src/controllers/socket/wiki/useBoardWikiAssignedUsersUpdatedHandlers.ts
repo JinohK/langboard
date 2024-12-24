@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectWiki, User } from "@/core/models";
 
-export interface IBoardWikiAssignedUsersUpdatedRequest {}
-
 export interface IBoardWikiAssignedUsersUpdatedResponse {
     wiki: ProjectWiki.Interface;
 }
@@ -12,7 +10,7 @@ export interface IBoardWikiAssignedUsersUpdatedResponse {
 export interface IUseBoardWikiAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardWikiAssignedUsersUpdatedResponse> {
     projectUID: string;
     wikiUID: string;
-    username?: string;
+    userUID?: string;
 }
 
 const useBoardWikiAssignedUsersUpdatedHandlers = ({
@@ -20,12 +18,12 @@ const useBoardWikiAssignedUsersUpdatedHandlers = ({
     callback,
     projectUID,
     wikiUID,
-    username,
+    userUID,
 }: IUseBoardWikiAssignedUsersUpdatedHandlersProps) => {
-    const topic = username ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
-    const topicId = username ?? projectUID;
+    const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
+    const topicId = userUID ?? projectUID;
 
-    return useSocketHandler<IBoardWikiAssignedUsersUpdatedRequest, IBoardWikiAssignedUsersUpdatedResponse>({
+    return useSocketHandler({
         socket,
         topic,
         topicId,

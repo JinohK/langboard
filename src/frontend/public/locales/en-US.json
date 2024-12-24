@@ -406,6 +406,9 @@
     "Add card": "Add card",
     "Enter a name": "Enter a name",
     "Enter a title": "Enter a title",
+    "Select parent cards": "Select parent cards",
+    "Select child cards": "Select child cards",
+    "{count} selected": "{{count}} selected",
     "successes": {
       "Column added successfully.": "Column added successfully.",
       "Card added successfully.": "Card added successfully."
@@ -515,6 +518,9 @@
     "Show all checklist ({checkitems} hidden)": "Show all checklist ({{checkitems}} hidden)",
     "is commenting...": "is commenting...",
     "are commenting...": "are commenting...",
+    "Parent cards": "Parent cards",
+    "Child cards": "Child cards",
+    "Select cards": "Select cards",
     "successes": {
       "Title changed successfully.": "Title changed successfully.",
       "Labels updated successfully.": "Labels updated successfully.",
@@ -529,7 +535,8 @@
       "Timer stopped successfully.": "Timer stopped successfully.",
       "Checkitem deleted successfully.": "Checkitem deleted successfully.",
       "Comment updated successfully.": "Comment updated successfully.",
-      "Comment deleted successfully.": "Comment deleted successfully."
+      "Comment deleted successfully.": "Comment deleted successfully.",
+      "Relationships updated successfully.": "Relationships updated successfully."
     },
     "errors": {
       "Card not found.": "Card not found.",

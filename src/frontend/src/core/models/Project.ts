@@ -16,7 +16,7 @@ export interface IDashboard extends Interface {
 export interface IBoard extends Interface {
     members: User.Interface[];
     current_user_role_actions: TRoleActions[];
-    invited_users: User.Interface[];
+    invited_members: User.Interface[];
     labels: ProjectLabel.Interface[];
 }
 

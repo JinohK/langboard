@@ -36,7 +36,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
         socket,
         projectUID,
         wikiUID: wiki.uid,
-        username: currentUser.username,
+        userUID: currentUser.uid,
         callback: (data) => {
             wiki.title = data.title;
             setTitleMapRef.current[wiki.uid]?.(data.title);

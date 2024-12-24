@@ -18,9 +18,10 @@ import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
 import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
 import useCanUseProjectSettings from "@/controllers/api/board/useCanUseProjectSettings";
-import BoardSettings from "@/pages/BoardPage/BoardSettings";
+import BoardSettingsPage from "@/pages/BoardPage/BoardSettings";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 
 const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -43,6 +44,7 @@ const BoardProxy = memo((): JSX.Element => {
     const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
     const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
     const [canUseSettings, setCanUseSettings] = useState<bool | undefined>(undefined);
+    const { selectCardViewType } = useBoardRelationshipController();
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
@@ -135,6 +137,7 @@ const BoardProxy = memo((): JSX.Element => {
                 navigate.current(ROUTES.BOARD.MAIN(projectUID));
             },
             active: currentPage === "board",
+            hidden: !!selectCardViewType,
         },
         {
             name: "board.Wiki",
@@ -143,19 +146,21 @@ const BoardProxy = memo((): JSX.Element => {
                 navigate.current(ROUTES.BOARD.WIKI(projectUID));
             },
             active: currentPage === "wiki",
+            hidden: !!selectCardViewType,
         },
-        ...(canUseSettings
-            ? [
-                  {
-                      name: "board.Settings",
-                      onClick: () => {
-                          setCurrentPage("settings");
-                          navigate.current(ROUTES.BOARD.SETTINGS(projectUID));
-                      },
-                      active: currentPage === "settings",
-                  },
-              ]
-            : []),
+        {
+            name: "board.Settings",
+            onClick: () => {
+                if (!canUseSettings) {
+                    return;
+                }
+
+                setCurrentPage("settings");
+                navigate.current(ROUTES.BOARD.SETTINGS(projectUID));
+            },
+            active: currentPage === "settings",
+            hidden: !canUseSettings || !!selectCardViewType,
+        },
     ];
 
     let pageContent;
@@ -165,7 +170,7 @@ const BoardProxy = memo((): JSX.Element => {
             break;
         case "settings":
             if (canUseSettings) {
-                pageContent = <BoardSettings navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+                pageContent = <BoardSettingsPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
             } else if (TypeUtils.isUndefined(canUseSettings)) {
                 pageContent = <></>;
             } else {
@@ -179,7 +184,11 @@ const BoardProxy = memo((): JSX.Element => {
     }
 
     return (
-        <DashboardStyledLayout headerNavs={headerNavs} resizableSidebar={resizableSidebar} noPadding>
+        <DashboardStyledLayout
+            headerNavs={headerNavs}
+            resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType } : undefined}
+            noPadding
+        >
             {isReady ? pageContent : <></>}
         </DashboardStyledLayout>
     );

@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 
-export interface IIsBoardChatAvailableRequest {}
-
 interface IBaseIsBoardChatAvailableResponse {
     available: bool;
     bot?: BotModel.Interface;
@@ -27,7 +25,7 @@ export interface IUseIsBoardChatAvailableHandlersProps extends IBaseUseSocketHan
 }
 
 const useIsBoardChatAvailableHandlers = ({ socket, callback, projectUID }: IUseIsBoardChatAvailableHandlersProps) => {
-    return useSocketHandler<IIsBoardChatAvailableRequest, TIsBoardChatAvailableResponse>({
+    return useSocketHandler({
         socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,

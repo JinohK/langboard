@@ -1,4 +1,4 @@
-import { Box, Flex, ScrollArea, Toast } from "@/components/base";
+import { Box, Button, Flex, ScrollArea, Toast } from "@/components/base";
 import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
 import useGetCards from "@/controllers/api/board/useGetCards";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -26,6 +26,7 @@ import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -129,6 +130,7 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
 });
 
 const BoardResult = memo(() => {
+    const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
     const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const {
@@ -197,8 +199,33 @@ const BoardResult = memo(() => {
 
     return (
         <>
+            {selectCardViewType && (
+                <Flex justify="center" items="center" position="fixed" top="-2" left="0" h="20" w="full" z="50" gap="3" px="1">
+                    <Box position="absolute" top="0" left="0" size="full" className="bg-secondary/70 bg-cover blur-md backdrop-blur-sm" />
+                    <Flex wrap="wrap" position="relative" z="50" textSize={{ initial: "base", sm: "lg" }} weight="semibold" className="text-primary">
+                        <Box mr="2">{t(`board.Select ${selectCardViewType} cards`)}</Box>
+                        {selectedRelationshipUIDs.length > 0 && (
+                            <Box>({t("board.{count} selected", { count: selectedRelationshipUIDs.length })})</Box>
+                        )}
+                    </Flex>
+                    <Flex wrap="wrap" position="relative" justify="end" z="50" className="text-right">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="mb-1 mr-2 h-6 px-2 py-0 sm:mb-0 sm:h-8 sm:px-4"
+                            onClick={cancelCardSelection}
+                        >
+                            {t("common.Cancel")}
+                        </Button>
+                        <Button type="button" className="mr-2 h-6 px-2 py-0 sm:h-8 sm:px-4" onClick={saveCardSelection}>
+                            {t("common.Save")}
+                        </Button>
+                    </Flex>
+                </Flex>
+            )}
+
             <Flex justify="between" px="4" pt="4" wrap="wrap">
-                <BoardMemberList project={project} socket={socket} />
+                <BoardMemberList project={project} socket={socket} isSelectCardView={!!selectCardViewType} />
                 <Flex items="center" gap="1">
                     <BoardFilter />
                 </Flex>

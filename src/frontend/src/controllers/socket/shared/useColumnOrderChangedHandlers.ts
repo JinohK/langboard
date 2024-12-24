@@ -3,8 +3,6 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { StringCase } from "@/core/utils/StringUtils";
 
-export interface IColumnOrderChangedRequest {}
-
 export interface IColumnOrderChangedResponse {
     uid: string;
     order: number;
@@ -43,7 +41,7 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
             break;
     }
 
-    return useSocketHandler<IColumnOrderChangedRequest, IColumnOrderChangedResponse>({
+    return useSocketHandler({
         socket,
         topic,
         topicId: topicId,
