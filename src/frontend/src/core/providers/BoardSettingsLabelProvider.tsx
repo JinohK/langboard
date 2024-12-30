@@ -5,21 +5,21 @@ import { createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsLabelContext {
-    label: ProjectLabel.Interface;
+    label: ProjectLabel.TModel;
     isValidating: bool;
     setIsValidating: (isValidating: bool) => void;
     sharedErrorHandler: (error: unknown) => string;
 }
 
 interface IBoardSettingsLabelProps {
-    label: ProjectLabel.Interface;
+    label: ProjectLabel.TModel;
     isValidating: bool;
     setIsValidating: (isValidating: bool) => void;
     children: React.ReactNode;
 }
 
 const initialContext = {
-    label: {} as ProjectLabel.Interface,
+    label: {} as ProjectLabel.TModel,
     isValidating: false,
     setIsValidating: () => {},
     sharedErrorHandler: () => "",

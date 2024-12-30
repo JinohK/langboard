@@ -1,10 +1,9 @@
 import { forwardRef } from "react";
-import { IconComponent } from "@/components/base";
 import Button, { ButtonProps } from "@/components/base/Button";
-import { type TDimensionSize } from "@/core/utils/VariantUtils";
+import Loading, { ILoadingProps } from "@/components/base/Loading";
 
 interface IBaseSubmitButtonProps extends ButtonProps {
-    loadingIconSize?: TDimensionSize;
+    loadingProps?: Omit<ILoadingProps, "animate">;
     isValidating: bool;
     children: React.ReactNode;
 }
@@ -20,12 +19,10 @@ interface IClickButtonProps extends IBaseSubmitButtonProps {
 
 export type TSubmitButtonProps = ISubmitButtonProps | IClickButtonProps;
 
-const SubmitButton = forwardRef<HTMLButtonElement, TSubmitButtonProps>(
-    ({ type, onClick, isValidating, loadingIconSize = "5", children, ...props }, ref) => (
-        <Button type={type} onClick={onClick} disabled={isValidating} {...props} ref={ref}>
-            {isValidating ? <IconComponent icon="loader-circle" size={loadingIconSize} strokeWidth="3" className="animate-spin" /> : children}
-        </Button>
-    )
-);
+const SubmitButton = forwardRef<HTMLButtonElement, TSubmitButtonProps>(({ type, onClick, isValidating, loadingProps, children, ...props }, ref) => (
+    <Button type={type} onClick={onClick} disabled={isValidating} {...props} ref={ref}>
+        {isValidating ? <Loading animate="pulse" size="2" spacing="0.5" {...(loadingProps ?? {})} /> : children}
+    </Button>
+));
 
 export default SubmitButton;

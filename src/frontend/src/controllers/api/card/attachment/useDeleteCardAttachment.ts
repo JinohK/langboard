@@ -9,9 +9,7 @@ export interface IDeleteCardAttachmentForm {
     attachment_uid: string;
 }
 
-export interface IDeleteCardAttachmentResponse {}
-
-const useDeleteCardAttachment = (options?: TMutationOptions<IDeleteCardAttachmentForm, IDeleteCardAttachmentResponse>) => {
+const useDeleteCardAttachment = (options?: TMutationOptions<IDeleteCardAttachmentForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCardAttachment = async (params: IDeleteCardAttachmentForm) => {

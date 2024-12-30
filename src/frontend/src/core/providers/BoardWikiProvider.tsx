@@ -1,11 +1,10 @@
 import { Toast } from "@/components/base";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { ProjectWiki, User } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
 
@@ -13,14 +12,13 @@ export interface IBoardWikiContext {
     navigate: NavigateFunction;
     projectUID: string;
     socket: ISocketContext;
-    wikis: ProjectWiki.Interface[];
-    setWikis: React.Dispatch<React.SetStateAction<ProjectWiki.Interface[]>>;
-    projectMembers: User.Interface[];
-    currentUser: IAuthUser;
+    wikis: ProjectWiki.TModel[];
+    setWikis: React.Dispatch<React.SetStateAction<ProjectWiki.TModel[]>>;
+    projectMembers: User.TModel[];
+    currentUser: AuthUser.TModel;
     editorsRef: React.MutableRefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
     canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
-    setTitleMapRef: React.MutableRefObject<Record<string, (title: string) => void>>;
     disabledReorder: bool;
     setDisabledReorder: React.Dispatch<React.SetStateAction<bool>>;
     wikiTabListId: string;
@@ -29,9 +27,8 @@ export interface IBoardWikiContext {
 interface IBoardWikiProps {
     navigate: NavigateFunction;
     projectUID: string;
-    wikis: ProjectWiki.Interface[];
-    projectMembers: User.Interface[];
-    currentUser: IAuthUser;
+    projectMembers: User.TModel[];
+    currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
 
@@ -42,11 +39,10 @@ const initialContext = {
     wikis: [],
     setWikis: () => {},
     projectMembers: [],
-    currentUser: {} as IAuthUser,
+    currentUser: {} as AuthUser.TModel,
     editorsRef: { current: {} },
     setCurrentEditor: () => {},
     canAccessWiki: () => false,
-    setTitleMapRef: { current: {} },
     disabledReorder: true,
     setDisabledReorder: () => {},
     wikiTabListId: "",
@@ -54,22 +50,30 @@ const initialContext = {
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
 
-export const BoardWikiProvider = ({
-    navigate,
-    projectUID,
-    wikis: flatWikis,
-    projectMembers,
-    currentUser,
-    children,
-}: IBoardWikiProps): React.ReactNode => {
+export const BoardWikiProvider = ({ navigate, projectUID, projectMembers, currentUser, children }: IBoardWikiProps): React.ReactNode => {
     const socket = useSocket();
-    const [wikis, setWikis] = useState<ProjectWiki.Interface[]>(flatWikis);
+    const flatWikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
+    const [wikis, setWikis] = useState<ProjectWiki.TModel[]>(flatWikis.sort((a, b) => a.order - b.order));
     const [t] = useTranslation();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
     const [disabledReorder, setDisabledReorder] = useState<bool>(true);
-    const setTitleMapRef = useRef<Record<string, (title: string) => void>>({});
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
+
+    useEffect(() => {
+        setWikis(flatWikis.sort((a, b) => a.order - b.order));
+
+        const unsubscribes: (() => void)[] = [];
+        for (let i = 0; i < wikis.length; ++i) {
+            const wiki = wikis[i];
+            const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser.uid);
+            unsubscribes.push(unsubscribe);
+        }
+
+        return () => {
+            unsubscribes.forEach((unsubscribe) => unsubscribe());
+        };
+    }, [flatWikis]);
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditorRef.current) {
@@ -126,7 +130,6 @@ export const BoardWikiProvider = ({
                 editorsRef,
                 setCurrentEditor,
                 canAccessWiki,
-                setTitleMapRef,
                 disabledReorder,
                 setDisabledReorder,
                 wikiTabListId,

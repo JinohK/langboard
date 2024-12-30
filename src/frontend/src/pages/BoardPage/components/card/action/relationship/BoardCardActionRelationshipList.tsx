@@ -1,22 +1,24 @@
 import { Flex, ScrollArea } from "@/components/base";
-import { ProjectCard } from "@/core/models";
+import { ProjectCardRelationship } from "@/core/models";
+import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardCardActionRelationshipItem from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationshipItem";
 import { memo, useEffect, useState } from "react";
 
 export interface IBoardCardActionRelationshipListProps {
-    type: "parents" | "children";
-    relationships: ProjectCard.IRelationship[];
+    type: ProjectCardRelationship.TRelationship;
+    relationships: ProjectCardRelationship.TModel[];
 }
 
 const BoardCardActionRelationshipList = memo(({ type, relationships: flatRelationships }: IBoardCardActionRelationshipListProps) => {
     const isParent = type === "parents";
-    const [relationships, setRelationships] = useState(
-        flatRelationships.filter((relationship) => (isParent ? relationship.is_parent : !relationship.is_parent))
-    );
+    const { card } = useBoardCard();
+    const { filterRelationships } = useBoardRelationshipController();
+    const [relationships, setRelationships] = useState(filterRelationships(card.uid, flatRelationships, isParent));
 
     useEffect(() => {
-        setRelationships(() => flatRelationships.filter((relationship) => (isParent ? relationship.is_parent : !relationship.is_parent)));
+        setRelationships(() => filterRelationships(card.uid, flatRelationships, isParent));
     }, [flatRelationships]);
 
     return (

@@ -9,9 +9,7 @@ export interface IDeleteCardCommentForm {
     comment_uid: string;
 }
 
-export interface IDeleteCardCommentResponse {}
-
-const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm, IDeleteCardCommentResponse>) => {
+const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCardComment = async (params: IDeleteCardCommentForm) => {

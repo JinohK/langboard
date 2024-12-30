@@ -21,7 +21,10 @@ class Card(SoftDeleteModel, table=True):
     def api_response(self):
         return {
             "uid": self.get_uid(),
-            "column_uid": self.project_column_id.to_short_code() if self.project_column_id else None,
+            "project_uid": self.project_id.to_short_code(),
+            "column_uid": self.project_column_id.to_short_code()
+            if self.project_column_id
+            else self.project_id.to_short_code(),
             "title": self.title,
             "description": self.description.model_dump() if self.description else None,
             "ai_description": self.ai_description,

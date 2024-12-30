@@ -1,27 +1,24 @@
 import { Box, Button, Flex, IconComponent, Skeleton } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
-import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentNameChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCardAttachmentMore from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMore";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useReducer, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import mimeTypes from "react-native-mime-types";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardAttachmentProps {
-    attachment: ProjectCardAttachment.IBoard;
-    deletedAttachment: (uid: string) => void;
+    attachment: ProjectCardAttachment.TModel;
     isOverlay?: bool;
 }
 
 interface IBoardCardAttachmentDragData {
     type: "Attachment";
-    data: ProjectCardAttachment.IBoard;
+    data: ProjectCardAttachment.TModel;
 }
 
 export function SkeletonBoardCardAttachment() {
@@ -42,11 +39,12 @@ export function SkeletonBoardCardAttachment() {
     );
 }
 
-function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
-    const { card, socket, currentUser, hasRoleAction } = useBoardCard();
+function BoardCardAttachment({ attachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
+    const { currentUser, hasRoleAction } = useBoardCard();
     const [t, i18n] = useTranslation();
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const mimeType = mimeTypes.lookup(attachment.url) || "file";
+    const name = attachment.useField("name");
+    const url = attachment.useField("url");
+    const mimeType = mimeTypes.lookup(url) || "file";
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: attachment.uid,
         data: {
@@ -58,16 +56,6 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
         },
     });
     const [isValidating, setIsValidating] = useState(false);
-    const handlers = useCardAttachmentNameChangedHandlers({
-        socket,
-        cardUID: card.uid,
-        attachmentUID: attachment.uid,
-        callback: (data) => {
-            attachment.name = data.name;
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const canEdit = currentUser.uid === attachment.user.uid || hasRoleAction(Project.ERoleAction.CARD_UPDATE);
 
@@ -127,27 +115,19 @@ function BoardCardAttachment({ attachment, deletedAttachment, isOverlay }: IBoar
                     className="bg-muted"
                 >
                     {mimeType.startsWith("image/") ? (
-                        <CachedImage src={attachment.url} alt={mimeType} h="full" className="min-w-full" />
+                        <CachedImage src={url} alt={mimeType} h="full" className="min-w-full" />
                     ) : (
-                        (attachment.name.split(".").at(-1)?.toUpperCase() ?? "FILE")
+                        (name.split(".").at(-1)?.toUpperCase() ?? "FILE")
                     )}
                 </Flex>
                 <Box ml={{ initial: "1", sm: "0" }}>
-                    <Box textSize="sm">{attachment.name}</Box>
+                    <Box textSize="sm">{name}</Box>
                     <Box textSize="xs" className="text-muted-foreground">
                         {t("card.Added {date}", { date: formatDateDistance(i18n, t, attachment.created_at) })}
                     </Box>
                 </Box>
             </Flex>
-            {canEdit && (
-                <BoardCardAttachmentMore
-                    attachment={attachment}
-                    isValidating={isValidating}
-                    setIsValidating={setIsValidating}
-                    deletedAttachment={deletedAttachment}
-                    update={forceUpdate}
-                />
-            )}
+            {canEdit && <BoardCardAttachmentMore attachment={attachment} isValidating={isValidating} setIsValidating={setIsValidating} />}
         </Flex>
     );
 }

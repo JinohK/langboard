@@ -10,9 +10,7 @@ export interface IChangeCheckitemOrderForm {
     order: number;
 }
 
-export interface IChangeCheckitemOrderResponse {}
-
-const useChangeCheckitemOrder = (options?: TMutationOptions<IChangeCheckitemOrderForm, IChangeCheckitemOrderResponse>) => {
+const useChangeCheckitemOrder = (options?: TMutationOptions<IChangeCheckitemOrderForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeCheckitemOrder = async (params: IChangeCheckitemOrderForm) => {

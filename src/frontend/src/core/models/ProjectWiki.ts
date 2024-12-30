@@ -1,7 +1,13 @@
 import * as User from "@/core/models/User";
-import { IBaseModel, IEditorContent } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
+import useBoardWikiTitleChangedHandlers from "@/controllers/socket/wiki/useBoardWikiTitleChangedHandlers";
+import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
+import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
+import useBoardWikiContentChangedHandlers from "@/controllers/socket/wiki/useBoardWikiContentChangedHandlers";
+import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 
 export interface Interface extends IBaseModel {
+    project_uid: string;
     title: string;
     content: IEditorContent;
     order: number;
@@ -9,3 +15,97 @@ export interface Interface extends IBaseModel {
     forbidden?: true;
     assigned_members: User.Interface[];
 }
+
+class ProjectWiki extends BaseModel<Interface> {
+    static get FOREIGN_MODELS() {
+        return {
+            assigned_members: User.Model.MODEL_NAME,
+        };
+    }
+    static get MODEL_NAME() {
+        return "ProjectWiki" as const;
+    }
+
+    constructor(model: Record<string, unknown>) {
+        super(model);
+        // Public handlers
+        this.subscribeSocketEvents(
+            [
+                useBoardWikiCreatedHandlers,
+                useBoardWikiDeletedHandlers,
+                useBoardWikiTitleChangedHandlers,
+                useBoardWikiContentChangedHandlers,
+                useBoardWikiPublicChangedHandlers,
+            ],
+            {
+                projectUID: this.project_uid,
+                wikiUID: this.uid,
+            }
+        );
+    }
+
+    public subscribePrivateSocketHandlers(userUID: string) {
+        return this.subscribeSocketEvents(
+            [useBoardWikiCreatedHandlers, useBoardWikiTitleChangedHandlers, useBoardWikiContentChangedHandlers, useBoardWikiPublicChangedHandlers],
+            {
+                projectUID: this.project_uid,
+                wikiUID: this.uid,
+                userUID,
+            }
+        );
+    }
+
+    public get project_uid() {
+        return this.getValue("project_uid");
+    }
+    public set project_uid(value: string) {
+        this.update({ project_uid: value });
+    }
+
+    public get title() {
+        return this.getValue("title");
+    }
+    public set title(value: string) {
+        this.update({ title: value });
+    }
+
+    public get content() {
+        return this.getValue("content");
+    }
+    public set content(value: IEditorContent) {
+        this.update({ content: value });
+    }
+
+    public get order() {
+        return this.getValue("order");
+    }
+    public set order(value: number) {
+        this.update({ order: value });
+    }
+
+    public get is_public() {
+        return this.getValue("is_public");
+    }
+    public set is_public(value: bool) {
+        this.update({ is_public: value });
+    }
+
+    public get assigned_members(): User.TModel[] {
+        return this.getForeignModels("assigned_members");
+    }
+    public set assigned_members(value: (User.TModel | User.Interface)[]) {
+        this.update({ assigned_members: value });
+    }
+
+    public get forbidden() {
+        return this.getValue("forbidden");
+    }
+    public set forbidden(value: true | undefined) {
+        this.update({ forbidden: value });
+    }
+}
+
+registerModel(ProjectWiki);
+
+export type TModel = ProjectWiki;
+export const Model = ProjectWiki;

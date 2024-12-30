@@ -24,6 +24,9 @@ export const API_ROUTES = {
             CRUD: "/account/email",
             VERIFY: "/account/email/verify",
         },
+        USER_GROUP: {
+            UPDATE_ASSIGNED_EMAILS: "/account/group/{group_uid}/emails",
+        },
     },
     ACTIVITIY: {
         USER: "/activity/user",
@@ -142,7 +145,7 @@ export const SOCKET_SERVER_EVENTS = {
             CREATED: "board:card:created:{uid}",
             ORDER_CHANGED: "board:card:order:changed:{uid}",
             TITLE_CHANGED: "board:card:title:changed:{uid}",
-            DEADLINE_CHANGED: "board:card:deadline:changed:{uid}",
+            DEADLINE_CHANGED: "board:card:deadline_at:changed:{uid}",
             DESCRIPTION_CHANGED: "board:card:description:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:card:assigned-users:updated:{uid}",
             RELATIONSHIPS_UPDATED: "board:card:relationships:updated:{uid}",

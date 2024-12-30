@@ -11,7 +11,7 @@ from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, UserEmail, UserGroup, UserGroupAssignedEmail
+from ...models import Project, ProjectAssignedUser, UserEmail
 from ...models.RevertableRecord import RevertType
 from .RevertService import RevertService
 
@@ -65,44 +65,6 @@ class UserService(BaseService):
         self._db.insert(user_email)
         await self._db.commit()
         return user_email
-
-    async def get_groups(self, user: User) -> list[dict[str, Any]]:
-        if not user.id:
-            return []
-
-        raw_groups = await self._get_all_by(UserGroup, "user_id", user.id)
-        groups = []
-        for group in raw_groups:
-            api_group = group.api_response()
-            result = await self._db.exec(
-                self._db.query("select")
-                .tables(UserGroupAssignedEmail, User)
-                .outerjoin(UserEmail, UserEmail.column("email") == UserGroupAssignedEmail.column("email"))
-                .outerjoin(
-                    User,
-                    (User.column("email") == UserGroupAssignedEmail.column("email"))
-                    | (User.column("id") == UserEmail.column("user_id")),
-                )
-                .where(UserGroupAssignedEmail.column("group_id") == group.id)
-            )
-            records = result.all()
-            api_group["users"] = []
-            for assigned_email, user in records:
-                if user:
-                    api_group["users"].append(user.api_response())
-                else:
-                    api_group["users"].append(
-                        {
-                            "uid": User.GROUP_EMAIL_UID,
-                            "firstname": assigned_email.email,
-                            "lastname": "",
-                            "email": assigned_email.email,
-                            "username": "",
-                            "avatar": None,
-                        }
-                    )
-            groups.append(api_group)
-        return groups
 
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
         if not user.id:

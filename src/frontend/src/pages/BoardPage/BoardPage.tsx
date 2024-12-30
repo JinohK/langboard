@@ -10,7 +10,7 @@ import useGetProjet from "@/controllers/api/board/useGetProjet";
 
 const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps): JSX.Element => {
     const [t] = useTranslation();
-    const { data: project, error } = useGetProjet({ uid: projectUID });
+    const { data, error } = useGetProjet({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -31,7 +31,7 @@ const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPage
         handle(error);
     }, [error]);
 
-    return <>{!project ? <SkeletonBoard /> : <Board navigate={navigate} project={project} currentUser={currentUser} />}</>;
+    return <>{!data ? <SkeletonBoard /> : <Board navigate={navigate} project={data.project} currentUser={currentUser} />}</>;
 });
 
 export default BoardPage;

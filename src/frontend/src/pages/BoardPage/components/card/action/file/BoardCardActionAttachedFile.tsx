@@ -28,7 +28,7 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
     const [isError, setIsError] = useState(false);
     const { mutateAsync: uploadCardAttachmentMutateAsync } = useUploadCardAttachment();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: attachedFile.key,
+        id: attachedFile.uid,
         data: {
             type: "AttachedFile",
             data: attachedFile,
@@ -41,7 +41,7 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
         setIsUploading(true);
 
         try {
-            const newFile = await uploadCardAttachmentMutateAsync({
+            await uploadCardAttachmentMutateAsync({
                 project_uid: projectUID,
                 card_uid: card.uid,
                 attachment: attachedFile.file,
@@ -51,8 +51,6 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
                     setProgress(progress);
                 },
             });
-            newFile.order = card.attachments.length;
-            card.attachments.push(newFile);
         } catch {
             setIsError(true);
         }
@@ -111,7 +109,7 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay 
                 </Box>
             </Flex>
             {!isUploading && (
-                <Button variant="destructive" size="icon-sm" className="size-6" disabled={isUploading} onClick={() => deleteFile(attachedFile.key)}>
+                <Button variant="destructive" size="icon-sm" className="size-6" disabled={isUploading} onClick={() => deleteFile(attachedFile.uid)}>
                     <IconComponent icon="trash-2" size="4" />
                 </Button>
             )}

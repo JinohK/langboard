@@ -57,16 +57,12 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
             });
         },
         onDragOverOrMove: (activeWiki) => {
-            if (activeWiki.isInBin) {
+            const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid) as IDraggableProjectWiki;
+            if (!targetWiki || targetWiki.isInBin) {
                 return;
             }
 
-            const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid);
-            if (!targetWiki) {
-                return;
-            }
-
-            (targetWiki as IDraggableProjectWiki).isInBin = true;
+            targetWiki.isInBin = true;
             setWikis((prev) => [...prev]);
         },
     };

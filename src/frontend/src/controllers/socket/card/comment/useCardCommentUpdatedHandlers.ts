@@ -1,22 +1,22 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 
-export interface ICardCommentUpdatedResponse {
+export interface ICardCommentUpdatedRawResponse {
     comment_uid: string;
     content: IEditorContent;
     commented_at: Date;
 }
 
-export interface IUseCardCommentUpdatedHandlersProps extends IBaseUseSocketHandlersProps<ICardCommentUpdatedResponse> {
+export interface IUseCardCommentUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
     cardUID: string;
 }
 
-const useCardCommentUpdatedHandlers = ({ socket, callback, projectUID, cardUID }: IUseCardCommentUpdatedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useCardCommentUpdatedHandlers = ({ callback, projectUID, cardUID }: IUseCardCommentUpdatedHandlersProps) => {
+    return useSocketHandler<{}, ICardCommentUpdatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-comment-updated-${cardUID}`,
@@ -24,10 +24,15 @@ const useCardCommentUpdatedHandlers = ({ socket, callback, projectUID, cardUID }
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.UPDATED,
             params: { uid: cardUID },
             callback,
-            responseConverter: (response) => ({
-                ...response,
-                commented_at: new Date(response.commented_at),
-            }),
+            responseConverter: (data) => {
+                const comment = ProjectCardComment.Model.getModel(data.comment_uid);
+                if (comment) {
+                    comment.content = data.content;
+                    comment.commented_at = data.commented_at;
+                    comment.is_edited = true;
+                }
+                return {};
+            },
         },
     });
 };

@@ -1,27 +1,29 @@
-import { GlobalRelationshipType } from "@/core/models";
+import { GlobalRelationshipType, ProjectCardRelationship } from "@/core/models";
 import { createContext, memo, useContext, useRef, useState } from "react";
 
 interface IStartCardSelectionProps {
-    type: "parents" | "children";
+    type: ProjectCardRelationship.TRelationship;
     currentUID: string;
-    globalRelationshipTypes: GlobalRelationshipType.Interface[];
+    globalRelationshipTypes: GlobalRelationshipType.TModel[];
     saveCallback: (relationships: [string, string][]) => void;
     cancelCallback: () => void;
 }
 
 export interface IBoardRelationshipControllerContext {
-    selectCardViewType?: "parents" | "children";
+    selectCardViewType?: ProjectCardRelationship.TRelationship;
     selectedRelationshipUIDs: [string, string][];
-    globalRelationshipTypesRef: React.MutableRefObject<GlobalRelationshipType.Interface[]>;
+    globalRelationshipTypesRef: React.MutableRefObject<GlobalRelationshipType.TModel[]>;
     currentCardUIDRef: React.MutableRefObject<string | undefined>;
     disabledCardSelectionUIDsRef: React.MutableRefObject<string[]>;
     startCardSelection: (props: IStartCardSelectionProps) => void;
-    setSelectedRelationshipUIDs: React.Dispatch<React.SetStateAction<[string, string][]>>;
+    setSelectedRelationshipCardUIDs: React.Dispatch<React.SetStateAction<[string, string][]>>;
     setCardSelection: (cardUID: string, relationshipUID?: string) => void;
     saveCardSelection: () => void;
     cancelCardSelection: () => void;
     isSelectedCard: (cardUID: string) => bool;
     isDisabledCard: (cardUID: string) => bool;
+    filterRelationships: (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => ProjectCardRelationship.TModel[];
+    filterRelatedCardUIDs: (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => string[];
 }
 
 interface IBoardRelationshipControllerProps {
@@ -34,34 +36,36 @@ const initialContext = {
     currentCardUIDRef: { current: undefined },
     disabledCardSelectionUIDsRef: { current: [] },
     startCardSelection: () => {},
-    setSelectedRelationshipUIDs: () => {},
+    setSelectedRelationshipCardUIDs: () => {},
     setCardSelection: () => {},
     saveCardSelection: () => {},
     cancelCardSelection: () => {},
     isSelectedCard: () => false,
     isDisabledCard: () => false,
+    filterRelationships: () => [],
+    filterRelatedCardUIDs: () => [],
 };
 
 const BoardRelationshipControllerContext = createContext<IBoardRelationshipControllerContext>(initialContext);
 
 export const BoardRelationshipController = memo(({ children }: IBoardRelationshipControllerProps): React.ReactNode => {
-    const [selectCardViewType, setSelectCardViewType] = useState<"parents" | "children">();
-    const [selectedRelationshipUIDs, setSelectedRelationshipUIDs] = useState<[string, string][]>([]);
+    const [selectCardViewType, setSelectCardViewType] = useState<ProjectCardRelationship.TRelationship>();
+    const [selectedRelationshipUIDs, setSelectedRelationshipCardUIDs] = useState<[string, string][]>([]);
     const currentCardUIDRef = useRef<string>();
-    const globalRelationshipTypesRef = useRef<GlobalRelationshipType.Interface[]>([]);
+    const globalRelationshipTypesRef = useRef<GlobalRelationshipType.TModel[]>([]);
     const saveCardSelectionCallbackRef = useRef<(relationships: [string, string][]) => void>();
     const disabledCardSelectionUIDsRef = useRef<string[]>([]);
     const cancelCardSelectionCallbackRef = useRef<() => void>();
 
     const setCardSelection = (cardUID: string, relationshipUID?: string) => {
         if (!relationshipUID) {
-            setSelectedRelationshipUIDs((prev) => prev.filter(([selectedCardUID]) => selectedCardUID !== cardUID));
+            setSelectedRelationshipCardUIDs((prev) => prev.filter(([selectedCardUID]) => selectedCardUID !== cardUID));
             return;
         }
 
         const existedSelection = selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === cardUID);
         if (!existedSelection) {
-            setSelectedRelationshipUIDs((prev) => [...prev, [cardUID, relationshipUID]]);
+            setSelectedRelationshipCardUIDs((prev) => [...prev, [cardUID, relationshipUID]]);
             return;
         } else {
             existedSelection[1] = relationshipUID;
@@ -79,7 +83,7 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
     const saveCardSelection = () => {
         const selections = [...selectedRelationshipUIDs];
         setSelectCardViewType(undefined);
-        setSelectedRelationshipUIDs([]);
+        setSelectedRelationshipCardUIDs([]);
         setTimeout(() => {
             saveCardSelectionCallbackRef.current?.(selections);
             clear();
@@ -88,7 +92,7 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
 
     const cancelCardSelection = () => {
         setSelectCardViewType(undefined);
-        setSelectedRelationshipUIDs([]);
+        setSelectedRelationshipCardUIDs([]);
         setTimeout(() => {
             cancelCardSelectionCallbackRef.current?.();
             clear();
@@ -97,6 +101,16 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
 
     const isSelectedCard = (cardUID: string) => selectedRelationshipUIDs.some(([selectedCardUID]) => selectedCardUID === cardUID);
     const isDisabledCard = (cardUID: string) => disabledCardSelectionUIDsRef.current.includes(cardUID);
+
+    const filterRelationships = (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => {
+        return relationships.filter((relationship) => (isParent ? relationship.child_card_uid : relationship.parent_card_uid) === cardUID);
+    };
+
+    const filterRelatedCardUIDs = (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => {
+        return filterRelationships(cardUID, relationships, isParent).map((relationship) =>
+            isParent ? relationship.parent_card_uid : relationship.child_card_uid
+        );
+    };
 
     const clear = () => {
         saveCardSelectionCallbackRef.current = undefined;
@@ -114,12 +128,14 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
                 currentCardUIDRef,
                 disabledCardSelectionUIDsRef,
                 startCardSelection,
-                setSelectedRelationshipUIDs,
+                setSelectedRelationshipCardUIDs,
                 setCardSelection,
                 saveCardSelection,
                 cancelCardSelection,
                 isSelectedCard,
                 isDisabledCard,
+                filterRelationships,
+                filterRelatedCardUIDs,
             }}
         >
             {children}

@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 
 export interface IBoardCardAttachmentMoreRenameProps extends IBaseBoardCardAttachmentMoreProps {
     sharedErrorHandler: (error: unknown) => string;
-    update: () => void;
 }
 
 function BoardCardAttachmentMoreRename({
@@ -16,7 +15,6 @@ function BoardCardAttachmentMoreRename({
     setIsValidating,
     setIsMoreMenuOpened,
     sharedErrorHandler,
-    update,
 }: IBoardCardAttachmentMoreRenameProps): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const [t] = useTranslation();
@@ -52,8 +50,6 @@ function BoardCardAttachmentMoreRename({
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
-                attachment.name = name;
-                update();
                 return t("card.successes.File name changed successfully.");
             },
             finally: () => {

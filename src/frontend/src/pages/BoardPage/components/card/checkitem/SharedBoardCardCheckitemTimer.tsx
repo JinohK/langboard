@@ -1,21 +1,18 @@
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { memo, useEffect, useMemo, useReducer } from "react";
 import { add as addDate, intervalToDuration, differenceInSeconds, Duration } from "date-fns";
-import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
-import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
 import { Box } from "@/components/base";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 const SharedBoardCardCheckitemTimer = memo(() => {
-    const { projectUID, socket } = useBoardCard();
     const { checkitem } = useBoardCardCheckitem();
+    const timer = checkitem.useField("timer");
+    const accTimeSeconds = checkitem.useField("acc_time_seconds");
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
     const duration = useMemo(() => {
         const now = new Date();
-        let timerSeconds = checkitem.acc_time_seconds;
-        if (checkitem.timer) {
-            timerSeconds += differenceInSeconds(now, checkitem.timer.started_at);
+        let timerSeconds = accTimeSeconds;
+        if (timer) {
+            timerSeconds += differenceInSeconds(now, timer.started_at);
         }
 
         return intervalToDuration({
@@ -23,27 +20,6 @@ const SharedBoardCardCheckitemTimer = memo(() => {
             end: addDate(now, { seconds: timerSeconds }),
         });
     }, [updated]);
-    const checkitemTimerStartedHandler = useCardCheckitemTimerStartedHandlers({
-        socket,
-        projectUID,
-        checkitemUID: checkitem.uid,
-        callback: (data) => {
-            checkitem.timer = data.timer;
-            checkitem.acc_time_seconds = data.acc_time_seconds;
-            forceUpdate();
-        },
-    });
-    const checkitemTimerStoppedHandler = useCardCheckitemTimerStoppedHandlers({
-        socket,
-        projectUID,
-        checkitemUID: checkitem.uid,
-        callback: (data) => {
-            checkitem.timer = undefined;
-            checkitem.acc_time_seconds = data.acc_time_seconds;
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [checkitemTimerStartedHandler, checkitemTimerStoppedHandler] });
 
     useEffect(() => {
         let timerTimeout: NodeJS.Timeout | undefined;
@@ -54,8 +30,8 @@ const SharedBoardCardCheckitemTimer = memo(() => {
 
             let nextMs = 1000;
 
-            if (checkitem.timer) {
-                const startDate = new Date(checkitem.timer.started_at);
+            if (timer) {
+                const startDate = new Date(timer.started_at);
                 const diff = new Date(new Date().getTime() - startDate.getTime()).getMilliseconds();
                 nextMs = 1000 + startDate.getMilliseconds() - diff;
                 forceUpdate();

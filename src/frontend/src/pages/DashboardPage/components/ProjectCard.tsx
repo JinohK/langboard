@@ -1,23 +1,12 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, Card, Flex, IconComponent, Skeleton, Toast, Tooltip } from "@/components/base";
-import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { Card, Flex, Skeleton } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
-import { Project } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
-import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/useDashboardCardCreatedHandlers";
-import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardCardOrderChangedHandlers";
-import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
-import useProjectColumnOrderChangedHandlers from "@/controllers/socket/project/column/useProjectColumnOrderChangedHandlers";
-import { arrayMove } from "@dnd-kit/sortable";
-import useProjectTitleChangedHandlers from "@/controllers/socket/project/useProjectTitleChangedHandlers";
-import useProjectTypeChangedHandlers from "@/controllers/socket/project/useProjectTypeChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import ProjectCardColumn from "@/pages/DashboardPage/components/ProjectCardColumn";
+import ProjectCardStarButton from "@/pages/DashboardPage/components/ProjectCardStarButton";
 
 export const SkeletonProjectCard = memo(() => {
     const cards = [];
@@ -54,146 +43,19 @@ export const SkeletonProjectCard = memo(() => {
 });
 
 export interface IProjectCardProps {
-    project: Project.IDashboard;
+    project: Project.TModel;
     refetchAllStarred: () => Promise<unknown>;
     refetchAllProjects: () => Promise<unknown>;
 }
 
 const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IProjectCardProps): JSX.Element => {
     const [t] = useTranslation();
-    const { navigate, socket } = useDashboard();
-    const { mutate } = useToggleStarProject();
+    const { navigate } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
-    const [title, setTitle] = useState(project.title);
-    const [projectType, setProjectType] = useState(project.project_type);
-    const [columns, setColumns] = useState(project.columns);
-    const projectTitleChangedHandler = useProjectTitleChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            project.title = data.title;
-            setTitle(data.title);
-        },
-    });
-    const projectTypeChangedHandler = useProjectTypeChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            project.project_type = data.project_type;
-            setProjectType(data.project_type);
-        },
-    });
-    const projectColumnCreatedHandler = useProjectColumnCreatedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setColumns((prev) => prev.filter((column) => column.uid !== data.column.uid).concat(data.column));
-        },
-    });
-    const projectColumnNameChangedHandler = useProjectColumnNameChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setColumns((prev) => {
-                const targetColumn = prev.find((column) => column.uid === data.uid);
-                if (targetColumn) {
-                    targetColumn.name = data.name;
-                }
-                return [...prev];
-            });
-        },
-    });
-    const projectColumnOrderChangedHandler = useProjectColumnOrderChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setColumns((prev) => {
-                const targetColumn = prev.find((column) => column.uid === data.uid);
-                if (targetColumn) {
-                    return arrayMove(prev, targetColumn.order, data.order).map((column, index) => {
-                        column.order = index;
-                        return column;
-                    });
-                }
-
-                return [...prev];
-            });
-        },
-    });
-    const dashboardCardCreatedHandler = useDashboardCardCreatedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setColumns((prev) => {
-                const targetColumn = prev.find((column) => column.uid === data.column_uid);
-                if (targetColumn) {
-                    targetColumn.count += 1;
-                }
-                return [...prev];
-            });
-        },
-    });
-    const dashboardCardOrderChangedHandler = useDashboardCardOrderChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setColumns((prev) => {
-                const fromColumn = prev.find((column) => column.uid === data.from_column_uid);
-                const toColumn = prev.find((column) => column.uid === data.to_column_uid);
-                if (fromColumn && toColumn) {
-                    fromColumn.count -= 1;
-                    toColumn.count += 1;
-                }
-                return [...prev];
-            });
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [
-            projectTitleChangedHandler,
-            projectTypeChangedHandler,
-            projectColumnCreatedHandler,
-            projectColumnNameChangedHandler,
-            projectColumnOrderChangedHandler,
-            dashboardCardCreatedHandler,
-            dashboardCardOrderChangedHandler,
-        ],
-    });
-
-    const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {
-        if (!project) {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        setIsUpdating(true);
-
-        mutate(
-            {
-                uid: project.uid,
-            },
-            {
-                onSuccess: async () => {
-                    await Promise.all([refetchAllStarred(), refetchAllProjects()]);
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("dashboard.errors.Project not found"));
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    setIsUpdating(false);
-                },
-            }
-        );
-    };
+    const title = project.useField("title");
+    const projectType = project.useField("project_type");
+    const flatColumns = project.useForeignField<ProjectColumn.TModel>("columns");
+    const [columns, setColumns] = useState(flatColumns);
 
     const toBoard = () => {
         if (!project) {
@@ -210,49 +72,18 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
                     {t(projectType === "Other" ? "common.Other" : `project.types.${projectType}`)}
                 </Card.Title>
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
-                <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <Button
-                                variant={project?.starred ? "default" : "outline"}
-                                className="absolute right-2.5 top-1 mt-0"
-                                size="icon"
-                                onClick={toggleStar}
-                                disabled={isUpdating}
-                            >
-                                {isUpdating ? (
-                                    <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
-                                ) : (
-                                    <IconComponent icon="star" />
-                                )}
-                            </Button>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content side="bottom">
-                            {t(`dashboard.${project?.starred ? "Unstar this project" : "Star this project"}`)}
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                </Tooltip.Provider>
+                <ProjectCardStarButton
+                    project={project}
+                    isUpdating={isUpdating}
+                    setIsUpdating={setIsUpdating}
+                    refetchAllStarred={refetchAllStarred}
+                    refetchAllProjects={refetchAllProjects}
+                />
             </Card.Header>
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
                 {columns.map((column) => (
-                    <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
-                        <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                                <Flex direction="col" gap="0.5" minW="5" className="text-center">
-                                    <span className="text-sm font-semibold">{column.count}</span>
-                                    <Box
-                                        display="inline-block"
-                                        h="0.5"
-                                        w="full"
-                                        rounded="full"
-                                        style={{ background: new ColorGenerator(column.name).generateRandomColor() }}
-                                    />
-                                </Flex>
-                            </Tooltip.Trigger>
-                            <Tooltip.Content side="bottom">{column.name}</Tooltip.Content>
-                        </Tooltip.Root>
-                    </Tooltip.Provider>
+                    <ProjectCardColumn key={createShortUUID()} column={column} setColumns={setColumns} />
                 ))}
             </Card.Footer>
         </Card.Root>

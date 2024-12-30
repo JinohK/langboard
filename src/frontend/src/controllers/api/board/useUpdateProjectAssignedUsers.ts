@@ -10,11 +10,9 @@ export interface IUpdateProjectAssignedUsersForm {
     lang?: string;
 }
 
-export interface IUpdateProjectAssignedUsersResponse {}
-
 export const PROJCT_INVITATION_TOKEN_QUERY_NAME = "PikQ";
 
-const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProjectAssignedUsersForm, IUpdateProjectAssignedUsersResponse>) => {
+const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProjectAssignedUsersForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateProjectAssignedUsers = async (params: IUpdateProjectAssignedUsersForm) => {

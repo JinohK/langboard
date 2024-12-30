@@ -24,7 +24,7 @@ const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOption
             }
 
             if (key === "avatar") {
-                formData.append(key, value[0], value[0].name);
+                formData.append(key, (value as unknown as File[])[0], (value as unknown as File[])[0].name);
             } else {
                 formData.append(key, value);
             }

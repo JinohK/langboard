@@ -72,7 +72,7 @@ async def about_me(user: User = Auth.scope("api"), service: Service = Service.sc
     response["purpose"] = user.purpose
     response["affiliation"] = user.affiliation
     response["position"] = user.position
-    response["user_groups"] = await service.user.get_groups(user)
+    response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
     response["subemails"] = await service.user.get_subemails(user)
 
     if user.is_admin:

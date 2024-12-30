@@ -24,6 +24,7 @@ export { default as IconComponent } from "@/components/base/IconComponent";
 export { default as Input, type InputProps } from "@/components/base/Input";
 export * as InputOTP from "@/components/base/InputOTP";
 export { default as Label } from "@/components/base/Label";
+export { default as Loading } from "@/components/base/Loading";
 export * as Menubar from "@/components/base/Menubar";
 export * as NavigationMenu from "@/components/base/NavigationMenu";
 export * as Popover from "@/components/base/Popover";

@@ -2,23 +2,29 @@ import { Box, Button, Flex, IconComponent, Popover, Toast } from "@/components/b
 import useUpdateCardRelationships from "@/controllers/api/card/useUpdateCardRelationships";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectCard } from "@/core/models";
+import { ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
-import { StringCase } from "@/core/utils/StringUtils";
 import BoardCardActionRelationshipList from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationshipList";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardCardActionRelationshipButtonProps extends ISharedBoardCardActionProps {
-    type: "parents" | "children";
-    relationships: ProjectCard.IRelationship[];
+    type: ProjectCardRelationship.TRelationship;
+    relationships: ProjectCardRelationship.TModel[];
 }
 
 function BoardCardActionRelationshipButton({ type, relationships, buttonClassName }: IBoardCardActionRelationshipButtonProps) {
-    const { selectCardViewType, disabledCardSelectionUIDsRef, setSelectedRelationshipUIDs, startCardSelection } = useBoardRelationshipController();
+    const {
+        selectCardViewType,
+        disabledCardSelectionUIDsRef,
+        setSelectedRelationshipCardUIDs,
+        startCardSelection,
+        filterRelationships,
+        filterRelatedCardUIDs,
+    } = useBoardRelationshipController();
     const { projectUID, card } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -70,14 +76,13 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
     };
 
     const selectRelationship = () => {
-        setSelectedRelationshipUIDs(
-            relationships
-                .filter((relationship) => (isParent ? relationship.is_parent : !relationship.is_parent))
-                .map((relationship) => [relationship.related_card.uid, relationship.relationship_type_uid])
+        setSelectedRelationshipCardUIDs(
+            filterRelationships(card.uid, relationships, isParent).map((relationship) => [
+                isParent ? relationship.parent_card_uid : relationship.child_card_uid,
+                relationship.relationship_type_uid,
+            ])
         );
-        disabledCardSelectionUIDsRef.current = relationships
-            .filter((relationship) => (isParent ? !relationship.is_parent : relationship.is_parent))
-            .map((relationship) => relationship.related_card.uid);
+        disabledCardSelectionUIDsRef.current = filterRelatedCardUIDs(card.uid, relationships, !isParent);
         startCardSelection({
             type,
             currentUID: card.uid,
@@ -87,7 +92,7 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
         });
     };
 
-    const title = t(`card.${new StringCase(type).toPascal()} cards`);
+    const title = t(`card.${type === "parents" ? "Parent" : "Child"} cards`);
 
     return (
         <Popover.Root open={isOpened} onOpenChange={setIsOpened}>

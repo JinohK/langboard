@@ -1,23 +1,23 @@
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { createContext, useContext } from "react";
 import { NavigateFunction } from "react-router-dom";
 
 export interface IDashboardContext {
     navigate: NavigateFunction;
-    currentUser: IAuthUser;
+    currentUser: AuthUser.TModel;
     socket: ISocketContext;
 }
 
 interface IDashboardProps {
     navigate: NavigateFunction;
-    currentUser: IAuthUser;
+    currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
 
 const initialContext = {
     navigate: () => {},
-    currentUser: {} as IAuthUser,
+    currentUser: {} as AuthUser.TModel,
     socket: {} as ISocketContext,
 };
 

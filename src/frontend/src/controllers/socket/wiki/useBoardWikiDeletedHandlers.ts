@@ -1,18 +1,18 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectWiki } from "@/core/models";
 
-export interface IBoardWikiDeletedResponse {
+export interface IBoardWikiDeletedRawResponse {
     uid: string;
 }
 
-export interface IUseBoardWikiDeletedHandlersProps extends IBaseUseSocketHandlersProps<IBoardWikiDeletedResponse> {
+export interface IUseBoardWikiDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useBoardWikiDeletedHandlers = ({ socket, callback, projectUID }: IUseBoardWikiDeletedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useBoardWikiDeletedHandlers = ({ callback, projectUID }: IUseBoardWikiDeletedHandlersProps) => {
+    return useSocketHandler<{}, IBoardWikiDeletedRawResponse>({
         topic: ESocketTopic.BoardWiki,
         topicId: projectUID,
         eventKey: `board-wiki-deleted-${projectUID}`,
@@ -21,7 +21,8 @@ const useBoardWikiDeletedHandlers = ({ socket, callback, projectUID }: IUseBoard
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                return data;
+                ProjectWiki.Model.deleteModel(data.uid);
+                return {};
             },
         },
     });

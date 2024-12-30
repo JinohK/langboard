@@ -18,12 +18,8 @@ interface IDetails {
 type TChangeableDetail = keyof IDetails;
 
 export type TChangeCardDetailsForm<TDetail extends TChangeableDetail> = IBaseChangeCardDetailsForm & Pick<IDetails, TDetail>;
-export type TChangeCardDetailsResponse<TDetail extends TChangeableDetail> = Required<Pick<IDetails, TDetail>>;
 
-const useChangeCardDetails = <TDetail extends TChangeableDetail>(
-    type: TDetail,
-    options?: TMutationOptions<TChangeCardDetailsForm<TDetail>, TChangeCardDetailsResponse<TDetail>>
-) => {
+const useChangeCardDetails = <TDetail extends TChangeableDetail>(type: TDetail, options?: TMutationOptions<TChangeCardDetailsForm<TDetail>>) => {
     const { mutate } = useQueryMutation();
 
     const changeCardDetails = async (params: TChangeCardDetailsForm<TDetail>) => {

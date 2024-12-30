@@ -1,12 +1,9 @@
 import { Box, Flex, Toast } from "@/components/base";
 import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
-import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
-import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -63,32 +60,34 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
 }
 
 interface IBoardCommentListResultProps extends IBoardCommentListProps {
-    comments: ProjectCardComment.IBoard[];
+    comments: ProjectCardComment.TModel[];
 }
 
 function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCommentListResultProps): JSX.Element {
-    const { projectUID, card, socket } = useBoardCard();
+    const { card } = useBoardCard();
     const [t] = useTranslation();
     const PAGE_SIZE = 10;
     const { items: comments, nextPage, forceUpdate, hasMore } = useInfiniteScrollPager({ allItems: flatComments, size: PAGE_SIZE });
-    const commentAddedHandler = useCardCommentAddedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            flatComments.unshift(data.comment);
+    ProjectCardComment.Model.subscribe(
+        "CREATION",
+        `board-card-comment-list-${card.uid}`,
+        (models) => {
+            flatComments.push(...models);
             forceUpdate();
         },
+        (model) => model.card_uid === card.uid
+    );
+    ProjectCardComment.Model.subscribe("DELETION", `board-card-comment-list-${card.uid}`, (uids) => {
+        uids.forEach((uid) => {
+            const index = flatComments.findIndex((c) => c.uid === uid);
+            if (index === -1) {
+                return;
+            }
+
+            flatComments.splice(index, 1);
+        });
+        forceUpdate();
     });
-    const commentDeletedHandler = useCardCommentDeletedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            deletedComment(data.comment_uid);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [commentAddedHandler, commentDeletedHandler] });
 
     const deletedComment = (commentUID: string) => {
         const index = flatComments.findIndex((c) => c.uid === commentUID);

@@ -3,7 +3,7 @@ export interface ISharedBoardCardActionProps {
 }
 
 export interface IAttachedFile {
-    key: string;
+    uid: string;
     file: File;
     order: number;
     upload?: () => Promise<void>;

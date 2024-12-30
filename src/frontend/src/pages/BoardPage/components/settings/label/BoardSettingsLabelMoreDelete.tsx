@@ -6,11 +6,9 @@ import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/se
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsLabelMoreDeleteProps extends IBoardSettingsLabelRelatedProps {
-    deletedLabel: (uid: string) => void;
-}
+export interface IBoardSettingsLabelMoreDeleteProps extends IBoardSettingsLabelRelatedProps {}
 
-function BoardSettingsLabelMoreDelete({ setIsMoreMenuOpened, deletedLabel }: IBoardSettingsLabelMoreDeleteProps): JSX.Element {
+function BoardSettingsLabelMoreDelete({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreDeleteProps): JSX.Element {
     const { project } = useBoardSettings();
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
     const [t] = useTranslation();
@@ -33,7 +31,6 @@ function BoardSettingsLabelMoreDelete({ setIsMoreMenuOpened, deletedLabel }: IBo
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
-                deletedLabel(label.uid);
                 return t("project.settings.successes.Label deleted successfully.");
             },
             finally: () => {

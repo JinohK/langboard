@@ -10,9 +10,7 @@ export interface IChangeCardAttachmentNameForm {
     attachment_name: string;
 }
 
-export interface IChangeCardAttachmentNameResponse {}
-
-const useChangeCardAttachmentName = (options?: TMutationOptions<IChangeCardAttachmentNameForm, IChangeCardAttachmentNameResponse>) => {
+const useChangeCardAttachmentName = (options?: TMutationOptions<IChangeCardAttachmentNameForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeCardAttachmentName = async (params: IChangeCardAttachmentNameForm) => {

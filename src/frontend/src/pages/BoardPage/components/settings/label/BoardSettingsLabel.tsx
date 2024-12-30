@@ -4,31 +4,25 @@ import { CSS } from "@dnd-kit/utilities";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
-import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
-import useProjectLabelNameChangedHandlers from "@/controllers/socket/project/label/useProjectLabelNameChangedHandlers";
-import useProjectLabelDescriptionChangedHandlers from "@/controllers/socket/project/label/useProjectLabelDescriptionChangedHandlers";
 import BoardSettingsLabelMore from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelMore";
 import BoardSettingsLabelColor from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelColor";
 import { BoardSettingsLabelProvider } from "@/core/providers/BoardSettingsLabelProvider";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 export interface IBoardSettingsLabelProps {
-    label: ProjectLabel.Interface;
-    deletedLabel: (uid: string) => void;
+    label: ProjectLabel.TModel;
     isOverlay?: bool;
 }
 
 interface IBoardSettingsLabelDragData {
     type: "Label";
-    data: ProjectLabel.Interface;
+    data: ProjectLabel.TModel;
 }
 
-const BoardSettingsLabel = memo(({ label, deletedLabel, isOverlay }: IBoardSettingsLabelProps): JSX.Element => {
-    const { project, socket } = useBoardSettings();
+const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps): JSX.Element => {
     const [t] = useTranslation();
-    const [labelName, setLabelName] = useState(label.name);
-    const [labelDescription, setLabelDescription] = useState(label.description);
+    const labelName = label.useField("name");
+    const labelDescription = label.useField("description");
     const [isValidating, setIsValidating] = useState(false);
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: label.uid,
@@ -40,25 +34,6 @@ const BoardSettingsLabel = memo(({ label, deletedLabel, isOverlay }: IBoardSetti
             roleDescription: "Label",
         },
     });
-    const projectLabelNameChangedHandler = useProjectLabelNameChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.name = data.name;
-            setLabelName(data.name);
-        },
-    });
-    const projectLabelDescriptionChangedHandler = useProjectLabelDescriptionChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.description = data.description;
-            setLabelDescription(data.description);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [projectLabelNameChangedHandler, projectLabelDescriptionChangedHandler] });
 
     const style = {
         transition,
@@ -122,7 +97,7 @@ const BoardSettingsLabel = memo(({ label, deletedLabel, isOverlay }: IBoardSetti
                         </Tooltip.Provider>
                     </Flex>
                 </Flex>
-                <BoardSettingsLabelMore labelName={labelName} labelDescription={labelDescription} deletedLabel={deletedLabel} />
+                <BoardSettingsLabelMore />
             </Flex>
         </BoardSettingsLabelProvider>
     );

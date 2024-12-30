@@ -1,32 +1,35 @@
 import { Button, Flex, IconComponent } from "@/components/base";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { ProjectCard } from "@/core/models";
+import { GlobalRelationshipType, ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useRef } from "react";
 
 export interface IBoardCardActionRelationshipItemProps {
-    type: "parents" | "children";
-    relationship: ProjectCard.IRelationship;
+    type: ProjectCardRelationship.TRelationship;
+    relationship: ProjectCardRelationship.TModel;
 }
 
 const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCardActionRelationshipItemProps) => {
     const navigate = useRef(usePageNavigate());
-    const { projectUID } = useBoardCard();
+    const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
-
-    const icon = isParent ? relationship.parent_icon : relationship.child_icon;
-    const name = isParent ? relationship.parent_name : relationship.child_name;
+    const relationshipType = GlobalRelationshipType.Model.getModel(relationship.relationship_type_uid)!;
+    const targetCardUID = relationship.parent_card_uid === card.uid ? relationship.child_card_uid : relationship.parent_card_uid;
+    const targetCard = ProjectCard.Model.getModel(targetCardUID)!;
+    const targetCardTitle = targetCard.useField("title");
+    const icon = relationshipType.useField(isParent ? "parent_icon" : "child_icon");
+    const name = relationshipType.useField(isParent ? "parent_name" : "child_name");
 
     const toRelatedCard = () => {
-        navigate.current(ROUTES.BOARD.CARD(projectUID, relationship.related_card.uid));
+        navigate.current(ROUTES.BOARD.CARD(projectUID, targetCardUID));
     };
 
     return (
         <Button
             type="button"
             variant="ghost"
-            title={`${name} > ${relationship.related_card.title}`}
+            title={`${name} > ${targetCardTitle}`}
             className="justify-start rounded-none border-b p-0"
             onClick={toRelatedCard}
         >
@@ -36,7 +39,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
                     {name}
                 </Flex>
                 <span className="text-muted-foreground">&gt;</span>
-                <span className="truncate">{relationship.related_card.title}</span>
+                <span className="truncate">{targetCardTitle}</span>
             </Flex>
         </Button>
     );

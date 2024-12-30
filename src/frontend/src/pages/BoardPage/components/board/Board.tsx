@@ -4,13 +4,12 @@ import useGetCards from "@/controllers/api/board/useGetCards";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import { IAuthUser } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BoardColumnCard, { IBoardColumnCardProps } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import BoardColumn, { IBoardColumnProps, SkeletonBoardColumn } from "@/pages/BoardPage/components/board/BoardColumn";
 import BoardFilter, { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
+import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { memo, useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -19,13 +18,11 @@ import { BoardProvider, useBoard } from "@/core/providers/BoardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
 import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
-import { Project } from "@/core/models";
+import { AuthUser, Project } from "@/core/models";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
-import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 
 export function SkeletonBoard() {
@@ -82,12 +79,12 @@ export function SkeletonBoard() {
 
 export interface IBoardProps {
     navigate: NavigateFunction;
-    project: Project.IBoard;
-    currentUser: IAuthUser;
+    project: Project.TModel;
+    currentUser: AuthUser.TModel;
 }
 
 const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
-    const { data: projectData, error } = useGetCards({ project_uid: project.uid });
+    const { data, error } = useGetCards({ project_uid: project.uid });
     const [t] = useTranslation();
 
     useEffect(() => {
@@ -111,14 +108,12 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
 
     return (
         <>
-            {!projectData ? (
+            {!data ? (
                 <SkeletonBoard />
             ) : (
                 <BoardProvider
                     navigate={navigate}
                     project={project}
-                    columns={projectData.columns}
-                    cards={projectData.cards}
                     currentUser={currentUser}
                     currentUserRoleActions={project.current_user_role_actions}
                 >
@@ -133,11 +128,7 @@ const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
     const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
-    const {
-        columns,
-        setColumns,
-        reorder: reorderColumns,
-    } = useReorderColumn({
+    const { columns, reorder: reorderColumns } = useReorderColumn({
         type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
@@ -149,15 +140,6 @@ const BoardResult = memo(() => {
     const viewportId = `board-viewport-${project.uid}`;
     const { onPointerDown } = useGrabbingScrollHorizontal(viewportId);
     const { mutate: changeProjectColumnOrderMutate } = useChangeProjectColumnOrder();
-    const handlers = useProjectColumnCreatedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            delete (data.column as unknown as Record<string, unknown>).count;
-            setColumns((prevColumns) => [...prevColumns, data.column]);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers, dependencies: [columns] });
     const {
         activeColumn,
         activeRow: activeCard,
@@ -171,6 +153,7 @@ const BoardResult = memo(() => {
         rowDragDataType: "Card",
         columnCallbacks: {
             onDragEnd: (originalColumn, index) => {
+                const originalColumnOrder = originalColumn.order;
                 if (!reorderColumns(originalColumn, index)) {
                     return;
                 }
@@ -182,7 +165,7 @@ const BoardResult = memo(() => {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {
                                     Toast.Add.error(t("errors.Internal server error"));
-                                    setColumns((prev) => arrayMove(prev, originalColumn.order, index).map((col, i) => ({ ...col, order: i })));
+                                    reorderColumns(originalColumn, originalColumnOrder);
                                 },
                             });
 
@@ -225,7 +208,7 @@ const BoardResult = memo(() => {
             )}
 
             <Flex justify="between" px="4" pt="4" wrap="wrap">
-                <BoardMemberList project={project} socket={socket} isSelectCardView={!!selectCardViewType} />
+                <BoardMemberList project={project} isSelectCardView={!!selectCardViewType} />
                 <Flex items="center" gap="1">
                     <BoardFilter />
                 </Flex>

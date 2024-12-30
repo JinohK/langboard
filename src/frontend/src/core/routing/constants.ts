@@ -27,6 +27,7 @@ export const ROUTES = {
             VERIFY: "/account/emails/verify",
         },
         PASSWORD: "/account/password",
+        GROUPS: "/account/groups",
     },
     BOARD: {
         ROUTE: "/board",

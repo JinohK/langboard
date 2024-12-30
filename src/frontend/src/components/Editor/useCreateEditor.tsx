@@ -1,4 +1,4 @@
-import { User } from "@/core/models";
+import { AuthUser, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useCallback, useEffect, useState } from "react";
 
@@ -59,7 +59,6 @@ import { TableRowElement } from "@/components/plate-ui/table-row-element";
 import { TocElement } from "@/components/plate-ui/toc-element";
 import { withDraggables } from "@/components/plate-ui/with-draggables";
 import { deserializeMd } from "@/components/Editor/plugins/markdown";
-import { IAuthUser } from "@/core/providers/AuthProvider";
 import { MediaPlaceholderElement } from "@/components/plate-ui/media-placeholder-element";
 import { MediaVideoElement } from "@/components/plate-ui/media-video-element";
 import { MediaAudioElement } from "@/components/plate-ui/media-audio-element";
@@ -69,8 +68,8 @@ import { InlineEquationElement } from "@/components/plate-ui/inline-equation-ele
 import { ISocketContext } from "@/core/providers/SocketProvider";
 
 interface IBaseUseCreateEditor {
-    currentUser: IAuthUser;
-    mentionableUsers: User.Interface[];
+    currentUser: AuthUser.TModel;
+    mentionableUsers: User.TModel[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plugins?: PlatePlugin<any>[];
     value?: IEditorContent;

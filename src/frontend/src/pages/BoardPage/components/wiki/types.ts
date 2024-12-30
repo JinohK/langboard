@@ -2,7 +2,7 @@ import { IMoreDroppableZoneCallbacks } from "@/core/hooks/useColumnRowSortable";
 import { ProjectWiki } from "@/core/models";
 import { UniqueIdentifier } from "@dnd-kit/core";
 
-export interface IDraggableProjectWiki extends ProjectWiki.Interface {
+export interface IDraggableProjectWiki extends ProjectWiki.TModel {
     isInBin?: bool;
 }
 

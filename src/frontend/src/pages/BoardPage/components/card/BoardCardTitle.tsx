@@ -1,12 +1,10 @@
 import { Dialog, Skeleton, Textarea, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
-import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { cn } from "@/core/utils/ComponentUtils";
-import { useReducer, useRef, useState } from "react";
+import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardTitle() {
@@ -18,24 +16,14 @@ export function SkeletonBoardCardTitle() {
 }
 
 function BoardCardTitle(): JSX.Element {
-    const { projectUID, card, socket, hasRoleAction } = useBoardCard();
+    const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title");
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const [isEditing, setIsEditing] = useState(false);
+    const title = card.useField("title");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const [height, setHeight] = useState(0);
-    const handlers = useCardTitleChangedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.title = data.title;
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
     const changeMode = (mode: "edit" | "view") => {
         if (!canEdit) {
@@ -45,7 +33,7 @@ function BoardCardTitle(): JSX.Element {
         if (mode === "edit") {
             setIsEditing(true);
             setTimeout(() => {
-                setHeight(measureTextAreaHeight());
+                setHeight(measureTextAreaHeight(textareaRef.current!));
                 if (!textareaRef.current) {
                     return;
                 }
@@ -58,7 +46,7 @@ function BoardCardTitle(): JSX.Element {
         }
 
         const newValue = textareaRef.current?.value?.replace(/\n/g, " ").trim() ?? "";
-        if (!newValue.length || card.title.trim() === newValue) {
+        if (!newValue.length || title.trim() === newValue) {
             setIsEditing(false);
             return;
         }
@@ -85,8 +73,7 @@ function BoardCardTitle(): JSX.Element {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                card.title = data.title;
+            success: () => {
                 return t("card.successes.Title changed successfully.");
             },
             finally: () => {
@@ -96,21 +83,10 @@ function BoardCardTitle(): JSX.Element {
         });
     };
 
-    const measureTextAreaHeight = () => {
-        const cloned = textareaRef.current!.cloneNode(true) as HTMLTextAreaElement;
-        cloned.style.width = `${textareaRef.current!.offsetWidth}px`;
-        cloned.style.height = "0px";
-        document.body.appendChild(cloned);
-        const height = cloned.scrollHeight;
-        document.body.removeChild(cloned);
-        cloned.remove();
-        return height;
-    };
-
     return (
         <Dialog.Title className="mr-7 cursor-text text-2xl" onClick={() => changeMode("edit")}>
             {!isEditing ? (
-                <span className="break-all">{card.title}</span>
+                <span className="break-all">{title}</span>
             ) : (
                 <Textarea
                     ref={textareaRef}
@@ -119,12 +95,15 @@ function BoardCardTitle(): JSX.Element {
                         "focus-visible:border-b-primary focus-visible:ring-0"
                     )}
                     style={{ height }}
-                    defaultValue={card.title}
+                    defaultValue={title}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                     }}
                     onBlur={() => changeMode("view")}
+                    onChange={() => {
+                        setHeight(measureTextAreaHeight(textareaRef.current!));
+                    }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             e.preventDefault();
@@ -132,11 +111,6 @@ function BoardCardTitle(): JSX.Element {
                             changeMode("view");
                             return;
                         }
-
-                        setHeight(measureTextAreaHeight());
-                    }}
-                    onKeyUp={() => {
-                        setHeight(measureTextAreaHeight());
                     }}
                 />
             )}

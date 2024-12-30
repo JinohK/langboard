@@ -2,26 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { cn, withRef } from "@udecode/cn";
-import { getMentionOnSelectItem } from "@udecode/plate-mention";
-import {
-    InlineCombobox,
-    InlineComboboxContent,
-    InlineComboboxEmpty,
-    InlineComboboxGroup,
-    InlineComboboxInput,
-    InlineComboboxItem,
-} from "./inline-combobox";
+import { InlineCombobox, InlineComboboxContent, InlineComboboxEmpty, InlineComboboxGroup, InlineComboboxInput } from "./inline-combobox";
 import { PlateElement } from "./plate-element";
-import { User } from "@/core/models";
-import UserAvatar from "@/components/UserAvatar";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser, User } from "@/core/models";
 import { useTranslation } from "react-i18next";
-
-const onSelectItem = getMentionOnSelectItem();
+import { createShortUUID } from "@/core/utils/StringUtils";
+import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
 
 export interface IMentionInputElement {
-    currentUser: IAuthUser;
-    mentionableUsers: User.Interface[];
+    currentUser: AuthUser.TModel;
+    mentionableUsers: User.TModel[];
 }
 
 export const MentionInputElement = withRef<typeof PlateElement, IMentionInputElement>(
@@ -33,12 +23,12 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
             const userList: (User.Interface & { key: string; text: string })[] = [];
             for (let i = 0; i < mentionableUsers.length; ++i) {
                 const user = mentionableUsers[i];
-                if (user.uid === currentUser.uid || !User.isValidUser(user)) {
+                if (user.uid === currentUser.uid || !user.isValidUser()) {
                     continue;
                 }
 
                 userList.push({
-                    ...user,
+                    ...user.copy(),
                     text: user.username,
                     key: user.uid,
                 });
@@ -63,30 +53,7 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
 
                         <InlineComboboxGroup>
                             {users.map((user) => (
-                                <InlineComboboxItem
-                                    key={user.key}
-                                    value={`${user.firstname} ${user.lastname} ${user.username}`}
-                                    onClick={() => onSelectItem(editor, user, search)}
-                                    className="h-auto p-0"
-                                >
-                                    <UserAvatar.Root
-                                        user={user}
-                                        withName
-                                        labelClassName="gap-1 p-1 w-full"
-                                        customName={
-                                            <div>
-                                                <div className="text-sm leading-none">
-                                                    {user.firstname} {user.lastname}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground/50">@{user.username}</div>
-                                            </div>
-                                        }
-                                    >
-                                        <UserAvatar.List>
-                                            <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                                        </UserAvatar.List>
-                                    </UserAvatar.Root>
-                                </InlineComboboxItem>
+                                <MentionInputComboboxItem key={createShortUUID()} search={search} user={user} editor={editor} />
                             ))}
                         </InlineComboboxGroup>
                     </InlineComboboxContent>

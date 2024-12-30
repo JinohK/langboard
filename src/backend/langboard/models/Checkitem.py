@@ -14,6 +14,7 @@ class Checkitem(SoftDeleteModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "card_uid": self.card_id.to_short_code(),
             "title": self.title,
             "checkitem_uid": self.checkitem_id.to_short_code() if self.checkitem_id else None,
             "cardified_uid": self.cardified_id.to_short_code() if self.cardified_id else None,

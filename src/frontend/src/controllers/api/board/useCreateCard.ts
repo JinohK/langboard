@@ -1,7 +1,6 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCard } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICreateCardForm {
@@ -10,11 +9,7 @@ export interface ICreateCardForm {
     title: string;
 }
 
-export interface ICreateCardResponse {
-    card: ProjectCard.IBoard;
-}
-
-const useCreateCard = (options?: TMutationOptions<ICreateCardForm, ICreateCardResponse>) => {
+const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string }>) => {
     const { mutate } = useQueryMutation();
 
     const createCard = async (params: ICreateCardForm) => {
@@ -26,7 +21,7 @@ const useCreateCard = (options?: TMutationOptions<ICreateCardForm, ICreateCardRe
             title: params.title,
         });
 
-        return res.data;
+        return res.data.card.uid;
     };
 
     const result = mutate(["create-card"], createCard, {

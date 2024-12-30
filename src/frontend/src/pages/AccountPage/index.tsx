@@ -9,6 +9,7 @@ import EmailPage from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import GroupsPage from "@/pages/AccountPage/GroupsPage";
 
 function AccountPage(): JSX.Element {
     const { isAuthenticated } = useAuth();
@@ -43,6 +44,13 @@ function AccountPage(): JSX.Element {
                 navigate(ROUTES.ACCOUNT.PASSWORD);
             },
         },
+        [ROUTES.ACCOUNT.GROUPS]: {
+            icon: "users",
+            name: "myAccount.Groups",
+            onClick: () => {
+                navigate(ROUTES.ACCOUNT.GROUPS);
+            },
+        },
     };
 
     const pathname: string = location.pathname;
@@ -59,6 +67,9 @@ function AccountPage(): JSX.Element {
             break;
         case ROUTES.ACCOUNT.PASSWORD:
             pageContent = <PasswordPage />;
+            break;
+        case ROUTES.ACCOUNT.GROUPS:
+            pageContent = <GroupsPage />;
             break;
     }
 

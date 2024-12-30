@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]): string {
     return twMerge(clsx(inputs.filter(Boolean).join(" ")));
 }
 
-export const measureHeight = (element: React.ReactElement): Promise<number> =>
+export const measureComponentHeight = (element: React.ReactElement): Promise<number> =>
     new Promise((resolve) => {
         const rootElem = document.createElement("div");
         const styles = {
@@ -33,3 +33,14 @@ export const measureHeight = (element: React.ReactElement): Promise<number> =>
             resolve(height);
         });
     });
+
+export const measureTextAreaHeight = (textarea: HTMLTextAreaElement): number => {
+    const cloned = textarea.cloneNode(true) as HTMLTextAreaElement;
+    cloned.style.width = `${textarea.offsetWidth}px`;
+    cloned.style.height = "0px";
+    document.body.appendChild(cloned);
+    const height = cloned.scrollHeight;
+    document.body.removeChild(cloned);
+    cloned.remove();
+    return height;
+};

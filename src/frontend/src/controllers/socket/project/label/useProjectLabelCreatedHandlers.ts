@@ -3,17 +3,16 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 
-export interface IProjectLabelCreatedResponse {
+export interface IProjectLabelCreatedRawResponse {
     label: ProjectLabel.Interface;
 }
 
-export interface IUseProjectLabelCreatedHandlersProps extends IBaseUseSocketHandlersProps<IProjectLabelCreatedResponse> {
+export interface IUseProjectLabelCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectLabelCreatedHandlers = ({ socket, callback, projectUID }: IUseProjectLabelCreatedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useProjectLabelCreatedHandlers = ({ callback, projectUID }: IUseProjectLabelCreatedHandlersProps) => {
+    return useSocketHandler<{}, IProjectLabelCreatedRawResponse>({
         topic: ESocketTopic.Project,
         topicId: projectUID,
         eventKey: `project-label-created-${projectUID}`,
@@ -21,6 +20,10 @@ const useProjectLabelCreatedHandlers = ({ socket, callback, projectUID }: IUsePr
             name: SOCKET_SERVER_EVENTS.PROJECT.LABEL.CREATED,
             params: { uid: projectUID },
             callback,
+            responseConverter: (data) => {
+                ProjectLabel.Model.fromObject(data.label, true);
+                return {};
+            },
         },
     });
 };

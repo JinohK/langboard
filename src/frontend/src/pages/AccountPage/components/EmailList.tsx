@@ -7,12 +7,8 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IEmailComponentProps } from "@/pages/AccountPage/components/types";
 
-function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailComponentProps): JSX.Element {
-    const [t, i18n] = useTranslation();
-    const { mutate: deleteSubEmailMutate, createRevertToastButton } = useDeleteSubEmail(updatedUser);
-    const { mutate: resendNewEmailLinkMutate } = useAddNewEmail();
-
-    const skeletonEmails = (
+function SkeletonEmails(): JSX.Element {
+    return (
         <>
             <Flex gap="3" p="3">
                 <Skeleton h="6" w="16" />
@@ -28,6 +24,12 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
             </Flex>
         </>
     );
+}
+
+function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailComponentProps): JSX.Element {
+    const [t, i18n] = useTranslation();
+    const { mutate: deleteSubEmailMutate, createRevertToastButton } = useDeleteSubEmail(updatedUser);
+    const { mutate: resendNewEmailLinkMutate } = useAddNewEmail();
 
     const handleSubmit = (email: string) => {
         if (isValidating) {
@@ -96,7 +98,7 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
     return (
         <Card.Root>
             <Card.Content className="p-0">
-                {!user && skeletonEmails}
+                {!user && <SkeletonEmails />}
                 {user && (
                     <Flex gap="3" p="3">
                         <Badge>{t("myAccount.Primary")}</Badge>
@@ -117,7 +119,6 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
                                         type="button"
                                         variant="secondary"
                                         size="sm"
-                                        loadingIconSize="4"
                                         onClick={() => handleResend(subEmail.email)}
                                         isValidating={isValidating}
                                     >
@@ -128,7 +129,6 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
                                     type="button"
                                     variant="destructive"
                                     size="icon-sm"
-                                    loadingIconSize="4"
                                     onClick={() => handleSubmit(subEmail.email)}
                                     isValidating={isValidating}
                                 >

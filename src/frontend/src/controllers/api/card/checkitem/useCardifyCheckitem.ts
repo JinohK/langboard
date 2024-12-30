@@ -1,7 +1,6 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICardifyCheckitemForm {
@@ -31,8 +30,6 @@ const useCardifyCheckitem = (options?: TMutationOptions<ICardifyCheckitemForm, I
             with_sub_checkitems: params.with_sub_checkitems,
             with_assign_users: params.with_assign_users,
         });
-
-        User.transformFromApi(res.data.card.members);
 
         return res.data;
     };

@@ -90,13 +90,13 @@ class CardCommentService(BaseService):
             api_comment["user"] = bot.api_response_as_user() if bot else User.create_unknown_user_api_response()
         api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
 
-        model_id = await SocketModelIdService.create_model_id({"comment": api_comment, "card_uid": card.get_uid()})
+        model_id = await SocketModelIdService.create_model_id({"comment": api_comment})
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:added:{card.get_uid()}",
-            data_keys=["comment", "card_uid"],
+            data_keys="comment",
         )
 
         return SocketModelIdBaseResult(model_id, (comment, api_comment), publish_model)
@@ -196,7 +196,7 @@ class CardCommentService(BaseService):
 
         model_id = await SocketModelIdService.create_model_id(model)
 
-        data_keys = ["comment_uid", "reaction", "is_reacted"]
+        data_keys = ["reaction", "is_reacted"]
         if isinstance(user_or_bot, User):
             data_keys.append("user_uid")
         else:

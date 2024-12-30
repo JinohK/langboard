@@ -1,9 +1,7 @@
-import { Button, DateTimePicker, IconComponent, Skeleton, Toast } from "@/components/base";
+import { Button, DateTimePicker, Flex, IconComponent, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
-import useCardDeadlineChangedHandlers from "@/controllers/socket/card/useCardDeadlineChangedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -15,29 +13,21 @@ export function SkeletonBoardCardDeadline() {
 }
 
 const BoardCardDeadline = memo(() => {
-    const { projectUID, card, socket, hasRoleAction } = useBoardCard();
+    const { projectUID, card, hasRoleAction } = useBoardCard();
     const { t } = useTranslation();
     const { mutate: changeCardDetailsMutate } = useChangeCardDetails("deadline_at");
-    const [deadline, setDeadline] = useState<Date | undefined>(card.deadline_at);
+    const deadline = card.useField("deadline_at");
     const [isSaving, setIsSaving] = useState(false);
     const editable = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const handlers = useCardDeadlineChangedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.deadline_at = data.deadline_at;
-            setDeadline(data.deadline_at);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const changeDeadline = (date: Date | undefined) => {
         if (!editable) {
             return;
         }
 
-        if (deadline?.getTime() === date?.getTime()) {
-            return;
+        if ((date as unknown as string) !== "") {
+            if (deadline?.getTime() === date?.getTime()) {
+                return;
+            }
         }
 
         setIsSaving(true);
@@ -49,10 +39,6 @@ const BoardCardDeadline = memo(() => {
                 deadline_at: date,
             },
             {
-                onSuccess: (data) => {
-                    card.deadline_at = data.deadline_at;
-                    setDeadline(data.deadline_at);
-                },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
@@ -82,37 +68,45 @@ const BoardCardDeadline = memo(() => {
                     {deadline?.toLocaleString() ?? t("card.No deadline")}
                 </span>
             ) : (
-                <DateTimePicker
-                    value={deadline}
-                    min={new Date(new Date().setMinutes(new Date().getMinutes() + 30))}
-                    onChange={(date) => {
-                        date?.setSeconds(0);
-                        changeDeadline(date);
-                    }}
-                    disabled={isSaving}
-                    timePicker={{
-                        hour: true,
-                        minute: true,
-                        second: false,
-                    }}
-                    renderTrigger={() => (
+                <Flex items="center">
+                    <DateTimePicker
+                        value={deadline}
+                        min={new Date(new Date().setMinutes(new Date().getMinutes() + 30))}
+                        onChange={(date) => {
+                            date?.setSeconds(0);
+                            changeDeadline(date);
+                        }}
+                        disabled={isSaving}
+                        timePicker={{
+                            hour: true,
+                            minute: true,
+                            second: false,
+                        }}
+                        renderTrigger={() => (
+                            <SubmitButton
+                                type="button"
+                                variant={deadline ? "default" : "outline"}
+                                className={cn("h-8 gap-2 px-3 lg:h-10", deadline && "rounded-r-none")}
+                                title={t("card.Set deadline")}
+                                onClick={() => {}}
+                                isValidating={isSaving}
+                            >
+                                <IconComponent icon="calendar" size="4" />
+                                {deadline?.toLocaleString() ?? t("card.Set deadline")}
+                            </SubmitButton>
+                        )}
+                    />
+                    {deadline && (
                         <Button
-                            variant={deadline ? "default" : "outline"}
-                            className="h-8 gap-2 lg:h-10"
-                            title={t("card.Set deadline")}
+                            variant="default"
+                            className="h-8 gap-2 rounded-l-none border-l border-l-secondary/70 px-2 lg:h-10"
+                            onClick={() => changeDeadline("" as unknown as undefined)}
                             disabled={isSaving}
                         >
-                            {isSaving ? (
-                                <IconComponent icon="loader-circle" size="5" strokeWidth="3" className="animate-spin" />
-                            ) : (
-                                <>
-                                    <IconComponent icon="calendar" size="4" />
-                                    {deadline?.toLocaleString() ?? t("card.Set deadline")}
-                                </>
-                            )}
+                            <IconComponent icon="trash-2" size="4" />
                         </Button>
                     )}
-                />
+                </Flex>
             )}
         </>
     );

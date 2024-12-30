@@ -6,11 +6,14 @@ from ..storage import FileModel
 from ..utils.String import generate_random_string
 from .ColumnTypes import DateTimeField, ModelColumnType, SecretStr, SecretStrType
 from .Models import SoftDeleteModel
+from .SnowflakeID import SnowflakeID
 
 
 class User(SoftDeleteModel, table=True):
-    BOT_UID: ClassVar[str] = "-1"
-    GROUP_EMAIL_UID: ClassVar[str] = "-2"
+    USER_TYPE: ClassVar[str] = "user"
+    UNKNOWN_USER_TYPE: ClassVar[str] = "unknown"
+    BOT_TYPE: ClassVar[str] = "bot"
+    GROUP_EMAIL_TYPE: ClassVar[str] = "group_email"
     firstname: str = Field(nullable=False)
     lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)
@@ -38,6 +41,7 @@ class User(SoftDeleteModel, table=True):
             return User.create_unknown_user_api_response()
 
         return {
+            "type": User.USER_TYPE,
             "uid": self.get_uid(),
             "firstname": self.firstname,
             "lastname": self.lastname,
@@ -49,12 +53,24 @@ class User(SoftDeleteModel, table=True):
     @staticmethod
     def create_unknown_user_api_response() -> dict[str, Any]:
         return {
+            "type": User.UNKNOWN_USER_TYPE,
             "uid": "0",
             "firstname": "",
             "lastname": "",
             "email": "",
             "username": "",
             "avatar": None,
+        }
+
+    @staticmethod
+    def create_email_user_api_response(user_id: SnowflakeID, email: str) -> dict[str, Any]:
+        return {
+            "type": User.GROUP_EMAIL_TYPE,
+            "uid": user_id.to_short_code(),
+            "firstname": email,
+            "lastname": "",
+            "email": email,
+            "username": "",
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

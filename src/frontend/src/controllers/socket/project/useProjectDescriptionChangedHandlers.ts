@@ -1,18 +1,18 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { Project } from "@/core/models";
 
-export interface IProjectDescriptionChangedResponse {
-    description?: string;
+export interface IProjectDescriptionChangedRawResponse {
+    description: string;
 }
 
-export interface IUseProjectDescriptionChangedHandlersProps extends IBaseUseSocketHandlersProps<IProjectDescriptionChangedResponse> {
+export interface IUseProjectDescriptionChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectDescriptionChangedHandlers = ({ socket, callback, projectUID }: IUseProjectDescriptionChangedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useProjectDescriptionChangedHandlers = ({ callback, projectUID }: IUseProjectDescriptionChangedHandlersProps) => {
+    return useSocketHandler<{}, IProjectDescriptionChangedRawResponse>({
         topic: ESocketTopic.Project,
         topicId: projectUID,
         eventKey: `project-description-changed-${projectUID}`,
@@ -20,6 +20,13 @@ const useProjectDescriptionChangedHandlers = ({ socket, callback, projectUID }: 
             name: SOCKET_SERVER_EVENTS.PROJECT.DESCRIPTION_CHANGED,
             params: { uid: projectUID },
             callback,
+            responseConverter: (data) => {
+                const project = Project.Model.getModel(projectUID);
+                if (project) {
+                    project.description = data.description;
+                }
+                return {};
+            },
         },
     });
 };

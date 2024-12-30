@@ -1,6 +1,5 @@
 import { createContext, useContext, useRef } from "react";
-import { Project, ProjectCard, User } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser, Project, ProjectCard, User } from "@/core/models";
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
@@ -9,13 +8,13 @@ import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEve
 
 export interface IBoardCardContext {
     projectUID: string;
-    card: ProjectCard.IBoardWithDetails;
-    currentUser: IAuthUser;
+    card: ProjectCard.TModel;
+    currentUser: AuthUser.TModel;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     socket: ISocketContext;
     editorsRef: React.MutableRefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
-    replyRef: React.MutableRefObject<(targetUser: User.Interface) => void>;
+    replyRef: React.MutableRefObject<(targetUser: User.TModel) => void>;
     subscribeEditorSocketEvents: (uid: string, startCallback: (userUIDs: string[]) => void, stopCallback: (userUIDs: string[]) => void) => () => void;
     sharedClassNames: {
         popoverContent: string;
@@ -24,16 +23,16 @@ export interface IBoardCardContext {
 
 interface IBoardCardProviderProps {
     projectUID: string;
-    card: ProjectCard.IBoardWithDetails;
-    currentUser: IAuthUser;
+    card: ProjectCard.TModel;
+    currentUser: AuthUser.TModel;
     currentUserRoleActions: Project.TRoleActions[];
     children: React.ReactNode;
 }
 
 const initialContext = {
     projectUID: "",
-    card: {} as ProjectCard.IBoardWithDetails,
-    currentUser: {} as IAuthUser,
+    card: {} as ProjectCard.TModel,
+    currentUser: {} as AuthUser.TModel,
     hasRoleAction: () => false,
     socket: {} as ISocketContext,
     editorsRef: { current: {} },
@@ -49,7 +48,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRo
     const socket = useSocket();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
-    const replyRef = useRef<(targetUser: User.Interface) => void>(() => {});
+    const replyRef = useRef<(targetUser: User.TModel) => void>(() => {});
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const sharedClassNames = {
         popoverContent: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",

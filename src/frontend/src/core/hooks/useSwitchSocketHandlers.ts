@@ -19,16 +19,20 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
     const [subscribedTopics, setSubscribedTopics] = useState<ESocketTopic[]>([]);
 
     useEffect(() => {
-        const notifiers: [ESocketTopic, string][] = [];
+        const notifiers: [ESocketTopic, string, string][] = [];
         for (let i = 0; i < handlers.length; ++i) {
-            const { topic } = handlers[i];
-            if (!topic) {
+            const { topic, topicId } = handlers[i];
+            if (!topic || !topicId) {
                 continue;
             }
 
             const key = createUUID();
-            notifiers.push([topic, key]);
-            socket.subscribeTopicNotifier(topic, key, (isSubscribed) => {
+            notifiers.push([topic, topicId, key]);
+            socket.subscribeTopicNotifier(topic, topicId, key, (subscribedTopicId, isSubscribed) => {
+                if (subscribedTopicId !== topicId) {
+                    return;
+                }
+
                 setSubscribedTopics((prev) => {
                     const newTopics = prev.filter((t) => t !== topic);
                     if (isSubscribed) {
@@ -41,8 +45,8 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
 
         return () => {
             for (let i = 0; i < notifiers.length; ++i) {
-                const [topic, key] = notifiers[i];
-                socket.unsubscribeTopicNotifier(topic, key);
+                const [topic, topicId, key] = notifiers[i];
+                socket.unsubscribeTopicNotifier(topic, topicId, key);
             }
         };
     }, []);

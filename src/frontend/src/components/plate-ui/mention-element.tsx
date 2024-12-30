@@ -8,15 +8,14 @@ import { useElement } from "@udecode/plate-common/react";
 import { useFocused, useSelected } from "slate-react";
 import { useMounted } from "@/core/hooks/useMounted";
 import { PlateElement } from "./plate-element";
-import { IAuthUser } from "@/core/providers/AuthProvider";
-import { User } from "@/core/models";
+import { AuthUser, User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 
 export const MentionElement = withRef<
     typeof PlateElement,
     {
-        currentUser: IAuthUser;
-        mentionableUsers: User.Interface[];
+        currentUser: AuthUser.TModel;
+        mentionableUsers: User.TModel[];
         prefix?: string;
         renderLabel?: (mentionable: TMentionElement) => string;
         onClick?: (mentionNode: any) => void;
@@ -26,7 +25,7 @@ export const MentionElement = withRef<
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionableUsers.find((user) => user.uid === element.key) ?? User.createUnknownUser();
+    const mentionedUser = mentionableUsers.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
 
     return (
         <PlateElement

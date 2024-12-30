@@ -33,3 +33,8 @@ class EmailForm(BaseFormModel):
 class ChangePasswordForm(BaseFormModel):
     current_password: str
     new_password: str
+
+
+@form_model
+class UpdateUserGroupAssignedEmailForm(BaseFormModel):
+    emails: list[str]

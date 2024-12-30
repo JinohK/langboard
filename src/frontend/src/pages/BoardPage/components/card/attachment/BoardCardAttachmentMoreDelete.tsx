@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardCardAttachmentMoreDeleteProps extends IBaseBoardCardAttachmentMoreProps {
-    deletedAttachment: (uid: string) => void;
     sharedErrorHandler: (error: unknown) => string;
 }
 
@@ -15,7 +14,6 @@ function BoardCardAttachmentMoreDelete({
     isValidating,
     setIsValidating,
     setIsMoreMenuOpened,
-    deletedAttachment,
     sharedErrorHandler,
 }: IBoardCardAttachmentMoreDeleteProps): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
@@ -40,7 +38,6 @@ function BoardCardAttachmentMoreDelete({
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
-                deletedAttachment(attachment.uid);
                 return t("card.successes.File deleted successfully.");
             },
             finally: () => {

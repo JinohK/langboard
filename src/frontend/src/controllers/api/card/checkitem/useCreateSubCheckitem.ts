@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCheckitem, ProjectCheckitemTimer, User } from "@/core/models";
+import { ProjectCheckitem } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICreateSubCheckitemForm {
@@ -13,7 +13,7 @@ export interface ICreateSubCheckitemForm {
 }
 
 export interface ICreateSubCheckitemResponse {
-    checkitem: ProjectCheckitem.IBoardSub;
+    checkitem: ProjectCheckitem.TModel;
 }
 
 const useCreateSubCheckitem = (options?: TMutationOptions<ICreateSubCheckitemForm, ICreateSubCheckitemResponse>) => {
@@ -30,10 +30,11 @@ const useCreateSubCheckitem = (options?: TMutationOptions<ICreateSubCheckitemFor
             assigned_users: params.assigned_users,
         });
 
-        ProjectCheckitemTimer.transformFromApi(res.data.checkitem.timer);
-        User.transformFromApi(res.data.checkitem.assigned_members);
+        res.data.checkitem.project_uid = params.project_uid;
 
-        return res.data;
+        return {
+            checkitem: ProjectCheckitem.Model.fromObject(res.data.checkitem),
+        };
     };
 
     const result = mutate(["create-sub-checkitem"], createSubCheckitem, {

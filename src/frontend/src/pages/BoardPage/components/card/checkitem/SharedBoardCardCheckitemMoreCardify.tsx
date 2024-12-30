@@ -1,6 +1,5 @@
 import { Button, Checkbox, DropdownMenu, Flex, Label, Popover, Select, SubmitButton, Toast } from "@/components/base";
 import useCardifyCheckitem from "@/controllers/api/card/checkitem/useCardifyCheckitem";
-import { Project } from "@/core/models";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { CheckedState } from "@radix-ui/react-checkbox";
@@ -9,11 +8,11 @@ import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
-    const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler, update } = useBoardCardCheckitem();
+    const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCheckitem();
-    const [allColumns] = useState(card.project_all_columns.filter((column) => column.uid !== Project.ARCHIVE_COLUMN_UID));
+    const [allColumns] = useState(card.project_all_columns.filter((column) => !column.isArchiveColumn()));
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
@@ -39,9 +38,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
-            success: (data) => {
-                checkitem.cardified_uid = data.card_uid;
-                update();
+            success: () => {
                 return t("card.successes.Cardified the checkitem successfully.");
             },
             finally: () => {
@@ -59,7 +56,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
         }
 
         if (!opened) {
-            setSelectedColumnUID(card.column_uid !== Project.ARCHIVE_COLUMN_UID ? card.column_uid : card.project_all_columns[0]?.uid);
+            setSelectedColumnUID(!card.is_archived ? card.column_uid : card.project_all_columns[0]?.uid);
             setWithSubCheckitems(true);
             setWithAssignMembers(true);
         }

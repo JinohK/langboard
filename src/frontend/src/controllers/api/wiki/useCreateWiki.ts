@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectWiki, User } from "@/core/models";
+import { ProjectWiki } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface ICreateWikiForm {
@@ -10,7 +10,7 @@ export interface ICreateWikiForm {
 }
 
 export interface ICreateWikiResponse {
-    wiki: ProjectWiki.Interface;
+    wiki: ProjectWiki.TModel;
 }
 
 const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiResponse>) => {
@@ -24,9 +24,9 @@ const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiRe
             title: params.title,
         });
 
-        User.transformFromApi(res.data.wiki.assigned_members);
-
-        return res.data;
+        return {
+            wiki: ProjectWiki.Model.fromObject(res.data),
+        };
     };
 
     const result = mutate(["create-wiki"], createWiki, {

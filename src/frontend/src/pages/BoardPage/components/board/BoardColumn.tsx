@@ -1,13 +1,11 @@
 import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/api/board/useChangeCardOrder";
-import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useReorderRow from "@/core/hooks/useReorderRow";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
-import { BoardAddCarddProvider } from "@/core/providers/BoardAddCardProvider";
+import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
@@ -43,7 +41,7 @@ export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
 }
 
 export interface IBoardColumnProps {
-    column: ProjectColumn.Interface;
+    column: ProjectColumn.TModel;
     callbacksRef: React.MutableRefObject<Record<string, IRowDragCallback<IBoardColumnCardProps["card"]>>>;
     isOverlay?: bool;
 }
@@ -85,17 +83,25 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     const closeHoverCardRef = useRef<(() => void) | undefined>();
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
-    const createdCard = (card: ProjectCard.IBoard) => {
-        if (cardsMap[card.uid]) {
-            return;
-        }
+    ProjectCard.Model.subscribe(
+        "CREATION",
+        columnId,
+        (models) => {
+            for (let i = 0; i < models.length; ++i) {
+                const card = models[i];
+                if (cardsMap[card.uid]) {
+                    continue;
+                }
 
-        allCards.push(card);
-        cardsMap[card.uid] = card;
-        forceUpdate();
-    };
+                allCards.push(card);
+                cardsMap[card.uid] = card;
+            }
+            forceUpdate();
+        },
+        (model) => model.column_uid === column.uid
+    );
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
-        type: "BoardCard",
+        type: "ProjectCard",
         eventNameParams: { uid: column.uid },
         topicId: project.uid,
         allRowsMap: cardsMap,
@@ -105,15 +111,6 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
         socket,
         updater,
     });
-    const handlers = useBoardCardCreatedHandlers({
-        socket,
-        projectUID: project.uid,
-        columnUID: column.uid,
-        callback: (data) => {
-            createdCard(data.card);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: column.uid,
         data: {
@@ -225,7 +222,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     }
 
     return (
-        <BoardAddCarddProvider columnUID={column.uid} viewportId={columnId} toLastPage={toLastPage} createdCard={createdCard}>
+        <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={toLastPage}>
             <Card.Root {...rootProps}>
                 <Card.Header className="flex flex-row items-start space-y-0 pb-1 pt-4 text-left font-semibold" {...headerProps}>
                     <BoardColumnHeader isDragging={isDragging} column={column} />
@@ -234,7 +231,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                     <Card.Content
                         className={cn(
                             "flex flex-grow flex-col gap-2 p-3",
-                            hasRoleAction(Project.ERoleAction.CARD_WRITE) && column.uid !== Project.ARCHIVE_COLUMN_UID
+                            hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn()
                                 ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.1))]"
                                 : "max-h-[calc(100vh_-_theme(spacing.52)_-_theme(spacing.1))]"
                         )}
@@ -268,7 +265,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                     <BoardColumnAddCardButton />
                 </Card.Footer>
             </Card.Root>
-        </BoardAddCarddProvider>
+        </BoardAddCardProvider>
     );
 });
 

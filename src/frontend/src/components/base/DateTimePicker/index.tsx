@@ -11,7 +11,7 @@ import * as Popover from "@/components/base/Popover";
 import Calendar, { ICalendarProps } from "@/components/base/Calendar";
 import { ScreenMap } from "@/core/utils/VariantUtils";
 import { Dialog } from "@/components/base";
-import { measureHeight } from "@/core/utils/ComponentUtils";
+import { measureComponentHeight } from "@/core/utils/ComponentUtils";
 
 export interface IDateTimePickerProps extends ICalendarProps {
     renderTrigger: (props: DateTimeRenderTriggerProps) => React.ReactNode;
@@ -41,7 +41,7 @@ function DateTimePicker({ renderTrigger, onChange, ...props }: IDateTimePickerPr
 
         const rect = triggerRef.current.getBoundingClientRect();
 
-        const height = await measureHeight(<Calendar onChange={() => {}} {...props} />);
+        const height = await measureComponentHeight(<Calendar onChange={() => {}} {...props} />);
         setIsDialog(window.innerWidth < ScreenMap.size.sm || window.innerHeight < height + rect.bottom);
     }, []);
 

@@ -1,4 +1,4 @@
-import { Box, Flex, IconComponent } from "@/components/base";
+import { Box, Flex, IconComponent, Loading } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
 import Markdown from "@/components/Markdown";
 import { ChatMessageModel } from "@/core/models";
@@ -38,16 +38,7 @@ function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, classN
                     isWaiting && !message ? "flex items-end" : ""
                 )}
             >
-                {isWaiting && !message ? (
-                    <Flex justify="center" className="space-x-1">
-                        <span className="sr-only">Loading...</span>
-                        <Box size="3" rounded="full" className="animate-bounce bg-secondary [animation-delay:-0.3s]" />
-                        <Box size="3" rounded="full" className="animate-bounce bg-secondary [animation-delay:-0.15s]" />
-                        <Box size="3" rounded="full" className="animate-bounce bg-secondary" />
-                    </Flex>
-                ) : (
-                    <Markdown>{message}</Markdown>
-                )}
+                {isWaiting && !message ? <Loading variant="secondary" size="3" spacing="1" /> : <Markdown>{message}</Markdown>}
             </Box>
         </Flex>
     );

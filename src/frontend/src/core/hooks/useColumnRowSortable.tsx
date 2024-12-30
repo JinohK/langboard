@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from "react";
 import {
     Active,
@@ -16,27 +17,35 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import createCoordinateGetter from "@/core/hooks/createCoordinateGetter";
+import { BaseModel, TBaseModelInstance } from "@/core/models/Base";
 
 export interface ISortableData {
+    uid: string;
     order: number;
 }
 
-export interface ISortableDragData<T extends ISortableData> {
+export interface ISortableDragData<T extends ISortableData | TBaseModelInstance<ISortableData>> {
     type: string;
     data: T;
 }
 
-export interface IRowDragCallback<TRow extends ISortableData> {
+export interface IRowDragCallback<TRow extends ISortableData | TBaseModelInstance<ISortableData>> {
     onDragEnd: (originalRow: TRow, index: number) => void;
     onDragOverOrMove: (row: TRow, index: number, isForeign: bool) => void;
 }
 
-export interface IMoreDroppableZoneCallbacks<TColumn extends ISortableData, TRow extends ISortableData> {
+export interface IMoreDroppableZoneCallbacks<
+    TColumn extends ISortableData | TBaseModelInstance<ISortableData>,
+    TRow extends ISortableData | TBaseModelInstance<ISortableData>,
+> {
     onDragEnd?: (original: TColumn | TRow) => void;
     onDragOverOrMove?: (active: TColumn | TRow, original: TColumn | TRow) => void;
 }
 
-export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow extends ISortableData> {
+export interface IUseColumnRowSortableProps<
+    TColumn extends ISortableData | TBaseModelInstance<ISortableData>,
+    TRow extends ISortableData | TBaseModelInstance<ISortableData>,
+> {
     columnDragDataType: string;
     rowDragDataType: string;
     columnCallbacks?: {
@@ -55,7 +64,10 @@ export interface IUseColumnRowSortableProps<TColumn extends ISortableData, TRow 
     moreDroppableZoneCallbacks?: Record<UniqueIdentifier, IMoreDroppableZoneCallbacks<TColumn, TRow>>;
 }
 
-function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISortableData>({
+function useColumnRowSortable<
+    TColumn extends ISortableData | TBaseModelInstance<ISortableData>,
+    TRow extends ISortableData | TBaseModelInstance<ISortableData>,
+>({
     columnDragDataType,
     rowDragDataType,
     columnCallbacks,
@@ -120,14 +132,16 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
 
         const data = event.active.data.current;
         if (data?.type === columnDragDataType) {
-            setActiveColumn({ ...data.data });
-            columnCallbacks?.onDragStart?.(data.data, data.sortable.index);
+            const activeData = createFakeData(data.data);
+            setActiveColumn(activeData);
+            columnCallbacks?.onDragStart?.(activeData, data.sortable.index);
             return;
         }
 
         if (data?.type === rowDragDataType) {
-            setActiveRow({ ...data.data });
-            rowCallbacks?.onDragStart?.(data.data, data.sortable.index);
+            const activeData = createFakeData(data.data);
+            setActiveRow(activeData);
+            rowCallbacks?.onDragStart?.(activeData, data.sortable.index);
             return;
         }
     };
@@ -178,7 +192,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         const overId = event.over?.id;
         if (overId && moreDroppableZoneCallbacks?.[overId]) {
             if (event.active.data.current) {
-                moreDroppableZoneCallbacks[overId].onDragOverOrMove?.({ ...event.active.data.current.data }, activeRow ?? activeColumn!);
+                moreDroppableZoneCallbacks[overId].onDragOverOrMove?.(createFakeData(event.active.data.current.data), activeRow ?? activeColumn!);
             }
             return;
         }
@@ -195,7 +209,7 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
                 return;
             }
 
-            columnCallbacks?.onDragOverOrMove?.({ ...activeData.data }, activeColumn!, overData.sortable.index);
+            columnCallbacks?.onDragOverOrMove?.(createFakeData(activeData.data), activeColumn!, overData.sortable.index);
             return;
         }
 
@@ -238,11 +252,13 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
             overIndex = 0;
         }
 
+        const activeFakeData = createFakeData(activeData.data);
+
         if (!isDifferentColumn) {
             if (rowCallbacks?.onDragOverOrMove) {
-                rowCallbacks?.onDragOverOrMove?.(activeContainerId, { ...activeData.data }, overIndex, false);
+                rowCallbacks?.onDragOverOrMove?.(activeContainerId, activeFakeData, overIndex, false);
             } else {
-                containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove({ ...activeData.data }, overIndex, false);
+                containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove(activeFakeData, overIndex, false);
             }
             return;
         }
@@ -253,11 +269,11 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
 
         isUpdatingRef.current = true;
         if (rowCallbacks?.onDragOverOrMove) {
-            rowCallbacks?.onDragOverOrMove?.(overContainerId, { ...activeData.data }, overIndex, true);
-            rowCallbacks?.onDragOverOrMove?.(activeContainerId, { ...activeData.data }, -1, true);
+            rowCallbacks?.onDragOverOrMove?.(overContainerId, activeFakeData, overIndex, true);
+            rowCallbacks?.onDragOverOrMove?.(activeContainerId, activeFakeData, -1, true);
         } else {
-            containerIdRowDragCallbacksRef.current[overContainerId]?.onDragOverOrMove({ ...activeData.data }, overIndex, true);
-            containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove({ ...activeData.data }, -1, true);
+            containerIdRowDragCallbacksRef.current[overContainerId]?.onDragOverOrMove(activeFakeData, overIndex, true);
+            containerIdRowDragCallbacksRef.current[activeContainerId]?.onDragOverOrMove(activeFakeData, -1, true);
         }
         isUpdatingRef.current = false;
     };
@@ -269,6 +285,10 @@ function useColumnRowSortable<TColumn extends ISortableData, TRow extends ISorta
         setActiveRow(null);
 
         cancelCallback(originalColumn, originalRow);
+    };
+
+    const createFakeData = (data: unknown): any => {
+        return (data instanceof BaseModel ? data.asFake() : { ...(data as Record<string, unknown>) }) as any;
     };
 
     return { activeColumn, activeRow, containerIdRowDragCallbacksRef, sensors, onDragStart, onDragEnd, onDragOverOrMove, onDragCancel };

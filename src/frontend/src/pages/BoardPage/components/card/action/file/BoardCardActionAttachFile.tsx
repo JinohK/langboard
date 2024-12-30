@@ -29,7 +29,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAtta
         const count = Object.keys(attachedFileMap.current).length;
         for (let i = 0; i < files.length; ++i) {
             const key = createUUID();
-            attachedFileMap.current[key] = { key, file: files[i], order: count + i };
+            attachedFileMap.current[key] = { uid: key, file: files[i], order: count + i };
         }
 
         if (inputRef.current) {

@@ -6,13 +6,7 @@ import BoardSettingsLabelMoreRename from "@/pages/BoardPage/components/settings/
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsLabelMoreProps {
-    labelName: string;
-    labelDescription: string;
-    deletedLabel: (uid: string) => void;
-}
-
-function BoardSettingsLabelMore({ labelName, labelDescription, deletedLabel }: IBoardSettingsLabelMoreProps): JSX.Element {
+function BoardSettingsLabelMore(): JSX.Element {
     const { isValidating } = useBoardSettingsLabel();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
@@ -35,9 +29,9 @@ function BoardSettingsLabelMore({ labelName, labelDescription, deletedLabel }: I
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 <DropdownMenu.Group>
-                    <BoardSettingsLabelMoreRename setIsMoreMenuOpened={setIsOpened} labelName={labelName} />
-                    <BoardSettingsLabelMoreChangeDescription setIsMoreMenuOpened={setIsOpened} labelDescription={labelDescription} />
-                    <BoardSettingsLabelMoreDelete setIsMoreMenuOpened={setIsOpened} deletedLabel={deletedLabel} />
+                    <BoardSettingsLabelMoreRename setIsMoreMenuOpened={setIsOpened} />
+                    <BoardSettingsLabelMoreChangeDescription setIsMoreMenuOpened={setIsOpened} />
+                    <BoardSettingsLabelMoreDelete setIsMoreMenuOpened={setIsOpened} />
                 </DropdownMenu.Group>
             </DropdownMenu.Content>
         </DropdownMenu.Root>

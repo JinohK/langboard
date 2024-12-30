@@ -6,16 +6,12 @@ import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/se
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsLabelMoreChangeDescriptionProps extends IBoardSettingsLabelRelatedProps {
-    labelDescription: string;
-}
+export interface IBoardSettingsLabelMoreChangeDescriptionProps extends IBoardSettingsLabelRelatedProps {}
 
-function BoardSettingsLabelMoreChangeDescription({
-    setIsMoreMenuOpened,
-    labelDescription,
-}: IBoardSettingsLabelMoreChangeDescriptionProps): JSX.Element {
+function BoardSettingsLabelMoreChangeDescription({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreChangeDescriptionProps): JSX.Element {
     const { project } = useBoardSettings();
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
+    const labelDescription = label.useField("description");
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const descriptionInputId = `project-label-description-input-${label.uid}`;
@@ -29,9 +25,9 @@ function BoardSettingsLabelMoreChangeDescription({
         setIsValidating(true);
 
         const descriptionInput = document.getElementById(descriptionInputId) as HTMLInputElement;
-        const description = descriptionInput.value.trim();
+        const newValue = descriptionInput.value.trim();
 
-        if (!description) {
+        if (!newValue) {
             Toast.Add.error(t("project.settings.errors.Description cannot be empty."));
             setIsValidating(false);
             descriptionInput.focus();
@@ -41,7 +37,7 @@ function BoardSettingsLabelMoreChangeDescription({
         const promise = changeProjectLabelDetailsMutateAsync({
             project_uid: project.uid,
             label_uid: label.uid,
-            description,
+            description: newValue,
         });
 
         const toastId = Toast.Add.promise(promise, {

@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectCardComment, User } from "@/core/models";
+import { ProjectCardComment } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetCardCommentsForm {
@@ -10,23 +10,19 @@ export interface IGetCardCommentsForm {
 }
 
 export interface IGetCardCommentsResponse {
-    comments: ProjectCardComment.IBoard[];
+    comments: ProjectCardComment.TModel[];
 }
 
-const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOptions<IGetCardCommentsForm, IGetCardCommentsResponse>) => {
+const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOptions<unknown, IGetCardCommentsResponse>) => {
     const { query } = useQueryMutation();
 
     const getCardComments = async () => {
         const url = format(API_ROUTES.BOARD.CARD.COMMENT.GET_LIST, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.get(url);
 
-        for (let i = 0; i < res.data.comments.length; ++i) {
-            const comment = res.data.comments[i];
-            User.transformFromApi(comment.user);
-            ProjectCardComment.transformFromApi(comment);
-        }
-
-        return res.data;
+        return {
+            comments: ProjectCardComment.Model.fromObjectArray(res.data.comments),
+        };
     };
 
     const result = query([`get-card-comments-${params.card_uid}`], getCardComments, {

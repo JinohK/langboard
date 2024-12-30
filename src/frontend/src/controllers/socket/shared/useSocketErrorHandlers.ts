@@ -4,9 +4,8 @@ export interface IUseSocketErrorHandlersProps extends IBaseUseSocketHandlersProp
     eventKey: string;
 }
 
-const useSocketErrorHandlers = ({ socket, callback, eventKey }: IUseSocketErrorHandlersProps) => {
+const useSocketErrorHandlers = ({ callback, eventKey }: IUseSocketErrorHandlersProps) => {
     return useSocketHandler<ErrorEvent>({
-        socket,
         eventKey,
         onProps: {
             name: "error",

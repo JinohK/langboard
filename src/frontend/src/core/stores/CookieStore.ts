@@ -15,7 +15,7 @@ const useCookieStore = create<ICookieStore>(() => {
         get: (key: string) => cookies.get(key),
         set: (key: string, value: string) => cookies.set(key, value, { path: "/" }),
         remove: (key: string) => cookies.remove(key, { path: "/" }),
-        clear: () => Object.keys(cookies.getAll()).forEach((key) => cookies.remove(key, { path: "/" })),
+        clear: () => Object.keys(cookies.getAll()).forEach((key) => cookies.remove(key as string, { path: "/" })),
     };
 });
 

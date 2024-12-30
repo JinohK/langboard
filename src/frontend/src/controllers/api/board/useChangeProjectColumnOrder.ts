@@ -9,9 +9,7 @@ export interface IChangeProjectColumnOrderForm {
     order: number;
 }
 
-export interface IChangeProjectColumnOrderResponse {}
-
-const useChangeProjectColumnOrder = (options?: TMutationOptions<IChangeProjectColumnOrderForm, IChangeProjectColumnOrderResponse>) => {
+const useChangeProjectColumnOrder = (options?: TMutationOptions<IChangeProjectColumnOrderForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeProjectColumnOrder = async (params: IChangeProjectColumnOrderForm) => {

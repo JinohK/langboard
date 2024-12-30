@@ -9,9 +9,7 @@ export interface IUpdateCardLabelsForm {
     labels: string[];
 }
 
-export interface IUpdateCardLabelsResponse {}
-
-const useUpdateCardLabels = (options?: TMutationOptions<IUpdateCardLabelsForm, IUpdateCardLabelsResponse>) => {
+const useUpdateCardLabels = (options?: TMutationOptions<IUpdateCardLabelsForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateCardLabels = async (params: IUpdateCardLabelsForm) => {

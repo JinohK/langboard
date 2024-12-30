@@ -82,7 +82,7 @@ class CardService(BaseService):
         api_card["global_relationships"] = [relationship.api_response() for relationship in global_relationships]
 
         card_relationship_service = self._get_service(CardRelationshipService)
-        api_card["relationships"] = await card_relationship_service.get_all_by_card(project, card, as_api=True)
+        api_card["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
         return api_card
 
     async def get_board_list(self, project: TProjectParam) -> list[dict[str, Any]]:
@@ -174,18 +174,16 @@ class CardService(BaseService):
         card_api = card.api_response()
         card_api["count_comment"] = count_comment
         card_api["members"] = await self.get_assigned_users(card, as_api=True)
-        card_api["relationships"] = {
-            "parents": parents,
-            "children": children,
-        }
-        card_api["labels"] = [label.get_uid() for label in raw_labels]
+        card_relationship_service = self._get_service(CardRelationshipService)
+        card_api["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
+        card_api["label_uids"] = [label.get_uid() for label in raw_labels]
         return card_api
 
     async def create(
         self, user_or_bot: User | BotType, project: TProjectParam, column: TColumnParam, title: str
     ) -> SocketModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
-        if not project or column == Project.ARCHIVE_COLUMN_UID:
+        if not project or column == project.ARCHIVE_COLUMN_UID():
             return None
 
         column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
@@ -306,12 +304,12 @@ class CardService(BaseService):
             if not original_column or original_column.project_id != project.id:
                 return None
 
-        original_column_id = original_column.id if original_column else Project.ARCHIVE_COLUMN_UID
+        original_column_id = original_column.id if original_column else project.ARCHIVE_COLUMN_UID()
         # original_column_name = original_column.name if original_column else project.archive_column_name
         new_column = None
         new_column_id = SnowflakeID.from_short_code(column_uid)
         if column_uid:
-            if column_uid != Project.ARCHIVE_COLUMN_UID:
+            if column_uid != project.ARCHIVE_COLUMN_UID():
                 new_column = await self._get_by_param(ProjectColumn, column_uid)
                 if not new_column or new_column.project_id != card.project_id:
                     return None
@@ -331,12 +329,14 @@ class CardService(BaseService):
         )
         if column_uid:
             update_query = self.__filter_column(
+                project,
                 shared_update_query.values({Card.order: Card.order - 1}).where(Card.column("order") >= original_order),
                 original_column_id,
             )
             await self._db.exec(update_query)
 
             update_query = self.__filter_column(
+                project,
                 (shared_update_query.values({Card.order: Card.order + 1}).where(Card.column("order") >= order)),
                 new_column_id,
             )
@@ -353,7 +353,7 @@ class CardService(BaseService):
                     (Card.column("order") >= order) & (Card.column("order") < original_order)
                 )
 
-            update_query = self.__filter_column(update_query, original_column_id)
+            update_query = self.__filter_column(project, update_query, original_column_id)
             await self._db.exec(update_query)
 
         card.order = order
@@ -379,14 +379,14 @@ class CardService(BaseService):
                         topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:order:changed:{new_column.get_uid()}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "to_column"},
+                        custom_data={"move_type": "to_column", "column_uid": new_column.get_uid()},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
                         event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "from_column"},
+                        custom_data={"move_type": "from_column", "column_uid": original_column_id},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
@@ -446,7 +446,7 @@ class CardService(BaseService):
                 .table(User)
                 .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
                 .where(
-                    (ProjectAssignedUser.column("project_uid") == card.project_id)
+                    (ProjectAssignedUser.column("project_id") == card.project_id)
                     & (ProjectAssignedUser.column("user_id").in_(assigned_user_ids))
                 )
             )
@@ -521,21 +521,24 @@ class CardService(BaseService):
         return SocketModelIdBaseResult(model_id, True, publish_model)
 
     @overload
-    def __filter_column(self, query: Select[_TSelectParam], column_id: SnowflakeID | str) -> Select[_TSelectParam]: ...
+    def __filter_column(
+        self, project: Project, query: Select[_TSelectParam], column_id: SnowflakeID | str
+    ) -> Select[_TSelectParam]: ...
     @overload
     def __filter_column(
-        self, query: SelectOfScalar[_TSelectParam], column_id: SnowflakeID | str
+        self, project: Project, query: SelectOfScalar[_TSelectParam], column_id: SnowflakeID | str
     ) -> SelectOfScalar[_TSelectParam]: ...
     @overload
-    def __filter_column(self, query: Update, column_id: SnowflakeID | str) -> Update: ...
+    def __filter_column(self, project: Project, query: Update, column_id: SnowflakeID | str) -> Update: ...
     @overload
-    def __filter_column(self, query: Delete, column_id: SnowflakeID | str) -> Delete: ...
+    def __filter_column(self, project: Project, query: Delete, column_id: SnowflakeID | str) -> Delete: ...
     def __filter_column(
         self,
+        project: Project,
         query: Select[_TSelectParam] | SelectOfScalar[_TSelectParam] | Update | Delete,
         column_id: SnowflakeID | str,
     ):
-        if column_id == Project.ARCHIVE_COLUMN_UID:
+        if column_id == project.ARCHIVE_COLUMN_UID():
             return query.where(Card.column("archived_at") != None)  # noqa
         return query.where(Card.column("project_column_id") == column_id)
 

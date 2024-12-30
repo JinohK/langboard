@@ -1,57 +1,26 @@
-import { AssignMemberPopover } from "@/components/AssignMemberPopover";
+import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
 import { Toast } from "@/components/base";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
-import useProjectAssignedUsersUpdatedHandlers, {
-    IProjectAssignedUsersUpdatedResponse,
-} from "@/controllers/socket/board/useProjectAssignedUsersUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, User } from "@/core/models";
-import { ISocketContext } from "@/core/providers/SocketProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const setInvitedText = (invitedMembers: User.Interface[], invitedText: string) => {
-    for (let i = 0; i < invitedMembers.length; ++i) {
-        const invitedMember = invitedMembers[i];
-        if (invitedMember.lastname.includes(invitedText)) {
-            continue;
-        }
+export interface IBoardMemberListProps {
+    project: Project.TModel;
+    isSelectCardView: bool;
+}
 
-        invitedMember.lastname = invitedMember.lastname.length ? `${invitedMember.lastname} (${invitedText})` : `(${invitedText})`;
-    }
-};
-
-const BoardMemberList = memo(({ project, socket, isSelectCardView }: { project: Project.IBoard; socket: ISocketContext; isSelectCardView: bool }) => {
+const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListProps) => {
     const [t, i18n] = useTranslation();
-    const [members, setMembers] = useState<User.Interface[]>(project.members);
-    const [invitedMembers, setInvitedMembers] = useState<User.Interface[]>(project.invited_members);
+    const members = project.useForeignField<User.TModel>("members");
+    const invitedMembers = project.useForeignField<User.TModel>("invited_members");
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
-    const updatedCallback = useCallback(
-        (response: IProjectAssignedUsersUpdatedResponse) => {
-            setInvitedText(response.invited_members, t("project.invited"));
-            project.members = response.assigned_members;
-            project.invited_members = response.invited_members;
-            setMembers(() => response.assigned_members);
-            setInvitedMembers(() => response.invited_members);
-        },
-        [members, invitedMembers]
-    );
-    const handlers = useProjectAssignedUsersUpdatedHandlers({
-        projectUID: project.uid,
-        socket,
-        callback: updatedCallback,
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
-    useEffect(() => {
-        setInvitedText(invitedMembers, t("project.invited"));
-    }, []);
-
-    const save = (users: User.Interface[], endCallback: () => void) => {
+    const save = (users: User.TModel[], endCallback: () => void) => {
         if (isValidating) {
             return;
         }
@@ -98,7 +67,7 @@ const BoardMemberList = memo(({ project, socket, isSelectCardView }: { project: 
     };
 
     return (
-        <AssignMemberPopover
+        <MultiSelectMemberPopover
             popoverButtonProps={{
                 size: "icon",
                 className: cn("size-8 xs:size-10", isSelectCardView ? "hidden" : ""),
@@ -131,6 +100,8 @@ const BoardMemberList = memo(({ project, socket, isSelectCardView }: { project: 
             iconSize="6"
             canControlAssignedUsers
             canAssignNonMembers
+            useGroupMembers
+            createNewUserLabel={(user) => `${user.firstname} ${user.lastname}${user.lastname ? " " : ""}(${t("project.invited")})`}
         />
     );
 });

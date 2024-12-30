@@ -1,6 +1,5 @@
 import { createContext, memo, useContext, useMemo, useReducer } from "react";
-import { Project, ProjectCard, ProjectColumn, ProjectLabel, User } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { NavigateFunction, NavigateOptions, To } from "react-router-dom";
@@ -16,28 +15,26 @@ export interface IFilterMap {
 
 export interface IBoardContext {
     socket: ISocketContext;
-    project: Project.IBoard;
-    columns: ProjectColumn.Interface[];
-    cards: ProjectCard.IBoard[];
-    cardsMap: Record<string, ProjectCard.IBoard>;
-    currentUser: IAuthUser;
+    project: Project.TModel;
+    columns: ProjectColumn.TModel[];
+    cards: ProjectCard.TModel[];
+    cardsMap: Record<string, ProjectCard.TModel>;
+    currentUser: AuthUser.TModel;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     filters: IFilterMap;
     navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
-    filterMember: (member: User.Interface) => bool;
-    filterLabel: (label: ProjectLabel.Interface) => bool;
-    filterCard: (card: ProjectCard.IBoard) => bool;
-    filterCardMember: (card: ProjectCard.IBoard) => bool;
-    filterCardLabels: (card: ProjectCard.IBoard) => bool;
-    filterCardRelationships: (card: ProjectCard.IBoard) => bool;
+    filterMember: (member: User.TModel) => bool;
+    filterLabel: (label: ProjectLabel.TModel) => bool;
+    filterCard: (card: ProjectCard.TModel) => bool;
+    filterCardMember: (card: ProjectCard.TModel) => bool;
+    filterCardLabels: (card: ProjectCard.TModel) => bool;
+    filterCardRelationships: (card: ProjectCard.TModel) => bool;
 }
 
 interface IBoardProviderProps {
     navigate: NavigateFunction;
-    project: Project.IBoard;
-    columns: ProjectColumn.Interface[];
-    cards: ProjectCard.IBoard[];
-    currentUser: IAuthUser;
+    project: Project.TModel;
+    currentUser: AuthUser.TModel;
     currentUserRoleActions: Project.TRoleActions[];
     children: React.ReactNode;
 }
@@ -45,11 +42,11 @@ interface IBoardProviderProps {
 const initialContext = {
     navigate: () => {},
     socket: {} as ISocketContext,
-    project: {} as Project.IBoard,
+    project: {} as Project.TModel,
     columns: [],
     cards: [],
     cardsMap: {},
-    currentUser: {} as IAuthUser,
+    currentUser: {} as AuthUser.TModel,
     hasRoleAction: () => false,
     filters: {},
     navigateWithFilters: () => {},
@@ -63,194 +60,191 @@ const initialContext = {
 
 const BoardContext = createContext<IBoardContext>(initialContext);
 
-export const BoardProvider = memo(
-    ({ navigate, project, columns, cards: flatCards, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
-        const socket = useSocket();
-        const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
-        const filters = useMemo(() => {
-            const searchParams = new URLSearchParams(location.search);
-            const rawFilters = searchParams.get("filters");
-            const newFilters = transformStringFilters(rawFilters);
-            return newFilters;
-        }, [navigated, location, location.search]);
-        const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
-        const cards = useMemo(() => flatCards, [flatCards]);
-        const cardsMap = useMemo(() => {
-            const map: Record<string, ProjectCard.IBoard> = {};
-            cards.forEach((card) => {
-                map[card.uid] = card;
-            });
-            return map;
-        }, [cards]);
+export const BoardProvider = memo(({ navigate, project, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
+    const socket = useSocket();
+    const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
+    const filters = useMemo(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const rawFilters = searchParams.get("filters");
+        const newFilters = transformStringFilters(rawFilters);
+        return newFilters;
+    }, [navigated, location, location.search]);
+    const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
+    const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
+    const cards = ProjectCard.Model.useModels((model) => model.project_uid === project.uid);
+    const cardsMap = useMemo(() => {
+        const map: Record<string, ProjectCard.TModel> = {};
+        cards.forEach((card) => {
+            map[card.uid] = card;
+        });
+        return map;
+    }, [cards]);
 
-        const transformFilters = (): string => {
-            return Object.entries(filters)
-                .map(([key, value]) => {
-                    if (!value.length) {
-                        return "";
-                    }
-                    return `${key}:${encodeURIComponent(encodeURIComponent(value.join(",")))}`;
-                })
-                .join(",");
-        };
+    const transformFilters = (): string => {
+        return Object.entries(filters)
+            .map(([key, value]) => {
+                if (!value!.length) {
+                    return "";
+                }
+                return `${key}:${encodeURIComponent(encodeURIComponent(value!.join(",")))}`;
+            })
+            .join(",");
+    };
 
-        const navigateWithFilters = (to?: To, options?: NavigateOptions) => {
-            if (filters.members) {
-                filters.members = filters.members.filter((member, index) => filters.members!.indexOf(member) === index);
-            }
-            if (filters.labels) {
-                filters.labels = filters.labels.filter((label, index) => filters.labels!.indexOf(label) === index);
-            }
-            if (filters.parents) {
-                filters.parents = filters.parents.filter((parent, index) => filters.parents!.indexOf(parent) === index);
-            }
-            if (filters.children) {
-                filters.children = filters.children.filter((child, index) => filters.children!.indexOf(child) === index);
-            }
+    const navigateWithFilters = (to?: To, options?: NavigateOptions) => {
+        if (filters.members) {
+            filters.members = filters.members.filter((member, index) => filters.members!.indexOf(member) === index);
+        }
+        if (filters.labels) {
+            filters.labels = filters.labels.filter((label, index) => filters.labels!.indexOf(label) === index);
+        }
+        if (filters.parents) {
+            filters.parents = filters.parents.filter((parent, index) => filters.parents!.indexOf(parent) === index);
+        }
+        if (filters.children) {
+            filters.children = filters.children.filter((child, index) => filters.children!.indexOf(child) === index);
+        }
 
-            const newFiltersString = transformFilters();
+        const newFiltersString = transformFilters();
 
-            if (TypeUtils.isString(to)) {
-                to = { pathname: to };
+        if (TypeUtils.isString(to)) {
+            to = { pathname: to };
+        } else {
+            to = { ...to };
+        }
+
+        const params = new URLSearchParams(to.search);
+        if (!newFiltersString.length) {
+            params.delete("filters");
+        } else {
+            params.set("filters", newFiltersString);
+        }
+
+        to = { ...to, search: params.toString() };
+
+        navigate(to, options);
+        forceUpdate();
+    };
+
+    const filterMember = (member: User.TModel) => {
+        const keyword = filters.keyword?.join(",");
+        if (!keyword) {
+            return true;
+        }
+
+        return (
+            member.email.includes(keyword) ||
+            member.username.toLowerCase().includes(keyword.toLowerCase()) ||
+            member.firstname.toLowerCase().includes(keyword.toLowerCase()) ||
+            member.lastname.toLowerCase().includes(keyword.toLowerCase())
+        );
+    };
+
+    const filterLabel = (label: ProjectLabel.TModel) => {
+        const keyword = filters.keyword?.join(",");
+        if (!keyword) {
+            return true;
+        }
+
+        return label.name.toLowerCase().includes(keyword.toLowerCase()) || label.description.toLowerCase().includes(keyword.toLowerCase());
+    };
+
+    const filterCard = (card: ProjectCard.TModel) => {
+        const keyword = filters.keyword?.join(",");
+        if (!keyword) {
+            return true;
+        }
+
+        return card.title.toLowerCase().includes(keyword.toLowerCase()) || card.members.some((member) => filterMember(member));
+    };
+
+    const filterCardMember = (card: ProjectCard.TModel) => {
+        if (!filters.members?.length) {
+            return true;
+        }
+
+        if (filters.members.includes("none") && !card.members.length) {
+            return true;
+        }
+
+        for (let i = 0; i < filters.members.length; ++i) {
+            const userUID = filters.members[i];
+            let user;
+            if (userUID === "me") {
+                user = currentUser;
             } else {
-                to = { ...to };
+                user = project.members.find((member) => member.uid === userUID);
             }
 
-            const params = new URLSearchParams(to.search);
-            if (!newFiltersString.length) {
-                params.delete("filters");
-            } else {
-                params.set("filters", newFiltersString);
+            if (!user) {
+                continue;
             }
 
-            to = { ...to, search: params.toString() };
-
-            navigate(to, options);
-            forceUpdate();
-        };
-
-        const filterMember = (member: User.Interface) => {
-            const keyword = filters.keyword?.join(",");
-            if (!keyword) {
+            if (card.members.some((member) => member.email === user.email && member.username === user.username)) {
                 return true;
             }
+        }
 
+        return false;
+    };
+
+    const filterCardLabels = (card: ProjectCard.TModel) => {
+        if (!filters.labels?.length) {
+            return true;
+        }
+
+        return !!card.label_uids.length && filters.labels.some((labelUID) => card.label_uids.includes(labelUID));
+    };
+
+    const filterCardRelationships = (card: ProjectCard.TModel) => {
+        if (!filters.parents?.length && !filters.children?.length) {
+            return true;
+        }
+
+        const filter = (relationshipType: ProjectCardRelationship.TRelationship) => {
+            const oppositeKey = relationshipType === "parents" ? "child_card_uid" : "parent_card_uid";
             return (
-                member.email.includes(keyword) ||
-                member.username.toLowerCase().includes(keyword.toLowerCase()) ||
-                member.firstname.toLowerCase().includes(keyword.toLowerCase()) ||
-                member.lastname.toLowerCase().includes(keyword.toLowerCase())
+                filters[relationshipType]!.some((oppositeUID) =>
+                    card.relationships.some((relationship) => relationship[oppositeKey] === oppositeUID)
+                ) || filters[relationshipType]!.includes(card.uid)
             );
         };
 
-        const filterLabel = (label: ProjectLabel.Interface) => {
-            const keyword = filters.keyword?.join(",");
-            if (!keyword) {
-                return true;
-            }
+        if (filters.parents?.length && filters.children?.length) {
+            return filter("parents") || filter("children");
+        } else if (filters.parents?.length) {
+            return filter("parents");
+        } else if (filters.children?.length) {
+            return filter("children");
+        } else {
+            return true;
+        }
+    };
 
-            return label.name.toLowerCase().includes(keyword.toLowerCase()) || label.description.toLowerCase().includes(keyword.toLowerCase());
-        };
-
-        const filterCard = (card: ProjectCard.IBoard) => {
-            const keyword = filters.keyword?.join(",");
-            if (!keyword) {
-                return true;
-            }
-
-            return card.title.toLowerCase().includes(keyword.toLowerCase()) || card.members.some((member) => filterMember(member));
-        };
-
-        const filterCardMember = (card: ProjectCard.IBoard) => {
-            if (!filters.members?.length) {
-                return true;
-            }
-
-            if (filters.members.includes("none") && !card.members.length) {
-                return true;
-            }
-
-            for (let i = 0; i < filters.members.length; ++i) {
-                const userUID = filters.members[i];
-                let user = project.members.find((member) => member.uid === userUID);
-                if (userUID === "me") {
-                    user = currentUser;
-                }
-
-                if (!user) {
-                    continue;
-                }
-
-                if (card.members.some((member) => member.email === user.email && member.username === user.username)) {
-                    return true;
-                }
-            }
-
-            return false;
-        };
-
-        const filterCardLabels = (card: ProjectCard.IBoard) => {
-            if (!filters.labels?.length) {
-                return true;
-            }
-
-            return !!card.labels.length && filters.labels.some((labelUID) => card.labels.includes(labelUID));
-        };
-
-        const filterCardRelationships = (card: ProjectCard.IBoard) => {
-            if (!filters.parents?.length && !filters.children?.length) {
-                return true;
-            }
-
-            const oppositeRelationships: Record<keyof ProjectCard.IBoard["relationships"], keyof ProjectCard.IBoard["relationships"]> = {
-                parents: "children",
-                children: "parents",
-            };
-
-            const filter = (relationship: keyof ProjectCard.IBoard["relationships"]) => {
-                const opposite = oppositeRelationships[relationship];
-                return (
-                    filters[relationship]!.some((oppositeUID) => card.relationships[opposite].includes(oppositeUID)) ||
-                    filters[relationship]!.includes(card.uid)
-                );
-            };
-
-            if (filters.parents?.length && filters.children?.length) {
-                return filter("parents") || filter("children");
-            } else if (filters.parents?.length) {
-                return filter("parents");
-            } else if (filters.children?.length) {
-                return filter("children");
-            } else {
-                return true;
-            }
-        };
-
-        return (
-            <BoardContext.Provider
-                value={{
-                    socket,
-                    project,
-                    columns,
-                    cards,
-                    cardsMap,
-                    currentUser,
-                    hasRoleAction,
-                    filters,
-                    navigateWithFilters,
-                    filterMember,
-                    filterLabel,
-                    filterCard,
-                    filterCardMember,
-                    filterCardLabels,
-                    filterCardRelationships,
-                }}
-            >
-                {children}
-            </BoardContext.Provider>
-        );
-    }
-);
+    return (
+        <BoardContext.Provider
+            value={{
+                socket,
+                project,
+                columns,
+                cards,
+                cardsMap,
+                currentUser,
+                hasRoleAction,
+                filters,
+                navigateWithFilters,
+                filterMember,
+                filterLabel,
+                filterCard,
+                filterCardMember,
+                filterCardLabels,
+                filterCardRelationships,
+            }}
+        >
+            {children}
+        </BoardContext.Provider>
+    );
+});
 
 export const useBoard = () => {
     const context = useContext(BoardContext);

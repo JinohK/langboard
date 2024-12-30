@@ -28,6 +28,7 @@ class ProjectLabel(BaseSqlModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "project_uid": self.project_id.to_short_code(),
             "name": self.name,
             "description": self.description,
             "order": self.order,

@@ -8,9 +8,7 @@ export interface IDeleteWikiForm {
     wiki_uid: string;
 }
 
-export interface IDeleteWikiResponse {}
-
-const useDeleteWiki = (options?: TMutationOptions<IDeleteWikiForm, IDeleteWikiResponse>) => {
+const useDeleteWiki = (options?: TMutationOptions<IDeleteWikiForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteWiki = async (params: IDeleteWikiForm) => {

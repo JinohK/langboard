@@ -1,24 +1,27 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { Project, User } from "@/core/models";
+import { Project } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetProjectDetailsForm {
     uid: string;
 }
 
-const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptions<Project.IBoardWithDetails>) => {
+export interface IGetProjectDetailsResponse {
+    project: Project.TModel;
+}
+
+const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptions<unknown, IGetProjectDetailsResponse>) => {
     const { query } = useQueryMutation();
 
     const getProjectDetails = async () => {
         const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
-        const res = await api.get<{ project: Required<Project.IBoardWithDetails> }>(url);
+        const res = await api.get(url);
 
-        User.transformFromApi(res.data.project.members);
-        User.transformFromApi(res.data.project.invited_members);
-
-        return res.data.project;
+        return {
+            project: Project.Model.fromObject(res.data.project),
+        };
     };
 
     const result = query([`get-project-details-${form.uid}`], getProjectDetails, {

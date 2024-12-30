@@ -10,7 +10,7 @@ import { createNameInitials } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
 
 interface IBaseUserAvatarProps {
-    user: User.Interface;
+    user: User.TModel;
     children?: React.ReactNode;
     listAlign?: "center" | "start" | "end";
     avatarSize?: IAvatarProps["size"];
@@ -58,8 +58,8 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
     const initials = createNameInitials(user.firstname, user.lastname);
     const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
-    const isDeletedUser = User.isDeletedUser(user);
-    const isPresentableUnknownUser = User.isPresentableUnknownUser(user);
+    const isDeletedUser = user.isDeletedUser();
+    const isPresentableUnknownUser = user.isPresentableUnknownUser();
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
@@ -124,8 +124,8 @@ const Trigger = memo(
     }: IUserAvatarTriggerProps) => {
         const [t] = useTranslation();
         const initials = createNameInitials(user.firstname, user.lastname);
-        const isDeletedUser = User.isDeletedUser(user);
-        const isPresentableUnknownUser = User.isPresentableUnknownUser(user);
+        const isDeletedUser = user.isDeletedUser();
+        const isPresentableUnknownUser = user.isPresentableUnknownUser();
 
         const avatarAfterPseudoClassNames = cn(
             "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
@@ -156,7 +156,7 @@ const Trigger = memo(
             <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
                 <Avatar.Image src={user.avatar} />
                 <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                    {User.isBot(user) ? (
+                    {user.isBot() ? (
                         <IconComponent icon="bot" className="h-[80%] w-[80%]" />
                     ) : isPresentableUnknownUser || isDeletedUser ? (
                         <IconComponent icon="user" className="h-[80%] w-[80%]" />

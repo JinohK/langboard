@@ -1,5 +1,6 @@
 import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/controllers/socket/shared/useRowOrderChangedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { TBaseModelInstance } from "@/core/models/Base";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 
 export interface IRow {
@@ -7,19 +8,19 @@ export interface IRow {
     order: number;
 }
 
-export interface IUseReorderRowProps<TRow extends IRow, TRowColumn extends keyof TRow> {
+export interface IUseReorderRowProps<TRow extends TBaseModelInstance<IRow>, TRowColumnKey extends keyof TRow> {
     type: IUseRowOrderChangedHandlersProps["type"];
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
     topicId: string;
     allRowsMap: Record<string, TRow>;
     rows: TRow[];
-    columnKey: TRowColumn;
-    currentColumnId: TRow[TRowColumn];
+    columnKey: TRowColumnKey;
+    currentColumnId: TRow[TRowColumnKey];
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
 }
 
-function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
+function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends keyof TRow>({
     type,
     eventNameParams,
     topicId,
@@ -32,7 +33,6 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
 }: IUseReorderRowProps<TRow, TRowColumn>) {
     const [_, forceUpdate] = updater;
     const handlers = useRowOrderChangedHandlers({
-        socket,
         type,
         topicId,
         params: eventNameParams,
@@ -62,11 +62,10 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
                 isUpdated = true;
                 continue;
             }
-            allRowsMap[row.uid].order = isUpdated ? i + 1 : i;
+            (allRowsMap[row.uid] as unknown as IRow).order = isUpdated ? i + 1 : i;
         }
-        allRowsMap[uid].order = index;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (allRowsMap[uid] as any)[columnKey] = columnId;
+        (allRowsMap[uid] as unknown as IRow).order = index;
+        (allRowsMap[uid] as Record<keyof TRow, unknown>)[columnKey] = columnId;
     };
 
     const removeFromColumn = (uid: string) => {
@@ -77,14 +76,14 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
                 isUpdated = true;
                 continue;
             }
-            allRowsMap[row.uid].order = isUpdated ? i - 1 : i;
+            (allRowsMap[row.uid] as unknown as IRow).order = isUpdated ? i - 1 : i;
         }
     };
 
     const reorderInColumn = (uid: string, index: number) => {
         let isTargetCardPassed = false;
         for (let i = 0; i < rows.length; ++i) {
-            const row = rows[i];
+            const row = rows[i] as unknown as IRow;
             if (row.uid === uid) {
                 isTargetCardPassed = true;
                 continue;
@@ -95,7 +94,7 @@ function useReorderRow<TRow extends IRow, TRowColumn extends keyof TRow>({
 
             row.order = i + numToAdd;
         }
-        allRowsMap[uid].order = index;
+        (allRowsMap[uid] as unknown as IRow).order = index;
     };
 
     return { moveToColumn, removeFromColumn, reorderInColumn, sendRowOrderChanged: handlers.send };

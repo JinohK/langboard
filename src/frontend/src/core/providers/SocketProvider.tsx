@@ -100,21 +100,103 @@ const initialContext = {
 
 const SocketContext = createContext<ISocketContext>(initialContext);
 
-export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { getAccessToken, getRefreshToken, signIn, isAuthenticated } = useAuth();
+const createSharedSocketHandlers = () => {
     const {
         getSocket,
-        createSocket,
-        getStore,
         addEvent,
         removeEvent,
         send: sendSocket,
         close,
-        subscribe: baseSubscribe,
-        unsubscribe: baseUnsubscribe,
+        subscribe,
+        unsubscribe,
         subscribeTopicNotifier,
         unsubscribeTopicNotifier,
-    } = useSocketStore();
+    } = useSocketStore.getState();
+
+    const isConnected = () => {
+        const socket = getSocket();
+        return !!socket && socket.readyState !== WebSocket.CLOSING && socket.readyState !== WebSocket.CLOSED;
+    };
+
+    const on: ISocketContext["on"] = (props) => {
+        addEvent(props as never);
+    };
+
+    const off: ISocketContext["off"] = (props) => {
+        removeEvent(props);
+    };
+
+    const stream: ISocketContext["stream"] = (props) => {
+        const { callbacks } = props;
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:start`,
+            callback: callbacks.start,
+        });
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:buffer`,
+            callback: callbacks.buffer,
+        });
+        on({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:end`,
+            callback: callbacks.end,
+        });
+    };
+
+    const streamOff: ISocketContext["streamOff"] = (props) => {
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:start`,
+            callback: props.callbacks.start,
+        });
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:buffer`,
+            callback: props.callbacks.buffer,
+        });
+        off({
+            ...props,
+            topic: props.topic as never,
+            event: `${props.event}:end`,
+            callback: props.callbacks.end,
+        });
+    };
+
+    const send = (props: TSocketSendProps) => {
+        if (!isConnected()) {
+            return { isConnected: false };
+        }
+
+        const { topic, topicId, eventName, data } = props;
+
+        return { isConnected: sendSocket(JSON.stringify({ event: eventName, topic, topic_id: topicId, data })) };
+    };
+
+    return {
+        isConnected,
+        on,
+        off,
+        send,
+        stream,
+        streamOff,
+        subscribe,
+        unsubscribe,
+        subscribeTopicNotifier,
+        unsubscribeTopicNotifier,
+        close,
+    };
+};
+
+export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
+    const { getAccessToken, getRefreshToken, signIn, isAuthenticated } = useAuth();
+    const { getSocket, createSocket, getStore, close } = useSocketStore.getState();
     const cookieStore = getCookieStore();
 
     useEffect(() => {
@@ -199,13 +281,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         });
     };
 
-    const subscribe: ISocketStore["subscribe"] = (topic, topicId, callback) => {
-        baseSubscribe(topic, topicId, callback);
-    };
-
-    const unsubscribe: ISocketStore["unsubscribe"] = (topic, topicId, callback) => {
-        baseUnsubscribe(topic, topicId, callback);
-    };
+    const socketMap = getStore();
 
     const runEvents = async (props: TRunEventsProps) => {
         const { eventName, data } = props;
@@ -230,84 +306,11 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
         connect();
     };
 
-    const on: ISocketContext["on"] = (props) => {
-        addEvent(props as never);
-    };
-
-    const off: ISocketContext["off"] = (props) => {
-        removeEvent(props);
-    };
-
-    const stream: ISocketContext["stream"] = (props) => {
-        const { callbacks } = props;
-        on({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:start`,
-            callback: callbacks.start,
-        });
-        on({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:buffer`,
-            callback: callbacks.buffer,
-        });
-        on({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:end`,
-            callback: callbacks.end,
-        });
-    };
-
-    const streamOff: ISocketContext["streamOff"] = (props) => {
-        off({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:start`,
-            callback: props.callbacks.start,
-        });
-        off({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:buffer`,
-            callback: props.callbacks.buffer,
-        });
-        off({
-            ...props,
-            topic: props.topic as never,
-            event: `${props.event}:end`,
-            callback: props.callbacks.end,
-        });
-    };
-
-    const send = (props: TSocketSendProps) => {
-        if (!isConnected()) {
-            return { isConnected: false };
-        }
-
-        const { topic, topicId, eventName, data } = props;
-
-        return { isConnected: sendSocket(JSON.stringify({ event: eventName, topic, topic_id: topicId, data })) };
-    };
-
-    const socketMap = getStore();
-
     return (
         <SocketContext.Provider
             value={{
-                isConnected,
+                ...createSharedSocketHandlers(),
                 reconnect,
-                on,
-                off,
-                send,
-                stream,
-                streamOff,
-                subscribe,
-                unsubscribe,
-                subscribeTopicNotifier,
-                unsubscribeTopicNotifier,
-                close,
             }}
         >
             {children}
@@ -321,4 +324,10 @@ export const useSocket = () => {
         throw new Error("useSocket must be used within a SocketProvider");
     }
     return context;
+};
+
+export const useSocketOutsideProvider = (): Omit<ISocketContext, "reconnect" | "close"> => {
+    return {
+        ...createSharedSocketHandlers(),
+    };
 };

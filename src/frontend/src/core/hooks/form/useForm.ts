@@ -56,20 +56,20 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                 Object.entries(predefinedValues).forEach(([key, value]) => {
                     if (value instanceof DataTransfer) {
                         for (let i = 0; i < value.files.length; ++i) {
-                            (formDataRef.current as FormData).append(key, value.files[i], value.files[i].name);
+                            (formDataRef.current as FormData).append(key as string, value.files[i], value.files[i].name);
                         }
                     } else if (value instanceof FileList) {
                         for (let i = 0; i < value.length; ++i) {
-                            (formDataRef.current as FormData).append(key, value[i], value[i].name);
+                            (formDataRef.current as FormData).append(key as string, value[i], value[i].name);
                         }
                     } else if (value instanceof File) {
-                        (formDataRef.current as FormData).append(key, value, value.name);
+                        (formDataRef.current as FormData).append(key as string, value, value.name);
                     } else if (Array.isArray(value)) {
                         value.forEach((v) => {
-                            (formDataRef.current as FormData).append(key, v);
+                            (formDataRef.current as FormData).append(key as string, v);
                         });
                     } else {
-                        (formDataRef.current as FormData).append(key, value as string);
+                        (formDataRef.current as FormData).append(key as string, value as string);
                     }
                 });
             } else {

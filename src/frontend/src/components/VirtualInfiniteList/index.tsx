@@ -1,7 +1,7 @@
 import { Virtualizer, useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Box, Flex, IconComponent } from "@/components/base";
+import { Box, Flex, Loading } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { StringCase, createShortUUID } from "@/core/utils/StringUtils";
 
@@ -77,11 +77,7 @@ function VirtualInfiniteList<T>({
 }: IVirtualInfiniteListProps<T>) {
     const isLoading = useRef(false);
     const loaderRef = useRef(
-        loader ?? (
-            <Flex justify="center" my="3" key={createShortUUID()}>
-                <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
-            </Flex>
-        )
+        loader ?? <Loading key={createShortUUID()} size="3" variant="primary-foreground" spacing="1" animate="bounce" my="3" className="opacity-80" />
     );
 
     if (isReverse && scrollable()) {

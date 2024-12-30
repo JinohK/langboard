@@ -1,5 +1,4 @@
-import { Project } from "@/core/models";
-import { IAuthUser } from "@/core/providers/AuthProvider";
+import { AuthUser, Project } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { createContext, useContext } from "react";
 import { NavigateFunction } from "react-router-dom";
@@ -7,22 +6,22 @@ import { NavigateFunction } from "react-router-dom";
 export interface IBoardSettingsContext {
     navigate: NavigateFunction;
     socket: ISocketContext;
-    project: Project.IBoardWithDetails;
-    currentUser: IAuthUser;
+    project: Project.TModel;
+    currentUser: AuthUser.TModel;
 }
 
 interface IBoardSettingsProps {
     navigate: NavigateFunction;
-    project: Project.IBoardWithDetails;
-    currentUser: IAuthUser;
+    project: Project.TModel;
+    currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
 
 const initialContext = {
     navigate: () => {},
     socket: {} as ISocketContext,
-    project: {} as Project.IBoardWithDetails,
-    currentUser: {} as IAuthUser,
+    project: {} as Project.TModel,
+    currentUser: {} as AuthUser.TModel,
 };
 
 const BoardSettingsContext = createContext<IBoardSettingsContext>(initialContext);

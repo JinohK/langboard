@@ -29,7 +29,7 @@ export function SkeletonProjectList() {
 }
 
 export interface IProjectListProps {
-    projects: Project.IDashboard[];
+    projects: Project.TModel[];
     refetchAllStarred: () => Promise<unknown>;
     refetchAllProjects: () => Promise<unknown>;
     scrollAreaUpdater: [number, React.DispatchWithoutAction];

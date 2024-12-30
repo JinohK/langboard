@@ -1,9 +1,7 @@
 import { Input, Toast } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeProjectColumnName from "@/controllers/api/board/useChangeProjectColumnName";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -13,31 +11,18 @@ import { useTranslation } from "react-i18next";
 
 export interface IBoardColumnHeaderProps {
     isDragging: bool;
-    column: ProjectColumn.Interface;
+    column: ProjectColumn.TModel;
 }
 
 const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps) => {
     const { selectCardViewType } = useBoardRelationshipController();
-    const { project, socket, hasRoleAction } = useBoard();
+    const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const [columnName, setColumnName] = useState(column.name);
+    const columnName = column.useField("name");
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
-    const handlers = useProjectColumnNameChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            if (data.uid !== column.uid || data.name === column.name) {
-                return;
-            }
-
-            column.name = data.name;
-            setColumnName(data.name);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
 
     const changeMode = (mode: "edit" | "view") => {
@@ -83,9 +68,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                column.name = data.name;
-                setColumnName(data.name);
+            success: () => {
                 return t("project.successes.Column name changed successfully.");
             },
             finally: () => {
@@ -128,7 +111,7 @@ export const BoardColumnHeaderInput = memo(
                 {!isEditing ? (
                     <span
                         {...{ [DISABLE_DRAGGING_ATTR]: "" }}
-                        className={cn("truncate", viewClassName)}
+                        className={cn("truncate pb-px", viewClassName)}
                         onClick={(e) => {
                             if (!canEdit) {
                                 return;

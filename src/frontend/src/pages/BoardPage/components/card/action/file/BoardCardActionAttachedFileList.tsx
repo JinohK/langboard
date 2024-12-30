@@ -15,7 +15,7 @@ export interface IBoardCardActionAttachedFileListProps {
 }
 
 const BoardCardActionAttachedFileList = memo(({ attachedFiles, deleteFile, update }: IBoardCardActionAttachedFileListProps) => {
-    const attachedFileKeys = useMemo(() => attachedFiles.map((attachedFile) => attachedFile.key), [attachedFiles]);
+    const attachedFileKeys = useMemo(() => attachedFiles.map((attachedFile) => attachedFile.uid), [attachedFiles]);
     const dndContextId = useId();
     const {
         activeColumn: activeAttachedFile,
@@ -43,7 +43,7 @@ const BoardCardActionAttachedFileList = memo(({ attachedFiles, deleteFile, updat
             <SortableContext items={attachedFileKeys} strategy={verticalListSortingStrategy}>
                 <Flex direction="col" gap="2">
                     {attachedFiles.map((attachedFile) => (
-                        <BoardCardActionAttachedFile key={`attached-file-${attachedFile.key}`} attachedFile={attachedFile} deleteFile={deleteFile} />
+                        <BoardCardActionAttachedFile key={`attached-file-${attachedFile.uid}`} attachedFile={attachedFile} deleteFile={deleteFile} />
                     ))}
                 </Flex>
             </SortableContext>

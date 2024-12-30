@@ -1,20 +1,19 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCard, User } from "@/core/models";
+import { ProjectCard } from "@/core/models";
 
-export interface IBoardCardCreatedResponse {
-    card: ProjectCard.IBoard;
+export interface IBoardCardCreatedRawResponse {
+    card: ProjectCard.IStore;
 }
 
-export interface IUseBoardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardCardCreatedResponse> {
+export interface IUseBoardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
     columnUID: string;
 }
 
-const useBoardCardCreatedHandlers = ({ socket, callback, projectUID, columnUID }: IUseBoardCardCreatedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useBoardCardCreatedHandlers = ({ callback, projectUID, columnUID }: IUseBoardCardCreatedHandlersProps) => {
+    return useSocketHandler<{}, IBoardCardCreatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-created-${columnUID}`,
@@ -23,8 +22,8 @@ const useBoardCardCreatedHandlers = ({ socket, callback, projectUID, columnUID }
             params: { uid: columnUID },
             callback,
             responseConverter: (data) => {
-                User.transformFromApi(data.card.members);
-                return data;
+                ProjectCard.Model.fromObject(data.card, true);
+                return {};
             },
         },
     });

@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectColumn, ProjectCard, User } from "@/core/models";
+import { ProjectColumn, ProjectCard } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetCardsForm {
@@ -9,22 +9,20 @@ export interface IGetCardsForm {
 }
 
 export interface IGetCardsResponse {
-    cards: ProjectCard.IBoard[];
-    columns: ProjectColumn.Interface[];
+    isUpdated: true;
 }
 
-const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<IGetCardsForm, IGetCardsResponse>) => {
+const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGetCardsResponse>) => {
     const { query } = useQueryMutation();
 
     const getCards = async () => {
         const url = format(API_ROUTES.BOARD.GET_CARDS, { uid: params.project_uid });
         const res = await api.get(url);
 
-        for (let i = 0; i < res.data.cards.length; ++i) {
-            User.transformFromApi(res.data.cards[i].members);
-        }
+        ProjectCard.Model.fromObjectArray(res.data.cards);
+        ProjectColumn.Model.fromObjectArray(res.data.columns);
 
-        return res.data;
+        return { isUpdated: true };
     };
 
     const result = query([`get-cards-${params.project_uid}`], getCards, {

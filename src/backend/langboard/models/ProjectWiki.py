@@ -14,6 +14,7 @@ class ProjectWiki(SoftDeleteModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "project_uid": self.project_id.to_short_code(),
             "title": self.title,
             "content": self.content.model_dump() if self.content else None,
             "order": self.order,

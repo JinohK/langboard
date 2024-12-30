@@ -1,19 +1,14 @@
 import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popover, ScrollArea, Skeleton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
-import useProjectLabelCreatedHandlers from "@/controllers/socket/project/label/useProjectLabelCreatedHandlers";
-import useProjectLabelDeletedHandlers from "@/controllers/socket/project/label/useProjectLabelDeletedHandlers";
-import useProjectLabelOrderChangedHandlers from "@/controllers/socket/project/label/useProjectLabelOrderChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { ProjectCard } from "@/core/models";
+import { ProjectLabel } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardFilterLabel from "@/pages/BoardPage/components/board/BoardFilterLabel";
-import { arrayMove } from "@dnd-kit/sortable";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardFilter() {
@@ -22,51 +17,9 @@ export function SkeletonBoardFilter() {
 
 function BoardFilter() {
     const { setIsLoadingRef } = usePageLoader();
-    const { project, cards, socket, filters, filterCard, filterMember, filterLabel, navigateWithFilters } = useBoard();
+    const { project, cards, filters, filterCard, filterMember, filterLabel, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
-    const [labels, setLabels] = useState(project.labels);
-    const projectLabelCreatedHandler = useProjectLabelCreatedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setLabels((prev) => {
-                const newLabels = prev.filter((label) => label.uid !== data.label.uid).concat(data.label);
-                project.labels = newLabels;
-                return newLabels;
-            });
-        },
-    });
-    const projectLabelOrderChangedHandler = useProjectLabelOrderChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            const label = labels.find((label) => label.uid === data.uid);
-            if (!label) {
-                return;
-            }
-
-            setLabels((prev) => {
-                const newLabels = arrayMove(prev, label.order, data.order).map((col, i) => ({ ...col, order: i }));
-                project.labels = newLabels;
-                return newLabels;
-            });
-        },
-    });
-    const projectLabelDeletedHandler = useProjectLabelDeletedHandlers({
-        socket,
-        projectUID: project.uid,
-        callback: (data) => {
-            setLabels((prev) => {
-                const newLabels = prev.filter((label) => label.uid !== data.uid);
-                project.labels = newLabels;
-                return newLabels;
-            });
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [projectLabelCreatedHandler, projectLabelOrderChangedHandler, projectLabelDeletedHandler],
-    });
+    const labels = project.useForeignField<ProjectLabel.TModel>("labels");
 
     useEffect(() => {
         setIsLoadingRef.current(false);
@@ -192,7 +145,13 @@ function BoardFilter() {
                                     createFilterItems={() =>
                                         cards
                                             .filter(
-                                                (card) => card.relationships[relationship as keyof ProjectCard.IBoard["relationships"]].length > 0
+                                                (card) =>
+                                                    card.relationships.filter(
+                                                        (cardRelationship) =>
+                                                            (relationship === "parents"
+                                                                ? cardRelationship.child_card_uid
+                                                                : cardRelationship.parent_card_uid) === card.uid
+                                                    ).length > 0
                                             )
                                             .filter((card) => filterCard(card))
                                             .map((card) => (

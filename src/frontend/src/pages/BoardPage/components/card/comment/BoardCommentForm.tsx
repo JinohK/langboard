@@ -74,8 +74,8 @@ const BoardCommentForm = memo((): JSX.Element => {
         [isValidating, setIsValidating]
     );
 
-    replyRef.current = (targetUser: User.Interface) => {
-        if (isValidating || !User.isValidUser(targetUser)) {
+    replyRef.current = (targetUser: User.TModel) => {
+        if (isValidating || !targetUser.isValidUser()) {
             return;
         }
 
@@ -198,7 +198,7 @@ const BoardCommentForm = memo((): JSX.Element => {
             >
                 <Drawer.Trigger asChild>
                     <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t bg-background">
-                        <UserAvatar.Root user={currentUser} avatarSize="sm" />
+                        <UserAvatar.Root user={currentUser as User.TModel} avatarSize="sm" />
                         <Box w="full" cursor="text" py="1">
                             {t("card.Add a comment as {firstname} {lastname}", { firstname: currentUser.firstname, lastname: currentUser.lastname })}
                         </Box>

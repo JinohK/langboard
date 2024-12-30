@@ -6,13 +6,12 @@ import { IBoardSettingsLabelRelatedProps } from "@/pages/BoardPage/components/se
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsLabelMoreRenameProps extends IBoardSettingsLabelRelatedProps {
-    labelName: string;
-}
+export interface IBoardSettingsLabelMoreRenameProps extends IBoardSettingsLabelRelatedProps {}
 
-function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened, labelName }: IBoardSettingsLabelMoreRenameProps): JSX.Element {
+function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened }: IBoardSettingsLabelMoreRenameProps): JSX.Element {
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
     const { project } = useBoardSettings();
+    const labelName = label.useField("name");
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("name");
@@ -26,9 +25,9 @@ function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened, labelName }: IBoard
         setIsValidating(true);
 
         const nameInput = document.getElementById(nameInputId) as HTMLInputElement;
-        const name = nameInput.value.trim();
+        const newValue = nameInput.value.trim();
 
-        if (!name) {
+        if (!newValue) {
             Toast.Add.error(t("project.settings.errors.Label name cannot be empty."));
             setIsValidating(false);
             nameInput.focus();
@@ -38,7 +37,7 @@ function BoardSettingsLabelMoreRename({ setIsMoreMenuOpened, labelName }: IBoard
         const promise = changeProjectLabelDetailsMutateAsync({
             project_uid: project.uid,
             label_uid: label.uid,
-            name,
+            name: newValue,
         });
 
         const toastId = Toast.Add.promise(promise, {

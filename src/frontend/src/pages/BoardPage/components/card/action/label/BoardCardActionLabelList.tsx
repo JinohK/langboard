@@ -1,13 +1,8 @@
 import { Checkbox, Flex, Label, ScrollArea } from "@/components/base";
-import useCardLabelsUpdatedHandlers from "@/controllers/socket/card/useCardLabelsUpdatedHandlers";
-import useProjectLabelCreatedHandlers from "@/controllers/socket/project/label/useProjectLabelCreatedHandlers";
-import useProjectLabelDeletedHandlers from "@/controllers/socket/project/label/useProjectLabelDeletedHandlers";
-import useProjectLabelOrderChangedHandlers from "@/controllers/socket/project/label/useProjectLabelOrderChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { ProjectLabel } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import BoardCardActionLabel from "@/pages/BoardPage/components/card/action/label/BoardCardActionLabel";
-import { arrayMove } from "@dnd-kit/sortable";
-import { memo, useState } from "react";
+import { memo } from "react";
 
 export interface IBoardCardActionLabelListProps {
     selectedLabelUIDs: string[];
@@ -15,60 +10,11 @@ export interface IBoardCardActionLabelListProps {
 }
 
 const BoardCardActionLabelList = memo(({ selectedLabelUIDs, setSelectedLabelUIDs }: IBoardCardActionLabelListProps) => {
-    const { projectUID, card, socket } = useBoardCard();
-    const [projectLabels, setProjectLabels] = useState(card.project_labels);
-    const projectLabelCreatedHandler = useProjectLabelCreatedHandlers({
-        socket,
-        projectUID,
-        callback: (data) => {
-            setProjectLabels((prev) => {
-                const newLabels = prev.filter((label) => label.uid !== data.label.uid).concat(data.label);
-                card.project_labels = newLabels;
-                return newLabels;
-            });
-        },
-    });
-    const projectLabelOrderChangedHandler = useProjectLabelOrderChangedHandlers({
-        socket,
-        projectUID,
-        callback: (data) => {
-            const label = projectLabels.find((label) => label.uid === data.uid);
-            if (!label) {
-                return;
-            }
-
-            setProjectLabels((prev) => {
-                const newLabels = arrayMove(prev, label.order, data.order).map((col, i) => ({ ...col, order: i }));
-                card.project_labels = newLabels;
-                return newLabels;
-            });
-        },
-    });
-    const projectLabelDeletedHandler = useProjectLabelDeletedHandlers({
-        socket,
-        projectUID,
-        callback: (data) => {
-            setProjectLabels((prev) => {
-                const newLabels = prev.filter((label) => label.uid !== data.uid);
-                card.project_labels = newLabels;
-                return newLabels;
-            });
-            card.labels = card.labels.filter((label) => label.uid !== data.uid);
-            setSelectedLabelUIDs((prev) => prev.filter((uid) => uid !== data.uid));
-        },
-    });
-    const cardLabelsUpdatedHandler = useCardLabelsUpdatedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.labels = data.labels;
-            setSelectedLabelUIDs(() => data.labels.map((label) => label.uid));
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [projectLabelCreatedHandler, projectLabelOrderChangedHandler, projectLabelDeletedHandler, cardLabelsUpdatedHandler],
+    const { card } = useBoardCard();
+    const flatProjectLabels = card.useForeignField<ProjectLabel.TModel>("project_labels");
+    const projectLabels = flatProjectLabels.sort((a, b) => a.order - b.order);
+    ProjectLabel.Model.subscribe("DELETION", `board-card-action-label-list-${card.uid}`, (uids) => {
+        setSelectedLabelUIDs((prev) => prev.filter((uid) => !uids.includes(uid)));
     });
 
     const changeSelectedState = (labelUID: string) => {

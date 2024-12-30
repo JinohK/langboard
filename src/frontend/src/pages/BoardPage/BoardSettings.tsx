@@ -11,7 +11,7 @@ import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
 
 const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
-    const { data: project, error } = useGetProjetDetails({ uid: projectUID });
+    const { data, error } = useGetProjetDetails({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -34,10 +34,10 @@ const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRel
 
     return (
         <>
-            {!project ? (
+            {!data ? (
                 <SkeletonSettingsList />
             ) : (
-                <BoardSettingsProvider navigate={navigate} project={project} currentUser={currentUser}>
+                <BoardSettingsProvider navigate={navigate} project={data.project} currentUser={currentUser}>
                     <BoardSettingsList />
                 </BoardSettingsProvider>
             )}

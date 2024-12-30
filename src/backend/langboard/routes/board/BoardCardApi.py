@@ -74,7 +74,10 @@ async def change_card_details(
         if value is None:
             continue
         elif key == "deadline_at":
-            value = datetime.fromisoformat(value)
+            if value:
+                value = datetime.fromisoformat(value)
+            else:
+                value = None
         elif key == "description":
             value = EditorContentModel(**value)
         form_dict[key] = value
@@ -89,7 +92,7 @@ async def change_card_details(
             if ["title", "description", "deadline_at"].count(key) == 0:
                 continue
             value = getattr(form, key)
-            if value is None:
+            if value is None and key != "deadline_at":
                 continue
             response[key] = service.card._convert_to_python(value)
         return JsonResponse(content=response, status_code=status.HTTP_200_OK)

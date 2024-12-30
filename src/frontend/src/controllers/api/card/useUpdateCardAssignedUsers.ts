@@ -9,9 +9,7 @@ export interface IUpdateCardAssignedUsersForm {
     assigned_users: string[];
 }
 
-export interface IUpdateCardAssignedUsersResponse {}
-
-const useUpdateCardAssignedUsers = (options?: TMutationOptions<IUpdateCardAssignedUsersForm, IUpdateCardAssignedUsersResponse>) => {
+const useUpdateCardAssignedUsers = (options?: TMutationOptions<IUpdateCardAssignedUsersForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateCardAssignedUsers = async (params: IUpdateCardAssignedUsersForm) => {

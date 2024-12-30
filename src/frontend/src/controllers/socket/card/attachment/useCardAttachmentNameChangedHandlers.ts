@@ -1,19 +1,19 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectCardAttachment } from "@/core/models";
 
-export interface ICardAttachmentNameChangedResponse {
+export interface ICardAttachmentNameChangedRawResponse {
     name: string;
 }
 
-export interface IUseCardAttachmentNameChangedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentNameChangedResponse> {
+export interface IUseCardAttachmentNameChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     cardUID: string;
     attachmentUID: string;
 }
 
-const useCardAttachmentNameChangedHandlers = ({ socket, callback, cardUID, attachmentUID }: IUseCardAttachmentNameChangedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useCardAttachmentNameChangedHandlers = ({ callback, cardUID, attachmentUID }: IUseCardAttachmentNameChangedHandlersProps) => {
+    return useSocketHandler<{}, ICardAttachmentNameChangedRawResponse>({
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,
         eventKey: `board-card-attachment-name-changed-${attachmentUID}`,
@@ -21,6 +21,13 @@ const useCardAttachmentNameChangedHandlers = ({ socket, callback, cardUID, attac
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.NAME_CHANGED,
             params: { uid: attachmentUID },
             callback,
+            responseConverter: (data) => {
+                const attachment = ProjectCardAttachment.Model.getModel(attachmentUID);
+                if (attachment) {
+                    attachment.name = data.name;
+                }
+                return {};
+            },
         },
     });
 };

@@ -11,9 +11,7 @@ export interface IUpdateCardCommentForm {
     content: IEditorContent;
 }
 
-export interface IUpdateCardCommentResponse {}
-
-const useUpdateCardComment = (options?: TMutationOptions<IUpdateCardCommentForm, IUpdateCardCommentResponse>) => {
+const useUpdateCardComment = (options?: TMutationOptions<IUpdateCardCommentForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateCardComment = async (params: IUpdateCardCommentForm) => {

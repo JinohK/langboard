@@ -2,32 +2,38 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Button, ButtonProps, DropdownMenu, Flex, IconComponent, Popover, SubmitButton } from "@/components/base";
 import UserAvatarList, { IUserAvatarListProps, SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IAuthUser, useAuth } from "@/core/providers/AuthProvider";
+import { useAuth } from "@/core/providers/AuthProvider";
 import { TIconProps } from "@/components/base/IconComponent";
-import { User } from "@/core/models";
+import { AuthUser, User } from "@/core/models";
 import MultiSelect, { TMultiSelectProps } from "@/components/MultiSelect";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
 import { EMAIL_REGEX } from "@/constants";
 
-export interface IAssignMemberPopoverProps {
+export interface IMultiSelectMemberPopoverProps {
     popoverButtonProps: ButtonProps;
     popoverContentProps?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
     userAvatarListProps: Omit<IUserAvatarListProps, "users">;
-    multiSelectProps: Pick<TMultiSelectProps, "placeholder" | "className" | "badgeClassName" | "inputClassName">;
-    allUsers: User.Interface[];
-    assignedUsers: User.Interface[];
-    newUsers?: User.Interface[];
+    multiSelectProps: Pick<
+        TMultiSelectProps,
+        "placeholder" | "className" | "badgeClassName" | "inputClassName" | "validateCreatedNewValue" | "commandItemForNew" | "multipleSplitter"
+    >;
+    allUsers: User.TModel[];
+    assignedUsers: User.TModel[];
+    newUsers?: User.TModel[];
     isValidating: bool;
-    onSave: (users: User.Interface[], endCallback: () => void) => void;
+    onSave: (users: User.TModel[], endCallback: () => void) => void;
     iconSize?: React.ComponentPropsWithoutRef<TIconProps>["size"];
-    currentUser?: IAuthUser;
+    currentUser?: AuthUser.TModel;
     canControlAssignedUsers?: bool;
     canAssignNonMembers?: bool;
+    useGroupMembers?: bool;
+    setSelectedRef?: React.MutableRefObject<React.Dispatch<React.SetStateAction<string[]>>>;
+    createNewUserLabel?: (user: User.TModel) => string;
 }
 
-const getAllUsers = (allUsers: User.Interface[], groups: IAuthUser["user_groups"], newUsers: User.Interface[], canAssignNonMembers?: bool) => {
+const getAllUsers = (allUsers: User.TModel[], groups: AuthUser.TModel["user_groups"], newUsers: User.TModel[], canAssignNonMembers?: bool) => {
     const users = [...allUsers];
     if (canAssignNonMembers) {
         users.push(...newUsers);
@@ -42,7 +48,7 @@ const getAllUsers = (allUsers: User.Interface[], groups: IAuthUser["user_groups"
     return users;
 };
 
-export const AssignMemberPopover = memo(
+export const MultiSelectMemberPopover = memo(
     ({
         popoverButtonProps,
         popoverContentProps,
@@ -57,20 +63,28 @@ export const AssignMemberPopover = memo(
         currentUser,
         canControlAssignedUsers,
         canAssignNonMembers,
-    }: IAssignMemberPopoverProps) => {
+        useGroupMembers,
+        setSelectedRef,
+        createNewUserLabel,
+    }: IMultiSelectMemberPopoverProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
         const [isOpened, setIsOpened] = useState(false);
-        const newUsers = useMemo<User.Interface[]>(() => (canAssignNonMembers ? (flatNewUsers ?? []) : []), [flatNewUsers]);
+        const newUsers = useMemo<User.TModel[]>(() => (canAssignNonMembers ? (flatNewUsers ?? []) : []), [flatNewUsers]);
         const selectedRef = useRef<string[]>([
             ...(canControlAssignedUsers ? assignedUsers.map((user) => user.email) : []),
             ...(canAssignNonMembers ? newUsers.map((user) => user.email) : []),
         ]);
         const { variant = "outline" } = popoverButtonProps;
         const user = currentUser ?? aboutMe();
-        const [allUsers, setAllUsers] = useState<User.Interface[]>(getAllUsers(flatAllUsers, user?.user_groups ?? [], newUsers, canAssignNonMembers));
+        const [allUsers, setAllUsers] = useState<User.TModel[]>(getAllUsers(flatAllUsers, user?.user_groups ?? [], newUsers, canAssignNonMembers));
         const setIsOpenedState = (state: bool) => {
             selectedRef.current = [];
+            setSelectedRef?.current?.(() => []);
+            if (flatNewUsers) {
+                const updatedUsers = flatNewUsers.filter((user) => user instanceof User.Model);
+                flatNewUsers.splice(0, flatNewUsers.length, ...updatedUsers);
+            }
             setIsOpened(state);
         };
         const save = () => {
@@ -83,7 +97,7 @@ export const AssignMemberPopover = memo(
             selectedRef.current = value;
             for (let i = 0; i < value.length; ++i) {
                 if (!allUsers.some((user) => user.email === value[i])) {
-                    newUsers.push(User.createNoneEmailUser(value[i]));
+                    newUsers.push(User.Model.createTempEmailUser(value[i]));
                 }
             }
             setAllUsers(getAllUsers(flatAllUsers, user?.user_groups ?? [], newUsers, canAssignNonMembers));
@@ -109,7 +123,7 @@ export const AssignMemberPopover = memo(
                         </Button>
                     </Popover.Trigger>
                     <Popover.Content {...popoverContentProps}>
-                        <AssignMemberForm
+                        <MultiSelectMemberForm
                             multiSelectProps={multiSelectProps}
                             allUsers={allUsers}
                             assignedUsers={assignedUsers}
@@ -118,7 +132,10 @@ export const AssignMemberPopover = memo(
                             currentUser={user}
                             canControlAssignedUsers={canControlAssignedUsers}
                             canAssignNonMembers={canAssignNonMembers}
+                            useGroupMembers={useGroupMembers}
                             onValueChange={onValueChange}
+                            setSelectedRef={setSelectedRef}
+                            createNewUserLabel={createNewUserLabel}
                         />
                         <Flex items="center" justify="end" gap="1" mt="2">
                             <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpenedState(false)}>
@@ -135,12 +152,13 @@ export const AssignMemberPopover = memo(
     }
 );
 
-export interface IAssignMemberFormProps
-    extends Omit<IAssignMemberPopoverProps, "popoverButtonProps" | "popoverContentProps" | "userAvatarListProps" | "onSave" | "iconSize"> {
+export interface IMultiSelectMemberFormProps
+    extends Omit<IMultiSelectMemberPopoverProps, "popoverButtonProps" | "popoverContentProps" | "userAvatarListProps" | "onSave" | "iconSize"> {
     onValueChange: TMultiSelectProps["onValueChange"];
+    useGroupMembers?: bool;
 }
 
-export const AssignMemberForm = memo(
+export const MultiSelectMemberForm = memo(
     ({
         multiSelectProps,
         allUsers,
@@ -150,16 +168,31 @@ export const AssignMemberForm = memo(
         currentUser,
         canControlAssignedUsers,
         canAssignNonMembers,
+        useGroupMembers,
+        setSelectedRef,
         onValueChange,
-    }: IAssignMemberFormProps) => {
+        createNewUserLabel,
+    }: IMultiSelectMemberFormProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
         const [selected, setSelected] = useState<string[]>([
             ...(canControlAssignedUsers && assignedUsers.length ? assignedUsers.map((user) => user.email) : []),
             ...(canAssignNonMembers && newUsers ? newUsers.map((user) => user.email) : []),
         ]);
+        if (setSelectedRef) {
+            setSelectedRef.current = setSelected;
+        }
         const user = currentUser ?? aboutMe();
         const [isDropdownOpened, setIsDropdownOpened] = useState(false);
+        const filterSelectableUsers = useCallback(
+            (member: User.TModel) => {
+                return (
+                    (canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.email === member.email)) &&
+                    (canAssignNonMembers || (!member.isPresentableUnknownUser() && allUsers.some((user) => user.email === member.email)))
+                );
+            },
+            [canControlAssignedUsers, assignedUsers, canAssignNonMembers, allUsers]
+        );
         const assignableGroups = useMemo(() => {
             if (!user) {
                 return [];
@@ -167,13 +200,7 @@ export const AssignMemberForm = memo(
 
             return user.user_groups
                 .map((group) => {
-                    const groupMembers = group.users.filter(
-                        (member) =>
-                            (canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.email === member.email)) &&
-                            (canAssignNonMembers ||
-                                (!User.isPresentableUnknownUser(member) && allUsers.some((user) => user.email === member.email))) &&
-                            selected.indexOf(member.email) === -1
-                    );
+                    const groupMembers = group.users.filter((member) => filterSelectableUsers(member) && !selected.includes(member.email));
 
                     if (!groupMembers.length) {
                         return null;
@@ -192,7 +219,7 @@ export const AssignMemberForm = memo(
 
                 setSelected((prev) => [
                     ...prev,
-                    ...group.members.filter((member) => canAssignNonMembers || !User.isPresentableUnknownUser(member)).map((member) => member.email),
+                    ...group.members.filter((member) => canAssignNonMembers || !member.isPresentableUnknownUser()).map((member) => member.email),
                 ]);
             },
             [assignableGroups]
@@ -209,60 +236,63 @@ export const AssignMemberForm = memo(
             setSelected(value);
         };
 
-        const validateCreatedNewValue = (value: string) => {
-            return EMAIL_REGEX.test(value);
-        };
-
         return (
             <>
                 <MultiSelect
                     selections={allUsers
-                        .filter(
-                            (member) =>
-                                (canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.email === member.email)) &&
-                                (canAssignNonMembers || !User.isPresentableUnknownUser(member))
-                        )
+                        .filter((member) => filterSelectableUsers(member))
                         .map((member) => ({
                             value: member.email,
-                            label: `${member.firstname} ${member.lastname}`,
+                            label:
+                                canAssignNonMembers &&
+                                newUsers?.some((user) => user.uid === member.uid) &&
+                                member instanceof User.Model &&
+                                createNewUserLabel
+                                    ? createNewUserLabel(member)
+                                    : `${member.firstname} ${member.lastname}`,
                         }))}
                     selectedValue={selected}
                     createBadgeWrapper={(badge, value) => {
                         let user = allUsers.find((member) => member.email === value);
                         if (!user && canAssignNonMembers) {
-                            user = User.createNoneEmailUser(value);
+                            user = User.Model.createTempEmailUser(value);
                         }
-                        user = { ...user! };
+
+                        if (!user) {
+                            return null!;
+                        }
 
                         return (
-                            <UserAvatar.Root user={user!} customTrigger={badge}>
+                            <UserAvatar.Root user={user} customTrigger={badge}>
                                 test
                             </UserAvatar.Root>
                         );
                     }}
                     disabled={isValidating}
                     onValueChange={onSelected}
-                    canCreateNew={canAssignNonMembers as bool}
-                    validateCreatedNewValue={validateCreatedNewValue as never}
-                    commandItemForNew={((value: string) => t("common.Assign '{email}'", { email: value })) as never}
-                    {...multiSelectProps}
+                    canCreateNew={canAssignNonMembers as false}
+                    validateCreatedNewValue={((value: string) => EMAIL_REGEX.test(value)) as never}
+                    commandItemForNew={((values: string[]) => t("common.Assign '{emails}'", { emails: values })) as never}
+                    {...(multiSelectProps as Record<string, unknown>)}
                 />
-                <DropdownMenu.Root open={isDropdownOpened} onOpenChange={setIsDropdownOpened}>
-                    <DropdownMenu.Trigger asChild>
-                        <Button variant="secondary" size="sm" disabled={!assignableGroups.length || isValidating}>
-                            {t("common.Add members from group")}
-                        </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content>
-                        <DropdownMenu.Group>
-                            {assignableGroups.map((group) => (
-                                <DropdownMenu.Item key={`group-${group.name}-${createShortUUID()}`} onClick={() => addGroupMembers(group.uid)}>
-                                    {group.name}
-                                </DropdownMenu.Item>
-                            ))}
-                        </DropdownMenu.Group>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
+                {useGroupMembers && (
+                    <DropdownMenu.Root open={isDropdownOpened} onOpenChange={setIsDropdownOpened}>
+                        <DropdownMenu.Trigger asChild>
+                            <Button variant="secondary" size="sm" disabled={!assignableGroups.length || isValidating}>
+                                {t("common.Add members from group")}
+                            </Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content>
+                            <DropdownMenu.Group>
+                                {assignableGroups.map((group) => (
+                                    <DropdownMenu.Item key={`group-${group.name}-${createShortUUID()}`} onClick={() => addGroupMembers(group.uid)}>
+                                        {group.name}
+                                    </DropdownMenu.Item>
+                                ))}
+                            </DropdownMenu.Group>
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+                )}
             </>
         );
     }

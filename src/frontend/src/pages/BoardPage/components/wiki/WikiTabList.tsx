@@ -1,24 +1,20 @@
 import { Flex, Toast } from "@/components/base";
 import useChangeWikiOrder from "@/controllers/api/wiki/useChangeWikiOrder";
-import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
-import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { IDraggableProjectWiki, TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
 import WikiBin from "@/pages/BoardPage/components/wiki/WikiBin";
 import WikiTab, { SkeletonWikiTab } from "@/pages/BoardPage/components/wiki/WikiTab";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
+import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { memo, useEffect, useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiTabListProps {
-    wikiUID: string;
     changeTab: (uid: string) => void;
 }
 
@@ -32,8 +28,8 @@ export function SkeletonWikiTabList() {
     );
 }
 
-const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
-    const { projectUID, wikis: flatWikis, setWikis: setFlatWikis, socket, currentUser, disabledReorder } = useBoardWiki();
+const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
+    const { projectUID, wikis: flatWikis, socket, disabledReorder } = useBoardWiki();
     const [t] = useTranslation();
     const { mutate: changeWikiOrderMutate } = useChangeWikiOrder();
     const moreDroppableZoneCallbacksRef = useRef<TMoreWikiTabDropzonCallbacks>({});
@@ -42,7 +38,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
         setColumns: setWikis,
         reorder: reorderWikis,
     } = useReorderColumn<IDraggableProjectWiki>({
-        type: "BoardWiki",
+        type: "ProjectWiki",
         eventNameParams: { uid: projectUID },
         topicId: projectUID,
         columns: flatWikis,
@@ -50,50 +46,6 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
     });
     const wikisUIDs = useMemo(() => wikis.map((wiki) => wiki.uid), [wikis]);
     const dndContextId = useId();
-    const boardWikiCreatedHandler = useBoardWikiCreatedHandlers({
-        socket,
-        projectUID,
-        callback: (data) => {
-            setFlatWikis((prev) => {
-                const newWikis = [...prev];
-                if (!prev.some((wiki) => wiki.uid === data.wiki.uid)) {
-                    newWikis.push(data.wiki);
-                }
-
-                return newWikis.sort((a, b) => a.order - b.order).map((wiki, i) => ({ ...wiki, order: i }));
-            });
-        },
-    });
-    const boardPrivateWikiCreatedHandler = useBoardWikiCreatedHandlers({
-        socket,
-        projectUID,
-        userUID: currentUser.uid,
-        callback: (data) => {
-            setFlatWikis((prev) => {
-                const newWikis = [...prev];
-                if (!prev.some((wiki) => wiki.uid === data.wiki.uid)) {
-                    newWikis.push(data.wiki);
-                }
-
-                return newWikis.sort((a, b) => a.order - b.order).map((wiki, i) => ({ ...wiki, order: i }));
-            });
-        },
-    });
-    const boardWikiDeletedHandlersHandler = useBoardWikiDeletedHandlers({
-        socket,
-        projectUID,
-        callback: (data) => {
-            setFlatWikis((prev) => prev.filter((wiki) => wiki.uid !== data.uid));
-            if (wikiUID === data.uid) {
-                Toast.Add.info(t("wiki.Wiki page has been deleted."));
-                changeTab("");
-            }
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [boardWikiCreatedHandler, boardPrivateWikiCreatedHandler, boardWikiDeletedHandlersHandler],
-    });
     const {
         activeColumn: activeWiki,
         sensors,
@@ -106,6 +58,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
         rowDragDataType: "FakeWiki",
         columnCallbacks: {
             onDragEnd: (orignalWiki, index) => {
+                const originalWikiOrder = orignalWiki.order;
                 const targetWiki = wikis.find((wiki) => wiki.uid === orignalWiki.uid);
                 if (targetWiki) {
                     delete targetWiki.isInBin;
@@ -122,7 +75,7 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {
                                     Toast.Add.error(t("errors.Internal server error"));
-                                    setWikis((prev) => arrayMove(prev, orignalWiki.order, index).map((wiki, i) => ({ ...wiki, order: i })));
+                                    reorderWikis(orignalWiki, originalWikiOrder);
                                 },
                             });
 
@@ -132,12 +85,8 @@ const WikiTabList = memo(({ wikiUID, changeTab }: IWikiTabListProps) => {
                 );
             },
             onDragOverOrMove: (activeWiki) => {
-                if (!activeWiki.isInBin) {
-                    return;
-                }
-
                 const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid);
-                if (!targetWiki) {
+                if (!targetWiki || !targetWiki.isInBin) {
                     return;
                 }
 

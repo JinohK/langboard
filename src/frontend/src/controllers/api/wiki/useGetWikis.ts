@@ -9,24 +9,21 @@ export interface IGetWikisForm {
 }
 
 export interface IGetWikisResponse {
-    wikis: ProjectWiki.Interface[];
-    project_members: User.Interface[];
+    wikis: ProjectWiki.TModel[];
+    project_members: User.TModel[];
 }
 
-const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<IGetWikisForm, IGetWikisResponse>) => {
+const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGetWikisResponse>) => {
     const { query } = useQueryMutation();
 
     const getWikis = async () => {
         const url = format(API_ROUTES.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
         const res = await api.get(url);
 
-        for (let i = 0; i < res.data.wikis.length; ++i) {
-            User.transformFromApi(res.data.wikis[i].assigned_members);
-        }
-
-        User.transformFromApi(res.data.project_members);
-
-        return res.data;
+        return {
+            wikis: ProjectWiki.Model.fromObjectArray(res.data.wikis),
+            project_members: User.Model.fromObjectArray(res.data.project_members),
+        };
     };
 
     const result = query([`get-wikis-${params.project_uid}`], getWikis, {

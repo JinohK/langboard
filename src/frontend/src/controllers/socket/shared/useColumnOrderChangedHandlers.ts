@@ -1,6 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectCardAttachment, ProjectCheckitem, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
 import { StringCase } from "@/core/utils/StringUtils";
 
 export interface IColumnOrderChangedResponse {
@@ -9,40 +10,45 @@ export interface IColumnOrderChangedResponse {
 }
 
 export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IColumnOrderChangedResponse> {
-    type: "ProjectColumn" | "BoardCardAttachment" | "BoardCardCheckitem" | "BoardWiki" | "ProjectLabel";
+    type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectCheckitem" | "ProjectWiki" | "ProjectLabel";
     params?: Record<string, string>;
     topicId: string;
 }
 
-const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId }: IUseColumnOrderChangedHandlersProps) => {
+const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUseColumnOrderChangedHandlersProps) => {
     let onEventName = "";
     const sendEventName = "";
+    let targetModel;
     let topic = ESocketTopic.None;
     switch (type) {
         case "ProjectColumn":
             onEventName = SOCKET_SERVER_EVENTS.PROJECT.COLUMN.ORDER_CHANGED;
+            targetModel = ProjectColumn.Model;
             topic = ESocketTopic.Project;
             break;
-        case "BoardCardAttachment":
+        case "ProjectCardAttachment":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;
+            targetModel = ProjectCardAttachment.Model;
             topic = ESocketTopic.BoardCard;
             break;
-        case "BoardCardCheckitem":
+        case "ProjectCheckitem":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
+            targetModel = ProjectCheckitem.Model;
             topic = ESocketTopic.Board;
             break;
-        case "BoardWiki":
+        case "ProjectWiki":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;
+            targetModel = ProjectWiki.Model;
             topic = ESocketTopic.BoardWiki;
             break;
         case "ProjectLabel":
             onEventName = SOCKET_SERVER_EVENTS.PROJECT.LABEL.ORDER_CHANGED;
+            targetModel = ProjectLabel.Model;
             topic = ESocketTopic.Project;
             break;
     }
 
     return useSocketHandler({
-        socket,
         topic,
         topicId: topicId,
         eventKey: `${new StringCase(type).toKebab()}-column-order-changed`,
@@ -50,6 +56,13 @@ const useColumnOrderChangedHandlers = ({ socket, callback, type, params, topicId
             name: onEventName,
             params,
             callback,
+            responseConverter: (data) => {
+                const model = targetModel.getModel(data.uid);
+                if (model) {
+                    model.order = data.order;
+                }
+                return data;
+            },
         },
         sendProps: {
             name: sendEventName,

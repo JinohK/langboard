@@ -10,9 +10,7 @@ export interface IChangeCardAttachmentOrderForm {
     order: number;
 }
 
-export interface IChangeCardAttachmentOrderResponse {}
-
-const useChangeCardAttachmentOrder = (options?: TMutationOptions<IChangeCardAttachmentOrderForm, IChangeCardAttachmentOrderResponse>) => {
+const useChangeCardAttachmentOrder = (options?: TMutationOptions<IChangeCardAttachmentOrderForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeCardAttachmentOrder = async (params: IChangeCardAttachmentOrderForm) => {

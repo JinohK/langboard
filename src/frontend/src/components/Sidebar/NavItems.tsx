@@ -5,15 +5,17 @@ import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element[] => {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
 
     return navs.map((item) => {
         const key = makeReactKey(item.name);
-        const componentClasses = cn(
+        const componentClassNames = cn(
             item.current ? "text-primary group-data-[collapsed=false]/sidebar:bg-muted" : "text-muted-foreground",
-            "group-data-[fullscreen=false]/floating:justify-center",
+            "select-none group-data-[fullscreen=false]/floating:justify-center",
             "inline-flex cursor-pointer items-center gap-3 rounded-lg py-2 text-base w-full",
             "transition-all duration-100 hover:text-primary",
             "group-data-[collapsed=false]/sidebar:px-3"
@@ -25,7 +27,14 @@ const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element
                 <a
                     key={key}
                     href={item.href}
-                    onClick={item.onClick}
+                    onClick={() => {
+                        item.onClick?.();
+                        if (item.current) {
+                            setTimeout(() => {
+                                setIsLoadingRef.current(false);
+                            }, 0);
+                        }
+                    }}
                     aria-current={item.current ? "page" : undefined}
                     className={ButtonVariants({
                         variant: "secondary",
@@ -38,7 +47,20 @@ const NavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element
             );
         } else {
             comp = (
-                <a key={key} href={item.href} onClick={item.onClick} aria-current={item.current ? "page" : undefined} className={componentClasses}>
+                <a
+                    key={key}
+                    href={item.href}
+                    onClick={() => {
+                        item.onClick?.();
+                        if (item.current) {
+                            setTimeout(() => {
+                                setIsLoadingRef.current(false);
+                            }, 0);
+                        }
+                    }}
+                    aria-current={item.current ? "page" : undefined}
+                    className={componentClassNames}
+                >
                     <IconComponent
                         icon={item.icon}
                         className={cn(

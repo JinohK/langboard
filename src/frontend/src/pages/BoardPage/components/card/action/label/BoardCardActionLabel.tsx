@@ -1,52 +1,15 @@
 import { Box, Flex, Tooltip } from "@/components/base";
-import useProjectLabelColorChangedHandlers from "@/controllers/socket/project/label/useProjectLabelColorChangedHandlers";
-import useProjectLabelDescriptionChangedHandlers from "@/controllers/socket/project/label/useProjectLabelDescriptionChangedHandlers";
-import useProjectLabelNameChangedHandlers from "@/controllers/socket/project/label/useProjectLabelNameChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectLabel } from "@/core/models";
-import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { memo, useState } from "react";
+import { memo } from "react";
 
 export interface IBoardCardActionLabelProps {
-    label: ProjectLabel.Interface;
+    label: ProjectLabel.TModel;
 }
 
 const BoardCardActionLabel = memo(({ label }: IBoardCardActionLabelProps) => {
-    const { projectUID, socket } = useBoardCard();
-    const [name, setName] = useState(label.name);
-    const [color, setColor] = useState(label.color);
-    const [description, setDescription] = useState(label.description);
-    const projectLabelNameChangedHandler = useProjectLabelNameChangedHandlers({
-        socket,
-        projectUID,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.name = data.name;
-            setName(data.name);
-        },
-    });
-    const projectLabelColorChangedHandler = useProjectLabelColorChangedHandlers({
-        socket,
-        projectUID,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.color = data.color;
-            setColor(data.color);
-        },
-    });
-    const projectLabelDescriptionChangedHandler = useProjectLabelDescriptionChangedHandlers({
-        socket,
-        projectUID,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.description = data.description;
-            setDescription(data.description);
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [projectLabelNameChangedHandler, projectLabelColorChangedHandler, projectLabelDescriptionChangedHandler],
-    });
+    const name = label.useField("name");
+    const color = label.useField("color");
+    const description = label.useField("description");
 
     return (
         <Tooltip.Provider delayDuration={400}>

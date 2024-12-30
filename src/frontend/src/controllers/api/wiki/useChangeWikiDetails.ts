@@ -17,12 +17,8 @@ interface IDetails {
 type TChangeableDetail = keyof IDetails;
 
 export type TChangeWikiDetailsForm<TDetail extends TChangeableDetail> = IBaseChangeWikiDetailsForm & Pick<IDetails, TDetail>;
-export type TChangeWikiDetailsResponse<TDetail extends TChangeableDetail> = Required<Pick<IDetails, TDetail>>;
 
-const useChangeWikiDetails = <TDetail extends TChangeableDetail>(
-    type: TDetail,
-    options?: TMutationOptions<TChangeWikiDetailsForm<TDetail>, TChangeWikiDetailsResponse<TDetail>>
-) => {
+const useChangeWikiDetails = <TDetail extends TChangeableDetail>(type: TDetail, options?: TMutationOptions<TChangeWikiDetailsForm<TDetail>>) => {
     const { mutate } = useQueryMutation();
 
     const changeWikiDetails = async (params: TChangeWikiDetailsForm<TDetail>) => {

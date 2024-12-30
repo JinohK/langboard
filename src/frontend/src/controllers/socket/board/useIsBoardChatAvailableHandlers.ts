@@ -24,9 +24,8 @@ export interface IUseIsBoardChatAvailableHandlersProps extends IBaseUseSocketHan
     projectUID: string;
 }
 
-const useIsBoardChatAvailableHandlers = ({ socket, callback, projectUID }: IUseIsBoardChatAvailableHandlersProps) => {
+const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardChatAvailableHandlersProps) => {
     return useSocketHandler({
-        socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `is-board-chat-available-${projectUID}`,

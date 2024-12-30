@@ -9,11 +9,7 @@ export interface IChangeProjectColumnNameForm {
     name: string;
 }
 
-export interface IChangeProjectColumnNameResponse {
-    name: string;
-}
-
-const useChangeProjectColumnName = (options?: TMutationOptions<IChangeProjectColumnNameForm, IChangeProjectColumnNameResponse>) => {
+const useChangeProjectColumnName = (options?: TMutationOptions<IChangeProjectColumnNameForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeProjectColumnName = async (params: IChangeProjectColumnNameForm) => {

@@ -15,23 +15,20 @@ class CardRelationshipService(BaseService):
 
     @overload
     async def get_all_by_card(
-        self, project: TProjectParam, card: TCardParam, as_api: Literal[False]
-    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType, Card]]: ...
+        self, card: TCardParam, as_api: Literal[False]
+    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]]: ...
     @overload
+    async def get_all_by_card(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all_by_card(
-        self, project: TProjectParam, card: TCardParam, as_api: Literal[True]
-    ) -> list[dict[str, Any]]: ...
-    async def get_all_by_card(
-        self, project: TProjectParam, card: TCardParam, as_api: bool
-    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType, Card]] | list[dict[str, Any]]:
-        params = await self.__get_records_by_params(project, card)
-        if not params:
+        self, card: TCardParam, as_api: bool
+    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]] | list[dict[str, Any]]:
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card:
             return []
-        project, card = params
 
         result = await self._db.exec(
             self._db.query("select")
-            .tables(CardRelationship, GlobalCardRelationshipType, Card)
+            .tables(CardRelationship, GlobalCardRelationshipType)
             .join(
                 GlobalCardRelationshipType,
                 CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
@@ -54,15 +51,13 @@ class CardRelationshipService(BaseService):
             return list(raw_relationships)
 
         relationships = []
-        for relationship, relationship_type, related_card in raw_relationships:
-            api_relationship = relationship_type.api_response()
-            api_relationship.pop("uid")
+        for relationship, relationship_type in raw_relationships:
             relationships.append(
                 {
-                    **api_relationship,
+                    "uid": relationship.get_uid(),
                     "relationship_type_uid": relationship_type.get_uid(),
-                    "is_parent": relationship.card_id_parent == related_card.id,
-                    "related_card": related_card.api_response(),
+                    "parent_card_uid": relationship.card_id_parent.to_short_code(),
+                    "child_card_uid": relationship.card_id_child.to_short_code(),
                 }
             )
         return relationships
@@ -106,8 +101,8 @@ class CardRelationshipService(BaseService):
             return None
         project, card = params
 
-        original_relationships = await self.get_by_card_with_type(project, card, is_parent)
-        original_relationship_ids = [related_card.id for _, _, related_card in original_relationships]
+        # original_relationships = await self.get_by_card_with_type(project, card, is_parent)
+        # original_relationship_ids = [related_card.id for _, _, related_card in original_relationships]
         opposite_relationship_ids = [
             related_card.id for _, _, related_card in await self.get_by_card_with_type(project, card, not is_parent)
         ]
@@ -115,14 +110,7 @@ class CardRelationshipService(BaseService):
         await self._db.exec(
             self._db.query("delete")
             .table(CardRelationship)
-            .where(
-                (CardRelationship.column("card_id_child" if is_parent else "card_id_parent") == card.id)
-                & (
-                    CardRelationship.column("card_id_parent" if is_parent else "card_id_child").in_(
-                        original_relationship_ids
-                    )
-                )
-            )
+            .where(CardRelationship.column("card_id_child" if is_parent else "card_id_parent") == card.id)
         )
 
         new_relationships_dict: dict[SnowflakeID, bool] = {}
@@ -151,28 +139,19 @@ class CardRelationshipService(BaseService):
             new_relationships_dict[related_card.id] = True
         await self._db.commit()
 
-        new_relationships = await self.get_all_by_card(project, card, as_api=True)
-        parent_card_uids: list[str] = []
-        child_card_uids: list[str] = []
-        for relationship in new_relationships:
-            if relationship["is_parent"]:
-                parent_card_uids.append(relationship["related_card"]["uid"])
-            else:
-                child_card_uids.append(relationship["related_card"]["uid"])
+        new_relationships = await self.get_all_by_card(card, as_api=True)
 
         model_id = await SocketModelIdService.create_model_id(
             {
                 "card_uid": card.get_uid(),
                 "relationships": new_relationships,
-                "parent_card_uids": parent_card_uids,
-                "child_card_uids": child_card_uids,
             }
         )
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:card:relationships:updated:{project.get_uid()}",
-            data_keys=["card_uid", "relationships", "parent_card_uids", "child_card_uids"],
+            data_keys=["card_uid", "relationships"],
         )
 
         return SocketModelIdBaseResult(model_id, True, publish_model)

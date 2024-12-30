@@ -209,7 +209,7 @@ class SocketApp(dict):
         if isinstance(ws, WebSocket):
             ws.send("error", {"message": message, "code": _error_code})
         else:
-            ws.send({"event": "error", "data": {"message": message, "code": _error_code}})
+            ws.send({"event": "error", "data": {"message": message, "code": _error_code}}, OpCode.TEXT)
 
     async def _toggle_subscription(self, ws: SocketifyWebSocket, event: str, data: dict, user_data: Any) -> bool:
         if event != "subscribe" and event != "unsubscribe":
@@ -232,7 +232,7 @@ class SocketApp(dict):
                     return True
 
             if topic.lower().endswith("_private"):
-                if user.username != topic_id:
+                if user.get_uid() != topic_id:
                     self._send_error(
                         ws,
                         "Forbidden",

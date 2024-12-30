@@ -92,7 +92,7 @@ export const validate = (
     schema: TValidationSchema
 ): keyof IBaseValidationSchema | (string & {}) | undefined => {
     const validator = new Validator();
-    const keys = Object.keys(schema) as (keyof TValidationSchema)[];
+    const keys = Object.keys(schema);
 
     for (let i = 0; i < keys.length; ++i) {
         const key = keys[i];

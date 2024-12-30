@@ -1,9 +1,13 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectWiki, User } from "@/core/models";
+import { ProjectWiki } from "@/core/models";
 
 export interface IBoardWikiPublicChangedResponse {
+    wiki: ProjectWiki.TModel;
+}
+
+export interface IBoardWikiPublicChangedRawResponse {
     wiki: ProjectWiki.Interface;
 }
 
@@ -13,12 +17,11 @@ export interface IUseBoardWikiPublicChangedHandlersProps extends IBaseUseSocketH
     userUID?: string;
 }
 
-const useBoardWikiPublicChangedHandlers = ({ socket, callback, projectUID, wikiUID, userUID }: IUseBoardWikiPublicChangedHandlersProps) => {
+const useBoardWikiPublicChangedHandlers = ({ callback, projectUID, wikiUID, userUID }: IUseBoardWikiPublicChangedHandlersProps) => {
     const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
     const topicId = userUID ?? projectUID;
 
-    return useSocketHandler({
-        socket,
+    return useSocketHandler<IBoardWikiPublicChangedResponse, IBoardWikiPublicChangedRawResponse>({
         topic,
         topicId,
         eventKey: `board-wiki-public-changed-${topic}-${wikiUID}`,
@@ -27,8 +30,9 @@ const useBoardWikiPublicChangedHandlers = ({ socket, callback, projectUID, wikiU
             params: { uid: wikiUID },
             callback,
             responseConverter: (data) => {
-                User.transformFromApi(data.wiki.assigned_members);
-                return data;
+                return {
+                    wiki: ProjectWiki.Model.fromObject(data.wiki),
+                };
             },
         },
     });

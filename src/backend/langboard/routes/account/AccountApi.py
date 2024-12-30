@@ -7,7 +7,14 @@ from ...core.routing.Exception import InvalidError, InvalidException
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
 from ...services import Service
-from .Form import AddNewEmailForm, ChangePasswordForm, EmailForm, UpdateProfileForm, VerifyNewEmailForm
+from .Form import (
+    AddNewEmailForm,
+    ChangePasswordForm,
+    EmailForm,
+    UpdateProfileForm,
+    UpdateUserGroupAssignedEmailForm,
+    VerifyNewEmailForm,
+)
 
 
 @AppRouter.api.put("/account/profile")
@@ -134,3 +141,20 @@ async def change_password(
     await Auth.reset_user(user)
 
     return JsonResponse(content={})
+
+
+@AppRouter.api.put("/account/group/{group_uid}/emails")
+@AuthFilter.add
+async def update_user_group_assigned_emails(
+    group_uid: str,
+    form: UpdateUserGroupAssignedEmailForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    revert_key = await service.user_group.update_assigned_emails(user, group_uid, form.emails)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    group_users = await service.user_group.get_by_group(group_uid, as_api=True)
+
+    return JsonResponse(content={"revert_key": revert_key, "users": group_users})

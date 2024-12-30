@@ -2,12 +2,7 @@ import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollA
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
-import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
-import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
-import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { Project, ProjectCard } from "@/core/models";
+import { Project, ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -15,14 +10,14 @@ import { cn } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo, useCallback, useEffect, useReducer, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
 
 export interface IBoardColumnCardProps {
-    card: ProjectCard.IBoard & {
+    card: ProjectCard.TModel & {
         isOpened?: bool;
     };
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
@@ -54,23 +49,13 @@ export const SkeletonBoardColumnCard = memo(() => {
 
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
-    const { project, currentUser, socket, hasRoleAction } = useBoard();
+    const { project, currentUser, hasRoleAction } = useBoard();
     if (TypeUtils.isNullOrUndefined(card.isOpened)) {
         card.isOpened = false;
     }
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const handlers = useCardDescriptionChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.description = data.description;
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
+    const description = card.useField("description");
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
         data: {
@@ -146,7 +131,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
 
     let cardInner = <BoardColumnCardInner isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
-    if (!isOverlay && !isDragging && card.description?.content.trim().length) {
+    if (!isOverlay && !isDragging && description?.content.trim().length) {
         cardInner = (
             <HoverCard.Root
                 open={isHoverCardOpened}
@@ -169,7 +154,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 >
                     <ScrollArea.Root>
                         <Box p="4" className="max-h-[calc(100vh-_theme(spacing.4))] break-all [&_img]:max-w-full">
-                            <PlateEditor value={card.description} mentionableUsers={project.members} currentUser={currentUser} readOnly />
+                            <PlateEditor value={description} mentionableUsers={project.members} currentUser={currentUser} readOnly />
                         </Box>
                     </ScrollArea.Root>
                 </HoverCard.Content>
@@ -188,44 +173,12 @@ interface IBoardColumnCardInnerProps {
 
 const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
     const { selectCardViewType, isDisabledCard } = useBoardRelationshipController();
-    const { project, socket, filters, navigateWithFilters } = useBoard();
+    const { project, filters, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
-    const [title, setTitle] = useState(card.title);
-    const [commentCount, setCommentCount] = useState(card.count_comment);
+    const title = card.useField("title");
+    const commentCount = card.useField("count_comment");
     const [isOpened, setIsOpened] = useState(card.isOpened);
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
-    const cardTitleChangedHandler = useCardTitleChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.title = data.title;
-            setTitle(data.title);
-        },
-    });
-    const commentAddedHandler = useCardCommentAddedHandlers({
-        socket,
-        projectUID: project.uid,
-        cardUID: card.uid,
-        callback: () => {
-            setCommentCount((count) => {
-                card.count_comment = count + 1;
-                return card.count_comment;
-            });
-        },
-    });
-    const commentDeletedHandler = useCardCommentDeletedHandlers({
-        socket,
-        projectUID: project.uid,
-        cardUID: card.uid,
-        callback: () => {
-            setCommentCount((count) => {
-                card.count_comment = count - 1;
-                return card.count_comment;
-            });
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [cardTitleChangedHandler, commentAddedHandler, commentDeletedHandler] });
 
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
@@ -254,7 +207,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
         navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
     };
 
-    const setFilters = (relationshipType: keyof ProjectCard.IBoard["relationships"]) => {
+    const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {
         if (!filters[relationshipType]) {
             filters[relationshipType] = [];
         }
@@ -288,15 +241,15 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                         card.isOpened = opened;
                     }}
                 >
-                    <Card.Header className="relative block py-4">
+                    <Card.Header className="relative block space-y-0 py-4">
                         <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
                         <Collapsible.Trigger asChild>
                             <Button
                                 variant="ghost"
-                                className="absolute right-2.5 top-1 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
+                                className="absolute right-2.5 top-2.5 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
                                 size="icon-sm"
                                 title={t(`common.${isOpened ? "Collapse" : "Expand"}`)}
-                                titleSide="bottom"
+                                titleSide="top"
                                 {...attributes}
                             >
                                 <IconComponent icon="chevron-down" size="4" />

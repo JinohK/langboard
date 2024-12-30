@@ -10,35 +10,13 @@ import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 function EmailPage(): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const { aboutMe, updatedUser } = useAuth();
+    const { aboutMe, updatedUser, updated } = useAuth();
     const [isValidating, setIsValidating] = useState(false);
     const [user, setUser] = useState(aboutMe());
 
     useEffect(() => {
-        let isMounted = true;
-        let aboutMeTimeout: NodeJS.Timeout;
-
-        const getUser = () => {
-            if (!isMounted) {
-                clearTimeout(aboutMeTimeout);
-                return;
-            }
-
-            const curUser = aboutMe();
-            if (!curUser) {
-                aboutMeTimeout = setTimeout(getUser, 50);
-                return;
-            }
-
-            setUser(curUser);
-        };
-
-        aboutMeTimeout = setTimeout(getUser, 50);
-
-        return () => {
-            isMounted = false;
-        };
-    }, [aboutMe, aboutMe()]);
+        setUser(aboutMe());
+    }, [updated]);
 
     useEffect(() => {
         setIsLoadingRef.current(false);

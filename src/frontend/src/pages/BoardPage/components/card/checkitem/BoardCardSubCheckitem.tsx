@@ -8,17 +8,16 @@ import { CSS } from "@dnd-kit/utilities";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardSubCheckitemProps {
-    checkitem: ProjectCheckitem.IBoardSub;
-    deletedSubCheckitem: (uid: string) => void;
+    checkitem: ProjectCheckitem.TModel;
     isOverlay?: bool;
 }
 
 interface IBoardCardCheckitemDragData {
     type: "SubCheckitem";
-    data: ProjectCheckitem.IBoardSub;
+    data: ProjectCheckitem.TModel;
 }
 
-function BoardCardSubCheckitem({ checkitem, deletedSubCheckitem, isOverlay }: IBoardCardSubCheckitemProps): JSX.Element {
+function BoardCardSubCheckitem({ checkitem, isOverlay }: IBoardCardSubCheckitemProps): JSX.Element {
     const { hasRoleAction } = useBoardCard();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: checkitem.uid,
@@ -68,13 +67,7 @@ function BoardCardSubCheckitem({ checkitem, deletedSubCheckitem, isOverlay }: IB
 
     return (
         <Box {...props}>
-            <SharedBoardCardCheckitem
-                checkitem={checkitem}
-                attributes={attributes}
-                listeners={listeners}
-                deleted={deletedSubCheckitem}
-                className="ml-2"
-            />
+            <SharedBoardCardCheckitem checkitem={checkitem} attributes={attributes} listeners={listeners} className="ml-2" />
         </Box>
     );
 }

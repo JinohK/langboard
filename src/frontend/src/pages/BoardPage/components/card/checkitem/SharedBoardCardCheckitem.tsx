@@ -1,11 +1,6 @@
 import { Box, Button, Collapsible, Flex, IconComponent, Tooltip } from "@/components/base";
 import { IFlexProps } from "@/components/base/Flex";
-import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
-import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
-import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
-import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -17,16 +12,15 @@ import SharedBoardCardCheckitemMore from "@/pages/BoardPage/components/card/chec
 import SharedBoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitemTimer";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { forwardRef, memo, useReducer, useRef, useState } from "react";
+import { forwardRef, memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface IBaseSharedBoardCardCheckitemProps<TParent extends bool> extends IFlexProps {
-    checkitem: ProjectCheckitem.IBaseBoard;
+    checkitem: ProjectCheckitem.TModel;
     attributes?: DraggableAttributes;
     listeners?: SyntheticListenerMap;
     isParent?: TParent;
     isOpenedRef?: React.MutableRefObject<bool>;
-    deleted: (uid: string) => void;
 }
 
 export interface ISharedBoardCardCheckitemWithCollapsibleProps extends IBaseSharedBoardCardCheckitemProps<true> {
@@ -42,180 +36,129 @@ export interface ISharedBoardCardCheckitemWithoutCollapsibleProps extends IBaseS
 export type TSharedBoardCardCheckitemProps = ISharedBoardCardCheckitemWithCollapsibleProps | ISharedBoardCardCheckitemWithoutCollapsibleProps;
 
 const SharedBoardCardCheckitem = memo(
-    forwardRef<HTMLDivElement, TSharedBoardCardCheckitemProps>(
-        ({ checkitem, attributes, listeners, isParent, isOpenedRef, deleted, ...props }, ref) => {
-            const { projectUID, socket, hasRoleAction, sharedClassNames } = useBoardCard();
-            const navigate = useRef(usePageNavigate());
-            const [t] = useTranslation();
-            const [isValidating, setIsValidating] = useState(false);
-            const [isTitleOpened, setIsTitleOpened] = useState(false);
-            const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-            const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-            const checkitemCardifiedHandler = useCardCheckitemCardifiedHandlers({
-                socket,
-                projectUID,
-                checkitemUID: checkitem.uid,
-                callback: (data) => {
-                    checkitem.cardified_uid = data.card.uid;
-                    forceUpdate();
-                },
-            });
-            const checkitemTitleChangedHandler = useCardCheckitemTitleChangedHandlers({
-                socket,
-                projectUID,
-                checkitemUID: checkitem.uid,
-                callback: (data) => {
-                    checkitem.title = data.title;
-                    forceUpdate();
-                },
-            });
-            const checkitemTimerStartedHandler = useCardCheckitemTimerStartedHandlers({
-                socket,
-                projectUID,
-                checkitemUID: checkitem.uid,
-                callback: (data) => {
-                    checkitem.timer = data.timer;
-                    checkitem.acc_time_seconds = data.acc_time_seconds;
-                    forceUpdate();
-                },
-            });
-            const checkitemTimerStoppedHandler = useCardCheckitemTimerStoppedHandlers({
-                socket,
-                projectUID,
-                checkitemUID: checkitem.uid,
-                callback: (data) => {
-                    checkitem.timer = undefined;
-                    checkitem.acc_time_seconds = data.acc_time_seconds;
-                    forceUpdate();
-                },
-            });
-            useSwitchSocketHandlers({
-                socket,
-                handlers: [checkitemCardifiedHandler, checkitemTitleChangedHandler, checkitemTimerStartedHandler, checkitemTimerStoppedHandler],
-            });
+    forwardRef<HTMLDivElement, TSharedBoardCardCheckitemProps>(({ checkitem, attributes, listeners, isParent, isOpenedRef, ...props }, ref) => {
+        const { projectUID, hasRoleAction, sharedClassNames } = useBoardCard();
+        const navigate = useRef(usePageNavigate());
+        const [t] = useTranslation();
+        const [isValidating, setIsValidating] = useState(false);
+        const [isTitleOpened, setIsTitleOpened] = useState(false);
+        const cardifiedUID = checkitem.useField("cardified_uid");
+        const title = checkitem.useField("title");
+        const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
 
-            const toCardifiedCard = () => {
-                if (!checkitem.cardified_uid) {
-                    return;
-                }
+        const toCardifiedCard = () => {
+            if (!cardifiedUID) {
+                return;
+            }
 
-                navigate.current(ROUTES.BOARD.CARD(projectUID, checkitem.cardified_uid!));
-            };
+            navigate.current(ROUTES.BOARD.CARD(projectUID, cardifiedUID));
+        };
 
-            return (
-                <BoardCardCheckitemProvider
-                    checkitem={checkitem}
-                    isParent={isParent}
-                    isValidating={isValidating}
-                    setIsValidating={setIsValidating}
-                    deleted={deleted}
-                    update={forceUpdate}
+        return (
+            <BoardCardCheckitemProvider checkitem={checkitem} isParent={isParent} isValidating={isValidating} setIsValidating={setIsValidating}>
+                <Flex
+                    items="center"
+                    justify="between"
+                    gap="2"
+                    h={{
+                        initial: "16",
+                        md: "12",
+                    }}
+                    className={cn("truncate", isParent ? "w-full" : "w-[calc(100%_-_theme(spacing.4))]")}
+                    {...props}
+                    ref={ref}
                 >
-                    <Flex
-                        items="center"
-                        justify="between"
-                        gap="2"
-                        h={{
-                            initial: "16",
-                            md: "12",
-                        }}
-                        className={cn("truncate", isParent ? "w-full" : "w-[calc(100%_-_theme(spacing.4))]")}
-                        {...props}
-                        ref={ref}
-                    >
-                        <Flex items="center" gap="2" w="full" className="truncate">
-                            <Flex items="center" gap="1">
-                                {hasRoleAction(Project.ERoleAction.CARD_UPDATE) && (
+                    <Flex items="center" gap="2" w="full" className="truncate">
+                        <Flex items="center" gap="1">
+                            {hasRoleAction(Project.ERoleAction.CARD_UPDATE) && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="h-8 w-5 sm:size-8"
+                                    title={t("common.Drag to reorder")}
+                                    disabled={isValidating}
+                                    {...attributes}
+                                    {...listeners}
+                                >
+                                    <IconComponent icon="grip-vertical" size="4" />
+                                </Button>
+                            )}
+                            {isParent && (
+                                <Collapsible.Trigger asChild>
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon-sm"
-                                        className="h-8 w-5 sm:size-8"
-                                        title={t("common.Drag to reorder")}
-                                        disabled={isValidating}
-                                        {...attributes}
-                                        {...listeners}
+                                        className="h-8 w-6 transition-all sm:size-8 [&[data-state=open]>svg]:rotate-180"
+                                        title={t(`common.${isOpenedRef.current ? "Collapse" : "Expand"}`)}
                                     >
-                                        <IconComponent icon="grip-vertical" size="4" />
+                                        <IconComponent icon="chevron-down" size="4" />
                                     </Button>
-                                )}
-                                {isParent && (
-                                    <Collapsible.Trigger asChild>
+                                </Collapsible.Trigger>
+                            )}
+                        </Flex>
+                        <Flex
+                            direction={{
+                                initial: "col",
+                                md: "row",
+                            }}
+                            items={{
+                                md: "center",
+                            }}
+                            gap="0.5"
+                            w="full"
+                            className="truncate"
+                        >
+                            <Flex items="center" justify="between" gap="1" mr="1">
+                                <Flex items="center" gap="1">
+                                    {cardifiedUID && (
                                         <Button
                                             type="button"
                                             variant="ghost"
+                                            title={t("card.Go to cardified card")}
                                             size="icon-sm"
-                                            className="h-8 w-6 transition-all sm:size-8 [&[data-state=open]>svg]:rotate-180"
-                                            title={t(`common.${isOpenedRef.current ? "Collapse" : "Expand"}`)}
+                                            className="h-8 w-5 sm:size-8"
+                                            onClick={toCardifiedCard}
                                         >
-                                            <IconComponent icon="chevron-down" size="4" />
+                                            <IconComponent icon="square-chart-gantt" size="5" />
                                         </Button>
-                                    </Collapsible.Trigger>
-                                )}
-                            </Flex>
-                            <Flex
-                                direction={{
-                                    initial: "col",
-                                    md: "row",
-                                }}
-                                items={{
-                                    md: "center",
-                                }}
-                                gap="0.5"
-                                w="full"
-                                className="truncate"
-                            >
-                                <Flex items="center" justify="between" gap="1" mr="1">
-                                    <Flex items="center" gap="1">
-                                        {checkitem.cardified_uid && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                title={t("card.Go to cardified card")}
-                                                size="icon-sm"
-                                                className="h-8 w-5 sm:size-8"
-                                                onClick={toCardifiedCard}
-                                            >
-                                                <IconComponent icon="square-chart-gantt" size="5" />
-                                            </Button>
-                                        )}
-                                        <SharedBoardCardCheckitemAssignMember
-                                            checkitem={checkitem}
-                                            members={checkitem.assigned_members}
-                                            isValidating={isValidating}
-                                            setIsValidating={setIsValidating}
-                                        />
-                                    </Flex>
-                                    <Box display={{ initial: "block", md: "hidden" }}>
-                                        <SharedBoardCardCheckitemTimer />
-                                    </Box>
+                                    )}
+                                    <SharedBoardCardCheckitemAssignMember
+                                        checkitem={checkitem}
+                                        isValidating={isValidating}
+                                        setIsValidating={setIsValidating}
+                                    />
                                 </Flex>
-                                <Tooltip.Provider delayDuration={400}>
-                                    <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
-                                        <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
-                                            <span className={cn("truncate", checkitem.cardified_uid && "sm:pl-2")}>{checkitem.title}</span>
-                                        </Tooltip.Trigger>
-                                        <Tooltip.Content className={sharedClassNames.popoverContent}>{checkitem.title}</Tooltip.Content>
-                                    </Tooltip.Root>
-                                </Tooltip.Provider>
+                                <Box display={{ initial: "block", md: "hidden" }}>
+                                    <SharedBoardCardCheckitemTimer />
+                                </Box>
                             </Flex>
-                        </Flex>
-                        <Flex items="center" gap="1.5">
-                            <Box display={{ initial: "hidden", md: "block" }}>
-                                <SharedBoardCardCheckitemTimer />
-                            </Box>
-                            {canEdit && (
-                                <Flex items="center">
-                                    {isParent && <SharedBoardCardCheckitemAddSub />}
-                                    <SharedBoardCardCheckitemMore />
-                                </Flex>
-                            )}
+                            <Tooltip.Provider delayDuration={400}>
+                                <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
+                                    <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
+                                        <span className={cn("truncate", cardifiedUID && "sm:pl-2")}>{title}</span>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content className={sharedClassNames.popoverContent}>{title}</Tooltip.Content>
+                                </Tooltip.Root>
+                            </Tooltip.Provider>
                         </Flex>
                     </Flex>
-                </BoardCardCheckitemProvider>
-            );
-        }
-    )
+                    <Flex items="center" gap="1.5">
+                        <Box display={{ initial: "hidden", md: "block" }}>
+                            <SharedBoardCardCheckitemTimer />
+                        </Box>
+                        {canEdit && (
+                            <Flex items="center">
+                                {isParent && <SharedBoardCardCheckitemAddSub />}
+                                <SharedBoardCardCheckitemMore />
+                            </Flex>
+                        )}
+                    </Flex>
+                </Flex>
+            </BoardCardCheckitemProvider>
+        );
+    })
 );
 
 export default SharedBoardCardCheckitem;

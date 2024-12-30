@@ -11,6 +11,7 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useSocket } from "@/core/providers/SocketProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { User } from "@/core/models";
 
 function Header({ navs }: IHeaderProps) {
     const { aboutMe, signOut, updated } = useAuth();
@@ -103,7 +104,7 @@ function Header({ navs }: IHeaderProps) {
                     <>
                         {separator}
                         <UserAvatar.Root
-                            user={currentUser}
+                            user={currentUser as User.TModel}
                             listAlign="end"
                             avatarSize={{
                                 initial: "sm",

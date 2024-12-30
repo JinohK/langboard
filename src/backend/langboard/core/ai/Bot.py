@@ -19,7 +19,8 @@ class Bot(BaseSqlModel, table=True):
 
     def api_response_as_user(self) -> dict[str, Any]:
         return {
-            "uid": User.BOT_UID,
+            "type": User.BOT_TYPE,
+            "uid": self.get_uid(),
             "firstname": self.display_name,
             "lastname": "",
             "email": "",

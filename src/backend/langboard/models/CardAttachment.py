@@ -15,6 +15,7 @@ class CardAttachment(SoftDeleteModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "card_uid": self.card_id.to_short_code(),
             "name": self.filename,
             "url": self.file.path,
             "order": self.order,

@@ -4,7 +4,7 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { IDraggableProjectWiki } from "@/pages/BoardPage/components/wiki/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 
@@ -25,7 +25,7 @@ export function SkeletonWikiTab() {
 
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
-    const { canAccessWiki, setTitleMapRef, disabledReorder, wikiTabListId } = useBoardWiki();
+    const { canAccessWiki, disabledReorder, wikiTabListId } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
         data: {
@@ -38,8 +38,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     });
     const canReorder = canAccessWiki(false, wiki.uid);
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
-    const [title, setTitle] = useState(wiki.title);
-    setTitleMapRef.current[wiki.uid] = setTitle;
+    const title = wiki.useField("title");
 
     const style = {
         transition,

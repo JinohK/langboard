@@ -324,14 +324,14 @@ class CheckitemService(BaseService):
                             topic_id=project.get_uid(),
                             event=f"{_SOCKET_PREFIX_SUB}:order:changed:{parent_checkitem.get_uid()}",
                             data_keys=["uid", "order"],
-                            custom_data={"move_type": "to_column"},
+                            custom_data={"move_type": "to_column", "column_uid": parent_checkitem.get_uid()},
                         ),
                         SocketPublishModel(
                             topic=SocketTopic.Board,
                             topic_id=project.get_uid(),
                             event=f"{_SOCKET_PREFIX_SUB}:order:changed:{original_parent_id.to_short_code()}",
                             data_keys=["uid", "order"],
-                            custom_data={"move_type": "from_column"},
+                            custom_data={"move_type": "from_column", "column_uid": original_parent_id.to_short_code()},
                         ),
                     ]
                 )
@@ -362,7 +362,7 @@ class CheckitemService(BaseService):
         if not params:
             return None
         project, card, checkitem = params
-        if checkitem.cardified_id or column_uid == Project.ARCHIVE_COLUMN_UID or card.archived_at:
+        if checkitem.cardified_id or column_uid == project.ARCHIVE_COLUMN_UID() or card.archived_at:
             return None
 
         if column_uid:

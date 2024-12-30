@@ -2,10 +2,8 @@ import { Box, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
-import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -31,22 +29,12 @@ const BoardCardDescription = memo((): JSX.Element => {
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
-    const descriptionRef = useRef<IEditorContent>(card.description ?? { content: "" });
+    const description = card.useField("description");
+    const descriptionRef = useRef<IEditorContent>(description ?? { content: "" });
     const setValue = (value: IEditorContent) => {
         descriptionRef.current = value;
     };
     const editorName = `${card.uid}-description`;
-    const handlers = useCardDescriptionChangedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.description = data.description;
-            setValue(data.description);
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
@@ -58,7 +46,7 @@ const BoardCardDescription = memo((): JSX.Element => {
             return;
         }
 
-        if (descriptionRef.current.content.trim() === (card.description?.content ?? "").trim()) {
+        if (descriptionRef.current.content.trim() === (description?.content ?? "").trim()) {
             setCurrentEditor("");
             return;
         }
@@ -85,8 +73,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                card.description = data.description;
+            success: () => {
                 return t("card.successes.Description changed successfully.");
             },
             finally: () => {
@@ -101,6 +88,11 @@ const BoardCardDescription = memo((): JSX.Element => {
             setIsEditing(editing);
         }
     };
+
+    useEffect(() => {
+        setValue(description ?? { content: "" });
+        forceUpdate();
+    }, [description]);
 
     useEffect(() => {
         if (!isEditing) {

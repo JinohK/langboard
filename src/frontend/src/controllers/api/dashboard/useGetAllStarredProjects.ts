@@ -4,7 +4,7 @@ import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
 
 export interface IGetAllStarredProjectsResponse {
-    projects: Project.Interface[];
+    projects: Project.TModel[];
 }
 
 const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjectsResponse>) => {
@@ -13,7 +13,9 @@ const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjects
     const getAllStarredProjects = async () => {
         const res = await api.get(API_ROUTES.DASHBOARD.ALL_STARRED_PROJECTS);
 
-        return res.data;
+        return {
+            projects: Project.Model.fromObjectArray(res.data.projects),
+        };
     };
 
     const result = query(["get-all-starred-projects"], getAllStarredProjects, {

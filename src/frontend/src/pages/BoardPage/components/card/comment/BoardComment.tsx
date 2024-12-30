@@ -4,17 +4,15 @@ import UserAvatar from "@/components/UserAvatar";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import { API_ROUTES } from "@/controllers/constants";
-import useCardCommentUpdatedHandlers from "@/controllers/socket/card/comment/useCardCommentUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { Project, ProjectCardComment, User } from "@/core/models";
+import { Project, ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format, formatDateDistance } from "@/core/utils/StringUtils";
 import BoardCommentReaction from "@/pages/BoardPage/components/card/comment/BoardCommentReaction";
-import { memo, useReducer, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardComment(): JSX.Element {
@@ -33,7 +31,7 @@ export function SkeletonBoardComment(): JSX.Element {
 }
 
 export interface IBoardCommentProps {
-    comment: ProjectCardComment.IBoard;
+    comment: ProjectCardComment.TModel;
     deletedComment: (commentUID: string) => void;
 }
 
@@ -41,33 +39,16 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const { projectUID, card, socket, currentUser, hasRoleAction, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [isEditing, setIsEditing] = useState(false);
     const [t, i18n] = useTranslation();
-    const valueRef = useRef<IEditorContent>(comment.content);
+    const content = comment.useField("content");
+    const commentedAt = comment.useField("commented_at");
+    const valueRef = useRef<IEditorContent>(content);
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
     const editorElementRef = useRef<HTMLDivElement | null>(null);
     const [isValidating, setIsValidating] = useState(false);
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();
-    const handlers = useCardCommentUpdatedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            if (comment.uid !== data.comment_uid) {
-                return;
-            }
-
-            if (comment.content !== data.content) {
-                comment.content = data.content;
-                comment.commented_at = data.commented_at;
-                comment.is_edited = true;
-                forceUpdate();
-            }
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
     const canEdit = currentUser.uid === comment.user.uid || currentUser.is_admin;
 
     editorsRef.current[comment.uid] = (editing: bool) => {
@@ -199,7 +180,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         {comment.user.firstname} {comment.user.lastname}
                     </span>
                     <span className="text-xs text-accent-foreground/50">
-                        {formatDateDistance(i18n, t, comment.commented_at)}
+                        {formatDateDistance(i18n, t, commentedAt)}
                         {comment.is_edited && ` (${t("card.edited")})`}
                     </span>
                 </Flex>
@@ -239,7 +220,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                             <BoardCommentReaction comment={comment} />
                             {hasRoleAction(Project.ERoleAction.READ) &&
                                 currentUser.uid !== comment.user.uid &&
-                                User.isValidUser(currentUser) &&
+                                currentUser.isValidUser() &&
                                 card.project_members.find((user) => user.uid === comment.user.uid) && (
                                     <>
                                         <Separator orientation="vertical" className="h-1/2" />

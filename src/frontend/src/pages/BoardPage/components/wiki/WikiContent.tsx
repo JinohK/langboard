@@ -3,12 +3,10 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import { API_ROUTES, SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import useBoardWikiContentChangedHandlers from "@/controllers/socket/wiki/useBoardWikiContentChangedHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
@@ -16,11 +14,11 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
-import { memo, useEffect, useReducer, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiContentProps {
-    wiki: ProjectWiki.Interface;
+    wiki: ProjectWiki.TModel;
     changeTab: (uid: string) => void;
 }
 
@@ -42,36 +40,14 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const { projectUID, projectMembers, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const [isEditing, setIsEditing] = useState(false);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
-    const valueRef = useRef<IEditorContent>(wiki.content);
+    const content = wiki.useField("content");
+    const valueRef = useRef<IEditorContent>(content);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const boardWikiContentChangedHandler = useBoardWikiContentChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        callback: (data) => {
-            wiki.content = data.content;
-            setValue(data.content);
-            forceUpdate();
-        },
-    });
-    const boardPrivateWikiContentChangedHandler = useBoardWikiContentChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        userUID: currentUser.uid,
-        callback: (data) => {
-            wiki.content = data.content;
-            setValue(data.content);
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [boardWikiContentChangedHandler, boardPrivateWikiContentChangedHandler] });
     const { stopEditing } = useStopEditingClickOutside("[data-wiki-content]", () => changeMode("view"), isEditing);
     const changeMode = (mode: "edit" | "view") => {
         if (mode === "edit") {
@@ -79,7 +55,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             return;
         }
 
-        if ((valueRef.current?.content ?? "").trim() === (wiki.content?.content ?? "").trim()) {
+        if ((valueRef.current?.content ?? "").trim() === (content?.content ?? "").trim()) {
             setCurrentEditor("");
             return;
         }
@@ -106,8 +82,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                wiki.content = data.content;
+            success: () => {
                 return t("wiki.successes.Content changed successfully.");
             },
             finally: () => {
@@ -182,7 +157,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 data-wiki-content
             >
                 <PlateEditor
-                    value={wiki.content}
+                    value={content}
                     currentUser={currentUser}
                     mentionableUsers={projectMembers}
                     className={cn(

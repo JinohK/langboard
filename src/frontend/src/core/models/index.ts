@@ -1,3 +1,4 @@
+export * as AuthUser from "@/core/models/AuthUser";
 export * as Activity from "@/core/models/Activity";
 export * as BotModel from "@/core/models/BotModel";
 export * as ChatMessageModel from "@/core/models/ChatMessageModel";
@@ -6,9 +7,11 @@ export * as Project from "@/core/models/Project";
 export * as ProjectCard from "@/core/models/ProjectCard";
 export * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 export * as ProjectCardComment from "@/core/models/ProjectCardComment";
+export * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
 export * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 export * as ProjectCheckitemTimer from "@/core/models/ProjectCheckitemTimer";
 export * as ProjectColumn from "@/core/models/ProjectColumn";
 export * as ProjectLabel from "@/core/models/ProjectLabel";
 export * as ProjectWiki from "@/core/models/ProjectWiki";
 export * as User from "@/core/models/User";
+export * as UserGroup from "@/core/models/UserGroup";

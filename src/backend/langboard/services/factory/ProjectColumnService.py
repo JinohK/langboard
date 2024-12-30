@@ -31,7 +31,8 @@ class ProjectColumnService(BaseService):
         columns.insert(
             project.archive_column_order,
             {
-                "uid": Project.ARCHIVE_COLUMN_UID,
+                "uid": project.ARCHIVE_COLUMN_UID(),
+                "project_uid": project.get_uid(),
                 "name": project.archive_column_name,
                 "order": project.archive_column_order,
             },
@@ -44,11 +45,11 @@ class ProjectColumnService(BaseService):
             return 0
         column_id = (
             SnowflakeID.from_short_code(column_id)
-            if isinstance(column_id, str) and column_id != Project.ARCHIVE_COLUMN_UID
+            if isinstance(column_id, str) and column_id != project.ARCHIVE_COLUMN_UID()
             else column_id
         )
         sql_query = self._db.query("select").count(Card, Card.id).where(Card.column("project_id") == project.id)
-        if column_id == Project.ARCHIVE_COLUMN_UID:
+        if column_id == project.ARCHIVE_COLUMN_UID():
             sql_query = sql_query.where(Card.column("archived_at") != None)  # noqa
         else:
             sql_query = sql_query.where(Card.column("project_column_id") == column_id)
@@ -99,11 +100,11 @@ class ProjectColumnService(BaseService):
         if not project:
             return None
 
-        if column == Project.ARCHIVE_COLUMN_UID:
+        if column == project.ARCHIVE_COLUMN_UID():
             # original_name = project.archive_column_name
             project.archive_column_name = name
             await self._db.update(project)
-            column_id = Project.ARCHIVE_COLUMN_UID
+            column_id = project.ARCHIVE_COLUMN_UID()
         else:
             column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
             if not column or column.project_id != project.id:
@@ -117,7 +118,7 @@ class ProjectColumnService(BaseService):
 
         model_id = await SocketModelIdService.create_model_id(
             {
-                "uid": Project.ARCHIVE_COLUMN_UID if isinstance(column_id, str) else column_id.to_short_code(),
+                "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
                 "name": name,
             }
         )
@@ -148,7 +149,7 @@ class ProjectColumnService(BaseService):
         columns: list[Project | ProjectColumn] = list(result.all())
         columns.insert(project.archive_column_order, project)
 
-        if project_column == Project.ARCHIVE_COLUMN_UID:
+        if project_column == project.ARCHIVE_COLUMN_UID():
             # original_column_order = project.archive_column_order
             target_column = columns.pop(project.archive_column_order)
         else:
@@ -182,7 +183,7 @@ class ProjectColumnService(BaseService):
             {
                 "uid": project_column.get_uid()
                 if isinstance(project_column, ProjectColumn)
-                else Project.ARCHIVE_COLUMN_UID,
+                else project.ARCHIVE_COLUMN_UID(),
                 "order": order,
             }
         )

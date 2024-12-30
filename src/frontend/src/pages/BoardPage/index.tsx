@@ -52,7 +52,6 @@ const BoardProxy = memo((): JSX.Element => {
     const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
     const { mutate: canUseProjectSettingsMutate } = useCanUseProjectSettings({ uid: projectUID });
     const { on: onIsBoardChatAvailable, send: sendIsBoardChatAvailable } = useIsBoardChatAvailableHandlers({
-        socket,
         projectUID,
         callback: (data) => {
             if (data.available) {
@@ -99,11 +98,8 @@ const BoardProxy = memo((): JSX.Element => {
             return;
         }
 
-        const offs: (() => void)[] = [];
-
         socket.subscribe(ESocketTopic.Board, projectUID, () => {
-            offs.push(onIsBoardChatAvailable().off);
-
+            onIsBoardChatAvailable();
             sendIsBoardChatAvailable({});
         });
         socket.subscribe(ESocketTopic.Project, projectUID);
@@ -121,9 +117,6 @@ const BoardProxy = memo((): JSX.Element => {
         );
 
         return () => {
-            for (let i = 0; i < offs.length; ++i) {
-                offs[i]();
-            }
             socket.unsubscribe(ESocketTopic.Board, projectUID);
             socket.unsubscribe(ESocketTopic.Project, projectUID);
         };

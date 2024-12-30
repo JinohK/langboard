@@ -9,9 +9,7 @@ export interface IUpdateWikiAssignedUsersForm {
     assigned_users: string[];
 }
 
-export interface IUpdateWikiAssignedUsersResponse {}
-
-const useUpdateWikiAssignedUsers = (options?: TMutationOptions<IUpdateWikiAssignedUsersForm, IUpdateWikiAssignedUsersResponse>) => {
+const useUpdateWikiAssignedUsers = (options?: TMutationOptions<IUpdateWikiAssignedUsersForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateWikiAssignedUsers = async (params: IUpdateWikiAssignedUsersForm) => {

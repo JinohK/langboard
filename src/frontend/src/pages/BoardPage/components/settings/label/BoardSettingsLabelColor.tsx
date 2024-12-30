@@ -1,28 +1,16 @@
 import { ColorPicker, Toast } from "@/components/base";
 import useChangeProjectLabelDetails from "@/controllers/api/board/settings/useChangeProjectLabelDetails";
-import useProjectLabelColorChangedHandlers from "@/controllers/socket/project/label/useProjectLabelColorChangedHandlers";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardSettingsLabel } from "@/core/providers/BoardSettingsLabelProvider";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardSettingsLabelColor = memo(() => {
-    const { project, socket } = useBoardSettings();
+    const { project } = useBoardSettings();
     const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
     const [t] = useTranslation();
-    const [labelColor, setLabelColor] = useState(label.color);
+    const labelColor = label.useField("color");
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("color");
-    const handlers = useProjectLabelColorChangedHandlers({
-        socket,
-        projectUID: project.uid,
-        labelUID: label.uid,
-        callback: (data) => {
-            label.color = data.color;
-            setLabelColor(data.color);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
     const changeColor = (color: string, endCallback: () => void) => {
         if (isValidating) {

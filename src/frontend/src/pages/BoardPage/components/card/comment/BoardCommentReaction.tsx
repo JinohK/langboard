@@ -1,35 +1,20 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import ReactionCounter from "@/components/ReactionCounter";
 import useReactCardComment from "@/controllers/api/card/comment/useReactCardComment";
-import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useState } from "react";
 
 export interface IBoardCommentReactionProps {
-    comment: ProjectCardComment.IBoard;
+    comment: ProjectCardComment.TModel;
 }
 
 const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Element => {
-    const { projectUID, card, socket, currentUser } = useBoardCard();
-    const [reactions, setReactions] = useState(comment.reactions);
+    const { projectUID, card, currentUser } = useBoardCard();
+    const reactions = comment.useField("reactions");
     const { mutate: reactCardCommentMutate } = useReactCardComment();
     const [isValidating, setIsValidating] = useState(false);
-    const handlers = useCardCommentReactedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            if (comment.uid !== data.comment_uid) {
-                return;
-            }
-
-            toggleReaction(data.user_uid, data.reaction, data.is_reacted);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
     const submitToggleReaction = (reaction: TEmoji) => {
         if (isValidating) {
@@ -46,9 +31,6 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
                 reaction,
             },
             {
-                onSuccess: (data) => {
-                    toggleReaction(currentUser.uid, reaction, data.is_reacted);
-                },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});
 
@@ -59,22 +41,6 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
                 },
             }
         );
-    };
-
-    const toggleReaction = (userUID: string, reaction: TEmoji, isReacted: bool) => {
-        if (isReacted) {
-            setReactions((prev) => {
-                const newReactions = { ...prev };
-                newReactions[reaction] = newReactions[reaction] ? [...newReactions[reaction].filter((uid) => uid !== userUID), userUID] : [userUID];
-                return newReactions;
-            });
-        } else {
-            setReactions((prev) => {
-                const newReactions = { ...prev };
-                newReactions[reaction] = newReactions[reaction]?.filter((uid) => uid !== userUID);
-                return newReactions;
-            });
-        }
     };
 
     return (

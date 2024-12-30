@@ -1,24 +1,23 @@
-import { AssignMemberPopover } from "@/components/AssignMemberPopover";
+import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
 import { ProjectCheckitem, User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface ISharedBoardCardCheckitemAssignMemberProps {
-    checkitem: ProjectCheckitem.IBaseBoard;
-    members: User.Interface[];
+    checkitem: ProjectCheckitem.TModel;
     isValidating: bool;
     setIsValidating: (state: bool) => void;
 }
 
 const SharedBoardCardCheckitemAssignMember = memo(
-    ({ members: flatMembers, isValidating, setIsValidating }: ISharedBoardCardCheckitemAssignMemberProps): JSX.Element => {
-        const { projectUID, card, socket, currentUser, sharedClassNames } = useBoardCard();
-        const [members, setMembers] = useState(flatMembers);
+    ({ checkitem, isValidating, setIsValidating }: ISharedBoardCardCheckitemAssignMemberProps): JSX.Element => {
+        const { card, currentUser, sharedClassNames } = useBoardCard();
+        const members = checkitem.useForeignField<User.TModel>("assigned_members");
         const [t] = useTranslation();
 
-        const onSave = (users: User.Interface[], endCallback: () => void) => {
+        const onSave = (users: User.TModel[], endCallback: () => void) => {
             if (isValidating) {
                 return;
             }
@@ -33,7 +32,7 @@ const SharedBoardCardCheckitemAssignMember = memo(
         };
 
         return (
-            <AssignMemberPopover
+            <MultiSelectMemberPopover
                 popoverButtonProps={{
                     size: "icon-sm",
                     className: "size-6 lg:size-8",
@@ -64,6 +63,7 @@ const SharedBoardCardCheckitemAssignMember = memo(
                 currentUser={currentUser}
                 iconSize={{ initial: "4", lg: "6" }}
                 canControlAssignedUsers
+                useGroupMembers
             />
         );
     }

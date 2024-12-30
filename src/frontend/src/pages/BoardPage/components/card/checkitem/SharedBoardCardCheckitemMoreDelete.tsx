@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
-    const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler, deleted } = useBoardCardCheckitem();
+    const { checkitem, isParent, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: deleteCheckitemMutateAsync } = useDeleteCheckitem();
@@ -29,7 +29,6 @@ function SharedBoardCardCheckitemMoreDelete({ setIsMoreMenuOpened }: { setIsMore
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
-                deleted(checkitem.uid);
                 return t("card.successes.Checkitem deleted successfully.");
             },
             finally: () => {

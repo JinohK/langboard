@@ -1,5 +1,6 @@
 import useColumnOrderChangedHandlers, { IUseColumnOrderChangedHandlersProps } from "@/controllers/socket/shared/useColumnOrderChangedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { TBaseModelInstance } from "@/core/models/Base";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useState } from "react";
@@ -9,7 +10,7 @@ export interface IColumn {
     order: number;
 }
 
-export interface IUseReorderColumnProps<TColumn extends IColumn> {
+export interface IUseReorderColumnProps<TColumn extends TBaseModelInstance<IColumn>> {
     type: IUseColumnOrderChangedHandlersProps["type"];
     eventNameParams?: IUseColumnOrderChangedHandlersProps["params"];
     topicId: string;
@@ -17,7 +18,7 @@ export interface IUseReorderColumnProps<TColumn extends IColumn> {
     socket: ISocketContext;
 }
 
-function useReorderColumn<TColumn extends IColumn>({
+function useReorderColumn<TColumn extends TBaseModelInstance<IColumn>>({
     type,
     eventNameParams,
     topicId,
@@ -26,7 +27,6 @@ function useReorderColumn<TColumn extends IColumn>({
 }: IUseReorderColumnProps<TColumn>) {
     const [columns, setColumns] = useState<TColumn[]>(flatColumns);
     const handlers = useColumnOrderChangedHandlers({
-        socket,
         type,
         topicId,
         params: eventNameParams,
@@ -36,18 +36,33 @@ function useReorderColumn<TColumn extends IColumn>({
                     prev,
                     prev.findIndex((col) => col.uid === data.uid),
                     data.order
-                ).map((col, i) => ({ ...col, order: i }))
+                ).map((col, i) => {
+                    const column = col as unknown as IColumn;
+                    if (column.order !== i) {
+                        column.order = i;
+                    }
+                    return col;
+                })
             );
         },
     });
     useSwitchSocketHandlers({ socket, handlers });
 
     const reorder = (column: TColumn, newIndex: number) => {
-        if (column.order === newIndex) {
+        const col = column as unknown as IColumn;
+        if (col.order === newIndex) {
             return false;
         }
 
-        setColumns((prev) => arrayMove(prev, column.order, newIndex).map((col, i) => ({ ...col, order: i })));
+        setColumns((prev) =>
+            arrayMove(prev, col.order, newIndex).map((arrayCol, i) => {
+                const column = arrayCol as unknown as IColumn;
+                if (column.order !== i) {
+                    column.order = i;
+                }
+                return arrayCol;
+            })
+        );
         return true;
     };
 

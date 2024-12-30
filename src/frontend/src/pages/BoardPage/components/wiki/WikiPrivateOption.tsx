@@ -1,20 +1,17 @@
-import { AssignMemberPopover } from "@/components/AssignMemberPopover";
+import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
 import { Flex, Label, Skeleton, Switch, Toast } from "@/components/base";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
 import useUpdateWikiAssignedUsers from "@/controllers/api/wiki/useUpdateWikiAssignedUsers";
-import useBoardWikiAssignedUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssignedUsersUpdatedHandlers";
-import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki, User } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiPrivateOptionProps {
-    wiki: ProjectWiki.Interface;
+    wiki: ProjectWiki.TModel;
     changeTab: (uid: string) => void;
 }
 
@@ -32,72 +29,26 @@ export function SkeletonWikiPrivateOption() {
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
-    const { projectUID, projectMembers, setWikis, socket, currentUser } = useBoardWiki();
-    const [isPrivate, setIsPrivate] = useState(!wiki.is_public);
+    const { projectUID, projectMembers } = useBoardWiki();
+    const isPublic = wiki.useField("is_public");
+    const isForbidden = wiki.useField("forbidden");
+    const isChangedTabRef = useRef(false);
+    const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
     const [isValidating, setIsValidating] = useState(false);
-    const [assignedUsers, setAssignedUsers] = useState<User.Interface[]>(wiki.assigned_members ?? []);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
     const { mutateAsync: updateWikiAssignedUsersMutateAsync } = useUpdateWikiAssignedUsers();
-    const updateWiki = (wiki: ProjectWiki.Interface) => {
-        setWikis((prev) =>
-            prev.map((prevWiki) => {
-                if (prevWiki.uid === wiki.uid) {
-                    return wiki;
-                }
 
-                return prevWiki;
-            })
-        );
-    };
-    const boardWikiPublicChangedHandler = useBoardWikiPublicChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        callback: (data) => {
-            updateWiki(data.wiki);
-            setIsPrivate(!data.wiki.is_public);
-            setAssignedUsers(data.wiki.assigned_members ?? []);
-        },
-    });
-    const boardPrivateWikiPublicChangedHandler = useBoardWikiPublicChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        userUID: currentUser.uid,
-        callback: (data) => {
-            updateWiki(data.wiki);
-            if (data.wiki.forbidden) {
-                Toast.Add.error(t("wiki.errors.Can't access this wiki."));
-                changeTab("");
-            } else {
-                setIsPrivate(!data.wiki.is_public);
-                setAssignedUsers(data.wiki.assigned_members ?? []);
-            }
-        },
-    });
-    const boardPrivateWikiAssignedUsersUpdatedHandler = useBoardWikiAssignedUsersUpdatedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        userUID: currentUser.uid,
-        callback: (data) => {
-            updateWiki(data.wiki);
-            if (data.wiki.forbidden) {
-                Toast.Add.error(t("wiki.errors.Can't access this wiki."));
-                changeTab("");
-            } else {
-                setIsPrivate(!data.wiki.is_public);
-                setAssignedUsers(data.wiki.assigned_members ?? []);
-            }
-        },
-    });
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [boardWikiPublicChangedHandler, boardPrivateWikiPublicChangedHandler, boardPrivateWikiAssignedUsersUpdatedHandler],
-    });
+    useEffect(() => {
+        if (isForbidden && !isChangedTabRef.current) {
+            Toast.Add.error(t("wiki.errors.Can't access this wiki."));
+            changeTab("");
+        } else {
+            isChangedTabRef.current = false;
+        }
+    }, [isForbidden]);
 
     const savePrivateState = (privateState: bool) => {
-        if (isValidating || privateState === isPrivate) {
+        if (isValidating || privateState === !isPublic) {
             return;
         }
 
@@ -126,7 +77,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 return message;
             },
             success: () => {
-                return t("wiki.Public state changed successfully.");
+                return t("wiki.successes.Public state changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -135,8 +86,8 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         });
     };
 
-    const saveAssignedUsers = (users: User.Interface[]) => {
-        if (isValidating || !isPrivate) {
+    const saveAssignedUsers = (users: User.TModel[]) => {
+        if (isValidating || isPublic) {
             return;
         }
 
@@ -165,8 +116,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 return message;
             },
             success: () => {
-                setAssignedUsers(users);
-                return t("wiki.Assigned users updated successfully.");
+                return t("wiki.successes.Assigned users updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -178,11 +128,11 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     return (
         <Flex items="center" gap="4" h="8">
             <Label display="inline-flex" cursor="pointer" items="center" gap="2">
-                <Switch checked={isPrivate} onCheckedChange={savePrivateState} />
-                <span>{t(`wiki.${isPrivate ? "Private" : "Public"}`)}</span>
+                <Switch checked={!isPublic} onCheckedChange={savePrivateState} />
+                <span>{t(`wiki.${isPublic ? "Public" : "Private"}`)}</span>
             </Label>
-            {isPrivate && (
-                <AssignMemberPopover
+            {!isPublic && (
+                <MultiSelectMemberPopover
                     popoverButtonProps={{
                         size: "icon",
                         className: "size-8",
@@ -210,9 +160,10 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                     onSave={saveAssignedUsers}
                     isValidating={isValidating}
                     allUsers={projectMembers}
-                    assignedUsers={assignedUsers}
+                    assignedUsers={assignedMembers}
                     iconSize="6"
                     canControlAssignedUsers
+                    useGroupMembers
                 />
             )}
         </Flex>

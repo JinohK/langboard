@@ -1,15 +1,13 @@
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { ISocketContext } from "@/core/providers/SocketProvider";
+import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { TDefaultEvents, TEventName } from "@/core/stores/SocketStore";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IBaseUseSocketHandlersProps<TResponse> {
-    socket: ISocketContext;
     callback?: (data: TResponse) => void;
 }
 
-interface IBaseUseSocketHandlerProps<TResponse, TEvent> {
-    socket: ISocketContext;
+interface IBaseUseSocketHandlerProps<TResponse, TRawResponse, TEvent> {
     topic?: ESocketTopic;
     topicId?: string;
     eventKey: string;
@@ -17,7 +15,7 @@ interface IBaseUseSocketHandlerProps<TResponse, TEvent> {
         name: TEvent;
         params?: Record<string, string>;
         callback?: IBaseUseSocketHandlersProps<TResponse>["callback"];
-        responseConverter?: (data: TResponse) => TResponse;
+        responseConverter?: (data: TRawResponse) => TResponse;
     };
     sendProps?: {
         name: TEvent;
@@ -25,7 +23,8 @@ interface IBaseUseSocketHandlerProps<TResponse, TEvent> {
     };
 }
 
-interface INoneTopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, TDefaultEvents>> {
+interface INoneTopicUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
+    extends IBaseUseSocketHandlerProps<TResponse, TRawResponse, Exclude<TEventName, TDefaultEvents>> {
     topic: ESocketTopic.None;
     topicId?: never;
     sendProps: {
@@ -34,12 +33,14 @@ interface INoneTopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandl
     };
 }
 
-interface ITopicUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, Exclude<TEventName, TDefaultEvents>> {
+interface ITopicUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
+    extends IBaseUseSocketHandlerProps<TResponse, TRawResponse, Exclude<TEventName, TDefaultEvents>> {
     topic: Exclude<ESocketTopic, ESocketTopic.None>;
     topicId: string;
 }
 
-interface IDefaultEventsUseSocketHandlerProps<TResponse> extends IBaseUseSocketHandlerProps<TResponse, TDefaultEvents> {
+interface IDefaultEventsUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
+    extends IBaseUseSocketHandlerProps<TResponse, TRawResponse, TDefaultEvents> {
     topic?: never;
     topicId?: never;
     onProps: {
@@ -51,21 +52,25 @@ interface IDefaultEventsUseSocketHandlerProps<TResponse> extends IBaseUseSocketH
     sendProps?: never;
 }
 
-export type TUseSocketHandlerProps<TResponse> =
-    | INoneTopicUseSocketHandlerProps<TResponse>
-    | ITopicUseSocketHandlerProps<TResponse>
-    | IDefaultEventsUseSocketHandlerProps<TResponse>;
+export type TUseSocketHandlerProps<TResponse, TRawResponse = TResponse> =
+    | INoneTopicUseSocketHandlerProps<TResponse, TRawResponse>
+    | ITopicUseSocketHandlerProps<TResponse, TRawResponse>
+    | IDefaultEventsUseSocketHandlerProps<TResponse, TRawResponse>;
 
-const useSocketHandler = <TResponse, TRequest = unknown>(props: TUseSocketHandlerProps<TResponse>) => {
-    const { socket, onProps, sendProps, eventKey } = props;
+const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknown>(props: TUseSocketHandlerProps<TResponse, TRawResponse>) => {
+    const socket = useSocketOutsideProvider();
+    const { onProps, sendProps, eventKey } = props;
     const on = () => {
         const eventName = onProps.params ? format(onProps.name, onProps.params) : onProps.name;
-        const event = (data: TResponse) => {
+        const event = (data: TResponse | TRawResponse) => {
+            let newData;
             if (onProps.responseConverter) {
-                data = onProps.responseConverter(data);
+                newData = onProps.responseConverter(data as TRawResponse);
+            } else {
+                newData = data as unknown as TResponse;
             }
 
-            onProps.callback?.(data);
+            onProps.callback?.(newData);
         };
 
         socket.on<TResponse>({

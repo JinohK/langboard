@@ -9,9 +9,7 @@ export interface IChangeWikiOrderForm {
     order: number;
 }
 
-export interface IChangeWikiOrderResponse {}
-
-const useChangeWikiOrder = (options?: TMutationOptions<IChangeWikiOrderForm, IChangeWikiOrderResponse>) => {
+const useChangeWikiOrder = (options?: TMutationOptions<IChangeWikiOrderForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeWikiOrder = async (params: IChangeWikiOrderForm) => {

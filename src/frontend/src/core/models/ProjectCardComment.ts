@@ -1,30 +1,85 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import * as User from "@/core/models/User";
-import { IBaseModel, IEditorContent } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends IBaseModel {
+    card_uid: string;
     content: IEditorContent;
     is_edited: bool;
     commented_at: Date;
 }
 
-export interface IBoard extends Interface {
+export interface IStore extends Interface {
     user: User.Interface;
     reactions: Partial<Record<TEmoji, (number | string)[]>>;
 }
 
-export const transformFromApi = <TComment extends Interface | Interface[]>(
-    comments: TComment
-): TComment extends Interface ? Interface : Interface[] => {
-    if (!TypeUtils.isArray(comments)) {
-        comments.commented_at = new Date(comments.commented_at);
-        return comments as unknown as TComment extends Interface ? Interface : Interface[];
+class ProjectCardComment extends BaseModel<IStore> {
+    static get FOREIGN_MODELS() {
+        return {
+            user: User.Model.MODEL_NAME,
+        };
+    }
+    static get MODEL_NAME() {
+        return "ProjectCardComment" as const;
     }
 
-    for (let i = 0; i < comments.length; ++i) {
-        comments[i].commented_at = new Date(comments[i].commented_at);
+    constructor(model: Record<string, unknown>) {
+        super(model);
     }
 
-    return comments as unknown as TComment extends Interface ? Interface : Interface[];
-};
+    public static convertModel(model: Interface): Interface {
+        if (TypeUtils.isString(model.commented_at)) {
+            model.commented_at = new Date(model.commented_at);
+        }
+        return model;
+    }
+
+    public get card_uid() {
+        return this.getValue("card_uid");
+    }
+    public set card_uid(value: string) {
+        this.update({ card_uid: value });
+    }
+
+    public get content() {
+        return this.getValue("content");
+    }
+    public set content(value: IEditorContent) {
+        this.update({ content: value });
+    }
+
+    public get is_edited() {
+        return this.getValue("is_edited");
+    }
+    public set is_edited(value: bool) {
+        this.update({ is_edited: value });
+    }
+
+    public get commented_at() {
+        return this.getValue("commented_at");
+    }
+    public set commented_at(value: string | Date) {
+        this.update({ commented_at: value });
+    }
+
+    public get user(): User.TModel {
+        return this.getForeignModels<User.TModel>("user")[0];
+    }
+    public set user(value: User.TModel | User.Interface) {
+        this.update({ user: value });
+    }
+
+    public get reactions() {
+        return this.getValue("reactions");
+    }
+    public set reactions(value: Partial<Record<TEmoji, (number | string)[]>>) {
+        this.update({ reactions: value });
+    }
+}
+
+registerModel(ProjectCardComment);
+
+export type TModel = ProjectCardComment;
+export const Model = ProjectCardComment;

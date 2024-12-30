@@ -23,9 +23,9 @@ export const getDataTextType = (text: string): MdastNodeType | undefined => {
 
     const keys = Object.keys(DATA_TEXT_WRAPPER_MAP);
     for (let i = 0; i < keys.length; ++i) {
-        const wrapper = DATA_TEXT_WRAPPER_MAP[keys[i] as TDataType];
+        const wrapper = DATA_TEXT_WRAPPER_MAP[keys[i]];
         if (text.includes(`!([${wrapper.start}`) && text.includes(`/${wrapper.end}])`)) {
-            return keys[i] as MdastNodeType;
+            return keys[i];
         }
     }
 
@@ -39,7 +39,7 @@ export const isDataTextType = (text: string | undefined): text is string => {
 
     const keys = Object.keys(DATA_TEXT_WRAPPER_MAP);
     for (let i = 0; i < keys.length; ++i) {
-        const wrapper = DATA_TEXT_WRAPPER_MAP[keys[i] as TDataType];
+        const wrapper = DATA_TEXT_WRAPPER_MAP[keys[i]];
         if (text.includes(`!([${wrapper.start}`) && text.includes(`/${wrapper.end}])`)) {
             return true;
         }

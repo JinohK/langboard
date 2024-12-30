@@ -33,7 +33,7 @@ export const SkeletonUserAvatarList = ({ count, size, spacing = "none", classNam
 };
 
 export interface IUserAvatarListProps extends React.HTMLAttributes<HTMLDivElement> {
-    users: User.Interface[];
+    users: User.TModel[];
     maxVisible: number;
     size?: TUserAvatarProps["avatarSize"];
     spacing?: "1" | "2" | "3" | "4" | "5" | "none";
@@ -68,7 +68,7 @@ const UserAvatarList = memo(
 );
 
 interface IUserAvatarMoreList {
-    users: User.Interface[];
+    users: User.TModel[];
     maxVisible: number;
     size?: TUserAvatarProps["avatarSize"];
     listAlign?: TUserAvatarProps["listAlign"];

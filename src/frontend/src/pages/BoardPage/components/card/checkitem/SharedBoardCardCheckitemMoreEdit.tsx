@@ -10,6 +10,7 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
+    const title = checkitem.useField("title");
     const { mutateAsync: changeCheckitemTitleMutateAsync } = useChangeCheckitemTitle();
     const titleInputId = `board-card-checkitem-title-input-${checkitem.uid}`;
 
@@ -21,9 +22,9 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
         setIsValidating(true);
 
         const titleInput = document.getElementById(titleInputId) as HTMLInputElement;
-        const title = titleInput.value.trim();
+        const newValue = titleInput.value.trim();
 
-        if (!title) {
+        if (!newValue) {
             Toast.Add.error(t("card.errors.Checkitem title cannot be empty."));
             setIsValidating(false);
             titleInput.focus();
@@ -34,14 +35,13 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
             project_uid: projectUID,
             card_uid: card.uid,
             checkitem_uid: checkitem.uid,
-            title,
+            title: newValue,
         });
 
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
-                checkitem.title = title;
                 return t("card.successes.Title changed successfully.");
             },
             finally: () => {
@@ -70,7 +70,7 @@ function SharedBoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMe
                 <Floating.LabelInput
                     label={t("card.Checkitem title")}
                     id={titleInputId}
-                    defaultValue={checkitem.title}
+                    defaultValue={title}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             changeCheckitemTitle();

@@ -2,7 +2,7 @@ import { Toast } from "@/components/base";
 import useCreateCard from "@/controllers/api/board/useCreateCard";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, ProjectCard } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { createContext, useContext, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,10 +19,9 @@ export interface IBoardAddCardContext {
 }
 
 interface IBoardAddCardProps {
-    columnUID: string;
+    column: ProjectColumn.TModel;
     viewportId: string;
     toLastPage: () => void;
-    createdCard: (card: ProjectCard.IBoard) => void;
     children: React.ReactNode;
 }
 
@@ -39,14 +38,14 @@ const initialContext = {
 
 const BoardAddCardContext = createContext<IBoardAddCardContext>(initialContext);
 
-export const BoardAddCarddProvider = ({ columnUID, viewportId, toLastPage, createdCard, children }: IBoardAddCardProps): React.ReactNode => {
+export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children }: IBoardAddCardProps): React.ReactNode => {
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isAddingCard, setIsAddingCard] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const disableChangeModeAttr = "data-disable-change-mode";
-    const canWrite = hasRoleAction(Project.ERoleAction.CARD_WRITE) && columnUID !== Project.ARCHIVE_COLUMN_UID;
+    const canWrite = hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn();
     const { mutateAsync: createCardMutateAsync } = useCreateCard();
 
     const scrollToBottom = () => {
@@ -94,7 +93,7 @@ export const BoardAddCarddProvider = ({ columnUID, viewportId, toLastPage, creat
 
         const promise = createCardMutateAsync({
             project_uid: project.uid,
-            column_uid: columnUID,
+            column_uid: column.uid,
             title: newValue,
         });
 
@@ -118,12 +117,16 @@ export const BoardAddCarddProvider = ({ columnUID, viewportId, toLastPage, creat
                 return message;
             },
             success: (data) => {
-                createdCard(data.card);
-                setTimeout(() => {
+                const openCard = () => {
+                    const card = document.getElementById(`board-card-${data.uid}`);
+                    if (!card) {
+                        return setTimeout(openCard, 50);
+                    }
+
                     scrollToBottom();
-                    const card = document.getElementById(`board-card-${data.card.uid}`)!;
                     card.click();
-                }, 0);
+                };
+                openCard();
                 return t("board.successes.Card added successfully.");
             },
             finally: () => {

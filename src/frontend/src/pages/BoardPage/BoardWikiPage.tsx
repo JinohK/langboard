@@ -41,11 +41,11 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
         }
 
         socket.subscribe(ESocketTopic.BoardWiki, projectUID);
-        socket.subscribe(ESocketTopic.BoardWikiPrivate, currentUser.username);
+        socket.subscribe(ESocketTopic.BoardWikiPrivate, currentUser.uid);
 
         return () => {
             socket.unsubscribe(ESocketTopic.BoardWiki, projectUID);
-            socket.unsubscribe(ESocketTopic.BoardWikiPrivate, currentUser.username);
+            socket.unsubscribe(ESocketTopic.BoardWikiPrivate, currentUser.uid);
         };
     }, [isFetching]);
 
@@ -54,13 +54,7 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
             {!data ? (
                 <SkeletonWikiList />
             ) : (
-                <BoardWikiProvider
-                    navigate={navigate}
-                    projectUID={projectUID}
-                    wikis={data.wikis}
-                    projectMembers={data.project_members}
-                    currentUser={currentUser}
-                >
+                <BoardWikiProvider navigate={navigate} projectUID={projectUID} projectMembers={data.project_members} currentUser={currentUser}>
                     <WikiList />
                 </BoardWikiProvider>
             )}

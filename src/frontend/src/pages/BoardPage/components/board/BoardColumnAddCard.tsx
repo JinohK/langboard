@@ -1,6 +1,6 @@
 import { Box, Textarea } from "@/components/base";
 import { useBoardAddCard } from "@/core/providers/BoardAddCardProvider";
-import { cn } from "@/core/utils/ComponentUtils";
+import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,17 +8,6 @@ const BoardColumnAddCard = memo(() => {
     const { isAddingCard, isValidating, changeMode, scrollToBottom, canWrite, textareaRef, disableChangeModeAttr } = useBoardAddCard();
     const [t] = useTranslation();
     const [height, setHeight] = useState(0);
-
-    const measureTextAreaHeight = () => {
-        const cloned = textareaRef.current!.cloneNode(true) as HTMLTextAreaElement;
-        cloned.style.width = `${textareaRef.current!.clientWidth}px`;
-        cloned.style.height = "0px";
-        document.body.appendChild(cloned);
-        const height = cloned.scrollHeight;
-        document.body.removeChild(cloned);
-        cloned.remove();
-        return height;
-    };
 
     if (!isAddingCard || !canWrite) {
         return null;
@@ -50,6 +39,12 @@ const BoardColumnAddCard = memo(() => {
                 style={{ height }}
                 placeholder={t("board.Enter a title")}
                 disabled={isValidating}
+                onChange={() => {
+                    setHeight(measureTextAreaHeight(textareaRef.current!));
+                    setTimeout(() => {
+                        scrollToBottom();
+                    }, 0);
+                }}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
                         e.preventDefault();
@@ -57,17 +52,6 @@ const BoardColumnAddCard = memo(() => {
                         changeMode("view");
                         return;
                     }
-
-                    setHeight(measureTextAreaHeight());
-                    setTimeout(() => {
-                        scrollToBottom();
-                    }, 0);
-                }}
-                onKeyUp={() => {
-                    setHeight(measureTextAreaHeight());
-                    setTimeout(() => {
-                        scrollToBottom();
-                    }, 0);
                 }}
             />
         </Box>

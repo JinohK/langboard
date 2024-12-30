@@ -1,4 +1,4 @@
-import { AssignMemberForm } from "@/components/AssignMemberPopover";
+import { MultiSelectMemberForm } from "@/components/MultiSelectMemberPopover";
 import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useCreateSubCheckitem from "@/controllers/api/card/checkitem/useCreateSubCheckitem";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
@@ -98,7 +98,7 @@ function SharedBoardCardCheckitemAddSub({
                         }
                     }}
                 />
-                <AssignMemberForm
+                <MultiSelectMemberForm
                     multiSelectProps={{
                         placeholder: t("card.Select members..."),
                         className: cn(
@@ -113,6 +113,7 @@ function SharedBoardCardCheckitemAddSub({
                     assignedUsers={[]}
                     currentUser={currentUser}
                     onValueChange={setSelectedMembers}
+                    useGroupMembers
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

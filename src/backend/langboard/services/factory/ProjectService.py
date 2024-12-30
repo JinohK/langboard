@@ -131,7 +131,7 @@ class ProjectService(BaseService):
             if invited_user:
                 response["invited_members"].append(invited_user.api_response())
             else:
-                response["invited_members"].append(invitation_service.convert_none_user_api_response(invitation.email))
+                response["invited_members"].append(User.create_email_user_api_response(invitation.id, invitation.email))
 
         return project, response
 

@@ -11,7 +11,10 @@ const BoardSettingsBasic = memo(() => {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const { mutate } = useChangeProjectDetails(project.uid);
-    const projectTypeRef = useRef<string>(project.project_type);
+    const title = project.useField("title");
+    const description = project.useField("description");
+    const projectType = project.useField("project_type");
+    const projectTypeRef = useRef<string>(projectType);
     const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "project.errors",
@@ -36,7 +39,7 @@ const BoardSettingsBasic = memo(() => {
                     <Box>{t("project.Project title")}</Box>
                     <Form.Field name="title">
                         <Form.Control asChild>
-                            <Input defaultValue={project.title} disabled={isValidating} />
+                            <Input defaultValue={title} disabled={isValidating} />
                         </Form.Control>
                     </Form.Field>
                 </Label>
@@ -45,7 +48,7 @@ const BoardSettingsBasic = memo(() => {
                     <Box>{t("project.Project description")}</Box>
                     <Form.Field name="description">
                         <Form.Control asChild>
-                            <Textarea defaultValue={project.description} disabled={isValidating} resize="none" className="max-h-36 min-h-36" />
+                            <Textarea defaultValue={description} disabled={isValidating} resize="none" className="max-h-36 min-h-36" />
                         </Form.Control>
                     </Form.Field>
                 </Label>
@@ -54,7 +57,7 @@ const BoardSettingsBasic = memo(() => {
                         <Box>{t("project.Project type")}</Box>
                         <Input type="hidden" name="project_type" value={projectTypeRef.current} ref={projectTypeInputRef} />
                         <AutoComplete
-                            selectedValue={project.project_type}
+                            selectedValue={projectType}
                             onValueChange={setProjectType}
                             items={Project.TYPES.map((project_type) => ({
                                 value: project_type,

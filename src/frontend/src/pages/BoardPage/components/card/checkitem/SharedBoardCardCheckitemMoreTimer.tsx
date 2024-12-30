@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
-    const { checkitem, isValidating, setIsValidating, sharedErrorHandler, update } = useBoardCardCheckitem();
+    const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: toggleCheckitemTimerMutateAsync } = useToggleCheckitemTimer();
@@ -30,13 +30,6 @@ function SharedBoardCardCheckitemMoreTimer({ setIsMoreMenuOpened }: { setIsMoreM
             error: sharedErrorHandler,
             success: (data) => {
                 const isStopped = !!data.timer.stopped_at;
-                if (isStopped) {
-                    checkitem.timer = undefined;
-                } else {
-                    checkitem.timer = data.timer;
-                }
-                checkitem.acc_time_seconds = data.acc_time_seconds;
-                update();
                 return t(`card.successes.Timer ${isStopped ? "stopped" : "started"} successfully.`);
             },
             finally: () => {

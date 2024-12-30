@@ -10,9 +10,7 @@ export interface IChangeCheckitemTitleForm {
     title: string;
 }
 
-export interface IChangeCheckitemTitleResponse {}
-
-const useChangeCheckitemTitle = (options?: TMutationOptions<IChangeCheckitemTitleForm, IChangeCheckitemTitleResponse>) => {
+const useChangeCheckitemTitle = (options?: TMutationOptions<IChangeCheckitemTitleForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeCheckitemTitle = async (params: IChangeCheckitemTitleForm) => {

@@ -7,18 +7,9 @@ import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardCardAttachmentMoreProps extends Omit<IBaseBoardCardAttachmentMoreProps, "setIsMoreMenuOpened"> {
-    deletedAttachment: (uid: string) => void;
-    update: () => void;
-}
+export interface IBoardCardAttachmentMoreProps extends Omit<IBaseBoardCardAttachmentMoreProps, "setIsMoreMenuOpened"> {}
 
-function BoardCardAttachmentMore({
-    attachment,
-    isValidating,
-    setIsValidating,
-    deletedAttachment,
-    update,
-}: IBoardCardAttachmentMoreProps): JSX.Element {
+function BoardCardAttachmentMore({ attachment, isValidating, setIsValidating }: IBoardCardAttachmentMoreProps): JSX.Element {
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
 
@@ -67,14 +58,12 @@ function BoardCardAttachmentMore({
                         setIsValidating={setIsValidating}
                         setIsMoreMenuOpened={setIsOpened}
                         sharedErrorHandler={sharedErrorHandler}
-                        update={update}
                     />
                     <BoardCardAttachmentMoreDelete
                         attachment={attachment}
                         isValidating={isValidating}
                         setIsValidating={setIsValidating}
                         setIsMoreMenuOpened={setIsOpened}
-                        deletedAttachment={deletedAttachment}
                         sharedErrorHandler={sharedErrorHandler}
                     />
                 </DropdownMenu.Group>

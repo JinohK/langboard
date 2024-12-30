@@ -3,8 +3,10 @@ import { THeaderNavItemsProps } from "@/components/Header/types";
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { makeReactKey } from "@/core/utils/StringUtils";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass, shardClass }: THeaderNavItemsProps): JSX.Element[] {
+    const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
 
     return navs.map((item) => {
@@ -79,8 +81,12 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
                         key={item.name}
                         onClick={() => {
                             setIsOpen(false);
-                            if (item.onClick) {
-                                item.onClick();
+                            item.onClick?.();
+
+                            if (item.active) {
+                                setTimeout(() => {
+                                    setIsLoadingRef.current(false);
+                                }, 0);
                             }
                         }}
                         {...navProps}
@@ -90,7 +96,19 @@ function NavItems({ isMobile, navs, setIsOpen, activatedClass, deactivatedClass,
                 );
             } else {
                 itemComponent = (
-                    <NavigationMenu.Link data-active={item.active ? true : null} aria-current={ariaCurrent} onClick={item.onClick} {...navProps}>
+                    <NavigationMenu.Link
+                        data-active={item.active ? true : null}
+                        aria-current={ariaCurrent}
+                        onClick={() => {
+                            item.onClick?.();
+                            if (item.active) {
+                                setTimeout(() => {
+                                    setIsLoadingRef.current(false);
+                                }, 0);
+                            }
+                        }}
+                        {...navProps}
+                    >
                         {t(item.name)}
                     </NavigationMenu.Link>
                 );

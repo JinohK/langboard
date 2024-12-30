@@ -1,19 +1,19 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectCheckitem } from "@/core/models";
 
-export interface ICardCheckitemDeletedResponse {
+export interface ICardCheckitemDeletedRawResponse {
     uid: string;
 }
 
-export interface IUseCardCheckitemDeletedHandlersProps extends IBaseUseSocketHandlersProps<ICardCheckitemDeletedResponse> {
+export interface IUseCardCheckitemDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
     uid: string;
 }
 
-const useCardCheckitemDeletedHandlers = ({ socket, callback, projectUID, uid }: IUseCardCheckitemDeletedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useCardCheckitemDeletedHandlers = ({ callback, projectUID, uid }: IUseCardCheckitemDeletedHandlersProps) => {
+    return useSocketHandler<{}, ICardCheckitemDeletedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-checkitem-deleted-${uid}`,
@@ -21,6 +21,10 @@ const useCardCheckitemDeletedHandlers = ({ socket, callback, projectUID, uid }: 
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.DELETED,
             params: { uid },
             callback,
+            responseConverter: (data) => {
+                ProjectCheckitem.Model.deleteModel(data.uid);
+                return {};
+            },
         },
     });
 };

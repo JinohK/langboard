@@ -10,9 +10,7 @@ export interface IUpdateCardRelationshipsForm {
     relationships: [string, string][];
 }
 
-export interface IUpdateCardRelationshipsResponse {}
-
-const useUpdateCardRelationships = (options?: TMutationOptions<IUpdateCardRelationshipsForm, IUpdateCardRelationshipsResponse>) => {
+const useUpdateCardRelationships = (options?: TMutationOptions<IUpdateCardRelationshipsForm>) => {
     const { mutate } = useQueryMutation();
 
     const updateCardRelationships = async (params: IUpdateCardRelationshipsForm) => {

@@ -9,9 +9,7 @@ export interface IDeleteCheckitemForm {
     checkitem_uid: string;
 }
 
-export interface IDeleteCheckitemResponse {}
-
-const useDeleteCheckitem = (options?: TMutationOptions<IDeleteCheckitemForm, IDeleteCheckitemResponse>) => {
+const useDeleteCheckitem = (options?: TMutationOptions<IDeleteCheckitemForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCheckitem = async (params: IDeleteCheckitemForm) => {

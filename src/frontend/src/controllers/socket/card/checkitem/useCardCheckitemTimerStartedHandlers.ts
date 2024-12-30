@@ -13,9 +13,8 @@ export interface IUseCardCheckitemTimerStartedHandlersProps extends IBaseUseSock
     checkitemUID: string;
 }
 
-const useCardCheckitemTimerStartedHandlers = ({ socket, callback, projectUID, checkitemUID }: IUseCardCheckitemTimerStartedHandlersProps) => {
+const useCardCheckitemTimerStartedHandlers = ({ callback, projectUID, checkitemUID }: IUseCardCheckitemTimerStartedHandlersProps) => {
     return useSocketHandler({
-        socket,
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-checkitem-timer-started-${checkitemUID}`,

@@ -115,7 +115,7 @@ class ProjectInvitationService(BaseService):
                 if target_user:
                     api_invited_users.append(target_user.api_response())
                 else:
-                    api_invited_users.append(self.convert_none_user_api_response(already_sent.email))
+                    api_invited_users.append(User.create_email_user_api_response(already_sent.id, already_sent.email))
                 continue
             await Cache.delete(f"project-invitation:{already_sent.id}")
             await self._db.delete(already_sent)
@@ -142,7 +142,7 @@ class ProjectInvitationService(BaseService):
                 if target_user:
                     api_invited_users.append(target_user.api_response())
                 else:
-                    api_invited_users.append(self.convert_none_user_api_response(primary_email))
+                    api_invited_users.append(User.create_email_user_api_response(invitation.id, primary_email))
 
             urls[primary_email] = token_url
 
@@ -206,13 +206,14 @@ class ProjectInvitationService(BaseService):
         model = {
             "assigned_members": [user.api_response() for user in updated_users],
             "invited_members": [],
+            "invitation_uid": invitation.get_uid(),
         }
 
         for invitation, invited_user in updated_invited_users:
             if invited_user:
                 model["invited_members"].append(invited_user.api_response())
             else:
-                model["invited_members"].append(self.convert_none_user_api_response(invitation.email))
+                model["invited_members"].append(User.create_email_user_api_response(invitation.id, invitation.email))
 
         model_id = await SocketModelIdService.create_model_id(model)
 
@@ -220,19 +221,10 @@ class ProjectInvitationService(BaseService):
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:assigned-users:updated:{project.get_uid()}",
-            data_keys=["assigned_members", "invited_members"],
+            data_keys=list(model.keys()),
         )
 
         return SocketModelIdBaseResult(model_id, (project, updated_users, updated_invited_users), publish_model)
-
-    def convert_none_user_api_response(self, email: str) -> dict[str, Any]:
-        return {
-            "id": User.GROUP_EMAIL_UID,
-            "firstname": email,
-            "lastname": "",
-            "email": email,
-            "username": "",
-        }
 
     async def __create_invitation_token_url(
         self, invitation: ProjectInvitation, url: str, token_query_name: str

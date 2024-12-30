@@ -65,9 +65,9 @@ const WikiList = memo(() => {
     return (
         <Tabs.Root value={wikiUID} className="p-2">
             <Flex items="center" justify="between" gap="1">
-                <Box id={wikiTabListId} pb="0.5" className="max-w-[calc(100%_-_theme(spacing.20))] overflow-x-scroll">
+                <Box id={wikiTabListId} pb="0.5" w="full" className="max-w-[calc(100%_-_theme(spacing.20))] overflow-x-scroll">
                     <Tabs.List className="gap-1" onPointerDown={onPointerDown}>
-                        <WikiTabList wikiUID={wikiUID} changeTab={changeTab} />
+                        <WikiTabList changeTab={changeTab} />
                     </Tabs.List>
                 </Box>
                 <Flex h="full" pb="2" gap="1">

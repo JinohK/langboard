@@ -59,6 +59,14 @@ function AccountRoute() {
                     </AuthGuard>
                 }
             />
+            <Route
+                path={ROUTES.ACCOUNT.GROUPS}
+                element={
+                    <AuthGuard>
+                        <AccountPage />
+                    </AuthGuard>
+                }
+            />
         </Route>
     );
 }

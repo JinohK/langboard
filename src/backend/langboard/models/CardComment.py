@@ -13,6 +13,7 @@ class CardComment(SoftDeleteModel, table=True):
     def api_response(self):
         return {
             "uid": self.get_uid(),
+            "card_uid": self.card_id.to_short_code(),
             "content": self.content.model_dump() if self.content else None,
             "is_edited": self.created_at.timestamp() != self.updated_at.timestamp(),
             "commented_at": self.updated_at,

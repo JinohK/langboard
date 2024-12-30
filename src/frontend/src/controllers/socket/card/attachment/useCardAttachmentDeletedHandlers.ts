@@ -1,18 +1,18 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ProjectCardAttachment } from "@/core/models";
 
-export interface ICardAttachmentDeletedResponse {
+export interface ICardAttachmentDeletedRawResponse {
     uid: string;
 }
 
-export interface IUseCardAttachmentDeletedHandlersProps extends IBaseUseSocketHandlersProps<ICardAttachmentDeletedResponse> {
+export interface IUseCardAttachmentDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     cardUID: string;
 }
 
-const useCardAttachmentDeletedHandlers = ({ socket, callback, cardUID }: IUseCardAttachmentDeletedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useCardAttachmentDeletedHandlers = ({ callback, cardUID }: IUseCardAttachmentDeletedHandlersProps) => {
+    return useSocketHandler<{}, ICardAttachmentDeletedRawResponse>({
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,
         eventKey: `board-card-attachment-deleted-${cardUID}`,
@@ -20,6 +20,10 @@ const useCardAttachmentDeletedHandlers = ({ socket, callback, cardUID }: IUseCar
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.DELETED,
             params: { uid: cardUID },
             callback,
+            responseConverter: (data) => {
+                ProjectCardAttachment.Model.deleteModel(data.uid);
+                return {};
+            },
         },
     });
 };

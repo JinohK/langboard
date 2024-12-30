@@ -1,22 +1,19 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCard } from "@/core/models";
+import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 
-export interface ICardRelationshipsUpdatedResponse {
+export interface ICardRelationshipsUpdatedRawResponse {
     card_uid: string;
-    relationships: ProjectCard.IRelationship[];
-    parent_card_uids: string[];
-    child_card_uids: string[];
+    relationships: ProjectCardRelationship.Interface[];
 }
 
-export interface IUseCardRelationshipsUpdatedHandlersProps extends IBaseUseSocketHandlersProps<ICardRelationshipsUpdatedResponse> {
+export interface IUseCardRelationshipsUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useCardRelationshipsUpdatedHandlers = ({ socket, callback, projectUID }: IUseCardRelationshipsUpdatedHandlersProps) => {
-    return useSocketHandler({
-        socket,
+const useCardRelationshipsUpdatedHandlers = ({ callback, projectUID }: IUseCardRelationshipsUpdatedHandlersProps) => {
+    return useSocketHandler<{}, ICardRelationshipsUpdatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-relationships-updated-${projectUID}`,
@@ -24,6 +21,14 @@ const useCardRelationshipsUpdatedHandlers = ({ socket, callback, projectUID }: I
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.RELATIONSHIPS_UPDATED,
             params: { uid: projectUID },
             callback,
+            responseConverter: (data) => {
+                const card = ProjectCard.Model.getModel(data.card_uid);
+                if (card) {
+                    ProjectCardRelationship.Model.deleteModels(card.relationships.map((r) => r.uid));
+                }
+                ProjectCardRelationship.Model.fromObjectArray(data.relationships, true);
+                return {};
+            },
         },
     });
 };

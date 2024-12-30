@@ -1,9 +1,11 @@
-import { IBaseModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import createFakeModel from "@/core/models/FakeModel";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends Omit<IBaseModel, "uid"> {
-    uid: string | "0" | "-1" | "-2";
+    type: "user" | "unknown" | "bot" | "group_email";
+    uid: string | "0";
     firstname: string;
     lastname: string;
     email: string;
@@ -14,58 +16,137 @@ export interface Interface extends Omit<IBaseModel, "uid"> {
 export const INDUSTRIES: string[] = ["Industry 1"];
 export const PURPOSES: string[] = ["Purpose 1"];
 
-export const BOT_UID = "-1";
-export const GROUP_EMAIL_UID = "-2";
-
-export const isPresentableUnknownUser = (user: Interface): bool => {
-    return !isNaN(Number(user.uid)) && Number(user.uid) < 0;
-};
-
-export const isValidUser = (user: Interface): bool => {
-    return TypeUtils.isString(user.uid) && !isPresentableUnknownUser(user);
-};
-
-export const filterValidUserUIDs = (users: Interface[]): string[] => {
-    return users.map((user) => user.uid).filter((uid) => isValidUser({ uid } as Interface)) as string[];
-};
-
-export const isDeletedUser = (user: Interface): bool => {
-    return user.uid === "0";
-};
-
-export const isBot = (user: Interface): bool => {
-    return user.uid === BOT_UID;
-};
-
-export const createUnknownUser = (): Interface => {
-    return {
-        uid: "0",
-        firstname: "",
-        lastname: "",
-        email: "",
-        username: "",
-    };
-};
-
-export const createNoneEmailUser = (email: string): Interface => {
-    return {
-        uid: GROUP_EMAIL_UID,
-        firstname: email,
-        lastname: "",
-        email,
-        username: "",
-    };
-};
-
-export const transformFromApi = <TUser extends Interface | Interface[]>(users: TUser): TUser extends Interface ? Interface : Interface[] => {
-    if (!TypeUtils.isArray(users)) {
-        users.avatar = convertServerFileURL(users.avatar);
-        return users as unknown as TUser extends Interface ? Interface : Interface[];
+class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & Interface> {
+    static get USER_TYPE() {
+        return "user" as const;
+    }
+    static get UNKNOWN_TYPE() {
+        return "unknown" as const;
+    }
+    static get BOT_TYPE() {
+        return "bot" as const;
+    }
+    static get GROUP_EMAIL_TYPE() {
+        return "group_email" as const;
     }
 
-    for (let i = 0; i < users.length; ++i) {
-        users[i].avatar = convertServerFileURL(users[i].avatar);
+    static get MODEL_NAME() {
+        return "User" as const;
     }
 
-    return users as unknown as TUser extends Interface ? Interface : Interface[];
+    constructor(model: Record<string, unknown>) {
+        super(model);
+    }
+
+    public static createUnknownUser(): User {
+        const model = {
+            type: User.UNKNOWN_TYPE,
+            uid: "0",
+            firstname: "",
+            lastname: "",
+            email: "",
+            username: "",
+            avatar: undefined,
+        };
+
+        return createFakeModel(model, User.createFakeMethodsMap(model));
+    }
+
+    public static createTempEmailUser(email: string): User {
+        const model = {
+            type: User.GROUP_EMAIL_TYPE,
+            uid: "0",
+            firstname: email,
+            lastname: "",
+            email,
+            username: "",
+            avatar: undefined,
+        };
+
+        return createFakeModel(model, User.createFakeMethodsMap(model));
+    }
+
+    public static convertModel(model: Interface): Interface {
+        if (model.avatar) {
+            model.avatar = convertServerFileURL(model.avatar);
+        }
+        return model;
+    }
+
+    public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
+        const map = {
+            isPresentableUnknownUser: () => model.type === User.BOT_TYPE || model.type === User.GROUP_EMAIL_TYPE,
+            isValidUser: () => TypeUtils.isString(model.uid) && !map.isPresentableUnknownUser(),
+            isDeletedUser: () => model.uid === "0" || model.type === User.UNKNOWN_TYPE,
+            isBot: () => model.type === User.BOT_TYPE,
+        };
+        return map as TMethodMap;
+    }
+
+    public get type() {
+        return this.getValue("type");
+    }
+    public set type(value: Interface["type"]) {
+        this.update({ type: value });
+    }
+
+    public get firstname() {
+        return this.getValue("firstname");
+    }
+    public set firstname(value: string) {
+        this.update({ firstname: value });
+    }
+
+    public get lastname() {
+        return this.getValue("lastname");
+    }
+    public set lastname(value: string) {
+        this.update({ lastname: value });
+    }
+
+    public get email() {
+        return this.getValue("email");
+    }
+    public set email(value: string) {
+        this.update({ email: value });
+    }
+
+    public get username() {
+        return this.getValue("username");
+    }
+    public set username(value: string) {
+        this.update({ username: value });
+    }
+
+    public get avatar() {
+        return this.getValue("avatar");
+    }
+    public set avatar(value: string | undefined) {
+        this.update({ avatar: value });
+    }
+
+    public isPresentableUnknownUser() {
+        return this.type === User.BOT_TYPE || this.type === User.GROUP_EMAIL_TYPE;
+    }
+
+    public isValidUser() {
+        return TypeUtils.isString(this.uid) && !this.isPresentableUnknownUser();
+    }
+
+    public isDeletedUser() {
+        return this.uid === "0" || this.type === User.UNKNOWN_TYPE;
+    }
+
+    public isBot() {
+        return this.type === User.BOT_TYPE;
+    }
+}
+
+registerModel(User);
+
+export type TModel = User;
+export const Model = User;
+
+export const filterValidUserUIDs = (users: User[]): string[] => {
+    return users.filter((user) => user.isValidUser()).map((user) => user.uid);
 };

@@ -2,7 +2,6 @@ import { Box, Dialog, Flex, Skeleton, Toast } from "@/components/base";
 import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IAuthUser } from "@/core/providers/AuthProvider";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardActionList, { SkeletonBoardCardActionList } from "@/pages/BoardPage/components/card/action/BoardCardActionList";
@@ -23,11 +22,13 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
+import { createShortUUID } from "@/core/utils/StringUtils";
+import { AuthUser } from "@/core/models";
 
 export interface IBoardCardProps {
     projectUID: string;
     cardUID: string;
-    currentUser: IAuthUser;
+    currentUser: AuthUser.TModel;
     viewportId: string;
 }
 
@@ -174,7 +175,7 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                 <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
-                            <BoardCardMemberList members={card.members} />
+                            <BoardCardMemberList key={createShortUUID()} />
                         </BoardCardSection>
                         <BoardCardSection title="card.Deadline" className="sm:w-1/2">
                             <BoardCardDeadline />

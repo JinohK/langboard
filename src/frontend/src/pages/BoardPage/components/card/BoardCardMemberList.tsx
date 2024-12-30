@@ -1,34 +1,22 @@
-import { AssignMemberPopover } from "@/components/AssignMemberPopover";
+import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
 import { Toast } from "@/components/base";
 import useUpdateCardAssignedUsers from "@/controllers/api/card/useUpdateCardAssignedUsers";
-import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Interface[] }) => {
-    const { projectUID, card, sharedClassNames, currentUser, socket } = useBoardCard();
+const BoardCardMemberList = memo(() => {
+    const { projectUID, card, sharedClassNames, currentUser } = useBoardCard();
     const [t] = useTranslation();
-    const [members, setMembers] = useState<User.Interface[]>(flatMembers);
+    const members = card.useForeignField<User.TModel>("members");
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers();
-    const handlers = useCardAssignedUsersUpdatedHandlers({
-        socket,
-        projectUID,
-        cardUID: card.uid,
-        callback: (data) => {
-            card.members = data.assigned_members;
-            setMembers(data.assigned_members);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
 
-    const onSave = (users: User.Interface[], endCallback: () => void) => {
+    const onSave = (users: User.TModel[], endCallback: () => void) => {
         if (isValidating) {
             return;
         }
@@ -75,7 +63,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
     };
 
     return (
-        <AssignMemberPopover
+        <MultiSelectMemberPopover
             popoverButtonProps={{
                 size: "icon",
                 className: "size-8 lg:size-10",
@@ -108,6 +96,7 @@ const BoardCardMemberList = memo(({ members: flatMembers }: { members: User.Inte
             currentUser={currentUser}
             iconSize={{ initial: "4", lg: "6" }}
             canControlAssignedUsers
+            useGroupMembers
         />
     );
 });

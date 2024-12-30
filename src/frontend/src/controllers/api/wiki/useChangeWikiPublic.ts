@@ -9,9 +9,7 @@ export interface IChangeWikiPublicForm {
     is_public: bool;
 }
 
-export interface IChangeWikiPublicResponse {}
-
-const useChangeWikiPublic = (options?: TMutationOptions<IChangeWikiPublicForm, IChangeWikiPublicResponse>) => {
+const useChangeWikiPublic = (options?: TMutationOptions<IChangeWikiPublicForm>) => {
     const { mutate } = useQueryMutation();
 
     const changeWikiPublic = async (params: IChangeWikiPublicForm) => {

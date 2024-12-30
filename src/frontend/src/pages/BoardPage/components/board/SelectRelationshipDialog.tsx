@@ -7,7 +7,7 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface ISelectRelationshipDialogProps {
-    card: ProjectCard.IBoard;
+    card: ProjectCard.TModel;
     isOpened: bool;
     setIsOpened: (isOpened: bool) => void;
 }

@@ -10,9 +10,7 @@ export interface IAddCardCommentForm {
     content: IEditorContent;
 }
 
-export interface IAddCardCommentResponse {}
-
-const useAddCardComment = (options?: TMutationOptions<IAddCardCommentForm, IAddCardCommentResponse>) => {
+const useAddCardComment = (options?: TMutationOptions<IAddCardCommentForm>) => {
     const { mutate } = useQueryMutation();
 
     const addCardComment = async (params: IAddCardCommentForm) => {

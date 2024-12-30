@@ -1,49 +1,25 @@
 import { Box, Textarea, Toast } from "@/components/base";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
-import useBoardWikiTitleChangedHandlers from "@/controllers/socket/wiki/useBoardWikiTitleChangedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
-import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useReducer, useRef, useState } from "react";
+import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiTitleProps {
-    wiki: ProjectWiki.Interface;
+    wiki: ProjectWiki.TModel;
 }
 
 const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
-    const { projectUID, socket, currentUser, canAccessWiki, setTitleMapRef } = useBoardWiki();
+    const { projectUID, canAccessWiki } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title");
-    const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const [isEditing, setIsEditing] = useState(false);
+    const title = wiki.useField("title");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const canEdit = canAccessWiki(false, wiki.uid);
     const [height, setHeight] = useState(0);
-    const boardWikiTitleChangedHandler = useBoardWikiTitleChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        callback: (data) => {
-            wiki.title = data.title;
-            setTitleMapRef.current[wiki.uid]?.(data.title);
-            forceUpdate();
-        },
-    });
-    const boardPrivateWikiTitleChangedHandler = useBoardWikiTitleChangedHandlers({
-        socket,
-        projectUID,
-        wikiUID: wiki.uid,
-        userUID: currentUser.uid,
-        callback: (data) => {
-            wiki.title = data.title;
-            setTitleMapRef.current[wiki.uid]?.(data.title);
-            forceUpdate();
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [boardWikiTitleChangedHandler, boardPrivateWikiTitleChangedHandler] });
     const changeMode = (mode: "edit" | "view") => {
         if (!canEdit) {
             return;
@@ -52,7 +28,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
         if (mode === "edit") {
             setIsEditing(true);
             setTimeout(() => {
-                setHeight(measureTextAreaHeight());
+                setHeight(measureTextAreaHeight(textareaRef.current!));
                 if (!textareaRef.current) {
                     return;
                 }
@@ -66,7 +42,6 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
 
         const newValue = textareaRef.current?.value?.replace(/\n/g, " ").trim() ?? "";
         if (!newValue.length || wiki.title.trim() === newValue) {
-            setTitleMapRef.current[wiki.uid]?.(wiki.title);
             setIsEditing(false);
             return;
         }
@@ -93,9 +68,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                wiki.title = data.title;
-                setTitleMapRef.current[wiki.uid]?.(data.title);
+            success: () => {
                 return t("wiki.successes.Title changed successfully.");
             },
             finally: () => {
@@ -105,37 +78,29 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
         });
     };
 
-    const measureTextAreaHeight = () => {
-        const cloned = textareaRef.current!.cloneNode(true) as HTMLTextAreaElement;
-        cloned.style.width = `${textareaRef.current!.offsetWidth}px`;
-        cloned.style.height = "0px";
-        document.body.appendChild(cloned);
-        const height = cloned.scrollHeight;
-        document.body.removeChild(cloned);
-        cloned.remove();
-        return height;
-    };
-
     return (
         <Box p="2">
             {!isEditing ? (
-                <h1 className="min-h-8 cursor-text break-all text-xl md:text-2xl" onClick={() => changeMode("edit")}>
-                    {wiki.title}
+                <h1 className="min-h-8 cursor-text break-all border-b border-border text-xl md:text-2xl" onClick={() => changeMode("edit")}>
+                    {title}
                 </h1>
             ) : (
                 <Textarea
                     ref={textareaRef}
                     className={cn(
-                        "min-h-8 resize-none break-all rounded-none border-x-0 border-t-0 p-0 text-xl scrollbar-hide md:text-2xl",
-                        "focus-visible:border-b-primary focus-visible:ring-0"
+                        "min-h-8 resize-none break-all rounded-none border-x-0 border-t-0 p-0 pb-px text-xl md:text-2xl",
+                        "scrollbar-hide focus-visible:border-b-primary focus-visible:ring-0"
                     )}
                     style={{ height }}
-                    defaultValue={wiki.title}
+                    defaultValue={title}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                     }}
                     onBlur={() => changeMode("view")}
+                    onChange={() => {
+                        setHeight(measureTextAreaHeight(textareaRef.current!));
+                    }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             e.preventDefault();
@@ -143,13 +108,6 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                             changeMode("view");
                             return;
                         }
-
-                        setHeight(measureTextAreaHeight());
-                        setTitleMapRef.current[wiki.uid]?.(textareaRef.current!.value);
-                    }}
-                    onKeyUp={() => {
-                        setHeight(measureTextAreaHeight());
-                        setTitleMapRef.current[wiki.uid]?.(textareaRef.current!.value);
                     }}
                 />
             )}

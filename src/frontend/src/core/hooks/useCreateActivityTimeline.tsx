@@ -9,7 +9,7 @@ import { Trans, useTranslation } from "react-i18next";
 
 export interface IActivityTimelineProps {
     activity: Activity.Interface;
-    user: User.Interface;
+    user: User.TModel;
     isCurrentUser?: bool;
 }
 

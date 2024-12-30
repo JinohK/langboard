@@ -11,11 +11,7 @@ export interface IReactCardCommentForm {
     reaction: TEmoji;
 }
 
-export interface IReactCardCommentResponse {
-    is_reacted: bool;
-}
-
-const useReactCardComment = (options?: TMutationOptions<IReactCardCommentForm, IReactCardCommentResponse>) => {
+const useReactCardComment = (options?: TMutationOptions<IReactCardCommentForm>) => {
     const { mutate } = useQueryMutation();
 
     const reactCardComment = async (params: IReactCardCommentForm) => {
