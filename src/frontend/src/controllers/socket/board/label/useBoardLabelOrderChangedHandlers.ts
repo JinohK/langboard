@@ -3,22 +3,22 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 
-export interface IProjectLabelOrderChangedRawResponse {
+export interface IBoardLabelOrderChangedRawResponse {
     uid: string;
     order: number;
 }
 
-export interface IUseProjectLabelOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardLabelOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectLabelOrderChangedHandlers = ({ callback, projectUID }: IUseProjectLabelOrderChangedHandlersProps) => {
-    return useSocketHandler<{}, IProjectLabelOrderChangedRawResponse>({
-        topic: ESocketTopic.Project,
+const useBoardLabelOrderChangedHandlers = ({ callback, projectUID }: IUseBoardLabelOrderChangedHandlersProps) => {
+    return useSocketHandler<{}, IBoardLabelOrderChangedRawResponse>({
+        topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-label-order-changed-${projectUID}`,
+        eventKey: `board-label-order-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.PROJECT.LABEL.ORDER_CHANGED,
+            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.ORDER_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -32,4 +32,4 @@ const useProjectLabelOrderChangedHandlers = ({ callback, projectUID }: IUseProje
     });
 };
 
-export default useProjectLabelOrderChangedHandlers;
+export default useBoardLabelOrderChangedHandlers;

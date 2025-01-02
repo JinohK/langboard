@@ -6,6 +6,7 @@ import { VariantProps, tv } from "tailwind-variants";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { DimensionMap } from "@/core/utils/VariantUtils";
+import { StringCase } from "@/core/utils/StringUtils";
 
 export const IconVariants = tv(
     {
@@ -51,7 +52,8 @@ const IconComponent = memo(
             );
         }
 
-        let TargetIcon: React.ElementType = icons[icon as keyof typeof icons];
+        const pascalCaseIcon = new StringCase(icon).toPascal();
+        let TargetIcon: React.ElementType = icons[pascalCaseIcon as keyof typeof icons];
         if (!TargetIcon) {
             const dynamicIcon = dynamicIconImports[icon as keyof typeof dynamicIconImports];
             if (dynamicIcon) {

@@ -6,7 +6,7 @@ import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardCo
 import { API_ROUTES } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, ProjectCardComment } from "@/core/models";
+import { Project, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -38,9 +38,10 @@ export interface IBoardCommentProps {
 const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX.Element => {
     const { projectUID, card, socket, currentUser, hasRoleAction, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [isEditing, setIsEditing] = useState(false);
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const content = comment.useField("content");
-    const commentedAt = comment.useField("commented_at");
+    const commentUsers = comment.useForeignField<User.TModel>("user");
+    const commentUser = commentUsers[0];
     const valueRef = useRef<IEditorContent>(content);
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -49,7 +50,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const [isValidating, setIsValidating] = useState(false);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();
-    const canEdit = currentUser.uid === comment.user.uid || currentUser.is_admin;
+    const canEdit = currentUser.uid === commentUser.uid || currentUser.is_admin;
 
     editorsRef.current[comment.uid] = (editing: bool) => {
         if (canEdit) {
@@ -161,11 +162,9 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
 
     return (
         <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
-            <UserAvatar.Root avatarSize="sm" user={comment.user}>
-                <UserAvatar.List>
-                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                </UserAvatar.List>
-            </UserAvatar.Root>
+            <Box>
+                <BoardCommentUserAvatar user={commentUser} />
+            </Box>
             <Flex
                 direction="col"
                 gap="2"
@@ -175,15 +174,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                     "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.52)_-_theme(spacing.2))]"
                 )}
             >
-                <Flex gap="2" items="center">
-                    <span className="text-sm font-bold">
-                        {comment.user.firstname} {comment.user.lastname}
-                    </span>
-                    <span className="text-xs text-accent-foreground/50">
-                        {formatDateDistance(i18n, t, commentedAt)}
-                        {comment.is_edited && ` (${t("card.edited")})`}
-                    </span>
-                </Flex>
+                <BoardCommentHeader comment={comment} user={commentUser} />
                 <Flex
                     px="3"
                     py="1.5"
@@ -219,16 +210,16 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         <>
                             <BoardCommentReaction comment={comment} />
                             {hasRoleAction(Project.ERoleAction.READ) &&
-                                currentUser.uid !== comment.user.uid &&
+                                currentUser.uid !== commentUser.uid &&
                                 currentUser.isValidUser() &&
-                                card.project_members.find((user) => user.uid === comment.user.uid) && (
+                                card.project_members.find((user) => user.uid === commentUser.uid) && (
                                     <>
                                         <Separator orientation="vertical" className="h-1/2" />
                                         <Button
                                             variant="link"
                                             size="sm"
                                             className="h-5 p-0 text-accent-foreground/50"
-                                            onClick={() => replyRef.current?.(comment.user)}
+                                            onClick={() => replyRef.current?.(commentUser)}
                                         >
                                             {t("card.Reply")}
                                         </Button>
@@ -270,6 +261,36 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                 </Flex>
             </Flex>
         </Box>
+    );
+});
+
+const BoardCommentUserAvatar = memo(({ user }: { user: User.TModel }): JSX.Element => {
+    return (
+        <UserAvatar.Root avatarSize="sm" user={user}>
+            <UserAvatar.List>
+                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
+            </UserAvatar.List>
+        </UserAvatar.Root>
+    );
+});
+
+const BoardCommentHeader = memo(({ comment, user }: { comment: ProjectCardComment.TModel; user: User.TModel }): JSX.Element => {
+    const [t, i18n] = useTranslation();
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
+    const commentedAt = comment.useField("commented_at");
+    const isEdited = comment.useField("is_edited");
+
+    return (
+        <Flex gap="2" items="center">
+            <span className="text-sm font-bold">
+                {firstname} {lastname}
+            </span>
+            <span className="text-xs text-accent-foreground/50">
+                {formatDateDistance(i18n, t, commentedAt)}
+                {isEdited && ` (${t("card.edited")})`}
+            </span>
+        </Flex>
     );
 });
 

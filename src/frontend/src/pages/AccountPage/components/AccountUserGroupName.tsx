@@ -66,7 +66,7 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
     };
 
     return (
-        <Card.Title>
+        <Card.Title className="w-[calc(100%_-_theme(spacing.6))]">
             {!isEditing ? (
                 <Box className="min-h-6 cursor-text break-all border-b border-input" onClick={() => changeMode("edit")}>
                     {groupName}

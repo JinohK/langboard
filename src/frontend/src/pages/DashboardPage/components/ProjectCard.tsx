@@ -44,11 +44,10 @@ export const SkeletonProjectCard = memo(() => {
 
 export interface IProjectCardProps {
     project: Project.TModel;
-    refetchAllStarred: () => Promise<unknown>;
-    refetchAllProjects: () => Promise<unknown>;
+    updateStarredProjects: React.DispatchWithoutAction;
 }
 
-const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IProjectCardProps): JSX.Element => {
+const ProjectCard = memo(({ project, updateStarredProjects }: IProjectCardProps): JSX.Element => {
     const [t] = useTranslation();
     const { navigate } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
@@ -76,8 +75,7 @@ const ProjectCard = memo(({ project, refetchAllStarred, refetchAllProjects }: IP
                     project={project}
                     isUpdating={isUpdating}
                     setIsUpdating={setIsUpdating}
-                    refetchAllStarred={refetchAllStarred}
-                    refetchAllProjects={refetchAllProjects}
+                    updateStarredProjects={updateStarredProjects}
                 />
             </Card.Header>
             <Card.Content></Card.Content>

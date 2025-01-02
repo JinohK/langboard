@@ -3,21 +3,21 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, User } from "@/core/models";
 
-export interface IProjectAssignedUsersUpdatedRawResponse {
+export interface IBoardAssignedUsersUpdatedRawResponse {
     assigned_members: User.Interface[];
     invited_members: User.Interface[];
     invitation_uid?: string;
 }
 
-export interface IUseProjectAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseProjectAssignedUsersUpdatedHandlersProps) => {
-    return useSocketHandler<{}, IProjectAssignedUsersUpdatedRawResponse>({
+const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoardAssignedUsersUpdatedHandlersProps) => {
+    return useSocketHandler<{}, IBoardAssignedUsersUpdatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-assigned-users-updated-${projectUID}`,
+        eventKey: `board-assigned-users-updated-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.ASSIGNED_USERS_UPDATED,
             params: { uid: projectUID },
@@ -38,4 +38,4 @@ const useProjectAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUsePr
     });
 };
 
-export default useProjectAssignedUsersUpdatedHandlers;
+export default useBoardAssignedUsersUpdatedHandlers;

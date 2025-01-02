@@ -8,15 +8,15 @@ import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
 import BoardSettingsLabelMore from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelMore";
 import BoardSettingsLabelColor from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelColor";
 import { BoardSettingsLabelProvider } from "@/core/providers/BoardSettingsLabelProvider";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 
 export interface IBoardSettingsLabelProps {
     label: ProjectLabel.TModel;
     isOverlay?: bool;
 }
 
-interface IBoardSettingsLabelDragData {
+interface IBoardSettingsLabelDragData extends ISortableDragData<ProjectLabel.TModel> {
     type: "Label";
-    data: ProjectLabel.TModel;
 }
 
 const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps): JSX.Element => {

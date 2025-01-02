@@ -25,7 +25,9 @@ export const API_ROUTES = {
             VERIFY: "/account/email/verify",
         },
         USER_GROUP: {
+            CREATE: "/account/group",
             UPDATE_ASSIGNED_EMAILS: "/account/group/{group_uid}/emails",
+            DELETE: "/account/group/{group_uid}",
         },
     },
     ACTIVITIY: {
@@ -40,6 +42,7 @@ export const API_ROUTES = {
     },
     BOARD: {
         GET: "/board/{uid}",
+        DETAILS: "/board/{uid}/details",
         IS_AVAILABLE: "/board/{uid}/available",
         CAN_USE_SETTINGS: "/board/{uid}/settings/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
@@ -111,29 +114,18 @@ export const API_ROUTES = {
 } as const;
 
 export const SOCKET_SERVER_EVENTS = {
-    PROJECT: {
-        TITLE_CHANGED: "project:title:changed:{uid}",
-        DESCRIPTION_CHANGED: "project:description:changed:{uid}",
-        TYPE_CHANGED: "project:project_type:changed:{uid}",
-        AI_DESCRIPTION_CHANGED: "project:ai_description:changed:{uid}",
-        COLUMN: {
-            CREATED: "project:column:created:{uid}",
-            NAME_CHANGED: "project:column:name:changed:{uid}",
-            ORDER_CHANGED: "project:column:order:changed:{uid}",
-        },
-        LABEL: {
-            CREATED: "project:label:created:{uid}",
-            NAME_CHANGED: "project:label:name:changed:{uid}",
-            COLOR_CHANGED: "project:label:color:changed:{uid}",
-            DESCRIPTION_CHANGED: "project:label:description:changed:{uid}",
-            ORDER_CHANGED: "project:label:order:changed:{uid}",
-            DELETED: "project:label:deleted:{uid}",
-        },
-    },
     DASHBOARD: {
-        CARD: {
-            CREATED: "dashboard:card:created:{uid}",
-            ORDER_CHANGED: "dashboard:card:order:changed:{uid}",
+        PROJECT: {
+            UNASSIGNED: "dashboard:project:unassigned:{uid}",
+            COLUMN: {
+                CREATED: "dashboard:project:column:created:{uid}",
+                NAME_CHANGED: "dashboard:project:column:name:changed:{uid}",
+                ORDER_CHANGED: "dashboard:project:column:order:changed:{uid}",
+            },
+            CARD: {
+                CREATED: "dashboard:project:card:created:{uid}",
+                ORDER_CHANGED: "dashboard:project:card:order:changed:{uid}",
+            },
         },
     },
     BOARD: {
@@ -141,12 +133,22 @@ export const SOCKET_SERVER_EVENTS = {
         CHAT_SENT: "board:chat:sent",
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
+        DETAILS_CHANGED: "board:details:changed:{uid}",
+        LABEL: {
+            CREATED: "board:label:created:{uid}",
+            DETAILS_CHANGED: "board:label:details:changed:{uid}",
+            ORDER_CHANGED: "board:label:order:changed:{uid}",
+            DELETED: "board:label:deleted:{uid}",
+        },
+        COLUMN: {
+            CREATED: "board:column:created:{uid}",
+            NAME_CHANGED: "board:column:name:changed:{uid}",
+            ORDER_CHANGED: "board:column:order:changed:{uid}",
+        },
         CARD: {
             CREATED: "board:card:created:{uid}",
             ORDER_CHANGED: "board:card:order:changed:{uid}",
-            TITLE_CHANGED: "board:card:title:changed:{uid}",
-            DEADLINE_CHANGED: "board:card:deadline_at:changed:{uid}",
-            DESCRIPTION_CHANGED: "board:card:description:changed:{uid}",
+            DETAILS_CHANGED: "board:card:details:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:card:assigned-users:updated:{uid}",
             RELATIONSHIPS_UPDATED: "board:card:relationships:updated:{uid}",
             LABELS_UPDATED: "board:card:labels:updated:{uid}",
@@ -185,8 +187,7 @@ export const SOCKET_SERVER_EVENTS = {
             EDITOR_USERS: "board:wiki:editor:users:{uid}",
             EDITOR_START_EDITING: "board:wiki:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:wiki:editor:stop:{uid}",
-            TITLE_CHANGED: "board:wiki:title:changed:{uid}",
-            CONTENT_CHANGED: "board:wiki:content:changed:{uid}",
+            DETAILS_CHANGED: "board:wiki:details:changed:{uid}",
             PUBLIC_CHANGED: "board:wiki:public:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:wiki:assigned-users:updated:{uid}",
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",

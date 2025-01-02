@@ -14,24 +14,29 @@ export interface IMentionInputElement {
     mentionableUsers: User.TModel[];
 }
 
+export interface IMentionableUser extends User.TModel {
+    key: string;
+    text: string;
+}
+
 export const MentionInputElement = withRef<typeof PlateElement, IMentionInputElement>(
     ({ className, currentUser, mentionableUsers, ...props }, ref) => {
         const { children, editor, element } = props;
         const [t] = useTranslation();
         const [search, setSearch] = useState("");
         const users = useMemo(() => {
-            const userList: (User.Interface & { key: string; text: string })[] = [];
+            const userList: IMentionableUser[] = [];
             for (let i = 0; i < mentionableUsers.length; ++i) {
                 const user = mentionableUsers[i];
                 if (user.uid === currentUser.uid || !user.isValidUser()) {
                     continue;
                 }
 
-                userList.push({
-                    ...user.copy(),
-                    text: user.username,
-                    key: user.uid,
-                });
+                const fakeUser = user.asFake() as IMentionableUser;
+                fakeUser.text = user.username;
+                fakeUser.key = user.uid;
+
+                userList.push(fakeUser);
             }
             return userList;
         }, [mentionableUsers]);

@@ -52,10 +52,14 @@ interface IUserAvatarPropsWithCustomTrigger extends IBaseUserAvatarProps {
 
 export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithoutName | IUserAvatarPropsWithCustomTrigger;
 
-const Root = memo((props: TUserAvatarProps): JSX.Element => {
+const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const { user, children, listAlign, customTrigger } = props;
     const [isOpened, setIsOpened] = useState(false);
-    const initials = createNameInitials(user.firstname, user.lastname);
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
+    const username = user.useField("username");
+    const userAvatar = user.useField("avatar");
+    const initials = createNameInitials(firstname, lastname);
     const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
     const isDeletedUser = user.isDeletedUser();
@@ -86,14 +90,14 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">
-                            <Avatar.Image src={user.avatar} />
+                            <Avatar.Image src={userAvatar} />
                             <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
                                 {initials}
                             </Avatar.Fallback>
                         </Avatar.Root>
                         <Card.Title className="ml-24 pt-6">
-                            {user.firstname} {user.lastname}
-                            <Card.Description className="mt-1 text-muted-foreground">@{user.username}</Card.Description>
+                            {firstname} {lastname}
+                            <Card.Description className="mt-1 text-muted-foreground">@{username}</Card.Description>
                         </Card.Title>
                     </Card.Header>
                     <Card.Content className="px-0 pt-8">{children}</Card.Content>
@@ -123,7 +127,10 @@ const Trigger = memo(
         setIsOpened,
     }: IUserAvatarTriggerProps) => {
         const [t] = useTranslation();
-        const initials = createNameInitials(user.firstname, user.lastname);
+        const firstname = user.useField("firstname");
+        const lastname = user.useField("lastname");
+        const userAvatar = user.useField("avatar");
+        const initials = createNameInitials(firstname, lastname);
         const isDeletedUser = user.isDeletedUser();
         const isPresentableUnknownUser = user.isPresentableUnknownUser();
 
@@ -154,7 +161,7 @@ const Trigger = memo(
 
         const avatar = (
             <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
-                <Avatar.Image src={user.avatar} />
+                <Avatar.Image src={userAvatar} />
                 <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
                     {user.isBot() ? (
                         <IconComponent icon="bot" className="h-[80%] w-[80%]" />
@@ -174,9 +181,9 @@ const Trigger = memo(
             if (isDeletedUser) {
                 names = t("common.Unknown User");
             } else if (isPresentableUnknownUser) {
-                names = user.firstname;
+                names = firstname;
             } else {
-                names = `${user.firstname} ${user.lastname}`;
+                names = `${firstname} ${lastname}`;
             }
 
             avatarWrapper = (

@@ -1,19 +1,39 @@
 import { MultiSelectMemberForm } from "@/components/MultiSelectMemberPopover";
-import { Card, Toast } from "@/components/base";
+import { Box, Card, Flex, Skeleton, Toast } from "@/components/base";
 import useUpdateUserGroupAssignedEmails from "@/controllers/api/account/useUpdateUserGroupAssignedEmails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
+import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import AccountUserGroupDeleteButton from "@/pages/AccountPage/components/AccountUserGroupDeleteButton";
 import AccountUserGroupName from "@/pages/AccountPage/components/AccountUserGroupName";
-import { IGroupComponentProps } from "@/pages/AccountPage/components/types";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IAccountUserGroupProps extends Omit<IGroupComponentProps, "user"> {
+export function SkeletonAccountUserGroup(): JSX.Element {
+    return (
+        <Card.Root>
+            <Card.Header className="relative">
+                <Skeleton h="6" w="28" />
+            </Card.Header>
+            <Card.Content>
+                <Flex gap="3" w="full" wrap="wrap" rounded="md" border px="3" py="2" className="border-input">
+                    <Skeleton w="24" className="h-[calc(theme(spacing.5)_+_2px)]" />
+                    <Skeleton w="20" className="h-[calc(theme(spacing.5)_+_2px)]" />
+                    <Skeleton w="32" className="h-[calc(theme(spacing.5)_+_2px)]" />
+                </Flex>
+                <Box p="1" />
+            </Card.Content>
+        </Card.Root>
+    );
+}
+
+export interface IAccountUserGroupProps {
     group: UserGroup.TModel;
 }
 
-function AccountUserGroup({ group, updatedUser }: IAccountUserGroupProps): JSX.Element {
+const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element => {
+    const { updatedUser } = useAccountSetting();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { mutate, createRevertToastButton } = useUpdateUserGroupAssignedEmails(group.uid, () => {
@@ -65,8 +85,9 @@ function AccountUserGroup({ group, updatedUser }: IAccountUserGroupProps): JSX.E
 
     return (
         <Card.Root>
-            <Card.Header>
+            <Card.Header className="relative">
                 <AccountUserGroupName group={group} />
+                <AccountUserGroupDeleteButton group={group} />
             </Card.Header>
             <Card.Content>
                 <MultiSelectMemberForm
@@ -78,7 +99,7 @@ function AccountUserGroup({ group, updatedUser }: IAccountUserGroupProps): JSX.E
                     }}
                     onValueChange={onValueChange}
                     isValidating={isValidating}
-                    allUsers={appUsers}
+                    allUsers={users}
                     assignedUsers={appUsers}
                     newUsers={invitedMembers}
                     canControlAssignedUsers
@@ -88,6 +109,6 @@ function AccountUserGroup({ group, updatedUser }: IAccountUserGroupProps): JSX.E
             </Card.Content>
         </Card.Root>
     );
-}
+});
 
 export default AccountUserGroup;

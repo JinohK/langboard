@@ -6,10 +6,7 @@ import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
 
 export interface IGetProjectsResponse {
-    all: Project.TModel[];
-    starred: Project.TModel[];
-    recent: Project.TModel[];
-    unstarred: Project.TModel[];
+    projects: Project.TModel[];
 }
 
 const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) => {
@@ -17,13 +14,10 @@ const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) 
 
     const getProjects = async () => {
         try {
-            const res = await api.get(`${API_ROUTES.DASHBOARD.PROJECTS}`);
+            const res = await api.get(API_ROUTES.DASHBOARD.PROJECTS);
 
             return {
-                all: Project.Model.fromObjectArray(res.data.all),
-                starred: Project.Model.fromObjectArray(res.data.starred),
-                recent: Project.Model.fromObjectArray(res.data.recent),
-                unstarred: Project.Model.fromObjectArray(res.data.unstarred),
+                projects: Project.Model.fromObjectArray(res.data.projects),
             };
         } catch (e) {
             if (!isAxiosError(e)) {

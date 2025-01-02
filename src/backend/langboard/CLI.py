@@ -2,6 +2,7 @@ from asyncio import run
 from logging import INFO
 from multiprocessing import Process, cpu_count
 from os import sep
+from threading import Thread
 from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
@@ -15,69 +16,32 @@ from .Loader import load_modules
 from .services import Service
 
 
-def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
-    ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
+def execute():
+    commander = Commander()
 
-    websocket_options = options.create_websocket_options()
+    modules = load_modules(f"core{sep}bootstrap{sep}commands", "Command", BaseCommand, log=False)
+    for module in modules.values():
+        for command in module:
+            if command.__name__.endswith("Command"):
+                commander.add_commands(command(run_app=_run_app))  # type: ignore
 
-    app = App(
-        host=HOST,
-        port=PORT,
-        uds=options.uds,
-        lifespan=options.lifespan,
-        ssl_options=ssl_options,
-        ws_options=websocket_options,
-        workers=options.workers,
-        task_factory_maxitems=options.task_factory_maxitems,
-        is_restarting=is_restarting,
-    )
-
-    app.run()
+    commander.run()
+    return 0
 
 
-def _run_app_wrapper(options: RunCommandOptions, is_restarting: bool = False) -> Process:
-    if is_restarting:
-        Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
-    process = Process(target=_start_app, args=(options, is_restarting))
-    process.start()
-    return process
+def _run_app(options: RunCommandOptions):
+    if options.workers < 1:
+        options.workers = 1
 
+    if options.watch:
+        _watch(options)
+        return
 
-def _start_queue_bot():
-    load_modules("bots", "Bot", log=True)
-    queue = QueueBot(Service)
-    run(queue.loop())
+    processes = _run_workers(options)
 
-
-def _run_queue_bot_wrapper() -> Process:
-    process = Process(target=_start_queue_bot)
-    process.start()
-    return process
-
-
-def _close_processes(processes: list[Process]):
-    close_all_sessions()
-    for process in processes:
-        process.terminate()
-        process.kill()
-        process.join()
-        process.close()
-    processes.clear()
-
-
-def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
-    workers = options.workers
-    options.workers = 1
-    processes: list[Process] = []
     try:
-        for _ in range(min(workers, cpu_count())):
-            process = _run_app_wrapper(options, is_restarting)
-            processes.append(process)
-        processes.append(_run_queue_bot_wrapper())
-
-        options.workers = workers
-
-        return processes
+        for process in processes:
+            process.join()
     except Exception:
         _close_processes(processes)
         raise
@@ -100,32 +64,66 @@ def _watch(options: RunCommandOptions):
     start_watch(cast(str, Path(dirname(__file__))), callback, on_close)
 
 
-def _run_app(options: RunCommandOptions):
-    if options.workers < 1:
-        options.workers = 1
-
-    if options.watch:
-        _watch(options)
-        return
-
-    processes = _run_workers(options)
-
+def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
+    workers = options.workers
+    options.workers = 1
+    processes: list[Process] = []
     try:
-        for process in processes:
-            process.join()
+        for _ in range(min(workers, cpu_count())):
+            process = _run_app_bot_wrapper(options, is_restarting)
+            processes.append(process)
+        # processes.append(_run_queue_bot_wrapper())
+
+        options.workers = workers
+
+        return processes
     except Exception:
         _close_processes(processes)
         raise
 
 
-def execute():
-    commander = Commander()
+def _close_processes(processes: list[Process]):
+    close_all_sessions()
+    for process in processes:
+        process.terminate()
+        process.kill()
+        process.join()
+        process.close()
+    processes.clear()
 
-    modules = load_modules(f"core{sep}bootstrap{sep}commands", "Command", BaseCommand, log=False)
-    for module in modules.values():
-        for command in module:
-            if command.__name__.endswith("Command"):
-                commander.add_commands(command(run_app=_run_app))  # type: ignore
 
-    commander.run()
-    return 0
+def _run_app_bot_wrapper(options: RunCommandOptions, is_restarting: bool = False) -> Process:
+    if is_restarting:
+        Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
+    process = Process(target=_start_app, args=(options, is_restarting))
+    process.start()
+    return process
+
+
+def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
+    ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
+    bot_thread = Thread(target=_start_queue_bot)
+
+    websocket_options = options.create_websocket_options()
+
+    bot_thread.start()
+
+    app = App(
+        host=HOST,
+        port=PORT,
+        uds=options.uds,
+        lifespan=options.lifespan,
+        ssl_options=ssl_options,
+        ws_options=websocket_options,
+        workers=options.workers,
+        task_factory_maxitems=options.task_factory_maxitems,
+        is_restarting=is_restarting,
+    )
+
+    app.run()
+
+
+def _start_queue_bot():
+    load_modules("bots", "Bot", log=True)
+    queue = QueueBot(Service)
+    run(queue.loop())

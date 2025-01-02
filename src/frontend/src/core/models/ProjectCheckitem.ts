@@ -22,6 +22,9 @@ export interface IStore extends Interface {
     acc_time_seconds: number;
     checkitem_uid?: string;
     sub_checkitems?: IStore[];
+
+    // variable set from the client side
+    isOpenedInBoardCard: bool;
 }
 
 class ProjectCheckitem extends BaseModel<IStore> {
@@ -67,6 +70,10 @@ class ProjectCheckitem extends BaseModel<IStore> {
                 this.sub_checkitems = this.sub_checkitems.filter((checkitem) => !uids.includes(checkitem.uid));
             });
         }
+    }
+
+    public static convertModel(model: IStore): IStore {
+        return model;
     }
 
     public get project_uid() {
@@ -137,6 +144,13 @@ class ProjectCheckitem extends BaseModel<IStore> {
     }
     public set sub_checkitems(value: (TModel | IStore)[]) {
         this.update({ sub_checkitems: value });
+    }
+
+    public get isOpenedInBoardCard() {
+        return this.getValue("isOpenedInBoardCard") ?? false;
+    }
+    public set isOpenedInBoardCard(value: bool) {
+        this.update({ isOpenedInBoardCard: value });
     }
 }
 

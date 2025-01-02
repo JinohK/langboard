@@ -7,7 +7,6 @@ import { useBoardRelationshipController } from "@/core/providers/BoardRelationsh
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import React, { memo, useCallback, useEffect, useState } from "react";
@@ -15,18 +14,16 @@ import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 
 export interface IBoardColumnCardProps {
-    card: ProjectCard.TModel & {
-        isOpened?: bool;
-    };
+    card: ProjectCard.TModel;
     closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
     isOverlay?: bool;
 }
 
-export interface IBoardColumnCardDragData {
+export interface IBoardColumnCardDragData extends ISortableDragData<ProjectCard.TModel> {
     type: "Card";
-    data: IBoardColumnCardProps["card"];
 }
 
 export const SkeletonBoardColumnCard = memo(() => {
@@ -50,9 +47,6 @@ export const SkeletonBoardColumnCard = memo(() => {
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
     const { project, currentUser, hasRoleAction } = useBoard();
-    if (TypeUtils.isNullOrUndefined(card.isOpened)) {
-        card.isOpened = false;
-    }
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
     const description = card.useField("description");
@@ -87,7 +81,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     }, []);
 
     useEffect(() => {
-        card.isOpened = false;
+        card.isOpenedInBoardColumn = false;
     }, []);
 
     const style = {
@@ -177,7 +171,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
     const [t] = useTranslation();
     const title = card.useField("title");
     const commentCount = card.useField("count_comment");
-    const [isOpened, setIsOpened] = useState(card.isOpened);
+    const isOpenedInBoardColumn = card.useField("isOpenedInBoardColumn");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
 
     const attributes = {
@@ -235,20 +229,19 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                 onClick={openCard}
             >
                 <Collapsible.Root
-                    open={isOpened}
+                    open={isOpenedInBoardColumn}
                     onOpenChange={(opened) => {
-                        setIsOpened(opened);
-                        card.isOpened = opened;
+                        card.isOpenedInBoardColumn = opened;
                     }}
                 >
                     <Card.Header className="relative block space-y-0 py-4">
-                        <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
+                        <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] break-all leading-tight">{title}</Card.Title>
                         <Collapsible.Trigger asChild>
                             <Button
                                 variant="ghost"
                                 className="absolute right-2.5 top-2.5 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
                                 size="icon-sm"
-                                title={t(`common.${isOpened ? "Collapse" : "Expand"}`)}
+                                title={t(`common.${isOpenedInBoardColumn ? "Collapse" : "Expand"}`)}
                                 titleSide="top"
                                 {...attributes}
                             >
@@ -262,9 +255,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                             "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
                         )}
                     >
-                        <Card.Content>
-                            <BoardColumnCardRelationship card={card} setFilters={setFilters} attributes={attributes} />
-                        </Card.Content>
+                        <BoardColumnCardRelationship card={card} setFilters={setFilters} attributes={attributes} />
                         <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
                             <Flex items="center" gap="2">
                                 <IconComponent icon="message-square" size="4" className="text-secondary" strokeWidth="4" />

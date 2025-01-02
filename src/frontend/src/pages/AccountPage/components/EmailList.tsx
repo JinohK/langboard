@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
-import { Badge, Card, Flex, IconComponent, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
+import { Badge, Box, Card, Flex, IconComponent, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import useDeleteSubEmail from "@/controllers/api/account/useDeleteSubEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IEmailComponentProps } from "@/pages/AccountPage/components/types";
+import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 
-function SkeletonEmails(): JSX.Element {
+export function SkeletonEmails(): JSX.Element {
     return (
-        <>
+        <Box>
             <Flex gap="3" p="3">
                 <Skeleton h="6" w="16" />
                 <Skeleton h="6" className="w-1/3" />
@@ -22,11 +22,12 @@ function SkeletonEmails(): JSX.Element {
                 </Flex>
                 <Skeleton size="8" />
             </Flex>
-        </>
+        </Box>
     );
 }
 
-function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailComponentProps): JSX.Element {
+function EmailList(): JSX.Element {
+    const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
     const [t, i18n] = useTranslation();
     const { mutate: deleteSubEmailMutate, createRevertToastButton } = useDeleteSubEmail(updatedUser);
     const { mutate: resendNewEmailLinkMutate } = useAddNewEmail();
@@ -98,14 +99,11 @@ function EmailList({ user, updatedUser, isValidating, setIsValidating }: IEmailC
     return (
         <Card.Root>
             <Card.Content className="p-0">
-                {!user && <SkeletonEmails />}
-                {user && (
-                    <Flex gap="3" p="3">
-                        <Badge>{t("myAccount.Primary")}</Badge>
-                        <span>{user.email}</span>
-                    </Flex>
-                )}
-                {user?.subemails.map((subEmail) => (
+                <Flex gap="3" p="3">
+                    <Badge>{t("myAccount.Primary")}</Badge>
+                    <span>{currentUser.email}</span>
+                </Flex>
+                {currentUser.subemails.map((subEmail) => (
                     <Fragment key={`email-list-${subEmail.email}`}>
                         <Separator />
                         <Flex items="center" justify="between" p="3">

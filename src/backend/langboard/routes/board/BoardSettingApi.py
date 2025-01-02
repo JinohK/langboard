@@ -32,7 +32,7 @@ async def can_use_settings(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
 
-@AppRouter.api.get("/board/{project_uid}")
+@AppRouter.api.get("/board/{project_uid}/details")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def get_project_details(

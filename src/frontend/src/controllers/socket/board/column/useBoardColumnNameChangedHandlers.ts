@@ -3,22 +3,22 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 
-export interface IProjectColumnNameChangedRawResponse {
+export interface IBoardColumnNameChangedRawResponse {
     uid: string;
     name: string;
 }
 
-export interface IUseProjectColumnNameChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardColumnNameChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectColumnNameChangedHandlers = ({ callback, projectUID }: IUseProjectColumnNameChangedHandlersProps) => {
-    return useSocketHandler<{}, IProjectColumnNameChangedRawResponse>({
-        topic: ESocketTopic.Project,
+const useBoardColumnNameChangedHandlers = ({ callback, projectUID }: IUseBoardColumnNameChangedHandlersProps) => {
+    return useSocketHandler<{}, IBoardColumnNameChangedRawResponse>({
+        topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-column-name-changed-${projectUID}`,
+        eventKey: `board-column-name-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.PROJECT.COLUMN.NAME_CHANGED,
+            name: SOCKET_SERVER_EVENTS.BOARD.COLUMN.NAME_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -32,4 +32,4 @@ const useProjectColumnNameChangedHandlers = ({ callback, projectUID }: IUseProje
     });
 };
 
-export default useProjectColumnNameChangedHandlers;
+export default useBoardColumnNameChangedHandlers;

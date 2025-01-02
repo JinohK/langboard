@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CachedImage from "@/components/CachedImage";
-import NavItems from "@/components/Header/NavItems";
+import HedaerNavItems from "@/components/Header/HedaerNavItems";
 import { IHeaderProps } from "@/components/Header/types";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
@@ -53,7 +53,7 @@ function Header({ navs }: IHeaderProps) {
                 {navs.length > 0 && (
                     <NavigationMenu.Root>
                         <NavigationMenu.List>
-                            <NavItems navs={navs} />
+                            <HedaerNavItems navs={navs} />
                         </NavigationMenu.List>
                     </NavigationMenu.Root>
                 )}
@@ -73,7 +73,7 @@ function Header({ navs }: IHeaderProps) {
                             <a onClick={toDashboard} className="mb-4 flex cursor-pointer items-center gap-2 text-lg font-semibold">
                                 <CachedImage src="/images/logo.png" alt="Logo" size="6" />
                             </a>
-                            <NavItems
+                            <HedaerNavItems
                                 isMobile
                                 navs={navs}
                                 setIsOpen={setIsOpen}

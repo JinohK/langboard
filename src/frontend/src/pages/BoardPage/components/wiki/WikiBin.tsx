@@ -3,7 +3,7 @@ import useDeleteWiki from "@/controllers/api/wiki/useDeleteWiki";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { IDraggableProjectWiki, TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
+import { TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
 import { useDroppable } from "@dnd-kit/core";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,7 +57,7 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
             });
         },
         onDragOverOrMove: (activeWiki) => {
-            const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid) as IDraggableProjectWiki;
+            const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid);
             if (!targetWiki || targetWiki.isInBin) {
                 return;
             }

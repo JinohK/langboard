@@ -8,7 +8,7 @@ from ....models import Project, ProjectRole
 def project_role_finder(
     query: SelectOfScalar[Sequence[str]], path_params: dict[str, Any]
 ) -> SelectOfScalar[Sequence[str]]:
-    key_prefixes = [SocketTopic.Board.value, SocketTopic.Project.value, SocketTopic.BoardWiki.value]
+    key_prefixes = [SocketTopic.Board.value, SocketTopic.BoardWiki.value]
     project_uid = path_params.get("project_uid", None)
     if not project_uid:
         for key in key_prefixes:

@@ -17,7 +17,7 @@ class SnowflakeIDType(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is None:
-            return int(SnowflakeID())
+            return None
         if isinstance(value, SnowflakeID):
             return int(value)
         return value
@@ -29,16 +29,20 @@ class SnowflakeIDType(TypeDecorator):
 
 
 def SnowflakeIDField(
-    primary_key: bool = False, foreign_key: Any = Undefined, nullable: bool = True, index: bool = False
+    primary_key: bool | None = None,
+    foreign_key: Any = Undefined,
+    nullable: bool | None = None,
+    index: bool | None = None,
 ) -> Any:
     default_value = None if nullable and not primary_key else SnowflakeID(0)
     return Field(
         default=default_value,
-        primary_key=primary_key,
+        primary_key=primary_key if primary_key is not None else False,
         foreign_key=foreign_key,
         sa_type=SnowflakeIDType,
-        nullable=nullable,
-        index=index,
+        sa_column_kwargs={"nullable": nullable if nullable is not None else True},
+        nullable=nullable if nullable is not None else True,
+        index=index if index is not None else False,
     )
 
 

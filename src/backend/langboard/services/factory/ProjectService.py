@@ -65,12 +65,7 @@ class ProjectService(BaseService):
         users = [user.api_response() for user, _ in raw_users]
         return users
 
-    async def get_dashboard_list(
-        self, user: User, list_type: Literal["all", "starred", "recent", "unstarred"] | str
-    ) -> list[dict[str, Any]]:
-        if list_type not in ["all", "starred", "recent", "unstarred"]:
-            return []
-
+    async def get_dashboard_list(self, user: User) -> list[dict[str, Any]]:
         sql_query = (
             self._db.query("select")
             .tables(Project, ProjectAssignedUser)
@@ -79,19 +74,8 @@ class ProjectService(BaseService):
             .where(ProjectAssignedUser.column("user_id") == user.id)
         )
 
-        descs = [Project.column("updated_at").desc(), Project.column("id").desc()]
-        group_bys = [Project.column("id"), ProjectAssignedUser.column("starred")]
-
-        if list_type == "starred":
-            sql_query = sql_query.where(ProjectAssignedUser.column("starred") == True)  # noqa
-        elif list_type == "recent":
-            descs.insert(0, ProjectAssignedUser.column("last_viewed_at").desc())
-            group_bys.append(ProjectAssignedUser.column("last_viewed_at"))
-        elif list_type == "unstarred":
-            sql_query = sql_query.where(ProjectAssignedUser.column("starred") == False)  # noqa
-
-        sql_query = sql_query.order_by(*descs)
-        sql_query = sql_query.group_by(*group_bys)
+        sql_query = sql_query.order_by(Project.column("updated_at").desc(), Project.column("id").desc())
+        sql_query = sql_query.group_by(Project.column("id"), ProjectAssignedUser.column("updated_at"))
 
         result = await self._db.exec(sql_query)
         raw_projects = result.all()
@@ -103,6 +87,7 @@ class ProjectService(BaseService):
             columns = await column_service.get_list(project)
             project_dict = project.api_response()
             project_dict["starred"] = assigned_user.starred
+            project_dict["last_viewed_at"] = assigned_user.last_viewed_at
             project_dict["columns"] = [
                 {
                     **column,
@@ -247,6 +232,7 @@ class ProjectService(BaseService):
             revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
 
             QueueBot.add(
+                "bot",
                 QueueBotModel(
                     bot_type=BotType.Project,
                     bot_data={
@@ -257,7 +243,7 @@ class ProjectService(BaseService):
                     service_name=ProjectService.name(),
                     service_method="update",
                     params={"project": project.id, "form": {"ai_description": "{output}"}},
-                )
+                ),
             )
 
         model: dict[str, Any] = {}
@@ -267,19 +253,15 @@ class ProjectService(BaseService):
             model[key] = self._convert_to_python(getattr(project, key))
         model_id = await SocketModelIdService.create_model_id(model)
 
-        publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
-        for key in model:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Project,
-                    topic_id=topic_id,
-                    event=f"project:{key}:changed:{topic_id}",
-                    data_keys=key,
-                )
-            )
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:details:changed:{topic_id}",
+            data_keys=list(model.keys()),
+        )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
+        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_model)
 
     async def update_assign_users(
         self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
@@ -317,6 +299,7 @@ class ProjectService(BaseService):
             if target_user.email in inviting_emails:
                 inviting_emails.remove(target_user.email)
 
+        removed_assigned_user_ids: list[SnowflakeID] = []
         prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
         updated_checkitem_ids: set[SnowflakeID] = set()
         updated_card_ids: set[SnowflakeID] = set()
@@ -355,6 +338,7 @@ class ProjectService(BaseService):
                 updated_card_ids.add(card_assigned_user.card_id)
                 await self._db.delete(card_assigned_user)
 
+            removed_assigned_user_ids.append(prev_assigned_user.id)
             await self._db.delete(prev_assigned_user)
 
         await self._db.commit()
@@ -380,6 +364,15 @@ class ProjectService(BaseService):
                 data_keys=["assigned_members", "invited_members"],
             )
         ]
+
+        for removed_assigned_user_id in removed_assigned_user_ids:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.Dashboard,
+                    topic_id=removed_assigned_user_id.to_short_code(),
+                    event=f"dashboard:project:unassigned:{topic_id}",
+                )
+            )
 
         checkitem_service = self._get_service_by_name("checkitem")
         for checkitem_id in updated_checkitem_ids:
@@ -412,3 +405,30 @@ class ProjectService(BaseService):
             )
 
         return SocketModelIdBaseResult(model_id, urls, publish_models)
+
+    async def create_publish_private_models_for_members(
+        self,
+        project: TProjectParam,
+        topic: SocketTopic,
+        event: str,
+        data_keys: str | list[str] | None = None,
+        custom_data: dict[str, Any] | None = None,
+    ) -> list[SocketPublishModel]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+
+        members = await self.get_assigned_users(project, as_api=False)
+        publish_models = []
+        for member, _ in members:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=topic,
+                    topic_id=member.get_uid(),
+                    event=event,
+                    data_keys=data_keys,
+                    custom_data=custom_data,
+                )
+            )
+
+        return publish_models

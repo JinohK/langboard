@@ -69,14 +69,14 @@ export class StringCase {
     }
 
     #detectCase(): TStringCase {
-        if (this.#str === this.#str.toLowerCase()) {
-            return "flat";
-        } else if (this.#str === this.#str.toUpperCase()) {
-            return "upper";
-        } else if (this.#str.includes("_")) {
+        if (this.#str.includes("_")) {
             return this.#str === this.#str.toUpperCase() ? "upperSnake" : "snake";
         } else if (this.#str.includes("-")) {
             return "kebab";
+        } else if (this.#str === this.#str.toLowerCase()) {
+            return "flat";
+        } else if (this.#str === this.#str.toUpperCase()) {
+            return "upper";
         } else if (this.#str.charAt(0) === this.#str.charAt(0).toUpperCase()) {
             return "pascal";
         } else {

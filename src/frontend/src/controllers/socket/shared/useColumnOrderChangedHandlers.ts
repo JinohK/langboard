@@ -22,9 +22,9 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
     let topic = ESocketTopic.None;
     switch (type) {
         case "ProjectColumn":
-            onEventName = SOCKET_SERVER_EVENTS.PROJECT.COLUMN.ORDER_CHANGED;
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.COLUMN.ORDER_CHANGED;
             targetModel = ProjectColumn.Model;
-            topic = ESocketTopic.Project;
+            topic = ESocketTopic.Board;
             break;
         case "ProjectCardAttachment":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;
@@ -42,9 +42,9 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
             topic = ESocketTopic.BoardWiki;
             break;
         case "ProjectLabel":
-            onEventName = SOCKET_SERVER_EVENTS.PROJECT.LABEL.ORDER_CHANGED;
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.LABEL.ORDER_CHANGED;
             targetModel = ProjectLabel.Model;
-            topic = ESocketTopic.Project;
+            topic = ESocketTopic.Board;
             break;
     }
 

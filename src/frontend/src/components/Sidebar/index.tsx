@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import NavItems from "@/components/Sidebar/NavItems";
+import SidebarNavItems from "@/components/Sidebar/SidebarNavItems";
 import { ISidebarProps } from "@/components/Sidebar/types";
 import { Box, Button, Floating, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -29,7 +29,7 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
                             "group-data-[collapsed=false]/sidebar:p-2 lg:group-data-[collapsed=false]/sidebar:p-3"
                         )}
                     >
-                        <NavItems navs={navs} />
+                        <SidebarNavItems navs={navs} />
                     </aside>
 
                     <Button
@@ -44,7 +44,7 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
             </Box>
             <Floating.Button.Root>
                 <Floating.Button.Content>
-                    <NavItems isFloating navs={navs} />
+                    <SidebarNavItems isFloating navs={navs} />
                 </Floating.Button.Content>
                 <Floating.Button.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
             </Floating.Button.Root>

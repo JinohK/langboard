@@ -13,6 +13,7 @@ const BoardSettingsBasic = memo(() => {
     const { mutate } = useChangeProjectDetails(project.uid);
     const title = project.useField("title");
     const description = project.useField("description");
+    const aiDescription = project.useField("ai_description");
     const projectType = project.useField("project_type");
     const projectTypeRef = useRef<string>(projectType);
     const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
@@ -70,6 +71,14 @@ const BoardSettingsBasic = memo(() => {
                     </Label>
                     {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}
                 </Form.Field>
+                {aiDescription && (
+                    <Box>
+                        <Box textSize="sm" weight="semibold" className="select-none">
+                            {t("project.AI summary")}
+                        </Box>
+                        <Textarea value={aiDescription} disabled className="min-h-36" />
+                    </Box>
+                )}
                 <SubmitButton type="submit" isValidating={isValidating}>
                     {t("common.Save")}
                 </SubmitButton>

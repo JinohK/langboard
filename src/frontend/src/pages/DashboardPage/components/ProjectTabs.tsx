@@ -1,13 +1,13 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Skeleton, Tabs } from "@/components/base";
-import { IGetProjectsResponse } from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
 import { makeReactKey } from "@/core/utils/StringUtils";
 import ProjectList, { SkeletonProjectList } from "@/pages/DashboardPage/components/ProjectList";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useDashboard } from "@/core/providers/DashboardProvider";
-import { PROJECT_TABS } from "@/pages/DashboardPage/constants";
+import { PROJECT_TABS, TProjectTab, TProjectTabRoute } from "@/pages/DashboardPage/constants";
+import { Project } from "@/core/models";
 
 export function SkeletonProjecTabs() {
     return (
@@ -26,32 +26,65 @@ export function SkeletonProjecTabs() {
 }
 
 interface IProjectTabsProps {
-    currentTab: keyof IGetProjectsResponse;
-    refetchAllStarred: () => Promise<unknown>;
+    currentTab: TProjectTab;
+    updateStarredProjects: React.DispatchWithoutAction;
     scrollAreaUpdater: [number, React.DispatchWithoutAction];
-    projects: IGetProjectsResponse;
-    refetchAllProjects: () => Promise<unknown>;
 }
 
-const ProjectTabs = memo(({ currentTab: curTab, refetchAllStarred, refetchAllProjects, scrollAreaUpdater, projects }: IProjectTabsProps) => {
+const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarredProjects, scrollAreaUpdater }: IProjectTabsProps) => {
     const { setIsLoadingRef } = usePageLoader();
-    const { navigate } = useDashboard();
+    const { currentUser, navigate } = useDashboard();
+    const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [t] = useTranslation();
-    const [currentTab, setCurrentTab] = useState(curTab);
-    const currentProjects = projects[currentTab];
+    const projects = Project.Model.useModels(
+        (model) => {
+            switch (currentTab) {
+                case "starred":
+                    return model.starred;
+                case "unstarred":
+                    return !model.starred;
+                default:
+                    return true;
+            }
+        },
+        [currentTab, updatedStarredProjects]
+    );
 
-    const navigateToTab = (tab: keyof IGetProjectsResponse) => {
+    const currentProjects = projects.sort((a, b) => {
+        switch (currentTab) {
+            case "recent":
+                return a.last_viewed_at > b.last_viewed_at ? -1 : 1;
+            default:
+                return a.updated_at > b.updated_at ? -1 : 1;
+        }
+    });
+
+    const navigateToTab = (tab: IProjectTabsProps["currentTab"]) => {
         if (tab === currentTab) {
             return;
         }
 
-        navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as "ALL" | "STARRED" | "RECENT" | "UNSTARRED"]);
-        setCurrentTab(tab);
+        navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as TProjectTabRoute]);
     };
 
     useEffect(() => {
-        setIsLoadingRef.current(false);
+        setTimeout(() => {
+            setIsLoadingRef.current(false);
+        }, 0);
     }, [currentTab]);
+
+    useEffect(() => {
+        const unsubs: (() => void)[] = [];
+        for (let i = 0; i < projects.length; ++i) {
+            const project = projects[i];
+            unsubs.push(project.subscribeDashboardSocketHandlers(currentUser.uid));
+        }
+
+        return () => {
+            unsubs.forEach((unsub) => unsub());
+            unsubs.splice(0);
+        };
+    }, [projects]);
 
     return (
         <Tabs.Root value={currentTab}>
@@ -68,8 +101,10 @@ const ProjectTabs = memo(({ currentTab: curTab, refetchAllStarred, refetchAllPro
                 ) : (
                     <ProjectList
                         projects={currentProjects}
-                        refetchAllStarred={refetchAllStarred}
-                        refetchAllProjects={refetchAllProjects}
+                        updateStarredProjects={() => {
+                            updateHeaderStarredProjects();
+                            updateStarredProjects();
+                        }}
                         scrollAreaUpdater={scrollAreaUpdater}
                     />
                 )}

@@ -3,9 +3,10 @@ import useChangeWikiOrder from "@/controllers/api/wiki/useChangeWikiOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
+import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { IDraggableProjectWiki, TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
+import { TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
 import WikiBin from "@/pages/BoardPage/components/wiki/WikiBin";
 import WikiTab, { SkeletonWikiTab } from "@/pages/BoardPage/components/wiki/WikiTab";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
@@ -37,7 +38,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
         columns: wikis,
         setColumns: setWikis,
         reorder: reorderWikis,
-    } = useReorderColumn<IDraggableProjectWiki>({
+    } = useReorderColumn<ProjectWiki.TModel>({
         type: "ProjectWiki",
         eventNameParams: { uid: projectUID },
         topicId: projectUID,
@@ -53,7 +54,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
         onDragEnd,
         onDragOverOrMove,
         onDragCancel,
-    } = useColumnRowSortable<IDraggableProjectWiki, IDraggableProjectWiki>({
+    } = useColumnRowSortable<ProjectWiki.TModel, ProjectWiki.TModel>({
         columnDragDataType: "Wiki",
         rowDragDataType: "FakeWiki",
         columnCallbacks: {
@@ -61,7 +62,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
                 const originalWikiOrder = orignalWiki.order;
                 const targetWiki = wikis.find((wiki) => wiki.uid === orignalWiki.uid);
                 if (targetWiki) {
-                    delete targetWiki.isInBin;
+                    targetWiki.isInBin = false;
                 }
 
                 if (!reorderWikis(orignalWiki, index)) {
@@ -90,7 +91,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
                     return;
                 }
 
-                delete targetWiki.isInBin;
+                targetWiki.isInBin = false;
                 setWikis((prev) => [...prev]);
             },
             onDragCancel: (originalWiki) => {
@@ -99,7 +100,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
                     return;
                 }
 
-                delete targetWiki.isInBin;
+                targetWiki.isInBin = false;
                 setWikis((prev) => [...prev]);
             },
         },

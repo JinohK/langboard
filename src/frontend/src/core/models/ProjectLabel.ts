@@ -1,6 +1,4 @@
-import useProjectLabelColorChangedHandlers from "@/controllers/socket/project/label/useProjectLabelColorChangedHandlers";
-import useProjectLabelDescriptionChangedHandlers from "@/controllers/socket/project/label/useProjectLabelDescriptionChangedHandlers";
-import useProjectLabelNameChangedHandlers from "@/controllers/socket/project/label/useProjectLabelNameChangedHandlers";
+import useBoardLabelDetailsChangedHandlers from "@/controllers/socket/board/label/useBoardLabelDetailsChangedHandlers";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
 
 export interface Interface extends IBaseModel {
@@ -19,13 +17,10 @@ class ProjectLabel extends BaseModel<Interface> {
     constructor(model: Record<string, unknown>) {
         super(model);
 
-        this.subscribeSocketEvents(
-            [useProjectLabelNameChangedHandlers, useProjectLabelColorChangedHandlers, useProjectLabelDescriptionChangedHandlers],
-            {
-                projectUID: this.project_uid,
-                labelUID: this.uid,
-            }
-        );
+        this.subscribeSocketEvents([useBoardLabelDetailsChangedHandlers], {
+            projectUID: this.project_uid,
+            labelUID: this.uid,
+        });
     }
 
     public get project_uid() {
@@ -68,18 +63,3 @@ registerModel(ProjectLabel);
 
 export type TModel = ProjectLabel;
 export const Model = ProjectLabel;
-
-export const subscribeSocketHandlers = (projectUID: string, label: ProjectLabel) => {
-    useProjectLabelNameChangedHandlers({
-        projectUID,
-        labelUID: label.uid,
-    });
-    useProjectLabelColorChangedHandlers({
-        projectUID,
-        labelUID: label.uid,
-    });
-    useProjectLabelDescriptionChangedHandlers({
-        projectUID,
-        labelUID: label.uid,
-    });
-};

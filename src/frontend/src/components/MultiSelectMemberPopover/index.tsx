@@ -69,6 +69,7 @@ export const MultiSelectMemberPopover = memo(
     }: IMultiSelectMemberPopoverProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
+        currentUser = currentUser ?? aboutMe()!;
         const [isOpened, setIsOpened] = useState(false);
         const newUsers = useMemo<User.TModel[]>(() => (canAssignNonMembers ? (flatNewUsers ?? []) : []), [flatNewUsers]);
         const selectedRef = useRef<string[]>([
@@ -76,8 +77,9 @@ export const MultiSelectMemberPopover = memo(
             ...(canAssignNonMembers ? newUsers.map((user) => user.email) : []),
         ]);
         const { variant = "outline" } = popoverButtonProps;
-        const user = currentUser ?? aboutMe();
-        const [allUsers, setAllUsers] = useState<User.TModel[]>(getAllUsers(flatAllUsers, user?.user_groups ?? [], newUsers, canAssignNonMembers));
+        const [allUsers, setAllUsers] = useState<User.TModel[]>(
+            getAllUsers(flatAllUsers, currentUser?.user_groups ?? [], newUsers, canAssignNonMembers)
+        );
         const setIsOpenedState = (state: bool) => {
             selectedRef.current = [];
             setSelectedRef?.current?.(() => []);
@@ -100,10 +102,10 @@ export const MultiSelectMemberPopover = memo(
                     newUsers.push(User.Model.createTempEmailUser(value[i]));
                 }
             }
-            setAllUsers(getAllUsers(flatAllUsers, user?.user_groups ?? [], newUsers, canAssignNonMembers));
+            setAllUsers(getAllUsers(flatAllUsers, currentUser?.user_groups ?? [], newUsers, canAssignNonMembers));
         };
 
-        if (!user) {
+        if (!currentUser) {
             return (
                 <SkeletonUserAvatarList
                     count={userAvatarListProps.maxVisible}
@@ -129,7 +131,7 @@ export const MultiSelectMemberPopover = memo(
                             assignedUsers={assignedUsers}
                             newUsers={newUsers}
                             isValidating={isValidating}
-                            currentUser={user}
+                            currentUser={currentUser}
                             canControlAssignedUsers={canControlAssignedUsers}
                             canAssignNonMembers={canAssignNonMembers}
                             useGroupMembers={useGroupMembers}
@@ -175,6 +177,7 @@ export const MultiSelectMemberForm = memo(
     }: IMultiSelectMemberFormProps) => {
         const [t] = useTranslation();
         const { aboutMe } = useAuth();
+        currentUser = currentUser ?? aboutMe()!;
         const [selected, setSelected] = useState<string[]>([
             ...(canControlAssignedUsers && assignedUsers.length ? assignedUsers.map((user) => user.email) : []),
             ...(canAssignNonMembers && newUsers ? newUsers.map((user) => user.email) : []),
@@ -182,23 +185,22 @@ export const MultiSelectMemberForm = memo(
         if (setSelectedRef) {
             setSelectedRef.current = setSelected;
         }
-        const user = currentUser ?? aboutMe();
         const [isDropdownOpened, setIsDropdownOpened] = useState(false);
         const filterSelectableUsers = useCallback(
             (member: User.TModel) => {
                 return (
-                    (canControlAssignedUsers || !assignedUsers.some((assigned) => assigned.email === member.email)) &&
-                    (canAssignNonMembers || (!member.isPresentableUnknownUser() && allUsers.some((user) => user.email === member.email)))
+                    (canControlAssignedUsers || !assignedUsers.some((assignedUser) => assignedUser.email === member.email)) &&
+                    (canAssignNonMembers || (!member.isPresentableUnknownUser() && allUsers.some((allUser) => allUser.email === member.email)))
                 );
             },
             [canControlAssignedUsers, assignedUsers, canAssignNonMembers, allUsers]
         );
         const assignableGroups = useMemo(() => {
-            if (!user) {
+            if (!currentUser) {
                 return [];
             }
 
-            return user.user_groups
+            return currentUser.user_groups
                 .map((group) => {
                     const groupMembers = group.users.filter((member) => filterSelectableUsers(member) && !selected.includes(member.email));
 
@@ -253,18 +255,18 @@ export const MultiSelectMemberForm = memo(
                         }))}
                     selectedValue={selected}
                     createBadgeWrapper={(badge, value) => {
-                        let user = allUsers.find((member) => member.email === value);
-                        if (!user && canAssignNonMembers) {
-                            user = User.Model.createTempEmailUser(value);
+                        let selectedUser = allUsers.find((member) => member.email === value);
+                        if (!selectedUser && canAssignNonMembers) {
+                            selectedUser = User.Model.createTempEmailUser(value);
                         }
 
-                        if (!user) {
+                        if (!selectedUser) {
                             return null!;
                         }
 
                         return (
-                            <UserAvatar.Root user={user} customTrigger={badge}>
-                                test
+                            <UserAvatar.Root user={selectedUser} customTrigger={badge}>
+                                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                             </UserAvatar.Root>
                         );
                     }}

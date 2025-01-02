@@ -27,7 +27,7 @@ class UserGroupService(BaseService):
         raw_groups = await self._get_all_by(UserGroup, "user_id", user.id)
         groups = []
         for group in raw_groups:
-            records = await self.get_by_group(group, as_api=cast(Literal[False], as_api))
+            records = await self.get_user_emails_by_group(group, as_api=cast(Literal[False], as_api))
             if not as_api:
                 groups.append((group, records))
                 continue
@@ -37,12 +37,14 @@ class UserGroupService(BaseService):
         return groups
 
     @overload
-    async def get_by_group(
+    async def get_user_emails_by_group(
         self, user_group: TUserGroupParam, as_api: Literal[False]
     ) -> list[tuple[UserGroupAssignedEmail, User | None]]: ...
     @overload
-    async def get_by_group(self, user_group: TUserGroupParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
-    async def get_by_group(
+    async def get_user_emails_by_group(
+        self, user_group: TUserGroupParam, as_api: Literal[True]
+    ) -> list[dict[str, Any]]: ...
+    async def get_user_emails_by_group(
         self, user_group: TUserGroupParam, as_api: bool
     ) -> list[tuple[UserGroupAssignedEmail, User | None]] | list[dict[str, Any]]:
         user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
@@ -143,6 +145,24 @@ class UserGroupService(BaseService):
                 for assigned_email in assigned_emails
             ],
             revert_key=revert_key,
+        )
+
+        return revert_key
+
+    async def delete(self, user: User, user_group: TUserGroupParam) -> str | None:
+        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        if not user_group or user_group.user_id != user.id:
+            return None
+
+        revert_service = self._get_service(RevertService)
+
+        assigned_emails = await self._get_all_by(UserGroupAssignedEmail, "group_id", user_group.id)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(user_group, RevertType.Insert),
+            *[
+                revert_service.create_record_model(assigned_email, RevertType.Insert)
+                for assigned_email in assigned_emails
+            ],
         )
 
         return revert_key

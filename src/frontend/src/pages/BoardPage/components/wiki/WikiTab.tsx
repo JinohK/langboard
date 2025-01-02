@@ -1,7 +1,8 @@
 import { Box, Skeleton, Tabs, Tooltip } from "@/components/base";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
+import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
-import { IDraggableProjectWiki } from "@/pages/BoardPage/components/wiki/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { memo } from "react";
@@ -10,13 +11,12 @@ import { tv } from "tailwind-variants";
 
 export interface IWikiTabProps {
     changeTab: (uid: string) => void;
-    wiki: IDraggableProjectWiki;
+    wiki: ProjectWiki.TModel;
     isOverlay?: bool;
 }
 
-interface IBoardWikiDragData {
+interface IBoardWikiDragData extends ISortableDragData<ProjectWiki.TModel> {
     type: "Wiki";
-    data: IDraggableProjectWiki;
 }
 
 export function SkeletonWikiTab() {
@@ -25,6 +25,7 @@ export function SkeletonWikiTab() {
 
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
+    const isInBin = wiki.useField("isInBin");
     const { canAccessWiki, disabledReorder, wikiTabListId } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
@@ -96,7 +97,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     };
 
     return (
-        <Box hidden={wiki.isInBin}>
+        <Box hidden={isInBin}>
             <Tooltip.Provider delayDuration={400}>
                 <Tooltip.Root>
                     <Tabs.Trigger

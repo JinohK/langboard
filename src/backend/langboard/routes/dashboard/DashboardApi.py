@@ -24,12 +24,9 @@ async def get_projects(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    response = {}
-    for list_type in ["all", "starred", "recent", "unstarred"]:
-        projects = await service.project.get_dashboard_list(user, list_type)
-        response[list_type] = projects
+    projects = await service.project.get_dashboard_list(user)
 
-    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/dashboard/projects/new")

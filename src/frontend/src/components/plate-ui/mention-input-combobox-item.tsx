@@ -6,12 +6,13 @@ import { User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { PlateEditor } from "@udecode/plate-common/react";
+import { IMentionableUser } from "@/components/plate-ui/mention-input-element";
 
 const onSelectItem = getMentionOnSelectItem();
 
 export interface IMentionInputComboboxItem {
     search: string;
-    user: User.Interface & { key: string; text: string };
+    user: IMentionableUser;
     editor: PlateEditor;
 }
 
@@ -35,9 +36,9 @@ export const MentionInputComboboxItem = ({ search, user, editor }: IMentionInput
                 customName={
                     <div>
                         <div className="text-sm leading-none">
-                            {user.firstname} {user.lastname}
+                            {firstname} {lastname}
                         </div>
-                        <div className="text-xs text-muted-foreground/50">@{user.username}</div>
+                        <div className="text-xs text-muted-foreground/50">@{username}</div>
                     </div>
                 }
             >

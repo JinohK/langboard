@@ -3,21 +3,21 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 
-export interface IProjectLabelCreatedRawResponse {
+export interface IBoardLabelCreatedRawResponse {
     label: ProjectLabel.Interface;
 }
 
-export interface IUseProjectLabelCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardLabelCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectLabelCreatedHandlers = ({ callback, projectUID }: IUseProjectLabelCreatedHandlersProps) => {
-    return useSocketHandler<{}, IProjectLabelCreatedRawResponse>({
-        topic: ESocketTopic.Project,
+const useBoardLabelCreatedHandlers = ({ callback, projectUID }: IUseBoardLabelCreatedHandlersProps) => {
+    return useSocketHandler<{}, IBoardLabelCreatedRawResponse>({
+        topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-label-created-${projectUID}`,
+        eventKey: `board-label-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.PROJECT.LABEL.CREATED,
+            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -28,4 +28,4 @@ const useProjectLabelCreatedHandlers = ({ callback, projectUID }: IUseProjectLab
     });
 };
 
-export default useProjectLabelCreatedHandlers;
+export default useBoardLabelCreatedHandlers;

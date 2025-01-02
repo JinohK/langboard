@@ -1,10 +1,9 @@
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
-import useBoardWikiTitleChangedHandlers from "@/controllers/socket/wiki/useBoardWikiTitleChangedHandlers";
 import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
 import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
-import useBoardWikiContentChangedHandlers from "@/controllers/socket/wiki/useBoardWikiContentChangedHandlers";
 import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
+import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoardWikiDetailsChangedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -14,6 +13,9 @@ export interface Interface extends IBaseModel {
     is_public: bool;
     forbidden?: true;
     assigned_members: User.Interface[];
+
+    // variable set from the client side
+    isInBin: bool;
 }
 
 class ProjectWiki extends BaseModel<Interface> {
@@ -30,13 +32,7 @@ class ProjectWiki extends BaseModel<Interface> {
         super(model);
         // Public handlers
         this.subscribeSocketEvents(
-            [
-                useBoardWikiCreatedHandlers,
-                useBoardWikiDeletedHandlers,
-                useBoardWikiTitleChangedHandlers,
-                useBoardWikiContentChangedHandlers,
-                useBoardWikiPublicChangedHandlers,
-            ],
+            [useBoardWikiCreatedHandlers, useBoardWikiDeletedHandlers, useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers],
             {
                 projectUID: this.project_uid,
                 wikiUID: this.uid,
@@ -45,14 +41,11 @@ class ProjectWiki extends BaseModel<Interface> {
     }
 
     public subscribePrivateSocketHandlers(userUID: string) {
-        return this.subscribeSocketEvents(
-            [useBoardWikiCreatedHandlers, useBoardWikiTitleChangedHandlers, useBoardWikiContentChangedHandlers, useBoardWikiPublicChangedHandlers],
-            {
-                projectUID: this.project_uid,
-                wikiUID: this.uid,
-                userUID,
-            }
-        );
+        return this.subscribeSocketEvents([useBoardWikiCreatedHandlers, useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers], {
+            projectUID: this.project_uid,
+            wikiUID: this.uid,
+            userUID,
+        });
     }
 
     public get project_uid() {
@@ -102,6 +95,13 @@ class ProjectWiki extends BaseModel<Interface> {
     }
     public set forbidden(value: true | undefined) {
         this.update({ forbidden: value });
+    }
+
+    public get isInBin() {
+        return this.getValue("isInBin") ?? false;
+    }
+    public set isInBin(value: bool) {
+        this.update({ isInBin: value });
     }
 }
 

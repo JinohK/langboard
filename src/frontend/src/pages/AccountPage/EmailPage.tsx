@@ -1,34 +1,34 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/core/providers/AuthProvider";
-import AddSubEmailForm from "@/pages/AccountPage/components/AddSubEmailForm";
-import EmailList from "@/pages/AccountPage/components/EmailList";
-import PrimaryEmailForm from "@/pages/AccountPage/components/PrimaryEmailForm";
+import AddSubEmailForm, { SkeletonAddSubEmailForm } from "@/pages/AccountPage/components/AddSubEmailForm";
+import EmailList, { SkeletonEmails } from "@/pages/AccountPage/components/EmailList";
+import PrimaryEmailForm, { SkeletonPrimaryEmailForm } from "@/pages/AccountPage/components/PrimaryEmailForm";
 import { Flex } from "@/components/base";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
-function EmailPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+export function SkeletonEmailPage(): JSX.Element {
     const [t] = useTranslation();
-    const { aboutMe, updatedUser, updated } = useAuth();
-    const [isValidating, setIsValidating] = useState(false);
-    const [user, setUser] = useState(aboutMe());
-
-    useEffect(() => {
-        setUser(aboutMe());
-    }, [updated]);
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     return (
         <>
             <h2 className="mb-11 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Emails")}</h2>
             <Flex direction="col" gap="6">
-                <EmailList updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
-                <AddSubEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
-                <PrimaryEmailForm updatedUser={updatedUser} user={user} isValidating={isValidating} setIsValidating={setIsValidating} />
+                <SkeletonEmails />
+                <SkeletonAddSubEmailForm />
+                <SkeletonPrimaryEmailForm />
+            </Flex>
+        </>
+    );
+}
+
+function EmailPage(): JSX.Element {
+    const [t] = useTranslation();
+
+    return (
+        <>
+            <h2 className="mb-11 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Emails")}</h2>
+            <Flex direction="col" gap="6">
+                <EmailList />
+                <AddSubEmailForm />
+                <PrimaryEmailForm />
             </Flex>
         </>
     );

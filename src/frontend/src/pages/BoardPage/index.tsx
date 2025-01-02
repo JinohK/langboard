@@ -102,7 +102,6 @@ const BoardProxy = memo((): JSX.Element => {
             onIsBoardChatAvailable();
             sendIsBoardChatAvailable({});
         });
-        socket.subscribe(ESocketTopic.Project, projectUID);
 
         canUseProjectSettingsMutate(
             {},
@@ -118,7 +117,6 @@ const BoardProxy = memo((): JSX.Element => {
 
         return () => {
             socket.unsubscribe(ESocketTopic.Board, projectUID);
-            socket.unsubscribe(ESocketTopic.Project, projectUID);
         };
     }, [isFetching]);
 

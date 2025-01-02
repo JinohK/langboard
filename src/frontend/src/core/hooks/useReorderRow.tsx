@@ -2,6 +2,7 @@ import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { TBaseModelInstance } from "@/core/models/Base";
 import { ISocketContext } from "@/core/providers/SocketProvider";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export interface IRow {
     uid: string;
@@ -48,53 +49,40 @@ function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends
                     reorderInColumn(data.uid, data.order);
                     break;
             }
-
-            forceUpdate();
         },
     });
     useSwitchSocketHandlers({ socket, handlers });
 
     const moveToColumn = <TRowColumn extends keyof TRow>(uid: string, index: number, columnId: TRow[TRowColumn]) => {
-        let isUpdated = false;
-        for (let i = 0; i < rows.length; ++i) {
-            const row = rows[i];
-            if (i === index) {
-                isUpdated = true;
-                continue;
-            }
-            (allRowsMap[row.uid] as unknown as IRow).order = isUpdated ? i + 1 : i;
+        const targetRow = allRowsMap[uid] as TRow;
+        let targetRowIndex;
+        if (!rows.some((row) => row.uid === uid)) {
+            rows.push(targetRow);
+            targetRowIndex = rows.length - 1;
+        } else {
+            targetRowIndex = rows.findIndex((row) => row.uid === uid);
         }
-        (allRowsMap[uid] as unknown as IRow).order = index;
-        (allRowsMap[uid] as Record<keyof TRow, unknown>)[columnKey] = columnId;
+
+        arrayMove(rows, targetRowIndex, index).forEach((row, i) => {
+            allRowsMap[row.uid].order = i;
+        });
+
+        (targetRow as Record<keyof TRow, unknown>)[columnKey] = columnId;
+        forceUpdate();
     };
 
     const removeFromColumn = (uid: string) => {
-        let isUpdated = false;
-        for (let i = 0; i < rows.length; ++i) {
-            const row = rows[i];
-            if (row.uid === uid) {
-                isUpdated = true;
-                continue;
-            }
-            (allRowsMap[row.uid] as unknown as IRow).order = isUpdated ? i - 1 : i;
-        }
+        rows.filter((row) => row.uid !== uid).forEach((row, i) => {
+            allRowsMap[row.uid].order = i;
+        });
+        forceUpdate();
     };
 
     const reorderInColumn = (uid: string, index: number) => {
-        let isTargetCardPassed = false;
-        for (let i = 0; i < rows.length; ++i) {
-            const row = rows[i] as unknown as IRow;
-            if (row.uid === uid) {
-                isTargetCardPassed = true;
-                continue;
-            }
-
-            let numToAdd = row.order <= index ? 0 : 1;
-            numToAdd -= isTargetCardPassed ? 1 : 0;
-
-            row.order = i + numToAdd;
-        }
-        (allRowsMap[uid] as unknown as IRow).order = index;
+        arrayMove(rows, rows.findIndex((row) => row.uid === uid)!, index).forEach((row, i) => {
+            allRowsMap[row.uid].order = i;
+        });
+        forceUpdate();
     };
 
     return { moveToColumn, removeFromColumn, reorderInColumn, sendRowOrderChanged: handlers.send };

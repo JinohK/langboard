@@ -1,5 +1,6 @@
 import { Box, Button, Flex, IconComponent, Progress } from "@/components/base";
 import useUploadCardAttachment from "@/controllers/api/card/attachment/useUploadCardAttachment";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatBytes } from "@/core/utils/StringUtils";
 import { IAttachedFile } from "@/pages/BoardPage/components/card/action/types";
@@ -15,9 +16,8 @@ interface IBoardCardActionAttachedFileProps {
     isOverlay?: bool;
 }
 
-interface IBoardCardActionAttachedFileDragData {
+interface IBoardCardActionAttachedFileDragData extends ISortableDragData<IAttachedFile> {
     type: "AttachedFile";
-    data: IAttachedFile;
 }
 
 const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile, isOverlay }: IBoardCardActionAttachedFileProps) => {

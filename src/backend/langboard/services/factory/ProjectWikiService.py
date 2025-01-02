@@ -162,26 +162,25 @@ class ProjectWikiService(BaseService):
         topic_id = project.get_uid()
         wiki_uid = wiki.get_uid()
         publish_models: list[SocketPublishModel] = []
-        for key in model:
-            if wiki.is_public:
+        if wiki.is_public:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.BoardWiki,
+                    topic_id=topic_id,
+                    event=f"board:wiki:details:changed:{wiki_uid}",
+                    data_keys=list(model.keys()),
+                )
+            )
+        else:
+            for assigned_user, _ in assigned_users:
                 publish_models.append(
                     SocketPublishModel(
-                        topic=SocketTopic.BoardWiki,
-                        topic_id=topic_id,
-                        event=f"board:wiki:{key}:changed:{wiki_uid}",
-                        data_keys=key,
+                        topic=SocketTopic.BoardWikiPrivate,
+                        topic_id=assigned_user.get_uid(),
+                        event=f"board:wiki:details:changed:{wiki_uid}",
+                        data_keys=list(model.keys()),
                     )
                 )
-            else:
-                for assigned_user, _ in assigned_users:
-                    publish_models.append(
-                        SocketPublishModel(
-                            topic=SocketTopic.BoardWikiPrivate,
-                            topic_id=assigned_user.get_uid(),
-                            event=f"board:wiki:{key}:changed:{wiki_uid}",
-                            data_keys=key,
-                        )
-                    )
 
         return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
 

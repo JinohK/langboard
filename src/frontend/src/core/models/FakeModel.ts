@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { IBaseModel } from "@/core/models/Base";
+import { BaseModel, type IBaseModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 const createFakeModel = <TModel extends IBaseModel, TMethodMap = undefined>(
@@ -16,20 +16,28 @@ const createFakeModel = <TModel extends IBaseModel, TMethodMap = undefined>(
                 continue;
             }
 
-            if (!foreigns[key]) {
-                foreigns[key] = [];
-            }
-
             if (!TypeUtils.isArray(copiedModel[key])) {
                 copiedModel[key] = [copiedModel[key]] as any;
             }
 
-            const targetFields = copiedModel[key] as any[];
-
-            for (let i = 0; i < targetFields.length; ++i) {
-                const targetField = targetFields[i];
-                foreigns[key].push(createFakeModel(targetField));
-            }
+            const models = copiedModel[key] as any[];
+            Object.defineProperty(foreigns, key, {
+                get: () => {
+                    const result = [];
+                    for (let i = 0; i < models.length; ++i) {
+                        const foreignModel = models[i];
+                        if (foreignModel instanceof BaseModel) {
+                            result.push(foreignModel.asFake());
+                        } else {
+                            result.push(createFakeModel(foreignModel));
+                        }
+                    }
+                    return result;
+                },
+                set: (_: any[]) => {
+                    return;
+                },
+            });
         }
     }
 

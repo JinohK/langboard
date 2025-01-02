@@ -49,7 +49,7 @@ import { KbdLeaf } from "@/components/plate-ui/kbd-leaf";
 import { LinkElement } from "@/components/plate-ui/link-element";
 import { MediaEmbedElement } from "@/components/plate-ui/media-embed-element";
 import { MentionElement } from "@/components/plate-ui/mention-element";
-import { MentionInputElement } from "@/components/plate-ui/mention-input-element";
+import { IMentionableUser, MentionInputElement } from "@/components/plate-ui/mention-input-element";
 import { ParagraphElement } from "@/components/plate-ui/paragraph-element";
 import { withPlaceholders } from "@/components/plate-ui/placeholder";
 import { SlashInputElement } from "@/components/plate-ui/slash-input-element";
@@ -149,7 +149,7 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
             mentionableUsers,
             prefix: "@",
             renderLabel: (mentionable) => {
-                const user = mentionableUsers.find((val) => val.uid === (mentionable as Record<string, string>).key);
+                const user = mentionableUsers.find((val) => val.uid === (mentionable as unknown as IMentionableUser).key);
                 if (user) {
                     return `${user.firstname} ${user.lastname}`;
                 } else {

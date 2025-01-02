@@ -3,13 +3,10 @@ import PasswordInput from "@/components/PasswordInput";
 import { Box, Flex, Form, SubmitButton, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/api/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
-import { useAuth } from "@/core/providers/AuthProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import { useEffect } from "react";
+import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 
 function PasswordPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
-    const { updatedUser } = useAuth();
+    const { updatedUser } = useAccountSetting();
     const [t] = useTranslation();
     const { mutate } = useChangePassword();
     const { errors, isValidating, handleSubmit, formRef } = useForm({
@@ -27,10 +24,6 @@ function PasswordPage(): JSX.Element {
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     return (
         <>

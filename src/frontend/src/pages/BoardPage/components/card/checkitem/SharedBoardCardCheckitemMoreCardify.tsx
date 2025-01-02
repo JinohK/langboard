@@ -56,7 +56,7 @@ function SharedBoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMor
         }
 
         if (!opened) {
-            setSelectedColumnUID(!card.is_archived ? card.column_uid : card.project_all_columns[0]?.uid);
+            setSelectedColumnUID(!card.isArchived ? card.column_uid : card.project_all_columns[0]?.uid);
             setWithSubCheckitems(true);
             setWithAssignMembers(true);
         }

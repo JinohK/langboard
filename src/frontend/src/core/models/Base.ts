@@ -8,6 +8,7 @@ import useSocketHandler from "@/core/helpers/SocketHandler";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { createUUID } from "@/core/utils/StringUtils";
+import type { Model as AuthUserModel } from "@/core/models/AuthUser";
 import type { Model as ActivityModel } from "@/core/models/Activity";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
 import type { Model as ProjectModel } from "@/core/models/Project";
@@ -38,6 +39,7 @@ export type TStateStore<T = any, V = undefined> = V extends undefined
       };
 
 interface IModelMap {
+    AuthUser: typeof AuthUserModel;
     Activity: typeof ActivityModel;
     GlobalRelationshipType: typeof GlobalRelationshipTypeModel;
     Project: typeof ProjectModel;
@@ -266,7 +268,8 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
     public static useModels<TParent extends TBaseModelClass<any>>(
         this: TParent,
-        filter: (model: InstanceType<TParent>) => bool
+        filter: (model: InstanceType<TParent>) => bool,
+        dependencies?: React.DependencyList
     ): InstanceType<TParent>[] {
         const [models, setModels] = useState<InstanceType<TParent>[]>(
             Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(filter as any) as any
@@ -298,7 +301,13 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 unsubscribeCreation();
                 unsubscribeDeletion();
             };
-        }, [models]);
+        }, []);
+
+        useEffect(() => {
+            if (dependencies && dependencies.length > 0) {
+                setModels(() => Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(filter as any) as any);
+            }
+        }, dependencies);
 
         return models;
     }
@@ -358,11 +367,13 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
     public asFake<TParent extends TBaseModelInstance<any>>(this: TParent): TParent {
         const constructor = this.#getConstructor();
-        return createFakeModel(
-            this.#mStore.getState(),
-            constructor.createFakeMethodsMap(this.#mStore.getState()),
-            Object.keys(constructor.FOREIGN_MODELS)
-        );
+        const model = {
+            ...this.#mStore.getState(),
+        };
+        Object.keys(constructor.FOREIGN_MODELS).forEach((key) => {
+            model[key] = this.getForeignModels<BaseModel<any>>(key as keyof IModelMap);
+        });
+        return createFakeModel(model, constructor.createFakeMethodsMap(this.#mStore.getState()), Object.keys(constructor.FOREIGN_MODELS));
     }
 
     public useField<TKey extends keyof TModel>(
@@ -377,8 +388,10 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     return;
                 }
 
-                setFieldValue(newValue[field]);
-                updatedCallback?.(newValue[field], fieldValue);
+                setTimeout(() => {
+                    setFieldValue(newValue[field]);
+                    updatedCallback?.(newValue[field], fieldValue);
+                }, 0);
             });
 
             return () => {
@@ -404,9 +417,11 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     return;
                 }
 
-                setFieldValue(this.getForeignModels<TForeignModel>(field));
-                updatedCallback?.(this.getForeignModels<TForeignModel>(field), fieldValue);
-                currentVersionRef.current = this.#getForeignModelVersions(field);
+                setTimeout(() => {
+                    setFieldValue(this.getForeignModels<TForeignModel>(field));
+                    updatedCallback?.(this.getForeignModels<TForeignModel>(field), fieldValue);
+                    currentVersionRef.current = this.#getForeignModelVersions(field);
+                }, 0);
             });
             return unsub;
         }, []);

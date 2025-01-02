@@ -211,13 +211,17 @@ class CardService(BaseService):
                 event=f"{_SOCKET_PREFIX}:created:{column.get_uid()}",
                 data_keys="card",
             ),
-            SocketPublishModel(
-                topic=SocketTopic.Project,
-                topic_id=project.get_uid(),
-                event=f"dashboard:card:created{project.get_uid()}",
-                custom_data={"column_uid": column.get_uid()},
-            ),
         ]
+
+        project_service = self._get_service(ProjectService)
+        publish_models.extend(
+            await project_service.create_publish_private_models_for_members(
+                project=project,
+                topic=SocketTopic.Dashboard,
+                event=f"dashboard:project:card:created{project.get_uid()}",
+                custom_data={"column_uid": column.get_uid()},
+            )
+        )
 
         return SocketModelIdBaseResult(model_id, (card, model), publish_models)
 
@@ -267,26 +271,24 @@ class CardService(BaseService):
             model[key] = self._convert_to_python(getattr(card, key))
         model_id = await SocketModelIdService.create_model_id(model)
 
-        publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
-        for key in model:
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=topic_id,
+                event=f"{_SOCKET_PREFIX}:details:changed:{card.get_uid()}",
+                data_keys=list(model.keys()),
+            )
+        ]
+        if "title" in key and checkitem_cardified_from:
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.Board,
                     topic_id=topic_id,
-                    event=f"{_SOCKET_PREFIX}:{key}:changed:{card.get_uid()}",
-                    data_keys=key,
+                    event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
+                    data_keys="title",
                 )
             )
-            if key == "title" and checkitem_cardified_from:
-                publish_models.append(
-                    SocketPublishModel(
-                        topic=SocketTopic.Board,
-                        topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
-                        data_keys="title",
-                    )
-                )
 
         return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
 
@@ -394,17 +396,22 @@ class CardService(BaseService):
                         event=f"{_SOCKET_PREFIX}:order:changed:{card.get_uid()}",
                         data_keys=["to_column_uid", "column_name"],
                     ),
-                    SocketPublishModel(
-                        topic=SocketTopic.Project,
-                        topic_id=topic_id,
-                        event="dashboard:card:order:changed",
-                        custom_data={
-                            "from_column_uid": original_column_id,
-                            "to_column_uid": new_column.get_uid(),
-                        },
-                    ),
                 ]
             )
+
+            project_service = self._get_service(ProjectService)
+            publish_models.extend(
+                await project_service.create_publish_private_models_for_members(
+                    project=project,
+                    topic=SocketTopic.Dashboard,
+                    event=f"dashboard:project:card:order:changed:{project.get_uid()}",
+                    custom_data={
+                        "from_column_uid": original_column_id,
+                        "to_column_uid": new_column.get_uid(),
+                    },
+                )
+            )
+
         else:
             publish_models.append(
                 SocketPublishModel(

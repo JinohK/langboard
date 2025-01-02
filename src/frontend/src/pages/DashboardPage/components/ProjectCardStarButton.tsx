@@ -9,14 +9,14 @@ import { useTranslation } from "react-i18next";
 export interface IProjectCardStarButtonProps {
     project: Project.TModel;
     isUpdating: bool;
-    setIsUpdating: React.Dispatch<React.SetStateAction<boolean>>;
-    refetchAllStarred: () => Promise<unknown>;
-    refetchAllProjects: () => Promise<unknown>;
+    setIsUpdating: React.Dispatch<React.SetStateAction<bool>>;
+    updateStarredProjects: React.DispatchWithoutAction;
 }
 
-const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, refetchAllStarred, refetchAllProjects }: IProjectCardStarButtonProps) => {
+const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, updateStarredProjects }: IProjectCardStarButtonProps) => {
     const [t] = useTranslation();
     const { mutate } = useToggleStarProject();
+    const starred = project.useField("starred");
     const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {
         if (!project) {
             return;
@@ -33,7 +33,8 @@ const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, refetc
             },
             {
                 onSuccess: async () => {
-                    await Promise.all([refetchAllStarred(), refetchAllProjects()]);
+                    project.starred = !starred;
+                    updateStarredProjects();
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
@@ -53,10 +54,10 @@ const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, refetc
 
     return (
         <Button
-            variant={project.starred ? "default" : "outline"}
+            variant={starred ? "default" : "outline"}
             className="absolute right-2.5 top-1 mt-0"
             size="icon"
-            title={t(`dashboard.${project?.starred ? "Unstar this project" : "Star this project"}`)}
+            title={t(`dashboard.${starred ? "Unstar this project" : "Star this project"}`)}
             titleSide="bottom"
             onClick={toggleStar}
             disabled={isUpdating}

@@ -30,48 +30,40 @@ export function SkeletonProjectList() {
 
 export interface IProjectListProps {
     projects: Project.TModel[];
-    refetchAllStarred: () => Promise<unknown>;
-    refetchAllProjects: () => Promise<unknown>;
+    updateStarredProjects: React.DispatchWithoutAction;
     scrollAreaUpdater: [number, React.DispatchWithoutAction];
     className?: string;
 }
 
-const ProjectList = memo(
-    ({ projects, refetchAllStarred, refetchAllProjects, scrollAreaUpdater, className }: IProjectListProps): JSX.Element | null => {
-        const PAGE_SIZE = 16;
-        const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: projects, size: PAGE_SIZE, updater: scrollAreaUpdater });
-        const skeletonCards = [];
-        for (let i = 0; i < 4; ++i) {
-            skeletonCards.push(<SkeletonProjectCard key={createShortUUID()} />);
-        }
-
-        return (
-            <InfiniteScroll
-                getScrollParent={() => document.getElementById("main")}
-                loadMore={nextPage}
-                hasMore={hasMore}
-                threshold={140}
-                loader={<SkeletonProjectList key={createShortUUID()} />}
-                initialLoad={false}
-                className={cn("!overflow-y-hidden", className)}
-                useWindow={false}
-                pageStart={1}
-            >
-                <Box mt="4">
-                    <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
-                        {items.map((project) => (
-                            <ProjectCard
-                                key={`${project.uid}-${createShortUUID()}`}
-                                project={project}
-                                refetchAllStarred={refetchAllStarred}
-                                refetchAllProjects={refetchAllProjects}
-                            />
-                        ))}
-                    </Box>
-                </Box>
-            </InfiniteScroll>
-        );
+const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, className }: IProjectListProps): JSX.Element | null => {
+    const PAGE_SIZE = 16;
+    const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: projects, size: PAGE_SIZE, updater: scrollAreaUpdater });
+    const skeletonCards = [];
+    for (let i = 0; i < 4; ++i) {
+        skeletonCards.push(<SkeletonProjectCard key={createShortUUID()} />);
     }
-);
+
+    return (
+        <InfiniteScroll
+            getScrollParent={() => document.getElementById("main")}
+            loadMore={nextPage}
+            hasMore={hasMore}
+            threshold={140}
+            loader={<SkeletonProjectList key={createShortUUID()} />}
+            initialLoad={false}
+            className={cn("!overflow-y-hidden", className)}
+            useWindow={false}
+            pageStart={1}
+        >
+            <Box mt="4">
+                <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
+                    {items.map((project) => (
+                        <ProjectCard key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
+                    ))}
+                </Box>
+            </Box>
+        </InfiniteScroll>
+    );
+});
 
 export default ProjectList;

@@ -36,5 +36,10 @@ class ChangePasswordForm(BaseFormModel):
 
 
 @form_model
+class CreateUserGroupForm(BaseFormModel):
+    name: str
+
+
+@form_model
 class UpdateUserGroupAssignedEmailForm(BaseFormModel):
     emails: list[str]

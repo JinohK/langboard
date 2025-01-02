@@ -5,6 +5,7 @@ from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
 from ...models import Card, CardAssignedUser, Checkitem, CheckitemAssignedUser, CheckitemTimer, Project, ProjectColumn
+from .ProjectService import ProjectService
 from .Types import TCardParam, TCheckitemParam, TProjectParam
 
 
@@ -29,7 +30,7 @@ class CheckitemService(BaseService):
                 (Checkitem.column("card_id") == card.id) & (Checkitem.column("checkitem_id") == None)  # noqa
             )
             .order_by(Checkitem.column("order"))
-            .group_by(Checkitem.column("order"))
+            .group_by(Checkitem.column("id"), Checkitem.column("order"))
         )
         raw_checkitems = result.all()
         checkitems = [await self.convert_api_response(raw_checkitem) for raw_checkitem in raw_checkitems]
@@ -45,7 +46,7 @@ class CheckitemService(BaseService):
             .table(Checkitem)
             .where(Checkitem.column("checkitem_id") == checkitem.id)
             .order_by(Checkitem.column("order"))
-            .group_by(Checkitem.column("order"))
+            .group_by(Checkitem.column("id"), Checkitem.column("order"))
         )
         raw_checkitems = result.all()
         checkitems = [await self.convert_api_response(raw_checkitem) for raw_checkitem in raw_checkitems]
@@ -180,20 +181,16 @@ class CheckitemService(BaseService):
         api_checkitem = await self.convert_api_response(checkitem)
         model_id = await SocketModelIdService.create_model_id({"checkitem": api_checkitem})
 
-        if not parent_checkitem_uid:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
-                event=f"{_SOCKET_PREFIX}:created:{card.get_uid()}",
-                data_keys="checkitem",
-            )
-        else:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
-                event=f"{_SOCKET_PREFIX_SUB}:created:{parent_checkitem_uid}",
-                data_keys="checkitem",
-            )
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.get_uid(),
+            event=(
+                f"{_SOCKET_PREFIX}:created:{card.get_uid()}"
+                if not parent_checkitem_uid
+                else f"{_SOCKET_PREFIX_SUB}:created:{parent_checkitem_uid}"
+            ),
+            data_keys="checkitem",
+        )
 
         return SocketModelIdBaseResult(model_id, (checkitem, api_checkitem), publish_model)
 
@@ -238,7 +235,7 @@ class CheckitemService(BaseService):
                 SocketPublishModel(
                     topic=SocketTopic.Board,
                     topic_id=project.get_uid(),
-                    event=f"{_SOCKET_PREFIX}:title:changed:{cardified_card.get_uid()}",
+                    event=f"board:card:details:changed:{cardified_card.get_uid()}",
                     data_keys="title",
                 )
             )
@@ -434,13 +431,18 @@ class CheckitemService(BaseService):
                 event=f"board:card:created:{column_id.to_short_code()}",
                 data_keys="card",
             ),
-            SocketPublishModel(
-                topic=SocketTopic.Project,
-                topic_id=project.get_uid(),
-                event=f"dashboard:card:created:{project.get_uid()}",
-                custom_data={"column_uid": column_id.to_short_code()},
-            ),
         ]
+
+        project_service = self._get_service(ProjectService)
+        publish_models.extend(
+            await project_service.create_publish_private_models_for_members(
+                project=project,
+                topic=SocketTopic.Dashboard,
+                event=f"dashboard:project:card:created{project.get_uid()}",
+                custom_data={"column_uid": column.get_uid()},
+            )
+        )
+
         return SocketModelIdBaseResult(model_id, new_card, publish_models)
 
     async def delete(

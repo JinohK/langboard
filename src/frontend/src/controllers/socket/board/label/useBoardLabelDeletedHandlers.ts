@@ -3,21 +3,21 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 
-export interface IProjectLabelDeletedRawResponse {
+export interface IBoardLabelDeletedRawResponse {
     uid: string;
 }
 
-export interface IUseProjectLabelDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardLabelDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectLabelDeletedHandlers = ({ callback, projectUID }: IUseProjectLabelDeletedHandlersProps) => {
-    return useSocketHandler<{}, IProjectLabelDeletedRawResponse>({
-        topic: ESocketTopic.Project,
+const useBoardLabelDeletedHandlers = ({ callback, projectUID }: IUseBoardLabelDeletedHandlersProps) => {
+    return useSocketHandler<{}, IBoardLabelDeletedRawResponse>({
+        topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-label-deleted-${projectUID}`,
+        eventKey: `board-label-deleted-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.PROJECT.LABEL.DELETED,
+            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.DELETED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -28,4 +28,4 @@ const useProjectLabelDeletedHandlers = ({ callback, projectUID }: IUseProjectLab
     });
 };
 
-export default useProjectLabelDeletedHandlers;
+export default useBoardLabelDeletedHandlers;

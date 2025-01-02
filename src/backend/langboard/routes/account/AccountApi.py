@@ -10,6 +10,7 @@ from ...services import Service
 from .Form import (
     AddNewEmailForm,
     ChangePasswordForm,
+    CreateUserGroupForm,
     EmailForm,
     UpdateProfileForm,
     UpdateUserGroupAssignedEmailForm,
@@ -143,6 +144,17 @@ async def change_password(
     return JsonResponse(content={})
 
 
+@AppRouter.api.post("/account/group")
+@AuthFilter.add
+async def create_user_group(
+    form: CreateUserGroupForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    group, revert_key = await service.user_group.create(user, form.name)
+    api_group = group.api_response()
+    api_group["users"] = await service.user_group.get_user_emails_by_group(group.id, as_api=True)
+    return JsonResponse(content={"revert_key": revert_key, "user_group": api_group})
+
+
 @AppRouter.api.put("/account/group/{group_uid}/emails")
 @AuthFilter.add
 async def update_user_group_assigned_emails(
@@ -155,6 +167,18 @@ async def update_user_group_assigned_emails(
     if not revert_key:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    group_users = await service.user_group.get_by_group(group_uid, as_api=True)
+    group_users = await service.user_group.get_user_emails_by_group(group_uid, as_api=True)
 
     return JsonResponse(content={"revert_key": revert_key, "users": group_users})
+
+
+@AppRouter.api.delete("/account/group/{group_uid}")
+@AuthFilter.add
+async def delete_user_group(
+    group_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    revert_key = await service.user_group.delete(user, group_uid)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": revert_key})

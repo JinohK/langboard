@@ -21,6 +21,7 @@ class Project(SoftDeleteModel, table=True):
             "uid": self.get_uid(),
             "title": self.title,
             "project_type": self.project_type,
+            "updated_at": self.updated_at,
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

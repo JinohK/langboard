@@ -1,4 +1,4 @@
-import { memo, useReducer, useRef } from "react";
+import { memo, useEffect, useReducer, useRef } from "react";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -11,14 +11,38 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { Navigate } from "react-router-dom";
 import { DashboardProvider } from "@/core/providers/DashboardProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
+import { useSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { Project } from "@/core/models";
 
 const DashboardProxy = memo((): JSX.Element => {
     const navigate = useRef(usePageNavigate());
+    const socket = useSocket();
     const [pageType, tabName] = location.pathname.split("/").slice(2);
-    const { data: allStarredProjects, refetch: refetchAllStarred } = useGetAllStarredProjects();
+    const { data, isFetching } = useGetAllStarredProjects();
     const scrollAreaUpdater = useReducer((x) => x + 1, 0);
+    const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [scrollAreaMutable] = scrollAreaUpdater;
-    const { aboutMe } = useAuth();
+    const { aboutMe, updated } = useAuth();
+    const starredProjects = Project.Model.useModels((model) => model.starred, [data, isFetching, updated, updatedStarredProjects]);
+
+    useEffect(() => {
+        const user = aboutMe();
+        if (!data || isFetching || !user) {
+            return;
+        }
+
+        socket.subscribe(ESocketTopic.Dashboard, user.uid);
+
+        for (let i = 0; i < starredProjects.length; ++i) {
+            const project = starredProjects[i];
+            project.subscribeDashboardSocketHandlers(user.uid);
+        }
+
+        return () => {
+            socket.unsubscribe(ESocketTopic.Dashboard, user.uid);
+        };
+    }, [starredProjects]);
 
     const headerNavs: Record<string, IHeaderNavItem> = {
         projects: {
@@ -36,7 +60,7 @@ const DashboardProxy = memo((): JSX.Element => {
         starred: {
             name: "dashboard.Starred",
             subNavs:
-                allStarredProjects?.projects.map((project) => ({
+                starredProjects.map((project) => ({
                     name: project.title,
                     onClick: () => {
                         navigate.current(ROUTES.BOARD.MAIN(project.uid));
@@ -84,7 +108,9 @@ const DashboardProxy = memo((): JSX.Element => {
                 case "starred":
                 case "recent":
                 case "unstarred":
-                    pageContent = <ProjectPage refetchAllStarred={refetchAllStarred} currentTab={tabName} scrollAreaUpdater={scrollAreaUpdater} />;
+                    pageContent = (
+                        <ProjectPage updateStarredProjects={updateStarredProjects} currentTab={tabName} scrollAreaUpdater={scrollAreaUpdater} />
+                    );
                     break;
                 default:
                     return <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />;

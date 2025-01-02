@@ -1,5 +1,6 @@
 import { Box, Button, Flex, IconComponent, Skeleton } from "@/components/base";
 import CachedImage from "@/components/CachedImage";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatDateDistance } from "@/core/utils/StringUtils";
@@ -16,9 +17,8 @@ export interface IBoardCardAttachmentProps {
     isOverlay?: bool;
 }
 
-interface IBoardCardAttachmentDragData {
+interface IBoardCardAttachmentDragData extends ISortableDragData<ProjectCardAttachment.TModel> {
     type: "Attachment";
-    data: ProjectCardAttachment.TModel;
 }
 
 export function SkeletonBoardCardAttachment() {

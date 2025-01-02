@@ -7,18 +7,16 @@ import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
-import useCardDescriptionChangedHandlers from "@/controllers/socket/card/useCardDescriptionChangedHandlers";
-import useCardTitleChangedHandlers from "@/controllers/socket/card/useCardTitleChangedHandlers";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
-import useCardDeadlineChangedHandlers from "@/controllers/socket/card/useCardDeadlineChangedHandlers";
 import useCardLabelsUpdatedHandlers from "@/controllers/socket/card/useCardLabelsUpdatedHandlers";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
 import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentDeletedHandlers";
+import useCardDetailsChangedHandlers from "@/controllers/socket/card/useCardDetailsChangedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -42,7 +40,10 @@ export interface IStore extends Interface {
     relationships: ProjectCardRelationship.Interface[];
     attachments: ProjectCardAttachment.IStore[];
     checkitems: ProjectCheckitem.IStore[];
-    is_archived: bool;
+
+    // variable set from the client side
+    isArchived: bool;
+    isOpenedInBoardColumn: bool;
 }
 
 class ProjectCard extends BaseModel<IStore> {
@@ -68,13 +69,11 @@ class ProjectCard extends BaseModel<IStore> {
 
         this.subscribeSocketEvents(
             [
-                useCardDescriptionChangedHandlers,
-                useCardTitleChangedHandlers,
+                useCardDetailsChangedHandlers,
                 useCardCommentAddedHandlers,
                 useCardCommentDeletedHandlers,
                 useCardCommentReactedHandlers,
                 useCardAssignedUsersUpdatedHandlers,
-                useCardDeadlineChangedHandlers,
                 useCardLabelsUpdatedHandlers,
                 useCardCheckitemCreatedHandlers,
                 useCardCheckitemDeletedHandlers,
@@ -162,7 +161,10 @@ class ProjectCard extends BaseModel<IStore> {
             model.deadline_at = new Date(model.deadline_at);
         }
         if (model.column_uid && model.project_uid) {
-            model.is_archived = model.column_uid === model.project_uid;
+            model.isArchived = model.column_uid === model.project_uid;
+        }
+        if (TypeUtils.isNullOrUndefined(model.isOpenedInBoardColumn)) {
+            model.isOpenedInBoardColumn = false;
         }
         return model;
     }
@@ -178,7 +180,7 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("column_uid");
     }
     public set column_uid(value: string) {
-        this.update({ column_uid: value, is_archived: value === this.project_uid });
+        this.update({ column_uid: value, isArchived: value === this.project_uid });
     }
 
     public get title() {
@@ -293,11 +295,18 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ checkitems: value });
     }
 
-    public get is_archived() {
-        return this.getValue("is_archived");
+    public get isArchived() {
+        return this.getValue("isArchived");
     }
-    public set is_archived(value: bool) {
-        this.update({ is_archived: value });
+    public set isArchived(value: bool) {
+        this.update({ isArchived: value });
+    }
+
+    public get isOpenedInBoardColumn() {
+        return this.getValue("isOpenedInBoardColumn");
+    }
+    public set isOpenedInBoardColumn(value: bool) {
+        this.update({ isOpenedInBoardColumn: value });
     }
 }
 

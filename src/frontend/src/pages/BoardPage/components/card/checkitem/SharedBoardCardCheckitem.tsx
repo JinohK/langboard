@@ -20,24 +20,22 @@ interface IBaseSharedBoardCardCheckitemProps<TParent extends bool> extends IFlex
     attributes?: DraggableAttributes;
     listeners?: SyntheticListenerMap;
     isParent?: TParent;
-    isOpenedRef?: React.MutableRefObject<bool>;
 }
 
 export interface ISharedBoardCardCheckitemWithCollapsibleProps extends IBaseSharedBoardCardCheckitemProps<true> {
     isParent: true;
-    isOpenedRef: React.MutableRefObject<bool>;
 }
 
 export interface ISharedBoardCardCheckitemWithoutCollapsibleProps extends IBaseSharedBoardCardCheckitemProps<false> {
     isParent?: false;
-    isOpenedRef?: never;
 }
 
 export type TSharedBoardCardCheckitemProps = ISharedBoardCardCheckitemWithCollapsibleProps | ISharedBoardCardCheckitemWithoutCollapsibleProps;
 
 const SharedBoardCardCheckitem = memo(
-    forwardRef<HTMLDivElement, TSharedBoardCardCheckitemProps>(({ checkitem, attributes, listeners, isParent, isOpenedRef, ...props }, ref) => {
+    forwardRef<HTMLDivElement, TSharedBoardCardCheckitemProps>(({ checkitem, attributes, listeners, isParent, ...props }, ref) => {
         const { projectUID, hasRoleAction, sharedClassNames } = useBoardCard();
+        const isOpenedInBoardCard = checkitem.useField("isOpenedInBoardCard");
         const navigate = useRef(usePageNavigate());
         const [t] = useTranslation();
         const [isValidating, setIsValidating] = useState(false);
@@ -91,7 +89,7 @@ const SharedBoardCardCheckitem = memo(
                                         variant="ghost"
                                         size="icon-sm"
                                         className="h-8 w-6 transition-all sm:size-8 [&[data-state=open]>svg]:rotate-180"
-                                        title={t(`common.${isOpenedRef.current ? "Collapse" : "Expand"}`)}
+                                        title={t(`common.${isOpenedInBoardCard ? "Collapse" : "Expand"}`)}
                                     >
                                         <IconComponent icon="chevron-down" size="4" />
                                     </Button>

@@ -19,8 +19,11 @@ const useGetProjet = (form: IGetProjectForm, options?: TQueryOptions<unknown, IG
         const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
         const res = await api.get(url);
 
+        const project = Project.Model.fromObject(res.data.project);
+        project.last_viewed_at = new Date();
+
         return {
-            project: Project.Model.fromObject(res.data.project),
+            project,
         };
     };
 

@@ -1,40 +1,34 @@
 import { Box, Collapsible } from "@/components/base";
 import useChangeSubCheckitemOrder, { IChangeSubCheckitemOrderForm } from "@/controllers/api/card/checkitem/useChangeSubCheckitemOrder";
-import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
+import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useReorderRow from "@/core/hooks/useReorderRow";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardSubCheckitem from "@/pages/BoardPage/components/card/checkitem/BoardCardSubCheckitem";
 import SharedBoardCardCheckitem from "@/pages/BoardPage/components/card/checkitem/SharedBoardCardCheckitem";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useMemo, useReducer, useRef } from "react";
+import { memo, useMemo, useReducer } from "react";
 import { tv } from "tailwind-variants";
 
 export interface IBoardCardCheckitemProps {
-    checkitem: ProjectCheckitem.TModel & {
-        isOpenedRef?: React.MutableRefObject<bool>;
-    };
+    checkitem: ProjectCheckitem.TModel;
     callbacksRef: React.MutableRefObject<Record<string, IRowDragCallback<ProjectCheckitem.TModel>>>;
     subCheckitemsMap: Record<string, ProjectCheckitem.TModel>;
     isOverlay?: bool;
 }
 
-interface IBoardCardCheckitemDragData {
+interface IBoardCardCheckitemDragData extends ISortableDragData<ProjectCheckitem.TModel> {
     type: "Checkitem";
-    data: ProjectCheckitem.TModel;
 }
 
 const BoardCardCheckitem = memo(({ checkitem, subCheckitemsMap, callbacksRef, isOverlay }: IBoardCardCheckitemProps): JSX.Element => {
-    if (TypeUtils.isNullOrUndefined(checkitem.isOpenedRef)) {
-        checkitem.isOpenedRef = useRef(false);
-    }
     const { projectUID, card, socket, hasRoleAction } = useBoardCard();
+    const isOpenedInBoardCard = checkitem.useField("isOpenedInBoardCard");
     const checkitemId = `board-checkitem-${checkitem.uid}`;
     const updater = useReducer((x) => x + 1, 0);
-    const [updated, forceUpdate] = updater;
+    const [updated] = updater;
     const subCheckitemsUIDs = useMemo(() => {
         return Object.keys(subCheckitemsMap)
             .filter((subCheckitemUID) => subCheckitemsMap[subCheckitemUID].checkitem_uid === checkitem.uid)
@@ -66,21 +60,12 @@ const BoardCardCheckitem = memo(({ checkitem, subCheckitemsMap, callbacksRef, is
             roleDescription: `Checkitem: ${checkitem.title}`,
         },
     });
-    ProjectCheckitem.Model.subscribe("DELETION", `board-card-checkitem-${checkitem.uid}`, (uids) => {
-        for (let i = 0; i < uids.length; ++i) {
-            if (subCheckitemsMap[uids[i]]) {
-                delete subCheckitemsMap[uids[i]];
-            }
-        }
-        forceUpdate();
-    });
 
     callbacksRef.current[checkitemId] = {
         onDragEnd: (originalSubCheckitem, index) => {
             const isOrderUpdated = originalSubCheckitem.checkitem_uid !== checkitem.uid || originalSubCheckitem.order !== index;
             reorderInColumn(originalSubCheckitem.uid, index);
             if (!isOrderUpdated) {
-                forceUpdate();
                 return;
             }
 
@@ -96,15 +81,16 @@ const BoardCardCheckitem = memo(({ checkitem, subCheckitemsMap, callbacksRef, is
 
             subCheckitemsMap[originalSubCheckitem.uid].order = index;
             subCheckitemsMap[originalSubCheckitem.uid].checkitem_uid = checkitem.uid;
-            forceUpdate();
 
-            setTimeout(() => {
-                changeSubCheckitemOrderMutate(form);
-            }, 300);
+            changeSubCheckitemOrderMutate(form);
         },
         onDragOverOrMove: (activeSubCheckitem, index, isForeign) => {
             if (!isForeign) {
                 return;
+            }
+
+            if (!isOpenedInBoardCard) {
+                checkitem.isOpenedInBoardCard = true;
             }
 
             const shouldRemove = index === -1;
@@ -113,12 +99,6 @@ const BoardCardCheckitem = memo(({ checkitem, subCheckitemsMap, callbacksRef, is
             } else {
                 moveToColumn(activeSubCheckitem.uid, index, checkitem.uid);
             }
-
-            if (!checkitem.isOpenedRef!.current) {
-                checkitem.isOpenedRef!.current = true;
-            }
-
-            forceUpdate();
         },
     };
 
@@ -156,19 +136,12 @@ const BoardCardCheckitem = memo(({ checkitem, subCheckitemsMap, callbacksRef, is
     return (
         <Box id={checkitemId} {...props}>
             <Collapsible.Root
-                open={checkitem.isOpenedRef.current}
+                open={isOpenedInBoardCard}
                 onOpenChange={(opened) => {
-                    forceUpdate();
-                    checkitem.isOpenedRef!.current = opened;
+                    checkitem.isOpenedInBoardCard = opened;
                 }}
             >
-                <SharedBoardCardCheckitem
-                    checkitem={checkitem}
-                    attributes={attributes}
-                    listeners={listeners}
-                    isParent
-                    isOpenedRef={checkitem.isOpenedRef}
-                />
+                <SharedBoardCardCheckitem checkitem={checkitem} attributes={attributes} listeners={listeners} isParent />
                 <BoardCardSubCheckitemList
                     checkitem={checkitem}
                     checkitemId={checkitemId}

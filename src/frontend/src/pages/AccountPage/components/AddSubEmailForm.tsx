@@ -1,13 +1,30 @@
 import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Floating, Form, SubmitButton, Toast } from "@/components/base";
+import { Box, Flex, Floating, Form, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { IEmailComponentProps } from "@/pages/AccountPage/components/types";
+import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 
-function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: IEmailComponentProps): JSX.Element {
+export function SkeletonAddSubEmailForm(): JSX.Element {
+    const [t] = useTranslation();
+
+    return (
+        <Box>
+            <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Add new email")}</h4>
+            <Flex items="center" gap="2">
+                <Flex items="center" w="64" rounded="md" h="9" border py="2" px="3" className="whitespace-nowrap border-input">
+                    <Skeleton h="4" w="full" />
+                </Flex>
+                <Skeleton w="12" h="8" />
+            </Flex>
+        </Box>
+    );
+}
+
+function AddSubEmailForm(): JSX.Element {
+    const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
     const [t, i18n] = useTranslation();
     const { mutate } = useAddNewEmail();
     const { errors, setErrors, handleSubmit, formRef } = useForm({
@@ -19,12 +36,12 @@ function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: I
                 custom: {
                     errorKey: "exists",
                     validate: (value) => {
-                        if (!user || !TypeUtils.isString(value) || user.email === value) {
+                        if (!TypeUtils.isString(value) || currentUser.email === value) {
                             return false;
                         }
 
-                        for (let i = 0; i < user.subemails.length; ++i) {
-                            if (user.subemails[i].email === value) {
+                        for (let i = 0; i < currentUser.subemails.length; ++i) {
+                            if (currentUser.subemails[i].email === value) {
                                 return false;
                             }
                         }
@@ -54,7 +71,7 @@ function AddSubEmailForm({ user, updatedUser, isValidating, setIsValidating }: I
     return (
         <Box>
             <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Add new email")}</h4>
-            <Form.Root className="flex items-start gap-2" onSubmit={handleSubmit} ref={formRef}>
+            <Form.Root className="flex items-center gap-2" onSubmit={handleSubmit} ref={formRef}>
                 <Form.Field name="new_email">
                     <Floating.LabelInput
                         label={t("user.Email")}

@@ -123,6 +123,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                         return setTimeout(openCard, 50);
                     }
 
+                    toLastPage();
                     scrollToBottom();
                     card.click();
                 };

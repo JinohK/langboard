@@ -3,21 +3,21 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 
-export interface IProjectColumnCreatedRawResponse {
+export interface IBoardColumnCreatedRawResponse {
     column: ProjectColumn.IStore;
 }
 
-export interface IUseProjectColumnCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardColumnCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useProjectColumnCreatedHandlers = ({ callback, projectUID }: IUseProjectColumnCreatedHandlersProps) => {
-    return useSocketHandler<{}, IProjectColumnCreatedRawResponse>({
-        topic: ESocketTopic.Project,
+const useBoardColumnCreatedHandlers = ({ callback, projectUID }: IUseBoardColumnCreatedHandlersProps) => {
+    return useSocketHandler<{}, IBoardColumnCreatedRawResponse>({
+        topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `project-column-created-${projectUID}`,
+        eventKey: `board-column-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.PROJECT.COLUMN.CREATED,
+            name: SOCKET_SERVER_EVENTS.BOARD.COLUMN.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -28,4 +28,4 @@ const useProjectColumnCreatedHandlers = ({ callback, projectUID }: IUseProjectCo
     });
 };
 
-export default useProjectColumnCreatedHandlers;
+export default useBoardColumnCreatedHandlers;

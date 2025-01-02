@@ -49,16 +49,16 @@ function useReorderColumn<TColumn extends TBaseModelInstance<IColumn>>({
     useSwitchSocketHandlers({ socket, handlers });
 
     const reorder = (column: TColumn, newIndex: number) => {
-        const col = column as unknown as IColumn;
-        if (col.order === newIndex) {
+        const columnOrder = (column as unknown as IColumn).order;
+        if (columnOrder === newIndex) {
             return false;
         }
 
         setColumns((prev) =>
-            arrayMove(prev, col.order, newIndex).map((arrayCol, i) => {
-                const column = arrayCol as unknown as IColumn;
-                if (column.order !== i) {
-                    column.order = i;
+            arrayMove(prev, columnOrder, newIndex).map((arrayCol, i) => {
+                const col = arrayCol as unknown as IColumn;
+                if (col.order !== i) {
+                    col.order = i;
                 }
                 return arrayCol;
             })

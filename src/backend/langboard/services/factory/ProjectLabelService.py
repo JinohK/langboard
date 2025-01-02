@@ -8,7 +8,7 @@ from .RevertService import RevertService, RevertType
 from .Types import TCardParam, TProjectLabelParam, TProjectParam
 
 
-_SOCKET_PREFIX = "project:label"
+_SOCKET_PREFIX = "board:label"
 
 
 class ProjectLabelService(BaseService):
@@ -120,7 +120,7 @@ class ProjectLabelService(BaseService):
         model_id = await SocketModelIdService.create_model_id({"label": model})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Project,
+            topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:created:{project.get_uid()}",
             data_keys="label",
@@ -167,19 +167,15 @@ class ProjectLabelService(BaseService):
             model[key] = self._convert_to_python(getattr(label, key))
         model_id = await SocketModelIdService.create_model_id(model)
 
-        publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
-        for key in model:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Project,
-                    topic_id=topic_id,
-                    event=f"{_SOCKET_PREFIX}:{key}:changed:{label.get_uid()}",
-                    data_keys=key,
-                )
-            )
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"{_SOCKET_PREFIX}:details:changed:{label.get_uid()}",
+            data_keys=list(model.keys()),
+        )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
+        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_model)
 
     async def change_order(
         self, user: User, project: TProjectParam, label: TProjectLabelParam, order: int
@@ -212,7 +208,7 @@ class ProjectLabelService(BaseService):
         model_id = await SocketModelIdService.create_model_id({"uid": label.get_uid(), "order": order})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Project,
+            topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:order:changed:{project.get_uid()}",
             data_keys=["uid", "order"],
@@ -234,7 +230,7 @@ class ProjectLabelService(BaseService):
         model_id = await SocketModelIdService.create_model_id({"uid": label.get_uid()})
 
         publish_model = SocketPublishModel(
-            topic=SocketTopic.Project,
+            topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:deleted:{project.get_uid()}",
             data_keys="uid",

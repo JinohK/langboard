@@ -128,7 +128,11 @@ const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
     const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
-    const { columns, reorder: reorderColumns } = useReorderColumn({
+    const {
+        columns,
+        setColumns,
+        reorder: reorderColumns,
+    } = useReorderColumn({
         type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
@@ -180,6 +184,10 @@ const BoardResult = memo(() => {
         },
     });
 
+    useEffect(() => {
+        setColumns(flatColumns.sort((a, b) => a.order - b.order));
+    }, [flatColumns]);
+
     return (
         <>
             {selectCardViewType && (
@@ -216,7 +224,7 @@ const BoardResult = memo(() => {
 
             <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragMove={onDragOverOrMove}>
                 <ScrollArea.Root viewportId={viewportId} className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
-                    <Flex direction="row" items="start" gap="10" p="4" onPointerDown={onPointerDown}>
+                    <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" onPointerDown={onPointerDown}>
                         <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />

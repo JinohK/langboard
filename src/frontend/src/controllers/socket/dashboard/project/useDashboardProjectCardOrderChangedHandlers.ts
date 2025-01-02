@@ -3,22 +3,23 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project } from "@/core/models";
 
-export interface IDashboardCardOrderChangedRawResponse {
+export interface IDashboardProjectCardOrderChangedRawResponse {
     from_column_uid: string;
     to_column_uid: string;
 }
 
-export interface IUseDashboardCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseDashboardProjectCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
+    userUID: string;
 }
 
-const useDashboardCardOrderChangedHandlers = ({ callback, projectUID }: IUseDashboardCardOrderChangedHandlersProps) => {
-    return useSocketHandler<{}, IDashboardCardOrderChangedRawResponse>({
-        topic: ESocketTopic.Project,
-        topicId: projectUID,
-        eventKey: `dashboard-card-order-changed-${projectUID}`,
+const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectCardOrderChangedHandlersProps) => {
+    return useSocketHandler<{}, IDashboardProjectCardOrderChangedRawResponse>({
+        topic: ESocketTopic.Dashboard,
+        topicId: userUID,
+        eventKey: `dashboard-project-card-order-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.ORDER_CHANGED,
+            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.CARD.ORDER_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -42,4 +43,4 @@ const useDashboardCardOrderChangedHandlers = ({ callback, projectUID }: IUseDash
     });
 };
 
-export default useDashboardCardOrderChangedHandlers;
+export default useDashboardProjectCardOrderChangedHandlers;

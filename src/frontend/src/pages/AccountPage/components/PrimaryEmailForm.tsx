@@ -4,9 +4,27 @@ import { Box, Button, Command, Flex, IconComponent, Popover, Skeleton, SubmitBut
 import useChangePrimaryEmail from "@/controllers/api/account/useChangePrimaryEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IEmailComponentProps } from "@/pages/AccountPage/components/types";
+import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 
-function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: IEmailComponentProps): JSX.Element {
+export function SkeletonPrimaryEmailForm(): JSX.Element {
+    const [t] = useTranslation();
+
+    return (
+        <Box>
+            <h4 className="pb-2 text-lg font-semibold tracking-tight">{t("myAccount.Primary email")}</h4>
+            <Flex items="center" gap="2">
+                <Flex items="center" justify="between" minW="64" rounded="md" py="2" px="3" border className="whitespace-nowrap border-input">
+                    <Skeleton h="4" w="full" />
+                    <IconComponent icon="chevrons-up-down" size="4" className="ml-2 shrink-0 opacity-50" />
+                </Flex>
+                <Skeleton w="12" h="8" />
+            </Flex>
+        </Box>
+    );
+}
+
+function PrimaryEmailForm(): JSX.Element {
+    const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
     const [t] = useTranslation();
     const [open, setOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
@@ -62,7 +80,7 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
                 <Popover.Root open={open} onOpenChange={setOpen}>
                     <Popover.Trigger asChild>
                         <Button variant="outline" role="combobox" aria-expanded={open} className="min-w-64 justify-between" disabled={isValidating}>
-                            {!user ? <Skeleton h="4" w="full" /> : (selectedEmail ?? user.email)}
+                            {selectedEmail ?? currentUser.email}
                             <IconComponent icon="chevrons-up-down" size="4" className="ml-2 shrink-0 opacity-50" />
                         </Button>
                     </Popover.Trigger>
@@ -71,19 +89,17 @@ function PrimaryEmailForm({ user, updatedUser, isValidating, setIsValidating }: 
                             <Command.Input placeholder={t("myAccount.Search email...")} />
                             <Command.List>
                                 <Command.Group>
-                                    {user && (
-                                        <Command.Item
-                                            value={user.email}
-                                            onSelect={() => {
-                                                setSelectedEmail(null);
-                                                setOpen(false);
-                                            }}
-                                        >
-                                            {!selectedEmail && <IconComponent icon="check" size="4" className="mr-2" />}
-                                            {user.email}
-                                        </Command.Item>
-                                    )}
-                                    {user?.subemails.map(
+                                    <Command.Item
+                                        value={currentUser.email}
+                                        onSelect={() => {
+                                            setSelectedEmail(null);
+                                            setOpen(false);
+                                        }}
+                                    >
+                                        {!selectedEmail && <IconComponent icon="check" size="4" className="mr-2" />}
+                                        {currentUser.email}
+                                    </Command.Item>
+                                    {currentUser.subemails.map(
                                         (subEmail) =>
                                             subEmail.verified_at && (
                                                 <Command.Item

@@ -2,18 +2,22 @@ import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
-import useProjectColumnCreatedHandlers from "@/controllers/socket/project/column/useProjectColumnCreatedHandlers";
-import useProjectColumnNameChangedHandlers from "@/controllers/socket/project/column/useProjectColumnNameChangedHandlers";
-import useProjectLabelCreatedHandlers from "@/controllers/socket/project/label/useProjectLabelCreatedHandlers";
-import useProjectLabelOrderChangedHandlers from "@/controllers/socket/project/label/useProjectLabelOrderChangedHandlers";
-import useProjectLabelDeletedHandlers from "@/controllers/socket/project/label/useProjectLabelDeletedHandlers";
-import useProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useProjectAssignedUsersUpdatedHandlers";
-import useProjectTitleChangedHandlers from "@/controllers/socket/project/useProjectTitleChangedHandlers";
-import useProjectTypeChangedHandlers from "@/controllers/socket/project/useProjectTypeChangedHandlers";
-import useProjectColumnOrderChangedHandlers from "@/controllers/socket/project/column/useProjectColumnOrderChangedHandlers";
-import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/useDashboardCardCreatedHandlers";
-import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/useDashboardCardOrderChangedHandlers";
+import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
+import useBoardLabelOrderChangedHandlers from "@/controllers/socket/board/label/useBoardLabelOrderChangedHandlers";
+import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
+import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
+import useDashboardProjectCardCreatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardCreatedHandlers";
+import useDashboardProjectCardOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardOrderChangedHandlers";
 import useCardRelationshipsUpdatedHandlers from "@/controllers/socket/card/useCardRelationshipsUpdatedHandlers";
+import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardDetailsChangedHandlers";
+import useDashboardProjectColumnCreatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnCreatedHandlers";
+import useDashboardProjectColumnNameChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnNameChangedHandlers";
+import useDashboardProjectColumnOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnOrderChangedHandlers";
+import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/useBoardColumnCreatedHandlers";
+import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
+import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useDashboardProjectUnassignedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectUnassigned";
 
 export enum ERoleAction {
     READ = "read",
@@ -30,6 +34,7 @@ export const TYPES = ["SI", "SW", "Other"];
 export interface Interface extends IBaseModel {
     title: string;
     project_type: string;
+    updated_at: Date;
 }
 
 export interface IStore extends Interface {
@@ -41,6 +46,7 @@ export interface IStore extends Interface {
     labels: ProjectLabel.Interface[];
     description: string;
     ai_description?: string;
+    last_viewed_at: Date;
 }
 
 class Project extends BaseModel<IStore> {
@@ -58,19 +64,17 @@ class Project extends BaseModel<IStore> {
 
     constructor(model: Record<string, unknown>) {
         super(model);
+
         this.subscribeSocketEvents(
             [
-                useDashboardCardCreatedHandlers,
-                useDashboardCardOrderChangedHandlers,
-                useProjectTitleChangedHandlers,
-                useProjectTypeChangedHandlers,
-                useProjectColumnCreatedHandlers,
-                useProjectColumnNameChangedHandlers,
-                useProjectColumnOrderChangedHandlers,
-                useProjectAssignedUsersUpdatedHandlers,
-                useProjectLabelCreatedHandlers,
-                useProjectLabelOrderChangedHandlers,
-                useProjectLabelDeletedHandlers,
+                useBoardColumnCreatedHandlers,
+                useBoardColumnNameChangedHandlers,
+                useBoardColumnOrderChangedHandlers,
+                useBoardDetailsChangedHandlers,
+                useBoardAssignedUsersUpdatedHandlers,
+                useBoardLabelCreatedHandlers,
+                useBoardLabelOrderChangedHandlers,
+                useBoardLabelDeletedHandlers,
                 useCardRelationshipsUpdatedHandlers,
             ],
             {
@@ -100,6 +104,33 @@ class Project extends BaseModel<IStore> {
         ProjectLabel.Model.subscribe("DELETION", this.uid, (uids) => {
             this.labels = this.labels.filter((label) => !uids.includes(label.uid));
         });
+    }
+
+    public static convertModel(model: IStore): Interface {
+        if (TypeUtils.isString(model.updated_at)) {
+            model.updated_at = new Date(model.updated_at);
+        }
+        if (TypeUtils.isString(model.last_viewed_at)) {
+            model.last_viewed_at = new Date(model.last_viewed_at);
+        }
+        return model;
+    }
+
+    public subscribeDashboardSocketHandlers(userUID: string) {
+        return this.subscribeSocketEvents(
+            [
+                useDashboardProjectUnassignedHandlers,
+                useDashboardProjectCardCreatedHandlers,
+                useDashboardProjectCardOrderChangedHandlers,
+                useDashboardProjectColumnCreatedHandlers,
+                useDashboardProjectColumnNameChangedHandlers,
+                useDashboardProjectColumnOrderChangedHandlers,
+            ],
+            {
+                projectUID: this.uid,
+                userUID,
+            }
+        );
     }
 
     public get title() {
@@ -170,6 +201,20 @@ class Project extends BaseModel<IStore> {
     }
     public set labels(value: (ProjectLabel.TModel | ProjectLabel.Interface)[]) {
         this.update({ labels: value });
+    }
+
+    public get updated_at(): Date {
+        return this.getValue("updated_at");
+    }
+    public set updated_at(value: string | Date) {
+        this.update({ updated_at: value });
+    }
+
+    public get last_viewed_at(): Date {
+        return this.getValue("last_viewed_at");
+    }
+    public set last_viewed_at(value: string | Date) {
+        this.update({ last_viewed_at: value });
     }
 }
 

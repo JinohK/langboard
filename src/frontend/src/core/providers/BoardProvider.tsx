@@ -1,9 +1,12 @@
-import { createContext, memo, useContext, useMemo, useReducer } from "react";
+import { createContext, memo, useContext, useEffect, useMemo, useReducer, useRef } from "react";
 import { AuthUser, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { NavigateFunction, NavigateOptions, To } from "react-router-dom";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
+import { ROUTES } from "@/core/routing/constants";
+import { Toast } from "@/components/base";
+import { useTranslation } from "react-i18next";
 
 export interface IFilterMap {
     keyword?: string[];
@@ -40,7 +43,6 @@ interface IBoardProviderProps {
 }
 
 const initialContext = {
-    navigate: () => {},
     socket: {} as ISocketContext,
     project: {} as Project.TModel,
     columns: [],
@@ -62,7 +64,9 @@ const BoardContext = createContext<IBoardContext>(initialContext);
 
 export const BoardProvider = memo(({ navigate, project, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
     const socket = useSocket();
+    const [t] = useTranslation();
     const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
+    const members = project.useForeignField<User.TModel>("members");
     const filters = useMemo(() => {
         const searchParams = new URLSearchParams(location.search);
         const rawFilters = searchParams.get("filters");
@@ -72,6 +76,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, currentUser
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
     const cards = ProjectCard.Model.useModels((model) => model.project_uid === project.uid);
+    const forbiddenMessageIdRef = useRef<string | number | null>(null);
     const cardsMap = useMemo(() => {
         const map: Record<string, ProjectCard.TModel> = {};
         cards.forEach((card) => {
@@ -79,6 +84,23 @@ export const BoardProvider = memo(({ navigate, project, currentUser, currentUser
         });
         return map;
     }, [cards]);
+
+    useEffect(() => {
+        if (members.some((member) => member.uid === currentUser.uid) || forbiddenMessageIdRef.current) {
+            return;
+        }
+
+        const toastId = Toast.Add.error(t("project.errors.You are not a member of this project."), {
+            onAutoClose: () => {
+                forbiddenMessageIdRef.current = null;
+            },
+            onDismiss: () => {
+                forbiddenMessageIdRef.current = null;
+            },
+        });
+        forbiddenMessageIdRef.current = toastId;
+        navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
+    }, [members]);
 
     const transformFilters = (): string => {
         return Object.entries(filters)

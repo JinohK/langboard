@@ -1,4 +1,5 @@
 import { Box } from "@/components/base";
+import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -12,9 +13,8 @@ export interface IBoardCardSubCheckitemProps {
     isOverlay?: bool;
 }
 
-interface IBoardCardCheckitemDragData {
+interface IBoardCardCheckitemDragData extends ISortableDragData<ProjectCheckitem.TModel> {
     type: "SubCheckitem";
-    data: ProjectCheckitem.TModel;
 }
 
 function BoardCardSubCheckitem({ checkitem, isOverlay }: IBoardCardSubCheckitemProps): JSX.Element {

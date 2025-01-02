@@ -84,7 +84,7 @@ class AppRouter:
 
     async def publish_with_socket_model(self, socket_model: SocketModelIdBaseResult):
         model = await SocketModelIdService.get_model(socket_model.model_id)
-        if not model or not socket_model.publish_models:
+        if not model or not socket_model.publish_models or not self.__socketify_app:
             return
 
         if not isinstance(socket_model.publish_models, list):

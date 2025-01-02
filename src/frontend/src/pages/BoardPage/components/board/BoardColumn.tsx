@@ -1,7 +1,7 @@
 import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/api/board/useChangeCardOrder";
-import { IRowDragCallback } from "@/core/hooks/useColumnRowSortable";
+import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useReorderRow from "@/core/hooks/useReorderRow";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
@@ -46,60 +46,36 @@ export interface IBoardColumnProps {
     isOverlay?: bool;
 }
 
-interface IBoardColumnDragData {
+interface IBoardColumnDragData extends ISortableDragData<ProjectColumn.TModel> {
     type: "Column";
-    data: IBoardColumnProps["column"];
 }
+
+const PAGE_SIZE = 20;
 
 const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
     const { selectCardViewType } = useBoardRelationshipController();
     const { setIsLoadingRef } = usePageLoader();
-    const {
-        project,
-        filters,
-        socket,
-        cards: allCards,
-        cardsMap,
-        hasRoleAction,
-        filterCard,
-        filterCardMember,
-        filterCardLabels,
-        filterCardRelationships,
-    } = useBoard();
+    const { project, filters, socket, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [updated, forceUpdate] = updater;
-    const PAGE_SIZE = 20;
-    const cardUIDs = useMemo(() => {
-        return Object.keys(cardsMap)
-            .filter((cardUID) => cardsMap[cardUID].column_uid === column.uid)
-            .filter((cardUID) => filterCard(cardsMap[cardUID]))
-            .filter((cardUID) => filterCardMember(cardsMap[cardUID]))
-            .filter((cardUID) => filterCardLabels(cardsMap[cardUID]))
-            .filter((cardUID) => filterCardRelationships(cardsMap[cardUID]))
-            .sort((a, b) => cardsMap[a].order - cardsMap[b].order);
-    }, [filters, updated]);
-    const { items, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: cardUIDs, size: PAGE_SIZE, updater });
-    const cards = items.map((cardUID) => cardsMap[cardUID]);
+    const columnCards = ProjectCard.Model.useModels(
+        (model) => {
+            return (
+                model.column_uid === column.uid &&
+                filterCard(model) &&
+                filterCardMember(model) &&
+                filterCardLabels(model) &&
+                filterCardRelationships(model)
+            );
+        },
+        [column, updated, filters]
+    );
+    const sortedCards = columnCards.sort((a, b) => a.order - b.order);
+    const cardUIDs = useMemo(() => sortedCards.map((card) => card.uid), [sortedCards]);
+    const { items: cards, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: sortedCards, size: PAGE_SIZE, updater });
     const closeHoverCardRef = useRef<(() => void) | undefined>();
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
-    ProjectCard.Model.subscribe(
-        "CREATION",
-        columnId,
-        (models) => {
-            for (let i = 0; i < models.length; ++i) {
-                const card = models[i];
-                if (cardsMap[card.uid]) {
-                    continue;
-                }
-
-                allCards.push(card);
-                cardsMap[card.uid] = card;
-            }
-            forceUpdate();
-        },
-        (model) => model.column_uid === column.uid
-    );
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
         type: "ProjectCard",
         eventNameParams: { uid: column.uid },
@@ -174,8 +150,6 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             } else {
                 moveToColumn(activeCard.uid, index, column.uid);
             }
-
-            forceUpdate();
         },
     };
 
@@ -189,7 +163,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     };
 
     const variants = tv({
-        base: "my-1 w-80 flex-shrink-0 snap-center ring-primary",
+        base: "my-1 w-72 sm:w-80 flex-shrink-0 snap-center ring-primary",
         variants: {
             dragging: {
                 over: "ring-2 opacity-30",
@@ -233,7 +207,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                             "flex flex-grow flex-col gap-2 p-3",
                             hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn()
                                 ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.1))]"
-                                : "max-h-[calc(100vh_-_theme(spacing.52)_-_theme(spacing.1))]"
+                                : "max-h-[calc(100vh_-_theme(spacing.56))]"
                         )}
                         onWheel={(e) => {
                             e.stopPropagation();

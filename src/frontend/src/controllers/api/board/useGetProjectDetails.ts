@@ -16,7 +16,7 @@ const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptio
     const { query } = useQueryMutation();
 
     const getProjectDetails = async () => {
-        const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
+        const url = format(API_ROUTES.BOARD.DETAILS, { uid: form.uid });
         const res = await api.get(url);
 
         return {

@@ -3,21 +3,22 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project } from "@/core/models";
 
-export interface IDashboardCardCreatedRawResponse {
+export interface IDashboardProjectCardCreatedRawResponse {
     column_uid: string;
 }
 
-export interface IUseDashboardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseDashboardProjectCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
+    userUID: string;
 }
 
-const useDashboardCardCreatedHandlers = ({ callback, projectUID }: IUseDashboardCardCreatedHandlersProps) => {
-    return useSocketHandler<{}, IDashboardCardCreatedRawResponse>({
-        topic: ESocketTopic.Project,
-        topicId: projectUID,
-        eventKey: `dashboard-card-created-${projectUID}`,
+const useDashboardProjectCardCreatedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectCardCreatedHandlersProps) => {
+    return useSocketHandler<{}, IDashboardProjectCardCreatedRawResponse>({
+        topic: ESocketTopic.Dashboard,
+        topicId: userUID,
+        eventKey: `dashboard-project-card-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.CREATED,
+            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.CARD.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -40,4 +41,4 @@ const useDashboardCardCreatedHandlers = ({ callback, projectUID }: IUseDashboard
     });
 };
 
-export default useDashboardCardCreatedHandlers;
+export default useDashboardProjectCardCreatedHandlers;

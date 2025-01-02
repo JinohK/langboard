@@ -1,27 +1,26 @@
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toast } from "@/components/base";
-import useGetProjects, { IGetProjectsResponse } from "@/controllers/api/dashboard/useGetProjects";
+import useGetProjects from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useDashboard } from "@/core/providers/DashboardProvider";
-import { useSocket } from "@/core/providers/SocketProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { PROJECT_TABS } from "@/pages/DashboardPage/constants";
 import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { TProjectTab } from "@/pages/DashboardPage/constants";
 
 interface IProjectPageProps {
-    currentTab: keyof IGetProjectsResponse;
-    refetchAllStarred: () => Promise<unknown>;
+    currentTab: TProjectTab;
+    updateStarredProjects: React.DispatchWithoutAction;
     scrollAreaUpdater: [number, React.DispatchWithoutAction];
 }
 
-const ProjectPage = memo(({ currentTab, refetchAllStarred, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
+const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
+    const { setIsLoadingRef } = usePageLoader();
     const { navigate } = useDashboard();
     const [t] = useTranslation();
-    const socket = useSocket();
-    const { data, isFetching, error, refetch } = useGetProjects();
+    const { data, isFetching, error } = useGetProjects();
 
     useEffect(() => {
         if (!error) {
@@ -47,25 +46,7 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred, scrollAreaUpdater }: 
             return;
         }
 
-        const subscribedProjects: Record<string, bool> = {};
-        for (let i = 0; i < PROJECT_TABS.length; ++i) {
-            const tab = PROJECT_TABS[i];
-            for (let j = 0; j < data[tab].length; ++j) {
-                const project = data[tab][j];
-                if (subscribedProjects[project.uid]) {
-                    continue;
-                }
-
-                subscribedProjects[project.uid] = true;
-                socket.subscribe(ESocketTopic.Project, project.uid);
-            }
-        }
-
-        return () => {
-            Object.keys(subscribedProjects).forEach((uid) => {
-                socket.unsubscribe(ESocketTopic.Project, uid);
-            });
-        };
+        setIsLoadingRef.current(false);
     }, [isFetching]);
 
     return (
@@ -73,13 +54,7 @@ const ProjectPage = memo(({ currentTab, refetchAllStarred, scrollAreaUpdater }: 
             {!data ? (
                 <SkeletonProjecTabs />
             ) : (
-                <ProjectTabs
-                    currentTab={currentTab}
-                    refetchAllStarred={refetchAllStarred}
-                    refetchAllProjects={refetch}
-                    scrollAreaUpdater={scrollAreaUpdater}
-                    projects={data}
-                />
+                <ProjectTabs currentTab={currentTab} updateStarredProjects={updateStarredProjects} scrollAreaUpdater={scrollAreaUpdater} />
             )}
         </>
     );
