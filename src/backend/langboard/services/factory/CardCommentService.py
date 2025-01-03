@@ -30,7 +30,7 @@ class CardCommentService(BaseService):
             .outerjoin(User, CardComment.column("user_id") == User.column("id"))
             .where(CardComment.column("card_id") == card.id)
             .order_by(CardComment.column("created_at").desc(), CardComment.column("id").desc())
-            .group_by(CardComment.column("id"), CardComment.column("created_at"))
+            .group_by(CardComment.column("id"), CardComment.column("created_at"), User.column("id"))
         )
         raw_comments = result.all()
 

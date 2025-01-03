@@ -1,4 +1,4 @@
-from ...core.ai import BotRunner, BotType
+from ...core.ai import Bot, BotRunner, BotType
 from ...core.db import SnowflakeID, User
 from ...core.service import BaseService
 from ...models.BaseReactionModel import BaseReactionModel
@@ -16,10 +16,10 @@ class ReactionService(BaseService):
             .tables(model_class, User)
             .outerjoin(User, model_class.column("user_id") == User.column("id"))
             .where(model_class.column(model_class.get_target_column_name()) == target_id)
-            .group_by(model_class.column("reaction_type"))
         )
         records = result.all()
 
+        bot_configs: dict[BotType, Bot] = {}
         reactions: dict[str, list[str]] = {}
         for reaction, reacted_user in records:
             reaction_type = reaction.reaction_type
@@ -28,9 +28,12 @@ class ReactionService(BaseService):
             if reacted_user:
                 reactions[reaction_type].append(reacted_user.get_fullname())
             elif reaction.bot_type:
-                bot = await BotRunner.get_bot_config(reaction.bot_type)
-                if bot:
-                    reactions[reaction_type].append(bot.display_name)
+                if reaction.bot_type in bot_configs:
+                    reactions[reaction_type].append(bot_configs[reaction.bot_type].display_name)
+                else:
+                    bot = await BotRunner.get_bot_config(reaction.bot_type)
+                    if bot:
+                        reactions[reaction_type].append(bot.display_name)
 
         return reactions
 

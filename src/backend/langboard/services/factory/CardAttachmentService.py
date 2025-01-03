@@ -29,7 +29,7 @@ class CardAttachmentService(BaseService):
             .join(User, CardAttachment.column("user_id") == User.column("id"))
             .where(CardAttachment.column("card_id") == card.id)
             .order_by(CardAttachment.column("order").asc(), CardAttachment.column("id").desc())
-            .group_by(CardAttachment.column("id"), CardAttachment.column("order"))
+            .group_by(CardAttachment.column("id"), CardAttachment.column("order"), User.column("id"))
         )
         card_attachments = result.all()
 
