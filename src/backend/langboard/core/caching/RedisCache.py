@@ -17,7 +17,7 @@ class RedisCache(BaseCache):
     @overload
     async def get(self, key: str, caster: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
     async def get(self, key: str, caster: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
-        raw_value = self.__run_redis_method("get", key)
+        raw_value = await self.__run_redis_method("get", key)
         if raw_value is None:
             return None
 
