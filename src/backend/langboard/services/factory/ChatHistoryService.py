@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from sqlmodel import desc
 from ...core.db import SnowflakeID, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
@@ -26,15 +25,14 @@ class ChatHistoryService(BaseService):
             self._db.query("select")
             .table(ChatHistory)
             .where((ChatHistory.sender_id == user.id) | (ChatHistory.receiver_id == user.id))
-            .where(ChatHistory.history_type == history_type)
-            .where(ChatHistory.created_at <= current_date)
+            .where((ChatHistory.history_type == history_type) & (ChatHistory.created_at <= current_date))
         )
 
         if filterable is not None:
-            sql_query = sql_query.where(ChatHistory.filterable == filterable)
+            sql_query = sql_query.where(ChatHistory.filterable == SnowflakeID.from_short_code(filterable))
 
         sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
-        sql_query = sql_query.order_by(desc(ChatHistory.created_at), desc(ChatHistory.id))
+        sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
         result = await self._db.exec(sql_query)
