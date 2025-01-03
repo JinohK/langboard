@@ -1,10 +1,9 @@
-import { GlobalRelationshipType, ProjectCardRelationship } from "@/core/models";
+import { ProjectCardRelationship } from "@/core/models";
 import { createContext, memo, useContext, useRef, useState } from "react";
 
 interface IStartCardSelectionProps {
     type: ProjectCardRelationship.TRelationship;
     currentUID: string;
-    globalRelationshipTypes: GlobalRelationshipType.TModel[];
     saveCallback: (relationships: [string, string][]) => void;
     cancelCallback: () => void;
 }
@@ -12,7 +11,6 @@ interface IStartCardSelectionProps {
 export interface IBoardRelationshipControllerContext {
     selectCardViewType?: ProjectCardRelationship.TRelationship;
     selectedRelationshipUIDs: [string, string][];
-    globalRelationshipTypesRef: React.MutableRefObject<GlobalRelationshipType.TModel[]>;
     currentCardUIDRef: React.MutableRefObject<string | undefined>;
     disabledCardSelectionUIDsRef: React.MutableRefObject<string[]>;
     startCardSelection: (props: IStartCardSelectionProps) => void;
@@ -32,7 +30,6 @@ interface IBoardRelationshipControllerProps {
 
 const initialContext = {
     selectedRelationshipUIDs: [],
-    globalRelationshipTypesRef: { current: [] },
     currentCardUIDRef: { current: undefined },
     disabledCardSelectionUIDsRef: { current: [] },
     startCardSelection: () => {},
@@ -52,7 +49,6 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
     const [selectCardViewType, setSelectCardViewType] = useState<ProjectCardRelationship.TRelationship>();
     const [selectedRelationshipUIDs, setSelectedRelationshipCardUIDs] = useState<[string, string][]>([]);
     const currentCardUIDRef = useRef<string>();
-    const globalRelationshipTypesRef = useRef<GlobalRelationshipType.TModel[]>([]);
     const saveCardSelectionCallbackRef = useRef<(relationships: [string, string][]) => void>();
     const disabledCardSelectionUIDsRef = useRef<string[]>([]);
     const cancelCardSelectionCallbackRef = useRef<() => void>();
@@ -72,9 +68,8 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
         }
     };
 
-    const startCardSelection = ({ type, currentUID, globalRelationshipTypes, saveCallback, cancelCallback }: IStartCardSelectionProps) => {
+    const startCardSelection = ({ type, currentUID, saveCallback, cancelCallback }: IStartCardSelectionProps) => {
         currentCardUIDRef.current = currentUID;
-        globalRelationshipTypesRef.current = globalRelationshipTypes;
         saveCardSelectionCallbackRef.current = saveCallback;
         cancelCardSelectionCallbackRef.current = cancelCallback;
         setSelectCardViewType(type);
@@ -124,7 +119,6 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
             value={{
                 selectCardViewType,
                 selectedRelationshipUIDs,
-                globalRelationshipTypesRef,
                 currentCardUIDRef,
                 disabledCardSelectionUIDsRef,
                 startCardSelection,

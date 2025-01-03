@@ -68,9 +68,13 @@ async def get_project_cards(
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    global_relationships = await service.card_relationship.get_all_types(as_api=True)
     columns = await service.project_column.get_list(project)
     cards = await service.card.get_board_list(project_uid)
-    return JsonResponse(content={"cards": cards, "columns": columns}, status_code=status.HTTP_200_OK)
+    return JsonResponse(
+        content={"cards": cards, "global_relationships": global_relationships, "columns": columns},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @AppRouter.api.put("/board/{project_uid}/assigned-users")

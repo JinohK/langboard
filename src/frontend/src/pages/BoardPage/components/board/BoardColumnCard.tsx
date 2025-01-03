@@ -9,12 +9,13 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
+import { createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
@@ -166,13 +167,77 @@ interface IBoardColumnCardInnerProps {
 }
 
 const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
-    const { selectCardViewType, isDisabledCard } = useBoardRelationshipController();
-    const { project, filters, navigateWithFilters } = useBoard();
+    const { selectCardViewType, selectedRelationshipUIDs, currentCardUIDRef, isDisabledCard } = useBoardRelationshipController();
+    const { project, filters, cardsMap, globalRelationshipTypes, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
     const title = card.useField("title");
     const commentCount = card.useField("count_comment");
     const isOpenedInBoardColumn = card.useField("isOpenedInBoardColumn");
+    const cardRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
+    const selectedRelationship = useMemo(
+        () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
+        [selectCardViewType, selectedRelationshipUIDs]
+    );
+    const presentableRelationships = useMemo(() => {
+        const relationships: [string, string | undefined, string][] = [];
+
+        const filteredRelationships = cardRelationships.filter((relationship) => {
+            if (!globalRelationshipTypes.length) {
+                return false;
+            }
+
+            if (filters.parents) {
+                return filters.parents.includes(relationship.child_card_uid);
+            } else if (filters.children) {
+                return filters.children.includes(relationship.parent_card_uid);
+            } else {
+                return false;
+            }
+        });
+
+        const selectedRelationshipType = selectedRelationship
+            ? globalRelationshipTypes.find((relationship) => relationship.uid === selectedRelationship)
+            : undefined;
+
+        for (let i = 0; i < filteredRelationships.length; ++i) {
+            const relationship = filteredRelationships[i];
+            const relationshipType = relationship.relationship_type;
+            if (relationshipType) {
+                const isParent = relationship.parent_card_uid === card.uid;
+                relationships.push([
+                    cardsMap[isParent ? relationship.child_card_uid : relationship.parent_card_uid].title,
+                    isParent ? relationshipType.child_icon : relationshipType.parent_icon,
+                    isParent ? relationshipType.child_name : relationshipType.parent_name,
+                ]);
+            }
+        }
+
+        if (selectedRelationshipType) {
+            const isParent = selectCardViewType === "parents";
+            relationships.push([
+                cardsMap[currentCardUIDRef.current!].title,
+                isParent ? selectedRelationshipType.parent_icon : selectedRelationshipType.child_icon,
+                isParent ? selectedRelationshipType.parent_name : selectedRelationshipType.child_name,
+            ]);
+        }
+
+        return relationships;
+    }, [globalRelationshipTypes, filters, cardRelationships, selectedRelationship]);
+
+    useEffect(() => {
+        if (selectCardViewType) {
+            if (selectedRelationship) {
+                card.isOpenedInBoardColumn = true;
+            }
+        }
+    }, [selectCardViewType]);
+
+    useEffect(() => {
+        if (presentableRelationships.length) {
+            card.isOpenedInBoardColumn = true;
+        }
+    }, [filters]);
 
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
@@ -255,6 +320,20 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                             "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
                         )}
                     >
+                        {!!presentableRelationships.length && (
+                            <Card.Content className="px-6 pb-4">
+                                {presentableRelationships.map(([relatedCardTitle, relationshipIcon, relationshipName]) => (
+                                    <Flex key={createShortUUID()} items="center" gap="2" className="truncate text-accent-foreground/70">
+                                        <Flex items="center" gap="1">
+                                            {relationshipIcon && <IconComponent icon={relationshipIcon} size="4" />}
+                                            {relationshipName}
+                                        </Flex>
+                                        <span className="text-muted-foreground">&gt;</span>
+                                        <span className="truncate">{relatedCardTitle}</span>
+                                    </Flex>
+                                ))}
+                            </Card.Content>
+                        )}
                         <BoardColumnCardRelationship card={card} setFilters={setFilters} attributes={attributes} />
                         <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
                             <Flex items="center" gap="2">

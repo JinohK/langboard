@@ -78,9 +78,6 @@ class CardService(BaseService):
 
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
 
-        global_relationships = await self._get_all(GlobalCardRelationshipType)
-        api_card["global_relationships"] = [relationship.api_response() for relationship in global_relationships]
-
         card_relationship_service = self._get_service(CardRelationshipService)
         api_card["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
         return api_card

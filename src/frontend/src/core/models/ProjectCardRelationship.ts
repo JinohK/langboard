@@ -1,4 +1,5 @@
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 
 export type TRelationship = "parents" | "children";
 
@@ -32,6 +33,10 @@ class ProjectCardRelationship extends BaseModel<Interface> {
     }
     public set child_card_uid(value: string) {
         this.update({ child_card_uid: value });
+    }
+
+    public get relationship_type() {
+        return GlobalRelationshipType.Model.getModel(this.relationship_type_uid);
     }
 }
 

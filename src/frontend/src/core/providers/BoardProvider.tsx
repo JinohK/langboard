@@ -1,5 +1,5 @@
 import { createContext, memo, useContext, useEffect, useMemo, useReducer, useRef } from "react";
-import { AuthUser, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
+import { AuthUser, GlobalRelationshipType, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { NavigateFunction, NavigateOptions, To } from "react-router-dom";
@@ -7,6 +7,7 @@ import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
+import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 
 export interface IFilterMap {
     keyword?: string[];
@@ -23,6 +24,7 @@ export interface IBoardContext {
     cards: ProjectCard.TModel[];
     cardsMap: Record<string, ProjectCard.TModel>;
     currentUser: AuthUser.TModel;
+    globalRelationshipTypes: GlobalRelationshipType.TModel[];
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     filters: IFilterMap;
     navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
@@ -49,6 +51,7 @@ const initialContext = {
     cards: [],
     cardsMap: {},
     currentUser: {} as AuthUser.TModel,
+    globalRelationshipTypes: [],
     hasRoleAction: () => false,
     filters: {},
     navigateWithFilters: () => {},
@@ -64,6 +67,7 @@ const BoardContext = createContext<IBoardContext>(initialContext);
 
 export const BoardProvider = memo(({ navigate, project, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
     const socket = useSocket();
+    const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
     const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
     const members = project.useForeignField<User.TModel>("members");
@@ -84,6 +88,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, currentUser
         });
         return map;
     }, [cards]);
+    const globalRelationshipTypes = GlobalRelationshipType.Model.useModels(() => true, [selectCardViewType, filters]);
 
     useEffect(() => {
         if (members.some((member) => member.uid === currentUser.uid) || forbiddenMessageIdRef.current) {
@@ -252,6 +257,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, currentUser
                 cards,
                 cardsMap,
                 currentUser,
+                globalRelationshipTypes,
                 hasRoleAction,
                 filters,
                 navigateWithFilters,

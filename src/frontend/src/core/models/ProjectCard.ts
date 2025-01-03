@@ -36,7 +36,6 @@ export interface IStore extends Interface {
     project_members: User.Interface[];
     project_labels: ProjectLabel.Interface[];
     labels: ProjectLabel.Interface[];
-    global_relationships: GlobalRelationshipType.Interface[];
     relationships: ProjectCardRelationship.Interface[];
     attachments: ProjectCardAttachment.IStore[];
     checkitems: ProjectCheckitem.IStore[];
@@ -54,7 +53,6 @@ class ProjectCard extends BaseModel<IStore> {
             project_members: User.Model.MODEL_NAME,
             project_labels: ProjectLabel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
-            global_relationships: GlobalRelationshipType.Model.MODEL_NAME,
             relationships: ProjectCardRelationship.Model.MODEL_NAME,
             attachments: ProjectCardAttachment.Model.MODEL_NAME,
             checkitems: ProjectCheckitem.Model.MODEL_NAME,
@@ -109,16 +107,7 @@ class ProjectCard extends BaseModel<IStore> {
             this.project_labels = this.project_labels.filter((label) => !uids.includes(label.uid));
             this.labels = this.labels.filter((label) => !uids.includes(label.uid));
         });
-        GlobalRelationshipType.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.global_relationships = [...this.global_relationships, ...models];
-            },
-            () => true
-        );
         GlobalRelationshipType.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.global_relationships = this.global_relationships.filter((relationship) => !uids.includes(relationship.uid));
             this.relationships = this.relationships.filter((relationship) => !uids.includes(relationship.relationship_type_uid));
         });
         ProjectCardAttachment.Model.subscribe(
@@ -265,13 +254,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set labels(value: (ProjectLabel.TModel | ProjectLabel.Interface)[]) {
         this.update({ labels: value });
-    }
-
-    public get global_relationships(): GlobalRelationshipType.TModel[] {
-        return this.getForeignModels("global_relationships");
-    }
-    public set global_relationships(value: (GlobalRelationshipType.TModel | GlobalRelationshipType.Interface)[]) {
-        this.update({ global_relationships: value });
     }
 
     public get relationships(): ProjectCardRelationship.TModel[] {

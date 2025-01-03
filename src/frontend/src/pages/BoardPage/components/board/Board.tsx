@@ -194,7 +194,7 @@ const BoardResult = memo(() => {
                 <Flex justify="center" items="center" position="fixed" top="-2" left="0" h="20" w="full" z="50" gap="3" px="1">
                     <Box position="absolute" top="0" left="0" size="full" className="bg-secondary/70 bg-cover blur-md backdrop-blur-sm" />
                     <Flex wrap="wrap" position="relative" z="50" textSize={{ initial: "base", sm: "lg" }} weight="semibold" className="text-primary">
-                        <Box mr="2">{t(`board.Select ${selectCardViewType} cards`)}</Box>
+                        <Box mr="2">{t(`board.Select ${selectCardViewType === "parents" ? "parent" : "child"} cards`)}</Box>
                         {selectedRelationshipUIDs.length > 0 && (
                             <Box>({t("board.{count} selected", { count: selectedRelationshipUIDs.length })})</Box>
                         )}

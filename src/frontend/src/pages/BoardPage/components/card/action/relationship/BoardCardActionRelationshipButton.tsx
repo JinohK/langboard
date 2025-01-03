@@ -86,7 +86,6 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
         startCardSelection({
             type,
             currentUID: card.uid,
-            globalRelationshipTypes: card.global_relationships,
             saveCallback: saveRelationship,
             cancelCallback: () => setIsOpened(true),
         });

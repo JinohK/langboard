@@ -24,13 +24,21 @@ from .scopes import (
 async def get_card_detail(
     project_uid: str, card_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    card = await service.card.get_details(project_uid, card_uid)
     project = await service.project.get_by_uid(project_uid)
-    if card is None or project is None:
+    if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    card = await service.card.get_details(project, card_uid)
+    if card is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    global_relationships = await service.card_relationship.get_all_types(as_api=True)
     current_user_role_actions = await service.project.get_user_role_actions(user, project)
     return JsonResponse(
-        content={"card": card, "current_user_role_actions": current_user_role_actions}, status_code=status.HTTP_200_OK
+        content={
+            "card": card,
+            "global_relationships": global_relationships,
+            "current_user_role_actions": current_user_role_actions,
+        },
+        status_code=status.HTTP_200_OK,
     )
 
 

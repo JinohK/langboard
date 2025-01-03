@@ -14,6 +14,16 @@ class CardRelationshipService(BaseService):
         return "card_relationship"
 
     @overload
+    async def get_all_types(self, as_api: Literal[False]) -> list[GlobalCardRelationshipType]: ...
+    @overload
+    async def get_all_types(self, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_all_types(self, as_api: bool) -> list[GlobalCardRelationshipType] | list[dict[str, Any]]:
+        global_relationships = await self._get_all(GlobalCardRelationshipType)
+        if as_api:
+            return [relationship.api_response() for relationship in global_relationships]
+        return list(global_relationships)
+
+    @overload
     async def get_all_by_card(
         self, card: TCardParam, as_api: Literal[False]
     ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]]: ...

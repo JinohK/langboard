@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectColumn, ProjectCard } from "@/core/models";
+import { ProjectColumn, ProjectCard, GlobalRelationshipType } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetCardsForm {
@@ -20,6 +20,7 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
         const res = await api.get(url);
 
         ProjectCard.Model.fromObjectArray(res.data.cards);
+        GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships, true);
         ProjectColumn.Model.fromObjectArray(res.data.columns);
 
         return { isUpdated: true };

@@ -3,7 +3,7 @@ import { ProjectCard } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface ISelectRelationshipDialogProps {
@@ -13,18 +13,25 @@ export interface ISelectRelationshipDialogProps {
 }
 
 const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
-    const { selectCardViewType, globalRelationshipTypesRef, selectedRelationshipUIDs, setCardSelection } = useBoardRelationshipController();
+    const { selectCardViewType, selectedRelationshipUIDs, globalRelationshipTypes, setCardSelection } = useBoardRelationshipController();
     const [t] = useTranslation();
     const [selectedRelationshipUID, setSelectedRelationshipUID] = useState<string | undefined>(
         selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1]
     );
     const isParent = selectCardViewType === "parents";
 
+    useEffect(() => {
+        setSelectedRelationshipUID(selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1]);
+    }, [selectedRelationshipUIDs]);
+
     if (!selectCardViewType) {
         return null;
     }
 
     const changeIsOpened = (isOpened: bool) => {
+        if (selectedRelationshipUID && !isOpened) {
+            card.isOpenedInBoardColumn = true;
+        }
         setCardSelection(card.uid, selectedRelationshipUID);
         setIsOpened(isOpened);
     };
@@ -39,7 +46,7 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
                 </Flex>
                 <ScrollArea.Root className="border">
                     <Flex direction="col" position="relative" textSize="sm" className="h-[min(theme(spacing.48),35vh)] select-none">
-                        {globalRelationshipTypesRef.current.map((relationship) => {
+                        {globalRelationshipTypes.map((relationship) => {
                             const relationshipName = isParent ? relationship.parent_name : relationship.child_name;
                             const relationshipIcon = isParent ? relationship.parent_icon : relationship.child_icon;
                             return (

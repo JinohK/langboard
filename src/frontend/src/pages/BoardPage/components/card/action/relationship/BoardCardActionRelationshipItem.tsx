@@ -1,6 +1,6 @@
 import { Button, Flex, IconComponent } from "@/components/base";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { GlobalRelationshipType, ProjectCard, ProjectCardRelationship } from "@/core/models";
+import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useRef } from "react";
@@ -14,7 +14,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
     const navigate = useRef(usePageNavigate());
     const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
-    const relationshipType = GlobalRelationshipType.Model.getModel(relationship.relationship_type_uid)!;
+    const relationshipType = relationship.relationship_type!;
     const targetCardUID = relationship.parent_card_uid === card.uid ? relationship.child_card_uid : relationship.parent_card_uid;
     const targetCard = ProjectCard.Model.getModel(targetCardUID)!;
     const targetCardTitle = targetCard.useField("title");
