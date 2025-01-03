@@ -3,7 +3,7 @@
 import { withRef } from "@udecode/cn";
 import { useOutdentButton } from "@udecode/plate-indent/react";
 import { Outdent } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 
 export const OutdentToolbarButton = withRef<typeof ToolbarButton>((rest, ref) => {
     const { props } = useOutdentButton();

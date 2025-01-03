@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { TPlaceholderElement } from "@udecode/plate-media";
 import { cn } from "@udecode/cn";
 import { insertNodes, removeNodes, withoutSavingHistory } from "@udecode/plate-common";
-import { findNodePath, useEditorPlugin, withHOC, withRef } from "@udecode/plate-common/react";
+import { findPath, useEditorPlugin, withHOC, withRef } from "@udecode/plate-common/react";
 import {
     AudioPlugin,
     FilePlugin,
@@ -18,9 +18,9 @@ import {
 } from "@udecode/plate-media/react";
 import { AudioLines, FileUp, Film, ImageIcon } from "lucide-react";
 import { useFilePicker } from "use-file-picker";
-import { IUseUploadFile, useUploadFile } from "./uploadthing";
-import { PlateElement } from "./plate-element";
-import { Spinner } from "./spinner";
+import { IUseUploadFile, useUploadFile } from "@/components/plate-ui/uploadthing";
+import { PlateElement } from "@/components/plate-ui/plate-element";
+import { Spinner } from "@/components/plate-ui/spinner";
 import { useTranslation } from "react-i18next";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { formatBytes } from "@/core/utils/StringUtils";
@@ -93,7 +93,7 @@ export const MediaPlaceholderElement = withHOC(
         useEffect(() => {
             if (!uploadedFile) return;
 
-            const path = findNodePath(editor, element);
+            const path = findPath(editor, element);
 
             withoutSavingHistory(editor, () => {
                 removeNodes(editor, { at: path });
@@ -185,7 +185,7 @@ export function ImageProgress({
 }: {
     file: File;
     className?: string;
-    imageRef?: React.RefObject<HTMLImageElement>;
+    imageRef?: React.RefObject<HTMLImageElement | null>;
     progress?: number;
 }) {
     const [objectUrl, setObjectUrl] = useState<string | null>(null);

@@ -4,8 +4,8 @@ import { cn, withRef } from "@udecode/cn";
 import { withHOC } from "@udecode/plate-common/react";
 import { useMediaState } from "@udecode/plate-media/react";
 import { ResizableProvider } from "@udecode/plate-resizable";
-import { Caption, CaptionTextarea } from "./caption";
-import { PlateElement } from "./plate-element";
+import { Caption, CaptionTextarea } from "@/components/plate-ui/caption";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
 
 export const MediaAudioElement = withHOC(

@@ -247,11 +247,12 @@ class CardService(BaseService):
             return True
 
         checkitem_cardified_from = None
-        if form.get("title", None):
+        if "title" in old_card_record:
             checkitem_cardified_from = await self._get_by(Checkitem, "cardified_id", card.id)
             if checkitem_cardified_from:
                 checkitem_cardified_from.title = card.title
                 await self._db.update(checkitem_cardified_from)
+                await self._db.commit()
 
         if isinstance(user_or_bot, BotType):
             await self._db.update(card)
@@ -259,7 +260,12 @@ class CardService(BaseService):
             revert_key = None
         else:
             revert_service = self._get_service(RevertService)
-            revert_key = await revert_service.record(revert_service.create_record_model(card, RevertType.Update))
+            revert_record_models = [revert_service.create_record_model(card, RevertType.Update)]
+            if checkitem_cardified_from:
+                revert_record_models.append(
+                    revert_service.create_record_model(checkitem_cardified_from, RevertType.Update)
+                )
+            revert_key = await revert_service.record(*revert_record_models)
 
         model: dict[str, Any] = {}
         for key in form:

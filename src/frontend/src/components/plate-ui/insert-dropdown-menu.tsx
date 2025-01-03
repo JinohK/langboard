@@ -31,7 +31,7 @@ import {
     TableOfContentsIcon,
 } from "lucide-react";
 import { insertBlock, insertInlineElement } from "@/components/Editor/transforms";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";

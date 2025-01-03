@@ -2,16 +2,17 @@ import { Toast } from "@/components/base";
 import useCreateCard from "@/controllers/api/board/useCreateCard";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardAddCardContext {
-    isAddingCard: bool;
-    setIsAddingCard: (isAddingCard: bool) => void;
+    isEditing: bool;
+    setIsEditing: (isEditing: bool) => void;
     isValidating: bool;
-    changeMode: (mode: "create" | "view") => void;
+    changeMode: (mode: "edit" | "view") => void;
     scrollToBottom: () => void;
     textareaRef: React.RefObject<HTMLTextAreaElement>;
     disableChangeModeAttr: string;
@@ -26,8 +27,8 @@ interface IBoardAddCardProps {
 }
 
 const initialContext = {
-    isAddingCard: false,
-    setIsAddingCard: () => {},
+    isEditing: false,
+    setIsEditing: () => {},
     isValidating: false,
     changeMode: () => {},
     scrollToBottom: () => {},
@@ -41,24 +42,15 @@ const BoardAddCardContext = createContext<IBoardAddCardContext>(initialContext);
 export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children }: IBoardAddCardProps): React.ReactNode => {
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
-    const [isAddingCard, setIsAddingCard] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const disableChangeModeAttr = "data-disable-change-mode";
     const canWrite = hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn();
     const { mutateAsync: createCardMutateAsync } = useCreateCard();
-
-    const scrollToBottom = () => {
-        const viewport = document.getElementById(viewportId)!;
-        viewport.scrollTo({ top: viewport.scrollHeight });
-    };
-
-    const changeMode = (mode: "create" | "view") => {
-        if (!canWrite) {
-            return;
-        }
-
-        if (mode === "create") {
+    const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
+        canEdit: () => hasRoleAction(Project.ERoleAction.UPDATE),
+        valueType: "textarea",
+        disableNewLine: true,
+        customStartEditing: () => {
             const pointerDownEvent = (e: PointerEvent) => {
                 const target = e.target;
                 if (!target || !(target instanceof HTMLElement) || target.closest(`[${disableChangeModeAttr}]`)) {
@@ -72,81 +64,80 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
             window.addEventListener("pointerdown", pointerDownEvent);
 
             toLastPage();
-            setIsAddingCard(true);
+            setIsEditing(() => true);
 
             setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.focus();
+                if (valueRef.current) {
+                    valueRef.current.focus();
                 }
                 scrollToBottom();
             }, 0);
-            return;
-        }
+        },
+        save: (value, endCallback) => {
+            setIsValidating(true);
 
-        const newValue = textareaRef.current?.value?.replace(/\n/g, " ").trim() ?? "";
-        if (!newValue.length) {
-            setIsAddingCard(false);
-            return;
-        }
+            const promise = createCardMutateAsync({
+                project_uid: project.uid,
+                column_uid: column.uid,
+                title: value,
+            });
 
-        setIsValidating(true);
+            const toastId = Toast.Add.promise(promise, {
+                loading: t("common.Adding..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                            message = t("project.Project not found");
+                        },
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
 
-        const promise = createCardMutateAsync({
-            project_uid: project.uid,
-            column_uid: column.uid,
-            title: newValue,
-        });
+                    handle(error);
+                    return message;
+                },
+                success: (data) => {
+                    const openCard = () => {
+                        const card = document.getElementById(`board-card-${data.uid}`);
+                        if (!card) {
+                            return setTimeout(openCard, 50);
+                        }
 
-        const toastId = Toast.Add.promise(promise, {
-            loading: t("common.Adding..."),
-            error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("project.Project not found");
-                    },
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                        toLastPage();
+                        scrollToBottom();
+                        card.click();
+                    };
+                    openCard();
+                    return t("board.successes.Card added successfully.");
+                },
+                finally: () => {
+                    setIsValidating(false);
+                    endCallback();
+                    Toast.Add.dismiss(toastId);
+                },
+            });
+        },
+    });
 
-                handle(error);
-                return message;
-            },
-            success: (data) => {
-                const openCard = () => {
-                    const card = document.getElementById(`board-card-${data.uid}`);
-                    if (!card) {
-                        return setTimeout(openCard, 50);
-                    }
-
-                    toLastPage();
-                    scrollToBottom();
-                    card.click();
-                };
-                openCard();
-                return t("board.successes.Card added successfully.");
-            },
-            finally: () => {
-                setIsValidating(false);
-                setIsAddingCard(false);
-                Toast.Add.dismiss(toastId);
-            },
-        });
+    const scrollToBottom = () => {
+        const viewport = document.getElementById(viewportId)!;
+        viewport.scrollTo({ top: viewport.scrollHeight });
     };
 
     return (
         <BoardAddCardContext.Provider
             value={{
-                isAddingCard,
-                setIsAddingCard,
+                isEditing,
+                setIsEditing,
                 isValidating,
                 changeMode,
                 scrollToBottom,
-                textareaRef,
+                textareaRef: valueRef,
                 disableChangeModeAttr,
                 canWrite,
             }}

@@ -1,7 +1,7 @@
 import type { EmojiCategoryList } from "@udecode/plate-emoji";
 import type { UseEmojiPickerType } from "@udecode/plate-emoji/react";
 import { cn } from "@udecode/cn";
-import { Button, Tooltip } from "@/components/base";
+import { Button } from "@/components/base";
 
 export type EmojiPickerNavigationProps = {
     onClick: (id: EmojiCategoryList) => void;
@@ -33,37 +33,34 @@ export function EmojiPickerNavigation({ emojiLibrary, focusedCategory, i18n, ico
     // );
 
     return (
-        <Tooltip.Provider delayDuration={400}>
-            <nav id="emoji-nav" className="mb-2.5 border-0 border-b border-solid border-b-border p-1.5">
-                <div className="relative flex items-center justify-evenly">
-                    {emojiLibrary
-                        .getGrid()
-                        .sections()
-                        .map(({ id }) => (
-                            <Tooltip.Root key={id}>
-                                <Tooltip.Trigger asChild>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className={cn(
-                                            "h-fit rounded-full fill-current p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground",
-                                            id === focusedCategory && "pointer-events-none bg-accent fill-current text-accent-foreground"
-                                        )}
-                                        onClick={() => {
-                                            onClick(id);
-                                        }}
-                                        aria-label={i18n.categories[id]}
-                                        type="button"
-                                    >
-                                        <span className="inline-flex size-5 items-center justify-center">{icons.categories[id].outline}</span>
-                                    </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content side="bottom">{i18n.categories[id]}</Tooltip.Content>
-                            </Tooltip.Root>
-                        ))}
+        <nav id="emoji-nav" className="mb-2.5 border-0 border-b border-solid border-b-border p-1.5">
+            <div className="relative flex items-center justify-evenly">
+                {emojiLibrary
+                    .getGrid()
+                    .sections()
+                    .map(({ id }) => (
+                        <Button
+                            key={id}
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                                "h-fit rounded-full fill-current p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground",
+                                id === focusedCategory && "pointer-events-none bg-accent fill-current text-accent-foreground"
+                            )}
+                            onClick={() => {
+                                onClick(id);
+                            }}
+                            aria-label={i18n.categories[id]}
+                            title={i18n.categories[id]}
+                            titleSide="bottom"
+                            type="button"
+                        >
+                            <span className="inline-flex size-5 items-center justify-center">{icons.categories[id].outline}</span>
+                        </Button>
+                    ))}
 
-                    {/* This is the animated indicator - Opt In if needed */}
-                    {/* <div
+                {/* This is the animated indicator - Opt In if needed */}
+                {/* <div
             className={cn(
               'absolute -bottom-1.5 left-0 h-0.5 w-full rounded-t-lg bg-accent opacity-100 transition-transform duration-200'
             )}
@@ -73,8 +70,7 @@ export function EmojiPickerNavigation({ emojiLibrary, focusedCategory, i18n, ico
               width: `${width}%`,
             }}
           /> */}
-                </div>
-            </nav>
-        </Tooltip.Provider>
+            </div>
+        </nav>
     );
 }

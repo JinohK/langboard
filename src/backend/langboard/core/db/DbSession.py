@@ -1,6 +1,6 @@
 from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
 from fastapi import Depends
-from sqlalchemy import Delete, Insert, Sequence, Update
+from sqlalchemy import Delete, Insert, Sequence, Update, text
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.util import EMPTY_DICT
@@ -11,6 +11,7 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROLE, SUB_DATABASE_URL
 from ..logger import Logger
 from ..utils.DateTime import now
+from ..utils.decorators import class_instance, thread_safe_singleton
 from .BaseSqlBuilder import BaseSqlBuilder
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
@@ -19,8 +20,16 @@ from .SnowflakeID import SnowflakeID
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
-_main_engine = create_async_engine(MAIN_DATABASE_URL)
-_sub_engine = create_async_engine(SUB_DATABASE_URL)
+
+@class_instance()
+@thread_safe_singleton
+class Engine:
+    def get_main_engine(self) -> AsyncEngine:
+        return create_async_engine(MAIN_DATABASE_URL)
+
+    def get_sub_engine(self) -> AsyncEngine:
+        return create_async_engine(SUB_DATABASE_URL)
+
 
 _logger = Logger.use("DbConnection")
 
@@ -32,8 +41,8 @@ class DbSession(BaseSqlBuilder):
     """
 
     def __init__(self):
-        main_session = AsyncSession(_main_engine, expire_on_commit=False)
-        sub_session = AsyncSession(_sub_engine, expire_on_commit=False)
+        main_session = AsyncSession(Engine.get_main_engine(), expire_on_commit=False)
+        sub_session = AsyncSession(Engine.get_sub_engine(), expire_on_commit=False)
 
         self._sessions: dict[DbSessionRole, AsyncSession] = {}
         self._sessions_needs_commit: list[AsyncSession] = []
@@ -45,17 +54,15 @@ class DbSession(BaseSqlBuilder):
             self._sessions[DbSessionRole(role)] = sub_session
 
     @staticmethod
-    def get_main_engine() -> AsyncEngine:
-        """Returns the main database engine."""
-        return _main_engine
-
-    @staticmethod
     def scope() -> "DbSession":
         """Creates a scope for the database session to be used in :class:`fastapi.FastAPI` endpoints."""
 
         async def get_db():
             db = DbSession()
             try:
+                for session in db._sessions.values():
+                    await session.execute(text("PRAGMA journal_mode=WAL;"))
+                    await session.commit()
                 yield db
             finally:
                 await db.close()
@@ -64,7 +71,14 @@ class DbSession(BaseSqlBuilder):
 
     async def close(self):
         if self.should_commit():
-            _logger.warning("DbConnection is being closed without committing.")
+            for session in self._sessions_needs_commit:
+                if session == self._sessions[DbSessionRole.Select]:
+                    await session.flush()
+            self._sessions_needs_commit = [
+                session for session in self._sessions_needs_commit if session != self._sessions[DbSessionRole.Select]
+            ]
+            if self.should_commit():
+                _logger.warning("DbConnection is being closed without committing.")
 
         await self.rollback()
         for session in self._sessions.values():
@@ -263,7 +277,10 @@ class DbSession(BaseSqlBuilder):
     async def commit(self) -> None:
         """Commits all sessions that need to be committed."""
         for session in self._sessions_needs_commit:
-            await session.commit()
+            try:
+                await session.commit()
+            except Exception as e:
+                print(e)
 
         self._sessions_needs_commit.clear()
 
@@ -280,6 +297,6 @@ class DbSession(BaseSqlBuilder):
         :param role: The role of the session to be returned.
         """
         session = self._sessions[role]
-        if role != DbSessionRole.Select:
-            self._sessions_needs_commit.append(session)
+        # if role != DbSessionRole.Select:
+        self._sessions_needs_commit.append(session)
         return session

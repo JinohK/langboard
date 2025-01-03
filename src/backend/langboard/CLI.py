@@ -72,7 +72,6 @@ def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
         for _ in range(min(workers, cpu_count())):
             process = _run_app_bot_wrapper(options, is_restarting)
             processes.append(process)
-        # processes.append(_run_queue_bot_wrapper())
 
         options.workers = workers
 

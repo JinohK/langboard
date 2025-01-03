@@ -12,7 +12,7 @@ const BoardCardActionLabel = memo(({ label }: IBoardCardActionLabelProps) => {
     const description = label.useField("description");
 
     return (
-        <Tooltip.Provider delayDuration={400}>
+        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
             <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                     <Flex items="center" gap="1.5" className="truncate">

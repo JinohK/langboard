@@ -1,7 +1,6 @@
 "use client";
 
 import { type ReactNode } from "react";
-
 import * as Popover from "@radix-ui/react-popover";
 
 type EmojiToolbarDropdownProps = {

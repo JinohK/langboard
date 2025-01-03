@@ -6,6 +6,7 @@ import { API_ROUTES, SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/contro
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
+import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
@@ -40,57 +41,51 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const { projectUID, projectMembers, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
-    const [isEditing, setIsEditing] = useState(false);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const content = wiki.useField("content");
-    const valueRef = useRef<IEditorContent>(content);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
+    const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
+        canEdit: () => true,
+        customStartEditing: () => setCurrentEditor(wiki.uid),
+        valueType: "editor",
+        save: (value) => {
+            const promise = changeWikiDetailsMutateAsync({
+                project_uid: projectUID,
+                wiki_uid: wiki.uid,
+                content: value,
+            });
+
+            const toastId = Toast.Add.promise(promise, {
+                loading: t("common.Changing..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
+
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    return t("wiki.successes.Content changed successfully.");
+                },
+                finally: () => {
+                    setCurrentEditor("");
+                    Toast.Add.dismiss(toastId);
+                },
+            });
+        },
+        originalValue: content,
+    });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
     const { stopEditing } = useStopEditingClickOutside("[data-wiki-content]", () => changeMode("view"), isEditing);
-    const changeMode = (mode: "edit" | "view") => {
-        if (mode === "edit") {
-            setCurrentEditor(wiki.uid);
-            return;
-        }
-
-        if ((valueRef.current?.content ?? "").trim() === (content?.content ?? "").trim()) {
-            setCurrentEditor("");
-            return;
-        }
-
-        const promise = changeWikiDetailsMutateAsync({
-            project_uid: projectUID,
-            wiki_uid: wiki.uid,
-            content: valueRef.current,
-        });
-
-        const toastId = Toast.Add.promise(promise, {
-            loading: t("common.Changing..."),
-            error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
-
-                handle(error);
-                return message;
-            },
-            success: () => {
-                return t("wiki.successes.Content changed successfully.");
-            },
-            finally: () => {
-                setCurrentEditor("");
-                Toast.Add.dismiss(toastId);
-            },
-        });
-    };
 
     editorsRef.current[wiki.uid] = (editing: bool) => {
         setIsEditing(editing);

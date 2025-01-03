@@ -16,7 +16,7 @@ const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.
                 const Comp = isFloating ? FloatingNavItem : SidebarNavItem;
 
                 return (
-                    <Tooltip.Provider delayDuration={400} key={createShortUUID()}>
+                    <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} key={createShortUUID()}>
                         <Tooltip.Root>
                             <Tooltip.Trigger asChild>
                                 <Comp key={key} item={item} />

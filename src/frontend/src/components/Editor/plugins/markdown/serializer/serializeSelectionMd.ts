@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SlateEditor } from "@udecode/plate-common";
-
 import merge from "lodash/merge.js";
-
 import type { SerializeMdNodeOptions, SerializeMdOptions } from "@/components/Editor/plugins/markdown/serializer/serializeMdNode";
-
 import { serializeMdNodes } from "@/components/Editor/plugins/markdown/serializer/serializeMdNodes";
 
 /** Serialize the editor value to Markdown. */

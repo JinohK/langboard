@@ -2,8 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { cn, withRef } from "@udecode/cn";
-import { InlineCombobox, InlineComboboxContent, InlineComboboxEmpty, InlineComboboxGroup, InlineComboboxInput } from "./inline-combobox";
-import { PlateElement } from "./plate-element";
+import {
+    InlineCombobox,
+    InlineComboboxContent,
+    InlineComboboxEmpty,
+    InlineComboboxGroup,
+    InlineComboboxInput,
+} from "@/components/plate-ui/inline-combobox";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { AuthUser, User } from "@/core/models";
 import { useTranslation } from "react-i18next";
 import { createShortUUID } from "@/core/utils/StringUtils";

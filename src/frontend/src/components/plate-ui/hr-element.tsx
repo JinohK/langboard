@@ -2,7 +2,7 @@
 
 import { cn, withRef } from "@udecode/cn";
 import { useFocused, useSelected } from "slate-react";
-import { PlateElement } from "./plate-element";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 
 export const HrElement = withRef<typeof PlateElement>(({ className, nodeProps, ...props }, ref) => {
     const { children } = props;

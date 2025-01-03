@@ -3,7 +3,6 @@
 
 import type { AutoformatRule } from "@udecode/plate-autoformat";
 import type { SlateEditor } from "@udecode/plate-common";
-
 import {
     autoformatArrow,
     autoformatLegal,

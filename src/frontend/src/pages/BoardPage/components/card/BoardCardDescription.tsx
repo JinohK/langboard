@@ -3,13 +3,14 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
 import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
-import { memo, useEffect, useReducer, useRef, useState } from "react";
+import { memo, useEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDescription() {
@@ -25,63 +26,53 @@ export function SkeletonBoardCardDescription() {
 const BoardCardDescription = memo((): JSX.Element => {
     const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
-    const [isEditing, setIsEditing] = useState(false);
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const editorElementRef = useRef<HTMLDivElement | null>(null);
     const description = card.useField("description");
-    const descriptionRef = useRef<IEditorContent>(description ?? { content: "" });
-    const setValue = (value: IEditorContent) => {
-        descriptionRef.current = value;
-    };
     const editorName = `${card.uid}-description`;
-    const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
-    const changeMode = (mode: "edit" | "view") => {
-        if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
-            return;
-        }
+    const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
+        canEdit: () => hasRoleAction(Project.ERoleAction.CARD_UPDATE),
+        customStartEditing: () => setCurrentEditor(editorName),
+        valueType: "editor",
+        save: (value) => {
+            const promise = changeCardDetailsMutateAsync({
+                project_uid: projectUID,
+                card_uid: card.uid,
+                description: value,
+            });
 
-        if (mode === "edit") {
-            setCurrentEditor(editorName);
-            return;
-        }
+            const toastId = Toast.Add.promise(promise, {
+                loading: t("common.Changing..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
 
-        if (descriptionRef.current.content.trim() === (description?.content ?? "").trim()) {
-            setCurrentEditor("");
-            return;
-        }
-
-        const promise = changeCardDetailsMutateAsync({
-            project_uid: projectUID,
-            card_uid: card.uid,
-            description: descriptionRef.current,
-        });
-
-        const toastId = Toast.Add.promise(promise, {
-            loading: t("common.Changing..."),
-            error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
-
-                handle(error);
-                return message;
-            },
-            success: () => {
-                return t("card.successes.Description changed successfully.");
-            },
-            finally: () => {
-                setCurrentEditor("");
-                Toast.Add.dismiss(toastId);
-            },
-        });
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    return t("card.successes.Description changed successfully.");
+                },
+                finally: () => {
+                    setCurrentEditor("");
+                    Toast.Add.dismiss(toastId);
+                },
+            });
+        },
+        originalValue: description ?? { content: "" },
+    });
+    const setValue = (value: IEditorContent) => {
+        valueRef.current = value;
     };
+    const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
 
     editorsRef.current[editorName] = (editing: bool) => {
         if (hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
@@ -127,7 +118,7 @@ const BoardCardDescription = memo((): JSX.Element => {
             data-card-description
         >
             <PlateEditor
-                value={descriptionRef.current}
+                value={valueRef.current}
                 mentionableUsers={card.project_members}
                 currentUser={currentUser}
                 className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}

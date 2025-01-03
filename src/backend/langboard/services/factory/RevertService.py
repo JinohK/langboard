@@ -97,7 +97,8 @@ class RevertService(BaseService):
             and will be inserted if :meth:`RevertService.revert` is called
 
         :val:`RevertType.Delete` means the model will be inserted in this method\n
-            and will be deleted if :meth:`RevertService.revert` is called
+            and will be deleted if :meth:`RevertService.revert` is called\n
+            You must commit before calling this method.
 
         :val:`RevertType.Update` means the model will be updated if :meth:`RevertService.revert` is called
         """
@@ -107,7 +108,6 @@ class RevertService(BaseService):
             if model.revert_type == RevertType.Delete:
                 if not only_commit:
                     self._db.insert(model.unsaved_model)
-                await self._db.commit()
                 target_id = model.unsaved_model.id
                 prev_record = {}
             elif model.revert_type == RevertType.Insert:
@@ -117,7 +117,6 @@ class RevertService(BaseService):
                     is_purged = True
                 if not only_commit:
                     await self._db.delete(model.unsaved_model, purge=model.purge)  # type: ignore
-                await self._db.commit()
             else:
                 target_id = model.unsaved_model.id
                 prev_record = model.unsaved_model.changes_dict

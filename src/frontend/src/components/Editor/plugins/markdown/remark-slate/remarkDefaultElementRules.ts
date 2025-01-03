@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TDescendant, TElement, TText } from "@udecode/plate-common";
-
 import type { MdastNode, RemarkElementRules } from "@/components/Editor/plugins/markdown/remark-slate/types";
-
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { remarkTransformElementChildren } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElementChildren";
 import { remarkTransformNode } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformNode";

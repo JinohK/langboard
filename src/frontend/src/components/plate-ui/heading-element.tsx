@@ -2,7 +2,7 @@
 
 import { withRef, withVariants } from "@udecode/cn";
 import { cva } from "class-variance-authority";
-import { PlateElement } from "./plate-element";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 
 const headingVariants = cva("relative mb-1 mt-4", {
     variants: {

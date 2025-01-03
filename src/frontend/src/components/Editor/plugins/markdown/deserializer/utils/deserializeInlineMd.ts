@@ -1,6 +1,5 @@
 import type { TDescendant } from "@udecode/plate-common";
 import type { PlateEditor } from "@udecode/plate-common/react";
-
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { stripMarkdownBlocks } from "@/components/Editor/plugins/markdown/deserializer/utils/stripMarkdown";
 

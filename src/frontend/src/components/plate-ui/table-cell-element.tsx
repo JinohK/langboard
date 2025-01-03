@@ -5,8 +5,8 @@ import { cn, withProps, withRef } from "@udecode/cn";
 import { useElement } from "@udecode/plate-common/react";
 import { useBlockSelected } from "@udecode/plate-selection/react";
 import { TableRowPlugin, useTableCellElement, useTableCellElementState } from "@udecode/plate-table/react";
-import { blockSelectionVariants } from "./block-selection";
-import { PlateElement } from "./plate-element";
+import { blockSelectionVariants } from "@/components/plate-ui/block-selection";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 
 export const TableCellElement = withRef<
     typeof PlateElement,
@@ -35,7 +35,7 @@ export const TableCellElement = withRef<
                     cn(
                         isHeader && "text-left [&_>_*]:m-0",
                         "before:size-full",
-                        selected && "before:z-10 before:bg-muted",
+                        selected && "before:z-10 before:bg-muted/80",
                         "before:absolute before:box-border before:select-none before:content-['']",
                         borders &&
                             cn(

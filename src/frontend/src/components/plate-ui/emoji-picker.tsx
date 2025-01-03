@@ -3,11 +3,11 @@
 import type { UseEmojiPickerType } from "@udecode/plate-emoji/react";
 import { cn } from "@udecode/cn";
 import { EmojiSettings } from "@udecode/plate-emoji";
-import { EmojiPickerContent } from "./emoji-picker-content";
-import { EmojiPickerNavigation } from "./emoji-picker-navigation";
-import { EmojiPickerPreview } from "./emoji-picker-preview";
-import { EmojiPickerSearchAndClear } from "./emoji-picker-search-and-clear";
-import { EmojiPickerSearchBar } from "./emoji-picker-search-bar";
+import { EmojiPickerContent } from "@/components/plate-ui/emoji-picker-content";
+import { EmojiPickerNavigation } from "@/components/plate-ui/emoji-picker-navigation";
+import { EmojiPickerPreview } from "@/components/plate-ui/emoji-picker-preview";
+import { EmojiPickerSearchAndClear } from "@/components/plate-ui/emoji-picker-search-and-clear";
+import { EmojiPickerSearchBar } from "@/components/plate-ui/emoji-picker-search-bar";
 
 export function EmojiPicker({
     clearSearch,

@@ -4,7 +4,7 @@ import { withRef } from "@udecode/cn";
 import { ListStyleType } from "@udecode/plate-indent-list";
 import { useIndentListToolbarButton, useIndentListToolbarButtonState } from "@udecode/plate-indent-list/react";
 import { List, ListOrdered } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 
 export const IndentListToolbarButton = withRef<

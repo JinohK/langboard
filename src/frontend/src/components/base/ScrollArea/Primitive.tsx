@@ -10,7 +10,6 @@ import { useDirection } from "@radix-ui/react-direction";
 import { useLayoutEffect } from "@radix-ui/react-use-layout-effect";
 import { clamp } from "@radix-ui/number";
 import { composeEventHandlers } from "@radix-ui/primitive";
-
 import type { Scope } from "@radix-ui/react-context";
 import { useStateMachine } from "@/components/base/ScrollArea/useStateMachine";
 
@@ -811,7 +810,7 @@ const ScrollAreaThumbImpl = React.forwardRef<ScrollAreaThumbImplElement, ScrollA
         const scrollbarContext = useScrollbarContext(THUMB_NAME, __scopeScrollArea);
         const { onThumbPositionChange } = scrollbarContext;
         const composedRef = useComposedRefs(forwardedRef, (node) => scrollbarContext.onThumbChange(node));
-        const removeUnlinkedScrollListenerRef = React.useRef<() => void>();
+        const removeUnlinkedScrollListenerRef = React.useRef<() => void>(undefined);
         const debounceScrollEnd = useDebounceCallback(() => {
             if (removeUnlinkedScrollListenerRef.current) {
                 removeUnlinkedScrollListenerRef.current();
@@ -1054,8 +1053,8 @@ function getSubtree(
     if (!asChild) return typeof content === "function" ? content(children) : content;
 
     const firstChild = React.Children.only(children) as React.ReactElement;
-    return React.cloneElement(firstChild, {
-        children: typeof content === "function" ? content(firstChild.props.children) : content,
+    return React.cloneElement<any>(firstChild, {
+        children: typeof content === "function" ? content((firstChild.props as any).children) : content,
     });
 }
 

@@ -162,7 +162,7 @@ function Button({ buttonProps, dockIconProps, title, titleSide, icon, children }
 
     if (title) {
         iconComp = (
-            <Tooltip.Provider delayDuration={400} disableHoverableContent>
+            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} disableHoverableContent>
                 <Tooltip.Root>
                     <Tooltip.Trigger {...buttonProps}>{iconComp}</Tooltip.Trigger>
                     <Tooltip.Content side={titleSide}>{title}</Tooltip.Content>

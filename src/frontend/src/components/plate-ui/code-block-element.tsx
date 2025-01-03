@@ -2,8 +2,8 @@
 
 import { cn, withRef } from "@udecode/cn";
 import { useCodeBlockElementState } from "@udecode/plate-code-block/react";
-import { CodeBlockCombobox } from "./code-block-combobox";
-import { PlateElement } from "./plate-element";
+import { CodeBlockCombobox } from "@/components/plate-ui/code-block-combobox";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import "@/assets/styles/editor-code-block-element.scss";
 
 export const CodeBlockElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {

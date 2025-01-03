@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TDescendant } from "@udecode/plate-common";
-
 import merge from "lodash/merge.js";
-
 import type { MdNodeTypes } from "@/components/Editor/plugins/markdown/serializer/types";
-
 import { defaultSerializeMdNodesOptions } from "@/components/Editor/plugins/markdown/serializer/defaultSerializeMdNodesOptions";
 import {
     type SerializeMdNodeOptions,

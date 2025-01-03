@@ -15,7 +15,7 @@ const BoardCardLabel = memo(({ label }: IBoardCardLabelProps) => {
     const currentColor = color || "#FFFFFF";
 
     return (
-        <Tooltip.Provider delayDuration={400}>
+        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
             <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                     <Box className="select-none" position="relative">

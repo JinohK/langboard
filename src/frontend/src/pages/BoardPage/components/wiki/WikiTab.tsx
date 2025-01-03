@@ -98,7 +98,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
 
     return (
         <Box hidden={isInBin}>
-            <Tooltip.Provider delayDuration={400}>
+            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                 <Tooltip.Root>
                     <Tabs.Trigger
                         value={wiki.uid}

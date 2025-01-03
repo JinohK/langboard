@@ -4,7 +4,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardColumnAddCardButton = memo(() => {
-    const { isAddingCard, setIsAddingCard, isValidating, changeMode, canWrite, textareaRef } = useBoardAddCard();
+    const { isEditing, setIsEditing, isValidating, changeMode, canWrite, textareaRef } = useBoardAddCard();
     const [t] = useTranslation();
 
     if (!canWrite) {
@@ -23,8 +23,8 @@ const BoardColumnAddCardButton = memo(() => {
 
     return (
         <>
-            {!isAddingCard ? (
-                <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={() => changeMode("create")}>
+            {!isEditing ? (
+                <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={() => changeMode("edit")}>
                     <IconComponent icon="plus" size="5" />
                     {t("board.Add a card")}
                 </Button>
@@ -33,7 +33,7 @@ const BoardColumnAddCardButton = memo(() => {
                     <SubmitButton type="button" className="h-8 px-3 py-2" isValidating={isValidating} onClick={save}>
                         {t("board.Add card")}
                     </SubmitButton>
-                    <Button variant="ghost" size="icon-sm" disabled={isValidating} onClick={() => setIsAddingCard(false)}>
+                    <Button variant="ghost" size="icon-sm" disabled={isValidating} onClick={() => setIsEditing(false)}>
                         <IconComponent icon="x" size="5" />
                     </Button>
                 </Flex>

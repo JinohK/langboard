@@ -3,10 +3,10 @@
 import React from "react";
 import { type EmojiDropdownMenuOptions, useEmojiDropdownMenuState } from "@udecode/plate-emoji/react";
 import { Smile } from "lucide-react";
-import { emojiCategoryIcons, emojiSearchIcons } from "./emoji-icons";
-import { EmojiPicker } from "./emoji-picker";
-import { EmojiToolbarDropdown } from "./emoji-toolbar-dropdown";
-import { ToolbarButton } from "./toolbar";
+import { emojiCategoryIcons, emojiSearchIcons } from "@/components/plate-ui/emoji-icons";
+import { EmojiPicker } from "@/components/plate-ui/emoji-picker";
+import { EmojiToolbarDropdown } from "@/components/plate-ui/emoji-toolbar-dropdown";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 import { i18nProps } from "@udecode/plate-emoji";
 

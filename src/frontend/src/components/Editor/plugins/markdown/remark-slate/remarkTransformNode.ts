@@ -1,7 +1,5 @@
 import type { TDescendant } from "@udecode/plate-common";
-
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
-
 import { remarkTextTypes } from "@/components/Editor/plugins/markdown/remark-slate/remarkTextTypes";
 import { remarkTransformElement } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElement";
 import { remarkTransformText } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformText";

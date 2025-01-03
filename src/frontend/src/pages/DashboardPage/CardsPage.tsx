@@ -52,7 +52,7 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
         const Comp = isHead ? Table.Head : Table.Cell;
         return (
             <Comp className={className}>
-                <Tooltip.Provider delayDuration={400}>
+                <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                     <Tooltip.Root>
                         <Tooltip.Trigger>{value}</Tooltip.Trigger>
                         <Tooltip.Content>{value}</Tooltip.Content>

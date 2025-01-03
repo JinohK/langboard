@@ -6,6 +6,8 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 
+const DEFAULT_DURATION = 400;
+
 const Provider = TooltipPrimitive.Provider;
 
 const Root = TooltipPrimitive.Root;
@@ -68,4 +70,4 @@ function withTooltip<T extends React.ComponentType<any> | keyof HTMLElementTagNa
     });
 }
 
-export { Content, Provider, Root, Trigger, Portal, withTooltip };
+export { DEFAULT_DURATION, Content, Provider, Root, Trigger, Portal, withTooltip };

@@ -9,10 +9,10 @@ import { withHOC } from "@udecode/plate-common/react";
 import { parseTwitterUrl, parseVideoUrl } from "@udecode/plate-media";
 import { MediaEmbedPlugin, useMediaState } from "@udecode/plate-media/react";
 import { ResizableProvider, useResizableStore } from "@udecode/plate-resizable";
-import { Caption, CaptionTextarea } from "./caption";
-import { MediaPopover } from "./media-popover";
-import { PlateElement } from "./plate-element";
-import { Resizable, ResizeHandle, mediaResizeHandleVariants } from "./resizable";
+import { Caption, CaptionTextarea } from "@/components/plate-ui/caption";
+import { MediaPopover } from "@/components/plate-ui/media-popover";
+import { PlateElement } from "@/components/plate-ui/plate-element";
+import { Resizable, ResizeHandle, mediaResizeHandleVariants } from "@/components/plate-ui/resizable";
 import { useTranslation } from "react-i18next";
 
 export const MediaEmbedElement = withHOC(

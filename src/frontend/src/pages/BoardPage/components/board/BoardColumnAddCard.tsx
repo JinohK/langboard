@@ -5,11 +5,11 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardColumnAddCard = memo(() => {
-    const { isAddingCard, isValidating, changeMode, scrollToBottom, canWrite, textareaRef, disableChangeModeAttr } = useBoardAddCard();
+    const { isEditing, isValidating, changeMode, scrollToBottom, canWrite, textareaRef, disableChangeModeAttr } = useBoardAddCard();
     const [t] = useTranslation();
     const [height, setHeight] = useState(0);
 
-    if (!isAddingCard || !canWrite) {
+    if (!isEditing || !canWrite) {
         return null;
     }
 

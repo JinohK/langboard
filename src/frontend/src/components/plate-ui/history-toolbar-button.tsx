@@ -2,7 +2,7 @@
 
 import { useEditorRef, useEditorSelector, withRef } from "@udecode/plate-common/react";
 import { Redo2Icon, Undo2Icon } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 
 export const RedoToolbarButton = withRef<typeof ToolbarButton>((props, ref) => {

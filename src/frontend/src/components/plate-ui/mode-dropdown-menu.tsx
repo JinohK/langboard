@@ -4,7 +4,7 @@
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
 import { focusEditor, useEditorReadOnly, useEditorRef, usePlateStore } from "@udecode/plate-common/react";
 import { Eye, Pen } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
 import { useTranslation } from "react-i18next";
 

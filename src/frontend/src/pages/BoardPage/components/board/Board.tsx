@@ -230,7 +230,7 @@ const BoardResult = memo(() => {
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
                             ))}
                         </SortableContext>
-                        {hasRoleAction(Project.ERoleAction.UPDATE) && <BoardColumnAdd />}
+                        {hasRoleAction(Project.ERoleAction.UPDATE) && !selectCardViewType && <BoardColumnAdd />}
                     </Flex>
                     <ScrollArea.Bar orientation="horizontal" />
                 </ScrollArea.Root>

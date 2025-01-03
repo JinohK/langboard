@@ -1,7 +1,7 @@
 "use client";
 
 import { getMentionOnSelectItem } from "@udecode/plate-mention";
-import { InlineComboboxItem } from "./inline-combobox";
+import { InlineComboboxItem } from "@/components/plate-ui/inline-combobox";
 import { User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";

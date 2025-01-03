@@ -1,5 +1,6 @@
 import { Button, Dialog, Flex, IconComponent, ScrollArea } from "@/components/base";
 import { ProjectCard } from "@/core/models";
+import { useBoard } from "@/core/providers/BoardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -13,7 +14,8 @@ export interface ISelectRelationshipDialogProps {
 }
 
 const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
-    const { selectCardViewType, selectedRelationshipUIDs, globalRelationshipTypes, setCardSelection } = useBoardRelationshipController();
+    const { selectCardViewType, selectedRelationshipUIDs, setCardSelection } = useBoardRelationshipController();
+    const { globalRelationshipTypes } = useBoard();
     const [t] = useTranslation();
     const [selectedRelationshipUID, setSelectedRelationshipUID] = useState<string | undefined>(
         selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1]

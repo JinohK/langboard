@@ -17,8 +17,8 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "./alert-dialog";
-import { ToolbarSplitButton, ToolbarSplitButtonPrimary, ToolbarSplitButtonSecondary } from "./toolbar";
+} from "@/components/plate-ui/alert-dialog";
+import { ToolbarSplitButton, ToolbarSplitButtonPrimary, ToolbarSplitButtonSecondary } from "@/components/plate-ui/toolbar";
 import { DropdownMenu, Floating, Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 

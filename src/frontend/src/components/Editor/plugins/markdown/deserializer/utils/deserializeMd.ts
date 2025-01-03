@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SlateEditor } from "@udecode/plate-common";
-
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkMath from "remark-math";
 import { type Processor, unified } from "unified";
-
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import {
     RemarkDataTextRules,

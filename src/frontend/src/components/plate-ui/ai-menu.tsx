@@ -1,14 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
 import { AIChatPlugin, useEditorChat } from "@udecode/plate-ai/react";
-import { type TElement, type TNodeEntry, getAncestorNode, getBlocks, isElementEmpty, isHotkey, isSelectionAtBlockEnd } from "@udecode/plate-common";
-import { type PlateEditor, toDOMNode, useEditorPlugin, useHotkeys } from "@udecode/plate-common/react";
+import {
+    type SlateEditor,
+    type TElement,
+    type TNodeEntry,
+    getAncestorNode,
+    getBlocks,
+    isElementEmpty,
+    isHotkey,
+    isSelectionAtBlockEnd,
+} from "@udecode/plate-common";
+import { toDOMNode, useEditorPlugin, useHotkeys } from "@udecode/plate-common/react";
 import { BlockSelectionPlugin, useIsSelecting } from "@udecode/plate-selection/react";
 import { Loader2Icon } from "lucide-react";
 import { IUseChat, useChat } from "@/components/Editor/useChat";
-import { AIChatEditor } from "./ai-chat-editor";
-import { AIMenuItems } from "./ai-menu-items";
+import { AIChatEditor } from "@/components/plate-ui/ai-chat-editor";
+import { AIMenuItems } from "@/components/plate-ui/ai-menu-items";
 import { Command, Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -21,7 +31,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
     const mode = useOption("mode");
     const isSelecting = useIsSelecting();
 
-    const aiEditorRef = React.useRef<PlateEditor | null>(null);
+    const aiEditorRef = React.useRef<SlateEditor | null>(null);
     const [value, setValue] = React.useState("");
 
     const chat = useChat({ socket, eventKey, events });
@@ -77,7 +87,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
     return (
         <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-            <Popover.Anchor virtualRef={{ current: anchorElement }} />
+            <Popover.Anchor virtualRef={{ current: anchorElement as any }} />
 
             <Popover.Content
                 className="border-none bg-transparent p-0 shadow-none"

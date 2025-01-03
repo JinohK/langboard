@@ -3,7 +3,7 @@
 
 import type { UseEmojiPickerType } from "@udecode/plate-emoji/react";
 import { cn } from "@udecode/cn";
-import { emojiSearchIcons } from "./emoji-icons";
+import { emojiSearchIcons } from "@/components/plate-ui/emoji-icons";
 import { Button } from "@/components/base";
 
 export type EmojiPickerSearchAndClearProps = Pick<UseEmojiPickerType, "clearSearch" | "i18n" | "searchValue">;

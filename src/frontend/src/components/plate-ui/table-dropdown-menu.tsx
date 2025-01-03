@@ -4,9 +4,10 @@ import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
 import { findNode, someNode } from "@udecode/plate-common";
 import { focusEditor, useEditorPlugin, useEditorSelector } from "@udecode/plate-common/react";
 import { deleteTable, insertTableRow, TTableCellElement, TTableElement, TTableRowElement } from "@udecode/plate-table";
-import { TablePlugin, deleteColumn, deleteRow, insertTable } from "@udecode/plate-table/react";
+import { TablePlugin } from "@udecode/plate-table/react";
+import { deleteColumn, deleteRow, insertTable } from "@udecode/plate-table";
 import { Minus, Plus, RectangleHorizontal, RectangleVertical, Table, Trash } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
 import { useTranslation } from "react-i18next";
 

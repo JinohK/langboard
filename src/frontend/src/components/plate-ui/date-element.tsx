@@ -2,8 +2,8 @@
 
 import { cn, withRef } from "@udecode/cn";
 import { setNodes } from "@udecode/plate-common";
-import { findNodePath } from "@udecode/plate-common/react";
-import { PlateElement } from "./plate-element";
+import { findPath } from "@udecode/plate-common/react";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { Popover, Calendar } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -49,7 +49,7 @@ export const DateElement = withRef<typeof PlateElement>(({ children, className, 
                         onChange={(date) => {
                             if (!date) return;
 
-                            setNodes(editor, { date: date.toDateString() }, { at: findNodePath(editor, element) });
+                            setNodes(editor, { date: date.toDateString() }, { at: findPath(editor, element) });
                         }}
                         hideTime
                         initialFocus

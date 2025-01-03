@@ -1,7 +1,6 @@
 "use client";
 
 import type { PlateEditor } from "@udecode/plate-common/react";
-
 import { insertCallout } from "@udecode/plate-callout";
 import { CalloutPlugin } from "@udecode/plate-callout/react";
 import { insertCodeBlock } from "@udecode/plate-code-block";
@@ -29,8 +28,11 @@ import { insertEquation, insertInlineEquation } from "@udecode/plate-math";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
 import { insertAudioPlaceholder, insertFilePlaceholder, insertMedia, insertVideoPlaceholder } from "@udecode/plate-media";
 import { AudioPlugin, FilePlugin, ImagePlugin, MediaEmbedPlugin, VideoPlugin } from "@udecode/plate-media/react";
-import { TablePlugin, insertTable } from "@udecode/plate-table/react";
+import { insertTable } from "@udecode/plate-table";
+import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
 import { Path } from "slate";
+
+export const STRUCTURAL_TYPES: string[] = [TablePlugin.key, TableRowPlugin.key, TableCellPlugin.key];
 
 const insertList = (editor: PlateEditor, type: string) => {
     insertNodes(
@@ -145,7 +147,7 @@ export const setBlockType = (editor: PlateEditor, type: string, { at }: { at?: P
             }
         }
 
-        const entries = getBlocks(editor);
+        const entries = getBlocks(editor, { mode: "lowest" });
 
         entries.forEach((entry) => setEntry(entry));
     });

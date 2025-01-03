@@ -3,7 +3,7 @@
 import { withRef } from "@udecode/cn";
 import { BulletedListPlugin, useListToolbarButton, useListToolbarButtonState } from "@udecode/plate-list/react";
 import { List, ListOrdered } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 
 export const ListToolbarButton = withRef<

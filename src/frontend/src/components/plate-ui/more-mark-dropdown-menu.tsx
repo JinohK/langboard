@@ -7,7 +7,7 @@ import { collapseSelection } from "@udecode/plate-common";
 import { focusEditor, useEditorRef } from "@udecode/plate-common/react";
 import { KbdPlugin } from "@udecode/plate-kbd/react";
 import { KeyboardIcon, MoreHorizontalIcon, RadicalIcon, SubscriptIcon, SuperscriptIcon } from "lucide-react";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
 import { useTranslation } from "react-i18next";
 

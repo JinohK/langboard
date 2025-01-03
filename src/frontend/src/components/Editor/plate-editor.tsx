@@ -46,7 +46,7 @@ export function PlateEditor({
     ...props
 }: TPlateEditorProps) {
     if (!editorRef) {
-        editorRef = useRef<TEditor>();
+        editorRef = useRef<TEditor>(null);
     }
 
     const editor = useCreateEditor({

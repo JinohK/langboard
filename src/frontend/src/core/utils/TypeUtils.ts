@@ -35,7 +35,7 @@ const isType =
 
 const isArray: <T>(value: unknown) => value is T[] = isType("array");
 const isNumber: (value: unknown) => value is number = isType("number");
-const isObject: (value: unknown) => value is object = isType("object");
+const isObject: <T = object>(value: unknown) => value is T = isType("object");
 const isString: (value: unknown) => value is string = isType("string");
 const isBool: (value: unknown) => value is bool = isType(typeof true);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +64,7 @@ const isElement = <TName extends THTMLTags | undefined>(
     value: unknown,
     tag?: TName
 ): value is TName extends THTMLTags ? HTMLElementTagNameMap[TName] : Element =>
-    isDomType(ENodeTypeMap.ELEMENT)(value) && (!tag || getProperty<string>(value, "nodeName")?.toLowerCase() === tag);
+    isDomType(ENodeTypeMap.ELEMENT)(value) && (!tag || getProperty<string>(value, "nodeName")?.toLowerCase() === tag.toLowerCase());
 const isAttribute: (value: unknown) => value is Attr = isDomType(ENodeTypeMap.ATTRIBUTE);
 const isText: (value: unknown) => value is Text = isDomType(ENodeTypeMap.TEXT);
 const isCDATASection: (value: unknown) => value is CDATASection = isDomType(ENodeTypeMap.CDATA_SECTION);

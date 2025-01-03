@@ -1,21 +1,14 @@
 "use client";
 
-import type { TTableElement } from "@udecode/plate-table";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import { cn, withRef } from "@udecode/cn";
 import { isSelectionExpanded } from "@udecode/plate-common";
 import { useEditorRef, useEditorSelector, useElement, useRemoveNodeButton, withHOC } from "@udecode/plate-common/react";
-import {
-    TableProvider,
-    mergeTableCells,
-    unmergeTableCells,
-    useTableElement,
-    useTableElementState,
-    useTableMergeState,
-} from "@udecode/plate-table/react";
+import { type TTableElement, mergeTableCells, unmergeTableCells } from "@udecode/plate-table";
+import { TableProvider, useTableElement, useTableElementState, useTableMergeState } from "@udecode/plate-table/react";
 import { Combine, Trash2Icon, Ungroup } from "lucide-react";
 import { useReadOnly, useSelected } from "slate-react";
-import { PlateElement } from "./plate-element";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { Button, Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -60,7 +53,12 @@ export const TableFloatingToolbar = withRef<typeof Popover.Content>(({ children,
         <Popover.Root open={open} modal={false}>
             <PopoverAnchor asChild>{children}</PopoverAnchor>
             {(canMerge || canUnmerge || collapsed) && (
-                <Popover.Content ref={ref} className="flex w-[220px] flex-col p-0" onOpenAutoFocus={(e) => e.preventDefault()} {...props}>
+                <Popover.Content
+                    ref={ref}
+                    className={cn(Popover.ContentVariants(), "flex w-[220px] flex-col p-0")}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    {...props}
+                >
                     {unmergeButton}
                     {mergeContent}
                     {bordersContent}
@@ -78,13 +76,13 @@ export const TableElement = withHOC(
 
         return (
             <TableFloatingToolbar>
-                <PlateElement className={cn("overflow-x-auto", className)} style={{ paddingLeft: marginLeft }} {...props}>
+                <PlateElement className={cn(className, "overflow-x-auto")} style={{ paddingLeft: marginLeft }} {...props}>
                     <table
                         ref={ref}
                         className={cn(
                             "my-4 ml-px mr-0 table h-px w-[calc(100%-6px)] table-fixed border-collapse",
                             "[&_tr:first-child_td]:bg-secondary/50 [&_tr:first-child_th]:bg-secondary/50",
-                            isSelectingCell && "[&_*::selection]:bg-none"
+                            isSelectingCell && "[&_*::selection]:!bg-transparent"
                         )}
                         {...tableProps}
                     >

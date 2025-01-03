@@ -1,7 +1,6 @@
 import { AuthUser, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useCallback, useEffect, useState } from "react";
-
 import { withProps } from "@udecode/cn";
 import { AIPlugin } from "@udecode/plate-ai/react";
 import {
@@ -31,7 +30,6 @@ import { AudioPlugin, FilePlugin, ImagePlugin, MediaEmbedPlugin, PlaceholderPlug
 import { MentionInputPlugin, MentionPlugin } from "@udecode/plate-mention/react";
 import { SlashInputPlugin } from "@udecode/plate-slash-command/react";
 import { TableCellHeaderPlugin, TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
-
 import { editorPlugins, viewPlugins } from "@/components/Editor/plugins/editor-plugins";
 import { AILeaf } from "@/components/plate-ui/ai-leaf";
 import { BlockquoteElement } from "@/components/plate-ui/blockquote-element";
@@ -57,7 +55,6 @@ import { TableCellElement, TableCellHeaderElement } from "@/components/plate-ui/
 import { TableElement } from "@/components/plate-ui/table-element";
 import { TableRowElement } from "@/components/plate-ui/table-row-element";
 import { TocElement } from "@/components/plate-ui/toc-element";
-import { withDraggables } from "@/components/plate-ui/with-draggables";
 import { deserializeMd } from "@/components/Editor/plugins/markdown";
 import { MediaPlaceholderElement } from "@/components/plate-ui/media-placeholder-element";
 import { MediaVideoElement } from "@/components/plate-ui/media-video-element";
@@ -186,7 +183,7 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
     return editorComponents;
 };
 
-export const useCreateEditor = (props: TUseCreateEditor) => {
+export const useCreateEditor = (props: TUseCreateEditor): ReturnType<typeof usePlateEditor> => {
     const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, plugins: customPlugins } = props;
 
     const reloadPlugins = useCallback(() => {
@@ -206,7 +203,7 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
         {
             override: {
                 components: {
-                    ...(readOnly ? components : withPlaceholders(withDraggables(components))),
+                    ...(readOnly ? components : withPlaceholders(components)),
                 },
             },
             plugins,

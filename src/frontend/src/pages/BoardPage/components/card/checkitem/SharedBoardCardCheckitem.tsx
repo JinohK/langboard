@@ -132,7 +132,7 @@ const SharedBoardCardCheckitem = memo(
                                     <SharedBoardCardCheckitemTimer />
                                 </Box>
                             </Flex>
-                            <Tooltip.Provider delayDuration={400}>
+                            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                                 <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
                                     <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
                                         <span className={cn("truncate", cardifiedUID && "sm:pl-2")}>{title}</span>

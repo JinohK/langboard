@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Processor } from "unified";
-
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
-
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { remarkDefaultCompiler } from "@/components/Editor/plugins/markdown/remark-slate/remarkDefaultCompiler";
 import { remarkSplitLineBreaksCompiler } from "@/components/Editor/plugins/markdown/remark-slate/remarkSplitLineBreaksCompiler";

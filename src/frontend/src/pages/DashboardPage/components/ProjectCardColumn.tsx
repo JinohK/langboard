@@ -16,7 +16,7 @@ function ProjectCardColumn({ column, setColumns }: IProjectCardColumnProps) {
     });
 
     return (
-        <Tooltip.Provider delayDuration={400}>
+        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
             <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                     <Flex direction="col" gap="0.5" minW="5" className="text-center">

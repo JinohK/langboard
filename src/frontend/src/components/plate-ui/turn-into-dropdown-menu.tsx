@@ -10,7 +10,7 @@ import { HEADING_KEYS } from "@udecode/plate-heading";
 import { INDENT_LIST_KEYS, ListStyleType } from "@udecode/plate-indent-list";
 import { FileCodeIcon, Heading1Icon, Heading2Icon, Heading3Icon, ListIcon, ListOrderedIcon, PilcrowIcon, QuoteIcon, SquareIcon } from "lucide-react";
 import { getBlockType, setBlockType } from "@/components/Editor/transforms";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
 import { someNode } from "@udecode/plate-common";
 import { TablePlugin } from "@udecode/plate-table/react";

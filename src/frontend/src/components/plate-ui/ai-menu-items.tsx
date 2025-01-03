@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
-import { getAncestorNode, getEndPoint, getNodeString } from "@udecode/plate-common";
+import { type SlateEditor, getAncestorNode, getEndPoint, getNodeString } from "@udecode/plate-common";
 import { type PlateEditor, focusEditor, useEditorPlugin } from "@udecode/plate-common/react";
 import { useIsSelecting } from "@udecode/plate-selection/react";
 import { Album, BadgeHelp, Check, CornerUpLeft, FeatherIcon, ListEnd, ListMinus, ListPlus, PenLine, Wand, X } from "lucide-react";
@@ -164,7 +164,7 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
         filterItems?: bool;
         items?: { label: string; value: string }[];
         shortcut?: string;
-        onSelect?: ({ aiEditor, editor }: { aiEditor: PlateEditor; editor: PlateEditor }) => void;
+        onSelect?: ({ aiEditor, editor }: { aiEditor: SlateEditor; editor: PlateEditor }) => void;
     }
 >;
 
@@ -207,7 +207,7 @@ export const AIMenuItems = ({
     aiEditorRef,
     setValue,
 }: {
-    aiEditorRef: React.MutableRefObject<PlateEditor | null>;
+    aiEditorRef: React.MutableRefObject<SlateEditor | null>;
     setValue: (value: string) => void;
 }) => {
     const [t] = useTranslation();

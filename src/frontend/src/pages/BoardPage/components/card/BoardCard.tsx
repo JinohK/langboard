@@ -22,7 +22,6 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
-import { createShortUUID } from "@/core/utils/StringUtils";
 import { AuthUser } from "@/core/models";
 
 export interface IBoardCardProps {
@@ -162,12 +161,12 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
     return (
         <>
             <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
-                <BoardCardTitle />
+                <BoardCardTitle key={`board-card-title-${card.uid}`} />
                 <Flex gap="3">
                     <Dialog.Description>
-                        <BoardCardColumnName />
+                        <BoardCardColumnName key={`board-card-column-name-${card.uid}`} />
                     </Dialog.Description>
-                    <BoardCardLabelList />
+                    <BoardCardLabelList key={`board-card-label-list-${card.uid}`} />
                 </Flex>
                 <Dialog.CloseButton className="absolute right-0" />
             </Dialog.Header>
@@ -175,27 +174,27 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                 <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
-                            <BoardCardMemberList key={createShortUUID()} />
+                            <BoardCardMemberList key={`board-card-member-list-${card.uid}`} />
                         </BoardCardSection>
                         <BoardCardSection title="card.Deadline" className="sm:w-1/2">
-                            <BoardCardDeadline />
+                            <BoardCardDeadline key={`board-card-deadline-${card.uid}`} />
                         </BoardCardSection>
                     </Flex>
                     <BoardCardSection title="card.Description" className="relative min-h-56">
-                        <BoardCardDescription />
+                        <BoardCardDescription key={`board-card-description-${card.uid}`} />
                     </BoardCardSection>
                     {card.attachments.length > 0 && (
                         <BoardCardSection title="card.Attached files">
-                            <BoardCardAttachmentList />
+                            <BoardCardAttachmentList key={`board-card-attachment-list-${card.uid}`} />
                         </BoardCardSection>
                     )}
                     {card.checkitems.length > 0 && (
                         <BoardCardSection title="card.Checklist">
-                            <BoardCardChecklist />
+                            <BoardCardChecklist key={`board-card-checklist-${card.uid}`} />
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">
-                        <BoardCommentList viewportId={viewportId} />
+                        <BoardCommentList key={`board-card-comment-list-${card.uid}`} viewportId={viewportId} />
                     </BoardCardSection>
                 </Flex>
                 <Box w="full" maxW={{ sm: "32" }}>
@@ -207,7 +206,7 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                         className="top-[calc(theme(spacing.16)_+_theme(spacing.3))]"
                     >
                         <BoardCardSection title="card.Actions" titleClassName="mb-2">
-                            <BoardCardActionList />
+                            <BoardCardActionList key={`board-card-action-list-${card.uid}`} />
                         </BoardCardSection>
                     </Box>
                 </Box>

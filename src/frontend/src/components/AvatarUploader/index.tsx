@@ -115,7 +115,7 @@ function AvatarUploader({
                             {t("user.Drop avatar here")}
                         </Flex>
                     )}
-                    <Tooltip.Provider delayDuration={400}>
+                    <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                         <Tooltip.Root>
                             <Tooltip.Trigger asChild>
                                 <Avatar.Root size={avatarSize} onClick={() => !isValidating && inputRef.current?.click()}>
@@ -152,7 +152,7 @@ function AvatarUploader({
                     )}
                     {avatarUrl && (
                         <Dock.Icon className="bg-accent/70 text-red-500 transition-colors duration-300 hover:text-red-700">
-                            <Tooltip.Provider delayDuration={400} disableHoverableContent>
+                            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} disableHoverableContent>
                                 <Tooltip.Root>
                                     <Tooltip.Trigger className="p-3" type="button">
                                         <IconComponent icon="trash-2" className="size-full" onClick={removeAvatar} />

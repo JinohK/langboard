@@ -36,8 +36,8 @@ import {
     InlineComboboxGroupLabel,
     InlineComboboxInput,
     InlineComboboxItem,
-} from "./inline-combobox";
-import { PlateElement } from "./plate-element";
+} from "@/components/plate-ui/inline-combobox";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
 

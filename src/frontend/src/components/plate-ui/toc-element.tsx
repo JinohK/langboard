@@ -5,7 +5,7 @@
 import { cn, withRef } from "@udecode/cn";
 import { useTocElement, useTocElementState } from "@udecode/plate-heading/react";
 import { cva } from "class-variance-authority";
-import { PlateElement } from "./plate-element";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { Button } from "@/components/base";
 import { useTranslation } from "react-i18next";
 

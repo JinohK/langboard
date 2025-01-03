@@ -1,5 +1,4 @@
 import type { MdElementType, MdLeafType } from "@/components/Editor/plugins/markdown/serializer/types";
-
 import { type SerializeMdOptions, serializeMdNode } from "@/components/Editor/plugins/markdown/serializer/serializeMdNode";
 import { TTableCellElement, TTableElement, TTableRowElement } from "@udecode/plate-table";
 import { isLeafNode, nodeToHTML } from "@/components/Editor/plugins/markdown/serializer/utils";

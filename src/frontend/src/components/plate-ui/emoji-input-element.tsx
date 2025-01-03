@@ -11,8 +11,8 @@ import {
     InlineComboboxGroup,
     InlineComboboxInput,
     InlineComboboxItem,
-} from "./inline-combobox";
-import { PlateElement } from "./plate-element";
+} from "@/components/plate-ui/inline-combobox";
+import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
 
 export const EmojiInputElement = withRef<typeof PlateElement>(({ className, ...props }, ref) => {

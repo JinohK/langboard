@@ -10,7 +10,6 @@ import { ParagraphPlugin, PlateLeaf, createPlateEditor } from "@udecode/plate-co
 import { HEADING_KEYS } from "@udecode/plate-heading";
 import { HorizontalRulePlugin } from "@udecode/plate-horizontal-rule/react";
 import { LinkPlugin } from "@udecode/plate-link/react";
-
 import { cursorOverlayPlugin } from "@/components/Editor/plugins/cursor-overlay-plugin";
 import { AIMenu } from "@/components/plate-ui/ai-menu";
 import { BlockquoteElement } from "@/components/plate-ui/blockquote-element";
@@ -22,7 +21,6 @@ import { HeadingElement } from "@/components/plate-ui/heading-element";
 import { HrElement } from "@/components/plate-ui/hr-element";
 import { LinkElement } from "@/components/plate-ui/link-element";
 import { ParagraphElement } from "@/components/plate-ui/paragraph-element";
-
 import { basicNodesPlugins } from "@/components/Editor/plugins/basic-nodes-plugins";
 import { blockSelectionReadOnlyPlugin } from "@/components/Editor/plugins/block-selection-plugins";
 import { indentListPlugins } from "@/components/Editor/plugins/indent-list-plugins";

@@ -1,5 +1,4 @@
 import { type TDescendant, getNodeString } from "@udecode/plate-common";
-
 import { serializeMdNodes } from "@/components/Editor/plugins/markdown/serializer/serializeMdNodes";
 
 // TODO: add keepLeadingSpaces option to serializeMdNodes

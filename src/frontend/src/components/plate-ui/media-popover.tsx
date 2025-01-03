@@ -6,7 +6,7 @@ import { useEditorSelector, useElement, useRemoveNodeButton } from "@udecode/pla
 import { FloatingMedia as FloatingMediaPrimitive, floatingMediaActions, useFloatingMediaSelectors } from "@udecode/plate-media/react";
 import { Link, Trash2Icon } from "lucide-react";
 import { useReadOnly, useSelected } from "slate-react";
-import { CaptionButton } from "./caption";
+import { CaptionButton } from "@/components/plate-ui/caption";
 import { Button, ButtonVariants, Popover, Separator } from "@/components/base";
 import { InputVariants } from "@/components/base/Input";
 import { useTranslation } from "react-i18next";

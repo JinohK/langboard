@@ -75,7 +75,7 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
                     </Button>
                     <BoardSettingsLabelColor />
                     <Flex items={{ sm: "center" }} direction={{ initial: "col", sm: "row" }} gap={{ sm: "3" }} className="truncate">
-                        <Tooltip.Provider delayDuration={400}>
+                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                             <Tooltip.Root>
                                 <Tooltip.Trigger asChild>
                                     <Box textSize="sm" className="truncate">
@@ -85,7 +85,7 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
                                 <Tooltip.Content>{labelName}</Tooltip.Content>
                             </Tooltip.Root>
                         </Tooltip.Provider>
-                        <Tooltip.Provider delayDuration={400}>
+                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
                             <Tooltip.Root>
                                 <Tooltip.Trigger asChild>
                                     <Box textSize="sm" className="truncate text-muted-foreground/70">

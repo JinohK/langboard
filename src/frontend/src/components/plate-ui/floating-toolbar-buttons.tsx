@@ -3,12 +3,12 @@
 import { BoldPlugin, CodePlugin, ItalicPlugin, StrikethroughPlugin, UnderlinePlugin } from "@udecode/plate-basic-marks/react";
 import { useEditorReadOnly } from "@udecode/plate-common/react";
 import { BoldIcon, Code2Icon, ItalicIcon, StrikethroughIcon, UnderlineIcon, WandSparklesIcon } from "lucide-react";
-import { AIToolbarButton } from "./ai-toolbar-button";
-import { LinkToolbarButton } from "./link-toolbar-button";
-import { MarkToolbarButton } from "./mark-toolbar-button";
-import { MoreMarkDropdownMenu } from "./more-mark-dropdown-menu";
-import { ToolbarGroup } from "./toolbar";
-import { TurnIntoDropdownMenu } from "./turn-into-dropdown-menu";
+import { AIToolbarButton } from "@/components/plate-ui/ai-toolbar-button";
+import { LinkToolbarButton } from "@/components/plate-ui/link-toolbar-button";
+import { MarkToolbarButton } from "@/components/plate-ui/mark-toolbar-button";
+import { MoreMarkDropdownMenu } from "@/components/plate-ui/more-mark-dropdown-menu";
+import { ToolbarGroup } from "@/components/plate-ui/toolbar";
+import { TurnIntoDropdownMenu } from "@/components/plate-ui/turn-into-dropdown-menu";
 import { useTranslation } from "react-i18next";
 
 export function FloatingToolbarButtons() {

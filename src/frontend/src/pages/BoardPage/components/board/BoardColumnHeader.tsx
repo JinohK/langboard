@@ -6,8 +6,9 @@ import { Project, ProjectColumn } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 
 export interface IBoardColumnHeaderProps {
     isDragging: bool;
@@ -19,65 +20,50 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const inputRef = useRef<HTMLInputElement | null>(null);
     const columnName = column.useField("name");
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
     const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
+    const { valueRef, isEditing, changeMode } = useChangeEditMode({
+        canEdit: () => canEdit && !isDragging && !selectCardViewType,
+        valueType: "input",
+        disableNewLine: true,
+        save: (value, endCallback) => {
+            setIsValidating(true);
 
-    const changeMode = (mode: "edit" | "view") => {
-        if (isDragging || !canEdit || !!selectCardViewType) {
-            return;
-        }
+            const promise = changeProjectColumnNameMutateAsync({
+                project_uid: project.uid,
+                column_uid: column.uid,
+                name: value,
+            });
 
-        if (mode === "edit") {
-            setIsEditing(true);
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 0);
-            return;
-        }
+            const toastId = Toast.Add.promise(promise, {
+                loading: t("common.Changing..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
 
-        const newValue = inputRef.current?.value?.replace(/\n/g, " ").trim() ?? "";
-        if (!newValue.length || column.name.trim() === newValue) {
-            setIsEditing(false);
-            return;
-        }
-
-        setIsValidating(true);
-
-        const promise = changeProjectColumnNameMutateAsync({
-            project_uid: project.uid,
-            column_uid: column.uid,
-            name: newValue,
-        });
-
-        const toastId = Toast.Add.promise(promise, {
-            loading: t("common.Changing..."),
-            error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
-
-                handle(error);
-                return message;
-            },
-            success: () => {
-                return t("project.successes.Column name changed successfully.");
-            },
-            finally: () => {
-                setIsValidating(false);
-                setIsEditing(false);
-                Toast.Add.dismiss(toastId);
-            },
-        });
-    };
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    return t("project.successes.Column name changed successfully.");
+                },
+                finally: () => {
+                    setIsValidating(false);
+                    endCallback();
+                    Toast.Add.dismiss(toastId);
+                },
+            });
+        },
+        originalValue: columnName,
+    });
 
     return (
         <BoardColumnHeaderInput
@@ -87,7 +73,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
             changeMode={changeMode}
             columnName={columnName}
             disabled={isValidating}
-            inputRef={inputRef}
+            inputRef={valueRef}
         />
     );
 });
