@@ -88,6 +88,7 @@ class UserService(BaseService):
                 Project.column("updated_at").desc(),
                 Project.column("id").desc(),
             )
+            .group_by(Project.column("id"))
         )
         raw_projects = result.all()
         projects = [project.api_response() for project in raw_projects]

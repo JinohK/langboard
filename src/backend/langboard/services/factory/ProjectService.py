@@ -75,7 +75,9 @@ class ProjectService(BaseService):
         )
 
         sql_query = sql_query.order_by(Project.column("updated_at").desc(), Project.column("id").desc())
-        sql_query = sql_query.group_by(Project.column("id"), ProjectAssignedUser.column("updated_at"))
+        sql_query = sql_query.group_by(
+            Project.column("id"), ProjectAssignedUser.column("updated_at"), ProjectAssignedUser.column("id")
+        )
 
         result = await self._db.exec(sql_query)
         raw_projects = result.all()

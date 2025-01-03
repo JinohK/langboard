@@ -24,7 +24,7 @@ class ProjectColumnService(BaseService):
             .table(ProjectColumn)
             .where(ProjectColumn.column("project_id") == project.id)
             .order_by(ProjectColumn.column("order").asc())
-            .group_by(ProjectColumn.column("order"))
+            .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
         )
         raw_columns = result.all()
         columns = [raw_column.api_response() for raw_column in raw_columns]
@@ -170,7 +170,7 @@ class ProjectColumnService(BaseService):
             .table(ProjectColumn)
             .where(ProjectColumn.column("project_id") == project.id)
             .order_by(ProjectColumn.column("order").asc())
-            .group_by(ProjectColumn.column("order"))
+            .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
         )
         columns: list[Project | ProjectColumn] = list(result.all())
         columns.insert(project.archive_column_order, project)
