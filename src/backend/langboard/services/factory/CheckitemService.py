@@ -91,7 +91,9 @@ class CheckitemService(BaseService):
             return result.first()
 
         result = await self._db.exec(
-            query.order_by(CheckitemTimer.column("started_at").desc()).group_by(CheckitemTimer.column("started_at"))
+            query.order_by(CheckitemTimer.column("started_at").desc()).group_by(
+                CheckitemTimer.column("id"), CheckitemTimer.column("started_at")
+            )
         )
         raw_timers = result.all()
 

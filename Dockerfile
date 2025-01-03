@@ -20,4 +20,5 @@ RUN poetry --version
 COPY ./src/backend ./src/backend
 COPY pyproject.toml poetry.lock README.md alembic.ini ./
 
+RUN poetry lock --no-update
 RUN poetry install

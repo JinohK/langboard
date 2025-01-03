@@ -10,6 +10,7 @@ from alembic import context
 from alembic.autogenerate.api import AutogenContext
 
 from langboard.Constants import MAIN_DATABASE_URL
+from langboard.core.db import User
 from langboard.models import * # type: ignore
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -44,6 +45,10 @@ def render_item(type_: str, obj: Any, autogen_context: AutogenContext):
             autogen_context.imports.add(f"from {obj.__class__.__module__} import ModelColumnType")
             autogen_context.imports.add(f"from {model_type_class.__module__} import {model_type_class.__name__}")
             return f"ModelColumnType({model_type_class.__name__})"
+        elif obj.__class__.__name__ == "SnowflakeIDType":
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeIDType")
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeID")
+            return "SnowflakeIDType"
 
     return False
 
