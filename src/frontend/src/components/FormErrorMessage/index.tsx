@@ -7,21 +7,26 @@ export interface IFormErrorMessageProps {
     icon?: string;
     wrapperClassName?: string;
     messageClassName?: string;
+    notInForm?: bool;
 }
 
-function FormErrorMessage({ error, icon, wrapperClassName, messageClassName }: IFormErrorMessageProps): JSX.Element | null {
+function FormErrorMessage({ error, icon, wrapperClassName, messageClassName, notInForm }: IFormErrorMessageProps): JSX.Element | null {
     const [t] = useTranslation();
 
-    return (
-        <Form.Message>
-            <Flex items="center" gap="1" mt="1" className={wrapperClassName}>
-                {icon && <IconComponent icon={icon} className="text-red-500" size="4" />}
-                <Box textSize="sm" className={cn("text-red-500", messageClassName)}>
-                    {t(error)}
-                </Box>
-            </Flex>
-        </Form.Message>
+    const comp = (
+        <Flex items="center" gap="1" mt="1" className={wrapperClassName}>
+            {icon && <IconComponent icon={icon} className="text-red-500" size="4" />}
+            <Box textSize="sm" className={cn("text-red-500", messageClassName)}>
+                {t(error)}
+            </Box>
+        </Flex>
     );
+
+    if (notInForm) {
+        return comp;
+    }
+
+    return <Form.Message>{comp}</Form.Message>;
 }
 
 export default FormErrorMessage;

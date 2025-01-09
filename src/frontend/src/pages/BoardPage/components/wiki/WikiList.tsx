@@ -29,7 +29,7 @@ const WikiList = memo(() => {
     const [t] = useTranslation();
     const [wikiUID, setWikiUID] = useState(location.pathname.split("/")[4]);
     const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, disabledReorder, setDisabledReorder, wikiTabListId } = useBoardWiki();
-    const paramsLastCheckedRef = useRef<string>();
+    const paramsLastCheckedRef = useRef<string>(null);
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
 
     useEffect(() => {

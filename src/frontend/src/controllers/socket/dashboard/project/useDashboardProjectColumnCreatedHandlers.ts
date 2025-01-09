@@ -9,13 +9,12 @@ export interface IDashboardProjectColumnCreatedRawResponse {
 
 export interface IUseDashboardProjectColumnCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID: string;
 }
 
-const useDashboardProjectColumnCreatedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectColumnCreatedHandlersProps) => {
+const useDashboardProjectColumnCreatedHandlers = ({ callback, projectUID }: IUseDashboardProjectColumnCreatedHandlersProps) => {
     return useSocketHandler<{}, IDashboardProjectColumnCreatedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: userUID,
+        topicId: projectUID,
         eventKey: `dashboard-project-column-created-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.COLUMN.CREATED,

@@ -24,7 +24,7 @@ interface ILabelProps {
     isTextarea?: bool;
 }
 
-const Label = React.forwardRef<React.ElementRef<typeof BaseLabel>, React.ComponentPropsWithoutRef<typeof BaseLabel> & ILabelProps>(
+const Label = React.forwardRef<React.ComponentRef<typeof BaseLabel>, React.ComponentPropsWithoutRef<typeof BaseLabel> & ILabelProps>(
     ({ className, isTextarea, ...props }, ref) => {
         const classNames = cn(
             "peer-focus:secondary peer-focus:dark:secondary",
@@ -44,7 +44,7 @@ Label.displayName = "FloatingLabel";
 
 type LabelInputProps = InputProps & { label: string; isFormControl?: bool };
 
-const LabelInput = React.forwardRef<React.ElementRef<typeof Input>, React.PropsWithoutRef<LabelInputProps>>(
+const LabelInput = React.forwardRef<React.ComponentRef<typeof Input>, React.PropsWithoutRef<LabelInputProps>>(
     ({ label, isFormControl, id, ...props }, ref) => {
         id = id ?? `floating-input-${createShortUUID()}`;
 
@@ -67,7 +67,7 @@ LabelInput.displayName = "FloatingLabelInput";
 
 type LabelTextareaProps = BaseTextareaProps & { label: string; isFormControl?: bool };
 
-const LabelTextarea = React.forwardRef<React.ElementRef<typeof Textarea>, React.PropsWithoutRef<LabelTextareaProps>>(
+const LabelTextarea = React.forwardRef<React.ComponentRef<typeof Textarea>, React.PropsWithoutRef<LabelTextareaProps>>(
     ({ label, isFormControl, id, ...props }, ref) => {
         id = id ?? `floating-textarea-${createShortUUID()}`;
 

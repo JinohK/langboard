@@ -5,12 +5,12 @@ import { API_ROUTES } from "@/controllers/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
-import { Project } from "@/core/models";
+import { BotModel, Project, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
-import { memo, useEffect, useReducer, useRef } from "react";
+import { memo, useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardDescription() {
@@ -28,7 +28,10 @@ const BoardCardDescription = memo((): JSX.Element => {
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
-    const editorElementRef = useRef<HTMLDivElement | null>(null);
+    const editorComponentRef = useRef<HTMLDivElement | null>(null);
+    const projectMembers = card.useForeignField<User.TModel>("project_members");
+    const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
     const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
@@ -110,8 +113,8 @@ const BoardCardDescription = memo((): JSX.Element => {
 
                 changeMode("edit");
                 setTimeout(() => {
-                    if (editorElementRef.current) {
-                        editorElementRef.current.focus();
+                    if (editorComponentRef.current) {
+                        editorComponentRef.current.focus();
                     }
                 }, 50);
             }}
@@ -119,7 +122,7 @@ const BoardCardDescription = memo((): JSX.Element => {
         >
             <PlateEditor
                 value={valueRef.current}
-                mentionableUsers={card.project_members}
+                mentionables={mentionables}
                 currentUser={currentUser}
                 className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
                 socket={socket}
@@ -130,7 +133,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}
-                editorElementRef={editorElementRef}
+                editorComponentRef={editorComponentRef}
             />
         </Box>
     );

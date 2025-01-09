@@ -15,7 +15,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiContentProps {
@@ -38,12 +38,13 @@ export function SkeletonWikiContent() {
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
-    const { projectUID, projectMembers, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
+    const { projectUID, projectMembers, projectBots, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const content = wiki.useField("content");
-    const editorElementRef = useRef<HTMLDivElement | null>(null);
+    const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         customStartEditing: () => setCurrentEditor(wiki.uid),
@@ -100,7 +101,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 topicId: projectUID,
                 onEventNames: SOCKET_SERVER_EVENTS.BOARD.WIKI,
                 eventNameFormatMap: { uid: wiki.uid },
-                eventKey: `wiki-content-editor-${wiki.uid}`,
+                eventKey: `board-wiki-content-editor-${wiki.uid}`,
                 getUsersSendEvent: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_USERS,
                 getUsersSendEventData: { uid: wiki.uid },
                 startCallback: (userUIDs) => setEditingUserUIDs(userUIDs),
@@ -143,8 +144,8 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
 
                     changeMode("edit");
                     setTimeout(() => {
-                        if (editorElementRef.current) {
-                            editorElementRef.current.focus();
+                        if (editorComponentRef.current) {
+                            editorComponentRef.current.focus();
                         }
                     }, 50);
                 }}
@@ -154,7 +155,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 <PlateEditor
                     value={content}
                     currentUser={currentUser}
-                    mentionableUsers={projectMembers}
+                    mentionables={mentionables}
                     className={cn(
                         "h-full px-6 py-3",
                         isEditing
@@ -169,7 +170,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     placeholder={!isEditing ? t("wiki.No content") : undefined}
                     uploadPath={format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: projectUID, wiki_uid: wiki.uid })}
                     setValue={setValue}
-                    editorElementRef={editorElementRef}
+                    editorComponentRef={editorComponentRef}
                 />
                 {editingUsers.length > 0 && (
                     <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">

@@ -53,6 +53,16 @@ export const ROUTES = {
         CARDS: "/dashboard/cards",
         TRACKING: "/dashboard/tracking",
     },
+    SETTINGS: {
+        ROUTE: "/settings",
+        API_KEYS: "/settings/api-keys",
+        CREATE_API_KEY: "/settings/api-keys/create",
+        BOTS: "/settings/bots",
+        CREATE_BOT: "/settings/bots/create",
+        LANGFLOW: "/settings/langflow",
+        WEBHOOKS: "/settings/webhooks",
+        CREATE_WEBHOOK: "/settings/webhooks/create",
+    },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
 } as const;
 

@@ -32,7 +32,7 @@ export interface IUseChangeEditModeProps<TValue extends TValueType> {
 }
 
 interface IUseChangeEditMode<TValue extends TValueType> {
-    valueRef: TValue extends "textarea" | "input" ? React.RefObject<TElementValueRef<TValue>> : React.MutableRefObject<TObjectValueRef<TValue>>;
+    valueRef: TValue extends "textarea" | "input" ? React.RefObject<TElementValueRef<TValue>> : React.RefObject<TObjectValueRef<TValue>>;
     height: TValue extends "textarea" ? number : undefined;
     updateHeight: TValue extends "textarea" ? () => void : undefined;
     isEditing: bool;
@@ -42,7 +42,7 @@ interface IUseChangeEditMode<TValue extends TValueType> {
 
 const useChangeEditMode = <
     TValue extends TValueType,
-    TRef extends TValue extends "textarea" | "input" ? React.RefObject<TElementValueRef<TValue>> : React.MutableRefObject<TObjectValueRef<TValue>>,
+    TRef extends TValue extends "textarea" | "input" ? React.RefObject<TElementValueRef<TValue>> : React.RefObject<TObjectValueRef<TValue>>,
 >({
     canEdit,
     save,

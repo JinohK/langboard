@@ -11,29 +11,27 @@ export interface IBoardWikiDetailsChangedRawResponse {
 
 export interface IUseBoardWikiDetailsChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    wikiUID: string;
-    userUID?: string;
+    wiki: ProjectWiki.TModel;
+    isPrivate: bool;
 }
 
-const useBoardWikiDetailsChangedHandlers = ({ callback, projectUID, wikiUID, userUID }: IUseBoardWikiDetailsChangedHandlersProps) => {
-    const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
-    const topicId = userUID ?? projectUID;
+const useBoardWikiDetailsChangedHandlers = ({ callback, projectUID, wiki, isPrivate }: IUseBoardWikiDetailsChangedHandlersProps) => {
+    const topic = isPrivate ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
+    const topicId = isPrivate ? wiki.uid : projectUID;
 
     return useSocketHandler<{}, IBoardWikiDetailsChangedRawResponse>({
         topic,
         topicId,
-        eventKey: `board-wiki-details-changed-${topic}-${wikiUID}`,
+        eventKey: `board-wiki-details-changed-${topic}-${wiki.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.WIKI.DETAILS_CHANGED,
-            params: { uid: wikiUID },
+            params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {
-                const wiki = ProjectWiki.Model.getModel(wikiUID);
-                if (wiki) {
-                    Object.entries(data).forEach(([key, value]) => {
-                        wiki[key] = value as string & IEditorContent;
-                    });
-                }
+                console.log(wiki, data);
+                Object.entries(data).forEach(([key, value]) => {
+                    wiki[key] = value as string & IEditorContent;
+                });
                 return {};
             },
         },

@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectWiki, User } from "@/core/models";
+import { BotModel, ProjectWiki, User } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetWikisForm {
@@ -11,6 +11,7 @@ export interface IGetWikisForm {
 export interface IGetWikisResponse {
     wikis: ProjectWiki.TModel[];
     project_members: User.TModel[];
+    project_bots: BotModel.TModel[];
 }
 
 const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGetWikisResponse>) => {
@@ -23,6 +24,7 @@ const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGe
         return {
             wikis: ProjectWiki.Model.fromObjectArray(res.data.wikis),
             project_members: User.Model.fromObjectArray(res.data.project_members),
+            project_bots: BotModel.Model.fromObjectArray(res.data.project_bots),
         };
     };
 

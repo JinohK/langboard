@@ -9,7 +9,7 @@ import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { tv } from "tailwind-variants";
 
-const Root = React.forwardRef<React.ElementRef<typeof Primitive>, React.ComponentPropsWithoutRef<typeof Primitive>>(
+const Root = React.forwardRef<React.ComponentRef<typeof Primitive>, React.ComponentPropsWithoutRef<typeof Primitive>>(
     ({ className, ...props }, ref) => (
         <Primitive
             ref={ref}
@@ -35,7 +35,7 @@ const Dialog = ({ children, ...props }: CommandDialogProps) => {
 };
 
 const Input = React.forwardRef<
-    React.ElementRef<typeof Primitive.Input>,
+    React.ComponentRef<typeof Primitive.Input>,
     React.ComponentPropsWithoutRef<typeof Primitive.Input> & {
         withoutIcon?: bool;
     }
@@ -55,7 +55,7 @@ const Input = React.forwardRef<
 
 Input.displayName = Primitive.Input.displayName;
 
-const List = React.forwardRef<React.ElementRef<typeof Primitive.List>, React.ComponentPropsWithoutRef<typeof Primitive.List>>(
+const List = React.forwardRef<React.ComponentRef<typeof Primitive.List>, React.ComponentPropsWithoutRef<typeof Primitive.List>>(
     ({ className, ...props }, ref) => (
         <Primitive.List ref={ref} className={cn("max-h-[min(70vh,300px)] overflow-y-auto overflow-x-hidden", className)} {...props} />
     )
@@ -63,7 +63,7 @@ const List = React.forwardRef<React.ElementRef<typeof Primitive.List>, React.Com
 
 List.displayName = Primitive.List.displayName;
 
-const Empty = React.forwardRef<React.ElementRef<typeof Primitive.Empty>, React.ComponentPropsWithoutRef<typeof Primitive.Empty>>((props, ref) => (
+const Empty = React.forwardRef<React.ComponentRef<typeof Primitive.Empty>, React.ComponentPropsWithoutRef<typeof Primitive.Empty>>((props, ref) => (
     <Primitive.Empty ref={ref} className="py-6 text-center text-sm" {...props} />
 ));
 
@@ -73,13 +73,13 @@ const GroupVariants = tv({
     base: "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
 });
 
-const Group = React.forwardRef<React.ElementRef<typeof Primitive.Group>, React.ComponentPropsWithoutRef<typeof Primitive.Group>>(
+const Group = React.forwardRef<React.ComponentRef<typeof Primitive.Group>, React.ComponentPropsWithoutRef<typeof Primitive.Group>>(
     ({ className, ...props }, ref) => <Primitive.Group ref={ref} className={cn(GroupVariants(), className)} {...props} />
 );
 
 Group.displayName = Primitive.Group.displayName;
 
-const Separator = React.forwardRef<React.ElementRef<typeof Primitive.Separator>, React.ComponentPropsWithoutRef<typeof Primitive.Separator>>(
+const Separator = React.forwardRef<React.ComponentRef<typeof Primitive.Separator>, React.ComponentPropsWithoutRef<typeof Primitive.Separator>>(
     ({ className, ...props }, ref) => <Primitive.Separator ref={ref} className={cn("-mx-1 h-px bg-border", className)} {...props} />
 );
 Separator.displayName = Primitive.Separator.displayName;
@@ -88,7 +88,7 @@ const ItemVariants = tv({
     base: "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50",
 });
 
-const Item = React.forwardRef<React.ElementRef<typeof Primitive.Item>, React.ComponentPropsWithoutRef<typeof Primitive.Item>>(
+const Item = React.forwardRef<React.ComponentRef<typeof Primitive.Item>, React.ComponentPropsWithoutRef<typeof Primitive.Item>>(
     ({ className, ...props }, ref) => <Primitive.Item ref={ref} className={cn(ItemVariants(), className)} {...props} />
 );
 

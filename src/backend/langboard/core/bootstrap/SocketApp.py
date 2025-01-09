@@ -10,6 +10,7 @@ from ..routing import (
     SocketRequest,
     SocketResponse,
     SocketResponseCode,
+    SocketTopic,
     TCachedScopes,
     WebSocket,
 )
@@ -73,6 +74,7 @@ class SocketApp(dict):
             return
 
         req = self._create_request(ws, user_data)
+        req.socket.subscribe(SocketTopic.Global, ["all"])
 
         await self._run_events(SocketDefaultEvent.Open, req)
 
@@ -224,40 +226,25 @@ class SocketApp(dict):
             self._send_error(ws, "Invalid data", error_code=SocketResponseCode.WS_4001_INVALID_DATA, should_close=False)
             return True
 
+        topic_ids = [topic_id] if not isinstance(topic_id, list) else topic_id
+
         if is_subscribe:
             validator = AppRouter.socket.get_subscription_validator(topic)
             user = cast(User, await Auth.get_user_by_id(user_data["auth_user_id"]))
             if validator:
-                if not await validator(topic_id, user):  # type: ignore
-                    return True
+                validated_topic_ids = []
+                for topic_id in topic_ids:
+                    if await validator(topic_id, user):
+                        validated_topic_ids.append(topic_id)
+            else:
+                validated_topic_ids = topic_ids
 
-            if topic.lower().endswith("_private"):
-                if user.get_uid() != topic_id:
-                    self._send_error(
-                        ws,
-                        "Forbidden",
-                        error_code=SocketResponseCode.WS_3003_FORBIDDEN,
-                        should_close=False,
-                    )
-                    return True
-
-            topics = websocket.get_topics()
-            for existed_topic in [*topics]:
-                if existed_topic.startswith(f"{topic}:"):
-                    existed_topic, existed_topic_id = existed_topic.split(":")
-                    if existed_topic_id == topic_id:
-                        continue
-                    websocket.unsubscribe(existed_topic)
-                    websocket.send(
-                        event_response=SocketResponse(
-                            event="unsubscribed", topic=existed_topic, topic_id=existed_topic_id
-                        )
-                    )
-            websocket.subscribe(f"{topic}:{topic_id}")
-            websocket.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=topic_id))
+            result = websocket.subscribe(topic, validated_topic_ids)
+            if isinstance(result, SocketResponseCode):
+                self._send_error(ws, "Forbidden", error_code=result, should_close=False)
+                return True
         else:
-            websocket.unsubscribe(f"{topic}:{topic_id}")
-            websocket.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=topic_id))
+            websocket.unsubscribe(topic, topic_ids)
 
         return True
 

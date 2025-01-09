@@ -155,6 +155,21 @@ async def create_user_group(
     return JsonResponse(content={"revert_key": revert_key, "user_group": api_group})
 
 
+@AppRouter.api.put("/account/group/{group_uid}/name")
+@AuthFilter.add
+async def change_user_group_name(
+    group_uid: str,
+    form: CreateUserGroupForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    revert_key = await service.user_group.change_name(user, group_uid, form.name)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": revert_key})
+
+
 @AppRouter.api.put("/account/group/{group_uid}/emails")
 @AuthFilter.add
 async def update_user_group_assigned_emails(

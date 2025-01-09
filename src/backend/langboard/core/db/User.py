@@ -38,7 +38,7 @@ class User(SoftDeleteModel, table=True):
 
     def api_response(self) -> dict[str, Any]:
         if self.deleted_at is not None:
-            return User.create_unknown_user_api_response()
+            return self.create_unknown_user_api_response()
 
         return {
             "type": User.USER_TYPE,
@@ -50,11 +50,10 @@ class User(SoftDeleteModel, table=True):
             "avatar": self.avatar.path if self.avatar else None,
         }
 
-    @staticmethod
-    def create_unknown_user_api_response() -> dict[str, Any]:
+    def create_unknown_user_api_response(self) -> dict[str, Any]:
         return {
             "type": User.UNKNOWN_USER_TYPE,
-            "uid": "0",
+            "uid": self.get_uid(),
             "firstname": "",
             "lastname": "",
             "email": "",
@@ -71,6 +70,7 @@ class User(SoftDeleteModel, table=True):
             "lastname": "",
             "email": email,
             "username": "",
+            "avatar": None,
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

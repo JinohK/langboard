@@ -9,13 +9,12 @@ export interface IDashboardProjectCardCreatedRawResponse {
 
 export interface IUseDashboardProjectCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID: string;
 }
 
-const useDashboardProjectCardCreatedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectCardCreatedHandlersProps) => {
+const useDashboardProjectCardCreatedHandlers = ({ callback, projectUID }: IUseDashboardProjectCardCreatedHandlersProps) => {
     return useSocketHandler<{}, IDashboardProjectCardCreatedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: userUID,
+        topicId: projectUID,
         eventKey: `dashboard-project-card-created-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.CARD.CREATED,

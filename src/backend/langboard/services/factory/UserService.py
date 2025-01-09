@@ -1,6 +1,6 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
@@ -163,10 +163,27 @@ class UserService(BaseService):
         await self._db.update(subemail)
         await self._db.commit()
 
-    async def update(self, user: User, form: dict) -> str:
-        for key, value in form.items():
-            if key != "id" and hasattr(user, key):
-                setattr(user, key, value)
+    async def update(self, user: User, form: dict) -> str | Literal[True]:
+        mutable_keys = ["firstname", "lastname", "affiliation", "position", "avatar"]
+
+        old_user_record = {}
+
+        for key in mutable_keys:
+            if key not in form or not hasattr(user, key):
+                continue
+            old_value = getattr(user, key)
+            new_value = form[key]
+            if old_value == new_value or new_value is None:
+                continue
+            old_user_record[key] = self._convert_to_python(old_value)
+            setattr(user, key, new_value)
+
+        if "delete_avatar" in form and form["delete_avatar"]:
+            old_user_record["avatar"] = self._convert_to_python(user.avatar)
+            user.avatar = None
+
+        if not old_user_record:
+            return True
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(
@@ -175,6 +192,7 @@ class UserService(BaseService):
             )
         )
         await Auth.reset_user(user)
+
         return revert_key
 
     async def change_primary_email(self, user: User, subemail: UserEmail) -> str:

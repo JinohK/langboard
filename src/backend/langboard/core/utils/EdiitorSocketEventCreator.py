@@ -1,11 +1,11 @@
 from typing import Callable
-from ..ai import BotRunner, BotType
+from ..ai import BotRunner, InternalBotType
 from ..ai.BotDataModel import EditorChatDataModel, EditorCopilotDataModel
 from ..routing import AppRouter, WebSocket
 
 
 class EdiitorSocketEventCreator:
-    def __init__(self, chat_bot_type: BotType, copilot_type: BotType, event_prefix: str) -> None:
+    def __init__(self, chat_bot_type: InternalBotType, copilot_type: InternalBotType, event_prefix: str) -> None:
         self.chat_bot_type = chat_bot_type
         self.copilot_type = copilot_type
         self.event_prefix = event_prefix
@@ -45,7 +45,7 @@ class EdiitorSocketEventCreator:
             ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "".join(chunks)})
 
     async def abort_copilot(self, ws: WebSocket, key: str):
-        await BotRunner.abort(BotType.EditorCopilot, key)
+        await BotRunner.abort(InternalBotType.EditorCopilot, key)
         ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
 
     def register(self, *decorators: Callable):

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Floating, Form, IconComponent } from "@/components/base";
+import { Box, Floating, Form, IconComponent, Input } from "@/components/base";
 
-interface IBasePasswordInputProps {
+interface IBasePasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     name: string;
     label: string;
     autoFocus?: bool;
@@ -26,50 +26,43 @@ interface IUnformedPasswordInputProps extends IBasePasswordInputProps {
 
 export type TPasswordInputProps = IFormPasswordInputProps | IUnformedPasswordInputProps;
 
-function PasswordInput({
-    name,
-    label,
-    autoFocus,
-    className,
-    isFormControl,
-    isValidating,
-    autoComplete = "off",
-    defaultValue,
-    error,
-}: TPasswordInputProps): JSX.Element {
-    const [shouldShow, setShouldShow] = useState(false);
+const PasswordInput = forwardRef<React.ComponentRef<typeof Input>, TPasswordInputProps>(
+    ({ name, label, autoFocus, className, isFormControl, isValidating, autoComplete = "off", defaultValue, error, ...props }, ref) => {
+        const [shouldShow, setShouldShow] = useState(false);
 
-    const comp = (
-        <Box position="relative" className={className}>
-            <Floating.LabelInput
-                type={shouldShow ? "text" : "password"}
-                name={name}
-                label={label}
-                autoFocus={autoFocus}
-                isFormControl={isFormControl}
-                className="pr-10"
-                autoComplete={autoComplete}
-                disabled={isValidating}
-                defaultValue={defaultValue}
-            />
-            <IconComponent
-                icon={shouldShow ? "eye-off" : "eye"}
-                className="absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer transition-all [&:not(:hover)]:text-gray-600"
-                onClick={() => setShouldShow(!shouldShow)}
-            />
-        </Box>
-    );
-
-    if (isFormControl) {
-        return (
-            <Form.Field name={name}>
-                {comp}
-                {error && <FormErrorMessage error={error} />}
-            </Form.Field>
+        const comp = (
+            <Box position="relative" className={className}>
+                <Floating.LabelInput
+                    type={shouldShow ? "text" : "password"}
+                    name={name}
+                    label={label}
+                    autoFocus={autoFocus}
+                    isFormControl={isFormControl}
+                    className="pr-10"
+                    autoComplete={autoComplete}
+                    disabled={isValidating}
+                    defaultValue={defaultValue}
+                    ref={ref}
+                    {...props}
+                />
+                <IconComponent
+                    icon={shouldShow ? "eye-off" : "eye"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 transform cursor-pointer transition-all [&:not(:hover)]:text-gray-600"
+                    onClick={() => setShouldShow(!shouldShow)}
+                />
+            </Box>
         );
-    } else {
-        return comp;
-    }
-}
 
+        if (isFormControl) {
+            return (
+                <Form.Field name={name}>
+                    {comp}
+                    {error && <FormErrorMessage error={error} />}
+                </Form.Field>
+            );
+        } else {
+            return comp;
+        }
+    }
+);
 export default PasswordInput;

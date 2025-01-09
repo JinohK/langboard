@@ -10,7 +10,7 @@ interface IScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollA
     mutable?: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>["mutable"];
 }
 
-const Root = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>, IScrollAreaProps>(
+const Root = React.forwardRef<React.ComponentRef<typeof ScrollAreaPrimitive.Root>, IScrollAreaProps>(
     ({ className, children, viewportId, viewportClassName, mutable, onScroll, ...props }, ref) => (
         <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
             <ScrollAreaPrimitive.Viewport className={cn("h-full w-full rounded-[inherit]", viewportClassName)} id={viewportId} onScroll={onScroll}>
@@ -24,7 +24,7 @@ const Root = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>,
 Root.displayName = ScrollAreaPrimitive.Root.displayName;
 
 const Bar = React.forwardRef<
-    React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
+    React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
     React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>
 >(({ className, orientation = "vertical", ...props }, ref) => (
     <ScrollAreaPrimitive.ScrollAreaScrollbar

@@ -1,4 +1,4 @@
-from ...core.ai import BotRunner, BotType
+from ...core.ai import BotRunner, InternalBotType
 from ...core.db import User
 from ...core.filter import RoleFilter
 from ...core.routing import AppRouter, SocketResponse, SocketTopic, WebSocket
@@ -13,21 +13,16 @@ from .scopes import project_role_finder
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 async def is_chat_available(topic: str, topic_id: str):
     try:
-        is_available = await BotRunner.is_available(BotType.ProjectChat)
+        is_available = await BotRunner.is_available(InternalBotType.ProjectChat)
     except Exception:
         is_available = False
 
     if is_available:
-        bot = await BotRunner.get_bot_config(BotType.ProjectChat)
-        api_bot = (
-            bot.api_response()
-            if bot
-            else {
-                "bot_type": BotType.ProjectChat,
-                "display_name": BotType.ProjectChat.name,
-                "avatar": None,
-            }
-        )
+        api_bot = {
+            "bot_type": InternalBotType.ProjectChat,
+            "display_name": InternalBotType.ProjectChat.name,
+            "avatar": None,
+        }
     else:
         api_bot = None
 
@@ -44,7 +39,7 @@ async def is_chat_available(topic: str, topic_id: str):
 async def project_chat(
     ws: WebSocket, project_uid: str, message: str, user: User = Auth.scope("socket"), service: Service = Service.scope()
 ):
-    stream_or_str = await BotRunner.run(BotType.ProjectChat, {"message": message})
+    stream_or_str = await BotRunner.run(InternalBotType.ProjectChat, {"message": message})
     if not stream_or_str:
         return SocketResponse(
             event="board:chat:available",

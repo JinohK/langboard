@@ -1,9 +1,10 @@
 enum ESocketTopic {
-    Dashboard = "dashboard_private",
+    Dashboard = "dashboard",
     Board = "board",
     BoardCard = "board_card",
     BoardWiki = "board_wiki",
     BoardWikiPrivate = "board_wiki_private",
+    Global = "global",
     None = "none",
 }
 

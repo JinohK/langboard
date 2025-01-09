@@ -55,6 +55,7 @@ export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithou
 const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const { user, children, listAlign, customTrigger } = props;
     const [isOpened, setIsOpened] = useState(false);
+    const userType = user.useField("type");
     const firstname = user.useField("firstname");
     const lastname = user.useField("lastname");
     const username = user.useField("username");
@@ -62,8 +63,8 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const initials = createNameInitials(firstname, lastname);
     const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
-    const isDeletedUser = user.isDeletedUser();
-    const isPresentableUnknownUser = user.isPresentableUnknownUser();
+    const isDeletedUser = user.isDeletedUser(userType);
+    const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
@@ -76,7 +77,7 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
         trigger = <Trigger {...props} isOpened={isOpened} setIsOpened={setIsOpened} />;
     }
 
-    if (!children || isDeletedUser || isPresentableUnknownUser) {
+    if (!children || isDeletedUser) {
         return <>{trigger}</>;
     }
 
@@ -92,15 +93,23 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
                         <Avatar.Root className="absolute top-10 border" size="2xl">
                             <Avatar.Image src={userAvatar} />
                             <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                                {initials}
+                                {user.isBot(userType) ? (
+                                    <IconComponent icon="bot" className="h-[80%] w-[80%]" />
+                                ) : isPresentableUnknownUser ? (
+                                    <IconComponent icon="user" className="h-[80%] w-[80%]" />
+                                ) : (
+                                    initials
+                                )}
                             </Avatar.Fallback>
                         </Avatar.Root>
-                        <Card.Title className="ml-24 pt-6">
+                        <Card.Title className={cn("ml-24 pt-6", !user.isBot() && isPresentableUnknownUser ? "pt-10" : "")}>
                             {firstname} {lastname}
-                            <Card.Description className="mt-1 text-muted-foreground">@{username}</Card.Description>
+                            {user.isBot(userType) || !isPresentableUnknownUser ? (
+                                <Card.Description className="mt-1 text-muted-foreground">@{username}</Card.Description>
+                            ) : null}
                         </Card.Title>
                     </Card.Header>
-                    <Card.Content className="px-0 pt-8">{children}</Card.Content>
+                    <Card.Content className="px-0 pt-8">{!isPresentableUnknownUser && children}</Card.Content>
                 </Card.Root>
             </HoverCard.Content>
         </HoverCard.Root>
@@ -127,18 +136,17 @@ const Trigger = memo(
         setIsOpened,
     }: IUserAvatarTriggerProps) => {
         const [t] = useTranslation();
+        const userType = user.useField("type");
         const firstname = user.useField("firstname");
         const lastname = user.useField("lastname");
         const userAvatar = user.useField("avatar");
         const initials = createNameInitials(firstname, lastname);
-        const isDeletedUser = user.isDeletedUser();
-        const isPresentableUnknownUser = user.isPresentableUnknownUser();
+        const isDeletedUser = user.isDeletedUser(userType);
+        const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
 
         const avatarAfterPseudoClassNames = cn(
             "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
-            children && !isDeletedUser && !isPresentableUnknownUser
-                ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer"
-                : ""
+            children && !isDeletedUser ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer" : ""
         );
 
         const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
@@ -163,7 +171,7 @@ const Trigger = memo(
             <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
                 <Avatar.Image src={userAvatar} />
                 <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                    {user.isBot() ? (
+                    {user.isBot(userType) ? (
                         <IconComponent icon="bot" className="h-[80%] w-[80%]" />
                     ) : isPresentableUnknownUser || isDeletedUser ? (
                         <IconComponent icon="user" className="h-[80%] w-[80%]" />
@@ -235,7 +243,7 @@ const ListItem = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeo
     );
 });
 
-const ListSeparator = forwardRef<React.ElementRef<typeof SeparatorPrimitive.Root>, React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>>(
+const ListSeparator = forwardRef<React.ComponentRef<typeof SeparatorPrimitive.Root>, React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>>(
     ({ className, orientation = "horizontal", decorative = true, ...props }, ref) => {
         return <Separator ref={ref} {...props} />;
     }

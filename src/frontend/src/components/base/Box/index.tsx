@@ -87,7 +87,7 @@ interface ISpanBoxProps extends IBaseBoxProps, TComponentPropsWithout<"span", TR
 
 export type TBoxProps = IDivBoxProps | ISpanBoxProps;
 
-const Box = forwardRef<React.ElementRef<"div">, TBoxProps>(({ as: Comp = "div", className, children, ...props }, ref) => {
+const Box = forwardRef<React.ComponentRef<"div">, TBoxProps>(({ as: Comp = "div", className, children, ...props }, ref) => {
     const variants = extractVariantProps(BoxVariants, props);
     return (
         <Comp ref={ref} className={cn(BoxVariants({ ...variants }), className)} {...props}>

@@ -70,8 +70,6 @@ S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
 S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
 S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
 
-# Bot
-QUEUE_BOT_DIR = Path(_get_env("QUEUE_BOT_DIR", DATA_DIR / "bot" / "queue"))
-LANGFLOW_URL = _get_env("LANGFLOW_URL")
-LANGFLOW_API_KEY = _get_env("LANGFLOW_API_KEY")
-OPENAI_API_KEY = _get_env("OPENAI_API_KEY")
+# Webhook
+WEBHOOK_QUEUE_DIR = Path(_get_env("WEBHOOK_QUEUE_DIR", DATA_DIR / "hook" / "queue"))
+WEBHOOK_TRHEAD_COUNT = int(_get_env("WEBHOOK_TRHEAD_COUNT", 1))

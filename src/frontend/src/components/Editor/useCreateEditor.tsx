@@ -66,7 +66,7 @@ import { ISocketContext } from "@/core/providers/SocketProvider";
 
 interface IBaseUseCreateEditor {
     currentUser: AuthUser.TModel;
-    mentionableUsers: User.TModel[];
+    mentionables: User.TModel[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plugins?: PlatePlugin<any>[];
     value?: IEditorContent;
@@ -115,7 +115,7 @@ const createEditorSocketEvents = (baseEvent: string) => ({
     },
 });
 
-const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCallback, readOnly = false }: TUseCreateEditor) => {
+const getComponents = ({ currentUser, mentionables, uploadPath, uploadedCallback, readOnly = false }: TUseCreateEditor) => {
     const viewComponents = {
         [AudioPlugin.key]: MediaAudioElement,
         [BlockquotePlugin.key]: BlockquoteElement,
@@ -143,10 +143,10 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
         [MediaEmbedPlugin.key]: MediaEmbedElement,
         [MentionPlugin.key]: withProps(MentionElement, {
             currentUser,
-            mentionableUsers,
+            mentionables,
             prefix: "@",
             renderLabel: (mentionable) => {
-                const user = mentionableUsers.find((val) => val.uid === (mentionable as unknown as IMentionableUser).key);
+                const user = mentionables.find((val) => val.uid === (mentionable as unknown as IMentionableUser).key);
                 if (user) {
                     return `${user.firstname} ${user.lastname}`;
                 } else {
@@ -176,7 +176,7 @@ const getComponents = ({ currentUser, mentionableUsers, uploadPath, uploadedCall
         ...viewComponents,
         [AIPlugin.key]: AILeaf,
         [EmojiInputPlugin.key]: EmojiInputElement,
-        [MentionInputPlugin.key]: withProps(MentionInputElement, { currentUser, mentionableUsers }),
+        [MentionInputPlugin.key]: withProps(MentionInputElement, { currentUser, mentionables }),
         [SlashInputPlugin.key]: SlashInputElement,
     };
 

@@ -1,13 +1,13 @@
 import { Box, Button, Drawer, Flex, Form, Skeleton, SubmitButton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { createDataText } from "@/components/Editor/plugins/markdown";
 import { format } from "@/core/utils/StringUtils";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { User } from "@/core/models";
+import { BotModel, User } from "@/core/models";
 import { API_ROUTES } from "@/controllers/constants";
 import UserAvatarList from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
@@ -34,12 +34,15 @@ export function SkeletonBoardCommentForm() {
 const BoardCommentForm = memo((): JSX.Element => {
     const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
     const [t] = useTranslation();
+    const projectMembers = card.useForeignField<User.TModel>("project_members");
+    const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
     const drawerRef = useRef<HTMLDivElement | null>(null);
-    const editorElementRef = useRef<HTMLDivElement | null>(null);
+    const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
@@ -89,8 +92,8 @@ const BoardCommentForm = memo((): JSX.Element => {
         });
 
         setTimeout(() => {
-            if (editorElementRef.current) {
-                editorElementRef.current.focus();
+            if (editorComponentRef.current) {
+                editorComponentRef.current.focus();
             }
         }, 0);
     };
@@ -238,7 +241,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                             <PlateEditor
                                 value={valueRef.current}
                                 currentUser={currentUser}
-                                mentionableUsers={card.project_members}
+                                mentionables={mentionables}
                                 className="h-full max-h-[min(50vh,200px)] min-h-[min(50vh,200px)] overflow-y-auto px-6 py-3"
                                 socket={socket}
                                 baseSocketEvent="board:card"
@@ -246,7 +249,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                                 copilotEventKey={`card-new-comment-${card.uid}`}
                                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                                 setValue={setValue}
-                                editorElementRef={editorElementRef}
+                                editorComponentRef={editorComponentRef}
                             />
                         </Box>
                         <Flex items="center" gap="2" justify="start" p="1">

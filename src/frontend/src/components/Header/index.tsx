@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CachedImage from "@/components/CachedImage";
 import HedaerNavItems from "@/components/Header/HedaerNavItems";
@@ -11,13 +11,12 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useSocket } from "@/core/providers/SocketProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { User } from "@/core/models";
+import { AuthUser } from "@/core/models";
+import { NavigateFunction } from "react-router-dom";
 
 function Header({ navs }: IHeaderProps) {
     const { aboutMe, signOut, updated } = useAuth();
-    const { close } = useSocket();
     const [isOpened, setIsOpen] = useState(false);
-    const [t] = useTranslation();
     const navigate = useRef(usePageNavigate());
     const [currentUser, setCurrentUser] = useState(aboutMe());
 
@@ -103,37 +102,61 @@ function Header({ navs }: IHeaderProps) {
                 {currentUser ? (
                     <>
                         {separator}
-                        <UserAvatar.Root
-                            user={currentUser as User.TModel}
-                            listAlign="end"
-                            avatarSize={{
-                                initial: "sm",
-                                md: "default",
-                            }}
-                            className="mx-1"
-                        >
-                            <UserAvatar.List>
-                                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.ACCOUNT.PROFILE)}>
-                                    {t("myAccount.My Account")}
-                                </UserAvatar.ListItem>
-                                <UserAvatar.ListSeparator />
-                                <UserAvatar.ListItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        close();
-                                        signOut();
-                                    }}
-                                >
-                                    {t("myAccount.Sign out")}
-                                </UserAvatar.ListItem>
-                                <UserAvatar.ListSeparator />
-                            </UserAvatar.List>
-                        </UserAvatar.Root>
+                        <HeaderUserMenu currentUser={currentUser} signOut={signOut} navigate={navigate} />
                     </>
                 ) : null}
             </Flex>
         </header>
     );
 }
+
+interface IHeaderUserMenuProps {
+    currentUser: AuthUser.TModel;
+    signOut: () => void;
+    navigate: React.RefObject<NavigateFunction>;
+}
+
+const HeaderUserMenu = memo(({ currentUser, signOut, navigate }: IHeaderUserMenuProps) => {
+    const [t] = useTranslation();
+    const { close: closeSocket } = useSocket();
+    const isAdmin = currentUser.useField("is_admin");
+
+    return (
+        <UserAvatar.Root
+            user={currentUser}
+            listAlign="end"
+            avatarSize={{
+                initial: "sm",
+                md: "default",
+            }}
+            className="mx-1"
+        >
+            <UserAvatar.List>
+                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.ACCOUNT.PROFILE)}>
+                    {t("myAccount.My account")}
+                </UserAvatar.ListItem>
+                {isAdmin && (
+                    <>
+                        <UserAvatar.ListSeparator />
+                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.SETTINGS.ROUTE)}>
+                            {t("settings.App settings")}
+                        </UserAvatar.ListItem>
+                    </>
+                )}
+                <UserAvatar.ListSeparator />
+                <UserAvatar.ListItem
+                    className="cursor-pointer"
+                    onClick={() => {
+                        closeSocket();
+                        signOut();
+                    }}
+                >
+                    {t("myAccount.Sign out")}
+                </UserAvatar.ListItem>
+                <UserAvatar.ListSeparator />
+            </UserAvatar.List>
+        </UserAvatar.Root>
+    );
+});
 
 export default Header;

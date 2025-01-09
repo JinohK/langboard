@@ -1,3 +1,4 @@
+import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
@@ -17,7 +18,8 @@ import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/use
 import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
 import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
 import TypeUtils from "@/core/utils/TypeUtils";
-import useDashboardProjectUnassignedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectUnassigned";
+import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
+import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
 
 export enum ERoleAction {
     READ = "read",
@@ -39,8 +41,10 @@ export interface Interface extends IBaseModel {
 
 export interface IStore extends Interface {
     starred: bool;
+    owner: User.Interface;
     columns: ProjectColumn.Interface[];
     members: User.Interface[];
+    bots: BotModel.Interface[];
     current_user_role_actions: TRoleActions[];
     invited_members: User.Interface[];
     labels: ProjectLabel.Interface[];
@@ -52,8 +56,10 @@ export interface IStore extends Interface {
 class Project extends BaseModel<IStore> {
     static get FOREIGN_MODELS() {
         return {
+            owner: User.Model.MODEL_NAME,
             columns: ProjectColumn.Model.MODEL_NAME,
             members: User.Model.MODEL_NAME,
+            bots: BotModel.Model.MODEL_NAME,
             invited_members: User.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
         };
@@ -71,6 +77,7 @@ class Project extends BaseModel<IStore> {
                 useBoardColumnNameChangedHandlers,
                 useBoardColumnOrderChangedHandlers,
                 useBoardDetailsChangedHandlers,
+                useBoardAssignedBotsUpdatedHandlers,
                 useBoardAssignedUsersUpdatedHandlers,
                 useBoardLabelCreatedHandlers,
                 useBoardLabelOrderChangedHandlers,
@@ -119,7 +126,7 @@ class Project extends BaseModel<IStore> {
     public subscribeDashboardSocketHandlers(userUID: string) {
         return this.subscribeSocketEvents(
             [
-                useDashboardProjectUnassignedHandlers,
+                useDashboardProjectAssignedUsersUpdatedHandlers,
                 useDashboardProjectCardCreatedHandlers,
                 useDashboardProjectCardOrderChangedHandlers,
                 useDashboardProjectColumnCreatedHandlers,
@@ -168,6 +175,13 @@ class Project extends BaseModel<IStore> {
         this.update({ ai_description: value });
     }
 
+    public get owner(): User.TModel {
+        return this.getForeignModels<User.TModel>("owner")[0];
+    }
+    public set owner(value: User.TModel | User.Interface) {
+        this.update({ owner: value });
+    }
+
     public get columns(): ProjectColumn.TModel[] {
         return this.getForeignModels("columns");
     }
@@ -180,6 +194,13 @@ class Project extends BaseModel<IStore> {
     }
     public set members(value: (User.TModel | User.Interface)[]) {
         this.update({ members: value });
+    }
+
+    public get bots(): BotModel.TModel[] {
+        return this.getForeignModels("bots");
+    }
+    public set bots(value: (BotModel.TModel | BotModel.Interface)[]) {
+        this.update({ bots: value });
     }
 
     public get current_user_role_actions() {

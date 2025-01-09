@@ -203,13 +203,7 @@ const menuStateItems: Record<
     ],
 };
 
-export const AIMenuItems = ({
-    aiEditorRef,
-    setValue,
-}: {
-    aiEditorRef: React.MutableRefObject<SlateEditor | null>;
-    setValue: (value: string) => void;
-}) => {
+export const AIMenuItems = ({ aiEditorRef, setValue }: { aiEditorRef: React.RefObject<SlateEditor | null>; setValue: (value: string) => void }) => {
     const [t] = useTranslation();
     const { editor, useOption } = useEditorPlugin(AIChatPlugin);
     const { messages } = useOption("chat");

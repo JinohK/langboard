@@ -1,7 +1,7 @@
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...core.ai import BotType
+from ...core.ai import Bot
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
@@ -15,7 +15,6 @@ from ...models import (
     Checkitem,
     GlobalCardRelationshipType,
     Project,
-    ProjectAssignedUser,
     ProjectColumn,
     ProjectLabel,
 )
@@ -26,7 +25,7 @@ from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
-from .Types import TCardParam, TColumnParam, TProjectParam
+from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBot
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
@@ -68,6 +67,7 @@ class CardService(BaseService):
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
+        api_card["project_bots"] = await project_service.get_assigned_bots(card.project_id, as_api=True)
 
         card_attachment_service = self._get_service(CardAttachmentService)
         api_card["attachments"] = await card_attachment_service.get_board_list(card)
@@ -177,7 +177,7 @@ class CardService(BaseService):
         return card_api
 
     async def create(
-        self, user_or_bot: User | BotType, project: TProjectParam, column: TColumnParam, title: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, title: str
     ) -> SocketModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project or column == project.ARCHIVE_COLUMN_UID():
@@ -201,29 +201,26 @@ class CardService(BaseService):
         model = await self.convert_board_list_api_response(card)
         model_id = await SocketModelIdService.create_model_id({"card": model})
 
+        topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
+                topic_id=topic_id,
                 event=f"{_SOCKET_PREFIX}:created:{column.get_uid()}",
                 data_keys="card",
             ),
-        ]
-
-        project_service = self._get_service(ProjectService)
-        publish_models.extend(
-            await project_service.create_publish_private_models_for_members(
-                project=project,
+            SocketPublishModel(
                 topic=SocketTopic.Dashboard,
-                event=f"dashboard:project:card:created{project.get_uid()}",
+                topic_id=topic_id,
+                event=f"dashboard:project:card:created{topic_id}",
                 custom_data={"column_uid": column.get_uid()},
-            )
-        )
+            ),
+        ]
 
         return SocketModelIdBaseResult(model_id, (card, model), publish_models)
 
     async def update(
-        self, user_or_bot: User | BotType, project: TProjectParam, card: TCardParam, form: dict
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, form: dict
     ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
@@ -254,7 +251,7 @@ class CardService(BaseService):
                 await self._db.update(checkitem_cardified_from)
                 await self._db.commit()
 
-        if isinstance(user_or_bot, BotType):
+        if isinstance(user_or_bot, Bot):
             await self._db.update(card)
             await self._db.commit()
             revert_key = None
@@ -399,22 +396,17 @@ class CardService(BaseService):
                         event=f"{_SOCKET_PREFIX}:order:changed:{card.get_uid()}",
                         data_keys=["to_column_uid", "column_name"],
                     ),
+                    SocketPublishModel(
+                        topic=SocketTopic.Dashboard,
+                        topic_id=topic_id,
+                        event=f"dashboard:project:card:order:changed:{topic_id}",
+                        custom_data={
+                            "from_column_uid": original_column_id,
+                            "to_column_uid": new_column.get_uid(),
+                        },
+                    ),
                 ]
             )
-
-            project_service = self._get_service(ProjectService)
-            publish_models.extend(
-                await project_service.create_publish_private_models_for_members(
-                    project=project,
-                    topic=SocketTopic.Dashboard,
-                    event=f"dashboard:project:card:order:changed:{project.get_uid()}",
-                    custom_data={
-                        "from_column_uid": original_column_id,
-                        "to_column_uid": new_column.get_uid(),
-                    },
-                )
-            )
-
         else:
             publish_models.append(
                 SocketPublishModel(
@@ -430,7 +422,7 @@ class CardService(BaseService):
 
     async def update_assigned_users(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         assign_user_uids: list[str] | None = None,
@@ -451,18 +443,16 @@ class CardService(BaseService):
 
         if assign_user_uids:
             assigned_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
-            result = await self._db.exec(
-                self._db.query("select")
-                .table(User)
-                .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
-                .where(
-                    (ProjectAssignedUser.column("project_id") == card.project_id)
-                    & (ProjectAssignedUser.column("user_id").in_(assigned_user_ids))
-                )
+            project_service = self._get_service(ProjectService)
+            raw_users = await project_service.get_assigned_users(
+                project.id, as_api=False, where_user_ids_in=assigned_user_ids
             )
-            users = result.all()
-            for user in users:
-                self._db.insert(CardAssignedUser(card_id=card.id, user_id=user.id))
+            users: list[User] = []
+            for user, project_assigned_user in raw_users:
+                self._db.insert(
+                    CardAssignedUser(project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=user.id)
+                )
+                users.append(user)
         else:
             users = []
         await self._db.commit()
@@ -481,7 +471,7 @@ class CardService(BaseService):
         return SocketModelIdBaseResult(model_id, list(users), publish_model)
 
     async def update_labels(
-        self, user_or_bot: User | BotType, project: TProjectParam, card: TCardParam, label_uids: list[str]
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, label_uids: list[str]
     ) -> SocketModelIdBaseResult[bool] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
@@ -489,7 +479,7 @@ class CardService(BaseService):
         project, card = params
 
         project_label_service = self._get_service(ProjectLabelService)
-        is_bot = isinstance(user_or_bot, BotType)
+        is_bot = isinstance(user_or_bot, Bot)
 
         # result = await self._db.exec(
         #     self._db.query("select")
@@ -529,6 +519,17 @@ class CardService(BaseService):
         )
 
         return SocketModelIdBaseResult(model_id, True, publish_model)
+
+    async def create_publish_assigned_users_model(self, project: Project, card: Card, users: list[User] | None):
+        if users is None:
+            users = [user for user, _ in await self.get_assigned_users(card, as_api=False)]
+
+        return SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=project.get_uid(),
+            event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.get_uid()}",
+            custom_data={"assigned_members": [user.api_response() for user in users]},
+        )
 
     @overload
     def __filter_column(

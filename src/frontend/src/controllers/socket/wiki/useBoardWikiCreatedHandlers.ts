@@ -9,17 +9,13 @@ export interface IBoardWikiCreatedRawResponse {
 
 export interface IUseBoardWikiCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID?: string;
 }
 
-const useBoardWikiCreatedHandlers = ({ callback, projectUID, userUID }: IUseBoardWikiCreatedHandlersProps) => {
-    const topic = userUID ? ESocketTopic.BoardWikiPrivate : ESocketTopic.BoardWiki;
-    const topicId = userUID ?? projectUID;
-
+const useBoardWikiCreatedHandlers = ({ callback, projectUID }: IUseBoardWikiCreatedHandlersProps) => {
     return useSocketHandler<{}, IBoardWikiCreatedRawResponse>({
-        topic,
-        topicId,
-        eventKey: `board-wiki-created-${topic}-${projectUID}`,
+        topic: ESocketTopic.BoardWiki,
+        topicId: projectUID,
+        eventKey: `board-wiki-created-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.WIKI.CREATED,
             params: { uid: projectUID },

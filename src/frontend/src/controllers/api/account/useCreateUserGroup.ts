@@ -13,18 +13,23 @@ export interface ICreateUserGroupResponse extends IRevertKeyBaseResponse {
     user_group: UserGroup.TModel;
 }
 
-const useCreateUserGroup = (revertCallback?: () => void, options?: TMutationOptions<ICreateUserGroupForm, ICreateUserGroupResponse>) => {
+const useCreateUserGroup = (options?: TMutationOptions<ICreateUserGroupForm, ICreateUserGroupResponse>) => {
     const { mutate } = useQueryMutation();
-    const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.USER_GROUP.CREATE, revertCallback);
+    const { createToastCreator } = useRevert<string>(API_ROUTES.ACCOUNT.USER_GROUP.CREATE, (newGroupUID) => {
+        UserGroup.Model.deleteModel(newGroupUID);
+    });
 
     const createUserGroup = async (params: ICreateUserGroupForm) => {
         const res = await api.post(API_ROUTES.ACCOUNT.USER_GROUP.CREATE, {
             name: params.name,
         });
 
+        const userGroup = UserGroup.Model.fromObject(res.data.user_group);
+
         return {
-            user_group: UserGroup.Model.fromObject(res.data.user_group),
+            user_group: userGroup,
             revert_key: res.data.revert_key,
+            createToast: createToastCreator(res.data.revert_key, res.data.user_group.uid),
         };
     };
 
@@ -33,11 +38,7 @@ const useCreateUserGroup = (revertCallback?: () => void, options?: TMutationOpti
         retry: 0,
     });
 
-    return {
-        ...result,
-        revert,
-        createRevertToastButton,
-    };
+    return result;
 };
 
 export default useCreateUserGroup;

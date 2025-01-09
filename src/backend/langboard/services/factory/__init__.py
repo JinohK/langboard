@@ -1,3 +1,4 @@
+from .AppSettingService import AppSettingService
 from .CardAttachmentService import CardAttachmentService
 from .CardCommentService import CardCommentService
 from .CardRelationshipService import CardRelationshipService
@@ -18,6 +19,7 @@ from .UserService import UserService
 
 
 __all__ = [
+    "AppSettingService",
     "CardAttachmentService",
     "CardCommentService",
     "CardRelationshipService",

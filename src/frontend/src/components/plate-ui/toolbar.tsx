@@ -65,7 +65,7 @@ const dropdownArrowVariants = cva(
 
 const ToolbarButton = Tooltip.withTooltip(
     React.forwardRef<
-        React.ElementRef<typeof ToolbarToggleItem>,
+        React.ComponentRef<typeof ToolbarToggleItem>,
         {
             isDropdown?: bool;
             pressed?: bool;
@@ -120,7 +120,7 @@ ToolbarButton.displayName = "ToolbarButton";
 
 export { ToolbarButton };
 
-export const ToolbarSplitButton = React.forwardRef<React.ElementRef<typeof ToolbarButton>, React.ComponentPropsWithoutRef<typeof ToolbarButton>>(
+export const ToolbarSplitButton = React.forwardRef<React.ComponentRef<typeof ToolbarButton>, React.ComponentPropsWithoutRef<typeof ToolbarButton>>(
     ({ children, className, ...props }, ref) => {
         return (
             <ToolbarButton ref={ref} className={cn("group flex gap-0 px-0 hover:bg-transparent", className)} {...props}>
@@ -131,7 +131,7 @@ export const ToolbarSplitButton = React.forwardRef<React.ElementRef<typeof Toolb
 );
 
 export const ToolbarSplitButtonPrimary = React.forwardRef<
-    React.ElementRef<typeof ToolbarToggleItem>,
+    React.ComponentRef<typeof ToolbarToggleItem>,
     Omit<React.ComponentPropsWithoutRef<typeof ToolbarToggleItem>, "value">
 >(({ children, className, size, variant, ...props }, ref) => {
     return (

@@ -16,7 +16,7 @@ const Sub = MenubarPrimitive.Sub;
 
 const RadioGroup = MenubarPrimitive.RadioGroup;
 
-const Root = React.forwardRef<React.ElementRef<typeof MenubarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>>(
+const Root = React.forwardRef<React.ComponentRef<typeof MenubarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>>(
     ({ className, ...props }, ref) => (
         <MenubarPrimitive.Root
             ref={ref}
@@ -27,22 +27,23 @@ const Root = React.forwardRef<React.ElementRef<typeof MenubarPrimitive.Root>, Re
 );
 Root.displayName = MenubarPrimitive.Root.displayName;
 
-const Trigger = React.forwardRef<React.ElementRef<typeof MenubarPrimitive.Trigger>, React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>>(
-    ({ className, ...props }, ref) => (
-        <MenubarPrimitive.Trigger
-            ref={ref}
-            className={cn(
-                "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-                className
-            )}
-            {...props}
-        />
-    )
-);
+const Trigger = React.forwardRef<
+    React.ComponentRef<typeof MenubarPrimitive.Trigger>,
+    React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+    <MenubarPrimitive.Trigger
+        ref={ref}
+        className={cn(
+            "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
+            className
+        )}
+        {...props}
+    />
+));
 Trigger.displayName = MenubarPrimitive.Trigger.displayName;
 
 const SubTrigger = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.SubTrigger>,
+    React.ComponentRef<typeof MenubarPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubTrigger> & {
         inset?: bool;
     }
@@ -63,7 +64,7 @@ const SubTrigger = React.forwardRef<
 SubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName;
 
 const SubContent = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.SubContent>,
+    React.ComponentRef<typeof MenubarPrimitive.SubContent>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
     <MenubarPrimitive.SubContent
@@ -77,27 +78,28 @@ const SubContent = React.forwardRef<
 ));
 SubContent.displayName = MenubarPrimitive.SubContent.displayName;
 
-const Content = React.forwardRef<React.ElementRef<typeof MenubarPrimitive.Content>, React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Content>>(
-    ({ className, align = "start", alignOffset = -4, sideOffset = 8, ...props }, ref) => (
-        <MenubarPrimitive.Portal>
-            <MenubarPrimitive.Content
-                ref={ref}
-                align={align}
-                alignOffset={alignOffset}
-                sideOffset={sideOffset}
-                className={cn(
-                    "z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-                    className
-                )}
-                {...props}
-            />
-        </MenubarPrimitive.Portal>
-    )
-);
+const Content = React.forwardRef<
+    React.ComponentRef<typeof MenubarPrimitive.Content>,
+    React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Content>
+>(({ className, align = "start", alignOffset = -4, sideOffset = 8, ...props }, ref) => (
+    <MenubarPrimitive.Portal>
+        <MenubarPrimitive.Content
+            ref={ref}
+            align={align}
+            alignOffset={alignOffset}
+            sideOffset={sideOffset}
+            className={cn(
+                "z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+                className
+            )}
+            {...props}
+        />
+    </MenubarPrimitive.Portal>
+));
 Content.displayName = MenubarPrimitive.Content.displayName;
 
 const Item = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.Item>,
+    React.ComponentRef<typeof MenubarPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Item> & {
         inset?: bool;
     }
@@ -115,7 +117,7 @@ const Item = React.forwardRef<
 Item.displayName = MenubarPrimitive.Item.displayName;
 
 const CheckboxItem = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.CheckboxItem>,
+    React.ComponentRef<typeof MenubarPrimitive.CheckboxItem>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => (
     <MenubarPrimitive.CheckboxItem
@@ -138,7 +140,7 @@ const CheckboxItem = React.forwardRef<
 CheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName;
 
 const RadioItem = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.RadioItem>,
+    React.ComponentRef<typeof MenubarPrimitive.RadioItem>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => (
     <MenubarPrimitive.RadioItem
@@ -160,7 +162,7 @@ const RadioItem = React.forwardRef<
 RadioItem.displayName = MenubarPrimitive.RadioItem.displayName;
 
 const Label = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.Label>,
+    React.ComponentRef<typeof MenubarPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Label> & {
         inset?: bool;
     }
@@ -170,7 +172,7 @@ const Label = React.forwardRef<
 Label.displayName = MenubarPrimitive.Label.displayName;
 
 const Separator = React.forwardRef<
-    React.ElementRef<typeof MenubarPrimitive.Separator>,
+    React.ComponentRef<typeof MenubarPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Separator>
 >(({ className, ...props }, ref) => <MenubarPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} {...props} />);
 Separator.displayName = MenubarPrimitive.Separator.displayName;

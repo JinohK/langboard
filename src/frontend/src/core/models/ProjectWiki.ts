@@ -1,14 +1,15 @@
+import * as AuthUser from "@/core/models/AuthUser";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
-import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
 import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
 import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoardWikiDetailsChangedHandlers";
+import useBoardWikiAssignedUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssignedUsersUpdatedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
     title: string;
-    content: IEditorContent;
+    content?: IEditorContent;
     order: number;
     is_public: bool;
     forbidden?: true;
@@ -30,22 +31,38 @@ class ProjectWiki extends BaseModel<Interface> {
 
     constructor(model: Record<string, unknown>) {
         super(model);
+
         // Public handlers
-        this.subscribeSocketEvents(
-            [useBoardWikiCreatedHandlers, useBoardWikiDeletedHandlers, useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers],
-            {
-                projectUID: this.project_uid,
-                wikiUID: this.uid,
-            }
-        );
+        this.subscribeSocketEvents([useBoardWikiDeletedHandlers, useBoardWikiDetailsChangedHandlers], {
+            projectUID: this.project_uid,
+            wiki: this,
+            isPrivate: false,
+        });
     }
 
-    public subscribePrivateSocketHandlers(userUID: string) {
-        return this.subscribeSocketEvents([useBoardWikiCreatedHandlers, useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers], {
-            projectUID: this.project_uid,
-            wikiUID: this.uid,
-            userUID,
-        });
+    public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
+        const map = {
+            changeToPrivate: () => {
+                model.title = "";
+                model.content = undefined;
+                model.is_public = false;
+                model.forbidden = true;
+                model.assigned_members = [];
+            },
+        };
+        return map as TMethodMap;
+    }
+
+    public subscribePrivateSocketHandlers(currentUser: AuthUser.TModel) {
+        return this.subscribeSocketEvents(
+            [useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers, useBoardWikiAssignedUsersUpdatedHandlers],
+            {
+                projectUID: this.project_uid,
+                wiki: this,
+                currentUser,
+                isPrivate: true,
+            }
+        );
     }
 
     public get project_uid() {
@@ -65,7 +82,7 @@ class ProjectWiki extends BaseModel<Interface> {
     public get content() {
         return this.getValue("content");
     }
-    public set content(value: IEditorContent) {
+    public set content(value: IEditorContent | undefined) {
         this.update({ content: value });
     }
 
@@ -102,6 +119,14 @@ class ProjectWiki extends BaseModel<Interface> {
     }
     public set isInBin(value: bool) {
         this.update({ isInBin: value });
+    }
+
+    public changeToPrivate() {
+        this.title = "";
+        this.content = undefined;
+        this.is_public = false;
+        this.forbidden = true;
+        this.assigned_members = [];
     }
 }
 

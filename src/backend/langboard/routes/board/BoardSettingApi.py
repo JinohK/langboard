@@ -8,6 +8,7 @@ from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
+    AssignBotsForm,
     ChangeColumnOrderForm,
     CreateProjectLabelForm,
     UpdateProjectDetailsForm,
@@ -44,8 +45,9 @@ async def get_project_details(
     project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
+    bots = await service.app_setting.get_bots(as_api=True)
 
-    return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"project": response, "bots": bots}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/settings/details")
@@ -60,6 +62,21 @@ async def change_project_details(
 
     if result is True:
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/assigned-bots")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def update_project_assigned_bots(
+    project_uid: str, form: AssignBotsForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    result = await service.project.update_assigned_bots(user, project_uid, form.assigned_bots)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     await AppRouter.publish_with_socket_model(result)
 

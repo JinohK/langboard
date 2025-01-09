@@ -1,10 +1,10 @@
-import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
+import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import { Flex, Label, Skeleton, Switch, Toast } from "@/components/base";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
 import useUpdateWikiAssignedUsers from "@/controllers/api/wiki/useUpdateWikiAssignedUsers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectWiki, User } from "@/core/models";
+import { ProjectWiki, User, UserGroup } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useRef, useState } from "react";
@@ -29,11 +29,12 @@ export function SkeletonWikiPrivateOption() {
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
-    const { projectUID, projectMembers } = useBoardWiki();
+    const { projectUID, projectMembers, currentUser } = useBoardWiki();
     const isPublic = wiki.useField("is_public");
     const isForbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);
     const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
+    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
     const { mutateAsync: updateWikiAssignedUsersMutateAsync } = useUpdateWikiAssignedUsers();
@@ -86,7 +87,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         });
     };
 
-    const saveAssignedUsers = (users: User.TModel[]) => {
+    const saveAssignedUsers = (items: TMultiSelectAssigneeItem[]) => {
         if (isValidating || isPublic) {
             return;
         }
@@ -96,7 +97,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         const promise = updateWikiAssignedUsersMutateAsync({
             project_uid: projectUID,
             wiki_uid: wiki.uid,
-            assigned_users: User.filterValidUserUIDs(users),
+            assigned_users: User.filterValidUserUIDs(items as User.TModel[]),
         });
 
         const toastId = Toast.Add.promise(promise, {
@@ -132,7 +133,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 <span>{t(`wiki.${isPublic ? "Public" : "Private"}`)}</span>
             </Label>
             {!isPublic && (
-                <MultiSelectMemberPopover
+                <MultiSelectAssigneesPopover
                     popoverButtonProps={{
                         size: "icon",
                         className: "size-8",
@@ -157,13 +158,13 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                         ),
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
                     }}
+                    addIconSize="6"
                     onSave={saveAssignedUsers}
                     isValidating={isValidating}
-                    allUsers={projectMembers}
-                    assignedUsers={assignedMembers}
-                    iconSize="6"
-                    canControlAssignedUsers
-                    useGroupMembers
+                    allItems={projectMembers}
+                    groups={groups}
+                    assignedFilter={(item) => assignedMembers.includes(item as User.TModel)}
+                    initialSelectedItems={assignedMembers}
                 />
             )}
         </Flex>

@@ -41,7 +41,7 @@ const staticComponents = {
     [HEADING_KEYS.h3]: withProps(HeadingElementStatic, { variant: "h3" }),
 };
 
-export const AIChatEditor = memo(({ aiEditorRef }: { aiEditorRef: React.MutableRefObject<SlateEditor | null> }) => {
+export const AIChatEditor = memo(({ aiEditorRef }: { aiEditorRef: React.RefObject<SlateEditor | null> }) => {
     const { getOptions } = useEditorPlugin(AIChatPlugin);
     const lastAssistantMessage = useLastAssistantMessage();
     const content = lastAssistantMessage?.content ?? "";

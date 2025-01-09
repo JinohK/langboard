@@ -17,7 +17,7 @@ class Service(ServiceFactory):
         return Depends(create_factory)
 
     def close(self):
-        self._serivces.clear()
+        self._services.clear()
 
     @property
     def user(self):
@@ -86,3 +86,7 @@ class Service(ServiceFactory):
     @property
     def card_relationship(self):
         return self._create_or_get_service(factory.CardRelationshipService)
+
+    @property
+    def app_setting(self):
+        return self._create_or_get_service(factory.AppSettingService)

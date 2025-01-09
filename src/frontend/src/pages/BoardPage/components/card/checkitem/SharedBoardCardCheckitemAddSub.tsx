@@ -1,6 +1,7 @@
-import { MultiSelectMemberForm } from "@/components/MultiSelectMemberPopover";
+import { MultiSelectAssigneesForm, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import { Button, DropdownMenu, Flex, Floating, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useCreateSubCheckitem from "@/controllers/api/card/checkitem/useCreateSubCheckitem";
+import { User, UserGroup } from "@/core/models";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -16,9 +17,11 @@ function SharedBoardCardCheckitemAddSub({
 }): JSX.Element {
     const { projectUID, card, currentUser, sharedClassNames } = useBoardCard();
     const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
+    const projectMembers = card.useForeignField<User.TModel>("project_members");
+    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
-    const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+    const [selectedMembers, setSelectedMembers] = useState<TMultiSelectAssigneeItem[]>([]);
     const { mutateAsync: createSubCheckitemMutateAsync } = useCreateSubCheckitem();
     const titleInputId = `board-card-new-sub-checkitem-title-input-${checkitem.uid}${fromDropdown ? "-dropdown" : ""}`;
 
@@ -44,7 +47,7 @@ function SharedBoardCardCheckitemAddSub({
             card_uid: card.uid,
             checkitem_uid: checkitem.uid,
             title,
-            assigned_users: selectedMembers,
+            assigned_users: (selectedMembers as User.TModel[]).map((user) => user.uid),
         });
 
         const toastId = Toast.Add.promise(promise, {
@@ -98,7 +101,7 @@ function SharedBoardCardCheckitemAddSub({
                         }
                     }}
                 />
-                <MultiSelectMemberForm
+                <MultiSelectAssigneesForm
                     multiSelectProps={{
                         placeholder: t("card.Select members..."),
                         className: cn(
@@ -108,12 +111,11 @@ function SharedBoardCardCheckitemAddSub({
                         ),
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
                     }}
+                    allItems={projectMembers}
+                    groups={groups}
+                    initialSelectedItems={[]}
                     isValidating={isValidating}
-                    allUsers={card.project_members}
-                    assignedUsers={[]}
-                    currentUser={currentUser}
                     onValueChange={setSelectedMembers}
-                    useGroupMembers
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

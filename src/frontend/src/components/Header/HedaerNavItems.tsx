@@ -7,7 +7,7 @@ import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useRef, useState } from "react";
 
 interface IDropdownMenuNavProps {
-    setDropdownMenuOpenedRef?: React.MutableRefObject<React.Dispatch<React.SetStateAction<bool>>>;
+    setDropdownMenuOpenedRef?: React.RefObject<React.Dispatch<React.SetStateAction<bool>>>;
 }
 
 function HedaerNavItems({

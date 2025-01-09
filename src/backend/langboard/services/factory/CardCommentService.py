@@ -1,11 +1,11 @@
 from typing import Any, cast, overload
-from ...core.ai import BotRunner, BotType
+from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...models import Card, CardComment, CardCommentReaction, Project
 from .ReactionService import ReactionService
-from .Types import TCardParam, TCommentParam, TProjectParam
+from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:card:comment"
@@ -26,26 +26,26 @@ class CardCommentService(BaseService):
             return []
         result = await self._db.exec(
             self._db.query("select")
-            .tables(CardComment, User)
+            .tables(CardComment, User, Bot, with_deleted=True)
             .outerjoin(User, CardComment.column("user_id") == User.column("id"))
+            .outerjoin(Bot, CardComment.column("bot_id") == Bot.column("id"))
             .where(CardComment.column("card_id") == card.id)
             .order_by(CardComment.column("created_at").desc(), CardComment.column("id").desc())
-            .group_by(CardComment.column("id"), CardComment.column("created_at"), User.column("id"))
+            .group_by(CardComment.column("id"), CardComment.column("created_at"), User.column("id"), Bot.column("id"))
         )
         raw_comments = result.all()
 
         reaction_service = self._get_service(ReactionService)
 
         comments = []
-        for comment, user in raw_comments:
+        for comment, user, bot in raw_comments:
+            if comment.deleted_at is not None:
+                continue
             api_comment = comment.api_response()
             if user:
                 api_comment["user"] = user.api_response()
-            elif comment.bot_type:
-                bot = await BotRunner.get_bot_config(comment.bot_type, self._db)
-                api_comment["user"] = bot.api_response_as_user() if bot else User.create_unknown_user_api_response()
             else:
-                continue
+                api_comment["bot"] = bot.api_response()
             api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
             comments.append(api_comment)
 
@@ -53,7 +53,7 @@ class CardCommentService(BaseService):
 
     async def create(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         content: EditorContentModel | dict[str, Any],
@@ -74,7 +74,7 @@ class CardCommentService(BaseService):
         if isinstance(user_or_bot, User):
             comment_params["user_id"] = user_or_bot.id
         else:
-            comment_params["bot_type"] = user_or_bot
+            comment_params["bot_id"] = user_or_bot.id
 
         comment = CardComment(**comment_params)
         self._db.insert(comment)
@@ -86,8 +86,7 @@ class CardCommentService(BaseService):
         if isinstance(user_or_bot, User):
             api_comment["user"] = user_or_bot.api_response()
         else:
-            bot = await BotRunner.get_bot_config(user_or_bot, self._db)
-            api_comment["user"] = bot.api_response_as_user() if bot else User.create_unknown_user_api_response()
+            api_comment["bot"] = user_or_bot.api_response()
         api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
 
         model_id = await SocketModelIdService.create_model_id({"comment": api_comment})
@@ -103,7 +102,7 @@ class CardCommentService(BaseService):
 
     async def update(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         comment: TCommentParam,
@@ -142,7 +141,7 @@ class CardCommentService(BaseService):
 
     async def delete(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         comment: TCommentParam,
@@ -170,7 +169,7 @@ class CardCommentService(BaseService):
 
     async def toggle_reaction(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         comment: TCommentParam,
@@ -189,24 +188,19 @@ class CardCommentService(BaseService):
             "reaction": reaction,
             "is_reacted": is_reacted,
         }
+
         if isinstance(user_or_bot, User):
             model["user_uid"] = user_or_bot.get_uid()
         else:
-            model["bot_type"] = user_or_bot.name
+            model["bot_uid"] = user_or_bot.get_uid()
 
         model_id = await SocketModelIdService.create_model_id(model)
-
-        data_keys = ["reaction", "is_reacted"]
-        if isinstance(user_or_bot, User):
-            data_keys.append("user_uid")
-        else:
-            data_keys.append("bot_type")
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:reacted:{card.get_uid()}",
-            data_keys=data_keys,
+            data_keys=list(model.keys()),
         )
 
         return SocketModelIdBaseResult(model_id, is_reacted, publish_model)

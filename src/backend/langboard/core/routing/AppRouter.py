@@ -67,8 +67,9 @@ class AppRouter:
         if "model_id" in (response_model.data or {}):
             response_data: dict = response_model.data
             model_id = response_data.pop("model_id")
-            data = await SocketModelIdService.get_model(model_id)
-            response_data.update(data)
+            model_data = await SocketModelIdService.get_model(model_id)
+            if model_data:
+                response_data.update(model_data)
 
         if isinstance(topic, Enum):
             topic = topic.value

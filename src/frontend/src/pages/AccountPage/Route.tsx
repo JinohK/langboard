@@ -13,7 +13,7 @@ function AccountRoute() {
                 index
                 element={
                     <AuthGuard>
-                        <Navigate to={ROUTES.ACCOUNT.PROFILE} />
+                        <Navigate to={ROUTES.ACCOUNT.PROFILE} replace />
                     </AuthGuard>
                 }
             />

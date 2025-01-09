@@ -1,11 +1,10 @@
 from typing import Any, Literal, cast, overload
-from ...core.ai import BotType
+from ...core.ai import InternalBotType
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
 from ...models import Card, CardAssignedUser, Checkitem, CheckitemAssignedUser, CheckitemTimer, Project, ProjectColumn
-from .ProjectService import ProjectService
 from .Types import TCardParam, TCheckitemParam, TProjectParam
 
 
@@ -134,7 +133,7 @@ class CheckitemService(BaseService):
 
     async def create(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: User | InternalBotType,
         project: TProjectParam,
         card: TCardParam,
         title: str,
@@ -198,7 +197,7 @@ class CheckitemService(BaseService):
 
     async def change_title(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: User | InternalBotType,
         project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
@@ -349,7 +348,7 @@ class CheckitemService(BaseService):
 
     async def cardify(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: User | InternalBotType,
         project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
@@ -420,35 +419,32 @@ class CheckitemService(BaseService):
         api_card = await card_service.convert_board_list_api_response(new_card)
         model_id = await SocketModelIdService.create_model_id({"card": api_card})
 
+        topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
+                topic_id=topic_id,
                 event=f"{_SOCKET_PREFIX}:cardified:{checkitem.get_uid()}",
                 data_keys="card",
             ),
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
+                topic_id=topic_id,
                 event=f"board:card:created:{column_id.to_short_code()}",
                 data_keys="card",
             ),
-        ]
-
-        project_service = self._get_service(ProjectService)
-        publish_models.extend(
-            await project_service.create_publish_private_models_for_members(
-                project=project,
+            SocketPublishModel(
                 topic=SocketTopic.Dashboard,
-                event=f"dashboard:project:card:created{project.get_uid()}",
+                topic_id=topic_id,
+                event=f"dashboard:project:card:created{topic_id}",
                 custom_data={"column_uid": column.get_uid()},
-            )
-        )
+            ),
+        ]
 
         return SocketModelIdBaseResult(model_id, new_card, publish_models)
 
     async def delete(
-        self, user_or_bot: User | BotType, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
+        self, user_or_bot: User | InternalBotType, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
     ) -> SocketModelIdBaseResult[Checkitem] | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:

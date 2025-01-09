@@ -31,7 +31,7 @@ interface IBaseUseFormProps<TVariables = unknown, TData = unknown, TContext = un
     schema: Record<string, TValidationSchema> | (() => Record<string, TValidationSchema>);
     isValidatingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
     isFormData?: TFormData;
-    inputRefs?: Record<string, React.RefObject<HTMLInputElement | null> | React.MutableRefObject<DataTransfer>>;
+    inputRefs?: Record<string, React.RefObject<HTMLInputElement | DataTransfer | string | bool>>;
     beforeHandleSubmit?: () => void;
     predefineValues?: Partial<TVariables> | (() => Partial<TVariables>);
     successCallback?: (form: TFormDataType<TFormData, TVariables>) => void;
@@ -100,8 +100,8 @@ export interface IUseForm<TVariables = unknown, TFormData extends bool = false> 
     setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
-    formDataRef: React.MutableRefObject<TFormDataType<TFormData, TVariables>>;
+    formDataRef: React.RefObject<TFormDataType<TFormData, TVariables>>;
     handleSubmit: (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => void;
-    formRef: React.MutableRefObject<HTMLFormElement | null>;
-    focusElementRef: React.MutableRefObject<HTMLInputElement | string | null>;
+    formRef: React.RefObject<HTMLFormElement | null>;
+    focusComponentRef: React.RefObject<HTMLInputElement | string | null>;
 }

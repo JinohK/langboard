@@ -6,7 +6,7 @@ import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 
-const Root = React.forwardRef<React.ElementRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
+const Root = React.forwardRef<React.ComponentRef<typeof OTPInput>, React.ComponentPropsWithoutRef<typeof OTPInput>>(
     ({ className, containerClassName, ...props }, ref) => (
         <OTPInput
             ref={ref}
@@ -18,12 +18,12 @@ const Root = React.forwardRef<React.ElementRef<typeof OTPInput>, React.Component
 );
 Root.displayName = "InputOTP";
 
-const Group = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(({ className, ...props }, ref) => (
+const Group = React.forwardRef<React.ComponentRef<"div">, React.ComponentPropsWithoutRef<"div">>(({ className, ...props }, ref) => (
     <div ref={ref} className={cn("flex items-center", className)} {...props} />
 ));
 Group.displayName = "InputOTPGroup";
 
-const Slot = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div"> & { index: number }>(
+const Slot = React.forwardRef<React.ComponentRef<"div">, React.ComponentPropsWithoutRef<"div"> & { index: number }>(
     ({ index, className, ...props }, ref) => {
         const inputOTPContext = React.useContext(OTPInputContext);
         const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
@@ -50,7 +50,7 @@ const Slot = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWitho
 );
 Slot.displayName = "InputOTPSlot";
 
-const Separator = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(({ ...props }, ref) => (
+const Separator = React.forwardRef<React.ComponentRef<"div">, React.ComponentPropsWithoutRef<"div">>(({ ...props }, ref) => (
     <div ref={ref} role="separator" {...props}>
         <IconComponent icon="dot" />
     </div>

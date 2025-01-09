@@ -1,10 +1,9 @@
 from typing import Any, Literal, cast, overload
-from ...core.ai import BotType
-from ...core.db import SnowflakeID, User
+from ...core.db import SnowflakeID
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
-from .Types import TCardParam, TProjectParam
+from .Types import TCardParam, TProjectParam, TUserOrBot
 
 
 class CardRelationshipService(BaseService):
@@ -100,7 +99,7 @@ class CardRelationshipService(BaseService):
 
     async def update(
         self,
-        user_or_bot: User | BotType,
+        user_or_bot: TUserOrBot,
         project: TProjectParam,
         card: TCardParam,
         is_parent: bool,

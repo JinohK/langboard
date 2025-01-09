@@ -1,26 +1,32 @@
-import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
+import { getMultiSelectItemLabel, MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import { Toast } from "@/components/base";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, User } from "@/core/models";
+import { AuthUser, BotModel, Project, User, UserGroup } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardMemberListProps {
     project: Project.TModel;
     isSelectCardView: bool;
+    currentUser: AuthUser.TModel;
 }
 
-const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListProps) => {
+const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoardMemberListProps) => {
     const [t, i18n] = useTranslation();
+    const owners = project.useForeignField<User.TModel>("owner");
+    const owner = owners[0];
     const members = project.useForeignField<User.TModel>("members");
+    const bots = project.useForeignField<BotModel.TModel>("bots");
     const invitedMembers = project.useForeignField<User.TModel>("invited_members");
+    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const allItems = useMemo(() => [...members, ...bots, ...invitedMembers], [members, bots, invitedMembers]);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
 
-    const save = (users: User.TModel[], endCallback: () => void) => {
+    const save = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
         if (isValidating) {
             return;
         }
@@ -29,7 +35,7 @@ const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListPro
 
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
-            emails: users.map((user) => user.email),
+            emails: (items as User.TModel[]).map((user) => user.email),
             lang: i18n.language,
         });
 
@@ -56,7 +62,7 @@ const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListPro
                 return message;
             },
             success: () => {
-                return t("project.Assigned members updated and invited new users successfully.");
+                return t("project.successes.Assigned members updated and invited new users successfully.");
             },
             finally: () => {
                 endCallback();
@@ -67,7 +73,7 @@ const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListPro
     };
 
     return (
-        <MultiSelectMemberPopover
+        <MultiSelectAssigneesPopover
             popoverButtonProps={{
                 size: "icon",
                 className: cn("size-8 xs:size-10", isSelectCardView ? "hidden" : ""),
@@ -92,16 +98,23 @@ const BoardMemberList = memo(({ project, isSelectCardView }: IBoardMemberListPro
                 ),
                 inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
             }}
+            addIconSize="6"
             onSave={save}
             isValidating={isValidating}
-            allUsers={members}
-            assignedUsers={members}
-            newUsers={invitedMembers}
-            iconSize="6"
-            canControlAssignedUsers
+            allItems={allItems}
+            groups={groups}
+            selectableFilter={(item) => item.uid !== owner.uid}
+            newItemFilter={(item) => invitedMembers.includes(item as User.TModel) || (item as User.TModel).email !== owner.email}
+            assignedFilter={(item) => {
+                if (item instanceof User.Model) {
+                    return members.includes(item);
+                } else {
+                    return bots.includes(item);
+                }
+            }}
+            initialSelectedItems={allItems.filter((item) => invitedMembers.includes(item as User.TModel))}
             canAssignNonMembers
-            useGroupMembers
-            createNewUserLabel={(user) => `${user.firstname} ${user.lastname}${user.lastname ? " " : ""}(${t("project.invited")})`}
+            createNewUserLabel={(item) => `${getMultiSelectItemLabel(item).trim()} (${t("project.invited")})`}
         />
     );
 });

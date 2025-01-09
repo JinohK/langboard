@@ -8,6 +8,7 @@ interface IRevertForm {
 
 export interface IRevertKeyBaseResponse {
     revert_key: string;
+    createToast: (message: string) => void;
 }
 
 const useRevertMutate = (path: string, options?: TMutationOptions<IRevertForm>) => {

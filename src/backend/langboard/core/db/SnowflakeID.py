@@ -85,7 +85,7 @@ class SnowflakeID(int):
             return "0".rjust(11, "0")
 
         encoded = []
-        base = 62
+        base = len(BASE62_ALPHABET)
         n = num
         while n > 0:
             n, r = divmod(n, base)
@@ -98,7 +98,7 @@ class SnowflakeID(int):
 
     @staticmethod
     def __base62_decode(encoded: str) -> int:
-        base = 62
+        base = len(BASE62_ALPHABET)
         decoded = 0
         for char in encoded:
             decoded = decoded * base + BASE62_ALPHABET.index(char)

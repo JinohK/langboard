@@ -11,6 +11,7 @@ const useStopEditingClickOutside = (boxAttr: string, callback: () => void, isEdi
                 target.closest("[data-scroll-area-scrollbar]") ||
                 target.closest("[data-sonner-toast]") ||
                 target.closest(`${boxAttr}`) ||
+                target.closest("[data-plate-combobox-content]") || // Editor's combobox
                 target.closest("[data-radix-popper-content-wrapper") || // Editor's dropdown menu
                 target.closest("[data-radix-alert-dialog-content-wrapper]") // Editor's alert dialog
             ) {

@@ -21,5 +21,16 @@ class ProjectWiki(SoftDeleteModel, table=True):
             "is_public": self.is_public,
         }
 
+    def convert_to_private_api_response(self) -> dict[str, Any]:
+        return {
+            "uid": self.get_uid(),
+            "title": "",
+            "content": None,
+            "order": self.order,
+            "is_public": False,
+            "forbidden": True,
+            "assigned_members": [],
+        }
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["project_id", "title", "order", "is_public"]

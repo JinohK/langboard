@@ -15,8 +15,8 @@ interface IBasePlateEditorProps extends Omit<TUseCreateEditor, "plugins"> {
     setValue?: (value: IEditorContent) => void;
     variant?: React.ComponentProps<typeof Editor>["variant"];
     className?: string;
-    editorRef?: React.MutableRefObject<TEditor | undefined>;
-    editorElementRef?: React.MutableRefObject<HTMLDivElement | null>;
+    editorRef?: React.RefObject<TEditor | undefined>;
+    editorComponentRef?: React.RefObject<HTMLDivElement | null>;
     placeholder?: string;
 }
 
@@ -36,12 +36,12 @@ export function PlateEditor({
     value,
     readOnly,
     currentUser,
-    mentionableUsers,
+    mentionables,
     variant = "ai",
     className,
     setValue,
     editorRef,
-    editorElementRef,
+    editorComponentRef,
     placeholder,
     ...props
 }: TPlateEditorProps) {
@@ -51,7 +51,7 @@ export function PlateEditor({
 
     const editor = useCreateEditor({
         currentUser,
-        mentionableUsers,
+        mentionables,
         plugins: [],
         value,
         readOnly,
@@ -77,7 +77,7 @@ export function PlateEditor({
                     }}
                 >
                     <EditorContainer readOnly={readOnly}>
-                        <Editor variant={variant} className={className} placeholder={placeholder} ref={editorElementRef} />
+                        <Editor variant={variant} className={className} placeholder={placeholder} ref={editorComponentRef} />
                     </EditorContainer>
                 </Plate>
             </DndProvider>

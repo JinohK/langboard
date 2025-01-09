@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
+import { Tooltip } from "@/components/base";
 
 const Root = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(({ className, ...props }, ref) => (
     <div className="relative w-full overflow-auto">
@@ -28,18 +29,62 @@ const Row = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTable
 ));
 Row.displayName = "TableRow";
 
-const Head = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => (
-    <th
-        ref={ref}
-        className={cn("h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0", className)}
-        {...props}
-    />
-));
+export interface ITableCellProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+    title?: string;
+    titleAlign?: "center" | "start" | "end";
+    titleSide?: "top" | "bottom" | "left" | "right";
+}
+
+const Head = React.forwardRef<HTMLTableCellElement, ITableCellProps>(({ title, titleAlign, titleSide, className, children, ...props }, ref) => {
+    const headProps = {
+        ref,
+        className: cn("h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0", className),
+        ...props,
+    };
+
+    if (!title) {
+        return <th {...headProps}>{children}</th>;
+    }
+
+    return (
+        <th {...headProps}>
+            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
+                <Tooltip.Root>
+                    <Tooltip.Trigger>{children}</Tooltip.Trigger>
+                    <Tooltip.Content align={titleAlign} side={titleSide}>
+                        {title}
+                    </Tooltip.Content>
+                </Tooltip.Root>
+            </Tooltip.Provider>
+        </th>
+    );
+});
 Head.displayName = "TableHead";
 
-const Cell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => (
-    <td ref={ref} className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)} {...props} />
-));
+const Cell = React.forwardRef<HTMLTableCellElement, ITableCellProps>(({ title, titleAlign, titleSide, className, children, ...props }, ref) => {
+    const cellProps = {
+        ref,
+        className: cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className),
+        ...props,
+    };
+
+    if (!title) {
+        return <td {...cellProps}>{children}</td>;
+    }
+
+    return (
+        <td {...cellProps}>
+            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
+                <Tooltip.Root>
+                    <Tooltip.Trigger>{children}</Tooltip.Trigger>
+                    <Tooltip.Content align={titleAlign} side={titleSide}>
+                        {title}
+                    </Tooltip.Content>
+                </Tooltip.Root>
+            </Tooltip.Provider>
+        </td>
+    );
+});
 Cell.displayName = "TableCell";
 
 const Caption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(({ className, ...props }, ref) => (

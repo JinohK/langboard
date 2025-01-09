@@ -12,9 +12,9 @@ export interface IUpdateProfileForm extends Pick<User.Interface, "firstname" | "
     revert_key?: string;
 }
 
-const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOptions<IUpdateProfileForm, IRevertKeyBaseResponse>) => {
+const useUpdateProfile = (updatedUser: () => void, options?: TMutationOptions<IUpdateProfileForm, IRevertKeyBaseResponse>) => {
     const { mutate } = useQueryMutation();
-    const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.UPDATE_PROFILE, revertCallback);
+    const { createToastCreator } = useRevert(API_ROUTES.ACCOUNT.UPDATE_PROFILE, updatedUser);
 
     const updateProfile = async (params: IUpdateProfileForm) => {
         const formData = new FormData();
@@ -32,7 +32,10 @@ const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOption
 
         const res = await api.put(API_ROUTES.ACCOUNT.UPDATE_PROFILE, formData);
 
-        return res.data;
+        return {
+            revert_key: res.data.revert_key,
+            createToast: createToastCreator(res.data.revert_key, undefined),
+        };
     };
 
     const result = mutate(["update-profile"], updateProfile, {
@@ -40,11 +43,7 @@ const useUpdateProfile = (revertCallback?: () => void, options?: TMutationOption
         retry: 0,
     });
 
-    return {
-        ...result,
-        revert,
-        createRevertToastButton,
-    };
+    return result;
 };
 
 export default useUpdateProfile;

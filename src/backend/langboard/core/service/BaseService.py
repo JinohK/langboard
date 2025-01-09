@@ -47,23 +47,26 @@ class BaseService(ABC):
         return statement.limit(limit).offset((page - 1) * limit)
 
     async def _get_by(
-        self, model_class: type[_TBaseModel], column: str, value: Any, is_none: bool = False
+        self, model_class: type[_TBaseModel], column: str, value: Any, is_none: bool = False, with_deleted: bool = False
     ) -> _TBaseModel | None:
         if not is_none and value is None:
             return None
         result = await self._db.exec(
-            self._db.query("select").table(model_class).where(model_class.column(column) == value).limit(1)
+            self._db.query("select")
+            .table(model_class, with_deleted=with_deleted)
+            .where(model_class.column(column) == value)
+            .limit(1)
         )
         return result.first()
 
-    async def _get_all(self, model_class: type[_TBaseModel]) -> Sequence[_TBaseModel]:
-        result = await self._db.exec(self._db.query("select").table(model_class))
+    async def _get_all(self, model_class: type[_TBaseModel], with_deleted: bool = False) -> Sequence[_TBaseModel]:
+        result = await self._db.exec(self._db.query("select").table(model_class, with_deleted=with_deleted))
         return result.all()
 
     async def _get_all_by(
-        self, model_class: type[_TBaseModel], column: str, values: Any | list[Any]
+        self, model_class: type[_TBaseModel], column: str, values: Any | list[Any], with_deleted: bool = False
     ) -> Sequence[_TBaseModel]:
-        sql_query = self._db.query("select").table(model_class)
+        sql_query = self._db.query("select").table(model_class, with_deleted=with_deleted)
         if not isinstance(values, list):
             values = [values]
         sql_query = sql_query.where(model_class.column(column).in_(values))
@@ -132,14 +135,19 @@ class BaseService(ABC):
         return max_order
 
     async def _get_by_param(
-        self, model_class: type[_TBaseModel], id_param: _TBaseModel | SnowflakeID | int | str
+        self,
+        model_class: type[_TBaseModel],
+        id_param: _TBaseModel | SnowflakeID | int | str,
+        with_deleted: bool = False,
     ) -> _TBaseModel | None:
         if isinstance(id_param, model_class):
             return id_param
         if isinstance(id_param, SnowflakeID) or isinstance(id_param, int):
-            return await self._get_by(model_class, "id", id_param)
+            return await self._get_by(model_class, "id", id_param, with_deleted=with_deleted)
         if isinstance(id_param, str):
-            return await self._get_by(model_class, "id", SnowflakeID.from_short_code(id_param))
+            return await self._get_by(
+                model_class, "id", SnowflakeID.from_short_code(id_param), with_deleted=with_deleted
+            )
         return None
 
     def _convert_to_python(self, data: Any) -> Any:

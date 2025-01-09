@@ -1,5 +1,5 @@
 from sqlmodel import Field
-from ..core.ai import BotType
+from ..core.ai import Bot
 from ..core.db import EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 from .Card import Card
 
@@ -7,7 +7,7 @@ from .Card import Card
 class CardComment(SoftDeleteModel, table=True):
     card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
-    bot_type: BotType | None = Field(default=None, nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True, index=True)
     content: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
 
     def api_response(self):
@@ -20,4 +20,4 @@ class CardComment(SoftDeleteModel, table=True):
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["card_id", "user_id", "bot_type"]
+        return ["card_id", "user_id", "bot_id"]

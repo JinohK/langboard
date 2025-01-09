@@ -1,6 +1,8 @@
 import { Box, Flex } from "@/components/base";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
+import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +22,9 @@ const BoardSettingsList = memo(() => {
         <Flex direction="col" gap="3" p={{ initial: "4", md: "6", lg: "8" }} items="center">
             <BoardSettingsSection title="project.settings.Basic info">
                 <BoardSettingsBasic />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Bots">
+                <BoardSettingsBots key={createShortUUID()} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />

@@ -28,7 +28,7 @@ function PrimaryEmailForm(): JSX.Element {
     const [t] = useTranslation();
     const [open, setOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
-    const { mutate, createRevertToastButton } = useChangePrimaryEmail(updatedUser);
+    const { mutate } = useChangePrimaryEmail(updatedUser);
 
     const handleSubmit = () => {
         if (!selectedEmail) {
@@ -46,9 +46,7 @@ function PrimaryEmailForm(): JSX.Element {
                 onSuccess: (data) => {
                     setTimeout(() => {
                         updatedUser();
-                        const toastId = Toast.Add.success(t("myAccount.successes.Primary email updated successfully."), {
-                            actions: [createRevertToastButton(data.revert_key, () => toastId)],
-                        });
+                        data.createToast(t("myAccount.successes.Primary email updated successfully."));
                     }, 0);
                 },
                 onError: (error) => {

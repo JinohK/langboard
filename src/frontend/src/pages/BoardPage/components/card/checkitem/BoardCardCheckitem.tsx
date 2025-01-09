@@ -14,7 +14,7 @@ import { tv } from "tailwind-variants";
 
 export interface IBoardCardCheckitemProps {
     checkitem: ProjectCheckitem.TModel;
-    callbacksRef: React.MutableRefObject<Record<string, IRowDragCallback<ProjectCheckitem.TModel>>>;
+    callbacksRef: React.RefObject<Record<string, IRowDragCallback<ProjectCheckitem.TModel>>>;
     subCheckitemsMap: Record<string, ProjectCheckitem.TModel>;
     isOverlay?: bool;
 }

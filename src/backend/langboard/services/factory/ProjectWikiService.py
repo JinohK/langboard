@@ -1,5 +1,4 @@
 from typing import Any, Literal, cast, overload
-from ...core.ai import BotType
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
@@ -7,7 +6,7 @@ from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedUser, ProjectWikiAttachment
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
-from .Types import TProjectParam, TWikiParam
+from .Types import TProjectParam, TUserOrBot, TWikiParam
 
 
 class ProjectWikiService(BaseService):
@@ -46,7 +45,7 @@ class ProjectWikiService(BaseService):
             if raw_wiki.is_public or user.is_admin or user.id in assigned_user_ids:
                 api_wiki["assigned_members"] = [assigned_user.api_response() for assigned_user, _ in assigned_users]
             else:
-                api_wiki = self.convert_to_private_api_response(raw_wiki)
+                api_wiki = raw_wiki.convert_to_private_api_response()
 
             wikis.append(api_wiki)
 
@@ -77,19 +76,27 @@ class ProjectWikiService(BaseService):
         users = [user.api_response() for user, _ in raw_users]
         return users
 
-    def convert_to_private_api_response(self, wiki: ProjectWiki) -> dict[str, Any]:
-        return {
-            "uid": wiki.get_uid(),
-            "title": "",
-            "content": None,
-            "order": wiki.order,
-            "is_public": False,
-            "forbidden": True,
-            "assigned_members": [],
-        }
+    async def is_assigned(self, user: User, project_wiki: TWikiParam) -> bool:
+        project_wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, project_wiki))
+        if not project_wiki:
+            return False
+
+        if project_wiki.is_public:
+            return True
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectWikiAssignedUser)
+            .where(
+                (ProjectWikiAssignedUser.column("project_wiki_id") == project_wiki.id)
+                & (ProjectWikiAssignedUser.column("user_id") == user.id)
+            )
+            .limit(1)
+        )
+        return bool(result.first())
 
     async def create(
-        self, user: User, project: TProjectParam, title: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, title: str
     ) -> SocketModelIdBaseResult[tuple[ProjectWiki, dict[str, Any]]] | None:
         params = await self.__get_records_by_params(project)
         if not params:
@@ -119,7 +126,7 @@ class ProjectWikiService(BaseService):
         return SocketModelIdBaseResult(model_id, (wiki, api_wiki), publish_model)
 
     async def update(
-        self, user_or_bot: User | BotType, project: TProjectParam, wiki: TWikiParam, form: dict
+        self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, form: dict
     ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
@@ -142,13 +149,8 @@ class ProjectWikiService(BaseService):
         if not old_wiki_record:
             return True
 
-        if isinstance(user_or_bot, BotType):
-            await self._db.update(wiki)
-            await self._db.commit()
-            revert_key = None
-        else:
-            revert_service = self._get_service(RevertService)
-            revert_key = await revert_service.record(revert_service.create_record_model(wiki, RevertType.Update))
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(revert_service.create_record_model(wiki, RevertType.Update))
 
         model: dict[str, Any] = {}
         for key in form:
@@ -156,8 +158,6 @@ class ProjectWikiService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(wiki, key))
         model_id = await SocketModelIdService.create_model_id(model)
-
-        assigned_users = await self.get_assigned_users(wiki, as_api=False)
 
         topic_id = project.get_uid()
         wiki_uid = wiki.get_uid()
@@ -172,20 +172,19 @@ class ProjectWikiService(BaseService):
                 )
             )
         else:
-            for assigned_user, _ in assigned_users:
-                publish_models.append(
-                    SocketPublishModel(
-                        topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=assigned_user.get_uid(),
-                        event=f"board:wiki:details:changed:{wiki_uid}",
-                        data_keys=list(model.keys()),
-                    )
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.BoardWikiPrivate,
+                    topic_id=wiki_uid,
+                    event=f"board:wiki:details:changed:{wiki_uid}",
+                    data_keys=list(model.keys()),
                 )
+            )
 
         return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
 
     async def change_public(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, is_public: bool
+        self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, is_public: bool
     ) -> SocketModelIdBaseResult[tuple[ProjectWiki, Project, list[User]]] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
@@ -200,65 +199,52 @@ class ProjectWikiService(BaseService):
                 .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
             )
         else:
-            assigned_user = ProjectWikiAssignedUser(
-                project_wiki_id=wiki.id,
-                user_id=user.id,
-            )
+            if isinstance(user_or_bot, User):
+                assigned_user = ProjectWikiAssignedUser(
+                    project_wiki_id=wiki.id,
+                    user_id=user_or_bot.id,
+                )
 
-            self._db.insert(assigned_user)
+                self._db.insert(assigned_user)
 
         await self._db.update(wiki)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"fake": True})
+        assigned_users = [user_or_bot] if not wiki.is_public and isinstance(user_or_bot, User) else []
 
-        public_wiki = {
-            **wiki.api_response(),
-            "assigned_members": [user.api_response()] if not wiki.is_public else [],
-        }
-        private_wiki = self.convert_to_private_api_response(wiki)
+        model_id = await SocketModelIdService.create_model_id(
+            {
+                "wiki": {
+                    **wiki.api_response(),
+                    "assigned_members": [user.api_response() for user in assigned_users],
+                },
+            }
+        )
+
         wiki_uid = wiki.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        if wiki.is_public:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.BoardWiki,
-                    topic_id=project.get_uid(),
-                    event=f"board:wiki:public:changed:{wiki_uid}",
-                    custom_data={"wiki": public_wiki},
-                )
-            )
-        else:
-            project_service = self._get_service(ProjectService)
-            project_members = await project_service.get_assigned_users(project, as_api=False)
-            for project_member, _ in project_members:
-                is_public_user = project_member.is_admin or project_member.id == user.id
-                publish_models.append(
-                    SocketPublishModel(
-                        topic=SocketTopic.BoardWikiPrivate,
-                        topic_id=project_member.get_uid(),
-                        event=f"board:wiki:public:changed:{wiki_uid}",
-                        custom_data={"wiki": public_wiki if is_public_user else private_wiki},
-                    )
-                )
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.BoardWiki,
+            topic_id=project.get_uid(),
+            event=f"board:wiki:public:changed:{wiki_uid}",
+            data_keys="wiki",
+        )
 
-        return SocketModelIdBaseResult(model_id, (wiki, project, [user] if not wiki.is_public else []), publish_models)
+        return SocketModelIdBaseResult(model_id, (wiki, project, assigned_users), publish_model)
 
     async def update_assigned_users(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, assigned_user_uids: list[str]
+        self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, assign_user_uids: list[str]
     ) -> SocketModelIdBaseResult[tuple[ProjectWiki, Project]] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
         project, wiki = params
+        if wiki.is_public:
+            return None
 
-        project_service = self._get_service(ProjectService)
-        project_assigned_users = await project_service.get_assigned_users(project, as_api=False)
-        project_assigned_user_uids = [
-            project_assigned_user.get_uid() for project_assigned_user, _ in project_assigned_users
-        ]
-
-        prev_assigned_users = await self.get_assigned_users(wiki, as_api=False)
+        # result = await self._db.exec(
+        #     self._db.query("select").column(ProjectWikiAssignedUser.user_id).where(ProjectWikiAssignedUser.card_id == card.id)
+        # )
+        # original_assigned_user_ids = list(result.all())
 
         await self._db.exec(
             self._db.query("delete")
@@ -266,51 +252,40 @@ class ProjectWikiService(BaseService):
             .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
         )
 
-        assigned_user_ids: list[SnowflakeID] = []
-        for assigned_user_uid in assigned_user_uids:
-            if assigned_user_uid not in project_assigned_user_uids:
-                continue
-            assigned_user_id = SnowflakeID.from_short_code(assigned_user_uid)
-            assigned_user_ids.append(assigned_user_id)
-            assigned_user = ProjectWikiAssignedUser(
-                project_wiki_id=wiki.id,
-                user_id=assigned_user_id,
+        if assign_user_uids:
+            assigned_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
+            project_service = self._get_service(ProjectService)
+            raw_users = await project_service.get_assigned_users(
+                project.id, as_api=False, where_user_ids_in=assigned_user_ids
             )
-            self._db.insert(assigned_user)
-
+            users: list[User] = []
+            for user, project_assigned_user in raw_users:
+                self._db.insert(
+                    ProjectWikiAssignedUser(
+                        project_assigned_id=project_assigned_user.id, project_wiki_id=wiki.id, user_id=user.id
+                    )
+                )
+                users.append(user)
+        else:
+            users = []
         await self._db.commit()
 
-        assigned_users = await self.get_assigned_users(wiki, as_api=False)
-
-        prev_cur_users = [prev_assigned_user for prev_assigned_user, _ in prev_assigned_users]
-        prev_cur_user_ids = [prev_assigned_user.id for prev_assigned_user, _ in prev_assigned_users]
-        for assigned_user, _ in assigned_users:
-            if assigned_user.id in prev_cur_user_ids:
-                continue
-            prev_cur_users.append(assigned_user)
-            prev_cur_user_ids.append(assigned_user.id)
-
-        model_id = await SocketModelIdService.create_model_id({"fake": True})
-
-        public_wiki = {
-            **wiki.api_response(),
-            "assigned_members": [user.api_response()] if not wiki.is_public else [],
-        }
-        private_wiki = self.convert_to_private_api_response(wiki)
         wiki_uid = wiki.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        for prev_cur_user in prev_cur_users:
-            is_public_user = prev_cur_user.is_admin or prev_cur_user.id in assigned_user_ids
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.BoardWikiPrivate,
-                    topic_id=prev_cur_user.get_uid(),
-                    event=f"board:wiki:assigned-users:changed:{wiki_uid}",
-                    custom_data={"wiki": public_wiki if is_public_user else private_wiki},
-                )
-            )
+        model_id = await SocketModelIdService.create_model_id(
+            {
+                "wiki_uid": wiki_uid,
+                "assigned_members": [user.api_response() for user in users],
+            }
+        )
 
-        return SocketModelIdBaseResult(model_id, (wiki, project), publish_models)
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.BoardWiki,
+            topic_id=project.get_uid(),
+            event=f"board:wiki:assigned-users:changed:{wiki_uid}",
+            data_keys="assigned_members",
+        )
+
+        return SocketModelIdBaseResult(model_id, (wiki, project), publish_model)
 
     async def change_order(
         self, project: TProjectParam, wiki: TWikiParam, order: int

@@ -6,22 +6,25 @@ import useRevert from "@/core/hooks/useRevert";
 import { UserGroup } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
-export interface IDeleteUserGroupResponse extends IRevertKeyBaseResponse {
-    user_group: UserGroup.TModel;
-}
-
-const useDeleteUserGroup = (groupUID: string, revertCallback?: () => void, options?: TMutationOptions<unknown, IDeleteUserGroupResponse>) => {
+const useDeleteUserGroup = (group: UserGroup.TModel, options?: TMutationOptions<unknown, IRevertKeyBaseResponse>) => {
     const { mutate } = useQueryMutation();
     const url = format(API_ROUTES.ACCOUNT.USER_GROUP.DELETE, {
-        group_uid: groupUID,
+        group_uid: group.uid,
     });
 
-    const { revert, createToastButton: createRevertToastButton } = useRevert(url, revertCallback);
+    const { createToastCreator } = useRevert(url, () => {
+        UserGroup.Model.addModel(group);
+    });
 
     const deleteUserGroup = async () => {
         const res = await api.delete(url);
 
-        return res.data;
+        UserGroup.Model.deleteModel(group.uid);
+
+        return {
+            revert_key: res.data.revert_key,
+            createToast: createToastCreator(res.data.revert_key, undefined),
+        };
     };
 
     const result = mutate(["delete-user-group"], deleteUserGroup, {
@@ -29,11 +32,7 @@ const useDeleteUserGroup = (groupUID: string, revertCallback?: () => void, optio
         retry: 0,
     });
 
-    return {
-        ...result,
-        revert,
-        createRevertToastButton,
-    };
+    return result;
 };
 
 export default useDeleteUserGroup;

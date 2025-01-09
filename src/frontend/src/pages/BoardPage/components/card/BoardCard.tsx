@@ -63,10 +63,10 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
         }
 
         setIsLoadingRef.current(false);
-        socket.subscribe(ESocketTopic.BoardCard, cardUID);
+        socket.subscribe(ESocketTopic.BoardCard, [projectUID, cardUID]);
 
         return () => {
-            socket.unsubscribe(ESocketTopic.BoardCard, cardUID);
+            socket.unsubscribe(ESocketTopic.BoardCard, [projectUID, cardUID]);
         };
     }, [isFetching]);
 

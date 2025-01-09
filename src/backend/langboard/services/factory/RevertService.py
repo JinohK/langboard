@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, Literal, TypeVar, cast, overload
@@ -128,6 +129,8 @@ class RevertService(BaseService):
                     prev_record[key] = value.model_dump()
                 elif isinstance(value, datetime):
                     prev_record[key] = value.isoformat()
+                elif isinstance(value, Enum):
+                    prev_record[key] = value.value
 
             file_column_names = [
                 column_name for column_name in model.file_columns if column_name in model.unsaved_model.model_fields

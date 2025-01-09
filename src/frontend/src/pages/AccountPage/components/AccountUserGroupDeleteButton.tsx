@@ -11,11 +11,9 @@ export interface IAccountUserGroupDeleteButtonProps {
 }
 
 function AccountUserGroupDeleteButton({ group }: IAccountUserGroupDeleteButtonProps): JSX.Element {
-    const { currentUser, isValidating, setIsValidating } = useAccountSetting();
+    const { isValidating, setIsValidating } = useAccountSetting();
     const [t] = useTranslation();
-    const { mutate, createRevertToastButton } = useDeleteUserGroup(group.uid, () => {
-        currentUser.user_groups = currentUser.user_groups.concat(group);
-    });
+    const { mutate } = useDeleteUserGroup(group);
     const deleteGroup = () => {
         if (isValidating) {
             return;
@@ -27,12 +25,7 @@ function AccountUserGroupDeleteButton({ group }: IAccountUserGroupDeleteButtonPr
             {},
             {
                 onSuccess: (data) => {
-                    currentUser.user_groups = currentUser.user_groups.filter((g) => g.uid !== group.uid);
-                    setTimeout(() => {
-                        const toastId = Toast.Add.success(t("myAccount.successes.User group deleted successfully."), {
-                            actions: [createRevertToastButton(data.revert_key, () => toastId)],
-                        });
-                    }, 0);
+                    data.createToast(t("myAccount.successes.User group deleted successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

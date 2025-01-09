@@ -4,7 +4,14 @@ import { refresh } from "@/core/helpers/Api";
 import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
-import useSocketStore, { ISocketEvent, ISocketStore, TEventName, TSocketAddEventProps, TSocketRemoveEventProps } from "@/core/stores/SocketStore";
+import useSocketStore, {
+    getTopicWithId,
+    ISocketEvent,
+    ISocketStore,
+    TEventName,
+    TSocketAddEventProps,
+    TSocketRemoveEventProps,
+} from "@/core/stores/SocketStore";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { getCookieStore } from "@/core/stores/CookieStore";
 import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
@@ -22,8 +29,14 @@ interface INoneTopicRunEventsProps extends IBaseRunEventsProps {
     eventName: Exclude<TEventName, "open" | "close" | "error">;
 }
 
+interface IGlobalTopicRunEventsProps extends IBaseRunEventsProps {
+    topic: ESocketTopic.Global;
+    topicId?: never;
+    eventName: Exclude<TEventName, "open" | "close" | "error">;
+}
+
 interface ITopicRunEventsProps extends IBaseRunEventsProps {
-    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>;
     topicId: string;
     eventName: Exclude<TEventName, "open" | "close" | "error">;
 }
@@ -34,7 +47,7 @@ interface IDefaultEventsRunEventsProps extends IBaseRunEventsProps {
     eventName: "open" | "close" | "error";
 }
 
-type TRunEventsProps = INoneTopicRunEventsProps | ITopicRunEventsProps | IDefaultEventsRunEventsProps;
+type TRunEventsProps = INoneTopicRunEventsProps | IGlobalTopicRunEventsProps | ITopicRunEventsProps | IDefaultEventsRunEventsProps;
 
 interface IBaseSocketSendProps {
     topic?: ESocketTopic;
@@ -43,17 +56,17 @@ interface IBaseSocketSendProps {
     data: any;
 }
 
-interface INoneTopicSocketSendProps extends IBaseSocketSendProps {
-    topic: ESocketTopic.None;
+interface INoneOrGlobalTopicSocketSendProps extends IBaseSocketSendProps {
+    topic: ESocketTopic.None | ESocketTopic.Global;
     topicId?: never;
 }
 
 interface ITopicSocketSendProps extends IBaseSocketSendProps {
-    topic: Exclude<ESocketTopic, ESocketTopic.None>;
+    topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>;
     topicId: string;
 }
 
-type TSocketSendProps = INoneTopicSocketSendProps | ITopicSocketSendProps;
+type TSocketSendProps = INoneOrGlobalTopicSocketSendProps | ITopicSocketSendProps;
 
 export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown> {
     start: ISocketEvent<TStartResponse>;
@@ -293,8 +306,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
             return;
         }
 
-        const topic = props.topic ?? ESocketTopic.None;
-        const topicId = topic === ESocketTopic.None ? "none" : props.topicId!;
+        const { topic, topicId } = getTopicWithId(props);
 
         const targetEvents = Object.values(socketMap.subscriptions[topic]?.[topicId]?.[eventName] ?? {}).flat();
         for (let i = 0; i < targetEvents.length; ++i) {

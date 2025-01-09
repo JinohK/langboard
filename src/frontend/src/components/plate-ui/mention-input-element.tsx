@@ -17,7 +17,7 @@ import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-co
 
 export interface IMentionInputElement {
     currentUser: AuthUser.TModel;
-    mentionableUsers: User.TModel[];
+    mentionables: User.TModel[];
 }
 
 export interface IMentionableUser extends User.TModel {
@@ -26,15 +26,15 @@ export interface IMentionableUser extends User.TModel {
 }
 
 export const MentionInputElement = withRef<typeof PlateElement, IMentionInputElement>(
-    ({ className, currentUser, mentionableUsers, ...props }, ref) => {
+    ({ className, currentUser, mentionables: flatMentionables, ...props }, ref) => {
         const { children, editor, element } = props;
         const [t] = useTranslation();
         const [search, setSearch] = useState("");
-        const users = useMemo(() => {
+        const mentionables = useMemo(() => {
             const userList: IMentionableUser[] = [];
-            for (let i = 0; i < mentionableUsers.length; ++i) {
-                const user = mentionableUsers[i];
-                if (user.uid === currentUser.uid || !user.isValidUser()) {
+            for (let i = 0; i < flatMentionables.length; ++i) {
+                const user = flatMentionables[i];
+                if (user.uid === currentUser.uid || (!user.isValidUser() && !user.isBot())) {
                     continue;
                 }
 
@@ -45,7 +45,7 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
                 userList.push(fakeUser);
             }
             return userList;
-        }, [mentionableUsers]);
+        }, [flatMentionables]);
 
         return (
             <PlateElement ref={ref} as="span" data-slate-value={element.value} {...props}>
@@ -63,7 +63,7 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
                         <InlineComboboxEmpty>{t("editor.No results")}</InlineComboboxEmpty>
 
                         <InlineComboboxGroup>
-                            {users.map((user) => (
+                            {mentionables.map((user) => (
                                 <MentionInputComboboxItem key={createShortUUID()} search={search} user={user} editor={editor} />
                             ))}
                         </InlineComboboxGroup>

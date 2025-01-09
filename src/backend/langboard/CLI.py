@@ -6,14 +6,13 @@ from threading import Thread
 from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
-from .Constants import HOST, PORT
-from .core.ai.QueueBot import QueueBot
+from .Constants import HOST, PORT, WEBHOOK_TRHEAD_COUNT
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
 from .core.logger import Logger
+from .core.webhook import WebhookQueue
 from .Loader import load_modules
-from .services import Service
 
 
 def execute():
@@ -70,7 +69,7 @@ def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
     processes: list[Process] = []
     try:
         for _ in range(min(workers, cpu_count())):
-            process = _run_app_bot_wrapper(options, is_restarting)
+            process = _run_app_webhook_wrapper(options, is_restarting)
             processes.append(process)
 
         options.workers = workers
@@ -91,7 +90,7 @@ def _close_processes(processes: list[Process]):
     processes.clear()
 
 
-def _run_app_bot_wrapper(options: RunCommandOptions, is_restarting: bool = False) -> Process:
+def _run_app_webhook_wrapper(options: RunCommandOptions, is_restarting: bool = False) -> Process:
     if is_restarting:
         Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
     process = Process(target=_start_app, args=(options, is_restarting))
@@ -101,11 +100,14 @@ def _run_app_bot_wrapper(options: RunCommandOptions, is_restarting: bool = False
 
 def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
     ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
-    bot_thread = Thread(target=_start_queue_bot)
+    webhook_threads: list[Thread] = []
 
     websocket_options = options.create_websocket_options()
 
-    bot_thread.start()
+    for i in range(WEBHOOK_TRHEAD_COUNT):
+        webhook_thread = Thread(target=_start_queue_webhook, args=(i,))
+        webhook_threads.append(webhook_thread)
+        webhook_thread.start()
 
     app = App(
         host=HOST,
@@ -122,7 +124,6 @@ def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
     app.run()
 
 
-def _start_queue_bot():
-    load_modules("bots", "Bot", log=True)
-    queue = QueueBot(Service)
+def _start_queue_webhook(thread_index: int) -> None:
+    queue = WebhookQueue(thread_index)
     run(queue.loop())

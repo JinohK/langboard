@@ -106,6 +106,13 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
 
     const emoji = <AnimatedEmoji emoji={reaction} className="inline-block" lottieRef={lottieRef} onLoopComplete={stop} />;
 
+    const buttonProps = {
+        onPointerEnter: play,
+        onPointerLeave: stop,
+        onClick: () => toggleCallback(reaction),
+        disabled,
+    };
+
     if (TypeUtils.isUndefined(reactionData)) {
         return (
             <Dock.Button
@@ -113,10 +120,7 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
                 buttonProps={{
                     type: "button",
                     className: "size-full p-3",
-                    onPointerEnter: play,
-                    onPointerLeave: stop,
-                    onClick: () => toggleCallback(reaction),
-                    disabled,
+                    ...buttonProps,
                 }}
                 dockIconProps={{ className: "bg-accent/70 transition-colors duration-300 hover:text-primary" }}
                 title={t(`reaction.${reaction}`)}
@@ -133,10 +137,7 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
             size="sm"
             title={t(`reaction.${reaction}`)}
             className={cn("h-6 gap-1.5 px-1.5", isActiveReaction?.(reaction, reactionData) ? "bg-accent/75" : "")}
-            onPointerEnter={play}
-            onPointerLeave={stop}
-            onClick={() => toggleCallback(reaction)}
-            disabled={disabled}
+            {...buttonProps}
         >
             <Flex items="center" w="4">
                 {emoji}

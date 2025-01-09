@@ -1,16 +1,16 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { BotModel } from "@/core/models";
+import { InternalBotModel } from "@/core/models";
 
 interface IBaseIsBoardChatAvailableResponse {
     available: bool;
-    bot?: BotModel.Interface;
+    bot?: InternalBotModel.Interface;
 }
 
 interface IBoardChatAvailableResponse extends IBaseIsBoardChatAvailableResponse {
     available: true;
-    bot: BotModel.Interface;
+    bot: InternalBotModel.Interface;
 }
 
 interface IBoardChatUnavailableResponse extends IBaseIsBoardChatAvailableResponse {
@@ -34,7 +34,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
             callback,
             responseConverter: (data) => {
                 if (data.available) {
-                    data.bot = BotModel.transformFromApi(data.bot);
+                    data.bot = InternalBotModel.transformFromApi(data.bot);
                 }
                 return data;
             },

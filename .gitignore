@@ -195,8 +195,8 @@ dist-ssr
 local
 
 docker/volumes
-*.db
+*.db*
 uploads
 
-**/bots/*
-!**/bots/.gitkeep
+**/backend/**/bots/*
+!**/backend/**/bots/.gitkeep

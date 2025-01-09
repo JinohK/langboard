@@ -1,6 +1,7 @@
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler from "@/core/helpers/SocketHandler";
 import { ISocketContext } from "@/core/providers/SocketProvider";
+import { getTopicWithId } from "@/core/stores/SocketStore";
 import { createUUID } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useEffect, useState } from "react";
@@ -21,32 +22,34 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
     useEffect(() => {
         const notifiers: [ESocketTopic, string, string][] = [];
         for (let i = 0; i < handlers.length; ++i) {
-            const { topic, topicId } = handlers[i];
-            if (!topic || !topicId) {
-                continue;
-            }
+            const { topic, topicId } = getTopicWithId(handlers[i]);
 
             const key = createUUID();
             notifiers.push([topic, topicId, key]);
-            socket.subscribeTopicNotifier(topic, topicId, key, (subscribedTopicId, isSubscribed) => {
-                if (subscribedTopicId !== topicId) {
-                    return;
-                }
-
-                setSubscribedTopics((prev) => {
-                    const newTopics = prev.filter((t) => t !== topic);
-                    if (isSubscribed) {
-                        newTopics.push(topic);
+            socket.subscribeTopicNotifier({
+                topic,
+                topicId: topicId as never,
+                key,
+                notifier: (subscribedTopicId, isSubscribed) => {
+                    if (subscribedTopicId !== topicId) {
+                        return;
                     }
-                    return [...newTopics];
-                });
+
+                    setSubscribedTopics((prev) => {
+                        const newTopics = prev.filter((t) => t !== topic);
+                        if (isSubscribed) {
+                            newTopics.push(topic);
+                        }
+                        return [...newTopics];
+                    });
+                },
             });
         }
 
         return () => {
             for (let i = 0; i < notifiers.length; ++i) {
                 const [topic, topicId, key] = notifiers[i];
-                socket.unsubscribeTopicNotifier(topic, topicId, key);
+                socket.unsubscribeTopicNotifier({ topic, topicId: topicId as never, key });
             }
         };
     }, []);

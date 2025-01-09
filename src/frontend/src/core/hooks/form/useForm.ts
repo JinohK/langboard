@@ -27,7 +27,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isValidating, setIsValidating] = isValidatingState ? isValidatingState : useState(false);
     const formDataRef = useRef<TFormDataType<TFormData, TVariables>>((isFormData ? new FormData() : {}) as TFormDataType<TFormData, TVariables>);
-    const focusElementRef = useRef<HTMLInputElement | string | null>(null);
+    const focusComponentRef = useRef<HTMLInputElement | string | null>(null);
     const formRef = useRef<HTMLFormElement | null>(null);
 
     const handleSubmit = (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => {
@@ -46,7 +46,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
         beforeHandleSubmit?.();
 
-        focusElementRef.current = null;
+        focusComponentRef.current = null;
         formDataRef.current = (isFormData ? new FormData() : {}) as TFormDataType<TFormData, TVariables>;
         setIsValidating(true);
 
@@ -93,6 +93,10 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
                 if (input instanceof DataTransfer) {
                     inputValue = input.files;
+                } else if (TypeUtils.isString(input)) {
+                    inputValue = input.trim();
+                } else if (TypeUtils.isBool(input)) {
+                    inputValue = input.toString();
                 } else {
                     inputValue = input.value.trim();
                 }
@@ -119,11 +123,11 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             const error = validate(form, inputValue, scheme);
             if (error) {
                 newErrors[inputName] = convertValidationToLangKey(errorLangPrefix, error, inputName);
-                if (!focusElementRef.current) {
+                if (!focusComponentRef.current) {
                     if (form instanceof HTMLFormElement) {
-                        focusElementRef.current = form[inputName];
+                        focusComponentRef.current = form[inputName];
                     } else {
-                        focusElementRef.current = inputName;
+                        focusComponentRef.current = inputName;
                     }
                 }
             }
@@ -141,14 +145,14 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             }
         });
 
-        if (focusElementRef.current) {
+        if (focusComponentRef.current) {
             setErrors(newErrors);
             setIsValidating(false);
             if (formRef.current) {
-                if (TypeUtils.isString(focusElementRef.current)) {
-                    (formRef.current[focusElementRef.current] as HTMLInputElement).focus();
-                } else if (TypeUtils.isElement(focusElementRef.current)) {
-                    (focusElementRef.current as HTMLInputElement).focus();
+                if (TypeUtils.isString(focusComponentRef.current)) {
+                    (formRef.current[focusComponentRef.current] as HTMLInputElement).focus();
+                } else if (TypeUtils.isElement(focusComponentRef.current)) {
+                    (focusComponentRef.current as HTMLInputElement).focus();
                 }
             }
             failCallback?.(newErrors);
@@ -170,12 +174,12 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                         setErrors(handledErrors);
                         const firstFieldName = Object.keys(handledErrors)[0];
                         if (firstFieldName) {
-                            focusElementRef.current = formRef.current?.[firstFieldName] ?? firstFieldName;
+                            focusComponentRef.current = formRef.current?.[firstFieldName] ?? firstFieldName;
                             formRef.current?.[firstFieldName]?.focus();
                         }
                     }
 
-                    badRequestHandlerCallback?.(handledErrors, focusElementRef.current);
+                    badRequestHandlerCallback?.(handledErrors, focusComponentRef.current);
                 };
             }
 
@@ -203,7 +207,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
         handleSubmit,
         formRef,
         formDataRef,
-        focusElementRef,
+        focusComponentRef,
     };
 };
 

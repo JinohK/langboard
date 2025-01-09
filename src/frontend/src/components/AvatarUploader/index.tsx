@@ -6,22 +6,38 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import { Avatar, Box, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
 
-export interface IAvatarUploaderProps {
+interface IBaseAvatarUploaderProps {
     name?: string;
-    userInitials: string;
+    isBot?: bool;
+    userInitials?: string;
     errorMessage?: string;
     initialAvatarUrl?: string;
-    dataTransferRef: React.MutableRefObject<DataTransfer>;
-    avatarUrlRef?: React.MutableRefObject<string | undefined>;
-    isDeletedRef?: React.MutableRefObject<bool>;
+    dataTransferRef: React.RefObject<DataTransfer>;
+    avatarUrlRef?: React.RefObject<string | null>;
+    isDeletedRef?: React.RefObject<bool>;
     isValidating?: bool;
     canRevertUrl?: bool;
     avatarSize?: VariantProps<typeof AvatarVariants>["size"];
     hideDock?: bool;
+    onChange?: () => void;
+    onDeleted?: () => void;
 }
+
+interface IUserAvatarUploaderProps extends IBaseAvatarUploaderProps {
+    isBot?: false;
+    userInitials: string;
+}
+
+interface IBotAvatarUploaderProps extends IBaseAvatarUploaderProps {
+    isBot: true;
+    userInitials?: never;
+}
+
+export type TAvatarUploaderProps = IUserAvatarUploaderProps | IBotAvatarUploaderProps;
 
 function AvatarUploader({
     name = "avatar",
+    isBot,
     userInitials,
     initialAvatarUrl,
     dataTransferRef,
@@ -32,7 +48,9 @@ function AvatarUploader({
     canRevertUrl = false,
     avatarSize = "2xl",
     hideDock = false,
-}: IAvatarUploaderProps): JSX.Element {
+    onChange,
+    onDeleted,
+}: TAvatarUploaderProps): JSX.Element {
     const [t] = useTranslation();
     const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialAvatarUrl);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +63,7 @@ function AvatarUploader({
                 setAvatarUrl(initialAvatarUrl);
             } else {
                 if (avatarUrlRef) {
-                    avatarUrlRef.current = undefined;
+                    avatarUrlRef.current = null;
                 }
                 setAvatarUrl(undefined);
             }
@@ -64,6 +82,7 @@ function AvatarUploader({
             setAvatarUrl(reader.result as string);
         };
         reader.readAsDataURL(file);
+        onChange?.();
     }, []);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         accept: { "image/*": [] },
@@ -81,9 +100,10 @@ function AvatarUploader({
         }
         dataTransferRef.current.items.clear();
         if (avatarUrlRef) {
-            avatarUrlRef.current = undefined;
+            avatarUrlRef.current = null;
         }
         setAvatarUrl(undefined);
+        onDeleted?.();
     };
 
     const revertUrl = () => {
@@ -120,7 +140,9 @@ function AvatarUploader({
                             <Tooltip.Trigger asChild>
                                 <Avatar.Root size={avatarSize} onClick={() => !isValidating && inputRef.current?.click()}>
                                     <Avatar.Image src={avatarUrl} alt="" />
-                                    <Avatar.Fallback className="text-4xl">{userInitials}</Avatar.Fallback>
+                                    <Avatar.Fallback className="text-4xl">
+                                        {isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}
+                                    </Avatar.Fallback>
                                 </Avatar.Root>
                             </Tooltip.Trigger>
                             <Tooltip.Content side="bottom">{t("user.Upload avatar")}</Tooltip.Content>

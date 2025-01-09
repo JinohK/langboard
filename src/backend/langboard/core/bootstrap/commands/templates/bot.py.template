@@ -1,8 +1,7 @@
 from typing import Any, Literal
 from ..core.ai import (
     BaseBot,
-    BotType,
-    LangchainStreamResponse,
+    InternalBotType,
     LangflowRequestModel,
     LangflowStreamResponse,
     create_bot_data_model,
@@ -11,32 +10,24 @@ from ..core.ai import (
 
 class {bot_type}Bot(BaseBot):
     @staticmethod
-    def bot_type() -> Literal[BotType.{bot_type}]:
+    def bot_type() -> Literal[InternalBotType.{bot_type}]:
         """DO NOT EDIT THIS METHOD"""
-        return BotType.{bot_type}
+        return InternalBotType.{bot_type}
 
-    async def run(self, data: dict[str, Any]) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+    async def run(self, data: dict[str, Any]) -> str | LangflowStreamResponse | None:
         data_model = create_bot_data_model({bot_type}Bot.bot_type(), data)
         # Do something
 
-        # langchain output must be includes "response" field
-        # return await self._run_langchain(runnable=Runnable[Input, LangchainOutput], input=..., use_stream=True or False)
         # return await self._run_langflow(request_model=LangflowRequestModel(flow_id="", message=..., tweaks={} or None), use_stream=True or False)
 
     async def run_abortable(
         self, data: dict[str, Any], task_id: str
-    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+    ) -> str | LangflowStreamResponse | None:
         data_model = create_bot_data_model({bot_type}Bot.bot_type(), data)
         # Do something
 
-        # langchain output must be includes "response" field
-        # If you use langflow, you can cancel the request.
-        # However, you can't cancel the execution of langchain.
-        # return await self._run_langchain(runnable=Runnable[Input, LangchainOutput], input=..., use_stream=True or False)
         # return await self._run_langflow_abortable(task_id=task_id, request_model=LangflowRequestModel(flow_id="", message=..., tweaks={} or None), use_stream=True or False)
 
     async def is_available(self) -> bool:
-        # If using langchain,
-        # return True
         # If using langflow,
         # return await self._is_langflow_available()

@@ -44,7 +44,7 @@ export const AccountSettingProvider = ({ currentUser, children }: IAccountSettin
 export const useAccountSetting = () => {
     const context = useContext(AccountSettingContext);
     if (!context) {
-        throw new Error("useAccountSetting must be used within a AccountSettingProvider");
+        throw new Error("useAccountSetting must be used within an AccountSettingProvider");
     }
     return context;
 };

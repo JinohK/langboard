@@ -91,18 +91,14 @@ class ProjectColumnService(BaseService):
                 topic_id=topic_id,
                 event=f"{_SOCKET_PREFIX}:created:{topic_id}",
                 data_keys="column",
-            )
-        ]
-
-        project_service = self._get_service_by_name("project")
-        publish_models.extend(
-            await project_service.create_publish_private_models_for_members(
-                project=project,
+            ),
+            SocketPublishModel(
                 topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
                 event=f"dashboard:project:column:created{topic_id}",
                 data_keys="column",
-            )
-        )
+            ),
+        ]
 
         return SocketModelIdBaseResult(model_id, column, publish_models)
 
@@ -143,18 +139,14 @@ class ProjectColumnService(BaseService):
                 topic_id=topic_id,
                 event=f"{_SOCKET_PREFIX}:name:changed:{topic_id}",
                 data_keys=["uid", "name"],
-            )
-        ]
-
-        project_service = self._get_service_by_name("project")
-        publish_models.extend(
-            await project_service.create_publish_private_models_for_members(
-                project=project,
+            ),
+            SocketPublishModel(
                 topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
                 event=f"dashboard:project:column:name:changed{topic_id}",
                 data_keys=["uid", "name"],
-            )
-        )
+            ),
+        ]
 
         return SocketModelIdBaseResult(model_id, True, publish_models)
 
@@ -218,20 +210,16 @@ class ProjectColumnService(BaseService):
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
-                topic_id=project.get_uid(),
-                event=f"{_SOCKET_PREFIX}:order:changed:{project.get_uid()}",
+                topic_id=topic_id,
+                event=f"{_SOCKET_PREFIX}:order:changed:{topic_id}",
                 data_keys=["uid", "order"],
-            )
-        ]
-
-        project_service = self._get_service_by_name("project")
-        publish_models.extend(
-            await project_service.create_publish_private_models_for_members(
-                project=project,
+            ),
+            SocketPublishModel(
                 topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
                 event=f"dashboard:project:column:order:changed{topic_id}",
                 data_keys=["uid", "order"],
-            )
-        )
+            ),
+        ]
 
         return SocketModelIdBaseResult(model_id, True, publish_models)

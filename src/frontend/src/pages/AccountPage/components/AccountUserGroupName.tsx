@@ -1,4 +1,5 @@
 import { Box, Card, Textarea, Toast } from "@/components/base";
+import useChangeUserGroupName from "@/controllers/api/account/useChangeUserGroupName";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { UserGroup } from "@/core/models";
@@ -13,11 +14,15 @@ export interface IAccountUserGroupNameProps {
 const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
     const [t] = useTranslation();
     const groupName = group.useField("name");
+    const { mutateAsync } = useChangeUserGroupName(group);
+
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "textarea",
         save: (value, endCallback) => {
-            const promise = new Promise((resolve) => setTimeout(resolve, 3000));
+            const promise = mutateAsync({
+                name: value,
+            });
 
             const toastId = Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
@@ -35,8 +40,12 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                     handle(error);
                     return message;
                 },
-                success: () => {
-                    return t("myAccount.successes.User group name changed successfully.");
+                success: (data) => {
+                    data.createToast(t("myAccount.successes.User group name changed successfully."));
+                    setTimeout(() => {
+                        Toast.Add.dismiss(toastId.toString());
+                    }, 0);
+                    return null;
                 },
                 finally: () => {
                     endCallback();
@@ -50,7 +59,7 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
     return (
         <Card.Title className="w-[calc(100%_-_theme(spacing.6))]">
             {!isEditing ? (
-                <Box className="min-h-6 cursor-text break-all border-b border-input" onClick={() => changeMode("edit")}>
+                <Box cursor="text" minH="6" className="break-all border-b border-input" onClick={() => changeMode("edit")}>
                     {groupName}
                 </Box>
             ) : (

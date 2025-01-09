@@ -9,7 +9,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiBinProps {
-    moreDroppableZoneCallbacksRef: React.MutableRefObject<TMoreWikiTabDropzonCallbacks>;
+    moreDroppableZoneCallbacksRef: React.RefObject<TMoreWikiTabDropzonCallbacks>;
 }
 
 const WIKI_BIN_ID = "WikiBin";

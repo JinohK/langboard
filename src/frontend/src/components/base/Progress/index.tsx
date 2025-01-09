@@ -11,7 +11,7 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
     indicatorClassName?: string;
 }
 
-const Progress = React.forwardRef<React.ElementRef<typeof ProgressPrimitive.Root>, ProgressProps>(
+const Progress = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Root>, ProgressProps>(
     ({ className, value, indeterminate = false, height = "4", indicatorClassName, ...props }, ref) => (
         <ProgressPrimitive.Root
             ref={ref}

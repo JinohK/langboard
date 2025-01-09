@@ -28,11 +28,14 @@ const DashboardProxy = memo((): JSX.Element => {
 
     useEffect(() => {
         const user = aboutMe();
-        if (!data || isFetching || !user) {
+        if (!data || isFetching || !user || !data.projects.length) {
             return;
         }
 
-        socket.subscribe(ESocketTopic.Dashboard, user.uid);
+        socket.subscribe(
+            ESocketTopic.Dashboard,
+            data.projects.map((project) => project.uid)
+        );
 
         for (let i = 0; i < starredProjects.length; ++i) {
             const project = starredProjects[i];
@@ -40,7 +43,10 @@ const DashboardProxy = memo((): JSX.Element => {
         }
 
         return () => {
-            socket.unsubscribe(ESocketTopic.Dashboard, user.uid);
+            socket.unsubscribe(
+                ESocketTopic.Dashboard,
+                data.projects.map((project) => project.uid)
+            );
         };
     }, [starredProjects]);
 

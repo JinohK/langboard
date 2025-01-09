@@ -1,4 +1,4 @@
-import { MultiSelectMemberForm } from "@/components/MultiSelectMemberPopover";
+import { MultiSelectAssigneesForm, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import { Box, Card, Flex, Skeleton, Toast } from "@/components/base";
 import useUpdateUserGroupAssignedEmails from "@/controllers/api/account/useUpdateUserGroupAssignedEmails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -33,19 +33,17 @@ export interface IAccountUserGroupProps {
 }
 
 const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element => {
-    const { updatedUser } = useAccountSetting();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutate, createRevertToastButton } = useUpdateUserGroupAssignedEmails(group.uid, () => {
-        User.Model.deleteModels(group.users.filter((emailUser) => !emailUser.isValidUser()).map((emailUser) => emailUser.uid));
-        updatedUser();
+    const { currentUser } = useAccountSetting();
+    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const setSelectedItemsRef = useRef<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>(() => {});
+    const { mutate } = useUpdateUserGroupAssignedEmails(group, (originalUsers) => {
+        setSelectedItemsRef.current(() => originalUsers);
     });
     const users = group.useForeignField<User.TModel>("users");
-    const appUsers = users.filter((u) => u.isValidUser());
-    const invitedMembers = users.filter((u) => !u.isValidUser());
-    const setSelectedRef = useRef<React.Dispatch<React.SetStateAction<string[]>>>(() => {});
 
-    const onValueChange = (values: string[]) => {
+    const onValueChange = (values: TMultiSelectAssigneeItem[]) => {
         if (values.length === users.length || isValidating) {
             return;
         }
@@ -54,18 +52,11 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
 
         mutate(
             {
-                emails: values,
+                emails: (values as User.TModel[]).map((u) => u.email),
             },
             {
                 onSuccess: (data) => {
-                    User.Model.deleteModels(users.filter((emailUser) => !emailUser.isValidUser()).map((emailUser) => emailUser.uid));
-                    group.users = data.users;
-                    setSelectedRef.current?.(() => data.users.map((u) => u.email));
-                    setTimeout(() => {
-                        const toastId = Toast.Add.success(t("myAccount.successes.User group emails updated successfully."), {
-                            actions: [createRevertToastButton(data.revert_key, () => toastId)],
-                        });
-                    }, 0);
+                    data.createToast(t("myAccount.successes.User group emails updated successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
@@ -90,21 +81,21 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 <AccountUserGroupDeleteButton group={group} />
             </Card.Header>
             <Card.Content>
-                <MultiSelectMemberForm
+                <MultiSelectAssigneesForm
                     multiSelectProps={{
                         placeholder: t("myAccount.Add an email..."),
                         className: "w-full",
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
                         commandItemForNew: (values) => t("myAccount.Add '{emails}'", { emails: values }),
                     }}
-                    onValueChange={onValueChange}
+                    allItems={users}
+                    groups={groups.filter((g) => g.uid !== group.uid)}
+                    newItemFilter={() => true}
+                    initialSelectedItems={users}
                     isValidating={isValidating}
-                    allUsers={users}
-                    assignedUsers={appUsers}
-                    newUsers={invitedMembers}
-                    canControlAssignedUsers
                     canAssignNonMembers
-                    setSelectedRef={setSelectedRef}
+                    onValueChange={onValueChange}
+                    setSelectedItemsRef={setSelectedItemsRef}
                 />
             </Card.Content>
         </Card.Root>

@@ -1,8 +1,8 @@
 export const setInitialErrorsWithFocusingElement = (
     formFieldNames: string[],
-    initialErrorsRef: React.MutableRefObject<Record<string, string>>,
+    initialErrorsRef: React.RefObject<Record<string, string>>,
     setErrors: (errors: Record<string, string>) => void,
-    formRef: React.MutableRefObject<HTMLFormElement | null>
+    formRef: React.RefObject<HTMLFormElement | null>
 ) => {
     if (Object.keys(initialErrorsRef.current).length === 0) {
         return;

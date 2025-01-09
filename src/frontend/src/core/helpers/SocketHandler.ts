@@ -33,6 +33,12 @@ interface INoneTopicUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
     };
 }
 
+interface IGlobalTopicUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
+    extends IBaseUseSocketHandlerProps<TResponse, TRawResponse, Exclude<TEventName, TDefaultEvents>> {
+    topic: ESocketTopic.Global;
+    topicId?: never;
+}
+
 interface ITopicUseSocketHandlerProps<TResponse, TRawResponse = TResponse>
     extends IBaseUseSocketHandlerProps<TResponse, TRawResponse, Exclude<TEventName, TDefaultEvents>> {
     topic: Exclude<ESocketTopic, ESocketTopic.None>;
@@ -54,6 +60,7 @@ interface IDefaultEventsUseSocketHandlerProps<TResponse, TRawResponse = TRespons
 
 export type TUseSocketHandlerProps<TResponse, TRawResponse = TResponse> =
     | INoneTopicUseSocketHandlerProps<TResponse, TRawResponse>
+    | IGlobalTopicUseSocketHandlerProps<TResponse, TRawResponse>
     | ITopicUseSocketHandlerProps<TResponse, TRawResponse>
     | IDefaultEventsUseSocketHandlerProps<TResponse, TRawResponse>;
 
@@ -111,6 +118,7 @@ const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknow
     return {
         topic: props.topic,
         topicId: props.topicId,
+        eventKey,
         send,
         on,
     };

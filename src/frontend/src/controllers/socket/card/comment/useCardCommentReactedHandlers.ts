@@ -7,7 +7,7 @@ import { ProjectCardComment } from "@/core/models";
 export interface ICardCommentReactedRawResponse {
     comment_uid: string;
     user_uid?: string;
-    bot_type?: string;
+    bot_uid?: string;
     reaction: TEmoji;
     is_reacted: bool;
 }
@@ -41,17 +41,19 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
                     }
 
                     if (data.user_uid) {
-                        targetReactions.push(data.user_uid);
-                    } else if (data.bot_type) {
-                        targetReactions.push(data.bot_type);
+                        if (!targetReactions.includes(data.user_uid)) {
+                            targetReactions.push(data.user_uid);
+                        }
+                    } else if (data.bot_uid) {
+                        if (!targetReactions.includes(data.bot_uid)) {
+                            targetReactions.push(data.bot_uid);
+                        }
                     }
                 } else {
                     if (targetReactions) {
-                        if (data.user_uid) {
-                            targetReactions = targetReactions.filter((uid) => uid !== data.user_uid);
-                        } else if (data.bot_type) {
-                            targetReactions = targetReactions.filter((botType) => botType !== data.bot_type);
-                        }
+                        const targetUID = data.user_uid || data.bot_uid;
+                        targetReactions = targetReactions.filter((uid) => uid !== targetUID);
+                        reactions[data.reaction] = targetReactions;
                     }
                 }
                 comment.reactions = reactions;

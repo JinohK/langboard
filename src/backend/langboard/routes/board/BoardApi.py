@@ -90,7 +90,7 @@ async def update_project_member(
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    result = await service.project.update_assign_users(
+    result = await service.project.update_assigned_users(
         user, project, form.lang, form.url, form.token_query_name, form.emails
     )
     if not result:

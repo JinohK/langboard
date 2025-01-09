@@ -3,11 +3,10 @@ import { BaseModel, type IBaseModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 const createFakeModel = <TModel extends IBaseModel, TMethodMap = undefined>(
-    model: TModel,
+    copiedModel: TModel,
     methodMap?: TMethodMap,
     foreignModels?: (keyof TModel)[]
 ): any => {
-    const copiedModel = { ...model };
     const foreigns: Partial<Record<keyof TModel, any[]>> = {};
     if (foreignModels) {
         for (let i = 0; i < foreignModels.length; ++i) {

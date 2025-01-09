@@ -16,7 +16,7 @@ const BoardCardActionShare = memo(({ buttonClassName }: BoardCardActionShareProp
         e.currentTarget.selectionStart = 0;
         e.currentTarget.selectionEnd = 0;
         e.currentTarget.selectionEnd = link.length;
-        if (!navigator.clipboard) {
+        if (!navigator?.clipboard) {
             document.execCommand("copy");
             return;
         } else {
@@ -43,15 +43,9 @@ const BoardCardActionShare = memo(({ buttonClassName }: BoardCardActionShareProp
                         readOnly
                         onFocus={copyLink}
                         onClick={copyLink}
-                        className={cn("pr-9", isCopied && "focus-visible:ring-green-700")}
+                        className={isCopied ? "pr-9 focus-visible:ring-green-700" : ""}
                     />
-                    {isCopied && (
-                        <IconComponent
-                            icon="check"
-                            size="5"
-                            className={cn("absolute right-2 top-1/2 -translate-y-1/2", isCopied && "text-green-500")}
-                        />
-                    )}
+                    {isCopied && <IconComponent icon="check" size="5" className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500" />}
                 </Box>
             </Popover.Content>
         </Popover.Root>

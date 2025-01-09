@@ -42,7 +42,7 @@ export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
 
 export interface IBoardColumnProps {
     column: ProjectColumn.TModel;
-    callbacksRef: React.MutableRefObject<Record<string, IRowDragCallback<IBoardColumnCardProps["card"]>>>;
+    callbacksRef: React.RefObject<Record<string, IRowDragCallback<IBoardColumnCardProps["card"]>>>;
     isOverlay?: bool;
 }
 
@@ -73,7 +73,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     const sortedCards = columnCards.sort((a, b) => a.order - b.order);
     const cardUIDs = useMemo(() => sortedCards.map((card) => card.uid), [sortedCards]);
     const { items: cards, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: sortedCards, size: PAGE_SIZE, updater });
-    const closeHoverCardRef = useRef<(() => void) | undefined>();
+    const closeHoverCardRef = useRef<(() => void) | null>(null);
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({

@@ -26,6 +26,7 @@ export const API_ROUTES = {
         },
         USER_GROUP: {
             CREATE: "/account/group",
+            CHANGE_NAME: "/account/group/{group_uid}/name",
             UPDATE_ASSIGNED_EMAILS: "/account/group/{group_uid}/emails",
             DELETE: "/account/group/{group_uid}",
         },
@@ -102,6 +103,7 @@ export const API_ROUTES = {
         },
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
+            UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
                 CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
@@ -110,13 +112,26 @@ export const API_ROUTES = {
             },
         },
     },
+    SETTINGS: {
+        IS_AVAILABLE: "/settings/available",
+        GET_ALL: "/settings/all",
+        CREATE: "/settings/app",
+        UPDATE: "/settings/app/{uid}",
+        DELETE: "/settings/app/{uid}",
+        DELETE_SELECTED: "/settings/app",
+        BOTS: {
+            CREATE: "/settings/bot",
+            UPDATE: "/settings/bot/{bot_uid}",
+            DELETE: "/settings/bot/{bot_uid}",
+        },
+    },
     REVERT: (path: string) => `/revert/${path}`,
 } as const;
 
 export const SOCKET_SERVER_EVENTS = {
     DASHBOARD: {
         PROJECT: {
-            UNASSIGNED: "dashboard:project:unassigned:{uid}",
+            ASSIGNED_USERS_UPDATED: "dashboard:project:assigned-users:updated:{uid}",
             COLUMN: {
                 CREATED: "dashboard:project:column:created:{uid}",
                 NAME_CHANGED: "dashboard:project:column:name:changed:{uid}",
@@ -133,6 +148,7 @@ export const SOCKET_SERVER_EVENTS = {
         CHAT_SENT: "board:chat:sent",
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
+        ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
         LABEL: {
             CREATED: "board:label:created:{uid}",
@@ -190,8 +206,16 @@ export const SOCKET_SERVER_EVENTS = {
             DETAILS_CHANGED: "board:wiki:details:changed:{uid}",
             PUBLIC_CHANGED: "board:wiki:public:changed:{uid}",
             ASSIGNED_USERS_UPDATED: "board:wiki:assigned-users:updated:{uid}",
+            PROJECT_USERS_UPDATED: "board:wiki:project-users:updated:{uid}",
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",
             DELETED: "board:wiki:deleted:{uid}",
+        },
+    },
+    GLOBALS: {
+        BOTS: {
+            CREATED: "settings:bot:created",
+            UPDATED: "settings:bot:updated:{uid}",
+            DELETED: "settings:bot:deleted:{uid}",
         },
     },
 } as const;

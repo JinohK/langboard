@@ -1,11 +1,11 @@
 from typing import Any, Literal, cast, overload
-from ...core.ai import BotType
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from .RevertService import RevertService, RevertType
-from .Types import TCardParam, TProjectLabelParam, TProjectParam
+from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:label"
@@ -90,13 +90,13 @@ class ProjectLabelService(BaseService):
         return labels
 
     async def create(
-        self, user_or_bot: User | BotType, project: TProjectParam, name: str, color: str, description: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, name: str, color: str, description: str
     ) -> SocketModelIdBaseResult[tuple[ProjectLabel, dict[str, Any]]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
 
-        is_bot = isinstance(user_or_bot, BotType)
+        is_bot = isinstance(user_or_bot, Bot)
         if is_bot:
             max_order = -2  # -1 is for the bot label
         else:
@@ -129,7 +129,7 @@ class ProjectLabelService(BaseService):
         return SocketModelIdBaseResult(model_id, (label, model), publish_model)
 
     async def update(
-        self, user_or_bot: User | BotType, project: TProjectParam, label: TProjectLabelParam, form: dict
+        self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
     ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
@@ -152,7 +152,7 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        if isinstance(user_or_bot, BotType):
+        if isinstance(user_or_bot, Bot):
             await self._db.update(label)
             await self._db.commit()
             revert_key = None
@@ -217,7 +217,7 @@ class ProjectLabelService(BaseService):
         return SocketModelIdBaseResult(model_id, True, publish_model)
 
     async def delete(
-        self, user_or_bot: User | BotType, project: TProjectParam, label: TProjectLabelParam
+        self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam
     ) -> SocketModelIdBaseResult[bool] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:

@@ -67,7 +67,7 @@ export const LabelVariants = tv({
 });
 
 const Label = React.forwardRef<
-    React.ElementRef<typeof LabelPrimitive.Root>,
+    React.ComponentRef<typeof LabelPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof LabelVariants>
 >(({ className, children, ...props }, ref) => {
     const variants = extractVariantProps(LabelVariants, props);

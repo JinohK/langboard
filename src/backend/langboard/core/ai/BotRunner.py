@@ -1,56 +1,37 @@
 from typing import Any
-from ..db import DbSession
 from ..utils.decorators import class_instance, singleton
 from .BaseBot import BaseBot
-from .Bot import Bot
-from .BotResponse import LangchainStreamResponse, LangflowStreamResponse
-from .BotType import BotType
+from .BotResponse import LangflowStreamResponse
+from .InternalBotType import InternalBotType
 
 
 @class_instance()
 @singleton
 class BotRunner:
     def __init__(self):
-        self.__bot_factory: dict[BotType, BaseBot] = {}
+        self.__bot_factory: dict[InternalBotType, BaseBot] = {}
 
-    async def run(
-        self, bot_type: BotType, data: dict[str, Any]
-    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+    async def run(self, bot_type: InternalBotType, data: dict[str, Any]) -> str | LangflowStreamResponse | None:
         bot = self.__get_bot(bot_type)
         if bot is None:
             return None
         return await bot.run(data)
 
     async def run_abortable(
-        self, bot_type: BotType, data: dict[str, Any], task_id: str
-    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None:
+        self, bot_type: InternalBotType, data: dict[str, Any], task_id: str
+    ) -> str | LangflowStreamResponse | None:
         bot = self.__get_bot(bot_type)
         if bot is None:
             return None
         return await bot.run_abortable(data, task_id)
 
-    async def abort(self, bot_type: BotType, task_id: str):
+    async def abort(self, bot_type: InternalBotType, task_id: str):
         bot = self.__get_bot(bot_type)
         if bot is None:
             return
         await bot.abort(task_id)
 
-    async def get_bot_config(self, bot_type: BotType, db: DbSession | None = None) -> Bot | None:
-        if bot_type not in BaseBot.__bots__:
-            return None
-
-        should_close = db is None
-        if should_close:
-            db = DbSession()
-
-        result = await db.exec(db.query("select").table(Bot).where(Bot.column("bot_type") == bot_type))
-
-        if should_close:
-            await db.close()
-
-        return result.first()
-
-    async def is_available(self, bot_type: BotType) -> bool:
+    async def is_available(self, bot_type: InternalBotType) -> bool:
         if bot_type not in BaseBot.__bots__:
             return False
 
@@ -59,7 +40,7 @@ class BotRunner:
 
         return await self.__bot_factory[bot_type].is_available()
 
-    def __get_bot(self, bot_type: BotType) -> BaseBot | None:
+    def __get_bot(self, bot_type: InternalBotType) -> BaseBot | None:
         if bot_type not in BaseBot.__bots__:
             return None
 

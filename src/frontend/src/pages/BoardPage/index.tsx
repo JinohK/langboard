@@ -98,7 +98,7 @@ const BoardProxy = memo((): JSX.Element => {
             return;
         }
 
-        socket.subscribe(ESocketTopic.Board, projectUID, () => {
+        socket.subscribe(ESocketTopic.Board, [projectUID], () => {
             onIsBoardChatAvailable();
             sendIsBoardChatAvailable({});
         });
@@ -116,7 +116,7 @@ const BoardProxy = memo((): JSX.Element => {
         );
 
         return () => {
-            socket.unsubscribe(ESocketTopic.Board, projectUID);
+            socket.unsubscribe(ESocketTopic.Board, [projectUID]);
         };
     }, [isFetching]);
 

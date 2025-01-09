@@ -1,21 +1,17 @@
 from abc import abstractmethod
 from typing import Any, Literal, overload
-from httpx import Response as HTTPXResponse
 from httpx import get, post
-from langchain_core.runnables import Runnable
-from langchain_core.runnables.utils import Input
 from pydantic import BaseModel
 from requests import Response as HTTPResponse
 from requests import Session as HTTPSession
-from ...Constants import LANGFLOW_API_KEY, LANGFLOW_URL
+from ..db import DbSession
+from ..setting import AppSetting, AppSettingType
+from ..utils.String import generate_random_string
 from .BotResponse import (
-    LangchainOutput,
-    LangchainStreamResponse,
     LangflowStreamResponse,
-    get_langchain_output_message,
     get_langflow_output_message,
 )
-from .BotType import BotType
+from .InternalBotType import InternalBotType
 
 
 class LangflowRequestModel(BaseModel):
@@ -24,8 +20,20 @@ class LangflowRequestModel(BaseModel):
     tweaks: dict[str, dict[str, Any]] | None = None
 
 
+class _LangflowAPIRequestModel:
+    def __init__(self, settings: dict[AppSettingType, str], request_model: LangflowRequestModel, use_stream: bool):
+        self.url = f"{settings[AppSettingType.LangflowUrl]}/api/v1/run/{request_model.flow_id}?stream={use_stream}"
+        self.session_id = generate_random_string(32)
+        self.headers = {"Content-Type": "application/json", "x-api-key": settings[AppSettingType.LangflowApiKey]}
+        req_data: dict[str, Any] = {"input_value": request_model.message, "session": self.session_id}
+        if request_model.tweaks:
+            req_data["tweaks"] = request_model.tweaks
+        self.req_data = req_data
+        self.use_stream = use_stream
+
+
 class BotMetadata(type):
-    __bots__: dict[BotType, type["BaseBot"]] = {}
+    __bots__: dict[InternalBotType, type["BaseBot"]] = {}
 
     def __new__(cls, name, bases, attrs):
         new_cls: type[BaseBot] = super().__new__(cls, name, bases, attrs)
@@ -40,24 +48,24 @@ class BotMetadata(type):
 class BaseBot(metaclass=BotMetadata):
     @staticmethod
     @abstractmethod
-    def bot_type() -> BotType: ...
+    def bot_type() -> InternalBotType: ...
 
     @staticmethod
     def bot_avatar() -> str | None:
         return None
 
-    def __init__(self):
+    def __init__(self, db: DbSession | None = None):
         if self.__class__ is BaseBot:
             raise TypeError("Can't instantiate abstract class BaseBot")
+        if not db:
+            self._db = DbSession()
         self.__abortable_tasks: dict[str, list[HTTPSession | HTTPResponse]] = {}
 
     @abstractmethod
-    async def run(self, data: dict[str, Any]) -> str | LangchainStreamResponse | LangflowStreamResponse | None: ...
+    async def run(self, data: dict[str, Any]) -> str | LangflowStreamResponse | None: ...
 
     @abstractmethod
-    async def run_abortable(
-        self, data: dict[str, Any], task_id: str
-    ) -> str | LangchainStreamResponse | LangflowStreamResponse | None: ...
+    async def run_abortable(self, data: dict[str, Any], task_id: str) -> str | LangflowStreamResponse | None: ...
 
     @abstractmethod
     async def is_available(self) -> bool: ...
@@ -70,10 +78,14 @@ class BaseBot(metaclass=BotMetadata):
         del self.__abortable_tasks[task_id]
 
     async def _is_langflow_available(self) -> bool:
-        if not LANGFLOW_URL or not LANGFLOW_API_KEY:
+        settings = await self.__get_langflow_settings()
+        if not settings:
             return False
 
-        health_check = get(f"{LANGFLOW_URL}/health", headers={"x-api-key": LANGFLOW_API_KEY})
+        health_check = get(
+            f"{settings[AppSettingType.LangflowUrl]}/health",
+            headers={"x-api-key": settings[AppSettingType.LangflowApiKey]},
+        )
         if health_check.status_code != 200:
             return False
 
@@ -88,21 +100,31 @@ class BaseBot(metaclass=BotMetadata):
         self, request_model: LangflowRequestModel, use_stream: Literal[True]
     ) -> LangflowStreamResponse | None: ...
     async def _run_langflow(self, request_model: LangflowRequestModel, use_stream: bool = False):
-        if not LANGFLOW_URL or not LANGFLOW_API_KEY:
-            return None
+        settings = await self.__get_langflow_settings()
+        if not settings:
+            return False
 
-        req_data: dict[str, Any] = {"input_value": request_model.message}
-        if request_model.tweaks:
-            req_data["tweaks"] = request_model.tweaks
+        api_request_model = _LangflowAPIRequestModel(settings, request_model, use_stream)
+
+        if use_stream:
+            return LangflowStreamResponse(
+                api_request_model.url,
+                api_request_model.headers,
+                api_request_model.req_data,
+            )
 
         try:
             res = post(
-                f"{LANGFLOW_URL}/api/v1/run/{request_model.flow_id}?stream={use_stream}",
-                headers={"Content-Type": "application/json", "x-api-key": LANGFLOW_API_KEY},
-                json=req_data,
+                api_request_model.url,
+                headers=api_request_model.headers,
+                json=api_request_model.req_data,
             )
 
-            return self.__create_langflow_response(res, use_stream)
+            if res.status_code != 200:
+                return None
+
+            response = res.json()
+            return get_langflow_output_message(response)
         except Exception:
             return None
 
@@ -119,60 +141,51 @@ class BaseBot(metaclass=BotMetadata):
     async def _run_langflow_abortable(
         self, task_id: str, request_model: LangflowRequestModel, use_stream: bool = False
     ):
-        if not LANGFLOW_URL or not LANGFLOW_API_KEY:
-            return None
+        settings = await self.__get_langflow_settings()
+        if not settings:
+            return False
 
+        api_request_model = _LangflowAPIRequestModel(settings, request_model, use_stream)
         session = HTTPSession()
         self.__abortable_tasks[task_id] = [session]
 
+        if use_stream:
+            return LangflowStreamResponse(
+                api_request_model.url,
+                api_request_model.headers,
+                api_request_model.req_data,
+            )
+
         try:
             res = session.post(
-                f"{LANGFLOW_URL}/api/v1/run/{request_model.flow_id}?stream={use_stream}",
-                json={"input_value": request_model.message, "tweaks": request_model.tweaks},
-                headers={"Content-Type": "application/json", "x-api-key": LANGFLOW_API_KEY},
+                api_request_model.url,
+                headers=api_request_model.headers,
+                json=api_request_model.req_data,
                 stream=use_stream,
             )
             self.__abortable_tasks[task_id].append(res)
 
-            if not res.connection.poolmanager.pools:
+            if not res.connection.poolmanager.pools or res.status_code != 200:
                 return None
 
-            return self.__create_langflow_response(res, use_stream)
+            response = res.json()
+            return get_langflow_output_message(response)
         except Exception:
             return None
 
-    @overload
-    async def _run_langchain(self, runnable: Runnable[Input, LangchainOutput], input: Input) -> str | None: ...
-    @overload
-    async def _run_langchain(
-        self, runnable: Runnable[Input, LangchainOutput], input: Input, use_stream: Literal[False]
-    ) -> str | None: ...
-    @overload
-    async def _run_langchain(
-        self, runnable: Runnable[Input, LangchainOutput], input: Input, use_stream: Literal[True]
-    ) -> LangchainStreamResponse: ...
-    async def _run_langchain(self, runnable: Runnable[Input, LangchainOutput], input: Input, use_stream: bool = False):  # type: ignore
-        if not use_stream:
-            output = await runnable.ainvoke(input)
-            return get_langchain_output_message(output)  # type: ignore
-        return LangchainStreamResponse(runnable, input)
+    async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(AppSetting)
+            .where(
+                (AppSetting.setting_type == AppSettingType.LangflowUrl)
+                | (AppSetting.setting_type == AppSettingType.LangflowApiKey)
+            )
+        )
+        raw_settings = result.all()
+        settings = {row.setting_type: row.setting_value for row in raw_settings}
 
-    def __create_langflow_response(
-        self, res: HTTPXResponse | HTTPResponse, use_stream: bool
-    ) -> str | LangflowStreamResponse | None:
-        if res.status_code != 200:
+        if not settings or AppSettingType.LangflowUrl not in settings or AppSettingType.LangflowApiKey not in settings:
             return None
 
-        init_response = res.json()
-
-        if not use_stream:
-            return get_langflow_output_message(init_response)
-
-        session_id = init_response["session_id"]
-        has_stream_url = "stream_url" in init_response["outputs"][0]["outputs"][0]["artifacts"]
-        if not has_stream_url:
-            return init_response
-
-        stream_url = init_response["outputs"][0]["outputs"][0]["artifacts"]["stream_url"]
-
-        return LangflowStreamResponse(f"{LANGFLOW_URL}{stream_url}", {"session_id": session_id})
+        return settings

@@ -1,7 +1,11 @@
 import { Toast } from "@/components/base";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
+import useBoardWikiProjectBotsUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectBotsUpdatedHandlers";
+import useBoardWikiProjectUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectUsersUpdatedHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { AuthUser, ProjectWiki, User } from "@/core/models";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
@@ -15,8 +19,9 @@ export interface IBoardWikiContext {
     wikis: ProjectWiki.TModel[];
     setWikis: React.Dispatch<React.SetStateAction<ProjectWiki.TModel[]>>;
     projectMembers: User.TModel[];
+    projectBots: BotModel.TModel[];
     currentUser: AuthUser.TModel;
-    editorsRef: React.MutableRefObject<Record<string, (isEditing: bool) => void>>;
+    editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
     canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
     disabledReorder: bool;
@@ -28,6 +33,7 @@ interface IBoardWikiProps {
     navigate: NavigateFunction;
     projectUID: string;
     projectMembers: User.TModel[];
+    projectBots: BotModel.TModel[];
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
@@ -39,6 +45,7 @@ const initialContext = {
     wikis: [],
     setWikis: () => {},
     projectMembers: [],
+    projectBots: [],
     currentUser: {} as AuthUser.TModel,
     editorsRef: { current: {} },
     setCurrentEditor: () => {},
@@ -50,25 +57,53 @@ const initialContext = {
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
 
-export const BoardWikiProvider = ({ navigate, projectUID, projectMembers, currentUser, children }: IBoardWikiProps): React.ReactNode => {
+export const BoardWikiProvider = ({
+    navigate,
+    projectUID,
+    projectMembers: flatProjectMembers,
+    projectBots: flatProjectBots,
+    currentUser,
+    children,
+}: IBoardWikiProps): React.ReactNode => {
     const socket = useSocket();
     const flatWikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
     const [wikis, setWikis] = useState<ProjectWiki.TModel[]>(flatWikis.sort((a, b) => a.order - b.order));
+    const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
+    const [projectBots, setProjectBots] = useState(flatProjectBots);
     const [t] = useTranslation();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
     const [disabledReorder, setDisabledReorder] = useState<bool>(true);
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
+    const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({
+        projectUID,
+    });
+    const projectBotsUpdatedHandlers = useBoardWikiProjectBotsUpdatedHandlers({
+        projectUID,
+        callback: (data) => {
+            setProjectBots(() => data.assigned_bots);
+        },
+    });
+    const projectUsersUpdatedHandlers = useBoardWikiProjectUsersUpdatedHandlers({
+        projectUID,
+        callback: (data) => {
+            setProjectMembers(() => data.assigned_members);
+        },
+    });
+
+    useSwitchSocketHandlers({ socket, handlers: [boardWikiCreatedHandlers, projectBotsUpdatedHandlers, projectUsersUpdatedHandlers] });
 
     useEffect(() => {
         setWikis(flatWikis.sort((a, b) => a.order - b.order));
 
         const unsubscribes: (() => void)[] = [];
-        for (let i = 0; i < wikis.length; ++i) {
-            const wiki = wikis[i];
-            const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser.uid);
-            unsubscribes.push(unsubscribe);
-        }
+        setTimeout(() => {
+            for (let i = 0; i < wikis.length; ++i) {
+                const wiki = wikis[i];
+                const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser);
+                unsubscribes.push(unsubscribe);
+            }
+        }, 0);
 
         return () => {
             unsubscribes.forEach((unsubscribe) => unsubscribe());
@@ -126,6 +161,7 @@ export const BoardWikiProvider = ({ navigate, projectUID, projectMembers, curren
                 wikis,
                 setWikis,
                 projectMembers,
+                projectBots,
                 currentUser,
                 editorsRef,
                 setCurrentEditor,

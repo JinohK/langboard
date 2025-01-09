@@ -2,7 +2,7 @@ import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollA
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import { Project, ProjectCard, ProjectCardRelationship } from "@/core/models";
+import { BotModel, Project, ProjectCard, ProjectCardRelationship, User } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -19,7 +19,7 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
-    closeHoverCardRef?: React.MutableRefObject<(() => void) | undefined>;
+    closeHoverCardRef?: React.RefObject<(() => void) | undefined>;
     isOverlay?: bool;
 }
 
@@ -50,6 +50,9 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     const { project, currentUser, hasRoleAction } = useBoard();
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
+    const projectMembers = project.useForeignField<User.TModel>("members");
+    const projectBots = project.useForeignField<BotModel.TModel>("bots");
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
@@ -149,7 +152,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 >
                     <ScrollArea.Root>
                         <Box p="4" className="max-h-[calc(100vh-_theme(spacing.4))] break-all [&_img]:max-w-full">
-                            <PlateEditor value={description} mentionableUsers={project.members} currentUser={currentUser} readOnly />
+                            <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly />
                         </Box>
                     </ScrollArea.Root>
                 </HoverCard.Content>

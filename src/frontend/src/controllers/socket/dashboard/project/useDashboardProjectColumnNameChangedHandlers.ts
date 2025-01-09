@@ -10,13 +10,12 @@ export interface IDashboardProjectColumnNameChangedRawResponse {
 
 export interface IUseDashboardProjectColumnNameChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID: string;
 }
 
-const useDashboardProjectColumnNameChangedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectColumnNameChangedHandlersProps) => {
+const useDashboardProjectColumnNameChangedHandlers = ({ callback, projectUID }: IUseDashboardProjectColumnNameChangedHandlersProps) => {
     return useSocketHandler<{}, IDashboardProjectColumnNameChangedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: userUID,
+        topicId: projectUID,
         eventKey: `dashboard-project-column-name-changed-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.COLUMN.NAME_CHANGED,

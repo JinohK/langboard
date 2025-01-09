@@ -1,4 +1,10 @@
+from re import match
+from pydantic import field_validator
 from ....core.routing import BaseFormModel, form_model
+from ....core.routing.Exception import InvalidError, InvalidException, MissingException
+
+
+EMAIL_REGEX = r"^.+@.+\..+$"
 
 
 @form_model
@@ -19,6 +25,23 @@ class SignUpForm(BaseFormModel):
     url: str
     activate_token_query_name: str
     lang: str = "en-US"
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        if not value:
+            raise MissingException("body", "email", {"email": value})
+
+        if not bool(match(EMAIL_REGEX, value)):
+            raise InvalidException(
+                InvalidError(
+                    loc="body",
+                    field="email",
+                    inputs={"email": value},
+                )
+            )
+
+        return value
 
 
 @form_model

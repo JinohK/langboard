@@ -11,6 +11,7 @@ from .CheckitemAssignedUser import CheckitemAssignedUser
 from .CheckitemTimer import CheckitemTimer
 from .GlobalCardRelationshipType import GlobalCardRelationshipType
 from .Project import Project
+from .ProjectAssignedBot import ProjectAssignedBot
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectColumn import ProjectColumn
 from .ProjectInvitation import ProjectInvitation
@@ -40,6 +41,7 @@ __all__ = [
     "CheckitemTimer",
     "GlobalCardRelationshipType",
     "Project",
+    "ProjectAssignedBot",
     "ProjectAssignedUser",
     "ProjectColumn",
     "ProjectInvitation",

@@ -65,6 +65,8 @@ class UserGroupService(BaseService):
                 | (User.column("id") == UserEmail.column("user_id")),
             )
             .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
+            .order_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"))
+            .group_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"), User.column("id"))
         )
         records = result.all()
         if not as_api:
@@ -101,6 +103,19 @@ class UserGroupService(BaseService):
             )
 
         return user_group, revert_key
+
+    async def change_name(self, user: User, user_group: TUserGroupParam, name: str) -> str | None:
+        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        if not user_group or user_group.user_id != user.id:
+            return None
+
+        user_group.name = name
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(user_group, RevertType.Insert),
+        )
+        return revert_key
 
     async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> str | None:
         user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))

@@ -11,8 +11,8 @@ interface IStartCardSelectionProps {
 export interface IBoardRelationshipControllerContext {
     selectCardViewType?: ProjectCardRelationship.TRelationship;
     selectedRelationshipUIDs: [string, string][];
-    currentCardUIDRef: React.MutableRefObject<string | undefined>;
-    disabledCardSelectionUIDsRef: React.MutableRefObject<string[]>;
+    currentCardUIDRef: React.RefObject<string | undefined>;
+    disabledCardSelectionUIDsRef: React.RefObject<string[]>;
     startCardSelection: (props: IStartCardSelectionProps) => void;
     setSelectedRelationshipCardUIDs: React.Dispatch<React.SetStateAction<[string, string][]>>;
     setCardSelection: (cardUID: string, relationshipUID?: string) => void;

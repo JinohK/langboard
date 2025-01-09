@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Flex, Form, Input, Label, SubmitButton, Toast } from "@/components/base";
+import { Box, Flex, Form, Input, Label, SubmitButton } from "@/components/base";
 import useUpdateProfile from "@/controllers/api/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { createNameInitials } from "@/core/utils/StringUtils";
@@ -12,10 +12,10 @@ import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 function ProfilePage(): JSX.Element {
     const { currentUser, updatedUser } = useAccountSetting();
     const [t] = useTranslation();
-    const { mutate, createRevertToastButton } = useUpdateProfile(updatedUser);
+    const { mutate } = useUpdateProfile(updatedUser);
     const dataTransferRef = useRef(new DataTransfer());
     const isAvatarDeletedRef = useRef(false);
-    const { errors, isValidating, handleSubmit, formRef, focusElementRef } = useForm({
+    const { errors, isValidating, handleSubmit, formRef, focusComponentRef } = useForm({
         errorLangPrefix: "myAccount.errors",
         schema: {
             firstname: {
@@ -27,27 +27,27 @@ function ProfilePage(): JSX.Element {
             affiliation: {},
             position: {},
             avatar: { mimeType: "image/*" },
+            delete_avatar: {},
         },
         inputRefs: {
             avatar: dataTransferRef,
+            delete_avatar: isAvatarDeletedRef,
         },
         mutate,
         mutateOnSuccess: (data) => {
             updatedUser();
-            const toastId = Toast.Add.success(t("myAccount.successes.Profile updated successfully."), {
-                actions: [createRevertToastButton(data.revert_key, () => toastId)],
-            });
+            data.createToast(t("myAccount.successes.Profile updated successfully."));
         },
         mutateOnSettled: () => {
-            if (!focusElementRef.current) {
+            if (!focusComponentRef.current) {
                 return;
             }
 
             setTimeout(() => {
-                if (TypeUtils.isElement(focusElementRef.current)) {
-                    focusElementRef.current.focus();
-                } else if (TypeUtils.isString(focusElementRef.current)) {
-                    formRef.current?.[focusElementRef.current]?.focus();
+                if (TypeUtils.isElement(focusComponentRef.current)) {
+                    focusComponentRef.current.focus();
+                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                    formRef.current?.[focusComponentRef.current]?.focus();
                 }
             }, 0);
         },

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { icons } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
-import { forwardRef, lazy, memo } from "react";
+import { InternalIcon } from "@/assets/svgs/index";
+import React, { forwardRef, lazy, memo } from "react";
 import Flag from "react-flagkit";
 import { VariantProps, tv } from "tailwind-variants";
 import SuspenseComponent from "@/components/base/SuspenseComponent";
@@ -35,7 +37,7 @@ export type TIconProps = React.ForwardRefExoticComponent<ICountryIconProps> | Re
 export type TIconName = ICountryIconProps["icon"] | ILucideIconProps["icon"];
 
 const IconComponent = memo(
-    forwardRef<React.ElementRef<TIconProps>, React.ComponentPropsWithoutRef<TIconProps>>(({ icon, size, className, id, ...props }, ref) => {
+    forwardRef<React.ComponentRef<TIconProps>, React.ComponentPropsWithoutRef<TIconProps>>(({ icon, size, className, id, ...props }, ref) => {
         if (size) {
             className = cn(IconVariants({ size }), className ?? "");
         }
@@ -62,7 +64,11 @@ const IconComponent = memo(
         }
 
         if (!TargetIcon) {
-            return null;
+            return (
+                <SuspenseComponent className={className}>
+                    <InternalIcon icon={pascalCaseIcon} className={className} ref={ref as any} {...(props as any)} />
+                </SuspenseComponent>
+            );
         }
 
         return (

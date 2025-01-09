@@ -279,8 +279,8 @@ class DbSession(BaseSqlBuilder):
         for session in self._sessions_needs_commit:
             try:
                 await session.commit()
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
 
         self._sessions_needs_commit.clear()
 

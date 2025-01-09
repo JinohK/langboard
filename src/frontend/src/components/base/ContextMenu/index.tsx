@@ -45,7 +45,7 @@ const Sub = ContextMenuPrimitive.Sub;
 const RadioGroup = ContextMenuPrimitive.RadioGroup;
 
 const SubTrigger = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.SubTrigger>,
+    React.ComponentRef<typeof ContextMenuPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
         inset?: bool;
     }
@@ -66,7 +66,7 @@ const SubTrigger = React.forwardRef<
 SubTrigger.displayName = ContextMenuPrimitive.SubTrigger.displayName;
 
 const SubContent = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.SubContent>,
+    React.ComponentRef<typeof ContextMenuPrimitive.SubContent>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
     <ContextMenuPrimitive.SubContent
@@ -81,7 +81,7 @@ const SubContent = React.forwardRef<
 SubContent.displayName = ContextMenuPrimitive.SubContent.displayName;
 
 const Content = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.Content>,
+    React.ComponentRef<typeof ContextMenuPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
 >(({ className, ...props }, ref) => (
     <ContextMenuPrimitive.Portal>
@@ -98,7 +98,7 @@ const Content = React.forwardRef<
 Content.displayName = ContextMenuPrimitive.Content.displayName;
 
 const Item = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.Item>,
+    React.ComponentRef<typeof ContextMenuPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & {
         inset?: bool;
     }
@@ -116,7 +116,7 @@ const Item = React.forwardRef<
 Item.displayName = ContextMenuPrimitive.Item.displayName;
 
 const CheckboxItem = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.CheckboxItem>,
+    React.ComponentRef<typeof ContextMenuPrimitive.CheckboxItem>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => (
     <ContextMenuPrimitive.CheckboxItem
@@ -139,7 +139,7 @@ const CheckboxItem = React.forwardRef<
 CheckboxItem.displayName = ContextMenuPrimitive.CheckboxItem.displayName;
 
 const RadioItem = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.RadioItem>,
+    React.ComponentRef<typeof ContextMenuPrimitive.RadioItem>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => (
     <ContextMenuPrimitive.RadioItem
@@ -161,7 +161,7 @@ const RadioItem = React.forwardRef<
 RadioItem.displayName = ContextMenuPrimitive.RadioItem.displayName;
 
 const Label = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.Label>,
+    React.ComponentRef<typeof ContextMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Label> & {
         inset?: bool;
     }
@@ -175,7 +175,7 @@ const Label = React.forwardRef<
 Label.displayName = ContextMenuPrimitive.Label.displayName;
 
 const Separator = React.forwardRef<
-    React.ElementRef<typeof ContextMenuPrimitive.Separator>,
+    React.ComponentRef<typeof ContextMenuPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => <ContextMenuPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />);
 Separator.displayName = ContextMenuPrimitive.Separator.displayName;

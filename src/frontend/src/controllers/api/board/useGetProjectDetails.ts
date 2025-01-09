@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { Project } from "@/core/models";
+import { BotModel, Project } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetProjectDetailsForm {
@@ -10,6 +10,7 @@ export interface IGetProjectDetailsForm {
 
 export interface IGetProjectDetailsResponse {
     project: Project.TModel;
+    bots: BotModel.TModel[];
 }
 
 const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptions<unknown, IGetProjectDetailsResponse>) => {
@@ -21,6 +22,7 @@ const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptio
 
         return {
             project: Project.Model.fromObject(res.data.project),
+            bots: BotModel.Model.fromObjectArray(res.data.bots),
         };
     };
 

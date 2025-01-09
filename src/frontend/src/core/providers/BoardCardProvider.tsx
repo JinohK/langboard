@@ -12,9 +12,9 @@ export interface IBoardCardContext {
     currentUser: AuthUser.TModel;
     hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
     socket: ISocketContext;
-    editorsRef: React.MutableRefObject<Record<string, (isEditing: bool) => void>>;
+    editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
-    replyRef: React.MutableRefObject<(targetUser: User.TModel) => void>;
+    replyRef: React.RefObject<(targetUser: User.TModel) => void>;
     subscribeEditorSocketEvents: (uid: string, startCallback: (userUIDs: string[]) => void, stopCallback: (userUIDs: string[]) => void) => () => void;
     sharedClassNames: {
         popoverContent: string;

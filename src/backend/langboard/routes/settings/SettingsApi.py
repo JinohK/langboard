@@ -1,0 +1,198 @@
+from json import loads as json_loads
+from fastapi import File, UploadFile, status
+from ...core.db import User
+from ...core.filter import AuthFilter
+from ...core.routing import AppRouter, JsonResponse
+from ...core.security import Auth
+from ...core.setting import AppSettingType
+from ...core.storage import Storage, StorageName
+from ...services import Service
+from .Form import CreateBotForm, CreateSettingForm, DeleteSelectedSettingsForm, UpdateBotForm, UpdateSettingForm
+
+
+@AppRouter.api.post("/settings/available")
+@AuthFilter.add
+async def is_settings_available(user: User = Auth.scope("api")) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.get("/settings/all")
+@AuthFilter.add
+async def get_all_settings(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    langflow_url = await service.app_setting.get_by_type(AppSettingType.LangflowUrl, as_api=False)
+    langflow_api_key = await service.app_setting.get_by_type(AppSettingType.LangflowApiKey, as_api=False)
+    if not langflow_url:
+        await service.app_setting.create(AppSettingType.LangflowUrl, "Langflow URL", "")
+    if not langflow_api_key:
+        await service.app_setting.create(AppSettingType.LangflowApiKey, "Langflow API Key", "")
+
+    settings = await service.app_setting.get_all(as_api=True)
+    bots = await service.app_setting.get_bots(as_api=True)
+
+    return JsonResponse(content={"settings": settings, "bots": bots}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/settings/app")
+@AuthFilter.add
+async def create_setting(
+    form: CreateSettingForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    if form.setting_type == AppSettingType.ApiKey:
+        form.setting_value = await service.app_setting.generate_api_key()
+
+    revert_key, setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
+
+    revealed_value = json_loads(setting.setting_value)
+
+    return JsonResponse(
+        content={"revert_key": revert_key, "setting": setting.api_response(), "revealed_value": revealed_value},
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@AppRouter.api.put("/settings/app/{setting_uid}")
+@AuthFilter.add
+async def update_setting(
+    setting_uid: str,
+    form: UpdateSettingForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    revert_key = await service.app_setting.update(setting_uid, form.setting_name, form.setting_value)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if revert_key is True:
+        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/settings/app/{setting_uid}")
+@AuthFilter.add
+async def delete_setting(
+    setting_uid: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    revert_key = await service.app_setting.delete(setting_uid)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/settings/app")
+@AuthFilter.add
+async def delete_selected_settings(
+    form: DeleteSelectedSettingsForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    revert_key = await service.app_setting.delete_selected(form.setting_uids)
+    if not revert_key:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/settings/bot")
+@AuthFilter.add
+async def create_bot(
+    form: CreateBotForm = CreateBotForm.scope(),
+    avatar: UploadFile | None = File(None),
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    uploaded_avatar = None
+    file_model = Storage.upload(avatar, StorageName.BotAvatar) if avatar else None
+    if file_model:
+        uploaded_avatar = file_model
+
+    result = await service.app_setting.create_bot(form.bot_name, form.bot_uname, uploaded_avatar)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    revert_key, bot = result.data
+
+    return JsonResponse(content={"revert_key": revert_key, "bot": bot.api_response()}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/settings/bot/{bot_uid}")
+@AuthFilter.add
+async def update_bot(
+    bot_uid: str,
+    form: UpdateBotForm = UpdateBotForm.scope(),
+    avatar: UploadFile | None = File(None),
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    form_dict = form.model_dump()
+    if "bot_name" in form_dict:
+        form_dict["name"] = form_dict.pop("bot_name")
+
+    file_model = Storage.upload(avatar, StorageName.BotAvatar) if avatar else None
+    if file_model:
+        form_dict["avatar"] = file_model
+
+    result = await service.app_setting.update_bot(bot_uid, form_dict)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if isinstance(result, tuple):
+        is_success, bot = result
+        if not is_success or not bot:
+            return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+
+        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    revert_key, _, model = result.data
+    return JsonResponse(content={"revert_key": revert_key, **model}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/settings/bot/{bot_uid}")
+@AuthFilter.add
+async def delete_bot(
+    bot_uid: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.app_setting.delete_bot(bot_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    await AppRouter.publish_with_socket_model(result)
+
+    return JsonResponse(content={"revert_key": result.data}, status_code=status.HTTP_200_OK)

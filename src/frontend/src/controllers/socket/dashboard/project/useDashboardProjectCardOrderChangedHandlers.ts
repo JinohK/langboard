@@ -10,13 +10,12 @@ export interface IDashboardProjectCardOrderChangedRawResponse {
 
 export interface IUseDashboardProjectCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID: string;
 }
 
-const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID, userUID }: IUseDashboardProjectCardOrderChangedHandlersProps) => {
+const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID }: IUseDashboardProjectCardOrderChangedHandlersProps) => {
     return useSocketHandler<{}, IDashboardProjectCardOrderChangedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: userUID,
+        topicId: projectUID,
         eventKey: `dashboard-project-card-order-changed-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.CARD.ORDER_CHANGED,

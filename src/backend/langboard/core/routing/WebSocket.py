@@ -1,8 +1,8 @@
 from enum import Enum
-from typing import Any, Self, overload
+from typing import Any, Self, cast, overload
 from socketify import OpCode, SendStatus
 from socketify import WebSocket as SocketifyWebSocket
-from ..service import SocketModelIdService
+from typing_extensions import deprecated
 from .SocketResponse import SocketResponse
 from .SocketTopic import SocketTopic
 
@@ -16,11 +16,20 @@ class WebSocket(SocketifyWebSocket):
     def get_topics(self):
         return self.__ws.get_topics()
 
-    def subscribe(self, topic: str):
-        self.__ws.subscribe(topic)
+    def subscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
+        if isinstance(topic, Enum):
+            topic = topic.value
 
-    def unsubscribe(self, topic: str):
-        self.__ws.unsubscribe(topic)
+        for topic_id in topic_ids:
+            self.__ws.subscribe(f"{topic}:{topic_id}")
+        self.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=cast(str, topic_ids)))
+
+    def unsubscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
+        if isinstance(topic, Enum):
+            topic = topic.value
+        for topic_id in topic_ids:
+            self.__ws.unsubscribe(f"{topic}:{topic_id}")
+        self.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=cast(str, topic_ids)))
 
     @overload
     def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
@@ -121,19 +130,11 @@ class WebSocket(SocketifyWebSocket):
 
         return _WebSocketStream(self, topic, topic_id)
 
-    @overload
-    async def publish(
-        self, topic: SocketTopic | str, topic_id: str, event_response: str, data: Any = None, compress: bool = False
-    ): ...
-    @overload
-    async def publish(
-        self,
-        topic: SocketTopic | str,
-        topic_id: str,
-        event_response: SocketResponse,
-        data: None = None,
-        compress: bool = False,
-    ): ...
+    @deprecated(
+        """
+        🚨 Do not use this method. Use `AppRouter.publish` instead.
+        """
+    )
     async def publish(
         self,
         topic: SocketTopic | str,
@@ -148,11 +149,6 @@ class WebSocket(SocketifyWebSocket):
             response_model = event_response
         else:
             return False
-
-        if "model_id" in (response_model.data or {}):
-            model_id = response_model.data.pop("model_id")
-            data = await SocketModelIdService.get_model(model_id)
-            response_model.data.update(data)
 
         if isinstance(topic, Enum):
             topic = topic.value

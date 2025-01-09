@@ -8,14 +8,17 @@ export interface IChangePrimaryEmailForm {
     email: string;
 }
 
-const useChangePrimaryEmail = (revertCallback?: () => void, options?: TMutationOptions<IChangePrimaryEmailForm, IRevertKeyBaseResponse>) => {
+const useChangePrimaryEmail = (updatedUser: () => void, options?: TMutationOptions<IChangePrimaryEmailForm, IRevertKeyBaseResponse>) => {
     const { mutate } = useQueryMutation();
-    const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.EMAIL.CRUD, revertCallback);
+    const { createToastCreator } = useRevert(API_ROUTES.ACCOUNT.EMAIL.CRUD, updatedUser);
 
     const changePrimaryEmail = async (params: IChangePrimaryEmailForm) => {
         const res = await api.put(API_ROUTES.ACCOUNT.EMAIL.CRUD, params);
 
-        return res.data;
+        return {
+            revert_key: res.data.revert_key,
+            createToast: createToastCreator(res.data.revert_key, undefined),
+        };
     };
 
     const result = mutate(["change-primary-email"], changePrimaryEmail, {
@@ -23,11 +26,7 @@ const useChangePrimaryEmail = (revertCallback?: () => void, options?: TMutationO
         retry: 0,
     });
 
-    return {
-        ...result,
-        revert,
-        createRevertToastButton,
-    };
+    return result;
 };
 
 export default useChangePrimaryEmail;

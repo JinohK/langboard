@@ -18,6 +18,22 @@ class AuthUser extends User.Model<Interface> {
         };
     }
 
+    constructor(model: Record<string, unknown>) {
+        super(model);
+
+        UserGroup.Model.subscribe(
+            "CREATION",
+            this.uid,
+            (models) => {
+                this.user_groups = this.user_groups.concat(models);
+            },
+            () => true
+        );
+        UserGroup.Model.subscribe("DELETION", this.uid, (uids) => {
+            this.user_groups = this.user_groups.filter((column) => !uids.includes(column.uid));
+        });
+    }
+
     public get is_admin() {
         return this.getValue("is_admin");
     }

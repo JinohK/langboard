@@ -30,7 +30,11 @@ async def get_project_wikis(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     wikis = await service.project_wiki.get_board_list(user, project_uid)
     project_members = await service.project.get_assigned_users(project, as_api=True)
-    return JsonResponse(content={"wikis": wikis, "project_members": project_members}, status_code=status.HTTP_200_OK)
+    project_bots = await service.project.get_assigned_bots(project, as_api=True)
+    return JsonResponse(
+        content={"wikis": wikis, "project_members": project_members, "project_bots": project_bots},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @AppRouter.api.post("/board/{project_uid}/wiki")

@@ -13,6 +13,13 @@ async def create_service_generator():
         await db.close()
 
 
+@AppRouter.socket.subscription_validator(SocketTopic.Dashboard)
+async def dashboard_subscription_validator(topic_id: str, user: User) -> bool:
+    async for service in create_service_generator():
+        result = await service.project.is_assigned(user, topic_id)
+    return result
+
+
 @AppRouter.socket.subscription_validator(SocketTopic.Board)
 async def board_subscription_validator(topic_id: str, user: User) -> bool:
     async for service in create_service_generator():
@@ -24,4 +31,11 @@ async def board_subscription_validator(topic_id: str, user: User) -> bool:
 async def project_wiki_subscription_validator(topic_id: str, user: User) -> bool:
     async for service in create_service_generator():
         result = await service.project.is_assigned(user, topic_id)
+    return result
+
+
+@AppRouter.socket.subscription_validator(SocketTopic.BoardWikiPrivate)
+async def project_wiki_private_subscription_validator(topic_id: str, user: User) -> bool:
+    async for service in create_service_generator():
+        result = await service.project_wiki.is_assigned(user, topic_id)
     return result

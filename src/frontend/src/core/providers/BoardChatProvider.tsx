@@ -1,22 +1,22 @@
 import { createContext, useContext } from "react";
-import { BotModel } from "@/core/models";
+import { InternalBotModel } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 
 export interface IBoardChatContext {
     projectUID: string;
-    bot: BotModel.Interface;
+    bot: InternalBotModel.Interface;
     socket: ISocketContext;
 }
 
 interface IBoardChatProviderProps {
     projectUID: string;
-    bot: BotModel.Interface;
+    bot: InternalBotModel.Interface;
     children: React.ReactNode;
 }
 
 const initialContext = {
     projectUID: "",
-    bot: {} as BotModel.Interface,
+    bot: {} as InternalBotModel.Interface,
     socket: {} as ISocketContext,
 };
 

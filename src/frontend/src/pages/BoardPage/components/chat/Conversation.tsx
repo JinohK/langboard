@@ -13,7 +13,7 @@ import { useBoardChat } from "@/core/providers/BoardChatProvider";
 export interface IConversationProps {
     inputRef: React.RefObject<HTMLInputElement>;
     buttonRef: React.RefObject<HTMLButtonElement>;
-    sendChatCallbackRef: React.MutableRefObject<(message: string) => void>;
+    sendChatCallbackRef: React.RefObject<(message: string) => void>;
 }
 
 const params = { project_uid: "", page: 1, limit: 20, current_date: new Date() };

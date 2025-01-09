@@ -43,6 +43,7 @@ def SnowflakeIDField(
         sa_column_kwargs={"nullable": nullable if nullable is not None else True},
         nullable=nullable if nullable is not None else True,
         index=index if index is not None else False,
+        ondelete="CASCADE" if isinstance(foreign_key, str) else Undefined,
     )
 
 

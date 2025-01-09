@@ -2,6 +2,11 @@ from ....core.routing import BaseFormModel, form_model
 
 
 @form_model
+class AssignBotsForm(BaseFormModel):
+    assigned_bots: list[str]
+
+
+@form_model
 class AssignUsersForm(BaseFormModel):
     assigned_users: list[str]
 

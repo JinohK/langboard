@@ -20,7 +20,7 @@ export interface IVirtualInfiniteListProps<T> {
     isReverse?: bool;
     gap?: number;
     noItemsElement?: JSX.Element;
-    virtualizerRef?: React.MutableRefObject<Virtualizer<HTMLElement, Element> | null>;
+    virtualizerRef?: React.RefObject<Virtualizer<HTMLElement, Element> | null>;
     loader?: JSX.Element;
 }
 

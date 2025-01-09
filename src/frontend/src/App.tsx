@@ -5,22 +5,25 @@ import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
 import { BrowserRouter } from "react-router-dom";
-import { PageLoaderdProvider } from "@/core/providers/PageLoaderProvider";
+import { PageLoaderProvider } from "@/core/providers/PageLoaderProvider";
+import { GlobalSocketHandlersSubscriber } from "@/core/providers/GlobalSocketHandlersSubscriber";
 
 function App() {
     const queryClient = new QueryClient();
     return (
         <QueryClientProvider client={queryClient}>
-            <PageLoaderdProvider>
+            <PageLoaderProvider>
                 <AuthProvider>
                     <SocketProvider>
-                        <BrowserRouter>
-                            <Router />
-                        </BrowserRouter>
-                        <Toast.Area richColors />
+                        <GlobalSocketHandlersSubscriber>
+                            <BrowserRouter>
+                                <Router />
+                            </BrowserRouter>
+                            <Toast.Area richColors />
+                        </GlobalSocketHandlersSubscriber>
                     </SocketProvider>
                 </AuthProvider>
-            </PageLoaderdProvider>
+            </PageLoaderProvider>
         </QueryClientProvider>
     );
 }

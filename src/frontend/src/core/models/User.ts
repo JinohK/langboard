@@ -5,7 +5,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends Omit<IBaseModel, "uid"> {
     type: "user" | "unknown" | "bot" | "group_email";
-    uid: string | "0";
+    uid: string;
     firstname: string;
     lastname: string;
     email: string;
@@ -77,7 +77,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         const map = {
             isPresentableUnknownUser: () => model.type === User.BOT_TYPE || model.type === User.GROUP_EMAIL_TYPE,
             isValidUser: () => TypeUtils.isString(model.uid) && !map.isPresentableUnknownUser(),
-            isDeletedUser: () => model.uid === "0" || model.type === User.UNKNOWN_TYPE,
+            isDeletedUser: () => model.type === User.UNKNOWN_TYPE,
             isBot: () => model.type === User.BOT_TYPE,
         };
         return map as TMethodMap;
@@ -125,20 +125,29 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         this.update({ avatar: value });
     }
 
-    public isPresentableUnknownUser() {
-        return this.type === User.BOT_TYPE || this.type === User.GROUP_EMAIL_TYPE;
+    public isPresentableUnknownUser(type?: User["type"]) {
+        if (!type) {
+            type = this.type;
+        }
+        return type === User.BOT_TYPE || type === User.GROUP_EMAIL_TYPE;
     }
 
     public isValidUser() {
         return TypeUtils.isString(this.uid) && !this.isPresentableUnknownUser();
     }
 
-    public isDeletedUser() {
-        return this.uid === "0" || this.type === User.UNKNOWN_TYPE;
+    public isDeletedUser(type?: User["type"]) {
+        if (!type) {
+            type = this.type;
+        }
+        return type === User.UNKNOWN_TYPE;
     }
 
-    public isBot() {
-        return this.type === User.BOT_TYPE;
+    public isBot(type?: User["type"]) {
+        if (!type) {
+            type = this.type;
+        }
+        return type === User.BOT_TYPE;
     }
 }
 

@@ -60,7 +60,7 @@ class ProjectInvitationService(BaseService):
             .outerjoin(ProjectAssignedUser, (User.column("id") == ProjectAssignedUser.column("user_id")))
             .where(
                 (User.column("email").in_(emails) | UserEmail.column("email").in_(emails))
-                & (ProjectAssignedUser.column("project_id") == project.id)
+                | (ProjectAssignedUser.column("project_id") == project.id)
             )
         )
         records = result.all()

@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useTranslation } from "react-i18next";
 import { Button, Toast } from "@/components/base";
 import useRevertMutate from "@/controllers/api/revert/useRevertMutate";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-const useRevert = (path: string, revertCallback?: () => void) => {
+function useRevert<TData = any>(path: string, revertCallback?: (dataBeforeUpdated: TData) => void) {
     if (path.startsWith("/")) {
         path = path.slice(1);
     }
@@ -11,7 +12,39 @@ const useRevert = (path: string, revertCallback?: () => void) => {
     const [t] = useTranslation();
     const { mutateAsync } = useRevertMutate(path);
 
-    const revert = (revertKey: string, toastId?: string | number) => {
+    const createToastCreator = (revertKey: string, dataBeforeUpdated: TData) => {
+        return (message: string) => {
+            const toastId = Toast.Add.success(message, {
+                actions: [
+                    createToastButton(
+                        revertKey,
+                        () => toastId,
+                        () => {
+                            revertCallback?.(dataBeforeUpdated);
+                        }
+                    ),
+                ],
+            });
+        };
+    };
+
+    const createToastButton = (revertKey: string, toastId?: () => string | number, callback?: () => void) => {
+        return (
+            <Button
+                type="button"
+                variant="outline"
+                className="ml-auto h-6 px-2"
+                size="sm"
+                onClick={() => {
+                    revert(revertKey, toastId?.(), callback);
+                }}
+            >
+                {t("common.Undo")}
+            </Button>
+        );
+    };
+
+    const revert = (revertKey: string, toastId?: string | number, callback?: () => void) => {
         if (!TypeUtils.isUndefined(toastId)) {
             Toast.Add.dismiss(toastId);
         }
@@ -21,28 +54,12 @@ const useRevert = (path: string, revertCallback?: () => void) => {
             loading: t("common.Reverting..."),
             finally: () => {
                 Toast.Add.dismiss(toastId);
-                revertCallback?.();
+                callback?.();
             },
         });
     };
 
-    const createToastButton = (revertKey: string, toastId?: () => string | number) => {
-        return (
-            <Button
-                type="button"
-                variant="outline"
-                className="ml-auto h-6 px-2"
-                size="sm"
-                onClick={() => {
-                    revert(revertKey, toastId?.());
-                }}
-            >
-                {t("common.Undo")}
-            </Button>
-        );
-    };
-
-    return { revert, createToastButton };
-};
+    return { revert, createToastButton, createToastCreator };
+}
 
 export default useRevert;

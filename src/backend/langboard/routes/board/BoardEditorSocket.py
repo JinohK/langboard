@@ -1,4 +1,4 @@
-from ...core.ai import BotType
+from ...core.ai import InternalBotType
 from ...core.caching import Cache
 from ...core.db import User
 from ...core.filter import RoleFilter
@@ -39,7 +39,7 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         for uid, user_uids in editors.items():
             if current_user_uid in user_uids:
                 editors[uid] = [user_uid for user_uid in user_uids if user_uid != current_user_uid]
-                await ws.publish(
+                await AppRouter.publish(
                     topic=editor_topic,
                     topic_id=project_uid,
                     event_response=f"board:{editor_type}:editor:stop:{uid}",
@@ -85,7 +85,7 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         if user.id not in editors[uid]:
             editors[uid].append(user.get_uid())
         await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
-        await ws.publish(
+        await AppRouter.publish(
             topic=editor_topic,
             topic_id=project_uid,
             event_response=f"board:{editor_type}:editor:start:{uid}",
@@ -103,14 +103,16 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         if editors and uid in editors:
             editors[uid] = [editor for editor in editors[uid] if editor != user.id]
             await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
-        await ws.publish(
+        await AppRouter.publish(
             topic=editor_topic,
             topic_id=project_uid,
             event_response=f"board:{editor_type}:editor:stop:{uid}",
             data={"user_uids": editors[uid] if editors else []},
         )
 
-    editor_events = EdiitorSocketEventCreator(BotType.EditorChat, BotType.EditorCopilot, f"board:{editor_type}")
+    editor_events = EdiitorSocketEventCreator(
+        InternalBotType.EditorChat, InternalBotType.EditorCopilot, f"board:{editor_type}"
+    )
     editor_events.register(RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder))
 
 

@@ -34,21 +34,21 @@ export interface IAvatarProps extends AvatarPrimitive.AvatarProps, VariantProps<
 type TAvatarProps = React.ForwardRefExoticComponent<IAvatarProps & React.RefAttributes<HTMLSpanElement>>;
 
 const Root = React.memo(
-    React.forwardRef<React.ElementRef<TAvatarProps>, React.ComponentPropsWithoutRef<TAvatarProps>>(({ className, size, ...props }, ref) => (
+    React.forwardRef<React.ComponentRef<TAvatarProps>, React.ComponentPropsWithoutRef<TAvatarProps>>(({ className, size, ...props }, ref) => (
         <AvatarPrimitive.Root ref={ref} className={cn("select-none", AvatarVariants({ size }), className)} {...props} />
     ))
 );
 Root.displayName = AvatarPrimitive.Root.displayName;
 
 const Image = React.memo(
-    React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(
+    React.forwardRef<React.ComponentRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(
         ({ className, ...props }, ref) => <AvatarPrimitive.Image ref={ref} className={cn("aspect-square h-full w-full", className)} {...props} />
     )
 );
 Image.displayName = AvatarPrimitive.Image.displayName;
 
 const Fallback = React.memo(
-    React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(
+    React.forwardRef<React.ComponentRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(
         ({ className, ...props }, ref) => {
             return (
                 <AvatarPrimitive.Fallback

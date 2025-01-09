@@ -15,7 +15,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     const { setIsLoadingRef } = usePageLoader();
     const { t } = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
-    const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusElementRef } = useForm({
+    const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusComponentRef } = useForm({
         errorLangPrefix: "signUp.errors",
         schema: {
             email: { required: true, email: true },
@@ -28,10 +28,10 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
         mutateOnSuccess: (data) => {
             if (data.exists) {
                 setErrors({ email: "signUp.errors.invalid.email-exists" });
-                if (TypeUtils.isElement(focusElementRef.current)) {
-                    focusElementRef.current.focus();
-                } else if (TypeUtils.isString(focusElementRef.current)) {
-                    formRef.current?.[focusElementRef.current]?.focus();
+                if (TypeUtils.isElement(focusComponentRef.current)) {
+                    focusComponentRef.current.focus();
+                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                    formRef.current?.[focusComponentRef.current]?.focus();
                 }
                 return;
             }

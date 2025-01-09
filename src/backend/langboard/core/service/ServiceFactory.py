@@ -10,22 +10,22 @@ _TService = TypeVar("_TService", bound=BaseService)
 class ServiceFactory(ABC):
     def __init__(self, db: DbSession):
         self._db = db
-        self._serivces: dict[str, BaseService] = {}
+        self._services: dict[str, BaseService] = {}
 
     @abstractmethod
     def close(self): ...
 
     def _create_or_get_service(self, service: type[_TService]) -> _TService:
         service_name = service.name()
-        if service_name not in self._serivces:
-            self._serivces[service_name] = service(
+        if service_name not in self._services:
+            self._services[service_name] = service(
                 self._create_or_get_service, self._create_or_get_service_by_name, self._db
             )
 
-        return self._serivces[service_name]  # type: ignore
+        return self._services[service_name]  # type: ignore
 
     def _create_or_get_service_by_name(self, name: str) -> Any:
         if not hasattr(self, name):
             raise ValueError(f"Service {name} not found")
 
-        return self._serivces[name]
+        return self._services[name]

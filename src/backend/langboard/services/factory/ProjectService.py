@@ -1,27 +1,21 @@
-from typing import Any, Literal, cast, overload
-from ...core.ai import BotType
-from ...core.ai.QueueBot import QueueBot, QueueBotModel
-from ...core.db import SnowflakeID, User
+from typing import Any, Literal, TypeVar, cast, overload
+from ...core.ai import Bot
+from ...core.db import BaseSqlModel, SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
 from ...core.utils.DateTime import now
-from ...models import (
-    Card,
-    CardAssignedUser,
-    Checkitem,
-    CheckitemAssignedUser,
-    Project,
-    ProjectAssignedUser,
-    ProjectRole,
-    UserEmail,
-)
+from ...models import Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole, UserEmail
 from ...models.BaseRoleModel import ALL_GRANTED
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
 from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
-from .Types import TProjectParam
+from .Types import TProjectParam, TUserOrBot
+
+
+_TBaseModel1 = TypeVar("_TBaseModel1", bound=BaseSqlModel)
+_TBaseModel2 = TypeVar("_TBaseModel2", bound=BaseSqlModel)
 
 
 class ProjectService(BaseService):
@@ -41,17 +35,54 @@ class ProjectService(BaseService):
         return roles[0].actions if roles else []
 
     @overload
-    async def get_assigned_users(
+    async def get_assigned_bots(
         self, project: TProjectParam, as_api: Literal[False]
+    ) -> list[tuple[Bot, ProjectAssignedBot]]: ...
+    @overload
+    async def get_assigned_bots(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_assigned_bots(
+        self, project: TProjectParam, as_api: bool
+    ) -> list[tuple[Bot, ProjectAssignedBot]] | list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+        result = await self._db.exec(
+            self._db.query("select")
+            .tables(Bot, ProjectAssignedBot)
+            .join(ProjectAssignedBot, Bot.column("id") == ProjectAssignedBot.bot_id)
+            .where(ProjectAssignedBot.project_id == project.id)
+        )
+        raw_bots = result.all()
+        if not as_api:
+            return list(raw_bots)
+
+        bots = [bot.api_response() for bot, _ in raw_bots]
+        return bots
+
+    @overload
+    async def get_assigned_users(
+        self, project: TProjectParam, as_api: Literal[False], where_user_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[User, ProjectAssignedUser]]: ...
     @overload
-    async def get_assigned_users(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_assigned_users(
-        self, project: TProjectParam, as_api: bool
+        self, project: TProjectParam, as_api: Literal[True], where_user_ids_in: list[SnowflakeID] | None = None
+    ) -> list[dict[str, Any]]: ...
+    async def get_assigned_users(
+        self, project: TProjectParam, as_api: bool, where_user_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[User, ProjectAssignedUser]] | list[dict[str, Any]]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
+        query = (
+            self._db.query("select")
+            .tables(User, ProjectAssignedUser)
+            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
+            .where(ProjectAssignedUser.project_id == project.id)
+        )
+
+        if where_user_ids_in is not None:
+            query = query.where(User.column("id").in_(where_user_ids_in))
+
         result = await self._db.exec(
             self._db.query("select")
             .tables(User, ProjectAssignedUser)
@@ -107,7 +138,10 @@ class ProjectService(BaseService):
             return None
 
         response = project.api_response()
+        owner = cast(User, await self._get_by_param(User, project.owner_id, with_deleted=True))
+        response["owner"] = owner.api_response()
         response["members"] = await self.get_assigned_users(project, as_api=True)
+        response["bots"] = await self.get_assigned_bots(project, as_api=True)
         response["current_user_role_actions"] = await self.get_user_role_actions(user, project)
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
 
@@ -203,7 +237,7 @@ class ProjectService(BaseService):
         return project
 
     async def update(
-        self, user_or_bot: User | BotType, project: TProjectParam, form: dict
+        self, user_or_bot: TUserOrBot, project: TProjectParam, form: dict
     ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
@@ -225,28 +259,13 @@ class ProjectService(BaseService):
         if not old_project_record:
             return True
 
-        if isinstance(user_or_bot, BotType):
+        if isinstance(user_or_bot, Bot):
             await self._db.update(project)
             await self._db.commit()
             revert_key = None
         else:
             revert_service = self._get_service(RevertService)
             revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
-
-            QueueBot.add(
-                "bot",
-                QueueBotModel(
-                    bot_type=BotType.Project,
-                    bot_data={
-                        "title": project.title,
-                        "description": project.description,
-                        "project_type": project.project_type,
-                    },
-                    service_name=ProjectService.name(),
-                    service_method="update",
-                    params={"project": project.id, "form": {"ai_description": "{output}"}},
-                ),
-            )
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -265,7 +284,57 @@ class ProjectService(BaseService):
 
         return SocketModelIdBaseResult(model_id, (revert_key, model), publish_model)
 
-    async def update_assign_users(
+    async def update_assigned_bots(
+        self, user_or_bot: TUserOrBot, project: TProjectParam, assign_bot_uids: list[str]
+    ) -> SocketModelIdBaseResult[list[Bot]] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return None
+
+        # old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
+
+        await self._db.exec(
+            self._db.query("delete")
+            .table(ProjectAssignedBot)
+            .where(ProjectAssignedBot.column("project_id") == project.id)
+        )
+
+        if assign_bot_uids:
+            assigned_bot_ids = [SnowflakeID.from_short_code(uid) for uid in assign_bot_uids]
+            bots = await self._get_all_by(Bot, "id", assigned_bot_ids)
+            for bot in bots:
+                self._db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
+        else:
+            bots = []
+        await self._db.commit()
+
+        model_id = await SocketModelIdService.create_model_id({"assigned_bots": [bot.api_response() for bot in bots]})
+
+        topic_id = project.get_uid()
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=topic_id,
+                event=f"board:assigned-bots:updated:{topic_id}",
+                data_keys="assigned_bots",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.BoardCard,
+                topic_id=topic_id,
+                event=f"board:assigned-bots:updated:{topic_id}",
+                data_keys="assigned_bots",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.BoardWiki,
+                topic_id=topic_id,
+                event=f"board:assigned-bots:updated:{topic_id}",
+                data_keys="assigned_bots",
+            ),
+        ]
+
+        return SocketModelIdBaseResult(model_id, list(bots), publish_models)
+
+    async def update_assigned_users(
         self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
     ) -> SocketModelIdBaseResult[dict[str, str]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
@@ -302,46 +371,17 @@ class ProjectService(BaseService):
                 inviting_emails.remove(target_user.email)
 
         removed_assigned_user_ids: list[SnowflakeID] = []
+        removed_assigned_users: list[ProjectAssignedUser] = []
         prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
-        updated_checkitem_ids: set[SnowflakeID] = set()
-        updated_card_ids: set[SnowflakeID] = set()
         for prev_assigned_user in prev_assigned_users:
             if project.owner_id == prev_assigned_user.user_id or prev_assigned_user.id in assigned_user_ids:
                 continue
 
-            checkitem_assigned_users = (
-                await self._db.exec(
-                    self._db.query("select")
-                    .table(CheckitemAssignedUser)
-                    .join(Checkitem, Checkitem.column("id") == CheckitemAssignedUser.column("checkitem_id"))
-                    .join(Card, Card.column("id") == Checkitem.column("card_id"))
-                    .where(
-                        (Card.column("project_id") == project.id)
-                        & (CheckitemAssignedUser.column("user_id") == prev_assigned_user.user_id)
-                    )
-                )
-            ).all()
-            for checkitem_assigned_user in checkitem_assigned_users:
-                updated_checkitem_ids.add(checkitem_assigned_user.checkitem_id)
-                await self._db.delete(checkitem_assigned_user)
-
-            card_assigned_users = (
-                await self._db.exec(
-                    self._db.query("select")
-                    .table(CardAssignedUser)
-                    .join(Card, Card.column("id") == CardAssignedUser.column("card_id"))
-                    .where(
-                        (Card.column("project_id") == project.id)
-                        & (CardAssignedUser.column("user_id") == prev_assigned_user.user_id)
-                    )
-                )
-            ).all()
-            for card_assigned_user in card_assigned_users:
-                updated_card_ids.add(card_assigned_user.card_id)
-                await self._db.delete(card_assigned_user)
-
             removed_assigned_user_ids.append(prev_assigned_user.id)
-            await self._db.delete(prev_assigned_user)
+            removed_assigned_users.append(prev_assigned_user)
+
+        for removed_assigned_user in removed_assigned_users:
+            await self._db.delete(removed_assigned_user)
 
         await self._db.commit()
 
@@ -364,73 +404,25 @@ class ProjectService(BaseService):
                 topic_id=topic_id,
                 event=f"board:assigned-users:updated:{topic_id}",
                 data_keys=["assigned_members", "invited_members"],
-            )
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
+                event=f"dashboard:project:assigned-users:updated:{topic_id}",
+                data_keys="assigned_members",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.BoardCard,
+                topic_id=topic_id,
+                event=f"board:assigned-users:updated:{topic_id}",
+                data_keys="assigned_members",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.BoardWiki,
+                topic_id=topic_id,
+                event=f"board:assigned-users:updated:{topic_id}",
+                data_keys="assigned_members",
+            ),
         ]
 
-        for removed_assigned_user_id in removed_assigned_user_ids:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Dashboard,
-                    topic_id=removed_assigned_user_id.to_short_code(),
-                    event=f"dashboard:project:unassigned:{topic_id}",
-                )
-            )
-
-        checkitem_service = self._get_service_by_name("checkitem")
-        for checkitem_id in updated_checkitem_ids:
-            checkitem = await self._get_by(Checkitem, "id", checkitem_id)
-            if not checkitem:
-                continue
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Board,
-                    topic_id=topic_id,
-                    event=f"board:card:checkitem:assigned-users:updated:{topic_id}",
-                    custom_data={
-                        "assigned_members": await checkitem_service.get_assigned_users(checkitem, as_api=True)
-                    },
-                )
-            )
-
-        card_service = self._get_service_by_name("card")
-        for card_id in updated_card_ids:
-            card = await self._get_by(Card, "id", card_id)
-            if not card:
-                continue
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Board,
-                    topic_id=topic_id,
-                    event=f"board:card:assigned-users:updated:{topic_id}",
-                    custom_data={"assigned_members": await card_service.get_assigned_users(card, as_api=True)},
-                )
-            )
-
         return SocketModelIdBaseResult(model_id, urls, publish_models)
-
-    async def create_publish_private_models_for_members(
-        self,
-        project: TProjectParam,
-        topic: SocketTopic,
-        event: str,
-        data_keys: str | list[str] | None = None,
-        custom_data: dict[str, Any] | None = None,
-    ) -> list[SocketPublishModel]:
-        project = cast(Project, await self._get_by_param(Project, project))
-        if not project:
-            return []
-
-        members = await self.get_assigned_users(project, as_api=False)
-        publish_models = []
-        for member, _ in members:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=topic,
-                    topic_id=member.get_uid(),
-                    event=event,
-                    data_keys=data_keys,
-                    custom_data=custom_data,
-                )
-            )
-
-        return publish_models

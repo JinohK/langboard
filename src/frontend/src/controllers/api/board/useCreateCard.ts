@@ -21,7 +21,9 @@ const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string
             title: params.title,
         });
 
-        return res.data.card.uid;
+        return {
+            uid: res.data.card.uid,
+        };
     };
 
     const result = mutate(["create-card"], createCard, {

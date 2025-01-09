@@ -1,4 +1,5 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
+import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -11,14 +12,16 @@ export interface Interface extends IBaseModel {
 }
 
 export interface IStore extends Interface {
-    user: User.Interface;
-    reactions: Partial<Record<TEmoji, (number | string)[]>>;
+    user?: User.Interface;
+    bot?: BotModel.Interface;
+    reactions: Partial<Record<TEmoji, string[]>>;
 }
 
 class ProjectCardComment extends BaseModel<IStore> {
     static get FOREIGN_MODELS() {
         return {
             user: User.Model.MODEL_NAME,
+            bot: BotModel.Model.MODEL_NAME,
         };
     }
     static get MODEL_NAME() {
@@ -64,17 +67,24 @@ class ProjectCardComment extends BaseModel<IStore> {
         this.update({ commented_at: value });
     }
 
-    public get user(): User.TModel {
+    public get user(): User.TModel | undefined {
         return this.getForeignModels<User.TModel>("user")[0];
     }
     public set user(value: User.TModel | User.Interface) {
         this.update({ user: value });
     }
 
+    public get bot(): BotModel.TModel | undefined {
+        return this.getForeignModels<BotModel.TModel>("bot")[0];
+    }
+    public set bot(value: BotModel.TModel | BotModel.Interface) {
+        this.update({ bot: value });
+    }
+
     public get reactions() {
         return this.getValue("reactions");
     }
-    public set reactions(value: Partial<Record<TEmoji, (number | string)[]>>) {
+    public set reactions(value: Partial<Record<TEmoji, string[]>>) {
         this.update({ reactions: value });
     }
 }

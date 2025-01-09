@@ -15,17 +15,17 @@ export const MentionElement = withRef<
     typeof PlateElement,
     {
         currentUser: AuthUser.TModel;
-        mentionableUsers: User.TModel[];
+        mentionables: User.TModel[];
         prefix?: string;
         renderLabel?: (mentionable: TMentionElement) => string;
         onClick?: (mentionNode: any) => void;
     }
->(({ children, className, currentUser, mentionableUsers, prefix, renderLabel, onClick, ...props }, ref) => {
+>(({ children, className, currentUser, mentionables, prefix, renderLabel, onClick, ...props }, ref) => {
     const element = useElement<TMentionElement>();
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionableUsers.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
+    const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
 
     return (
         <PlateElement

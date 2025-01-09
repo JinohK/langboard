@@ -8,16 +8,19 @@ export interface IDeleteSubEmailForm {
     email: string;
 }
 
-const useDeleteSubEmail = (revertCallback?: () => void, options?: TMutationOptions<IDeleteSubEmailForm, IRevertKeyBaseResponse>) => {
+const useDeleteSubEmail = (updatedUser: () => void, options?: TMutationOptions<IDeleteSubEmailForm, IRevertKeyBaseResponse>) => {
     const { mutate } = useQueryMutation();
-    const { revert, createToastButton: createRevertToastButton } = useRevert(API_ROUTES.ACCOUNT.EMAIL.CRUD, revertCallback);
+    const { createToastCreator } = useRevert(API_ROUTES.ACCOUNT.EMAIL.CRUD, updatedUser);
 
     const deleteSubEmail = async (params: IDeleteSubEmailForm) => {
         const res = await api.delete(API_ROUTES.ACCOUNT.EMAIL.CRUD, {
             data: params,
         });
 
-        return res.data;
+        return {
+            revert_key: res.data.revert_key,
+            createToast: createToastCreator(res.data.revert_key, undefined),
+        };
     };
 
     const result = mutate(["delete-subemail"], deleteSubEmail, {
@@ -25,11 +28,7 @@ const useDeleteSubEmail = (revertCallback?: () => void, options?: TMutationOptio
         retry: 0,
     });
 
-    return {
-        ...result,
-        revert,
-        createRevertToastButton,
-    };
+    return result;
 };
 
 export default useDeleteSubEmail;

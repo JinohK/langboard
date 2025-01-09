@@ -1,5 +1,5 @@
-import { MultiSelectMemberPopover } from "@/components/MultiSelectMemberPopover";
-import { ProjectCheckitem, User } from "@/core/models";
+import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import { ProjectCheckitem, User, UserGroup } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
@@ -14,10 +14,12 @@ export interface ISharedBoardCardCheckitemAssignMemberProps {
 const SharedBoardCardCheckitemAssignMember = memo(
     ({ checkitem, isValidating, setIsValidating }: ISharedBoardCardCheckitemAssignMemberProps): JSX.Element => {
         const { card, currentUser, sharedClassNames } = useBoardCard();
+        const projectMembers = card.useForeignField<User.TModel>("project_members");
         const members = checkitem.useForeignField<User.TModel>("assigned_members");
+        const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
         const [t] = useTranslation();
 
-        const onSave = (users: User.TModel[], endCallback: () => void) => {
+        const onSave = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
             if (isValidating) {
                 return;
             }
@@ -32,7 +34,7 @@ const SharedBoardCardCheckitemAssignMember = memo(
         };
 
         return (
-            <MultiSelectMemberPopover
+            <MultiSelectAssigneesPopover
                 popoverButtonProps={{
                     size: "icon-sm",
                     className: "size-6 lg:size-8",
@@ -56,14 +58,13 @@ const SharedBoardCardCheckitemAssignMember = memo(
                     ),
                     inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
                 }}
+                addIconSize={{ initial: "4", lg: "6" }}
                 onSave={onSave}
                 isValidating={isValidating}
-                allUsers={card.project_members}
-                assignedUsers={members}
-                currentUser={currentUser}
-                iconSize={{ initial: "4", lg: "6" }}
-                canControlAssignedUsers
-                useGroupMembers
+                allItems={projectMembers}
+                groups={groups}
+                assignedFilter={(item) => members.includes(item as User.TModel)}
+                initialSelectedItems={members}
             />
         );
     }

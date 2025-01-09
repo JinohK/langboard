@@ -15,7 +15,7 @@ const Close = SheetPrimitive.Close;
 
 const Portal = SheetPrimitive.Portal;
 
-const Overlay = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Overlay>, React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>>(
+const Overlay = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Overlay>, React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>>(
     ({ className, ...props }, ref) => (
         <SheetPrimitive.Overlay
             className={cn(
@@ -51,7 +51,7 @@ const sheetVariants = tv(
 
 interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>, VariantProps<typeof sheetVariants> {}
 
-const Content = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
+const Content = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Content>, SheetContentProps>(
     ({ side = "right", className, children, ...props }, ref) => (
         <Portal>
             <Overlay />
@@ -77,13 +77,13 @@ const Footer = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) =
 );
 Footer.displayName = "SheetFooter";
 
-const Title = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Title>, React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>>(
+const Title = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Title>, React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>>(
     ({ className, ...props }, ref) => <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground", className)} {...props} />
 );
 Title.displayName = SheetPrimitive.Title.displayName;
 
 const Description = React.forwardRef<
-    React.ElementRef<typeof SheetPrimitive.Description>,
+    React.ComponentRef<typeof SheetPrimitive.Description>,
     React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
 >(({ className, ...props }, ref) => <SheetPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />);
 Description.displayName = SheetPrimitive.Description.displayName;
