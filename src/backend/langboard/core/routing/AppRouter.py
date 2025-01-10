@@ -3,7 +3,6 @@ from typing import Any, cast, overload
 from fastapi import APIRouter
 from socketify import App as SocketifyApp
 from socketify import OpCode
-from ..service import SocketModelIdBaseResult, SocketModelIdService
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketManager import SocketManager
@@ -64,13 +63,6 @@ class AppRouter:
         else:
             return False
 
-        if "model_id" in (response_model.data or {}):
-            response_data: dict = response_model.data
-            model_id = response_data.pop("model_id")
-            model_data = await SocketModelIdService.get_model(model_id)
-            if model_data:
-                response_data.update(model_data)
-
         if isinstance(topic, Enum):
             topic = topic.value
 
@@ -82,37 +74,3 @@ class AppRouter:
         return self.__socketify_app.publish(
             topic=socket_topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
         )
-
-    async def publish_with_socket_model(self, socket_model: SocketModelIdBaseResult):
-        model = await SocketModelIdService.get_model(socket_model.model_id)
-        if not model or not socket_model.publish_models or not self.__socketify_app:
-            return
-
-        if not isinstance(socket_model.publish_models, list):
-            socket_model.publish_models = [socket_model.publish_models]
-
-        for publish_model in socket_model.publish_models:
-            data = {}
-
-            if publish_model.data_keys:
-                if not isinstance(publish_model.data_keys, list):
-                    publish_model.data_keys = [publish_model.data_keys]
-
-                for key in publish_model.data_keys:
-                    if key in model:
-                        data[key] = model[key]
-
-            if publish_model.custom_data:
-                data.update(publish_model.custom_data)
-
-            if isinstance(publish_model.topic, SocketTopic) or isinstance(publish_model.topic, str):
-                topic = publish_model.topic
-            else:
-                topic = publish_model.topic.value
-
-            await self.publish(
-                topic=topic,
-                topic_id=publish_model.topic_id,
-                event_response=publish_model.event,
-                data=data,
-            )

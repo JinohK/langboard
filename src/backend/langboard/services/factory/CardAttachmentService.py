@@ -1,7 +1,7 @@
 from typing import Any, cast, overload
 from ...core.db import User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
 from .Types import TAttachmentParam, TCardParam, TProjectParam
@@ -40,7 +40,7 @@ class CardAttachmentService(BaseService):
 
     async def create(
         self, user: User, project: TProjectParam, card: TCardParam, attachment: FileModel
-    ) -> SocketModelIdBaseResult[CardAttachment] | None:
+    ) -> CardAttachment | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -59,15 +59,13 @@ class CardAttachmentService(BaseService):
         self._db.insert(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "attachment": {
-                    **card_attachment.api_response(),
-                    "user": user.api_response(),
-                    "card_uid": card.get_uid(),
-                }
+        model = {
+            "attachment": {
+                **card_attachment.api_response(),
+                "user": user.api_response(),
+                "card_uid": card.get_uid(),
             }
-        )
+        }
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
@@ -76,11 +74,13 @@ class CardAttachmentService(BaseService):
             data_keys="attachment",
         )
 
-        return SocketModelIdBaseResult(model_id, card_attachment, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return card_attachment
 
     async def change_order(
         self, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam, order: int
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card, card_attachment)
         if not params:
             return None
@@ -102,8 +102,7 @@ class CardAttachmentService(BaseService):
         await self._db.update(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": card_attachment.get_uid(), "order": order})
-
+        model = {"uid": card_attachment.get_uid(), "order": order}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
@@ -111,11 +110,13 @@ class CardAttachmentService(BaseService):
             data_keys=["uid", "order"],
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     async def change_name(
         self, user: User, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam, name: str
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card, card_attachment)
         if not params:
             return None
@@ -127,8 +128,7 @@ class CardAttachmentService(BaseService):
         await self._db.update(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"name": name})
-
+        model = {"name": name}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
@@ -136,11 +136,13 @@ class CardAttachmentService(BaseService):
             data_keys="name",
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     async def delete(
         self, user: User, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card, card_attachment)
         if not params:
             return None
@@ -158,8 +160,7 @@ class CardAttachmentService(BaseService):
         await self._db.delete(card_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": card_attachment.get_uid()})
-
+        model = {"uid": card_attachment.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
@@ -167,7 +168,9 @@ class CardAttachmentService(BaseService):
             data_keys="uid",
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     @overload
     async def __get_records_by_params(

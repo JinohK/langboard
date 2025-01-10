@@ -1,4 +1,5 @@
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.routing import GLOBAL_TOPIC_ID, NONE_TOPIC_ID, SocketTopic
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 
 
 class {class_name}Service(BaseService):

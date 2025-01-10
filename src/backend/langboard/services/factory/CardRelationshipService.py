@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import SnowflakeID
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
 from .Types import TCardParam, TProjectParam, TUserOrBot
 
@@ -104,7 +104,7 @@ class CardRelationshipService(BaseService):
         card: TCardParam,
         is_parent: bool,
         relationships: list[tuple[str, str]],
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -150,20 +150,20 @@ class CardRelationshipService(BaseService):
 
         new_relationships = await self.get_all_by_card(card, as_api=True)
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "card_uid": card.get_uid(),
-                "relationships": new_relationships,
-            }
-        )
+        model = {
+            "card_uid": card.get_uid(),
+            "relationships": new_relationships,
+        }
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:card:relationships:updated:{project.get_uid()}",
-            data_keys=["card_uid", "relationships"],
+            data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
         project = cast(Project, await self._get_by_param(Project, project))

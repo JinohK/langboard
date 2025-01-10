@@ -2,7 +2,7 @@ from typing import Any, Literal, cast, overload
 from ...core.ai import InternalBotType
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
 from ...models import Card, CardAssignedUser, Checkitem, CheckitemAssignedUser, CheckitemTimer, Project, ProjectColumn
 from .Types import TCardParam, TCheckitemParam, TProjectParam
@@ -139,7 +139,7 @@ class CheckitemService(BaseService):
         title: str,
         parent_checkitem_uid: str | None = None,
         assign_user_uids: list[str] | None = None,
-    ) -> SocketModelIdBaseResult[tuple[Checkitem, dict[str, Any]]] | None:
+    ) -> tuple[Checkitem, dict[str, Any]] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -180,8 +180,7 @@ class CheckitemService(BaseService):
             await self._db.commit()
 
         api_checkitem = await self.convert_api_response(checkitem)
-        model_id = await SocketModelIdService.create_model_id({"checkitem": api_checkitem})
-
+        model = {"checkitem": api_checkitem}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -193,7 +192,9 @@ class CheckitemService(BaseService):
             data_keys="checkitem",
         )
 
-        return SocketModelIdBaseResult(model_id, (checkitem, api_checkitem), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return checkitem, api_checkitem
 
     async def change_title(
         self,
@@ -202,7 +203,7 @@ class CheckitemService(BaseService):
         card: TCardParam,
         checkitem: TCheckitemParam,
         title: str,
-    ) -> SocketModelIdBaseResult[tuple[Checkitem, Card | None]] | None:
+    ) -> tuple[Checkitem, Card | None] | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
@@ -221,9 +222,8 @@ class CheckitemService(BaseService):
         await self._db.update(checkitem)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"title": title})
-
-        publish_models: list[SocketPublishModel] = [
+        model = {"title": title}
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=project.get_uid(),
@@ -241,7 +241,9 @@ class CheckitemService(BaseService):
                 )
             )
 
-        return SocketModelIdBaseResult(model_id, (checkitem, cardified_card), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return checkitem, cardified_card
 
     async def change_order(
         self,
@@ -250,7 +252,7 @@ class CheckitemService(BaseService):
         checkitem: TCheckitemParam,
         order: int,
         parent_checkitem_uid: str = "",
-    ) -> SocketModelIdBaseResult[tuple[Checkitem, SnowflakeID | None, Checkitem | None]] | None:
+    ) -> tuple[Checkitem, SnowflakeID | None, Checkitem | None] | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
@@ -301,8 +303,7 @@ class CheckitemService(BaseService):
         await self._db.update(checkitem)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": checkitem.get_uid(), "order": order})
-
+        model = {"uid": checkitem.get_uid(), "order": order}
         publish_models: list[SocketPublishModel] = []
         if not is_sub:
             publish_models.append(
@@ -344,7 +345,9 @@ class CheckitemService(BaseService):
                     )
                 )
 
-        return SocketModelIdBaseResult(model_id, (checkitem, original_parent_id, parent_checkitem), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return checkitem, original_parent_id, parent_checkitem
 
     async def cardify(
         self,
@@ -355,7 +358,7 @@ class CheckitemService(BaseService):
         column_uid: str | None = None,
         with_sub_checkitems: bool = False,
         with_assign_users: bool = False,
-    ) -> SocketModelIdBaseResult[Card] | None:
+    ) -> Card | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
@@ -417,10 +420,10 @@ class CheckitemService(BaseService):
 
         card_service = self._get_service_by_name("card")
         api_card = await card_service.convert_board_list_api_response(new_card)
-        model_id = await SocketModelIdService.create_model_id({"card": api_card})
+        model = {"card": api_card}
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -441,11 +444,13 @@ class CheckitemService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, new_card, publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return new_card
 
     async def delete(
         self, user_or_bot: User | InternalBotType, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
-    ) -> SocketModelIdBaseResult[Checkitem] | None:
+    ) -> Checkitem | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
@@ -468,8 +473,7 @@ class CheckitemService(BaseService):
         await self.__delete(checkitem)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": checkitem.get_uid()})
-
+        model = {"uid": checkitem.get_uid()}
         parent_id = checkitem.checkitem_id if checkitem.checkitem_id else checkitem.card_id
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -478,7 +482,9 @@ class CheckitemService(BaseService):
             data_keys="uid",
         )
 
-        return SocketModelIdBaseResult(model_id, checkitem, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return checkitem
 
     # TODO: Timer, will be changed
     async def start_timer(self, user: User, card_uid: str, checkitem_uid: str) -> CheckitemTimer | None:

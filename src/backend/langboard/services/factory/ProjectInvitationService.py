@@ -6,7 +6,7 @@ from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.db import User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail
@@ -150,7 +150,7 @@ class ProjectInvitationService(BaseService):
 
     async def accept(
         self, user: User, token: str
-    ) -> SocketModelIdBaseResult[tuple[Project, list[User], list[tuple[ProjectInvitation, User | None]]]] | None:
+    ) -> tuple[Project, list[User], list[tuple[ProjectInvitation, User | None]]] | None:
         try:
             token_info = json_loads(Encryptor.decrypt(token, COMMON_SECRET_KEY))
             if not token_info or "token" not in token_info or "invitaiton_id" not in token_info:
@@ -215,8 +215,6 @@ class ProjectInvitationService(BaseService):
             else:
                 model["invited_members"].append(User.create_email_user_api_response(invitation.id, invitation.email))
 
-        model_id = await SocketModelIdService.create_model_id(model)
-
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -224,7 +222,9 @@ class ProjectInvitationService(BaseService):
             data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, (project, updated_users, updated_invited_users), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return project, updated_users, updated_invited_users
 
     async def __create_invitation_token_url(
         self, invitation: ProjectInvitation, url: str, token_query_name: str

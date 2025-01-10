@@ -135,9 +135,7 @@ async def create_bot(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
-    await AppRouter.publish_with_socket_model(result)
-
-    revert_key, bot = result.data
+    revert_key, bot = result
 
     return JsonResponse(content={"revert_key": revert_key, "bot": bot.api_response()}, status_code=status.HTTP_200_OK)
 
@@ -166,16 +164,13 @@ async def update_bot(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if isinstance(result, tuple):
-        is_success, bot = result
-        if not is_success or not bot:
+    if isinstance(result, bool):
+        if not result:
             return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
-
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
-    await AppRouter.publish_with_socket_model(result)
+    revert_key, _, model = result
 
-    revert_key, _, model = result.data
     return JsonResponse(content={"revert_key": revert_key, **model}, status_code=status.HTTP_200_OK)
 
 
@@ -193,6 +188,4 @@ async def delete_bot(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
-    return JsonResponse(content={"revert_key": result.data}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)

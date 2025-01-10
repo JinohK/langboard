@@ -1,9 +1,19 @@
-from logging import ERROR, basicConfig, getLevelNamesMapping, getLogger
+from logging import ERROR, NOTSET, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
 from logging import Logger as LoggingLogger
 from rich.logging import RichHandler
 from ...Constants import ENVIRONMENT, FILE_LOGGING_LEVEL, LOGGING_DIR, PROJECT_NAME, TERMINAL_LOGGING_LEVEL
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .LogFileHandler import LogFileHandler
+
+
+class _LoggerWrapper(LoggingLogger):
+    def __init__(self, name, level=NOTSET):
+        if not name.startswith(PROJECT_NAME):
+            level = ERROR
+        super().__init__(name, level)
+
+
+setLoggerClass(_LoggerWrapper)
 
 
 @class_instance()

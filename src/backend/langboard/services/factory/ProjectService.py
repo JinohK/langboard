@@ -2,7 +2,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 from ...core.ai import Bot
 from ...core.db import BaseSqlModel, SnowflakeID, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
 from ...models import Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole, UserEmail
 from ...models.BaseRoleModel import ALL_GRANTED
@@ -238,7 +238,7 @@ class ProjectService(BaseService):
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, form: dict
-    ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
+    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -272,7 +272,6 @@ class ProjectService(BaseService):
             if key not in form or key not in old_project_record:
                 continue
             model[key] = self._convert_to_python(getattr(project, key))
-        model_id = await SocketModelIdService.create_model_id(model)
 
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
@@ -282,11 +281,13 @@ class ProjectService(BaseService):
             data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return revert_key, model
 
     async def update_assigned_bots(
         self, user_or_bot: TUserOrBot, project: TProjectParam, assign_bot_uids: list[str]
-    ) -> SocketModelIdBaseResult[list[Bot]] | None:
+    ) -> list[Bot] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -308,10 +309,9 @@ class ProjectService(BaseService):
             bots = []
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"assigned_bots": [bot.api_response() for bot in bots]})
-
+        model = {"assigned_bots": [bot.api_response() for bot in bots]}
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -332,11 +332,13 @@ class ProjectService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, list(bots), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return list(bots)
 
     async def update_assigned_users(
         self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
-    ) -> SocketModelIdBaseResult[dict[str, str]] | None:
+    ) -> dict[str, str] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -390,15 +392,13 @@ class ProjectService(BaseService):
             user, project, lang, url, token_query_name, inviting_emails
         )
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "assigned_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
-                "invited_members": invited_users,
-            }
-        )
+        model = {
+            "assigned_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
+            "invited_members": invited_users,
+        }
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -425,4 +425,6 @@ class ProjectService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, urls, publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return urls

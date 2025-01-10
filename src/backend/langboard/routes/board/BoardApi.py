@@ -96,10 +96,8 @@ async def update_project_member(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     # TODO: Email, Remove urls after implementing email sending
-    return JsonResponse(content={"urls": result.data}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"urls": result}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/project/invite/accept")
@@ -112,7 +110,5 @@ async def accept_project_invitation(
     result = await service.project_invitation.accept(user, form.invitation_token)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

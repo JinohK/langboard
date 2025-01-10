@@ -31,10 +31,8 @@ async def upload_card_attachment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(
-        content={**result.data.api_response(), "user": user.api_response()},
+        content={**result.api_response(), "user": user.api_response()},
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -52,8 +50,6 @@ async def change_attachment_order(
     result = await service.card_attachment.change_order(project_uid, card_uid, attachment_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -87,8 +83,6 @@ async def change_card_attachment_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -117,7 +111,5 @@ async def delete_card_attachment(
     result = await service.card_attachment.delete(user, project_uid, card_uid, card_attachment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

@@ -2,8 +2,8 @@ from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import SnowflakeID
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.routing import GLOBAL_TOPIC_ID, SocketTopic
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import FileModel
 from ...core.utils.String import generate_random_string
@@ -133,9 +133,7 @@ class AppSettingService(BaseService):
 
         return revert_key
 
-    async def create_bot(
-        self, name: str, bot_uname: str, avatar: FileModel | None = None
-    ) -> SocketModelIdBaseResult[tuple[str, Bot]] | None:
+    async def create_bot(self, name: str, bot_uname: str, avatar: FileModel | None = None) -> tuple[str, Bot] | None:
         existing_bot = await self._get_by(Bot, "bot_uname", bot_uname)
         if existing_bot:
             return None
@@ -153,20 +151,19 @@ class AppSettingService(BaseService):
             )
         )
 
-        model_id = await SocketModelIdService.create_model_id({"bot": bot.api_response()})
-
+        model = {"bot": bot.api_response()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
-            topic_id="all",
+            topic_id=GLOBAL_TOPIC_ID,
             event="settings:bot:created",
             data_keys="bot",
         )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, bot), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
 
-    async def update_bot(
-        self, bot: TBotParam, form: dict
-    ) -> tuple[bool, Bot | None] | SocketModelIdBaseResult[tuple[str, Bot, dict[str, Any]]] | None:
+        return revert_key, bot
+
+    async def update_bot(self, bot: TBotParam, form: dict) -> bool | tuple[str, Bot, dict[str, Any]] | None:
         bot = cast(Bot, await self._get_by_param(Bot, bot))
         if not bot:
             return None
@@ -187,14 +184,14 @@ class AppSettingService(BaseService):
         if "bot_uname" in form:
             existing_bot = await self._get_by(Bot, "bot_uname", form["bot_uname"])
             if existing_bot:
-                return False, None
+                return False
 
         if "delete_avatar" in form and form["delete_avatar"]:
             old_bot_record["avatar"] = self._convert_to_python(bot.avatar)
             bot.avatar = None
 
         if not old_bot_record:
-            return True, bot
+            return True
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(
@@ -215,18 +212,18 @@ class AppSettingService(BaseService):
             else:
                 model[key] = self._convert_to_python(getattr(bot, key))
 
-        model_id = await SocketModelIdService.create_model_id({**model})
-
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
-            topic_id="all",
+            topic_id=GLOBAL_TOPIC_ID,
             event=f"settings:bot:updated:{bot.get_uid()}",
             data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, bot, model), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
 
-    async def delete_bot(self, bot: TBotParam) -> SocketModelIdBaseResult[str] | None:
+        return revert_key, bot, model
+
+    async def delete_bot(self, bot: TBotParam) -> str | None:
         bot = cast(Bot, await self._get_by_param(Bot, bot))
         if not bot:
             return None
@@ -238,12 +235,12 @@ class AppSettingService(BaseService):
             )
         )
 
-        model_id = await SocketModelIdService.create_model_id({"fake": True})
-
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
-            topic_id="all",
+            topic_id=GLOBAL_TOPIC_ID,
             event=f"settings:bot:deleted:{bot.get_uid()}",
         )
 
-        return SocketModelIdBaseResult(model_id, revert_key, publish_model)
+        SocketPublishService.put_dispather({}, publish_model)
+
+        return revert_key

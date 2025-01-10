@@ -1,8 +1,8 @@
+from .Broker import Broker
 from .WebhookModel import WebhookModel
-from .WebhookQueue import WebhookQueue
 
 
 __all__ = [
+    "Broker",
     "WebhookModel",
-    "WebhookQueue",
 ]

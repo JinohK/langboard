@@ -22,8 +22,6 @@ async def create_column(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -41,8 +39,6 @@ async def update_column_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={"name": form.name}, status_code=status.HTTP_200_OK)
 
 
@@ -59,7 +55,5 @@ async def update_column_order(
     result = await service.project_column.change_order(user, project_uid, column_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

@@ -1,13 +1,12 @@
 from .BaseService import BaseService
 from .ServiceFactory import ServiceFactory
-from .SocketModelIdBaseResult import SocketModelIdBaseResult, SocketPublishModel
-from .SocketModelIdService import SocketModelIdService
+from .SocketPublishService import SocketPublishModel, SocketPublishQueueModel, SocketPublishService
 
 
 __all__ = [
     "BaseService",
-    "SocketModelIdBaseResult",
     "SocketPublishModel",
-    "SocketModelIdService",
+    "SocketPublishQueueModel",
+    "SocketPublishService",
     "ServiceFactory",
 ]

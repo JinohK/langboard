@@ -5,6 +5,7 @@ from socketify import OpCode, Request, Response
 from socketify import WebSocket as SocketifyWebSocket
 from ..db import User
 from ..routing import (
+    GLOBAL_TOPIC_ID,
     AppRouter,
     SocketDefaultEvent,
     SocketRequest,
@@ -74,7 +75,7 @@ class SocketApp(dict):
             return
 
         req = self._create_request(ws, user_data)
-        req.socket.subscribe(SocketTopic.Global, ["all"])
+        req.socket.subscribe(SocketTopic.Global, [GLOBAL_TOPIC_ID])
 
         await self._run_events(SocketDefaultEvent.Open, req)
 

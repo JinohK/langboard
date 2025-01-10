@@ -2,13 +2,19 @@ from importlib import metadata
 from os import environ
 from os.path import dirname
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
+
+
+_TDatabaseRole = Literal["SELECT", "INSERT", "UPDATE", "DELETE"]
 
 
 def _get_env(name: str, default: Any = None) -> Any | str:
     is_default = name not in environ or not environ[name]
     return default if is_default else environ[name]
 
+
+# Project
+PROJECT_NAME = _get_env("PROJECT_NAME")
 
 # Directory
 BASE_DIR = Path(dirname(__file__))
@@ -30,9 +36,13 @@ LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
-MAIN_DATABASE_ROLE = set(_get_env("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(","))
+MAIN_DATABASE_ROLE: set[_TDatabaseRole] = cast(
+    Any, set(_get_env("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(","))
+)
 SUB_DATABASE_URL = _get_env("SUB_DATABASE_URL", MAIN_DATABASE_URL)
-SUB_DATABASE_ROLE = set(_get_env("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(","))
+SUB_DATABASE_ROLE: set[_TDatabaseRole] = cast(
+    Any, set(_get_env("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(","))
+)
 _AVAILABLE_DATABASE_ROLES = set(["SELECT", "INSERT", "UPDATE", "DELETE"])
 
 for role in MAIN_DATABASE_ROLE:
@@ -49,7 +59,7 @@ if _added_roles != _AVAILABLE_DATABASE_ROLES:
     raise ValueError(f"Database roles must include all of {_AVAILABLE_DATABASE_ROLES}")
 
 # Cache
-CACHE_TYPE = _get_env("CACHE_TYPE", "in-memory")
+CACHE_TYPE: Literal["in-memory", "redis"] = cast(Any, _get_env("CACHE_TYPE", "in-memory"))
 CACHE_URL = _get_env("CACHE_URL")
 _AVAILABLE_CACHE_TYPES = set(["in-memory", "redis"])
 
@@ -69,7 +79,3 @@ S3_ACCESS_KEY_ID = _get_env("S3_ACCESS_KEY_ID")
 S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
 S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
 S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
-
-# Webhook
-WEBHOOK_QUEUE_DIR = Path(_get_env("WEBHOOK_QUEUE_DIR", DATA_DIR / "hook" / "queue"))
-WEBHOOK_TRHEAD_COUNT = int(_get_env("WEBHOOK_TRHEAD_COUNT", 1))

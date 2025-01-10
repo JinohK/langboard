@@ -25,9 +25,7 @@ async def create_checkitem(
     result = await service.checkitem.create(user, project_uid, card_uid, form.title, None, form.assigned_users)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    _, api_checkitem = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, api_checkitem = result
 
     return JsonResponse(content={"checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
@@ -46,9 +44,7 @@ async def create_sub_checkitem(
     result = await service.checkitem.create(user, project_uid, card_uid, form.title, checkitem_uid, form.assigned_users)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    _, api_checkitem = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, api_checkitem = result
 
     return JsonResponse(content={"checkitem": api_checkitem}, status_code=status.HTTP_201_CREATED)
 
@@ -68,8 +64,6 @@ async def change_checkitem_title(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -86,8 +80,6 @@ async def change_checkitem_order(
     result = await service.checkitem.change_order(project_uid, card_uid, checkitem_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -106,8 +98,6 @@ async def change_sub_checkitem_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -122,14 +112,11 @@ async def cardify_checkitem(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checkitem.cardify(
+    cardified_card = await service.checkitem.cardify(
         user, project_uid, card_uid, checkitem_uid, form.column_uid, form.with_sub_checkitems, form.with_assign_users
     )
-    if not result:
+    if not cardified_card:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    cardified_card = result.data
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(
         content={"card_uid": cardified_card.get_uid()},
@@ -150,8 +137,6 @@ async def delete_checkitem(
     result = await service.checkitem.delete(user, project_uid, card_uid, checkitem_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 

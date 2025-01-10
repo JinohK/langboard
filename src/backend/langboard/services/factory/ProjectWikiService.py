@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedUser, ProjectWikiAttachment
 from .ProjectService import ProjectService
@@ -97,7 +97,7 @@ class ProjectWikiService(BaseService):
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, title: str
-    ) -> SocketModelIdBaseResult[tuple[ProjectWiki, dict[str, Any]]] | None:
+    ) -> tuple[ProjectWiki, dict[str, Any]] | None:
         params = await self.__get_records_by_params(project)
         if not params:
             return None
@@ -115,7 +115,7 @@ class ProjectWikiService(BaseService):
 
         api_wiki = wiki.api_response()
         api_wiki["assigned_members"] = []
-        model_id = await SocketModelIdService.create_model_id({"wiki": api_wiki})
+        model = {"wiki": api_wiki}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
             topic_id=project.get_uid(),
@@ -123,11 +123,13 @@ class ProjectWikiService(BaseService):
             data_keys="wiki",
         )
 
-        return SocketModelIdBaseResult(model_id, (wiki, api_wiki), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return wiki, api_wiki
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, form: dict
-    ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
+    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -157,7 +159,6 @@ class ProjectWikiService(BaseService):
             if key not in mutable_keys or key not in old_wiki_record:
                 continue
             model[key] = self._convert_to_python(getattr(wiki, key))
-        model_id = await SocketModelIdService.create_model_id(model)
 
         topic_id = project.get_uid()
         wiki_uid = wiki.get_uid()
@@ -181,11 +182,13 @@ class ProjectWikiService(BaseService):
                 )
             )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return revert_key, model
 
     async def change_public(
         self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, is_public: bool
-    ) -> SocketModelIdBaseResult[tuple[ProjectWiki, Project, list[User]]] | None:
+    ) -> tuple[ProjectWiki, Project, list[User]] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -212,15 +215,12 @@ class ProjectWikiService(BaseService):
 
         assigned_users = [user_or_bot] if not wiki.is_public and isinstance(user_or_bot, User) else []
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "wiki": {
-                    **wiki.api_response(),
-                    "assigned_members": [user.api_response() for user in assigned_users],
-                },
-            }
-        )
-
+        model = {
+            "wiki": {
+                **wiki.api_response(),
+                "assigned_members": [user.api_response() for user in assigned_users],
+            },
+        }
         wiki_uid = wiki.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
@@ -229,11 +229,13 @@ class ProjectWikiService(BaseService):
             data_keys="wiki",
         )
 
-        return SocketModelIdBaseResult(model_id, (wiki, project, assigned_users), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return wiki, project, assigned_users
 
     async def update_assigned_users(
         self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, assign_user_uids: list[str]
-    ) -> SocketModelIdBaseResult[tuple[ProjectWiki, Project]] | None:
+    ) -> tuple[ProjectWiki, Project] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -271,13 +273,10 @@ class ProjectWikiService(BaseService):
         await self._db.commit()
 
         wiki_uid = wiki.get_uid()
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "wiki_uid": wiki_uid,
-                "assigned_members": [user.api_response() for user in users],
-            }
-        )
-
+        model = {
+            "wiki_uid": wiki_uid,
+            "assigned_members": [user.api_response() for user in users],
+        }
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
             topic_id=project.get_uid(),
@@ -285,11 +284,13 @@ class ProjectWikiService(BaseService):
             data_keys="assigned_members",
         )
 
-        return SocketModelIdBaseResult(model_id, (wiki, project), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return wiki, project
 
     async def change_order(
         self, project: TProjectParam, wiki: TWikiParam, order: int
-    ) -> SocketModelIdBaseResult[tuple[Project, ProjectWiki]] | None:
+    ) -> tuple[Project, ProjectWiki] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -308,13 +309,10 @@ class ProjectWikiService(BaseService):
 
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "uid": wiki.get_uid(),
-                "order": wiki.order,
-            }
-        )
-
+        model = {
+            "uid": wiki.get_uid(),
+            "order": wiki.order,
+        }
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
             topic_id=project.get_uid(),
@@ -322,11 +320,13 @@ class ProjectWikiService(BaseService):
             data_keys=["uid", "order"],
         )
 
-        return SocketModelIdBaseResult(model_id, (project, wiki), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return project, wiki
 
     async def upload_attachment(
         self, user: User, project: TProjectParam, wiki: TWikiParam, attachment: FileModel
-    ) -> SocketModelIdBaseResult[ProjectWikiAttachment] | None:
+    ) -> ProjectWikiAttachment | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -345,21 +345,18 @@ class ProjectWikiService(BaseService):
         self._db.insert(wiki_attachment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "attachment": {
-                    **wiki_attachment.api_response(),
-                    "user": user.api_response(),
-                    "wiki_uid": wiki.get_uid(),
-                }
-            }
-        )
+        # model = {
+        #     "attachment": {
+        #         **wiki_attachment.api_response(),
+        #         "user": user.api_response(),
+        #         "wiki_uid": wiki.get_uid(),
+        #     }
+        # }
+        # SocketPublishService.put_dispather(model, publish_model)
 
-        return SocketModelIdBaseResult(model_id, wiki_attachment, [])
+        return wiki_attachment
 
-    async def delete(
-        self, user: User, project: TProjectParam, wiki: TWikiParam
-    ) -> SocketModelIdBaseResult[None] | None:
+    async def delete(self, user: User, project: TProjectParam, wiki: TWikiParam) -> None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -368,8 +365,7 @@ class ProjectWikiService(BaseService):
         await self._db.delete(wiki)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": wiki.get_uid()})
-
+        model = {"uid": wiki.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
             topic_id=project.get_uid(),
@@ -377,7 +373,9 @@ class ProjectWikiService(BaseService):
             data_keys=["uid"],
         )
 
-        return SocketModelIdBaseResult(model_id, None, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return None
 
     @overload
     async def __get_records_by_params(self, project: TProjectParam) -> tuple[Project, None] | None: ...

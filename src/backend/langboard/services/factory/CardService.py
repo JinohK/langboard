@@ -4,7 +4,7 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import Bot
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -178,7 +178,7 @@ class CardService(BaseService):
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, title: str
-    ) -> SocketModelIdBaseResult[tuple[Card, dict[str, Any]]] | None:
+    ) -> tuple[Card, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project or column == project.ARCHIVE_COLUMN_UID():
             return None
@@ -198,11 +198,10 @@ class CardService(BaseService):
         self._db.insert(card)
         await self._db.commit()
 
-        model = await self.convert_board_list_api_response(card)
-        model_id = await SocketModelIdService.create_model_id({"card": model})
-
+        api_card = await self.convert_board_list_api_response(card)
+        model = {"card": api_card}
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -217,11 +216,13 @@ class CardService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, (card, model), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return card, api_card
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, form: dict
-    ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
+    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -269,10 +270,9 @@ class CardService(BaseService):
             if key not in mutable_keys or key not in old_card_record:
                 continue
             model[key] = self._convert_to_python(getattr(card, key))
-        model_id = await SocketModelIdService.create_model_id(model)
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -290,11 +290,13 @@ class CardService(BaseService):
                 )
             )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return revert_key, model
 
     async def change_order(
         self, user: User, project: TProjectParam, card: TCardParam, order: int, column_uid: str = ""
-    ) -> SocketModelIdBaseResult[tuple[Card, ProjectColumn | None, ProjectColumn | None]] | None:
+    ) -> tuple[Card, ProjectColumn | None, ProjectColumn | None] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -369,7 +371,6 @@ class CardService(BaseService):
         if new_column:
             model["to_column_uid"] = new_column.get_uid()
             model["column_name"] = new_column.name
-        model_id = await SocketModelIdService.create_model_id(model)
 
         publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
@@ -418,7 +419,9 @@ class CardService(BaseService):
                 )
             )
 
-        return SocketModelIdBaseResult(model_id, (card, original_column, new_column), publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return card, original_column, new_column
 
     async def update_assigned_users(
         self,
@@ -426,7 +429,7 @@ class CardService(BaseService):
         project: TProjectParam,
         card: TCardParam,
         assign_user_uids: list[str] | None = None,
-    ) -> SocketModelIdBaseResult[list[User]] | None:
+    ) -> list[User] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -457,10 +460,7 @@ class CardService(BaseService):
             users = []
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {"assigned_members": [user.api_response() for user in users]}
-        )
-
+        model = {"assigned_members": [user.api_response() for user in users]}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -468,11 +468,13 @@ class CardService(BaseService):
             data_keys="assigned_members",
         )
 
-        return SocketModelIdBaseResult(model_id, list(users), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return list(users)
 
     async def update_labels(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, label_uids: list[str]
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -509,8 +511,7 @@ class CardService(BaseService):
 
         labels = await project_label_service.get_all_by_card(card, as_api=True)
 
-        model_id = await SocketModelIdService.create_model_id({"labels": labels})
-
+        model = {"labels": labels}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -518,7 +519,9 @@ class CardService(BaseService):
             data_keys="labels",
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     async def create_publish_assigned_users_model(self, project: Project, card: Card, users: list[User] | None):
         if users is None:

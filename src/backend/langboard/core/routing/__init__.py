@@ -9,7 +9,7 @@ from .SocketManager import SocketManager
 from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketResponseCode import SocketResponseCode
-from .SocketTopic import SocketTopic
+from .SocketTopic import GLOBAL_TOPIC_ID, NONE_TOPIC_ID, SocketTopic
 from .WebSocket import WebSocket
 
 
@@ -28,5 +28,7 @@ __all__ = [
     "SocketManager",
     "TCachedScopes",
     "SocketTopic",
+    "GLOBAL_TOPIC_ID",
+    "NONE_TOPIC_ID",
     "WebSocket",
 ]

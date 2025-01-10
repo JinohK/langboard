@@ -2,7 +2,7 @@ from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from .RevertService import RevertService, RevertType
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
@@ -91,7 +91,7 @@ class ProjectLabelService(BaseService):
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, name: str, color: str, description: str
-    ) -> SocketModelIdBaseResult[tuple[ProjectLabel, dict[str, Any]]] | None:
+    ) -> tuple[ProjectLabel, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -116,9 +116,8 @@ class ProjectLabelService(BaseService):
         if is_bot:
             return None
 
-        model = label.api_response()
-        model_id = await SocketModelIdService.create_model_id({"label": model})
-
+        api_label = label.api_response()
+        model = {"label": api_label}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -126,11 +125,13 @@ class ProjectLabelService(BaseService):
             data_keys="label",
         )
 
-        return SocketModelIdBaseResult(model_id, (label, model), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return label, api_label
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
-    ) -> SocketModelIdBaseResult[tuple[str | None, dict[str, Any]]] | Literal[True] | None:
+    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
             return None
@@ -165,7 +166,6 @@ class ProjectLabelService(BaseService):
             if key not in form or key not in old_label_record:
                 continue
             model[key] = self._convert_to_python(getattr(label, key))
-        model_id = await SocketModelIdService.create_model_id(model)
 
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
@@ -175,11 +175,13 @@ class ProjectLabelService(BaseService):
             data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, (revert_key, model), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return revert_key, model
 
     async def change_order(
         self, user: User, project: TProjectParam, label: TProjectLabelParam, order: int
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> Literal[True] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
             return None
@@ -205,8 +207,7 @@ class ProjectLabelService(BaseService):
         await self._db.update(label)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": label.get_uid(), "order": order})
-
+        model = {"uid": label.get_uid(), "order": order}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -214,11 +215,11 @@ class ProjectLabelService(BaseService):
             data_keys=["uid", "order"],
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
 
-    async def delete(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam
-    ) -> SocketModelIdBaseResult[bool] | None:
+        return True
+
+    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam) -> bool | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
             return None
@@ -227,8 +228,7 @@ class ProjectLabelService(BaseService):
         await self._db.delete(label)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id({"uid": label.get_uid()})
-
+        model = {"uid": label.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -236,7 +236,9 @@ class ProjectLabelService(BaseService):
             data_keys="uid",
         )
 
-        return SocketModelIdBaseResult(model_id, True, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return True
 
     async def __get_records_by_params(self, project: TProjectParam, label: TProjectLabelParam):
         project = cast(Project, await self._get_by_param(Project, project))

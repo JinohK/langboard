@@ -23,8 +23,6 @@ async def add_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
 
@@ -48,8 +46,6 @@ async def update_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -72,8 +68,6 @@ async def delete_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -95,6 +89,4 @@ async def react_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
-    return JsonResponse(content={"is_reacted": result.data}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"is_reacted": result}, status_code=status.HTTP_200_OK)

@@ -2,7 +2,7 @@ from typing import Any, cast, overload
 from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardComment, CardCommentReaction, Project
 from .ReactionService import ReactionService
 from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot
@@ -57,7 +57,7 @@ class CardCommentService(BaseService):
         project: TProjectParam,
         card: TCardParam,
         content: EditorContentModel | dict[str, Any],
-    ) -> SocketModelIdBaseResult[tuple[CardComment, dict[str, Any]]] | None:
+    ) -> tuple[CardComment, dict[str, Any]] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -89,8 +89,7 @@ class CardCommentService(BaseService):
             api_comment["bot"] = user_or_bot.api_response()
         api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
 
-        model_id = await SocketModelIdService.create_model_id({"comment": api_comment})
-
+        model = {"comment": api_comment}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -98,7 +97,9 @@ class CardCommentService(BaseService):
             data_keys="comment",
         )
 
-        return SocketModelIdBaseResult(model_id, (comment, api_comment), publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return comment, api_comment
 
     async def update(
         self,
@@ -107,7 +108,7 @@ class CardCommentService(BaseService):
         card: TCardParam,
         comment: TCommentParam,
         content: EditorContentModel | dict[str, Any],
-    ) -> SocketModelIdBaseResult[CardComment] | None:
+    ) -> CardComment | None:
         params = await self.__get_records_by_params(project, card, comment)
         if not params:
             return None
@@ -121,15 +122,12 @@ class CardCommentService(BaseService):
         await self._db.update(comment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "content": content.model_dump(),
-                "card_uid": card.get_uid(),
-                "uid": comment.get_uid(),
-                "commented_at": comment.updated_at,
-            }
-        )
-
+        model = {
+            "content": content.model_dump(),
+            "card_uid": card.get_uid(),
+            "uid": comment.get_uid(),
+            "commented_at": comment.updated_at,
+        }
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -137,7 +135,9 @@ class CardCommentService(BaseService):
             data_keys=["content", "card_uid", "uid", "commented_at"],
         )
 
-        return SocketModelIdBaseResult(model_id, comment, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return comment
 
     async def delete(
         self,
@@ -145,7 +145,7 @@ class CardCommentService(BaseService):
         project: TProjectParam,
         card: TCardParam,
         comment: TCommentParam,
-    ) -> SocketModelIdBaseResult[CardComment] | None:
+    ) -> CardComment | None:
         params = await self.__get_records_by_params(project, card, comment)
         if not params:
             return None
@@ -154,10 +154,7 @@ class CardCommentService(BaseService):
         await self._db.delete(comment)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {"card_uid": card.get_uid(), "comment_uid": comment.get_uid()}
-        )
-
+        model = {"card_uid": card.get_uid(), "comment_uid": comment.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -165,7 +162,9 @@ class CardCommentService(BaseService):
             data_keys=["card_uid", "comment_uid"],
         )
 
-        return SocketModelIdBaseResult(model_id, comment, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return comment
 
     async def toggle_reaction(
         self,
@@ -174,7 +173,7 @@ class CardCommentService(BaseService):
         card: TCardParam,
         comment: TCommentParam,
         reaction: str,
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card, comment)
         if not params:
             return None
@@ -194,8 +193,6 @@ class CardCommentService(BaseService):
         else:
             model["bot_uid"] = user_or_bot.get_uid()
 
-        model_id = await SocketModelIdService.create_model_id(model)
-
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -203,7 +200,9 @@ class CardCommentService(BaseService):
             data_keys=list(model.keys()),
         )
 
-        return SocketModelIdBaseResult(model_id, is_reacted, publish_model)
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return is_reacted
 
     @overload
     async def __get_records_by_params(

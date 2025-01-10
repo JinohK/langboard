@@ -49,9 +49,7 @@ async def create_wiki(
     result = await service.project_wiki.create(user, project_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    _, api_wiki = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, api_wiki = result
 
     return JsonResponse(content={"wiki": api_wiki}, status_code=status.HTTP_200_OK)
 
@@ -88,9 +86,7 @@ async def change_wiki_details(
             response[key] = service.project_wiki._convert_to_python(value)
         return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
-    _, response = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, response = result
 
     return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
@@ -109,8 +105,6 @@ async def change_wiki_public(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -128,8 +122,6 @@ async def update_wiki_assigned_users(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -145,8 +137,6 @@ async def change_wiki_order(
     result = await service.project_wiki.change_order(project_uid, wiki_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -173,7 +163,7 @@ async def upload_wiki_attachment(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
-        content={**result.data.api_response(), "user": user.api_response()},
+        content={**result.api_response(), "user": user.api_response()},
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -190,7 +180,5 @@ async def delete_wiki(
     result = await service.project_wiki.delete(user, project_uid, wiki_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)

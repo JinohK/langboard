@@ -1,17 +1,20 @@
-from asyncio import run
 from logging import INFO
-from multiprocessing import Process, cpu_count
-from os import sep
+from multiprocessing import Process, Queue, cpu_count
+from os import getpid, kill, sep
+from os.path import dirname
+from pathlib import Path
+from signal import SIGINT
 from threading import Thread
 from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
-from .Constants import HOST, PORT, WEBHOOK_TRHEAD_COUNT
+from .Constants import HOST, PORT
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
+from .core.broadcast import DispatcherQueue
+from .core.broker import Broker
 from .core.logger import Logger
-from .core.webhook import WebhookQueue
 from .Loader import load_modules
 
 
@@ -32,55 +35,54 @@ def _run_app(options: RunCommandOptions):
     if options.workers < 1:
         options.workers = 1
 
-    if options.watch:
-        _watch(options)
-        return
+    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count()))]
+    DispatcherQueue.worker_queues = worker_queues
 
-    processes = _run_workers(options)
-
-    try:
-        for process in processes:
-            process.join()
-    except Exception:
-        _close_processes(processes)
-        raise
+    _watch(options, worker_queues)
 
 
-def _watch(options: RunCommandOptions):
-    from os.path import dirname
-    from pathlib import Path
+def _watch(options: RunCommandOptions, worker_queues: list[Queue]):
     from .core.bootstrap.WatchHandler import start_watch
 
-    processes = _run_workers(options)
+    processes = _run_workers(options, worker_queues)
 
     def on_close():
-        _close_processes(processes)
+        _close_processes(processes, False)
 
     def callback(_):
-        _close_processes(processes)
-        processes.extend(_run_workers(options, is_restarting=True))
+        if options.watch:
+            _close_processes(processes, True)
+            processes.extend(_run_workers(options, worker_queues, is_restarting=True))
 
     start_watch(cast(str, Path(dirname(__file__))), callback, on_close)
 
 
-def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
+def _run_workers(options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False):
     workers = options.workers
     options.workers = 1
     processes: list[Process] = []
     try:
-        for _ in range(min(workers, cpu_count())):
-            process = _run_app_webhook_wrapper(options, is_restarting)
+        for i in range(min(workers, cpu_count())):
+            process = _run_app_wrapper(i, options, worker_queues, is_restarting)
             processes.append(process)
+
+        broker_process = _run_broker(is_restarting)
+        if broker_process:
+            processes.append(broker_process)
 
         options.workers = workers
 
         return processes
     except Exception:
-        _close_processes(processes)
+        _close_processes(processes, is_restarting)
         raise
 
 
-def _close_processes(processes: list[Process]):
+def _close_processes(processes: list[Process], is_restarting: bool = False):
+    if not is_restarting:
+        Logger.main.info("Terminating the server..")
+        DispatcherQueue.close()
+
     close_all_sessions()
     for process in processes:
         process.terminate()
@@ -90,24 +92,43 @@ def _close_processes(processes: list[Process]):
     processes.clear()
 
 
-def _run_app_webhook_wrapper(options: RunCommandOptions, is_restarting: bool = False) -> Process:
-    if is_restarting:
-        Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
-    process = Process(target=_start_app, args=(options, is_restarting))
+def _run_broker(is_restarting: bool = False) -> Process | None:
+    if Broker.is_in_memory():
+        return None
+
+    process = Process(target=_start_broker, args=(is_restarting,))
     process.start()
     return process
 
 
-def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
+def _run_app_wrapper(
+    index: int, options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False
+) -> Process:
+    if is_restarting:
+        Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
+    process = Process(target=_start_app, args=(index, options, worker_queues, is_restarting))
+    process.start()
+    return process
+
+
+def _start_app(index: int, options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False) -> None:
+    from .core.broadcast import DispatcherQueue, WorkerQueue
+
+    DispatcherQueue.worker_queues = worker_queues
+    WorkerQueue.queue = worker_queues[index]
+
+    pid = getpid()
     ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
-    webhook_threads: list[Thread] = []
 
     websocket_options = options.create_websocket_options()
 
-    for i in range(WEBHOOK_TRHEAD_COUNT):
-        webhook_thread = Thread(target=_start_queue_webhook, args=(i,))
-        webhook_threads.append(webhook_thread)
-        webhook_thread.start()
+    broker_thread = None
+    if Broker.is_in_memory():
+        broker_thread = Thread(target=_start_broker, args=(is_restarting,))
+        broker_thread.start()
+
+    queue_thread = Thread(target=_start_worker_queue, args=(is_restarting,))
+    queue_thread.start()
 
     app = App(
         host=HOST,
@@ -123,7 +144,20 @@ def _start_app(options: RunCommandOptions, is_restarting: bool = False) -> None:
 
     app.run()
 
+    kill(pid, SIGINT)
 
-def _start_queue_webhook(thread_index: int) -> None:
-    queue = WebhookQueue(thread_index)
-    run(queue.loop())
+
+def _start_broker(is_restarting: bool = False) -> None:
+    from .core.broker import Broker
+
+    load_modules("tasks", "Task", log=not is_restarting)
+
+    Broker.start()
+
+
+def _start_worker_queue(is_restarting: bool = False) -> None:
+    from .core.broadcast import WorkerQueue
+
+    load_modules("consumers", "Consumer", log=not is_restarting)
+
+    WorkerQueue.start()

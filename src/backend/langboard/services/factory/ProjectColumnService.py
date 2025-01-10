@@ -1,7 +1,7 @@
 from typing import Any, cast
 from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketModelIdBaseResult, SocketModelIdService, SocketPublishModel
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, Project, ProjectColumn
 from .Types import TColumnParam, TProjectParam
 
@@ -57,9 +57,7 @@ class ProjectColumnService(BaseService):
         count = result.one()
         return count
 
-    async def create(
-        self, user: User, project: TProjectParam, name: str
-    ) -> SocketModelIdBaseResult[ProjectColumn] | None:
+    async def create(self, user: User, project: TProjectParam, name: str) -> ProjectColumn | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -75,17 +73,15 @@ class ProjectColumnService(BaseService):
         self._db.insert(column)
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "column": {
-                    **column.api_response(),
-                    "count": 0,
-                }
+        model = {
+            "column": {
+                **column.api_response(),
+                "count": 0,
             }
-        )
+        }
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -100,11 +96,11 @@ class ProjectColumnService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, column, publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
 
-    async def change_name(
-        self, user: User, project: TProjectParam, column: TColumnParam, name: str
-    ) -> SocketModelIdBaseResult[bool] | None:
+        return column
+
+    async def change_name(self, user: User, project: TProjectParam, column: TColumnParam, name: str) -> bool | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -125,34 +121,34 @@ class ProjectColumnService(BaseService):
 
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
-                "name": name,
-            }
-        )
+        model = {
+            "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
+            "name": name,
+        }
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
                 event=f"{_SOCKET_PREFIX}:name:changed:{topic_id}",
-                data_keys=["uid", "name"],
+                data_keys=list(model.keys()),
             ),
             SocketPublishModel(
                 topic=SocketTopic.Dashboard,
                 topic_id=topic_id,
                 event=f"dashboard:project:column:name:changed{topic_id}",
-                data_keys=["uid", "name"],
+                data_keys=list(model.keys()),
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, True, publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return True
 
     async def change_order(
         self, user: User, project: TProjectParam, project_column: TColumnParam, order: int
-    ) -> SocketModelIdBaseResult[bool] | None:
+    ) -> bool | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -197,17 +193,15 @@ class ProjectColumnService(BaseService):
 
         await self._db.commit()
 
-        model_id = await SocketModelIdService.create_model_id(
-            {
-                "uid": project_column.get_uid()
-                if isinstance(project_column, ProjectColumn)
-                else project.ARCHIVE_COLUMN_UID(),
-                "order": order,
-            }
-        )
+        model = {
+            "uid": project_column.get_uid()
+            if isinstance(project_column, ProjectColumn)
+            else project.ARCHIVE_COLUMN_UID(),
+            "order": order,
+        }
 
         topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
+        publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
@@ -222,4 +216,6 @@ class ProjectColumnService(BaseService):
             ),
         ]
 
-        return SocketModelIdBaseResult(model_id, True, publish_models)
+        SocketPublishService.put_dispather(model, publish_models)
+
+        return True

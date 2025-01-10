@@ -59,9 +59,7 @@ async def create_card(
     result = await service.card.create(user, project_uid, form.column_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    _, api_card = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, api_card = result
 
     return JsonResponse(content={"card": api_card}, status_code=status.HTTP_200_OK)
 
@@ -105,9 +103,7 @@ async def change_card_details(
             response[key] = service.card._convert_to_python(value)
         return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
-    _, response = result.data
-
-    await AppRouter.publish_with_socket_model(result)
+    _, response = result
 
     return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
@@ -126,8 +122,6 @@ async def update_card_assigned_users(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -144,8 +138,6 @@ async def change_card_order(
     result = await service.card.change_order(user, project_uid, card_uid, form.order, form.parent_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -164,8 +156,6 @@ async def update_card_labels(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    await AppRouter.publish_with_socket_model(result)
-
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
@@ -182,7 +172,5 @@ async def update_card_relationships(
     result = await service.card_relationship.update(user, project_uid, card_uid, form.is_parent, form.relationships)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    await AppRouter.publish_with_socket_model(result)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
