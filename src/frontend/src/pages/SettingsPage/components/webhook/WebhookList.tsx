@@ -19,7 +19,7 @@ function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListPr
     const updater = useReducer((x) => x + 1, 0);
     const webhooks = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.WebhookUrl);
     const PAGE_SIZE = 30;
-    const { items: urls, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: webhooks, size: PAGE_SIZE, updater });
+    const { items: urls, nextPage, hasMore } = useInfiniteScrollPager({ allItems: webhooks, size: PAGE_SIZE, updater });
     const listId = "settings-webhook-url-list";
 
     const selectAll = () => {
@@ -40,16 +40,16 @@ function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListPr
                         <Table.Head className="w-12 px-0 text-center">
                             <Checkbox checked={!!urls.length && urls.length === selectedWebhooks.length} onClick={selectAll} />
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Name">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Name")}>
                             {t("settings.Name")}
                         </Table.Head>
-                        <Table.Head className="text-center" title="URL">
+                        <Table.Head className="text-center" title={t("settings.URL")}>
                             {t("settings.URL")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Created">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Created")}>
                             {t("settings.Created")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Last Used">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Last Used")}>
                             {t("settings.Last Used")}
                         </Table.Head>
                     </Table.Row>

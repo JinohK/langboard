@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { AppSettingModel, BotModel } from "@/core/models";
+import { AppSettingModel, BotModel, GlobalRelationshipType } from "@/core/models";
 
 const useGetAllSettings = (options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
@@ -11,6 +11,7 @@ const useGetAllSettings = (options?: TMutationOptions) => {
 
         AppSettingModel.Model.fromObjectArray(res.data.settings);
         BotModel.Model.fromObjectArray(res.data.bots);
+        GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships);
 
         return {};
     };

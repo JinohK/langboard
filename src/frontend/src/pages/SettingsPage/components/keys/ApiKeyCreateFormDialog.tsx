@@ -17,7 +17,8 @@ export interface IApiKeyCreateFormDialogProps {
 function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigate } = useAppSetting();
+    const [isValidating, setIsValidating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [revealedKey, setRevealedKey] = useState<string>();
     const [isCopied, setIsCopied] = useState(false);
@@ -69,6 +70,10 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
     }, []);
 
     const changeOpenedState = (opened: bool) => {
+        if (isValidating) {
+            return;
+        }
+
         if (!opened) {
             setRevealedKey(undefined);
             setIsCopied(false);

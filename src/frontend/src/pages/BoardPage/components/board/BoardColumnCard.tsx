@@ -183,7 +183,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
         [selectCardViewType, selectedRelationshipUIDs]
     );
     const presentableRelationships = useMemo(() => {
-        const relationships: [string, string | undefined, string][] = [];
+        const relationships: [string, string][] = [];
 
         const filteredRelationships = cardRelationships.filter((relationship) => {
             if (!globalRelationshipTypes.length) {
@@ -210,7 +210,6 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                 const isParent = relationship.parent_card_uid === card.uid;
                 relationships.push([
                     cardsMap[isParent ? relationship.child_card_uid : relationship.parent_card_uid].title,
-                    isParent ? relationshipType.child_icon : relationshipType.parent_icon,
                     isParent ? relationshipType.child_name : relationshipType.parent_name,
                 ]);
             }
@@ -220,7 +219,6 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             const isParent = selectCardViewType === "parents";
             relationships.push([
                 cardsMap[currentCardUIDRef.current!].title,
-                isParent ? selectedRelationshipType.parent_icon : selectedRelationshipType.child_icon,
                 isParent ? selectedRelationshipType.parent_name : selectedRelationshipType.child_name,
             ]);
         }
@@ -325,12 +323,9 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                     >
                         {!!presentableRelationships.length && (
                             <Card.Content className="px-6 pb-4">
-                                {presentableRelationships.map(([relatedCardTitle, relationshipIcon, relationshipName]) => (
+                                {presentableRelationships.map(([relatedCardTitle, relationshipName]) => (
                                     <Flex key={createShortUUID()} items="center" gap="2" className="truncate text-accent-foreground/70">
-                                        <Flex items="center" gap="1">
-                                            {relationshipIcon && <IconComponent icon={relationshipIcon} size="4" />}
-                                            {relationshipName}
-                                        </Flex>
+                                        <span>{relationshipName}</span>
                                         <span className="text-muted-foreground">&gt;</span>
                                         <span className="truncate">{relatedCardTitle}</span>
                                     </Flex>

@@ -124,6 +124,12 @@ export const API_ROUTES = {
             UPDATE: "/settings/bot/{bot_uid}",
             DELETE: "/settings/bot/{bot_uid}",
         },
+        GLOBAL_RELATIONSHIPS: {
+            CREATE: "/settings/global-relationship",
+            UPDATE: "/settings/global-relationship/{uid}",
+            DELETE: "/settings/global-relationship/{uid}",
+            DELETE_SELECTED: "/settings/global-relationship",
+        },
     },
     REVERT: (path: string) => `/revert/${path}`,
 } as const;
@@ -216,6 +222,12 @@ export const SOCKET_SERVER_EVENTS = {
             CREATED: "settings:bot:created",
             UPDATED: "settings:bot:updated:{uid}",
             DELETED: "settings:bot:deleted:{uid}",
+        },
+        GLOBAL_RELATIONSHIPS: {
+            CREATED: "settings:global-relationship:created",
+            UPDATED: "settings:global-relationship:updated:{uid}",
+            DELETED: "settings:global-relationship:deleted:{uid}",
+            SELECTIONS_DELETED: "settings:global-relationship:deleted",
         },
     },
 } as const;

@@ -13,6 +13,7 @@ import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
 import BotsPage from "@/pages/SettingsPage/BotsPage";
+import GlobalRelationshipsPage from "@/pages/SettingsPage/GlobalRelationshipsPage";
 import LangflowPage from "@/pages/SettingsPage/LangflowPage";
 import WebhooksPage from "@/pages/SettingsPage/WebhookPage";
 import { useEffect, useRef, useState } from "react";
@@ -97,6 +98,14 @@ function SettingsProxy(): JSX.Element {
                 setIsLoadingRef.current(false);
             },
         },
+        [ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS]: {
+            icon: "waypoints",
+            name: "settings.Global relationships",
+            onClick: () => {
+                navigate.current(ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS);
+                setIsLoadingRef.current(false);
+            },
+        },
         [ROUTES.SETTINGS.WEBHOOKS]: {
             icon: "webhook",
             name: "settings.Webhooks",
@@ -124,6 +133,10 @@ function SettingsProxy(): JSX.Element {
             break;
         case ROUTES.SETTINGS.LANGFLOW:
             pageContent = <LangflowPage />;
+            skeletonContent = <></>;
+            break;
+        case ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS:
+            pageContent = <GlobalRelationshipsPage />;
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.WEBHOOKS:

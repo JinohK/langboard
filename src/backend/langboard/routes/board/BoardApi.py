@@ -68,7 +68,7 @@ async def get_project_cards(
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    global_relationships = await service.card_relationship.get_all_types(as_api=True)
+    global_relationships = await service.app_setting.get_global_relationships(as_api=True)
     columns = await service.project_column.get_list(project)
     cards = await service.card.get_board_list(project_uid)
     return JsonResponse(

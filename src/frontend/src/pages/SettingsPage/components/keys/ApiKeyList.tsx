@@ -19,7 +19,7 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
     const updater = useReducer((x) => x + 1, 0);
     const apiKeys = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.ApiKey);
     const PAGE_SIZE = 30;
-    const { items: keys, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: apiKeys, size: PAGE_SIZE, updater });
+    const { items: keys, nextPage, hasMore } = useInfiniteScrollPager({ allItems: apiKeys, size: PAGE_SIZE, updater });
     const listId = "settings-api-keys-list";
 
     const selectAll = () => {
@@ -40,19 +40,19 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                         <Table.Head className="w-12 px-0 text-center">
                             <Checkbox checked={!!keys.length && keys.length === selectedKeys.length} onClick={selectAll} />
                         </Table.Head>
-                        <Table.Head className="text-center" title="Name">
+                        <Table.Head className="text-center" title={t("settings.Name")}>
                             {t("settings.Name")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Key">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Key")}>
                             {t("settings.Key")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Created">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Created")}>
                             {t("settings.Created")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Last Used">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Last Used")}>
                             {t("settings.Last Used")}
                         </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title="Total Uses">
+                        <Table.Head className="w-1/6 text-center" title={t("settings.Total Uses")}>
                             {t("settings.Total Uses")}
                         </Table.Head>
                     </Table.Row>

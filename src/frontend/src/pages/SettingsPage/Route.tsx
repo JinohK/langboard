@@ -22,10 +22,12 @@ function SettingsRoute() {
             <Route path={ROUTES.SETTINGS.API_KEYS} element={<></>} />
             <Route path={ROUTES.SETTINGS.BOTS} element={<></>} />
             <Route path={ROUTES.SETTINGS.LANGFLOW} element={<></>} />
+            <Route path={ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS} element={<></>} />
             <Route path={ROUTES.SETTINGS.WEBHOOKS} element={<></>} />
 
             <Route path={ROUTES.SETTINGS.CREATE_API_KEY} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_BOT} element={<ModalPage />} />
+            <Route path={ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_WEBHOOK} element={<ModalPage />} />
         </Route>
     );

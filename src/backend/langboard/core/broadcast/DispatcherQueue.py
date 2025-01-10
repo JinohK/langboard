@@ -7,15 +7,20 @@ from .DispatcherModel import DispatcherModel
 @class_instance()
 @thread_safe_singleton
 class DispatcherQueue:
-    worker_queues: list[Queue] = []
-    is_closed: bool = False
+    @property
+    def is_closed(self) -> bool:
+        return self.__is_closed
+
+    def __init__(self):
+        self.__worker_queues: list[Queue] = []
+        self.__is_closed = False
 
     @overload
     def put(self, event: str, data: dict[str, Any]): ...
     @overload
     def put(self, event: DispatcherModel): ...
     def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
-        if not self.worker_queues:
+        if not self.__worker_queues:
             return
 
         if isinstance(event, str):
@@ -25,15 +30,23 @@ class DispatcherQueue:
         else:
             model = event
 
-        for worker_queue in self.worker_queues:
-            worker_queue.put(model.model_dump_json())
+        json_data = model.model_dump_json()
+        for worker_queue in self.__worker_queues:
+            try:
+                worker_queue.put(json_data)
+            except Exception:
+                continue
+
+    def start(self, worker_queues: list[Queue]):
+        self.__worker_queues = worker_queues
+        self.__is_closed = False
 
     def close(self):
-        if not self.worker_queues:
+        if not self.__worker_queues:
             return
 
-        for worker_queue in self.worker_queues:
+        for worker_queue in self.__worker_queues:
             worker_queue.put("EOF")
 
-        self.is_closed = True
-        self.worker_queues.clear()
+        self.__is_closed = True
+        self.__worker_queues.clear()

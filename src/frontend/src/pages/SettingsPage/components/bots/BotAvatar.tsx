@@ -1,6 +1,6 @@
 import { Avatar, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/components/base";
 import { IRevertKeyBaseResponse } from "@/controllers/api/revert/useRevertMutate";
-import useUpdateBot from "@/controllers/api/settings/useUpdateBot";
+import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";

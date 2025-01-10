@@ -3,55 +3,50 @@ import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components
 import { useEffect, useRef, useState } from "react";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
-import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
-import { ESettingType } from "@/core/models/AppSettingModel";
+import useCreateGlobalRelationship from "@/controllers/api/settings/relationships/useCreateGlobalRelationship";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 
-export interface IWebhookCreateFormDialogProps {
+export interface IGlobalRelationshipCreateFormDialogProps {
     opened: bool;
     setOpened: (opened: bool) => void;
 }
 
-function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialogProps): JSX.Element {
+function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelationshipCreateFormDialogProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const { navigate } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const urlInputRef = useRef<HTMLInputElement>(null);
-    const { mutate } = useCreateSetting();
+    const dataTransferRef = useRef(new DataTransfer());
+    const parentNameInputRef = useRef<HTMLInputElement>(null);
+    const childNameInputRef = useRef<HTMLInputElement>(null);
+    const descriptionInputRef = useRef<HTMLInputElement>(null);
+    const { mutate } = useCreateGlobalRelationship();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const save = () => {
-        if (isValidating || !nameInputRef.current || !urlInputRef.current) {
+        if (isValidating || !parentNameInputRef.current || !childNameInputRef.current || !descriptionInputRef.current) {
             return;
         }
 
         setIsValidating(true);
 
-        const nameValue = nameInputRef.current.value.trim();
-        const urlValue = urlInputRef.current.value.trim();
+        const parentValue = parentNameInputRef.current.value.trim();
+        const childValue = childNameInputRef.current.value.trim();
+        const descriptionValue = descriptionInputRef.current.value.trim();
         const newErrors: Record<string, string> = {};
         let focusableInput: HTMLInputElement | null = null;
 
-        if (!nameValue) {
-            newErrors.name = t("settings.errors.missing.webhook_url");
-            focusableInput = nameInputRef.current;
+        if (!parentValue) {
+            newErrors.parentName = t("settings.errors.missing.parent_name");
+            focusableInput = parentNameInputRef.current;
         }
 
-        if (!urlValue.startsWith("http://") && !urlValue.startsWith("https://")) {
-            newErrors.url = t("settings.errors.invalid.webhook_url");
+        if (!childValue) {
+            newErrors.childName = t("settings.errors.missing.child_name");
             if (!focusableInput) {
-                focusableInput = urlInputRef.current;
-            }
-        }
-
-        if (!urlValue) {
-            newErrors.url = t("settings.errors.missing.webhook_url");
-            if (!focusableInput) {
-                focusableInput = urlInputRef.current;
+                focusableInput = childNameInputRef.current;
             }
         }
 
@@ -64,16 +59,26 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
 
         mutate(
             {
-                setting_type: ESettingType.WebhookUrl,
-                setting_name: nameValue,
-                setting_value: urlValue,
+                parent_name: parentValue,
+                child_name: childValue,
+                description: descriptionValue,
             },
             {
                 onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Webhook created successfully."));
-                    setTimeout(() => {
-                        setOpened(false);
-                    }, 0);
+                    data.createToast(t("settings.successes.Global relationship type created successfully."));
+                    if (dataTransferRef.current.items.length) {
+                        dataTransferRef.current.items.clear();
+                    }
+                    if (parentNameInputRef.current) {
+                        parentNameInputRef.current.value = "";
+                    }
+                    if (childNameInputRef.current) {
+                        childNameInputRef.current.value = "";
+                    }
+                    if (descriptionInputRef.current) {
+                        descriptionInputRef.current.value = "";
+                    }
+                    setOpened(false);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
@@ -86,12 +91,6 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                     handle(error);
                 },
                 onSettled: () => {
-                    if (nameInputRef.current) {
-                        nameInputRef.current.value = "";
-                    }
-                    if (urlInputRef.current) {
-                        urlInputRef.current.value = "";
-                    }
                     setIsValidating(false);
                 },
             }
@@ -114,15 +113,24 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
         <Dialog.Root open={opened} onOpenChange={changeOpenedState}>
             <Dialog.Content className="sm:max-w-md" aria-describedby="">
                 <Dialog.Header>
-                    <Dialog.Title>{t("settings.Create webhook")}</Dialog.Title>
+                    <Dialog.Title>{t("settings.Create global relationship type")}</Dialog.Title>
                 </Dialog.Header>
                 <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook name")} autoFocus autoComplete="off" disabled={isValidating} ref={nameInputRef} />
-                    {errors.name && <FormErrorMessage error={errors.name} notInForm />}
+                    <Floating.LabelInput
+                        label={t("settings.Parent name")}
+                        autoFocus
+                        autoComplete="off"
+                        disabled={isValidating}
+                        ref={parentNameInputRef}
+                    />
+                    {errors.parentName && <FormErrorMessage error={errors.parentName} notInForm />}
                 </Box>
                 <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook URL")} autoComplete="off" disabled={isValidating} ref={urlInputRef} />
-                    {errors.url && <FormErrorMessage error={errors.url} notInForm />}
+                    <Floating.LabelInput label={t("settings.Child name")} autoComplete="off" disabled={isValidating} ref={childNameInputRef} />
+                    {errors.childName && <FormErrorMessage error={errors.childName} notInForm />}
+                </Box>
+                <Box mt="4">
+                    <Floating.LabelInput label={t("settings.Description")} autoComplete="off" disabled={isValidating} ref={descriptionInputRef} />
                 </Box>
                 <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                     <Dialog.Close asChild>
@@ -139,4 +147,4 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
     );
 }
 
-export default WebhookCreateFormDialog;
+export default GlobalRelationshipCreateFormDialog;

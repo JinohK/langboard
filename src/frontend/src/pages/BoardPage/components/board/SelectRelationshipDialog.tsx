@@ -1,4 +1,4 @@
-import { Button, Dialog, Flex, IconComponent, ScrollArea } from "@/components/base";
+import { Box, Button, Dialog, Flex, ScrollArea } from "@/components/base";
 import { ProjectCard } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
@@ -50,7 +50,6 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
                     <Flex direction="col" position="relative" textSize="sm" className="h-[min(theme(spacing.48),35vh)] select-none">
                         {globalRelationshipTypes.map((relationship) => {
                             const relationshipName = isParent ? relationship.parent_name : relationship.child_name;
-                            const relationshipIcon = isParent ? relationship.parent_icon : relationship.child_icon;
                             return (
                                 <Button
                                     key={createShortUUID()}
@@ -69,10 +68,9 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
                                         setSelectedRelationshipUID(relationship.uid);
                                     }}
                                 >
-                                    <Flex items="center" gap="1" py="1" px="2" className="truncate">
-                                        {relationshipIcon && <IconComponent icon={relationshipIcon} size="4" />}
-                                        <span className="truncate">{relationshipName}</span>
-                                    </Flex>
+                                    <Box py="1" px="2" className="truncate">
+                                        {relationshipName}
+                                    </Box>
                                 </Button>
                             );
                         })}

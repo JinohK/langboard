@@ -1,31 +1,31 @@
-import { Box, Input, Toast } from "@/components/base";
-import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
+import { Box, Input, Table, Toast } from "@/components/base";
+import useUpdateGlobalRelationship from "@/controllers/api/settings/relationships/useUpdateGlobalRelationship";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { BotModel } from "@/core/models";
+import { GlobalRelationshipType } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotNameProps {
-    bot: BotModel.TModel;
+export interface IGlobalRelationshipParentNameProps {
+    globalRelationship: GlobalRelationshipType.TModel;
 }
 
-const BotName = memo(({ bot }: IBotNameProps) => {
+const GlobalRelationshipParentName = memo(({ globalRelationship }: IGlobalRelationshipParentNameProps) => {
     const [t] = useTranslation();
     const { navigate } = useAppSetting();
-    const name = bot.useField("name");
-    const { mutateAsync } = useUpdateBot(bot);
+    const parentName = globalRelationship.useField("parent_name");
+    const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
         save: (value, endCallback) => {
             const promise = mutateAsync({
-                bot_name: value,
+                parent_name: value,
             });
 
             const toastId = Toast.Add.promise(promise, {
@@ -49,7 +49,7 @@ const BotName = memo(({ bot }: IBotNameProps) => {
                     return message;
                 },
                 success: (data) => {
-                    data.createToast(t("settings.successes.Bot name changed successfully."));
+                    data.createToast(t("settings.successes.Parent name changed successfully."));
                     setTimeout(() => {
                         Toast.Add.dismiss(toastId.toString());
                     }, 0);
@@ -61,23 +61,23 @@ const BotName = memo(({ bot }: IBotNameProps) => {
                 },
             });
         },
-        originalValue: name,
+        originalValue: parentName,
     });
 
     return (
-        <Box>
+        <Table.Cell className={cn("w-1/6 max-w-0 truncate text-center", isEditing && "py-0")}>
             {!isEditing ? (
                 <Box cursor="text" onClick={() => changeMode("edit")}>
-                    {name}
+                    {parentName}
                 </Box>
             ) : (
                 <Input
                     ref={valueRef}
                     className={cn(
-                        "h-6 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-base scrollbar-hide",
+                        "h-6 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-center scrollbar-hide",
                         "focus-visible:border-b-primary focus-visible:ring-0"
                     )}
-                    defaultValue={name}
+                    defaultValue={parentName}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -93,8 +93,8 @@ const BotName = memo(({ bot }: IBotNameProps) => {
                     }}
                 />
             )}
-        </Box>
+        </Table.Cell>
     );
 });
 
-export default BotName;
+export default GlobalRelationshipParentName;

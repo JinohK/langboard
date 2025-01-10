@@ -32,3 +32,22 @@ class UpdateBotForm(BaseFormModel):
     bot_name: str | None = None
     bot_uname: str | None = None
     delete_avatar: bool = False
+
+
+@form_model
+class CreateGlobalRelationshipTypeForm(BaseFormModel):
+    parent_name: str
+    child_name: str
+    description: str = ""
+
+
+@form_model
+class UpdateGlobalRelationshipTypeForm(BaseFormModel):
+    parent_name: str | None = None
+    child_name: str | None = None
+    description: str | None = None
+
+
+@form_model
+class DeleteSelectedGlobalRelationshipTypesForm(BaseFormModel):
+    relationship_type_uids: list[str]

@@ -3,7 +3,7 @@ import { Box, Button, Dialog, Floating, Form, SubmitButton, Toast } from "@/comp
 import { useEffect, useRef, useState } from "react";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
-import useCreateBot from "@/controllers/api/settings/useCreateBot";
+import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
@@ -19,7 +19,8 @@ export interface IBotCreateFormDialogProps {
 function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigate } = useAppSetting();
+    const [isValidating, setIsValidating] = useState(false);
     const dataTransferRef = useRef(new DataTransfer());
     const nameInputRef = useRef<HTMLInputElement>(null);
     const botUNameInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +75,9 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                     if (botUNameInputRef.current) {
                         botUNameInputRef.current.value = "";
                     }
-                    setOpened(false);
+                    setTimeout(() => {
+                        setOpened(false);
+                    }, 0);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
@@ -102,8 +105,16 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         setIsLoadingRef.current(false);
     }, []);
 
+    const changeOpenedState = (opened: bool) => {
+        if (isValidating) {
+            return;
+        }
+
+        setOpened(opened);
+    };
+
     return (
-        <Dialog.Root open={opened} onOpenChange={setOpened}>
+        <Dialog.Root open={opened} onOpenChange={changeOpenedState}>
             <Dialog.Content className="sm:max-w-md" aria-describedby="">
                 <Dialog.Header>
                     <Dialog.Title>{t("settings.Create bot")}</Dialog.Title>
@@ -116,18 +127,11 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                         errorMessage={errors.avatar}
                         avatarSize="3xl"
                     />
-                    <Box>
-                        <Floating.LabelInput
-                            label={t("settings.Bot name")}
-                            autoFocus
-                            autoComplete="off"
-                            className="mt-10"
-                            disabled={isValidating}
-                            ref={nameInputRef}
-                        />
+                    <Box mt="10">
+                        <Floating.LabelInput label={t("settings.Bot name")} autoFocus autoComplete="off" disabled={isValidating} ref={nameInputRef} />
                         {errors.name && <FormErrorMessage error={errors.name} notInForm />}
                     </Box>
-                    <Box>
+                    <Box mt="4">
                         <Box position="relative" className="[&_label]:pl-10">
                             <Box position="absolute" left="3" z="50" textSize="sm" className="top-1/2 -translate-y-1/2">
                                 {BotModel.Model.BOT_UNAME_PREFIX}
@@ -135,7 +139,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                             <Floating.LabelInput
                                 label={t("settings.Bot Unique Name")}
                                 autoComplete="off"
-                                className="mt-4 pl-10"
+                                className="pl-10"
                                 disabled={isValidating}
                                 ref={botUNameInputRef}
                             />

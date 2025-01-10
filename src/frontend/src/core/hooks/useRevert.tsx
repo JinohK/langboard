@@ -49,12 +49,13 @@ function useRevert<TData = any>(path: string, revertCallback?: (dataBeforeUpdate
             Toast.Add.dismiss(toastId);
         }
 
-        const promise = mutateAsync({ revert_key: revertKey });
+        const promise = new Promise((_, reject) => setTimeout(reject, 2500)); // mutateAsync({ revert_key: revertKey });
         toastId = Toast.Add.promise(promise, {
             loading: t("common.Reverting..."),
+            error: "Not implemented",
             finally: () => {
                 Toast.Add.dismiss(toastId);
-                callback?.();
+                // callback?.();
             },
         });
     };

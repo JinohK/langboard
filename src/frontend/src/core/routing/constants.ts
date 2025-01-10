@@ -60,6 +60,8 @@ export const ROUTES = {
         BOTS: "/settings/bots",
         CREATE_BOT: "/settings/bots/create",
         LANGFLOW: "/settings/langflow",
+        GLOBAL_RELATIONSHIPS: "/settings/global-relationships",
+        CREATE_GLOBAL_RELATIONSHIP: "/settings/global-relationships/create",
         WEBHOOKS: "/settings/webhooks",
         CREATE_WEBHOOK: "/settings/webhooks/create",
     },

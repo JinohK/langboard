@@ -1,5 +1,5 @@
 import { Box, Flex, Input, Toast } from "@/components/base";
-import useUpdateBot from "@/controllers/api/settings/useUpdateBot";
+import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";

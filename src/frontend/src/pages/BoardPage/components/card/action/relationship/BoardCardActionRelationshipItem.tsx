@@ -1,4 +1,4 @@
-import { Button, Flex, IconComponent } from "@/components/base";
+import { Button, Flex } from "@/components/base";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -18,7 +18,6 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
     const targetCardUID = relationship.parent_card_uid === card.uid ? relationship.child_card_uid : relationship.parent_card_uid;
     const targetCard = ProjectCard.Model.getModel(targetCardUID)!;
     const targetCardTitle = targetCard.useField("title");
-    const icon = relationshipType.useField(isParent ? "parent_icon" : "child_icon");
     const name = relationshipType.useField(isParent ? "parent_name" : "child_name");
 
     const toRelatedCard = () => {
@@ -34,10 +33,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
             onClick={toRelatedCard}
         >
             <Flex items="center" gap="2" py="1" px="2" className="truncate">
-                <Flex items="center" gap="1">
-                    {icon && <IconComponent icon={icon} size="4" />}
-                    {name}
-                </Flex>
+                <span>{name}</span>
                 <span className="text-muted-foreground">&gt;</span>
                 <span className="truncate">{targetCardTitle}</span>
             </Flex>

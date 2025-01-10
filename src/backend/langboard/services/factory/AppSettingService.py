@@ -7,8 +7,9 @@ from ...core.service import BaseService, SocketPublishModel, SocketPublishServic
 from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import FileModel
 from ...core.utils.String import generate_random_string
+from ...models import GlobalCardRelationshipType
 from .RevertService import RevertService, RevertType
-from .Types import TBotParam, TSettingParam
+from .Types import TBotParam, TGlobalCardRelationshipTypeParam, TSettingParam
 
 
 class AppSettingService(BaseService):
@@ -60,6 +61,16 @@ class AppSettingService(BaseService):
         if as_api:
             return [bot.api_response() for bot in bots]
         return list(bots)
+
+    @overload
+    async def get_global_relationships(self, as_api: Literal[False]) -> list[GlobalCardRelationshipType]: ...
+    @overload
+    async def get_global_relationships(self, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_global_relationships(self, as_api: bool) -> list[GlobalCardRelationshipType] | list[dict[str, Any]]:
+        global_relationships = await self._get_all(GlobalCardRelationshipType)
+        if as_api:
+            return [relationship.api_response() for relationship in global_relationships]
+        return list(global_relationships)
 
     async def generate_api_key(self) -> str:
         api_key = f"sk-{generate_random_string(53)}"
@@ -242,5 +253,126 @@ class AppSettingService(BaseService):
         )
 
         SocketPublishService.put_dispather({}, publish_model)
+
+        return revert_key
+
+    async def create_global_relationship(
+        self, parent_name: str, child_name: str, description: str = ""
+    ) -> tuple[str, GlobalCardRelationshipType]:
+        global_relationship = GlobalCardRelationshipType(
+            parent_name=parent_name,
+            child_name=child_name,
+            description=description,
+        )
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Delete)
+        )
+
+        model = {"global_relationships": global_relationship.api_response()}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Global,
+            topic_id=GLOBAL_TOPIC_ID,
+            event="settings:global-relationship:created",
+            data_keys="global_relationships",
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return revert_key, global_relationship
+
+    async def update_global_relationship(
+        self, global_relationship: TGlobalCardRelationshipTypeParam, form: dict
+    ) -> bool | tuple[str, GlobalCardRelationshipType, dict[str, Any]] | None:
+        global_relationship = cast(
+            GlobalCardRelationshipType, await self._get_by_param(GlobalCardRelationshipType, global_relationship)
+        )
+        if not global_relationship:
+            return None
+        mutable_keys = ["parent_name", "child_name", "description"]
+
+        old_global_relationship_record = {}
+
+        for key in form:
+            if key not in mutable_keys:
+                continue
+            old_value = getattr(global_relationship, key)
+            new_value = form[key]
+            if old_value == new_value or new_value is None:
+                continue
+            old_global_relationship_record[key] = self._convert_to_python(old_value)
+            setattr(global_relationship, key, new_value)
+
+        if not old_global_relationship_record:
+            return True
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Update)
+        )
+
+        model = {}
+        for key in form:
+            if key not in mutable_keys or key not in old_global_relationship_record:
+                continue
+            model[key] = self._convert_to_python(getattr(global_relationship, key))
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Global,
+            topic_id=GLOBAL_TOPIC_ID,
+            event=f"settings:global-relationship:updated:{global_relationship.get_uid()}",
+            data_keys=list(model.keys()),
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
+        return revert_key, global_relationship, model
+
+    async def delete_global_relationship(self, global_relationship: TGlobalCardRelationshipTypeParam) -> str | None:
+        global_relationship = cast(
+            GlobalCardRelationshipType, await self._get_by_param(GlobalCardRelationshipType, global_relationship)
+        )
+        if not global_relationship:
+            return None
+
+        revert_service = self._get_service(RevertService)
+        revert_key = await revert_service.record(
+            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Insert)
+        )
+
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Global,
+            topic_id=GLOBAL_TOPIC_ID,
+            event=f"settings:global-relationship:deleted:{global_relationship.get_uid()}",
+        )
+
+        SocketPublishService.put_dispather({}, publish_model)
+
+        return revert_key
+
+    async def delete_selected_global_relationships(self, uids: list[str]) -> str | None:
+        ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
+
+        global_relationships = await self._get_all_by(GlobalCardRelationshipType, "id", ids)
+        if not global_relationships:
+            return None
+
+        revert_service = self._get_service(RevertService)
+        record_models = [
+            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Insert)
+            for global_relationship in global_relationships
+        ]
+        revert_key = await revert_service.record(*record_models)
+
+        model = {"uids": uids}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Global,
+            topic_id=GLOBAL_TOPIC_ID,
+            event="settings:global-relationship:deleted",
+            data_keys="uids",
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
 
         return revert_key

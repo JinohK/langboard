@@ -7,7 +7,16 @@ from ...core.security import Auth
 from ...core.setting import AppSettingType
 from ...core.storage import Storage, StorageName
 from ...services import Service
-from .Form import CreateBotForm, CreateSettingForm, DeleteSelectedSettingsForm, UpdateBotForm, UpdateSettingForm
+from .Form import (
+    CreateBotForm,
+    CreateGlobalRelationshipTypeForm,
+    CreateSettingForm,
+    DeleteSelectedGlobalRelationshipTypesForm,
+    DeleteSelectedSettingsForm,
+    UpdateBotForm,
+    UpdateGlobalRelationshipTypeForm,
+    UpdateSettingForm,
+)
 
 
 @AppRouter.api.post("/settings/available")
@@ -33,8 +42,12 @@ async def get_all_settings(user: User = Auth.scope("api"), service: Service = Se
 
     settings = await service.app_setting.get_all(as_api=True)
     bots = await service.app_setting.get_bots(as_api=True)
+    global_relationships = await service.app_setting.get_global_relationships(as_api=True)
 
-    return JsonResponse(content={"settings": settings, "bots": bots}, status_code=status.HTTP_200_OK)
+    return JsonResponse(
+        content={"settings": settings, "bots": bots, "global_relationships": global_relationships},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @AppRouter.api.post("/settings/app")
@@ -185,6 +198,89 @@ async def delete_bot(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.app_setting.delete_bot(bot_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/settings/global-relationship")
+@AuthFilter.add
+async def create_global_relationship(
+    form: CreateGlobalRelationshipTypeForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.app_setting.create_global_relationship(form.parent_name, form.child_name, form.description)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+
+    revert_key, global_relationship = result
+
+    return JsonResponse(
+        content={"revert_key": revert_key, "global_relationship": global_relationship.api_response()},
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@AppRouter.api.put("/settings/global-relationship/{global_relationship_uid}")
+@AuthFilter.add
+async def update_global_relationship(
+    global_relationship_uid: str,
+    form: UpdateGlobalRelationshipTypeForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    form_dict = form.model_dump()
+
+    result = await service.app_setting.update_global_relationship(global_relationship_uid, form_dict)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if isinstance(result, bool):
+        if not result:
+            return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+    revert_key, _, model = result
+
+    return JsonResponse(content={"revert_key": revert_key, **model}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/settings/global-relationship/{global_relationship_uid}")
+@AuthFilter.add
+async def delete_global_relationship(
+    global_relationship_uid: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.app_setting.delete_global_relationship(global_relationship_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/settings/global-relationship")
+@AuthFilter.add
+async def delete_selected_global_relationship(
+    form: DeleteSelectedGlobalRelationshipTypesForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.app_setting.delete_selected_global_relationships(form.relationship_type_uids)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

@@ -35,16 +35,13 @@ def _run_app(options: RunCommandOptions):
     if options.workers < 1:
         options.workers = 1
 
-    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count()))]
-    DispatcherQueue.worker_queues = worker_queues
-
-    _watch(options, worker_queues)
+    _watch(options)
 
 
-def _watch(options: RunCommandOptions, worker_queues: list[Queue]):
+def _watch(options: RunCommandOptions):
     from .core.bootstrap.WatchHandler import start_watch
 
-    processes = _run_workers(options, worker_queues)
+    processes = _run_workers(options)
 
     def on_close():
         _close_processes(processes, False)
@@ -52,12 +49,15 @@ def _watch(options: RunCommandOptions, worker_queues: list[Queue]):
     def callback(_):
         if options.watch:
             _close_processes(processes, True)
-            processes.extend(_run_workers(options, worker_queues, is_restarting=True))
+            processes.extend(_run_workers(options, is_restarting=True))
 
     start_watch(cast(str, Path(dirname(__file__))), callback, on_close)
 
 
-def _run_workers(options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False):
+def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
+    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count()))]
+    DispatcherQueue.start(worker_queues)
+
     workers = options.workers
     options.workers = 1
     processes: list[Process] = []
@@ -79,9 +79,9 @@ def _run_workers(options: RunCommandOptions, worker_queues: list[Queue], is_rest
 
 
 def _close_processes(processes: list[Process], is_restarting: bool = False):
+    DispatcherQueue.close()
     if not is_restarting:
         Logger.main.info("Terminating the server..")
-        DispatcherQueue.close()
 
     close_all_sessions()
     for process in processes:
@@ -114,7 +114,7 @@ def _run_app_wrapper(
 def _start_app(index: int, options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False) -> None:
     from .core.broadcast import DispatcherQueue, WorkerQueue
 
-    DispatcherQueue.worker_queues = worker_queues
+    DispatcherQueue.start(worker_queues)
     WorkerQueue.queue = worker_queues[index]
 
     pid = getpid()
@@ -127,7 +127,10 @@ def _start_app(index: int, options: RunCommandOptions, worker_queues: list[Queue
         broker_thread = Thread(target=_start_broker, args=(is_restarting,))
         broker_thread.start()
 
-    queue_thread = Thread(target=_start_worker_queue, args=(is_restarting,))
+    queue_thread = Thread(
+        target=_start_worker_queue,
+        args=(is_restarting,),
+    )
     queue_thread.start()
 
     app = App(

@@ -1,9 +1,9 @@
+import useGlobalRelationshipDeletedHandlers from "@/controllers/socket/global/useGlobalRelationshipDeletedHandlers";
+import useGlobalRelationshipUpdatedHandlers from "@/controllers/socket/global/useGlobalRelationshipUpdatedHandlers";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
 
 export interface Interface extends IBaseModel {
-    parent_icon?: string;
     parent_name: string;
-    child_icon?: string;
     child_name: string;
     description: string;
 }
@@ -16,11 +16,12 @@ class GlobalRelationshipType extends BaseModel<Interface> {
         return GlobalRelationshipType.MODEL_NAME;
     }
 
-    public get parent_icon() {
-        return this.getValue("parent_icon");
-    }
-    public set parent_icon(value: string | undefined) {
-        this.update({ parent_icon: value });
+    constructor(model: Record<string, unknown>) {
+        super(model);
+
+        this.subscribeSocketEvents([useGlobalRelationshipUpdatedHandlers, useGlobalRelationshipDeletedHandlers], {
+            globalRelationship: this,
+        });
     }
 
     public get parent_name() {
@@ -28,13 +29,6 @@ class GlobalRelationshipType extends BaseModel<Interface> {
     }
     public set parent_name(value: string) {
         this.update({ parent_name: value });
-    }
-
-    public get child_icon() {
-        return this.getValue("child_icon");
-    }
-    public set child_icon(value: string | undefined) {
-        this.update({ child_icon: value });
     }
 
     public get child_name() {

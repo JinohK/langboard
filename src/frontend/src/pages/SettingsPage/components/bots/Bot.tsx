@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Form, IconComponent, Toast } from "@/components/base";
-import useDeleteBot from "@/controllers/api/settings/useDeleteBot";
+import useDeleteBot from "@/controllers/api/settings/bots/useDeleteBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";

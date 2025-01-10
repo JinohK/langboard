@@ -6,6 +6,7 @@ from ...models import (
     CardAttachment,
     CardComment,
     Checkitem,
+    GlobalCardRelationshipType,
     Project,
     ProjectColumn,
     ProjectLabel,
@@ -27,3 +28,4 @@ TUserGroupParam = UserGroup | int | str
 TProjectLabelParam = ProjectLabel | int | str
 TBotParam = Bot | int | str
 TSettingParam = AppSetting | int | str
+TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str
