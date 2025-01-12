@@ -1,5 +1,6 @@
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler from "@/core/helpers/SocketHandler";
+import useSocketStreamHandler from "@/core/helpers/SocketStreamHandler";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { getTopicWithId } from "@/core/stores/SocketStore";
 import { createUUID } from "@/core/utils/StringUtils";
@@ -7,7 +8,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import { useEffect, useState } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type THandler = ReturnType<typeof useSocketHandler<any, any>>;
+type THandler = ReturnType<typeof useSocketHandler<any, any>> | ReturnType<typeof useSocketStreamHandler>;
 
 export interface IUseSwitchSocketHandlersProps {
     socket: ISocketContext;

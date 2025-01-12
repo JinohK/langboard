@@ -183,7 +183,7 @@ class BaseBot(metaclass=BotMetadata):
             )
         )
         raw_settings = result.all()
-        settings = {row.setting_type: row.setting_value for row in raw_settings}
+        settings = {row.setting_type: row.get_value() for row in raw_settings}
 
         if not settings or AppSettingType.LangflowUrl not in settings or AppSettingType.LangflowApiKey not in settings:
             return None

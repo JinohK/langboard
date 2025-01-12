@@ -51,7 +51,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const editorComponentRef = useRef<HTMLDivElement | null>(null);
+    const editorComponentRef = useRef<HTMLDivElement>(null);
     const [isValidating, setIsValidating] = useState(false);
     const { mutate: updateCommentMutate } = useUpdateCardComment();
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();

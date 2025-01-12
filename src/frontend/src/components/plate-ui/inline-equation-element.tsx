@@ -15,7 +15,7 @@ export const InlineEquationElement = withRef<typeof PlateElement, { element: TEq
     const [t] = useTranslation();
     const { element } = props;
     const [isOpened, setIsOpened] = useState(false);
-    const katexRef = useRef<HTMLDivElement | null>(null);
+    const katexRef = useRef<HTMLDivElement>(null);
     const shouldNotOpenInitRef = useRef((element as any).shouldNotOpenInit);
     useEquationElement({ element, katexRef, options: { throwOnError: false, trust: true } });
 

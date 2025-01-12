@@ -44,21 +44,25 @@ class ChatHistoryService(BaseService):
 
         return chat_histories
 
+    async def get_by_uid(self, uid: str) -> ChatHistory | None:
+        return await self._get_by_param(ChatHistory, uid)
+
     async def create(
         self,
         history_type: str,
         message: str,
-        filterable: str | None = None,
+        filterable: SnowflakeID | str | None = None,
         sender: TUserParam | None = None,
         receiver: TUserParam | None = None,
         commit: bool = True,
     ) -> ChatHistory:
         sender = await self._get_by_param(User, sender) if sender else None
         receiver = await self._get_by_param(User, receiver) if receiver else None
+        filterable = SnowflakeID.from_short_code(filterable) if isinstance(filterable, str) else filterable
         chat_history = ChatHistory(
             history_type=history_type,
             message=message,
-            filterable=SnowflakeID.from_short_code(filterable) if filterable else None,
+            filterable=filterable,
             sender_id=sender.id if sender else None,
             receiver_id=receiver.id if receiver else None,
         )
@@ -73,6 +77,11 @@ class ChatHistoryService(BaseService):
         if commit:
             await self._db.commit()
         return chat_history
+
+    async def delete(self, chat_history: ChatHistory, commit: bool = True):
+        await self._db.delete(chat_history)
+        if commit:
+            await self._db.commit()
 
     async def clear(
         self,

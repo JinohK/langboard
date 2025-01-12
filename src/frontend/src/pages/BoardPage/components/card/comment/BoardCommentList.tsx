@@ -1,4 +1,5 @@
 import { Box, Flex, Toast } from "@/components/base";
+import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -11,7 +12,6 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardComment, { SkeletonBoardComment } from "@/pages/BoardPage/components/card/comment/BoardComment";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import InfiniteScroll from "react-infinite-scroller";
 
 export interface IBoardCommentListProps {
     viewportId: string;
@@ -100,16 +100,13 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
     };
 
     return (
-        <InfiniteScroll
-            getScrollParent={() => document.getElementById(viewportId)}
+        <InfiniteScroller
+            scrollable={() => document.getElementById(viewportId)}
             loadMore={nextPage}
             loader={<SkeletonBoardComment key={createShortUUID()} />}
             hasMore={hasMore}
-            threshold={0}
-            initialLoad={false}
+            threshold={100}
             className="pb-2.5"
-            useWindow={false}
-            pageStart={1}
         >
             {comments.length === 0 && (
                 <Box textSize="sm" className="text-accent-foreground/50">
@@ -121,7 +118,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
                     return <BoardComment key={`${card.uid}-${comment.uid}`} comment={comment} deletedComment={deletedComment} />;
                 })}
             </Flex>
-        </InfiniteScroll>
+        </InfiniteScroller>
     );
 }
 

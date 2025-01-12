@@ -11,7 +11,7 @@ interface IStartCardSelectionProps {
 export interface IBoardRelationshipControllerContext {
     selectCardViewType?: ProjectCardRelationship.TRelationship;
     selectedRelationshipUIDs: [string, string][];
-    currentCardUIDRef: React.RefObject<string | undefined>;
+    currentCardUIDRef: React.RefObject<string | null>;
     disabledCardSelectionUIDsRef: React.RefObject<string[]>;
     startCardSelection: (props: IStartCardSelectionProps) => void;
     setSelectedRelationshipCardUIDs: React.Dispatch<React.SetStateAction<[string, string][]>>;
@@ -30,7 +30,7 @@ interface IBoardRelationshipControllerProps {
 
 const initialContext = {
     selectedRelationshipUIDs: [],
-    currentCardUIDRef: { current: undefined },
+    currentCardUIDRef: { current: null },
     disabledCardSelectionUIDsRef: { current: [] },
     startCardSelection: () => {},
     setSelectedRelationshipCardUIDs: () => {},
@@ -48,10 +48,10 @@ const BoardRelationshipControllerContext = createContext<IBoardRelationshipContr
 export const BoardRelationshipController = memo(({ children }: IBoardRelationshipControllerProps): React.ReactNode => {
     const [selectCardViewType, setSelectCardViewType] = useState<ProjectCardRelationship.TRelationship>();
     const [selectedRelationshipUIDs, setSelectedRelationshipCardUIDs] = useState<[string, string][]>([]);
-    const currentCardUIDRef = useRef<string>();
-    const saveCardSelectionCallbackRef = useRef<(relationships: [string, string][]) => void>();
+    const currentCardUIDRef = useRef<string>(null);
+    const saveCardSelectionCallbackRef = useRef<(relationships: [string, string][]) => void>(null);
     const disabledCardSelectionUIDsRef = useRef<string[]>([]);
-    const cancelCardSelectionCallbackRef = useRef<() => void>();
+    const cancelCardSelectionCallbackRef = useRef<() => void>(null);
 
     const setCardSelection = (cardUID: string, relationshipUID?: string) => {
         if (!relationshipUID) {
@@ -108,9 +108,9 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
     };
 
     const clear = () => {
-        saveCardSelectionCallbackRef.current = undefined;
-        cancelCardSelectionCallbackRef.current = undefined;
-        currentCardUIDRef.current = undefined;
+        saveCardSelectionCallbackRef.current = null;
+        cancelCardSelectionCallbackRef.current = null;
+        currentCardUIDRef.current = null;
         disabledCardSelectionUIDsRef.current = [];
     };
 

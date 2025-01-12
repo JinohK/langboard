@@ -1,5 +1,6 @@
 import { Button, IconComponent, Popover, ScrollArea } from "@/components/base";
 import { TimelineVariants } from "@/components/base/Timeline";
+import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetCardActivities from "@/controllers/api/activity/useGetCardActivities";
 import useCreateActivityTimeline from "@/core/hooks/useCreateActivityTimeline";
 import { Activity } from "@/core/models";
@@ -9,7 +10,6 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import InfiniteScroll from "react-infinite-scroller";
 
 export interface BoardCardActionActivityProps extends ISharedBoardCardActionProps {}
 
@@ -85,25 +85,22 @@ const BoardCardActionActivity = memo(({ buttonClassName }: BoardCardActionActivi
                         "lg:w-[calc(theme(screens.md)_-_theme(spacing.9))]"
                     )}
                 >
-                    <InfiniteScroll
-                        element="ul"
-                        getScrollParent={() => document.getElementById(cardActivityListId.current)}
+                    <InfiniteScroller
+                        as="ul"
+                        scrollable={() => document.getElementById(cardActivityListId.current)}
                         loadMore={nextPage}
                         loader={<SkeletonActivity key={createShortUUID()} />}
                         hasMore={hasNextPage}
                         threshold={140}
-                        initialLoad={false}
                         className={cn(
                             TimelineVariants(),
                             "max-h-[min(70vh,calc(var(--radix-popper-available-height)_-_theme(spacing.4)))] py-3 pr-3"
                         )}
-                        useWindow={false}
-                        pageStart={1}
                     >
                         {activities.map((activity) => (
                             <ActivityTimeline activity={activity} user={currentUser} key={createShortUUID()} />
                         ))}
-                    </InfiniteScroll>
+                    </InfiniteScroller>
                     <ScrollArea.Bar orientation="horizontal" mutable={activities} />
                     <ScrollArea.Bar mutable={activities} />
                 </ScrollArea.Root>

@@ -16,6 +16,7 @@ class ChatHistory(SoftDeleteModel, table=True):
             "sender_uid": self.sender_id.to_short_code() if self.sender_id else None,
             "receiver_uid": self.receiver_id.to_short_code() if self.receiver_id else None,
             "message": self.message,
+            "updated_at": self.updated_at,
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

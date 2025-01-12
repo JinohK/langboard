@@ -1,4 +1,5 @@
 import { Checkbox, Flex, Loading, ScrollArea, Table } from "@/components/base";
+import InfiniteScroller from "@/components/InfiniteScroller";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { GlobalRelationshipType } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -6,7 +7,6 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import GlobalRelationshipRow from "@/pages/SettingsPage/components/relationships/GlobalRelationshipRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import InfiniteScroll from "react-infinite-scroller";
 
 export interface IGlobalRelationshipListProps {
     selectedGlobalRelationships: string[];
@@ -55,8 +55,8 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                 </Table.Header>
             </Table.Root>
             <ScrollArea.Root viewportId={listId}>
-                <InfiniteScroll
-                    getScrollParent={() => document.getElementById(listId)}
+                <InfiniteScroller
+                    scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={hasMore}
                     threshold={43}
@@ -70,9 +70,6 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                         "md:max-h-[calc(100vh_-_theme(spacing.56))]",
                         "lg:max-h-[calc(100vh_-_theme(spacing.60))]"
                     )}
-                    initialLoad={false}
-                    useWindow={false}
-                    pageStart={1}
                 >
                     <Table.Root>
                         <Table.Body>
@@ -86,7 +83,7 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                             ))}
                         </Table.Body>
                     </Table.Root>
-                </InfiniteScroll>
+                </InfiniteScroller>
                 <ScrollArea.Bar mutable={relationships} />
             </ScrollArea.Root>
         </>

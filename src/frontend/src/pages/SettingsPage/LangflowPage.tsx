@@ -114,7 +114,13 @@ function LangflowPage() {
             <Flex justify="center" mt="12">
                 <Box w="full" className="max-w-md">
                     <Box>
-                        <Floating.LabelInput label={t("settings.Langflow URL")} defaultValue={urlValue} disabled={isValidating} ref={urlInputRef} />
+                        <Floating.LabelInput
+                            label={t("settings.Langflow URL")}
+                            autoFocus
+                            defaultValue={urlValue}
+                            disabled={isValidating}
+                            ref={urlInputRef}
+                        />
                         {errors.url && <FormErrorMessage error={errors.url} notInForm />}
                     </Box>
                     <Box>
@@ -123,7 +129,6 @@ function LangflowPage() {
                             className="mt-4"
                             label={t("settings.Langflow API key")}
                             defaultValue={apiKeyValue}
-                            autoFocus
                             isValidating={isValidating}
                             ref={apiKeyInputRef}
                         />

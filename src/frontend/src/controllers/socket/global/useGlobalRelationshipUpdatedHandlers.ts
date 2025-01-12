@@ -23,7 +23,7 @@ const useGlobalRelationshipUpdatedHandlers = ({ callback, globalRelationship }: 
             callback,
             responseConverter: (data) => {
                 Object.entries(data).forEach(([key, value]) => {
-                    globalRelationship[key] = value as string;
+                    globalRelationship[key] = value!;
                 });
 
                 return {};

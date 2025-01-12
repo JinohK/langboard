@@ -41,8 +41,8 @@ const BoardCommentForm = memo((): JSX.Element => {
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const drawerRef = useRef<HTMLDivElement | null>(null);
-    const editorComponentRef = useRef<HTMLDivElement | null>(null);
+    const drawerRef = useRef<HTMLDivElement>(null);
+    const editorComponentRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);

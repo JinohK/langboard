@@ -19,7 +19,7 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
-    closeHoverCardRef?: React.RefObject<(() => void) | undefined>;
+    closeHoverCardRef?: React.RefObject<(() => void) | null>;
     isOverlay?: bool;
 }
 
@@ -136,7 +136,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 onOpenChange={(opened) => {
                     setIsHoverCardOpened(opened);
                     if (closeHoverCardRef) {
-                        closeHoverCardRef.current = opened ? () => setIsHoverCardOpened(false) : undefined;
+                        closeHoverCardRef.current = opened ? () => setIsHoverCardOpened(false) : null;
                     }
                 }}
             >

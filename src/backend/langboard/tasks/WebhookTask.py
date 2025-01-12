@@ -1,4 +1,3 @@
-from json import loads as json_loads
 from httpx import post
 from ..core.broker import Broker, WebhookModel
 from ..core.db import DbSession
@@ -26,12 +25,12 @@ async def run_webhook(model: WebhookModel):
 async def _get_webhook_url() -> list[str]:
     db = DbSession()
     result = await db.exec(
-        db.query("select").column(AppSetting.setting_value).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
+        db.query("select").table(AppSetting).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
     )
-    raw_value = result.first()
-    if not raw_value:
+    raw_setting = result.first()
+    if not raw_setting:
         return []
-    urls = json_loads(raw_value)
+    urls = raw_setting.get_value()
     if not isinstance(urls, list):
         return []
 

@@ -31,7 +31,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
     const mode = useOption("mode");
     const isSelecting = useIsSelecting();
 
-    const aiEditorRef = React.useRef<SlateEditor | null>(null);
+    const aiEditorRef = React.useRef<SlateEditor>(null);
     const [value, setValue] = React.useState("");
 
     const chat = useChat({ socket, eventKey, events });

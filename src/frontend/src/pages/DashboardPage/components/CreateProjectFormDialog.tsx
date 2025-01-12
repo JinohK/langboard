@@ -19,8 +19,8 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const { mutate } = useCreateProject();
-    const projectTypeRef = useRef<string>("");
-    const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
+    const projectTypeRef = useRef("");
+    const projectTypeInputRef = useRef<HTMLInputElement>(null);
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "project.errors",
         schema: {

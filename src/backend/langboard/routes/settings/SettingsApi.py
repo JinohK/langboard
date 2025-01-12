@@ -1,4 +1,3 @@
-from json import loads as json_loads
 from fastapi import File, UploadFile, status
 from ...core.db import User
 from ...core.filter import AuthFilter
@@ -33,12 +32,7 @@ async def get_all_settings(user: User = Auth.scope("api"), service: Service = Se
     if not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    langflow_url = await service.app_setting.get_by_type(AppSettingType.LangflowUrl, as_api=False)
-    langflow_api_key = await service.app_setting.get_by_type(AppSettingType.LangflowApiKey, as_api=False)
-    if not langflow_url:
-        await service.app_setting.create(AppSettingType.LangflowUrl, "Langflow URL", "")
-    if not langflow_api_key:
-        await service.app_setting.create(AppSettingType.LangflowApiKey, "Langflow API Key", "")
+    await service.app_setting.init_langflow()
 
     settings = await service.app_setting.get_all(as_api=True)
     bots = await service.app_setting.get_bots(as_api=True)
@@ -64,8 +58,7 @@ async def create_setting(
         form.setting_value = await service.app_setting.generate_api_key()
 
     revert_key, setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
-
-    revealed_value = json_loads(setting.setting_value)
+    revealed_value = setting.get_value()
 
     return JsonResponse(
         content={"revert_key": revert_key, "setting": setting.api_response(), "revealed_value": revealed_value},

@@ -175,7 +175,7 @@ export function serializeMdNode(node: MdElementType | MdLeafType, opts: Serializ
     }
     // This is pretty fragile code, check the long comment where we iterate over children
     if (!opts.ignoreParagraphNewline && (text === "" || text === "\n") && node.parent?.type === nodes.p.type && !node.parent?.isList) {
-        type = nodes.p.type!;
+        type = nodes.p.type;
         children = opts.breakTag;
     }
     // Skip nodes that are empty, not a list and not void.

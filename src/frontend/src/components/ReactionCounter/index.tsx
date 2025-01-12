@@ -90,7 +90,7 @@ type TReactionCounterButtonProps = IReactionCounterListButtonProps | IReactionCo
 function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiveReaction, disabled }: TReactionCounterButtonProps): JSX.Element {
     const [t] = useTranslation();
     const lottieRef = useRef<LottieRefCurrentProps>(null);
-    const isPlayed = useRef<bool>(false);
+    const isPlayed = useRef(false);
 
     const play = () => {
         if (!isPlayed.current) {

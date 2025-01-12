@@ -39,3 +39,17 @@ async def project_wiki_private_subscription_validator(topic_id: str, user: User)
     async for service in create_service_generator():
         result = await service.project_wiki.is_assigned(user, topic_id)
     return result
+
+
+@AppRouter.socket.subscription_validator(SocketTopic.User)
+async def user_subscription_validator(topic_id: str, user: User) -> bool:
+    if user.get_uid() == topic_id:
+        # Disallow user to subscribe to themselves
+        return False
+
+    async for service in create_service_generator():
+        target_user = await service.user.get_by_uid(topic_id)
+        if not target_user:
+            return False
+        result = await service.project.is_user_related_to_other_user(user, target_user)
+    return result

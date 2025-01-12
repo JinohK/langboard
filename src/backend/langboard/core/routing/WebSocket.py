@@ -7,6 +7,12 @@ from .SocketResponse import SocketResponse
 from .SocketTopic import SocketTopic
 
 
+class IWebSocketStream:
+    def start(self, data: Any = None, compress: bool = False): ...
+    def buffer(self, data: Any = None, compress: bool = False): ...
+    def end(self, data: Any = None, compress: bool = False): ...
+
+
 class WebSocket(SocketifyWebSocket):
     def __init__(self, ws: SocketifyWebSocket):
         for attr in ws.__dict__:
@@ -60,24 +66,23 @@ class WebSocket(SocketifyWebSocket):
                 self.__ws = ws
 
             def start(self, data: Any = None, compress: bool = False):
-                if not self.__ws:
-                    return self
-                self.__ws.send(f"{event}:start", data, compress=compress)
+                self.__send("start", data, compress=compress)
                 return self
 
             def buffer(self, data: Any = None, compress: bool = False):
-                if not self.__ws:
-                    return self
-                self.__ws.send(f"{event}:buffer", data, compress=compress)
+                self.__send("buffer", data, compress=compress)
                 return self
 
             def end(self, data: Any = None, compress: bool = False):
-                if not self.__ws:
-                    return
-                self.__ws.send(f"{event}:end", data, compress=compress)
+                self.__send("end", data, compress=compress)
                 self.__ws = None
 
-        return _WebSocketStream(self)
+            def __send(self, event_response: str, data: Any = None, compress: bool = False):
+                if not self.__ws:
+                    return
+                self.__ws.send(f"{event}:{event_response}", data, compress=compress)
+
+        return cast(IWebSocketStream, _WebSocketStream(self))
 
     def stream_with_topic(self, topic: SocketTopic | str, topic_id: str, event: str):
         class _WebSocketStream:
@@ -87,48 +92,31 @@ class WebSocket(SocketifyWebSocket):
                 self.__topic_id = topic_id
 
             def start(self, data: Any = None, compress: bool = False):
-                if not self.__ws:
-                    return self
-                self.__ws.send(
-                    SocketResponse(
-                        event=f"{event}:start",
-                        topic=self.__topic,
-                        topic_id=self.__topic_id,
-                        data=data,
-                    ),
-                    compress=compress,
-                )
+                self.__send("start", data, compress=compress)
                 return self
 
             def buffer(self, data: Any = None, compress: bool = False):
-                if not self.__ws:
-                    return self
-                self.__ws.send(
-                    SocketResponse(
-                        event=f"{event}:buffer",
-                        topic=self.__topic,
-                        topic_id=self.__topic_id,
-                        data=data,
-                    ),
-                    compress=compress,
-                )
+                self.__send("buffer", data, compress=compress)
                 return self
 
             def end(self, data: Any = None, compress: bool = False):
+                self.__send("end", data, compress=compress)
+                self.__ws = None
+
+            def __send(self, event_response: str, data: Any = None, compress: bool = False):
                 if not self.__ws:
                     return
                 self.__ws.send(
                     SocketResponse(
-                        event=f"{event}:end",
+                        event=f"{event}:{event_response}",
                         topic=self.__topic,
                         topic_id=self.__topic_id,
                         data=data,
                     ),
                     compress=compress,
                 )
-                self.__ws = None
 
-        return _WebSocketStream(self, topic, topic_id)
+        return cast(IWebSocketStream, _WebSocketStream(self, topic, topic_id))
 
     @deprecated(
         """

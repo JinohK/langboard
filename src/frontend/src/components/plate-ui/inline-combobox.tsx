@@ -28,6 +28,7 @@ import {
     Portal,
     useComboboxContext,
     useComboboxStore,
+    useStoreState,
 } from "@ariakit/react";
 import { cn, withCn } from "@udecode/cn";
 import { filterWords } from "@udecode/plate-combobox";
@@ -182,8 +183,8 @@ const InlineCombobox = ({
 const InlineComboboxInput = forwardRef<HTMLInputElement, HTMLAttributes<HTMLInputElement>>(({ className, ...props }, propRef) => {
     const { inputProps, inputRef: contextRef, showTrigger, trigger } = useContext(InlineComboboxContext);
 
-    const store = useComboboxContext()!;
-    const value = store.useState("value");
+    const store = useComboboxContext();
+    const value = useStoreState(store, "value");
 
     const ref = useComposedRef(propRef, contextRef);
 
@@ -259,10 +260,10 @@ const InlineComboboxItem = ({ className, focusEditor = true, group, keywords, la
 
     const { filter, removeInput } = useContext(InlineComboboxContext);
 
-    const store = useComboboxContext()!;
+    const store = useComboboxContext();
 
     // Optimization: Do not subscribe to value if filter is false
-    const search = filter && store.useState("value");
+    const search = !!filter && useStoreState(store, "value");
 
     const visible = useMemo(
         () => !filter || filter({ group, keywords, label, value }, search as string),
@@ -285,8 +286,8 @@ const InlineComboboxItem = ({ className, focusEditor = true, group, keywords, la
 
 const InlineComboboxEmpty = ({ children, className }: HTMLAttributes<HTMLDivElement>) => {
     const { setHasEmpty } = useContext(InlineComboboxContext);
-    const store = useComboboxContext()!;
-    const items = store.useState("items");
+    const store = useComboboxContext();
+    const items = useStoreState(store, "items");
 
     useEffect(() => {
         setHasEmpty(true);
@@ -296,7 +297,7 @@ const InlineComboboxEmpty = ({ children, className }: HTMLAttributes<HTMLDivElem
         };
     }, [setHasEmpty]);
 
-    if (items.length > 0) return null;
+    if ((items?.length ?? 0) > 0) return null;
 
     return <div className={cn(comboboxItemVariants({ interactive: false }), className)}>{children}</div>;
 };

@@ -1,198 +1,103 @@
-import { Virtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import VirtualInfiniteList from "@/components/VirtualInfiniteList";
 import useGetProjectChatMessages from "@/controllers/api/board/useGetProjectChatMessages";
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ChatMessage, { IChatMessageProps } from "@/pages/BoardPage/components/chat/ChatMessage";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { useSocket } from "@/core/providers/SocketProvider";
-import { Box } from "@/components/base";
+import { Box, Loading } from "@/components/base";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
+import { ChatMessageList } from "@/components/Chat/ChatMessageList";
+import { ChatMessageModel } from "@/core/models";
+import ChatMessage from "@/pages/BoardPage/components/chat/ChatMessage";
 
-export interface IConversationProps {
-    inputRef: React.RefObject<HTMLInputElement>;
-    buttonRef: React.RefObject<HTMLButtonElement>;
-    sendChatCallbackRef: React.RefObject<(message: string) => void>;
-}
+const LOADING_ELEMENT_MIDDLE_Y = 18;
 
-const params = { project_uid: "", page: 1, limit: 20, current_date: new Date() };
-
-function Conversation({ inputRef, buttonRef, sendChatCallbackRef }: IConversationProps) {
-    const { projectUID } = useBoardChat();
+function Conversation() {
+    const { projectUID, scrollToBottomRef } = useBoardChat();
     const [t] = useTranslation();
-    const socket = useSocket();
+    const [isLoaded, setIsLoaded] = useState(false);
+    const isFetchingRef = useRef(false);
+    const [isFetched, setIsFetched] = useState(false);
+    const { mutateAsync, isLastPage } = useGetProjectChatMessages(projectUID);
+    const messages = ChatMessageModel.Model.useModels((model) => model.projectUID === projectUID);
     const conversationRef = useRef<HTMLDivElement>(null);
-    const virtualizerRef = useRef<Virtualizer<HTMLElement, Element> | null>(null);
-    params.project_uid = projectUID;
-    params.current_date = new Date();
-    const {
-        status,
-        data: chatHistories,
-        isFetchingNextPage,
-        fetchNextPage,
-        hasNextPage,
-    } = useGetProjectChatMessages(params, {
-        getNextPageParam: (lastPage, _, lastPageParam) => {
-            if (lastPage.histories.length === params.limit) {
-                return {
-                    ...lastPageParam,
-                    page: lastPageParam.page + 1,
-                };
-            } else {
-                return undefined;
-            }
-        },
-    });
-    const [messages, setMessages] = useState<IChatMessageProps[]>(chatHistories?.pages.flatMap((page) => page.histories) ?? []);
-    const streamChatRef = useRef<IChatMessageProps | null>(null);
-    const sentCallback = useCallback((data: { uid: string; message: string }) => {
-        setMessages((prev) => [
-            ...prev.slice(0, 1),
-            {
-                uid: data.uid,
-                message: data.message,
-                isReceived: false,
-            },
-            ...prev.slice(2),
-        ]);
-        conversationRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    }, []);
-    const startCallback = useCallback((data: { uid: string }) => {
-        const chatList = conversationRef.current!.querySelector(".chat-list")!;
-        if (chatList.querySelector(`#chat-${data.uid}`)) {
-            return;
-        }
-
-        streamChatRef.current = {
-            uid: data.uid,
-            message: "",
-            isReceived: true,
-            isWaiting: true,
-        };
-
-        setMessages((prev) => [streamChatRef.current!, ...prev.slice(1)]);
-        conversationRef.current?.scrollTo({ top: 0 });
-    }, []);
-    const bufferCallback = useCallback((data: { uid: string; message: string }) => {
-        if (!streamChatRef.current || streamChatRef.current.uid !== data.uid) {
-            return;
-        }
-
-        streamChatRef.current.message = data.message;
-        streamChatRef.current.isWaiting = false;
-
-        setMessages((prev) => [...prev]);
-    }, []);
-    const endCallback = useCallback((data: { uid: string }) => {
-        if (!streamChatRef.current || streamChatRef.current.uid !== data.uid) {
-            return;
-        }
-
-        setMessages((prev) => [...prev]);
-
-        streamChatRef.current = null;
-        params.current_date = new Date();
-        inputRef.current!.disabled = false;
-        buttonRef.current!.disabled = false;
-    }, []);
-    sendChatCallbackRef.current = (message: string) => {
-        setMessages((prev) => [
-            {
-                uid: "waiting-response-chat-receiving",
-                message: "",
-                isReceived: true,
-                isWaiting: true,
-            },
-            {
-                uid: "waiting-response-chat-sending",
-                message: message,
-                isReceived: false,
-                isWaiting: true,
-            },
-            ...prev,
-        ]);
-    };
-
-    useEffect(() => {
-        if (!socket.isConnected()) {
-            socket.reconnect();
-        }
-
-        const streamCallbacks = {
-            start: startCallback,
-            buffer: bufferCallback,
-            end: endCallback,
-        };
-
-        socket.on({
-            topic: ESocketTopic.Board,
-            topicId: projectUID,
-            event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
-            eventKey: `board-chat-${projectUID}`,
-            callback: sentCallback,
-        });
-        socket.stream({
-            topic: ESocketTopic.Board,
-            topicId: projectUID,
-            event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
-            eventKey: `board-chat-stream-${projectUID}`,
-            callbacks: streamCallbacks,
-        });
-
-        return () => {
-            socket.off({
-                topic: ESocketTopic.Board,
-                topicId: projectUID,
-                event: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
-                eventKey: `board-chat-${projectUID}`,
-                callback: sentCallback,
-            });
-            socket.streamOff({
-                topic: ESocketTopic.Board,
-                topicId: projectUID,
-                event: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
-                eventKey: `board-chat-stream-${projectUID}`,
-                callbacks: streamCallbacks,
-            });
-        };
-    }, []);
-
-    useEffect(() => {
-        if (chatHistories) {
-            setMessages(chatHistories.pages.flatMap((page) => page.histories));
-        }
-    }, [chatHistories]);
+    const sortedMessages = useMemo(() => messages.sort((a, b) => a.updated_at.getTime() - b.updated_at.getTime()), [messages]);
+    const lastChatListHeightRef = useRef(0);
 
     const nextPage = async () => {
+        if (isFetchingRef.current || isLastPage) {
+            return;
+        }
+
+        isFetchingRef.current = true;
         await new Promise((resolve) => {
             setTimeout(async () => {
-                await fetchNextPage();
+                await mutateAsync({
+                    current_date: new Date(),
+                });
+                isFetchingRef.current = false;
                 resolve(null);
             }, 2500);
         });
     };
 
+    useEffect(() => {
+        if (!conversationRef.current) {
+            return;
+        }
+
+        const onScroll = async () => {
+            if (!isLoaded) {
+                setIsLoaded(true);
+                return;
+            }
+
+            if (isLastPage) {
+                return;
+            }
+
+            if (isFetchingRef.current) {
+                lastChatListHeightRef.current = conversationRef.current!.scrollHeight;
+                return;
+            }
+
+            lastChatListHeightRef.current = conversationRef.current!.scrollHeight;
+            if (conversationRef.current!.scrollTop <= LOADING_ELEMENT_MIDDLE_Y) {
+                await nextPage();
+                setIsFetched(true);
+            }
+        };
+
+        conversationRef.current.addEventListener("scroll", onScroll);
+
+        return () => {
+            conversationRef.current?.removeEventListener("scroll", onScroll);
+        };
+    }, [isLoaded, isLastPage]);
+
+    useEffect(() => {
+        if (
+            !isFetched ||
+            !conversationRef.current ||
+            !lastChatListHeightRef.current ||
+            conversationRef.current.scrollHeight === lastChatListHeightRef.current
+        ) {
+            return;
+        }
+
+        conversationRef.current.scrollTop = conversationRef.current.scrollHeight - lastChatListHeightRef.current;
+        lastChatListHeightRef.current = 0;
+        setIsFetched(false);
+    }, [isFetched]);
+
     return (
-        <Box className="h-[calc(100%_-_theme(spacing.28))] overflow-y-auto" ref={conversationRef}>
-            <VirtualInfiniteList
-                status={status}
-                items={messages}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                fetchNextPage={nextPage}
-                scrollable={() => conversationRef.current!}
-                createItem={(item) => <ChatMessage key={item.uid} {...item} />}
-                overscan={20}
-                isReverse
-                gap={5}
-                className="chat-list md:p-2"
-                itemClassName="md:p-2"
-                noItemsElement={
+        <Box className="h-[calc(100%_-_theme(spacing.28))]">
+            <ChatMessageList scrollToBottomRef={scrollToBottomRef} ref={conversationRef}>
+                {!isLastPage && <Loading size="3" variant="secondary" spacing="1" animate="bounce" my="3" />}
+                {sortedMessages.map((chatMessage) => (
+                    <ChatMessage key={`chat-bubble-${chatMessage.uid}`} chatMessage={chatMessage} />
+                ))}
+                {!messages.length && (
                     <h2 className="truncate text-nowrap pb-3 text-center text-sm text-accent-foreground">{t("project.Ask anything to {app} AI!")}</h2>
-                }
-                virtualizerRef={virtualizerRef}
-            />
+                )}
+            </ChatMessageList>
         </Box>
     );
 }

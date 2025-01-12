@@ -84,8 +84,8 @@ class AppSettingService(BaseService):
     async def create(
         self, setting_type: AppSettingType, setting_name: str, setting_value: Any
     ) -> tuple[str, AppSetting]:
-        json_value = json_dumps(setting_value, default=str)
-        setting = AppSetting(setting_type=setting_type, setting_name=setting_name, setting_value=json_value)
+        setting = AppSetting(setting_type=setting_type, setting_name=setting_name)
+        setting.set_value(setting_value)
 
         revert_service = self._get_service(RevertService)
         revert_key = await revert_service.record(
@@ -93,6 +93,19 @@ class AppSettingService(BaseService):
         )
 
         return revert_key, setting
+
+    async def init_langflow(self):
+        settings = await self._get_all_by(
+            AppSetting, "setting_type", [AppSettingType.LangflowUrl, AppSettingType.LangflowApiKey]
+        )
+        settings_set = set([setting.setting_type for setting in settings])
+        if len(settings_set) == 2:
+            return
+
+        if AppSettingType.LangflowUrl not in settings_set:
+            await self.create(AppSettingType.LangflowUrl, "Langflow URL", "")
+        if AppSettingType.LangflowApiKey not in settings_set:
+            await self.create(AppSettingType.LangflowApiKey, "Langflow API Key", "")
 
     async def update(
         self, setting: TSettingParam, setting_name: str | None = None, setting_value: Any | None = None
@@ -104,7 +117,7 @@ class AppSettingService(BaseService):
         if setting_name:
             setting.setting_name = setting_name
         if setting_value and not setting.is_immutable_type():
-            setting.setting_value = json_dumps(setting_value, default=str)
+            setting.set_value(setting_value)
 
         if not setting.has_changes():
             return True

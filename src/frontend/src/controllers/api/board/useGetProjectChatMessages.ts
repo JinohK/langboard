@@ -1,64 +1,61 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
-import { TInfiniteQueryOptions, TQueryFunction, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ChatMessageModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
+import { useEffect, useRef, useState } from "react";
 
 export interface IGetProjectChatMessagesForm {
-    project_uid: string;
     current_date: Date;
-    page: number;
-    limit: number;
 }
 
-export interface IGetProjectChatMessagesResponse {
-    histories: ChatMessageModel.Interface[];
-}
+const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions<IGetProjectChatMessagesForm>) => {
+    const { mutate } = useQueryMutation();
+    const [isLastPage, setIsLastPage] = useState(true);
+    const pageRef = useRef(0);
 
-const useGetProjectChatMessages = (
-    params: IGetProjectChatMessagesForm,
-    options?: TInfiniteQueryOptions<IGetProjectChatMessagesResponse, IGetProjectChatMessagesForm>
-) => {
-    const { infiniteQuery } = useQueryMutation();
+    const getProjectChatMessages = async (params: IGetProjectChatMessagesForm) => {
+        if (isLastPage && pageRef.current) {
+            return { isUpdated: false };
+        }
 
-    const getProjectChatMessages: TQueryFunction<IGetProjectChatMessagesResponse, IGetProjectChatMessagesForm> = async ({ pageParam }) => {
-        const url = format(API_ROUTES.BOARD.CHAT_MESSAGES, { uid: params.project_uid });
+        ++pageRef.current;
+
+        const url = format(API_ROUTES.BOARD.CHAT_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
-                current_date: params.current_date,
-                page: pageParam.page,
-                limit: params.limit,
+                ...params,
+                page: pageRef.current,
+                limit,
             },
         });
 
-        ChatMessageModel.transformFromApi(res.data.histories);
+        for (let i = 0; i < res.data.histories.length; ++i) {
+            const history = res.data.histories[i];
+            history.projectUID = projectUID;
+        }
 
-        return res.data;
+        ChatMessageModel.Model.fromObjectArray(res.data.histories, true);
+
+        setIsLastPage(res.data.histories.length < limit);
+
+        return { isUpdated: true };
     };
 
-    const nextPageParam = options?.getNextPageParam;
-    delete options?.getNextPageParam;
-    delete options?.initialPageParam;
-
-    const result = infiniteQuery<IGetProjectChatMessagesResponse, IGetProjectChatMessagesForm>(
-        [`get-project-chat-messages-${params.project_uid}`],
-        getProjectChatMessages,
-        (lastPage, allPages, lastPageParam, allPageParams) => {
-            if (nextPageParam) {
-                return nextPageParam(lastPage, allPages, lastPageParam, allPageParams);
-            }
-
-            return lastPageParam;
-        },
-        params,
-        {
-            ...options,
-            retry: false,
-            staleTime: Infinity,
+    useEffect(() => {
+        if (pageRef.current) {
+            return;
         }
-    );
 
-    return result;
+        getProjectChatMessages({ current_date: new Date() });
+    }, []);
+
+    const result = mutate([`get-project-chat-messages-${projectUID}`], getProjectChatMessages, {
+        ...options,
+        retry: 0,
+    });
+
+    return { ...result, isLastPage };
 };
 
 export default useGetProjectChatMessages;

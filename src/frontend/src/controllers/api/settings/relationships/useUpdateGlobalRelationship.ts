@@ -33,7 +33,7 @@ const useUpdateGlobalRelationship = (
         const originalValues: Partial<GlobalRelationshipType.Interface> = {};
         Object.entries(params).forEach(([key, value]) => {
             originalValues[key] = globalRelationship[key];
-            globalRelationship[key] = value as string;
+            globalRelationship[key] = value!;
         });
 
         return {

@@ -12,6 +12,7 @@ import type { Model as ActivityModel } from "@/core/models/Activity";
 import type { Model as AppSettingModel } from "@/core/models/AppSettingModel";
 import type { Model as AuthUserModel } from "@/core/models/AuthUser";
 import type { Model as BotModel } from "@/core/models/BotModel";
+import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
 import type { Model as ProjectModel } from "@/core/models/Project";
 import type { Model as ProjectCardModel } from "@/core/models/ProjectCard";
@@ -46,6 +47,7 @@ interface IModelMap {
     AppSettingModel: typeof AppSettingModel;
     AuthUser: typeof AuthUserModel;
     BotModel: typeof BotModel;
+    ChatMessageModel: typeof ChatMessageModel;
     GlobalRelationshipType: typeof GlobalRelationshipTypeModel;
     Project: typeof ProjectModel;
     ProjectCard: typeof ProjectCardModel;
@@ -110,16 +112,16 @@ type TModelSocketSubscriptionMap = {
 };
 
 export abstract class BaseModel<TModel extends IBaseModel> {
-    static #SOCKET = useSocketOutsideProvider();
-    static #MODELS: Partial<TModelStoreMap> = {};
-    static #NOTIFIERS: IModelNotifiersMap = {
+    static readonly #SOCKET = useSocketOutsideProvider();
+    static readonly #MODELS: Partial<TModelStoreMap> = {};
+    static readonly #NOTIFIERS: IModelNotifiersMap = {
         CREATION: {},
         DELETION: {},
     };
-    static #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
+    static readonly #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
     #mStore: TStateStore<TModel>;
-    #foreignModelUIDs: Record<string, string[]> = {};
-    #foreignModelVersions: Record<string, number> = {};
+    readonly #foreignModelUIDs: Record<string, string[]> = {};
+    readonly #foreignModelVersions: Record<string, number> = {};
 
     static get FOREIGN_MODELS(): Partial<Record<string, string>> {
         return {};
@@ -167,18 +169,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         if (!targetModelMap[model.uid]) {
             model = this.convertModel(model);
             targetModelMap[model.uid] = new this(model);
+            const targetModel = targetModelMap[model.uid];
             if (shouldNotify) {
-                if (BaseModel.#NOTIFIERS.CREATION[modelName]) {
-                    Object.values(BaseModel.#NOTIFIERS.CREATION[modelName]).forEach(([filter, notifier]) => {
-                        const target = targetModelMap[model.uid];
-                        if (filter(target)) {
-                            notifier([target]);
-                        }
-                    });
-                }
+                BaseModel.#notify("CREATION", modelName, targetModel);
             } else {
                 if (createdModels) {
-                    createdModels.push(targetModelMap[model.uid]);
+                    createdModels.push(targetModel);
                 }
             }
         } else {
@@ -201,9 +197,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         const resultModels = models.map((model) => this.fromObject(model, false, createdModels));
         if (createdModels.length > 0) {
             const modelName = this.MODEL_NAME;
-            if (BaseModel.#NOTIFIERS.CREATION[modelName]) {
-                Object.values(BaseModel.#NOTIFIERS.CREATION[modelName]!).forEach(([filter, notifier]) => notifier(createdModels.filter(filter)));
-            }
+            BaseModel.#notify("CREATION", modelName, createdModels);
         }
         return resultModels;
     }
@@ -217,20 +211,16 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
 
         const targetModelMap = BaseModel.#MODELS[modelName];
-
-        if (!targetModelMap[model.uid]) {
-            targetModelMap[model.uid] = model;
-            if (shouldNotify) {
-                if (BaseModel.#NOTIFIERS.CREATION[modelName]) {
-                    Object.values(BaseModel.#NOTIFIERS.CREATION[modelName]).forEach(([filter, notifier]) => {
-                        const target = targetModelMap[model.uid];
-                        if (filter(target)) {
-                            notifier([target]);
-                        }
-                    });
-                }
-            }
+        if (targetModelMap[model.uid]) {
+            return;
         }
+
+        targetModelMap[model.uid] = model;
+        if (!shouldNotify) {
+            return;
+        }
+
+        BaseModel.#notify("CREATION", modelName, targetModelMap[model.uid]);
     }
 
     public static addModels<TParent extends TBaseModelClass<any>>(this: TParent, models: InstanceType<TParent>[], shouldNotify: true): void;
@@ -256,9 +246,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
         if (createdModels.length > 0) {
             const modelName = this.MODEL_NAME;
-            if (BaseModel.#NOTIFIERS.CREATION[modelName]) {
-                Object.values(BaseModel.#NOTIFIERS.CREATION[modelName]!).forEach(([filter, notifier]) => notifier(createdModels.filter(filter)));
-            }
+            BaseModel.#notify("CREATION", modelName, createdModels);
         }
     }
 
@@ -321,15 +309,15 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     ): InstanceType<TParent> | undefined {
         if (TypeUtils.isString(uidOrFilter)) {
             return BaseModel.#MODELS[this.MODEL_NAME]?.[uidOrFilter] as any;
-        } else {
-            const models = Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {});
-            for (let i = 0; i < models.length; ++i) {
-                if (uidOrFilter(models[i] as any)) {
-                    return models[i] as any;
-                }
-            }
-            return undefined;
         }
+
+        const models = Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {});
+        for (let i = 0; i < models.length; ++i) {
+            if (uidOrFilter(models[i] as any)) {
+                return models[i] as any;
+            }
+        }
+        return undefined;
     }
 
     public static getModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): InstanceType<TParent>[] {
@@ -367,7 +355,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 filter
             );
             const unsubscribeDeletion = this.subscribe("DELETION", key, (uids) => {
-                if (uids.length === 0 || !models.some((model) => uids.includes(model.uid))) {
+                if (uids.length === 0) {
                     return;
                 }
 
@@ -399,9 +387,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
         this.unsubscribeSocketEvents(uid);
 
-        if (BaseModel.#NOTIFIERS.DELETION[modelName]) {
-            Object.values(BaseModel.#NOTIFIERS.DELETION[modelName]).forEach((notifier) => notifier([uid]));
-        }
+        BaseModel.#notify("DELETION", modelName, uid);
     }
 
     public static deleteModels(uids: string[]) {
@@ -417,9 +403,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             this.unsubscribeSocketEvents(uid);
         }
 
-        if (BaseModel.#NOTIFIERS.DELETION[modelName]) {
-            Object.values(BaseModel.#NOTIFIERS.DELETION[modelName]).forEach((notifier) => notifier(uids));
-        }
+        BaseModel.#notify("DELETION", modelName, uids);
     }
 
     public static unsubscribeSocketEvents(uid: string) {
@@ -433,6 +417,37 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             BaseModel.#SOCKET.unsubscribeTopicNotifier({ topic, topicId: topicId as never, key });
         });
         delete BaseModel.#socketSubscriptions[modelName][uid];
+    }
+
+    static #notify(type: "CREATION", modelName: keyof IModelMap, targetModels: BaseModel<any> | BaseModel<any>[]): void;
+    static #notify(type: "DELETION", modelName: keyof IModelMap, uids: string | string[]): void;
+    static #notify(
+        type: keyof IModelNotifiersMap,
+        modelName: keyof IModelMap,
+        targetModelsOrUIDs: (BaseModel<any> | string) | (BaseModel<any> | string)[]
+    ) {
+        const notifierMap = BaseModel.#NOTIFIERS[type]?.[modelName];
+        if (!notifierMap) {
+            return;
+        }
+
+        if (!TypeUtils.isArray(targetModelsOrUIDs)) {
+            targetModelsOrUIDs = [targetModelsOrUIDs];
+        }
+
+        if (type === "DELETION") {
+            Object.values(notifierMap).forEach((notifier) => notifier(targetModelsOrUIDs));
+            return;
+        }
+
+        Object.values(notifierMap).forEach(([filter, notifier]) => {
+            const filtered = targetModelsOrUIDs.filter(filter);
+            if (!filtered.length) {
+                return;
+            }
+
+            notifier(filtered);
+        });
     }
 
     public get uid() {
@@ -500,6 +515,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     currentVersionRef.current = this.#getForeignModelVersions(field);
                 }, 0);
             });
+
             return unsub;
         }, []);
 
@@ -524,7 +540,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             if (!model) {
                 continue;
             }
-            models.push(BaseModel.#MODELS[modelName]![uids[i]]);
+            models.push(model);
         }
         return models;
     }
@@ -572,11 +588,11 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 topicMap[topic] = {};
             }
 
-            if (!topicMap[topic]![topicId]) {
-                topicMap[topic]![topicId] = [];
+            if (!topicMap[topic][topicId]) {
+                topicMap[topic][topicId] = [];
             }
 
-            topicMap[topic]![topicId].push(handlers.on);
+            topicMap[topic][topicId].push(handlers.on);
         }
 
         Object.entries(topicMap).forEach(([topic, topicIdMap]) => {

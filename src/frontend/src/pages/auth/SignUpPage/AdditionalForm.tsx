@@ -14,9 +14,9 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
     const { setIsLoadingRef } = usePageLoader();
     const { t } = useTranslation();
     const industryRef = useRef<string>(values.industry ?? "");
-    const industryInputRef = useRef<HTMLInputElement | null>(null);
+    const industryInputRef = useRef<HTMLInputElement>(null);
     const purposeRef = useRef<string>(values.purpose ?? "");
-    const purposeInputRef = useRef<HTMLInputElement | null>(null);
+    const purposeInputRef = useRef<HTMLInputElement>(null);
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Pick<ISignUpForm, "industry" | "purpose">>({
         errorLangPrefix: "signUp.errors",
         schema: {

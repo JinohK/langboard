@@ -247,7 +247,7 @@ export const MultiSelectAssigneesForm = memo(
                     createBadgeWrapper={(badge, value) => {
                         const selectedItem = findItemByValue(value);
                         if (!selectedItem) {
-                            return null!;
+                            return null;
                         }
 
                         return (

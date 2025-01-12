@@ -18,8 +18,8 @@ import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHea
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { memo, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import InfiniteScroll from "react-infinite-scroller";
 import { tv } from "tailwind-variants";
+import InfiniteScroller from "@/components/InfiniteScroller";
 
 export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
@@ -73,7 +73,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     const sortedCards = columnCards.sort((a, b) => a.order - b.order);
     const cardUIDs = useMemo(() => sortedCards.map((card) => card.uid), [sortedCards]);
     const { items: cards, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: sortedCards, size: PAGE_SIZE, updater });
-    const closeHoverCardRef = useRef<(() => void) | null>(null);
+    const closeHoverCardRef = useRef<() => void>(null);
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
@@ -213,16 +213,13 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                             e.stopPropagation();
                         }}
                     >
-                        <InfiniteScroll
-                            getScrollParent={() => document.getElementById(columnId)}
+                        <InfiniteScroller
+                            scrollable={() => document.getElementById(columnId)}
                             loadMore={nextPage}
                             loader={<SkeletonBoardColumnCard key={createShortUUID()} />}
                             hasMore={hasMore}
                             threshold={140}
-                            initialLoad={false}
                             className="pb-2.5"
-                            useWindow={false}
-                            pageStart={1}
                         >
                             <SortableContext id={columnId} items={cardUIDs}>
                                 <Flex direction="col" gap="3">
@@ -232,7 +229,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                 </Flex>
                             </SortableContext>
                             <BoardColumnAddCard />
-                        </InfiniteScroll>
+                        </InfiniteScroller>
                     </Card.Content>
                 </ScrollArea.Root>
                 <Card.Footer className="px-3 py-2">

@@ -36,7 +36,7 @@ class ProjectCardRelationship extends BaseModel<Interface> {
     }
 
     public get relationship_type() {
-        return GlobalRelationshipType.Model.getModel(this.relationship_type_uid);
+        return GlobalRelationshipType.Model.getModel(this.relationship_type_uid)!;
     }
 }
 

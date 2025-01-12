@@ -28,7 +28,6 @@ const useBoardWikiDetailsChangedHandlers = ({ callback, projectUID, wiki, isPriv
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {
-                console.log(wiki, data);
                 Object.entries(data).forEach(([key, value]) => {
                     wiki[key] = value as string & IEditorContent;
                 });

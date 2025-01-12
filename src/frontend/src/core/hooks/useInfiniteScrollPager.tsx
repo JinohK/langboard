@@ -17,12 +17,12 @@ function useInfiniteScrollPager<T>({ allItems, size, updater }: IUseInfiniteScro
 
     const nextPage = (next: number) => {
         if (next - page > 1) {
-            return;
+            return false;
         }
 
-        new Promise((resolve) => {
+        return new Promise<bool>((resolve) => {
             setPage(next);
-            resolve(undefined);
+            resolve(true);
         });
     };
 

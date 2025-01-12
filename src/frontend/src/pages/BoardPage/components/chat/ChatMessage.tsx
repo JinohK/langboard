@@ -1,46 +1,22 @@
-import { Box, Flex, IconComponent, Loading } from "@/components/base";
-import CachedImage from "@/components/CachedImage";
-import Markdown from "@/components/Markdown";
+import { IconComponent } from "@/components/base";
+import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from "@/components/Chat/ChatBubble";
 import { ChatMessageModel } from "@/core/models";
-import { useBoardChat } from "@/core/providers/BoardChatProvider";
-import { cn } from "@/core/utils/ComponentUtils";
 
-export interface IChatMessageProps extends ChatMessageModel.Interface {
-    isWaiting?: bool;
-    className?: string;
+export interface IChatMessageProps {
+    chatMessage: ChatMessageModel.TModel;
 }
 
-function ChatMessage({ uid, icon = "bot", message, isReceived, isWaiting, className }: IChatMessageProps): JSX.Element {
-    const { bot } = useBoardChat();
-
-    let botAvatar;
-    if (isReceived) {
-        if (bot.avatar) {
-            botAvatar = <CachedImage src={bot.avatar} size="full" />;
-        } else {
-            botAvatar = <IconComponent icon={icon} size="full" className="flex items-center justify-center text-xs" />;
-        }
-    }
+function ChatMessage({ chatMessage }: IChatMessageProps): JSX.Element {
+    const icon = chatMessage.useField("icon");
+    const message = chatMessage.useField("message");
+    const isReceived = chatMessage.useField("isReceived");
+    const variant = isReceived ? "received" : "sent";
 
     return (
-        <Flex direction={isReceived ? "row" : "row-reverse"} className={className} id={`chat-${uid}`}>
-            {isReceived && (
-                <Box size="8" className="mr-2 mt-1 rounded-full bg-muted">
-                    {botAvatar}
-                </Box>
-            )}
-            <Box
-                py="2"
-                rounded="sm"
-                className={cn(
-                    "chat-content max-w-[85%] break-words",
-                    isReceived ? "rounded-tl-none" : "rounded-tr-none bg-secondary px-3",
-                    isWaiting && !message ? "flex items-end" : ""
-                )}
-            >
-                {isWaiting && !message ? <Loading variant="secondary" size="3" spacing="1" /> : <Markdown>{message}</Markdown>}
-            </Box>
-        </Flex>
+        <ChatBubble key={`chat-bubble-${chatMessage.uid}`} variant={variant}>
+            {isReceived && <ChatBubbleAvatar fallback={<IconComponent icon={icon ?? "bot"} className="size-[60%]" />} />}
+            {!message.length ? <ChatBubbleMessage isLoading /> : <ChatBubbleMessage variant={variant}>{message}</ChatBubbleMessage>}
+        </ChatBubble>
     );
 }
 

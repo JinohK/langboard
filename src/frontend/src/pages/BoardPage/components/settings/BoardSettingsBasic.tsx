@@ -15,8 +15,8 @@ const BoardSettingsBasic = memo(() => {
     const description = project.useField("description");
     const aiDescription = project.useField("ai_description");
     const projectType = project.useField("project_type");
-    const projectTypeRef = useRef<string>(projectType);
-    const projectTypeInputRef = useRef<HTMLInputElement | null>(null);
+    const projectTypeRef = useRef(projectType);
+    const projectTypeInputRef = useRef<HTMLInputElement>(null);
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "project.errors",
         schema: {

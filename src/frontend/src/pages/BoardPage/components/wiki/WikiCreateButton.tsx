@@ -39,8 +39,8 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
             success: (data) => {
                 setWikis((prev) => [...prev, data.wiki]);
                 setTimeout(() => {
-                    const wikiTabList = document.getElementById(wikiTabListId)!;
-                    wikiTabList.scrollTo({
+                    const wikiTabList = document.getElementById(wikiTabListId);
+                    wikiTabList?.scrollTo({
                         left: wikiTabList.scrollWidth,
                         behavior: "smooth",
                     });

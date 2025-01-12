@@ -1,7 +1,7 @@
 import { useState } from "react";
-import InfiniteScroll from "react-infinite-scroller";
 import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import InfiniteScroller from "@/components/InfiniteScroller";
 
 export interface ICardsPageProps {}
 
@@ -35,11 +35,7 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
     }
 
     const next = (page: number) => {
-        if (page - curPage > 1) {
-            return;
-        }
-
-        new Promise((resolve) => {
+        return new Promise((resolve) => {
             setTimeout(() => {
                 curPage = page;
                 createCards();
@@ -63,8 +59,8 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
     };
 
     return (
-        <InfiniteScroll
-            getScrollParent={() => document.getElementById("main")}
+        <InfiniteScroller
+            scrollable={() => document.getElementById("main")}
             loadMore={next}
             hasMore={true}
             threshold={43}
@@ -73,10 +69,7 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
                     <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
                 </Flex>
             }
-            initialLoad={false}
             className="!overflow-y-hidden"
-            useWindow={false}
-            pageStart={1}
         >
             <Table.Root>
                 <Table.Header>
@@ -109,7 +102,7 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
                     ))}
                 </Table.Body>
             </Table.Root>
-        </InfiniteScroll>
+        </InfiniteScroller>
     );
 }
 

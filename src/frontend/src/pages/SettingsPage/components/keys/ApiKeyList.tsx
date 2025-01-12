@@ -1,4 +1,5 @@
-import { Box, Checkbox, Flex, Loading, ScrollArea, Table } from "@/components/base";
+import { Checkbox, Flex, Loading, ScrollArea, Table } from "@/components/base";
+import InfiniteScroller from "@/components/InfiniteScroller";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
@@ -7,7 +8,6 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import ApiKeyRow from "@/pages/SettingsPage/components/keys/ApiKeyRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import InfiniteScroll from "react-infinite-scroller";
 
 export interface IApiKeysListProps {
     selectedKeys: string[];
@@ -59,8 +59,8 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                 </Table.Header>
             </Table.Root>
             <ScrollArea.Root viewportId={listId}>
-                <InfiniteScroll
-                    getScrollParent={() => document.getElementById(listId)}
+                <InfiniteScroller
+                    scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={hasMore}
                     threshold={43}
@@ -74,9 +74,6 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                         "md:max-h-[calc(100vh_-_theme(spacing.56))]",
                         "lg:max-h-[calc(100vh_-_theme(spacing.60))]"
                     )}
-                    initialLoad={false}
-                    useWindow={false}
-                    pageStart={1}
                 >
                     <Table.Root>
                         <Table.Body>
@@ -85,7 +82,7 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                             ))}
                         </Table.Body>
                     </Table.Root>
-                </InfiniteScroll>
+                </InfiniteScroller>
                 <ScrollArea.Bar mutable={keys} />
             </ScrollArea.Root>
         </>

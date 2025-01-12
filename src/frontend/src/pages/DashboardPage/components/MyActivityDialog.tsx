@@ -1,6 +1,5 @@
 import { Dialog, ScrollArea } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
-import InfiniteScroll from "react-infinite-scroller";
 import { useEffect, useRef, useState } from "react";
 import useGetUserActivities from "@/controllers/api/activity/useGetUserActivities";
 import { Activity } from "@/core/models";
@@ -9,6 +8,7 @@ import useCreateActivityTimeline from "@/core/hooks/useCreateActivityTimeline";
 import { cn } from "@/core/utils/ComponentUtils";
 import { TimelineVariants } from "@/components/base/Timeline";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import InfiniteScroller from "@/components/InfiniteScroller";
 
 export interface IMyActivityDialogProps {
     opened: bool;
@@ -84,22 +84,19 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
             <Dialog.Title hidden />
             <Dialog.Content className="p-0 pb-4 pt-8 sm:max-w-md" aria-describedby="">
                 <ScrollArea.Root viewportId={userActivityListId.current}>
-                    <InfiniteScroll
-                        element="ul"
-                        getScrollParent={() => document.getElementById(userActivityListId.current)}
+                    <InfiniteScroller
+                        as="ul"
+                        scrollable={() => document.getElementById(userActivityListId.current)}
                         loadMore={nextPage}
                         loader={<SkeletonActivity key={createShortUUID()} />}
                         hasMore={hasNextPage}
                         threshold={140}
-                        initialLoad={false}
                         className={cn(TimelineVariants(), "max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5")}
-                        useWindow={false}
-                        pageStart={1}
                     >
                         {activities.map((activity) => (
                             <ActivityTimeline activity={activity} user={user} isCurrentUser key={createShortUUID()} />
                         ))}
-                    </InfiniteScroll>
+                    </InfiniteScroller>
                     <ScrollArea.Bar mutable={activities} />
                 </ScrollArea.Root>
             </Dialog.Content>

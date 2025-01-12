@@ -32,12 +32,13 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
                     return {};
                 }
 
+                const reaction = data.reaction;
                 const reactions = comment.reactions || {};
-                let targetReactions = reactions[data.reaction];
+                let targetReactions = reactions[reaction];
                 if (data.is_reacted) {
                     if (!targetReactions) {
-                        reactions[data.reaction] = [];
-                        targetReactions = reactions[data.reaction]!;
+                        reactions[reaction] = [];
+                        targetReactions = reactions[reaction];
                     }
 
                     if (data.user_uid) {
@@ -53,7 +54,7 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
                     if (targetReactions) {
                         const targetUID = data.user_uid || data.bot_uid;
                         targetReactions = targetReactions.filter((uid) => uid !== targetUID);
-                        reactions[data.reaction] = targetReactions;
+                        reactions[reaction] = targetReactions;
                     }
                 }
                 comment.reactions = reactions;

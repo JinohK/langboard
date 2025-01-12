@@ -1,4 +1,6 @@
 from typing import Any, Literal, TypeVar, cast, overload
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from ...core.ai import Bot
 from ...core.db import BaseSqlModel, SnowflakeID, User
 from ...core.routing import SocketTopic
@@ -170,6 +172,19 @@ class ProjectService(BaseService):
             )
             .limit(1)
         )
+        return bool(result.first())
+
+    async def is_user_related_to_other_user(self, user: User, target_user: User) -> bool:
+        user_a = aliased(ProjectAssignedUser)
+        user_b = aliased(ProjectAssignedUser)
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .column(user_a.id)
+            .join(user_b, cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id)
+            .where((user_a.user_id == 1) & (user_b.user_id == 2))
+        )
+
         return bool(result.first())
 
     async def toggle_star(self, user: User, uid: str, commit: bool = True) -> bool:

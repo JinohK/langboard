@@ -1,5 +1,8 @@
+import useUserUpdatedHandlers from "@/controllers/socket/user/useUserUpdatedHandlers";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
 import createFakeModel from "@/core/models/FakeModel";
+import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -17,6 +20,10 @@ export const INDUSTRIES: string[] = ["Industry 1"];
 export const PURPOSES: string[] = ["Purpose 1"];
 
 class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & Interface> {
+    static readonly #pendingSubscribers: string[] = [];
+    static readonly #subscribedUserUIDs: string[] = [];
+    static #subscribeTimeout: NodeJS.Timeout | undefined = undefined;
+
     static get USER_TYPE() {
         return "user" as const;
     }
@@ -36,6 +43,8 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
 
     constructor(model: Record<string, unknown>) {
         super(model);
+
+        this.#subscribeUser();
     }
 
     public static createUnknownUser(): User {
@@ -148,6 +157,31 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             type = this.type;
         }
         return type === User.BOT_TYPE;
+    }
+
+    #subscribeUser() {
+        if (!this.isValidUser() || User.#pendingSubscribers.includes(this.uid) || User.#subscribedUserUIDs.includes(this.uid)) {
+            return;
+        }
+
+        if (User.#subscribeTimeout) {
+            clearTimeout(User.#subscribeTimeout);
+            User.#subscribeTimeout = undefined;
+        }
+
+        User.#pendingSubscribers.push(this.uid);
+
+        User.#subscribeTimeout = setTimeout(() => {
+            const socket = useSocketOutsideProvider();
+            const userUIDs = User.#pendingSubscribers.splice(0);
+            User.#subscribedUserUIDs.push(...userUIDs);
+
+            socket.subscribe(ESocketTopic.User, userUIDs);
+        }, 100);
+
+        this.subscribeSocketEvents([useUserUpdatedHandlers], {
+            user: this,
+        });
     }
 }
 

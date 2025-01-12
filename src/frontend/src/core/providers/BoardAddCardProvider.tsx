@@ -32,7 +32,7 @@ const initialContext = {
     isValidating: false,
     changeMode: () => {},
     scrollToBottom: () => {},
-    textareaRef: { current: null },
+    textareaRef: { current: null! },
     disableChangeModeAttr: "data-disable-change-mode",
     canWrite: false,
 };

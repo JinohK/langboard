@@ -369,7 +369,8 @@ class CardService(BaseService):
             "order": card.order,
         }
         if new_column:
-            model["to_column_uid"] = new_column.get_uid()
+            new_column_uid = new_column.get_uid()
+            model["to_column_uid"] = new_column_uid
             model["column_name"] = new_column.name
 
         publish_models: list[SocketPublishModel] = []
@@ -380,9 +381,9 @@ class CardService(BaseService):
                     SocketPublishModel(
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{new_column.get_uid()}",
+                        event=f"{_SOCKET_PREFIX}:order:changed:{new_column_uid}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "to_column", "column_uid": new_column.get_uid()},
+                        custom_data={"move_type": "to_column", "column_uid": new_column_uid},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
@@ -403,7 +404,7 @@ class CardService(BaseService):
                         event=f"dashboard:project:card:order:changed:{topic_id}",
                         custom_data={
                             "from_column_uid": original_column_id,
-                            "to_column_uid": new_column.get_uid(),
+                            "to_column_uid": new_column_uid,
                         },
                     ),
                 ]

@@ -173,7 +173,11 @@ const useSocketStore = create<ISocketStore>(() => {
 
         socket = new WebSocket(`${SOCKET_URL}?authorization=${accessToken}`);
         Object.entries(socketMap.subscriptions).forEach(([topic, subscriptions]) => {
-            subscribe(topic as Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, Object.keys(subscriptions!));
+            if (topic === ESocketTopic.None || topic === ESocketTopic.Global) {
+                return;
+            }
+
+            subscribe(topic, Object.keys(subscriptions));
         });
 
         const ping = () => {

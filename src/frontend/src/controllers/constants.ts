@@ -152,6 +152,7 @@ export const SOCKET_SERVER_EVENTS = {
     BOARD: {
         IS_CHAT_AVAILABLE: "board:chat:available",
         CHAT_SENT: "board:chat:sent",
+        CHAT_CANCELLED: "board:chat:cancelled",
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
@@ -217,6 +218,9 @@ export const SOCKET_SERVER_EVENTS = {
             DELETED: "board:wiki:deleted:{uid}",
         },
     },
+    USER: {
+        UPDATED: "user:updated",
+    },
     GLOBALS: {
         BOTS: {
             CREATED: "settings:bot:created",
@@ -236,6 +240,7 @@ export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
         IS_CHAT_AVAILABLE: "board:chat:available",
         CHAT_SEND: "board:chat:send",
+        CHAT_CANCEL: "board:chat:cancel",
         CARD: {
             EDITOR_USERS: "board:card:editor:users",
             EDITOR_START_EDITING: "board:card:editor:start",

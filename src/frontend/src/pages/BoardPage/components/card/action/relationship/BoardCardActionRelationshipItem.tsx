@@ -14,7 +14,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
     const navigate = useRef(usePageNavigate());
     const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
-    const relationshipType = relationship.relationship_type!;
+    const relationshipType = relationship.relationship_type;
     const targetCardUID = relationship.parent_card_uid === card.uid ? relationship.child_card_uid : relationship.parent_card_uid;
     const targetCard = ProjectCard.Model.getModel(targetCardUID)!;
     const targetCardTitle = targetCard.useField("title");

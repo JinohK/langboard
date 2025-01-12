@@ -72,7 +72,7 @@ export const BoardWikiProvider = ({
     const [projectBots, setProjectBots] = useState(flatProjectBots);
     const [t] = useTranslation();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
-    const currentEditorRef = useRef<string>("");
+    const currentEditorRef = useRef("");
     const [disabledReorder, setDisabledReorder] = useState<bool>(true);
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
     const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({

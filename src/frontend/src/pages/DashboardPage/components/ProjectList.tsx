@@ -1,4 +1,3 @@
-import InfiniteScroll from "react-infinite-scroller";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import ProjectCard, { SkeletonProjectCard } from "@/pages/DashboardPage/components/ProjectCard";
@@ -6,6 +5,7 @@ import { Box } from "@/components/base";
 import { Project } from "@/core/models";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { memo } from "react";
+import InfiniteScroller from "@/components/InfiniteScroller";
 
 export function SkeletonProjectList() {
     const skeletonCards = [];
@@ -44,16 +44,13 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
     }
 
     return (
-        <InfiniteScroll
-            getScrollParent={() => document.getElementById("main")}
+        <InfiniteScroller
+            scrollable={() => document.getElementById("main")}
             loadMore={nextPage}
             hasMore={hasMore}
             threshold={140}
             loader={<SkeletonProjectList key={createShortUUID()} />}
-            initialLoad={false}
             className={cn("!overflow-y-hidden", className)}
-            useWindow={false}
-            pageStart={1}
         >
             <Box mt="4">
                 <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
@@ -62,7 +59,7 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
                     ))}
                 </Box>
             </Box>
-        </InfiniteScroll>
+        </InfiniteScroller>
     );
 });
 

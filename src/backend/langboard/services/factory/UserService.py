@@ -5,8 +5,9 @@ from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.db import SnowflakeID, User
+from ...core.routing import SocketTopic
 from ...core.security import Auth
-from ...core.service import BaseService
+from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
@@ -25,7 +26,8 @@ class UserService(BaseService):
     def create_cache_name(self, cache_type: str, email: str) -> str:
         return f"{cache_type}:{email}"
 
-    async def get_by_id(self, user_id: int | None) -> User | None:
+    async def get_by_uid(self, uid: str) -> User | None:
+        user_id = SnowflakeID.from_short_code(uid)
         return await self._get_by(User, "id", user_id)
 
     async def get_by_email(self, email: str | None) -> tuple[User, UserEmail | None] | tuple[None, None]:
@@ -137,7 +139,7 @@ class UserService(BaseService):
         except Exception:
             return None, None, None
 
-        user = await self.get_by_id(token_info["id"])
+        user = await self._get_by(User, "id", token_info["id"])
         if not user:
             return None, None, None
 
@@ -165,6 +167,7 @@ class UserService(BaseService):
 
     async def update(self, user: User, form: dict) -> str | Literal[True]:
         mutable_keys = ["firstname", "lastname", "affiliation", "position", "avatar"]
+        api_keys = ["firstname", "lastname", "avatar"]
 
         old_user_record = {}
 
@@ -193,6 +196,26 @@ class UserService(BaseService):
         )
         await Auth.reset_user(user)
 
+        model: dict[str, Any] = {}
+        for key in form:
+            if key not in api_keys or key not in old_user_record:
+                continue
+            if key == "avatar":
+                model[key] = user.avatar.path if user.avatar else None
+            else:
+                model[key] = self._convert_to_python(getattr(user, key))
+
+        if model:
+            topic_id = user.get_uid()
+            publish_model = SocketPublishModel(
+                topic=SocketTopic.User,
+                topic_id=topic_id,
+                event="user:updated",
+                data_keys=list(model.keys()),
+            )
+
+            SocketPublishService.put_dispather(model, publish_model)
+
         return revert_key
 
     async def change_primary_email(self, user: User, subemail: UserEmail) -> str:
@@ -208,6 +231,18 @@ class UserService(BaseService):
             revert_service.create_record_model(unsaved_model=subemail, revert_type=RevertType.Update),
         )
         await Auth.reset_user(user)
+
+        model = {"email": user.email}
+        topic_id = user.get_uid()
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.User,
+            topic_id=topic_id,
+            event="user:updated",
+            data_keys="email",
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
         return revert_key
 
     async def delete_email(self, subemail: UserEmail) -> str:

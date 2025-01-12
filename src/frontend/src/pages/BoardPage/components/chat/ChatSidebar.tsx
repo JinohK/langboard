@@ -1,6 +1,6 @@
 import { memo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, DropdownMenu, Flex, Form, IconComponent, Input, Toast } from "@/components/base";
+import { Box, Button, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -12,53 +12,82 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
+import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
 
 const ChatSidebar = memo((): JSX.Element => {
-    const { projectUID: uid } = useBoardChat();
+    const { projectUID, isSending, setIsSending } = useBoardChat();
     const [t] = useTranslation();
     const navigate = useRef(usePageNavigate());
     const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
+    const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
     const { queryClient } = useQueryMutation();
-    const inputRef = useRef<HTMLInputElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const sendChatCallbackRef = useRef<(message: string) => void>(() => {});
+    const chatInputRef = useRef<HTMLInputElement>(null);
 
-    const sendChat = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
+    const sendChat = () => {
+        if (!chatInputRef.current) {
+            return;
+        }
 
-        const form = event.currentTarget;
-        const buttonInput = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
-        const chatInput = form["chat-message"];
-        const chat = chatInput.value;
+        if (isSending) {
+            cancelChat({});
+            return;
+        }
 
-        buttonInput.disabled = true;
-        chatInput.disabled = true;
+        setIsSending(true);
 
-        chatInput.value = "";
+        const chatMessage = chatInputRef.current.value.trim();
 
-        const isSent = socket.send({
-            topic: ESocketTopic.Board,
-            topicId: uid,
-            eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND,
-            data: { message: chat },
-        }).isConnected;
-        if (!isSent) {
-            socket.reconnect();
-            Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
-        } else {
-            sendChatCallbackRef.current(chat);
+        if (!chatMessage.length) {
+            setIsSending(false);
+            return;
+        }
+
+        chatInputRef.current.value = "";
+
+        let tried = 0;
+        let triedTimeout: NodeJS.Timeout | undefined;
+        const trySendChat = () => {
+            if (tried >= 5) {
+                Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
+                setIsSending(false);
+                return;
+            }
+
+            ++tried;
+
+            return socket.send({
+                topic: ESocketTopic.Board,
+                topicId: projectUID,
+                eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT_SEND,
+                data: { message: chatMessage },
+            }).isConnected;
+        };
+
+        const trySendChatWrapper = () => {
+            if (triedTimeout) {
+                clearTimeout(triedTimeout);
+                triedTimeout = undefined;
+            }
+
+            const isSent = trySendChat();
+            if (!isSent) {
+                triedTimeout = setTimeout(trySendChatWrapper, 1000);
+            }
+        };
+
+        if (!trySendChat()) {
+            triedTimeout = setTimeout(trySendChatWrapper, 1000);
         }
     };
 
     const clearChat = () => {
         mutate(
-            { uid },
+            { uid: projectUID },
             {
                 onSuccess: () => {
                     queryClient.resetQueries({
-                        queryKey: [`get-project-chat-messages-${uid}`],
+                        queryKey: [`get-project-chat-messages-${projectUID}`],
                         exact: true,
                     });
                 },
@@ -100,25 +129,36 @@ const ChatSidebar = memo((): JSX.Element => {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </Box>
-            <Conversation inputRef={inputRef} buttonRef={buttonRef} sendChatCallbackRef={sendChatCallbackRef} />
-            <Form.Root className="flex h-12 w-full items-center" onSubmit={sendChat}>
-                <Form.Field name="chat-message" className="mx-1 w-[calc(100%_-_theme(spacing.10))]">
-                    <Form.Control asChild>
-                        <Input type="text" placeholder={t("project.Enter a message")} className="h-10 px-2 py-1" ref={inputRef} />
-                    </Form.Control>
-                </Form.Field>
+            <Conversation />
+            <Flex items="center" h="12" w="full">
+                <Box mx="1" className="w-[calc(100%_-_theme(spacing.10))]">
+                    <Input
+                        type="text"
+                        placeholder={t("project.Enter a message")}
+                        className="h-10 px-2 py-1"
+                        disabled={isSending}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                sendChat();
+                            }
+                        }}
+                        ref={chatInputRef}
+                    />
+                </Box>
                 <Button
-                    type="submit"
-                    variant="default"
+                    type="button"
+                    variant={isSending ? "secondary" : "default"}
                     size="icon"
                     className="mr-1 size-10"
                     title={t("project.Send a message")}
                     titleSide="top"
-                    ref={buttonRef}
+                    onClick={sendChat}
                 >
-                    <IconComponent icon="send" size="4" />
+                    <IconComponent icon={isSending ? "square" : "send"} size="4" />
                 </Button>
-            </Form.Root>
+            </Flex>
         </Flex>
     );
 });

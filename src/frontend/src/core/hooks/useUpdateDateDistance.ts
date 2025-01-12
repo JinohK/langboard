@@ -7,11 +7,11 @@ const useUpdateDateDistance = (date: Date | undefined, timeout: number = 60000) 
     const [distance, setDistance] = useState(date ? formatDateDistance(i18n, t, date) : "");
 
     useEffect(() => {
-        let runningTimeout: NodeJS.Timeout;
+        let runningTimeout: NodeJS.Timeout | undefined;
         const updateCommentedAt = () => {
             if (runningTimeout) {
                 clearTimeout(runningTimeout);
-                runningTimeout = undefined!;
+                runningTimeout = undefined;
             }
 
             if (date) {
@@ -25,7 +25,7 @@ const useUpdateDateDistance = (date: Date | undefined, timeout: number = 60000) 
 
         return () => {
             clearTimeout(runningTimeout);
-            runningTimeout = undefined!;
+            runningTimeout = undefined;
         };
     }, [date]);
 

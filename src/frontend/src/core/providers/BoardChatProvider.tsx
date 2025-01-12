@@ -1,11 +1,20 @@
-import { createContext, useContext } from "react";
-import { InternalBotModel } from "@/core/models";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { ChatMessageModel, InternalBotModel } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
+import useBoardChatSentHandlers from "@/controllers/socket/board/useBoardChatSentHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { useTranslation } from "react-i18next";
+import { Toast } from "@/components/base";
+import useBoardChatStreamHandlers from "@/controllers/socket/board/useBoardChatStreamHandlers";
+import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
 
 export interface IBoardChatContext {
     projectUID: string;
     bot: InternalBotModel.Interface;
     socket: ISocketContext;
+    isSending: bool;
+    setIsSending: React.Dispatch<React.SetStateAction<bool>>;
+    scrollToBottomRef: React.RefObject<() => void>;
 }
 
 interface IBoardChatProviderProps {
@@ -18,12 +27,50 @@ const initialContext = {
     projectUID: "",
     bot: {} as InternalBotModel.Interface,
     socket: {} as ISocketContext,
+    isSending: false,
+    setIsSending: () => {},
+    scrollToBottomRef: { current: () => {} },
 };
 
 const BoardChatContext = createContext<IBoardChatContext>(initialContext);
 
 export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProviderProps): React.ReactNode => {
     const socket = useSocket();
+    const [t] = useTranslation();
+    const [isSending, setIsSending] = useState(false);
+    const scrollToBottomRef = useRef<() => void>(() => {});
+    const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
+        data.ai_message.projectUID = projectUID;
+        ChatMessageModel.Model.fromObject(data.ai_message, true);
+        scrollToBottomRef.current();
+    }, []);
+    const bufferCallback = useCallback((data: { uid: string; message: string }) => {
+        const chatMessage = ChatMessageModel.Model.getModel(data.uid);
+        if (!chatMessage) {
+            return;
+        }
+
+        chatMessage.message = data.message;
+    }, []);
+    const endCallback = useCallback((data: { uid: string; status: "success" | "failed" | "cancelled" }) => {
+        const chatMessage = ChatMessageModel.Model.getModel(data.uid);
+        if (data.status === "failed") {
+            Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
+        }
+
+        if (data.status !== "success") {
+            if (data.status === "failed" || !chatMessage?.message.length) {
+                ChatMessageModel.Model.deleteModel(data.uid);
+            }
+        }
+
+        setIsSending(false);
+    }, []);
+
+    const sentHandlers = useBoardChatSentHandlers({ projectUID, callback: () => scrollToBottomRef.current() });
+    const cancelledHandlers = useBoardChatCancelHandlers({ projectUID });
+    const streamHandlers = useBoardChatStreamHandlers({ projectUID, callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback } });
+    useSwitchSocketHandlers({ socket, handlers: [sentHandlers, cancelledHandlers, streamHandlers] });
 
     return (
         <BoardChatContext.Provider
@@ -31,6 +78,9 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                 projectUID,
                 bot,
                 socket,
+                isSending,
+                setIsSending,
+                scrollToBottomRef,
             }}
         >
             {children}

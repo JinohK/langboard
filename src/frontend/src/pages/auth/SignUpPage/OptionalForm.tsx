@@ -13,7 +13,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     const { setIsLoadingRef } = usePageLoader();
     const { t } = useTranslation();
     const dataTransferRef = useRef(new DataTransfer());
-    const avatarUrlRef = useRef<string | null>((values as unknown as Record<string, string>).avatarUrl ?? null);
+    const avatarUrlRef = useRef<string>((values as unknown as Record<string, string>).avatarUrl ?? null);
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Record<string, unknown>>({
         errorLangPrefix: "signUp.errors",
         schema: {

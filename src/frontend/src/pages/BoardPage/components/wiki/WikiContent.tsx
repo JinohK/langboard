@@ -44,7 +44,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const content = wiki.useField("content");
-    const editorComponentRef = useRef<HTMLDivElement | null>(null);
+    const editorComponentRef = useRef<HTMLDivElement>(null);
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         customStartEditing: () => setCurrentEditor(wiki.uid),

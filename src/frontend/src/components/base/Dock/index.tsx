@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
@@ -51,18 +52,18 @@ const Root = React.forwardRef<HTMLDivElement, DockProps>(
                 if (React.isValidElement(child) && (child.type === Icon || child.type === Button)) {
                     if (child.type === Button) {
                         return React.cloneElement(child, {
-                            ...child.props,
+                            ...(child.props as any),
                             dockIconProps: {
-                                ...child.props.dockIconProps,
+                                ...(child.props as any).dockIconProps,
                                 mouseX,
                                 magnification,
                                 distance,
                             },
-                        });
+                        } as any);
                     }
 
                     return React.cloneElement(child, {
-                        ...child.props,
+                        ...(child.props as any),
                         mouseX,
                         magnification,
                         distance,
@@ -97,7 +98,7 @@ Root.displayName = "Dock";
 export interface DockIconProps {
     magnification?: number;
     distance?: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     mouseX?: any;
     className?: string;
     children?: React.ReactNode;

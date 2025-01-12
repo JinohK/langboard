@@ -10,7 +10,7 @@ from .SocketRequest import SocketRequest
 from .SocketResponse import SocketResponse
 from .SocketResponseCode import SocketResponseCode
 from .SocketTopic import GLOBAL_TOPIC_ID, NONE_TOPIC_ID, SocketTopic
-from .WebSocket import WebSocket
+from .WebSocket import IWebSocketStream, WebSocket
 
 
 __all__ = [
@@ -30,5 +30,6 @@ __all__ = [
     "SocketTopic",
     "GLOBAL_TOPIC_ID",
     "NONE_TOPIC_ID",
+    "IWebSocketStream",
     "WebSocket",
 ]

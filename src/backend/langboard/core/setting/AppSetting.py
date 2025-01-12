@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
 from sqlalchemy import Text
@@ -17,7 +18,7 @@ class AppSettingType(Enum):
 class AppSetting(BaseSqlModel, table=True):
     setting_type: AppSettingType = Field(nullable=False)
     setting_name: str = Field(nullable=False)
-    setting_value: str = Field(nullable=True, sa_type=Text)
+    setting_value: str = Field(default="", sa_type=Text)
     last_used_at: datetime | None = DateTimeField(default=None, nullable=True)
     total_used_count: int = Field(default=0, nullable=False)
 
@@ -39,12 +40,18 @@ class AppSetting(BaseSqlModel, table=True):
         return self.setting_type in [AppSettingType.ApiKey]
 
     def convert_to_secret(self) -> Any:
-        value = json_loads(self.setting_value)
+        value = self.get_value()
         if self.is_secret_type():
             if self.setting_type == AppSettingType.ApiKey:
                 hide_rest_value = "*" * (len(value) - 8)
                 return f"{value[:8]}{hide_rest_value}"
         return value
+
+    def get_value(self) -> Any:
+        return json_loads(self.setting_value)
+
+    def set_value(self, value: Any):
+        self.setting_value = json_dumps(value, default=str)
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return []

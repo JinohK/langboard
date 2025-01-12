@@ -1,7 +1,7 @@
 import { useState } from "react";
-import InfiniteScroll from "react-infinite-scroller";
 import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import InfiniteScroller from "@/components/InfiniteScroller";
 
 export interface ITrackingPageProps {}
 
@@ -65,8 +65,8 @@ function TrackingPage(props: ITrackingPageProps): JSX.Element {
     };
 
     return (
-        <InfiniteScroll
-            getScrollParent={() => document.getElementById("main")}
+        <InfiniteScroller
+            scrollable={() => document.getElementById("main")}
             loadMore={next}
             hasMore={true}
             threshold={43}
@@ -75,10 +75,7 @@ function TrackingPage(props: ITrackingPageProps): JSX.Element {
                     <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
                 </Flex>
             }
-            initialLoad={false}
             className="!overflow-y-hidden"
-            useWindow={false}
-            pageStart={1}
         >
             <Table.Root>
                 <Table.Header>
@@ -113,7 +110,7 @@ function TrackingPage(props: ITrackingPageProps): JSX.Element {
                     ))}
                 </Table.Body>
             </Table.Root>
-        </InfiniteScroll>
+        </InfiniteScroller>
     );
 }
 
