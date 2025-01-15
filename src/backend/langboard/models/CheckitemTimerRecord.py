@@ -1,0 +1,18 @@
+from typing import Any
+from sqlmodel import Field
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from .Checkitem import Checkitem, CheckitemStatus
+
+
+class CheckitemTimerRecord(BaseSqlModel, table=True):
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False, index=True)
+    status: CheckitemStatus = Field(nullable=False)
+
+    def api_response(self) -> dict[str, Any]:
+        return {}
+
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
+    def _get_repr_keys(self) -> list[str | tuple[str, str]]:
+        return ["checkitem_id", "status", "created_at"]

@@ -30,6 +30,8 @@ import { HEADING_KEYS } from "@udecode/plate-heading";
 import { HighlightPlugin } from "@udecode/plate-highlight/react";
 import { HorizontalRulePlugin } from "@udecode/plate-horizontal-rule/react";
 import { INDENT_LIST_KEYS, ListStyleType, toggleIndentList } from "@udecode/plate-indent-list";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { EquationPlugin } from "@udecode/plate-math/react";
 
 export const format = (editor: SlateEditor, customFormatting: any) => {
     if (editor.selection) {
@@ -177,6 +179,30 @@ export const autoformatBlocks: AutoformatRule[] = [
         match: ["---", "—-", "___ "],
         mode: "block",
         type: HorizontalRulePlugin.key,
+    },
+    {
+        format: (editor) => {
+            setNodes(editor, { type: EquationPlugin.key });
+            insertNodes(editor, {
+                children: [{ text: "" }],
+                type: ParagraphPlugin.key,
+            });
+        },
+        match: "$$eq",
+        mode: "block",
+        type: EquationPlugin.key,
+    },
+    {
+        format: (editor) => {
+            setNodes(editor, { type: PlantUmlPlugin.key });
+            insertNodes(editor, {
+                children: [{ text: "" }],
+                type: ParagraphPlugin.key,
+            });
+        },
+        match: "$$uml",
+        mode: "block",
+        type: PlantUmlPlugin.key,
     },
 ];
 

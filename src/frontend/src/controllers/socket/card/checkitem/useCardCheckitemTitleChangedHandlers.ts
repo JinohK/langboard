@@ -4,29 +4,25 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectCheckitem } from "@/core/models";
 
 export interface ICardCheckitemTitleChangedRawResponse {
-    uid: string;
     title: string;
 }
 
 export interface IUseCardCheckitemTitleChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
-    checkitemUID: string;
+    cardUID: string;
+    checkitem: ProjectCheckitem.TModel;
 }
 
-const useCardCheckitemTitleChangedHandlers = ({ callback, projectUID, checkitemUID }: IUseCardCheckitemTitleChangedHandlersProps) => {
+const useCardCheckitemTitleChangedHandlers = ({ callback, cardUID, checkitem }: IUseCardCheckitemTitleChangedHandlersProps) => {
     return useSocketHandler<{}, ICardCheckitemTitleChangedRawResponse>({
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-card-checkitem-title-changed-${checkitemUID}`,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
+        eventKey: `board-card-checkitem-title-changed-${checkitem.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.TITLE_CHANGED,
-            params: { uid: checkitemUID },
+            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CHECKED_CHANGED,
+            params: { uid: checkitem.uid },
             callback,
             responseConverter: (data) => {
-                const checkitem = ProjectCheckitem.Model.getModel(data.uid);
-                if (checkitem) {
-                    checkitem.title = data.title;
-                }
+                checkitem.title = data.title;
                 return {};
             },
         },

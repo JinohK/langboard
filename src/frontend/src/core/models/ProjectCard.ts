@@ -2,7 +2,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
-import * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
+import * as ProjectCheckGroup from "@/core/models/ProjectCheckGroup";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as User from "@/core/models/User";
@@ -12,8 +12,8 @@ import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCa
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
 import useCardLabelsUpdatedHandlers from "@/controllers/socket/card/useCardLabelsUpdatedHandlers";
-import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
-import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
+import useCardCheckGroupCreatedHandlers from "@/controllers/socket/card/checkgroup/useCardCheckGroupCreatedHandlers";
+import useCardCheckGroupDeletedHandlers from "@/controllers/socket/card/checkgroup/useCardCheckGroupDeletedHandlers";
 import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
 import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentDeletedHandlers";
@@ -42,7 +42,7 @@ export interface IStore extends Interface {
     labels: ProjectLabel.Interface[];
     relationships: ProjectCardRelationship.Interface[];
     attachments: ProjectCardAttachment.IStore[];
-    checkitems: ProjectCheckitem.IStore[];
+    check_groups: ProjectCheckGroup.IStore[];
 
     // variable set from the client side
     isArchived: bool;
@@ -60,7 +60,7 @@ class ProjectCard extends BaseModel<IStore> {
             labels: ProjectLabel.Model.MODEL_NAME,
             relationships: ProjectCardRelationship.Model.MODEL_NAME,
             attachments: ProjectCardAttachment.Model.MODEL_NAME,
-            checkitems: ProjectCheckitem.Model.MODEL_NAME,
+            check_groups: ProjectCheckGroup.Model.MODEL_NAME,
         };
     }
     static get MODEL_NAME() {
@@ -80,8 +80,8 @@ class ProjectCard extends BaseModel<IStore> {
                 useCardProjectUsersUpdatedHandlers,
                 useCardAssignedUsersUpdatedHandlers,
                 useCardLabelsUpdatedHandlers,
-                useCardCheckitemCreatedHandlers,
-                useCardCheckitemDeletedHandlers,
+                useCardCheckGroupCreatedHandlers,
+                useCardCheckGroupDeletedHandlers,
                 useCardAttachmentUploadedHandlers,
                 useCardAttachmentDeletedHandlers,
             ],
@@ -129,16 +129,16 @@ class ProjectCard extends BaseModel<IStore> {
         ProjectCardAttachment.Model.subscribe("DELETION", this.uid, (uids) => {
             this.attachments = this.attachments.filter((attachment) => !uids.includes(attachment.uid));
         });
-        ProjectCheckitem.Model.subscribe(
+        ProjectCheckGroup.Model.subscribe(
             "CREATION",
             this.uid,
             (models) => {
-                this.checkitems = [...this.checkitems, ...models];
+                this.check_groups = [...this.check_groups, ...models];
             },
             (model) => model.card_uid === this.uid
         );
-        ProjectCheckitem.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.checkitems = this.checkitems.filter((checkitem) => !uids.includes(checkitem.uid));
+        ProjectCheckGroup.Model.subscribe("DELETION", this.uid, (uids) => {
+            this.check_groups = this.check_groups.filter((check_group) => !uids.includes(check_group.uid));
         });
         ProjectCardRelationship.Model.subscribe(
             "CREATION",
@@ -285,11 +285,11 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ attachments: value });
     }
 
-    public get checkitems(): ProjectCheckitem.TModel[] {
-        return this.getForeignModels("checkitems");
+    public get check_groups(): ProjectCheckGroup.TModel[] {
+        return this.getForeignModels("check_groups");
     }
-    public set checkitems(value: (ProjectCheckitem.TModel | ProjectCheckitem.IStore)[]) {
-        this.update({ checkitems: value });
+    public set check_groups(value: (ProjectCheckGroup.TModel | ProjectCheckGroup.IStore)[]) {
+        this.update({ check_groups: value });
     }
 
     public get isArchived() {

@@ -178,6 +178,9 @@ class BaseSqlModel(ABC, SQLModel):
     def api_response(self) -> dict[str, Any]: ...
 
     @abstractmethod
+    def notification_data(self) -> dict[str, Any]: ...
+
+    @abstractmethod
     def _get_repr_keys(self) -> list[str | tuple[str, str]]: ...
 
     def _repr(self, representable_keys: list[str | tuple[str, str]]) -> str:

@@ -1,4 +1,4 @@
-import { differenceInDays, formatDistanceToNow } from "date-fns";
+import { differenceInDays, Duration, formatDistanceToNow } from "date-fns";
 import { TFunction, i18n } from "i18next";
 import * as dateLocale from "date-fns/locale";
 import { API_URL } from "@/constants";
@@ -155,6 +155,34 @@ export const formatDateDistance = (i18n: i18n, translate: TFunction<"translation
                   locale: dateLocale[new StringCase(i18n.language).toLanguageObjKey() as keyof typeof dateLocale],
               }),
           });
+};
+
+export const formatTimerDuration = (duration: Duration) => {
+    let hours = duration.hours ?? 0;
+    if (duration.years) {
+        hours += duration.years * 365 * 24;
+    }
+    if (duration.months) {
+        hours += duration.months * 30 * 24;
+    }
+    if (duration.days) {
+        hours += duration.days * 24;
+    }
+
+    const timeTextChunks: string[] = [];
+    if (hours > 0) {
+        timeTextChunks.push(`${hours}h`);
+    }
+    if (hours < 100) {
+        if (duration.minutes) {
+            timeTextChunks.push(`${duration.minutes}m`);
+        }
+        if (duration.seconds) {
+            timeTextChunks.push(`${duration.seconds}s`);
+        }
+    }
+
+    return timeTextChunks.join(" ");
 };
 
 export const formatBytes = (

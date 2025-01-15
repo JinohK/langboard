@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCardAttachment, ProjectCheckitem, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
+import { ProjectCardAttachment, ProjectCheckGroup, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
 import { StringCase } from "@/core/utils/StringUtils";
 
 export interface IColumnOrderChangedResponse {
@@ -10,7 +10,7 @@ export interface IColumnOrderChangedResponse {
 }
 
 export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IColumnOrderChangedResponse> {
-    type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectCheckitem" | "ProjectWiki" | "ProjectLabel";
+    type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectCheckGroup" | "ProjectWiki" | "ProjectLabel";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -31,10 +31,10 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
             targetModel = ProjectCardAttachment.Model;
             topic = ESocketTopic.BoardCard;
             break;
-        case "ProjectCheckitem":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
-            targetModel = ProjectCheckitem.Model;
-            topic = ESocketTopic.Board;
+        case "ProjectCheckGroup":
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECK_GROUP.ORDER_CHANGED;
+            targetModel = ProjectCheckGroup.Model;
+            topic = ESocketTopic.BoardCard;
             break;
         case "ProjectWiki":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;
@@ -50,7 +50,7 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
 
     return useSocketHandler({
         topic,
-        topicId: topicId,
+        topicId,
         eventKey: `${new StringCase(type).toKebab()}-column-order-changed`,
         onProps: {
             name: onEventName,

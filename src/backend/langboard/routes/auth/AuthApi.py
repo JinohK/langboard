@@ -74,8 +74,9 @@ async def about_me(user: User = Auth.scope("api"), service: Service = Service.sc
     response["position"] = user.position
     response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
     response["subemails"] = await service.user.get_subemails(user)
+    notifications = await service.notification.get_list(user)
 
     if user.is_admin:
         response["is_admin"] = True
 
-    return JsonResponse(content={"user": response})
+    return JsonResponse(content={"user": response, "notifications": notifications})

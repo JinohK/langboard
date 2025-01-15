@@ -9,9 +9,9 @@ import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/a
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface BoardCardActionSetLabelProps extends ISharedBoardCardActionProps {}
+export interface IBoardCardActionSetLabelProps extends ISharedBoardCardActionProps {}
 
-const BoardCardActionSetLabel = memo(({ buttonClassName }: BoardCardActionSetLabelProps) => {
+const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLabelProps) => {
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);

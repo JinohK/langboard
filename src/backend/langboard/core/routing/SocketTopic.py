@@ -12,5 +12,6 @@ class SocketTopic(Enum):
     BoardWiki = "board_wiki"
     BoardWikiPrivate = "board_wiki_private"
     User = "user"
+    UserPrivate = "user_private"
     Global = "global"
     NoneTopic = "none"

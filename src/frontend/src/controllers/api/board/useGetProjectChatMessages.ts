@@ -5,18 +5,19 @@ import { ChatMessageModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 import { useEffect, useRef, useState } from "react";
 
-export interface IGetProjectChatMessagesForm {
-    current_date: Date;
-}
-
-const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions<IGetProjectChatMessagesForm>) => {
+const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
     const [isLastPage, setIsLastPage] = useState(true);
+    const lastCurrentDateRef = useRef(new Date());
     const pageRef = useRef(0);
 
-    const getProjectChatMessages = async (params: IGetProjectChatMessagesForm) => {
+    const getProjectChatMessages = async () => {
         if (isLastPage && pageRef.current) {
             return { isUpdated: false };
+        }
+
+        if (!ChatMessageModel.Model.getModel((model) => model.projectUID === projectUID)) {
+            pageRef.current = 0;
         }
 
         ++pageRef.current;
@@ -24,7 +25,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
         const url = format(API_ROUTES.BOARD.CHAT_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
-                ...params,
+                current_date: lastCurrentDateRef.current,
                 page: pageRef.current,
                 limit,
             },
@@ -47,7 +48,12 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
             return;
         }
 
-        getProjectChatMessages({ current_date: new Date() });
+        lastCurrentDateRef.current = new Date();
+        getProjectChatMessages();
+
+        return () => {
+            pageRef.current = 0;
+        };
     }, []);
 
     const result = mutate([`get-project-chat-messages-${projectUID}`], getProjectChatMessages, {

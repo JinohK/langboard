@@ -6,7 +6,7 @@ import { ProjectCheckitem } from "@/core/models";
 
 export interface IBoardCardCheckitemContext {
     checkitem: ProjectCheckitem.TModel;
-    isParent?: bool;
+    canEditCheckitem: bool;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
     sharedErrorHandler: (error: unknown) => string;
@@ -14,7 +14,7 @@ export interface IBoardCardCheckitemContext {
 
 interface IBoardCardCheckitemProviderProps {
     checkitem: ProjectCheckitem.TModel;
-    isParent?: bool;
+    canEditCheckitem: bool;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
     children: React.ReactNode;
@@ -22,7 +22,7 @@ interface IBoardCardCheckitemProviderProps {
 
 const initialContext = {
     checkitem: {} as ProjectCheckitem.TModel,
-    isParent: false,
+    canEditCheckitem: false,
     isValidating: false,
     setIsValidating: () => {},
     sharedErrorHandler: () => "",
@@ -32,7 +32,7 @@ const BoardCardCheckitemContext = createContext<IBoardCardCheckitemContext>(init
 
 export const BoardCardCheckitemProvider = ({
     checkitem,
-    isParent,
+    canEditCheckitem,
     isValidating,
     setIsValidating,
     children,
@@ -64,7 +64,7 @@ export const BoardCardCheckitemProvider = ({
         <BoardCardCheckitemContext.Provider
             value={{
                 checkitem,
-                isParent,
+                canEditCheckitem,
                 isValidating,
                 setIsValidating,
                 sharedErrorHandler,

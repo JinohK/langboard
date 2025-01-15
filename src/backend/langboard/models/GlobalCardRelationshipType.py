@@ -16,5 +16,8 @@ class GlobalCardRelationshipType(BaseSqlModel, table=True):
             "description": self.description,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["parent_name", "child_name"]

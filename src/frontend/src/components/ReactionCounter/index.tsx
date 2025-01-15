@@ -1,5 +1,4 @@
-import { Button, Dock, Flex, IconComponent, Popover } from "@/components/base";
-import AnimatedEmoji from "@/components/base/AnimatedEmoji";
+import { Button, Dock, Flex, IconComponent, Popover, AnimatedEmoji } from "@/components/base";
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";

@@ -1,37 +1,37 @@
 import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
-import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
-import useCardCheckitemTimerStartedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStartedHandlers";
-import useCardCheckitemTimerStoppedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTimerStoppedHandlers";
-import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
-import useCardSubCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardSubCheckitemCreatedHandlers";
+import useCardCheckitemCheckedChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCheckedChangedHandlers";
+import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemStatusChangedHandlers";
+import useCardCheckitemStatusChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemStatusChangedHandlers";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
-import * as ProjectCheckitemTimer from "@/core/models/ProjectCheckitemTimer";
+import * as ProjectCard from "@/core/models/ProjectCard";
 import * as User from "@/core/models/User";
+import { StringCase } from "@/core/utils/StringUtils";
+import TypeUtils from "@/core/utils/TypeUtils";
+
+export enum ECheckitemStatus {
+    Started = "started",
+    Paused = "paused",
+    Stopped = "stopped",
+}
 
 export interface Interface extends IBaseModel {
     card_uid: string;
+    check_group_uid: string;
+    cardified_card?: ProjectCard.IStore;
+    user?: User.Interface;
     title: string;
-    cardified_uid?: string;
+    status: ECheckitemStatus;
     order: number;
+    accumulated_seconds: number;
+    is_checked: bool;
+    timer_started_at?: Date;
 }
 
-export interface IStore extends Interface {
-    project_uid: string;
-    assigned_members: User.Interface[];
-    timer?: ProjectCheckitemTimer.Interface;
-    acc_time_seconds: number;
-    checkitem_uid?: string;
-    sub_checkitems?: IStore[];
-
-    // variable set from the client side
-    isOpenedInBoardCard: bool;
-}
-
-class ProjectCheckitem extends BaseModel<IStore> {
+class ProjectCheckitem extends BaseModel<Interface> {
     static get FOREIGN_MODELS() {
         return {
-            assigned_members: User.Model.MODEL_NAME,
-            sub_checkitems: ProjectCheckitem.MODEL_NAME,
+            cardified_card: ProjectCard.Model.MODEL_NAME,
+            user: User.Model.MODEL_NAME,
         };
     }
     static get MODEL_NAME() {
@@ -39,48 +39,37 @@ class ProjectCheckitem extends BaseModel<IStore> {
     }
 
     constructor(model: Record<string, unknown>) {
-        ProjectCheckitemTimer.transformFromApi(model.timer as ProjectCheckitemTimer.Interface | undefined);
         super(model);
 
         this.subscribeSocketEvents(
             [
-                useCardSubCheckitemCreatedHandlers,
-                useCardCheckitemDeletedHandlers,
                 useCardCheckitemCardifiedHandlers,
+                useCardCheckitemCheckedChangedHandlers,
+                useCardCheckitemStatusChangedHandlers,
                 useCardCheckitemTitleChangedHandlers,
-                useCardCheckitemTimerStartedHandlers,
-                useCardCheckitemTimerStoppedHandlers,
             ],
             {
-                projectUID: this.project_uid,
-                checkitemUID: this.uid,
+                cardUID: this.card_uid,
+                checkitem: this,
             }
         );
 
-        if (!this.checkitem_uid) {
-            ProjectCheckitem.subscribe(
-                "CREATION",
-                this.uid,
-                (models) => {
-                    this.sub_checkitems = [...this.sub_checkitems, ...models];
-                },
-                (model) => model.checkitem_uid === this.uid
-            );
-            ProjectCheckitem.subscribe("DELETION", this.uid, (uids) => {
-                this.sub_checkitems = this.sub_checkitems.filter((checkitem) => !uids.includes(checkitem.uid));
-            });
+        ProjectCard.Model.subscribe("DELETION", this.uid, (uids) => {
+            if (!this.cardified_card || !uids.includes(this.cardified_card.uid)) {
+                return;
+            }
+            this.cardified_card = undefined;
+        });
+    }
+
+    public static convertModel(model: Interface): Interface {
+        if (TypeUtils.isString(model.status)) {
+            model.status = ECheckitemStatus[new StringCase(model.status).toPascal() as keyof typeof ECheckitemStatus];
         }
-    }
-
-    public static convertModel(model: IStore): IStore {
+        if (TypeUtils.isString(model.timer_started_at)) {
+            model.timer_started_at = new Date(model.timer_started_at);
+        }
         return model;
-    }
-
-    public get project_uid() {
-        return this.getValue("project_uid");
-    }
-    public set project_uid(value: string) {
-        this.update({ project_uid: value });
     }
 
     public get card_uid() {
@@ -90,6 +79,27 @@ class ProjectCheckitem extends BaseModel<IStore> {
         this.update({ card_uid: value });
     }
 
+    public get check_group_uid() {
+        return this.getValue("check_group_uid");
+    }
+    public set check_group_uid(value: string) {
+        this.update({ check_group_uid: value });
+    }
+
+    public get cardified_card(): ProjectCard.TModel | undefined {
+        return this.getForeignModels<ProjectCard.TModel>("cardified_card")?.[0];
+    }
+    public set cardified_card(value: ProjectCard.TModel | ProjectCard.Interface | undefined) {
+        this.update({ cardified_card: value });
+    }
+
+    public get user(): User.TModel | undefined {
+        return this.getForeignModels<User.TModel>("user")?.[0];
+    }
+    public set user(value: User.TModel | User.Interface | undefined) {
+        this.update({ user: value });
+    }
+
     public get title() {
         return this.getValue("title");
     }
@@ -97,11 +107,11 @@ class ProjectCheckitem extends BaseModel<IStore> {
         this.update({ title: value });
     }
 
-    public get cardified_uid() {
-        return this.getValue("cardified_uid");
+    public get status() {
+        return this.getValue("status");
     }
-    public set cardified_uid(value: string | undefined) {
-        this.update({ cardified_uid: value });
+    public set status(value: ECheckitemStatus) {
+        this.update({ status: value });
     }
 
     public get order() {
@@ -111,46 +121,25 @@ class ProjectCheckitem extends BaseModel<IStore> {
         this.update({ order: value });
     }
 
-    public get assigned_members(): User.TModel[] {
-        return this.getForeignModels("assigned_members");
+    public get accumulated_seconds() {
+        return this.getValue("accumulated_seconds");
     }
-    public set assigned_members(value: (User.TModel | User.Interface)[]) {
-        this.update({ assigned_members: value });
-    }
-
-    public get timer() {
-        return this.getValue("timer");
-    }
-    public set timer(value: ProjectCheckitemTimer.Interface | undefined) {
-        this.update({ timer: value });
+    public set accumulated_seconds(value: number) {
+        this.update({ accumulated_seconds: value });
     }
 
-    public get acc_time_seconds() {
-        return this.getValue("acc_time_seconds");
+    public get is_checked() {
+        return this.getValue("is_checked");
     }
-    public set acc_time_seconds(value: number) {
-        this.update({ acc_time_seconds: value });
-    }
-
-    public get checkitem_uid() {
-        return this.getValue("checkitem_uid");
-    }
-    public set checkitem_uid(value: string | undefined) {
-        this.update({ checkitem_uid: value });
+    public set is_checked(value: bool) {
+        this.update({ is_checked: value });
     }
 
-    public get sub_checkitems(): TModel[] {
-        return this.getForeignModels("sub_checkitems");
+    public get timer_started_at() {
+        return this.getValue("timer_started_at");
     }
-    public set sub_checkitems(value: (TModel | IStore)[]) {
-        this.update({ sub_checkitems: value });
-    }
-
-    public get isOpenedInBoardCard() {
-        return this.getValue("isOpenedInBoardCard") ?? false;
-    }
-    public set isOpenedInBoardCard(value: bool) {
-        this.update({ isOpenedInBoardCard: value });
+    public set timer_started_at(value: string | Date | undefined) {
+        this.update({ timer_started_at: value });
     }
 }
 

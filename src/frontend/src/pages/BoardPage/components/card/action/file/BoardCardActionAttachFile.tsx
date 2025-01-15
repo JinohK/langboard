@@ -8,9 +8,9 @@ import { memo, useMemo, useReducer, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 
-export interface BoardCardActionAttachFileProps extends ISharedBoardCardActionProps {}
+export interface IBoardCardActionAttachFileProps extends ISharedBoardCardActionProps {}
 
-const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAttachFileProps) => {
+const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAttachFileProps) => {
     const { hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
@@ -94,13 +94,13 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: BoardCardActionAtta
             <Popover.Trigger asChild>
                 <Button variant="secondary" className={buttonClassName}>
                     <IconComponent icon="file-up" size="4" />
-                    {t("card.Attach a file")}
+                    {t("card.Attach file")}
                 </Button>
             </Popover.Trigger>
             <Popover.Content align="end" className="w-[min(theme(spacing.96),80vw)]">
                 <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />
                 <Box mb="2" textSize="sm" weight="semibold">
-                    {t("card.Attach a file")}
+                    {t("card.Attach file")}
                 </Box>
                 <ScrollArea.Root className="border border-dashed p-2">
                     <Box position="relative" className="h-[min(theme(spacing.36),35vh)] select-none" {...getRootProps()}>

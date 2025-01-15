@@ -31,10 +31,13 @@ import { tablePlugin } from "@/components/Editor/plugins/table-plugin";
 import { tocPlugin } from "@/components/Editor/plugins/toc-plugin";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown";
 import { equationPlugins } from "@/components/Editor/plugins/equation-plugin";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 
 export const viewPlugins = [
     ...basicNodesPlugins,
     ...equationPlugins,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PlantUmlPlugin as any,
     HorizontalRulePlugin,
     linkPlugin,
     DatePlugin,

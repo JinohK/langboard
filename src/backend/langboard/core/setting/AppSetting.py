@@ -33,6 +33,9 @@ class AppSetting(BaseSqlModel, table=True):
             "total_used_count": self.total_used_count,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def is_immutable_type(self) -> bool:
         return self.setting_type in [AppSettingType.ApiKey]
 

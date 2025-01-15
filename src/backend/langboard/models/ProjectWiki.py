@@ -32,5 +32,11 @@ class ProjectWiki(SoftDeleteModel, table=True):
             "assigned_members": [],
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {
+            "uid": self.get_uid(),
+            "title": self.title,
+        }
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["project_id", "title", "order", "is_public"]

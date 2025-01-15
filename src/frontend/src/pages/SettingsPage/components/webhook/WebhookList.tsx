@@ -55,15 +55,15 @@ function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListPr
                     </Table.Row>
                 </Table.Header>
             </Table.Root>
-            <ScrollArea.Root viewportId={listId}>
+            <ScrollArea.Root viewportId={listId} mutable={urls}>
                 <InfiniteScroller
                     scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={hasMore}
-                    threshold={43}
+                    threshold={30}
                     loader={
-                        <Flex justify="center" mt="6" key={createShortUUID()}>
-                            <Loading />
+                        <Flex justify="center" py="6" key={createShortUUID()}>
+                            <Loading variant="secondary" />
                         </Flex>
                     }
                     className={cn(
@@ -80,7 +80,6 @@ function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListPr
                         </Table.Body>
                     </Table.Root>
                 </InfiniteScroller>
-                <ScrollArea.Bar mutable={urls} />
             </ScrollArea.Root>
         </>
     );

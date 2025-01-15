@@ -128,11 +128,7 @@ const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
     const { project, columns: flatColumns, socket, hasRoleAction, currentUser } = useBoard();
     const [t] = useTranslation();
-    const {
-        columns,
-        setColumns,
-        reorder: reorderColumns,
-    } = useReorderColumn({
+    const { columns, reorder: reorderColumns } = useReorderColumn({
         type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
@@ -183,10 +179,6 @@ const BoardResult = memo(() => {
             return `board-column-${(columnOrCard as IBoardColumnCardProps["card"]).column_uid ?? columnOrCard.uid}`;
         },
     });
-
-    useEffect(() => {
-        setColumns(flatColumns.sort((a, b) => a.order - b.order));
-    }, [flatColumns]);
 
     return (
         <>

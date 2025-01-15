@@ -4,8 +4,10 @@ from .CardCommentService import CardCommentService
 from .CardRelationshipService import CardRelationshipService
 from .CardService import CardService
 from .ChatHistoryService import ChatHistoryService
+from .CheckGroupService import CheckGroupService
 from .CheckitemService import CheckitemService
 from .EmailService import EmailService
+from .NotificationService import NotificationService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
@@ -25,8 +27,10 @@ __all__ = [
     "CardRelationshipService",
     "CardService",
     "ChatHistoryService",
+    "CheckGroupService",
     "CheckitemService",
     "EmailService",
+    "NotificationService",
     "ProjectColumnService",
     "ProjectInvitationService",
     "ProjectLabelService",

@@ -9,19 +9,19 @@ export interface IRow {
     order: number;
 }
 
-export interface IUseReorderRowProps<TRow extends TBaseModelInstance<IRow>, TRowColumnKey extends keyof TRow> {
+export interface IUseReorderRowProps<TRow extends TBaseModelInstance<IRow>, TRowColumnKey extends keyof TRow = keyof TRow> {
     type: IUseRowOrderChangedHandlersProps["type"];
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
     topicId: string;
     allRowsMap: Record<string, TRow>;
     rows: TRow[];
     columnKey: TRowColumnKey;
-    currentColumnId: TRow[TRowColumnKey];
+    currentColumnId: string;
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
 }
 
-function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends keyof TRow>({
+function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumnKey extends keyof TRow = keyof TRow>({
     type,
     eventNameParams,
     topicId,
@@ -31,7 +31,7 @@ function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends
     currentColumnId,
     socket,
     updater,
-}: IUseReorderRowProps<TRow, TRowColumn>) {
+}: IUseReorderRowProps<TRow, TRowColumnKey>) {
     const [_, forceUpdate] = updater;
     const handlers = useRowOrderChangedHandlers({
         type,
@@ -53,7 +53,7 @@ function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends
     });
     useSwitchSocketHandlers({ socket, handlers });
 
-    const moveToColumn = <TRowColumn extends keyof TRow>(uid: string, index: number, columnId: TRow[TRowColumn]) => {
+    const moveToColumn = (uid: string, index: number, columnUID: string) => {
         const targetRow = allRowsMap[uid] as TRow;
         let targetRowIndex;
         if (!rows.some((row) => row.uid === uid)) {
@@ -67,7 +67,7 @@ function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumn extends
             allRowsMap[row.uid].order = i;
         });
 
-        (targetRow as Record<keyof TRow, unknown>)[columnKey] = columnId;
+        (targetRow as Record<keyof TRow, unknown>)[columnKey] = columnUID;
         forceUpdate();
     };
 

@@ -20,7 +20,7 @@ const useUserUpdatedHandlers = ({ callback, user }: IUseUserUpdatedHandlersProps
     return useSocketHandler<{}, IUserUpdatedRawResponse>({
         topic: ESocketTopic.User,
         topicId: user.uid,
-        eventKey: `bot-updated-${user.uid}`,
+        eventKey: `user-updated-${user.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.USER.UPDATED,
             callback,

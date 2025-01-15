@@ -4,6 +4,7 @@ from ...core.db import EditorContentModel, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardComment, CardCommentReaction, Project
+from .NotificationService import NotificationService
 from .ReactionService import ReactionService
 from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot
 
@@ -98,6 +99,9 @@ class CardCommentService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        notification_service = self._get_service(NotificationService)
+        await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
 
         return comment, api_comment
 

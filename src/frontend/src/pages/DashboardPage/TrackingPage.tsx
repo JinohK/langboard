@@ -38,14 +38,14 @@ function TrackingPage(props: ITrackingPageProps): JSX.Element {
 
     const next = (page: number) => {
         if (page - curPage > 1) {
-            return;
+            return false;
         }
 
-        new Promise((resolve) => {
+        return new Promise<bool>((resolve) => {
             setTimeout(() => {
                 curPage = page;
                 createCards();
-                resolve(undefined);
+                resolve(true);
             }, 3500);
         });
     };

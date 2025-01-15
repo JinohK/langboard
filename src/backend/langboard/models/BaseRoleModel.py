@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
+from typing import Any
 from sqlalchemy import JSON
 from sqlmodel import Field
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
@@ -30,7 +31,10 @@ class BaseRoleModel(BaseSqlModel):
     def set_all_actions(self) -> None:
         self.actions = [ALL_GRANTED]
 
-    def api_response(self):
+    def api_response(self) -> dict[str, Any]:
+        return {}
+
+    def notification_data(self) -> dict[str, Any]:
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

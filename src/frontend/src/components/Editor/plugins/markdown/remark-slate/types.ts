@@ -49,6 +49,7 @@ export interface MdastNode {
     text?: string;
     url?: string;
     value?: string;
+    meta?: string;
 }
 
 export type RemarkElementRule = {

@@ -47,9 +47,17 @@ async def user_subscription_validator(topic_id: str, user: User) -> bool:
         # Disallow user to subscribe to themselves
         return False
 
+    if user.is_admin:
+        return True
+
     async for service in create_service_generator():
         target_user = await service.user.get_by_uid(topic_id)
         if not target_user:
             return False
         result = await service.project.is_user_related_to_other_user(user, target_user)
     return result
+
+
+@AppRouter.socket.subscription_validator(SocketTopic.UserPrivate)
+async def user_private_subscription_validator(topic_id: str, user: User) -> bool:
+    return user.get_uid() == topic_id

@@ -15,5 +15,8 @@ class UserEmail(SoftDeleteModel, table=True):
             "verified_at": self.verified_at,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["user_id", "email", "verified_at"]

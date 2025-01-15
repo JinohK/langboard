@@ -8,18 +8,18 @@ export interface ICardCheckitemDeletedRawResponse {
 }
 
 export interface IUseCardCheckitemDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
-    uid: string;
+    cardUID: string;
+    checkGroupUID: string;
 }
 
-const useCardCheckitemDeletedHandlers = ({ callback, projectUID, uid }: IUseCardCheckitemDeletedHandlersProps) => {
+const useCardCheckitemDeletedHandlers = ({ callback, cardUID, checkGroupUID }: IUseCardCheckitemDeletedHandlersProps) => {
     return useSocketHandler<{}, ICardCheckitemDeletedRawResponse>({
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-card-checkitem-deleted-${uid}`,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
+        eventKey: `board-card-checkitem-deleted-${checkGroupUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.DELETED,
-            params: { uid },
+            params: { uid: checkGroupUID },
             callback,
             responseConverter: (data) => {
                 ProjectCheckitem.Model.deleteModel(data.uid);

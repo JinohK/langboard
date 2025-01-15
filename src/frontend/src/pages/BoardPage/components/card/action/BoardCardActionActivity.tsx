@@ -11,9 +11,9 @@ import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/a
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface BoardCardActionActivityProps extends ISharedBoardCardActionProps {}
+export interface IBoardCardActionActivityProps extends ISharedBoardCardActionProps {}
 
-const BoardCardActionActivity = memo(({ buttonClassName }: BoardCardActionActivityProps) => {
+const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActivityProps) => {
     const { projectUID, card, currentUser } = useBoardCard();
     const [t] = useTranslation();
     const pageRef = useRef(1);
@@ -56,14 +56,14 @@ const BoardCardActionActivity = memo(({ buttonClassName }: BoardCardActionActivi
 
     const nextPage = (page: number) => {
         if (page - pageRef.current > 1) {
-            return;
+            return false;
         }
 
-        new Promise((resolve) => {
+        return new Promise<bool>((resolve) => {
             setTimeout(async () => {
-                const result = await fetchNextPage();
+                await fetchNextPage();
                 pageRef.current = page;
-                resolve(result);
+                resolve(true);
             }, 2500);
         });
     };
@@ -79,6 +79,7 @@ const BoardCardActionActivity = memo(({ buttonClassName }: BoardCardActionActivi
             <Popover.Content align="end" className="w-full p-0">
                 <ScrollArea.Root
                     viewportId={cardActivityListId.current}
+                    mutable={activities}
                     className={cn(
                         "w-[calc(100vw_-_theme(spacing.9))]",
                         "sm:w-[calc(theme(screens.sm)_-_theme(spacing.9))]",
@@ -102,7 +103,6 @@ const BoardCardActionActivity = memo(({ buttonClassName }: BoardCardActionActivi
                         ))}
                     </InfiniteScroller>
                     <ScrollArea.Bar orientation="horizontal" mutable={activities} />
-                    <ScrollArea.Bar mutable={activities} />
                 </ScrollArea.Root>
             </Popover.Content>
         </Popover.Root>

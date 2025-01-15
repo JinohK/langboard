@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
@@ -18,7 +19,7 @@ class Card(SoftDeleteModel, table=True):
     order: int = Field(default=0, nullable=False)
     archived_at: datetime | None = DateTimeField(default=None, nullable=True)
 
-    def api_response(self):
+    def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
             "project_uid": self.project_id.to_short_code(),
@@ -29,6 +30,12 @@ class Card(SoftDeleteModel, table=True):
             "description": self.description.model_dump() if self.description else None,
             "ai_description": self.ai_description,
             "order": self.order,
+        }
+
+    def notification_data(self) -> dict[str, Any]:
+        return {
+            "uid": self.get_uid(),
+            "title": self.title,
         }
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

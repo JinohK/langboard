@@ -14,6 +14,7 @@ import { TablePlugin } from "@udecode/plate-table/react";
 import {
     CalendarIcon,
     Code2,
+    GitCompare,
     Heading1Icon,
     Heading2Icon,
     Heading3Icon,
@@ -40,6 +41,7 @@ import {
 import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 
 type Group = {
     group: string;
@@ -155,6 +157,11 @@ const groups: Group[] = [
                 icon: <RadicalIcon />,
                 label: "editor.Equation",
                 value: EquationPlugin.key,
+            },
+            {
+                icon: <GitCompare className="size-4" />,
+                label: "editor.Plant UML",
+                value: PlantUmlPlugin.key,
             },
         ].map((item) => ({
             ...item,

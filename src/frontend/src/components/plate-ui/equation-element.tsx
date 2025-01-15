@@ -30,7 +30,7 @@ export const EquationElement = withRef<typeof PlateElement, { element: TEquation
     }, []);
 
     const triggerClassNames = cn(
-        "flex cursor-pointer select-none items-center justify-center rounded-sm transition-bg-ease hover:bg-primary/10",
+        "flex cursor-pointer select-none items-center justify-center rounded-sm transition-all hover:bg-primary/10",
         element.texExpression ? "px-2 py-1" : "bg-muted p-3 pr-9"
     );
 

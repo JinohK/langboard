@@ -1,21 +1,18 @@
-import { memo, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useEffect, useRef, useState } from "react";
 import CachedImage from "@/components/CachedImage";
 import HedaerNavItems from "@/components/Header/HedaerNavItems";
 import { IHeaderProps } from "@/components/Header/types";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import UserAvatar from "@/components/UserAvatar";
 import { Button, Flex, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { useSocket } from "@/core/providers/SocketProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { AuthUser } from "@/core/models";
-import { NavigateFunction } from "react-router-dom";
+import HeaderUserMenu from "@/components/Header/HeaderUserMenu";
+import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
 
 function Header({ navs }: IHeaderProps) {
-    const { aboutMe, signOut, updated } = useAuth();
+    const { aboutMe, updated } = useAuth();
     const [isOpened, setIsOpen] = useState(false);
     const navigate = useRef(usePageNavigate());
     const [currentUser, setCurrentUser] = useState(aboutMe());
@@ -102,61 +99,14 @@ function Header({ navs }: IHeaderProps) {
                 {currentUser ? (
                     <>
                         {separator}
-                        <HeaderUserMenu currentUser={currentUser} signOut={signOut} navigate={navigate} />
+                        <HeaderUserNotification currentUser={currentUser} />
+                        {separator}
+                        <HeaderUserMenu currentUser={currentUser} navigate={navigate} />
                     </>
                 ) : null}
             </Flex>
         </header>
     );
 }
-
-interface IHeaderUserMenuProps {
-    currentUser: AuthUser.TModel;
-    signOut: () => void;
-    navigate: React.RefObject<NavigateFunction>;
-}
-
-const HeaderUserMenu = memo(({ currentUser, signOut, navigate }: IHeaderUserMenuProps) => {
-    const [t] = useTranslation();
-    const { close: closeSocket } = useSocket();
-    const isAdmin = currentUser.useField("is_admin");
-
-    return (
-        <UserAvatar.Root
-            user={currentUser}
-            listAlign="end"
-            avatarSize={{
-                initial: "sm",
-                md: "default",
-            }}
-            className="mx-1"
-        >
-            <UserAvatar.List>
-                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.ACCOUNT.PROFILE)}>
-                    {t("myAccount.My account")}
-                </UserAvatar.ListItem>
-                {isAdmin && (
-                    <>
-                        <UserAvatar.ListSeparator />
-                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.SETTINGS.ROUTE)}>
-                            {t("settings.App settings")}
-                        </UserAvatar.ListItem>
-                    </>
-                )}
-                <UserAvatar.ListSeparator />
-                <UserAvatar.ListItem
-                    className="cursor-pointer"
-                    onClick={() => {
-                        closeSocket();
-                        signOut();
-                    }}
-                >
-                    {t("myAccount.Sign out")}
-                </UserAvatar.ListItem>
-                <UserAvatar.ListSeparator />
-            </UserAvatar.List>
-        </UserAvatar.Root>
-    );
-});
 
 export default Header;

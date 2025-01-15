@@ -1,12 +1,11 @@
 import { Box, Button, IconComponent, Input, Popover } from "@/components/base";
-import { cn } from "@/core/utils/ComponentUtils";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface BoardCardActionShareProps extends ISharedBoardCardActionProps {}
+export interface IBoardCardActionShareProps extends ISharedBoardCardActionProps {}
 
-const BoardCardActionShare = memo(({ buttonClassName }: BoardCardActionShareProps) => {
+const BoardCardActionShare = memo(({ buttonClassName }: IBoardCardActionShareProps) => {
     const [t] = useTranslation();
     const [isCopied, setIsCopied] = useState(false);
 

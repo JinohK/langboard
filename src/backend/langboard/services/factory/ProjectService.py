@@ -6,7 +6,7 @@ from ...core.db import BaseSqlModel, SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
-from ...models import Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole, UserEmail
+from ...models import Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
@@ -148,13 +148,7 @@ class ProjectService(BaseService):
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
 
         invitation_service = self._get_service(ProjectInvitationService)
-        response["invited_members"] = []
-        invited_users = await invitation_service.get_invited_users(project)
-        for invitation, invited_user in invited_users:
-            if invited_user:
-                response["invited_members"].append(invited_user.api_response())
-            else:
-                response["invited_members"].append(User.create_email_user_api_response(invitation.id, invitation.email))
+        response["invited_members"] = await invitation_service.get_invited_users(project, as_api=True)
 
         return project, response
 
@@ -358,58 +352,25 @@ class ProjectService(BaseService):
         if not project:
             return None
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(User, UserEmail, ProjectAssignedUser)
-            .outerjoin(
-                UserEmail,
-                (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
-            )
-            .outerjoin(ProjectAssignedUser, (User.column("id") == ProjectAssignedUser.column("user_id")))
-            .where(
-                (User.column("email").in_(emails) | UserEmail.column("email").in_(emails))
-                | (ProjectAssignedUser.column("project_id") == project.id)
-            )
+        invitation_service = self._get_service(ProjectInvitationService)
+        invitation_related_data = await invitation_service.get_invitation_related_data(project, emails)
+
+        await self._db.exec(
+            self._db.query("delete")
+            .table(ProjectAssignedUser)
+            .where(ProjectAssignedUser.column("id").in_(invitation_related_data.assigned_ids_should_delete))
         )
-        records = result.all()
-
-        updated_assigned_users: list[User] = []
-        assigned_user_ids = []
-        inviting_emails: list[str] = [*emails]
-        for target_user, target_subemail, assigned_user in records:
-            if not assigned_user or target_user.id in assigned_user_ids:
-                continue
-
-            updated_assigned_users.append(target_user)
-            assigned_user_ids.append(assigned_user.id)
-            if target_subemail.email in inviting_emails:
-                inviting_emails.remove(target_subemail.email)
-            if target_user.email in inviting_emails:
-                inviting_emails.remove(target_user.email)
-
-        removed_assigned_user_ids: list[SnowflakeID] = []
-        removed_assigned_users: list[ProjectAssignedUser] = []
-        prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
-        for prev_assigned_user in prev_assigned_users:
-            if project.owner_id == prev_assigned_user.user_id or prev_assigned_user.id in assigned_user_ids:
-                continue
-
-            removed_assigned_user_ids.append(prev_assigned_user.id)
-            removed_assigned_users.append(prev_assigned_user)
-
-        for removed_assigned_user in removed_assigned_users:
-            await self._db.delete(removed_assigned_user)
 
         await self._db.commit()
 
         project_invitation_service = self._get_service(ProjectInvitationService)
-        _, invited_users, urls = await project_invitation_service.invite_emails(
-            user, project, lang, url, token_query_name, inviting_emails
+        _, urls = await project_invitation_service.invite_emails(
+            user, project, lang, url, token_query_name, invitation_related_data
         )
 
         model = {
-            "assigned_members": [assigned_user.api_response() for assigned_user in updated_assigned_users],
-            "invited_members": invited_users,
+            "assigned_members": await self.get_assigned_users(project, as_api=True),
+            "invited_members": await invitation_service.get_invited_users(project, as_api=True),
         }
 
         topic_id = project.get_uid()

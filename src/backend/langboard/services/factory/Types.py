@@ -5,6 +5,7 @@ from ...models import (
     Card,
     CardAttachment,
     CardComment,
+    CheckGroup,
     Checkitem,
     GlobalCardRelationshipType,
     Project,
@@ -12,6 +13,7 @@ from ...models import (
     ProjectLabel,
     ProjectWiki,
     UserGroup,
+    UserNotification,
 )
 
 
@@ -21,6 +23,7 @@ TColumnParam = ProjectColumn | int | str
 TCardParam = Card | int | str
 TAttachmentParam = CardAttachment | int | str
 TCommentParam = CardComment | int | str
+TCheckGroupParam = CheckGroup | int | str
 TCheckitemParam = Checkitem | int | str
 TWikiParam = ProjectWiki | int | str
 TUserParam = User | int | str
@@ -29,3 +32,4 @@ TProjectLabelParam = ProjectLabel | int | str
 TBotParam = Bot | int | str
 TSettingParam = AppSetting | int | str
 TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str
+TNotificationParam = UserNotification | int | str

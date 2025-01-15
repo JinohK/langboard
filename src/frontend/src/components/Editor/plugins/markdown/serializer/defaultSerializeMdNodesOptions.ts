@@ -59,9 +59,15 @@ export const defaultSerializeMdNodesOptions: SerializeMdOptions["nodes"] = {
     },
     equation: {
         serialize: (_, node) => {
-            return `\n$$\n${node.texExpression}\n$$\n`;
+            return `\n$$eq\n${node.texExpression?.trim()}\n$$\n`;
         },
         type: "equation",
+    },
+    plantuml: {
+        serialize: (_, node) => {
+            return `\n$$uml\n${node.umlCode?.trim()}\n$$\n`;
+        },
+        type: "plantuml",
     },
     file: {
         isVoid: true,

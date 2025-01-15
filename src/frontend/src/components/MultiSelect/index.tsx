@@ -69,8 +69,10 @@ const MultiSelect = React.memo(
             setSelected((prev) => {
                 const newSelected = TypeUtils.isFunction(action) ? action(prev) : action;
                 if (onValueChange) {
-                    setInputValue("");
-                    onValueChange(newSelected);
+                    setTimeout(() => {
+                        setInputValue("");
+                        onValueChange(newSelected);
+                    }, 0);
                 }
                 return newSelected;
             });
@@ -355,5 +357,6 @@ const MultiSelect = React.memo(
         );
     }
 );
+MultiSelect.displayName = "MultiSelect";
 
 export default MultiSelect;

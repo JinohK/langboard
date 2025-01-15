@@ -34,9 +34,8 @@ export type TDashboardStyledLayoutProps =
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
     ({ children, headerNavs, sidebarNavs, resizableSidebar, noPadding, scrollAreaMutable, ...props }, ref) => {
         const main = (
-            <ScrollArea.Root viewportId="main" className="relative size-full overflow-y-auto">
+            <ScrollArea.Root viewportId="main" mutable={scrollAreaMutable} className="relative size-full overflow-y-auto">
                 <main className={cn("relative size-full overflow-y-auto", noPadding ? "" : "p-4 md:p-6 lg:p-8")}>{children}</main>
-                <ScrollArea.Bar mutable={scrollAreaMutable} />
             </ScrollArea.Root>
         );
 

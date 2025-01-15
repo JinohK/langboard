@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
 from sqlalchemy import JSON
 from sqlmodel import Field
 from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField
@@ -28,7 +29,10 @@ class RevertableRecord(BaseSqlModel, table=True):
     def create_revert_key() -> str:
         return create_short_unique_id(16)
 
-    def api_response(self):
+    def api_response(self) -> dict[str, Any]:
+        return {}
+
+    def notification_data(self) -> dict[str, Any]:
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

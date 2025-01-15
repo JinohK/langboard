@@ -1,5 +1,8 @@
+import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import * as User from "@/core/models/User";
 import * as UserGroup from "@/core/models/UserGroup";
+import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 
 export interface Interface extends User.Interface {
     is_admin?: bool;
@@ -21,6 +24,13 @@ class AuthUser extends User.Model<Interface> {
     constructor(model: Record<string, unknown>) {
         super(model);
 
+        const socket = useSocketOutsideProvider();
+        socket.subscribe(ESocketTopic.UserPrivate, [this.uid]);
+
+        this.subscribeSocketEvents([useUserNotifiedHandlers], {
+            currentUser: this,
+        });
+
         UserGroup.Model.subscribe(
             "CREATION",
             this.uid,
@@ -31,6 +41,10 @@ class AuthUser extends User.Model<Interface> {
         );
         UserGroup.Model.subscribe("DELETION", this.uid, (uids) => {
             this.user_groups = this.user_groups.filter((column) => !uids.includes(column.uid));
+        });
+
+        AuthUser.subscribe("DELETION", this.uid, () => {
+            socket.unsubscribe(ESocketTopic.UserPrivate, [this.uid]);
         });
     }
 

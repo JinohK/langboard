@@ -218,7 +218,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                             loadMore={nextPage}
                             loader={<SkeletonBoardColumnCard key={createShortUUID()} />}
                             hasMore={hasMore}
-                            threshold={140}
+                            threshold={63}
                             className="pb-2.5"
                         >
                             <SortableContext id={columnId} items={cardUIDs}>

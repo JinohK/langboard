@@ -58,15 +58,15 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                     </Table.Row>
                 </Table.Header>
             </Table.Root>
-            <ScrollArea.Root viewportId={listId}>
+            <ScrollArea.Root viewportId={listId} mutable={keys}>
                 <InfiniteScroller
                     scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={hasMore}
-                    threshold={43}
+                    threshold={30}
                     loader={
-                        <Flex justify="center" mt="6" key={createShortUUID()}>
-                            <Loading />
+                        <Flex justify="center" py="6" key={createShortUUID()}>
+                            <Loading variant="secondary" />
                         </Flex>
                     }
                     className={cn(
@@ -83,7 +83,6 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
                         </Table.Body>
                     </Table.Root>
                 </InfiniteScroller>
-                <ScrollArea.Bar mutable={keys} />
             </ScrollArea.Root>
         </>
     );

@@ -20,7 +20,8 @@ from ...models import (
 )
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
-from .CheckitemService import CheckitemService
+from .CheckGroupService import CheckGroupService
+from .NotificationService import NotificationService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
@@ -62,8 +63,8 @@ class CardService(BaseService):
         project_column_service = self._get_service(ProjectColumnService)
         api_card["project_all_columns"] = await project_column_service.get_list(project)
 
-        checkitem_service = self._get_service(CheckitemService)
-        api_card["checkitems"] = await checkitem_service.get_list(card)
+        check_group_service = self._get_service(CheckGroupService)
+        api_card["check_groups"] = await check_group_service.get_list(card, as_api=True)
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
@@ -280,17 +281,21 @@ class CardService(BaseService):
                 data_keys=list(model.keys()),
             )
         ]
-        if "title" in key and checkitem_cardified_from:
+        if "title" in model and checkitem_cardified_from:
             publish_models.append(
                 SocketPublishModel(
-                    topic=SocketTopic.Board,
-                    topic_id=topic_id,
+                    topic=SocketTopic.BoardCard,
+                    topic_id=card.get_uid(),
                     event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
                     data_keys="title",
                 )
             )
 
         SocketPublishService.put_dispather(model, publish_models)
+
+        if "description" in model and card.description:
+            notification_service = self._get_service(NotificationService)
+            await notification_service.notify_mentioned_at_card(user_or_bot, project, card)
 
         return revert_key, model
 
@@ -436,20 +441,21 @@ class CardService(BaseService):
             return None
         project, card = params
 
-        # result = await self._db.exec(
-        #     self._db.query("select").column(CardAssignedUser.user_id).where(CardAssignedUser.card_id == card.id)
-        # )
-        # original_assigned_user_ids = list(result.all())
+        result = await self._db.exec(
+            self._db.query("select").column(CardAssignedUser.user_id).where(CardAssignedUser.card_id == card.id)
+        )
+        original_assigned_user_ids = list(result.all())
 
         await self._db.exec(
             self._db.query("delete").table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
         )
 
+        users = []
         if assign_user_uids:
-            assigned_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
+            assign_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
             project_service = self._get_service(ProjectService)
             raw_users = await project_service.get_assigned_users(
-                project.id, as_api=False, where_user_ids_in=assigned_user_ids
+                project.id, as_api=False, where_user_ids_in=assign_user_ids
             )
             users: list[User] = []
             for user, project_assigned_user in raw_users:
@@ -457,8 +463,6 @@ class CardService(BaseService):
                     CardAssignedUser(project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=user.id)
                 )
                 users.append(user)
-        else:
-            users = []
         await self._db.commit()
 
         model = {"assigned_members": [user.api_response() for user in users]}
@@ -470,6 +474,12 @@ class CardService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        notification_service = self._get_service(NotificationService)
+        for user in users:
+            if user.id in original_assigned_user_ids:
+                continue
+            await notification_service.notify_assigned_to_card(user_or_bot, user, project, card)
 
         return list(users)
 

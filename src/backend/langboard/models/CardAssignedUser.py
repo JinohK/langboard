@@ -1,3 +1,4 @@
+from typing import Any
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 from .Card import Card
 from .ProjectAssignedUser import ProjectAssignedUser
@@ -10,7 +11,10 @@ class CardAssignedUser(BaseSqlModel, table=True):
     card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
 
-    def api_response(self):
+    def api_response(self) -> dict[str, Any]:
+        return {}
+
+    def notification_data(self) -> dict[str, Any]:
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:

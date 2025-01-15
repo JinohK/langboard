@@ -16,7 +16,9 @@ interface IMultiSelectAssigneesPopoverProps extends Omit<TMultiSelectAssigneesFo
     popoverButtonProps: ButtonProps;
     popoverContentProps?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
     userAvatarListProps: Omit<IUserAvatarListProps, "users">;
+    addIcon?: React.ComponentPropsWithoutRef<TIconProps>["icon"];
     addIconSize?: React.ComponentPropsWithoutRef<TIconProps>["size"];
+    saveText?: string;
     assignedFilter: (item: TMultiSelectAssigneeItem) => bool;
     onSave: (selectedItems: TMultiSelectAssigneeItem[], endCallback: () => void) => void;
 }
@@ -50,7 +52,9 @@ export const MultiSelectAssigneesPopover = memo(
         popoverButtonProps,
         popoverContentProps,
         userAvatarListProps,
+        addIcon = "plus",
         addIconSize,
+        saveText,
         isValidating,
         allItems,
         initialSelectedItems,
@@ -83,7 +87,7 @@ export const MultiSelectAssigneesPopover = memo(
                 <Popover.Root modal={true} open={isOpened} onOpenChange={changeIsOpenedState}>
                     <Popover.Trigger asChild>
                         <Button variant={popoverButtonVariant} {...popoverButtonProps}>
-                            <IconComponent icon="plus" size={addIconSize} />
+                            <IconComponent icon={addIcon} size={addIconSize} />
                         </Button>
                     </Popover.Trigger>
                     <Popover.Content {...popoverContentProps}>
@@ -102,7 +106,7 @@ export const MultiSelectAssigneesPopover = memo(
                                 {t("common.Cancel")}
                             </Button>
                             <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating}>
-                                {t("common.Save")}
+                                {saveText ?? t("common.Save")}
                             </SubmitButton>
                         </Flex>
                     </Popover.Content>
@@ -111,6 +115,7 @@ export const MultiSelectAssigneesPopover = memo(
         );
     }
 );
+MultiSelectAssigneesPopover.displayName = "MultiSelectAssigneesPopover";
 
 export interface IBaseMultiSelectAssigneesFormProps {
     multiSelectProps: Pick<
@@ -285,3 +290,4 @@ export const MultiSelectAssigneesForm = memo(
         );
     }
 );
+MultiSelectAssigneesForm.displayName = "MultiSelectAssigneesForm";

@@ -4,6 +4,7 @@ from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedUser, ProjectWikiAttachment
+from .NotificationService import NotificationService
 from .ProjectService import ProjectService
 from .RevertService import RevertService, RevertType
 from .Types import TProjectParam, TUserOrBot, TWikiParam
@@ -183,6 +184,10 @@ class ProjectWikiService(BaseService):
             )
 
         SocketPublishService.put_dispather(model, publish_models)
+
+        notification_service = self._get_service(NotificationService)
+        if "content" in model:
+            await notification_service.notify_mentioned_at_wiki(user_or_bot, project, wiki)
 
         return revert_key, model
 

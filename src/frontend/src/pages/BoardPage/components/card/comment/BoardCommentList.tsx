@@ -105,7 +105,7 @@ function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCo
             loadMore={nextPage}
             loader={<SkeletonBoardComment key={createShortUUID()} />}
             hasMore={hasMore}
-            threshold={100}
+            threshold={36}
             className="pb-2.5"
         >
             {comments.length === 0 && (

@@ -24,5 +24,11 @@ class Project(SoftDeleteModel, table=True):
             "updated_at": self.updated_at,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {
+            "uid": self.get_uid(),
+            "title": self.title,
+        }
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["title", "project_type", "archive_column_name", "archive_column_order"]

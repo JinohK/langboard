@@ -19,12 +19,14 @@ import type { Model as ProjectCardModel } from "@/core/models/ProjectCard";
 import type { Model as ProjectCardAttachmentModel } from "@/core/models/ProjectCardAttachment";
 import type { Model as ProjectCardCommentModel } from "@/core/models/ProjectCardComment";
 import type { Model as ProjectCardRelationshipModel } from "@/core/models/ProjectCardRelationship";
+import type { Model as ProjectCheckGroupModel } from "@/core/models/ProjectCheckGroup";
 import type { Model as ProjectCheckitemModel } from "@/core/models/ProjectCheckitem";
 import type { Model as ProjectColumnModel } from "@/core/models/ProjectColumn";
 import type { Model as ProjectLabelModel } from "@/core/models/ProjectLabel";
 import type { Model as ProjectWikiModel } from "@/core/models/ProjectWiki";
 import type { Model as UserModel } from "@/core/models/User";
 import type { Model as UserGroupModel } from "@/core/models/UserGroup";
+import type { Model as UserNotificationModel } from "@/core/models/UserNotification";
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
 
@@ -54,12 +56,14 @@ interface IModelMap {
     ProjectCardAttachment: typeof ProjectCardAttachmentModel;
     ProjectCardComment: typeof ProjectCardCommentModel;
     ProjectCardRelationship: typeof ProjectCardRelationshipModel;
+    ProjectCheckGroup: typeof ProjectCheckGroupModel;
     ProjectCheckitem: typeof ProjectCheckitemModel;
     ProjectColumn: typeof ProjectColumnModel;
     ProjectLabel: typeof ProjectLabelModel;
     ProjectWiki: typeof ProjectWikiModel;
     User: typeof UserModel;
     UserGroup: typeof UserGroupModel;
+    UserNotification: typeof UserNotificationModel;
 }
 
 export interface IModelNotifiersMap {
@@ -87,6 +91,7 @@ export type TBaseModelClass<TModel extends IBaseModel> = {
     ): () => void;
     subscribe(type: "DELETION", key: string, notifier: (uids: string[]) => void): () => void;
     unsubscribe(type: keyof IModelNotifiersMap, key: string): void;
+    unsubscribeSocketEvents(uid: string): void;
     new (model: Record<string, any>): BaseModel<TModel>;
 };
 
@@ -320,10 +325,22 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return undefined;
     }
 
-    public static getModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): InstanceType<TParent>[] {
+    public static getModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): InstanceType<TParent>[];
+    public static getModels<TParent extends TBaseModelClass<any>>(
+        this: TParent,
+        filter: (model: InstanceType<TParent>) => bool
+    ): InstanceType<TParent>[];
+    public static getModels<TParent extends TBaseModelClass<any>>(
+        this: TParent,
+        uidsOrFilter: string[] | ((model: InstanceType<TParent>) => bool)
+    ): InstanceType<TParent>[] {
         const models: InstanceType<TParent>[] = [];
-        for (let i = 0; i < uids.length; ++i) {
-            const model = BaseModel.#MODELS[this.MODEL_NAME]?.[uids[i]];
+        if (TypeUtils.isFunction(uidsOrFilter)) {
+            return Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(uidsOrFilter as any);
+        }
+
+        for (let i = 0; i < uidsOrFilter.length; ++i) {
+            const model = BaseModel.#MODELS[this.MODEL_NAME]?.[uidsOrFilter[i]];
             if (model) {
                 models.push(model as any);
             }
@@ -377,30 +394,61 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return models;
     }
 
-    public static deleteModel(uid: string) {
+    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, uid: string): void;
+    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, filter: (model: InstanceType<TParent>) => bool): void;
+    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, uidOrFilter: string | ((model: InstanceType<TParent>) => bool)) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
             return;
         }
 
-        delete BaseModel.#MODELS[modelName][uid];
+        if (TypeUtils.isString(uidOrFilter)) {
+            delete BaseModel.#MODELS[modelName][uidOrFilter];
+        } else {
+            const model = Object.values(BaseModel.#MODELS[modelName] ?? {}).find(uidOrFilter as any);
+            if (model) {
+                delete BaseModel.#MODELS[modelName][model.uid];
+                uidOrFilter = model.uid;
+            }
+        }
 
-        this.unsubscribeSocketEvents(uid);
+        if (TypeUtils.isString(uidOrFilter)) {
+            this.unsubscribeSocketEvents(uidOrFilter);
 
-        BaseModel.#notify("DELETION", modelName, uid);
+            BaseModel.#notify("DELETION", modelName, uidOrFilter);
+        }
     }
 
-    public static deleteModels(uids: string[]) {
+    public static deleteModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): void;
+    public static deleteModels<TParent extends TBaseModelClass<any>>(this: TParent, filter: (model: InstanceType<TParent>) => bool): void;
+    public static deleteModels<TParent extends TBaseModelClass<any>>(
+        this: TParent,
+        uidsOrFilter: string[] | ((model: InstanceType<TParent>) => bool)
+    ) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
             return;
         }
 
-        for (let i = 0; i < uids.length; ++i) {
-            const uid = uids[i];
-            delete BaseModel.#MODELS[modelName][uid];
+        let uids: string[] = [];
+        if (TypeUtils.isArray(uidsOrFilter)) {
+            for (let i = 0; i < uidsOrFilter.length; ++i) {
+                const uid = uidsOrFilter[i];
+                delete BaseModel.#MODELS[modelName][uid];
 
-            this.unsubscribeSocketEvents(uid);
+                this.unsubscribeSocketEvents(uid);
+            }
+            uids = uidsOrFilter;
+        } else {
+            const values = Object.values(BaseModel.#MODELS[modelName] ?? {});
+            for (let i = 0; i < values.length; ++i) {
+                const model = values[i];
+                if (uidsOrFilter(model as any)) {
+                    uids.push(model.uid);
+                    delete BaseModel.#MODELS[modelName][model.uid];
+                    this.unsubscribeSocketEvents(model.uid);
+                }
+            }
         }
 
         BaseModel.#notify("DELETION", modelName, uids);

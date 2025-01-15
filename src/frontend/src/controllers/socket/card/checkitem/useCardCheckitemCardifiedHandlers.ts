@@ -4,29 +4,25 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
 
 export interface ICardCheckitemCardifiedRawResponse {
-    card: ProjectCard.IStore;
+    card: ProjectCard.Interface;
 }
 
 export interface IUseCardCheckitemCardifiedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
-    checkitemUID: string;
+    cardUID: string;
+    checkitem: ProjectCheckitem.TModel;
 }
 
-const useCardCheckitemCardifiedHandlers = ({ callback, projectUID, checkitemUID }: IUseCardCheckitemCardifiedHandlersProps) => {
+const useCardCheckitemCardifiedHandlers = ({ callback, cardUID, checkitem }: IUseCardCheckitemCardifiedHandlersProps) => {
     return useSocketHandler<{}, ICardCheckitemCardifiedRawResponse>({
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-card-checkitem-cardified-${checkitemUID}`,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
+        eventKey: `board-card-checkitem-cardified-${checkitem.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CARDIFIED,
-            params: { uid: checkitemUID },
+            params: { uid: checkitem.uid },
             callback,
             responseConverter: (data) => {
-                const checkitem = ProjectCheckitem.Model.getModel(checkitemUID);
-                if (checkitem) {
-                    checkitem.cardified_uid = data.card.uid;
-                }
-                ProjectCard.Model.fromObject(data.card, true);
+                checkitem.cardified_card = data.card;
                 return {};
             },
         },

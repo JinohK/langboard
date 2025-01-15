@@ -10,6 +10,17 @@ const DATA_TEXT_WRAPPER_MAP: Record<TDataType, { start: string; end: string }> =
     video: { start: "vd", end: "dv" },
 };
 
+export const createDataTextRegex = (type: TDataType, paramLength: number, hasValue: bool): RegExp => {
+    const wrapper = DATA_TEXT_WRAPPER_MAP[type];
+    const valueRegex = hasValue ? "(.*?)" : "";
+    let paramRegex = "";
+    for (let i = 0; i < paramLength; ++i) {
+        paramRegex = `${paramRegex}:(.*?)`;
+    }
+
+    return new RegExp(`!\\(\\[${wrapper.start}${paramRegex}\\]\\)${valueRegex}\\(\\[/${wrapper.end}\\]\\)`, "g");
+};
+
 export const createDataText = (type: TDataType, params: string[], value?: string): string => {
     const wrapper = DATA_TEXT_WRAPPER_MAP[type];
 

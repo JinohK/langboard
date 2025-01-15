@@ -22,5 +22,8 @@ class CardAttachment(SoftDeleteModel, table=True):
             "created_at": self.created_at,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["user_id", "card_id", "filename", "file"]

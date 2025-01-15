@@ -63,14 +63,14 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
 
     const nextPage = (page: number) => {
         if (page - pageRef.current > 1) {
-            return;
+            return false;
         }
 
-        new Promise((resolve) => {
+        return new Promise<bool>((resolve) => {
             setTimeout(async () => {
-                const result = await fetchNextPage();
+                await fetchNextPage();
                 pageRef.current = page;
-                resolve(result);
+                resolve(true);
             }, 2500);
         });
     };
@@ -83,7 +83,7 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
         <Dialog.Root open={opened} onOpenChange={setOpened}>
             <Dialog.Title hidden />
             <Dialog.Content className="p-0 pb-4 pt-8 sm:max-w-md" aria-describedby="">
-                <ScrollArea.Root viewportId={userActivityListId.current}>
+                <ScrollArea.Root viewportId={userActivityListId.current} mutable={activities}>
                     <InfiniteScroller
                         as="ul"
                         scrollable={() => document.getElementById(userActivityListId.current)}
@@ -97,7 +97,6 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
                             <ActivityTimeline activity={activity} user={user} isCurrentUser key={createShortUUID()} />
                         ))}
                     </InfiniteScroller>
-                    <ScrollArea.Bar mutable={activities} />
                 </ScrollArea.Root>
             </Dialog.Content>
         </Dialog.Root>

@@ -1,4 +1,6 @@
 export * as Accordion from "@/components/base/Accordion";
+export { default as AnimatedEmoji } from "@/components/base/AnimatedEmoji";
+export * as AnimatedList from "@/components/base/AnimatedList";
 export { default as AutoComplete } from "@/components/base/AutoComplete";
 export * as Avatar from "@/components/base/Avatar";
 export { default as Badge, BadgeVariants, type BadgeProps } from "@/components/base/Badge";

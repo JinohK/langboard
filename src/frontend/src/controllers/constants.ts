@@ -78,13 +78,22 @@ export const API_ROUTES = {
                 DELETE: "/board/{uid}/card/{card_uid}/comment/{comment_uid}",
                 REACT: "/board/{uid}/card/{card_uid}/comment/{comment_uid}/react",
             },
+            CHECK_GROUP: {
+                CREATE: "/board/{uid}/card/{card_uid}/checkgroup",
+                NOTIFY: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/notify",
+                CHANGE_TITLE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/title",
+                CHANGE_ORDER: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/order",
+                TOGGLE_CHECKED: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/toggle-checked",
+                DELETE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}",
+            },
             CHECKITEM: {
-                CREATE: "/board/{uid}/card/{card_uid}/checkitem",
+                CREATE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/checkitem",
                 CHANGE_TITLE: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/title",
                 CHANGE_ORDER: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
+                CHANGE_STATUS: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
+                TOGGLE_CHECKED: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/toggle-checked",
                 CARDIFY: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify",
                 DELETE: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}",
-                TOGGLE_TIMER: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/timer/toggle",
             },
             SUB_CHECKITEM: {
                 CREATE: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/sub-checkitem",
@@ -190,19 +199,21 @@ export const SOCKET_SERVER_EVENTS = {
                 DELETED: "board:card:comment:deleted:{uid}",
                 REACTED: "board:card:comment:reacted:{uid}",
             },
+            CHECK_GROUP: {
+                CREATED: "board:card:checkgroup:created",
+                TITLE_CHANGED: "board:card:checkgroup:title:changed:{uid}",
+                ORDER_CHANGED: "board:card:checkgroup:order:changed:{uid}",
+                CHECKED_CHANGED: "board:card:checkgroup:checked:changed:{uid}",
+                DELETED: "board:card:checkgroup:deleted",
+            },
             CHECKITEM: {
                 CREATED: "board:card:checkitem:created:{uid}",
                 TITLE_CHANGED: "board:card:checkitem:title:changed:{uid}",
                 ORDER_CHANGED: "board:card:checkitem:order:changed:{uid}",
-                ASSIGNED_USERS_UPDATED: "board:card:checkitem:assigned-users:updated:{uid}",
+                STATUS_CHANGED: "board:card:checkitem:status:changed:{uid}",
+                CHECKED_CHANGED: "board:card:checkitem:checked:changed:{uid}",
                 CARDIFIED: "board:card:checkitem:cardified:{uid}",
                 DELETED: "board:card:checkitem:deleted:{uid}",
-                TIMER_STARTED: "board:card:checkitem:timer:started:{uid}",
-                TIMER_STOPPED: "board:card:checkitem:timer:stopped:{uid}",
-            },
-            SUB_CHECKITEM: {
-                CREATED: "board:card:sub-checkitem:created:{uid}",
-                ORDER_CHANGED: "board:card:sub-checkitem:order:changed:{uid}",
             },
         },
         WIKI: {
@@ -220,6 +231,7 @@ export const SOCKET_SERVER_EVENTS = {
     },
     USER: {
         UPDATED: "user:updated",
+        NOTIFIED: "user:notified",
     },
     GLOBALS: {
         BOTS: {
@@ -251,5 +263,11 @@ export const SOCKET_CLIENT_EVENTS = {
             EDITOR_START_EDITING: "board:wiki:editor:start",
             EDITOR_STOP_EDITING: "board:wiki:editor:stop",
         },
+    },
+    USER: {
+        READ_NOTIFICATION: "user:notification:read",
+        READ_ALL_NOTIFICATIONS: "user:notification:read-all",
+        DELETE_NOTIFICATION: "user:notification:delete",
+        DELETE_ALL_NOTIFICATIONS: "user:notification:delete-all",
     },
 } as const;

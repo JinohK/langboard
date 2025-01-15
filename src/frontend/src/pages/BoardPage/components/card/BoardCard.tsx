@@ -5,7 +5,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardActionList, { SkeletonBoardCardActionList } from "@/pages/BoardPage/components/card/action/BoardCardActionList";
-import BoardCardChecklist, { SkeletonBoardCardChecklist } from "@/pages/BoardPage/components/card/checkitem/BoardCardChecklist";
+import BoardCardCheckGroupList, { SkeletonBoardCardCheckGroupList } from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupList";
 import BoardCardColumnName, { SkeletonBoardCardColumnName } from "@/pages/BoardPage/components/card/BoardCardColumnName";
 import BoardCardDeadline, { SkeletonBoardCardDeadline } from "@/pages/BoardPage/components/card/BoardCardDeadline";
 import BoardCardDescription, { SkeletonBoardCardDescription } from "@/pages/BoardPage/components/card/BoardCardDescription";
@@ -108,7 +108,7 @@ export function SkeletonBoardCard(): JSX.Element {
                 <Skeleton position="absolute" right="0" size="6" rounded="sm" className="opacity-70" />
             </Flex>
             <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
-                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
+                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.40)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
                             <SkeletonUserAvatarList count={6} size={{ initial: "sm", lg: "default" }} spacing="none" className="space-x-1" />
@@ -123,14 +123,14 @@ export function SkeletonBoardCard(): JSX.Element {
                     <BoardCardSection title="card.Attached files">
                         <SkeletonBoardCardAttachmentList />
                     </BoardCardSection>
-                    <BoardCardSection title="card.Checklist">
-                        <SkeletonBoardCardChecklist />
+                    <BoardCardSection title="card.Check groups">
+                        <SkeletonBoardCardCheckGroupList />
                     </BoardCardSection>
                     <BoardCardSection title="card.Comments">
                         <SkeletonBoardCommentList />
                     </BoardCardSection>
                 </Flex>
-                <Box w="full" maxW={{ sm: "32" }}>
+                <Box w="full" maxW={{ sm: "40" }}>
                     <Box
                         z="10"
                         display="inline-block"
@@ -171,7 +171,7 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                 <Dialog.CloseButton className="absolute right-0" />
             </Dialog.Header>
             <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
-                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.32)_-_theme(spacing.2))]">
+                <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.40)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
                             <BoardCardMemberList key={`board-card-member-list-${card.uid}`} />
@@ -188,16 +188,16 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                             <BoardCardAttachmentList key={`board-card-attachment-list-${card.uid}`} />
                         </BoardCardSection>
                     )}
-                    {card.checkitems.length > 0 && (
-                        <BoardCardSection title="card.Checklist">
-                            <BoardCardChecklist key={`board-card-checklist-${card.uid}`} />
+                    {card.check_groups.length > 0 && (
+                        <BoardCardSection title="card.Check groups">
+                            <BoardCardCheckGroupList key={`board-card-check group-${card.uid}`} />
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">
                         <BoardCommentList key={`board-card-comment-list-${card.uid}`} viewportId={viewportId} />
                     </BoardCardSection>
                 </Flex>
-                <Box w="full" maxW={{ sm: "32" }}>
+                <Box w="full" maxW={{ sm: "40" }}>
                     <Box
                         z="10"
                         display="inline-block"

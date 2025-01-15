@@ -28,6 +28,7 @@ export type MdNodeTypes = {
     li: string;
     ol: string;
     p: string;
+    plantuml: string;
     strikethrough: string;
     subscript: string;
     superscript: string;
@@ -66,6 +67,7 @@ export interface MdElementType extends NodeType {
     date?: string;
     name?: string;
     texExpression?: string;
+    umlCode?: string;
 }
 
 export interface ILeafNode {

@@ -148,12 +148,22 @@ export const remarkDefaultElementRules: RemarkElementRules = {
         }),
     },
     math: {
-        transform: (node, options) => ({
-            children: [{ text: "" }],
-            texExpression: node.value,
-            shouldNotOpenInit: true,
-            type: options.editor.getType({ key: "equation" }),
-        }),
+        transform: (node, options) => {
+            if (node.meta === "uml") {
+                return {
+                    children: [{ text: "" }],
+                    umlCode: node.value,
+                    type: options.editor.getType({ key: "plantuml" }),
+                };
+            }
+
+            return {
+                children: [{ text: "" }],
+                texExpression: node.value,
+                shouldNotOpenInit: true,
+                type: options.editor.getType({ key: "equation" }),
+            };
+        },
     },
     paragraph: {
         transform: (node, options) => {

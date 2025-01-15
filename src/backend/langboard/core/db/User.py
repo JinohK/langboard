@@ -50,6 +50,9 @@ class User(SoftDeleteModel, table=True):
             "avatar": self.avatar.path if self.avatar else None,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return self.api_response()
+
     def create_unknown_user_api_response(self) -> dict[str, Any]:
         return {
             "type": User.UNKNOWN_USER_TYPE,

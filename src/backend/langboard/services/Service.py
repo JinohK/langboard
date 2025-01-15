@@ -90,3 +90,11 @@ class Service(ServiceFactory):
     @property
     def app_setting(self):
         return self._create_or_get_service(factory.AppSettingService)
+
+    @property
+    def notification(self):
+        return self._create_or_get_service(factory.NotificationService)
+
+    @property
+    def check_group(self):
+        return self._create_or_get_service(factory.CheckGroupService)

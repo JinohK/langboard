@@ -4,25 +4,24 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectCheckitem } from "@/core/models";
 
 export interface ICardCheckitemCreatedRawResponse {
-    checkitem: ProjectCheckitem.IStore;
+    checkitem: ProjectCheckitem.Interface;
 }
 
 export interface IUseCardCheckitemCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
     cardUID: string;
+    checkGroupUID: string;
 }
 
-const useCardCheckitemCreatedHandlers = ({ callback, projectUID, cardUID }: IUseCardCheckitemCreatedHandlersProps) => {
+const useCardCheckitemCreatedHandlers = ({ callback, cardUID, checkGroupUID }: IUseCardCheckitemCreatedHandlersProps) => {
     return useSocketHandler<{}, ICardCheckitemCreatedRawResponse>({
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-card-checkitem-created-${cardUID}`,
+        topic: ESocketTopic.BoardCard,
+        topicId: cardUID,
+        eventKey: `board-card-checkitem-created-${checkGroupUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CREATED,
-            params: { uid: cardUID },
+            params: { uid: checkGroupUID },
             callback,
             responseConverter: (data) => {
-                data.checkitem.project_uid = projectUID;
                 ProjectCheckitem.Model.fromObject(data.checkitem, true);
                 return {};
             },

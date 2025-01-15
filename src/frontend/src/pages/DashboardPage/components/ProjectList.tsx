@@ -48,7 +48,7 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
             scrollable={() => document.getElementById("main")}
             loadMore={nextPage}
             hasMore={hasMore}
-            threshold={140}
+            threshold={78}
             loader={<SkeletonProjectList key={createShortUUID()} />}
             className={cn("!overflow-y-hidden", className)}
         >

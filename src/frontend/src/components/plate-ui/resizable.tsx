@@ -43,7 +43,10 @@ export const ResizeHandle = withRef<typeof ResizeHandlePrimitive>(({ options, ..
 
     if (state.readOnly) return null;
 
-    return <ResizeHandleVariants ref={ref} data-resizing={state.isResizing} direction={options?.direction} {...resizeHandle.props} {...props} />;
+    return (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <ResizeHandleVariants ref={ref} data-resizing={state.isResizing} direction={options?.direction} {...resizeHandle.props} {...(props as any)} />
+    );
 });
 
 const resizableVariants = cva("", {

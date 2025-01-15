@@ -177,6 +177,15 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             User.#subscribedUserUIDs.push(...userUIDs);
 
             socket.subscribe(ESocketTopic.User, userUIDs);
+
+            for (let i = 0; i < userUIDs.length; ++i) {
+                const uid = userUIDs[i];
+                User.subscribe("DELETION", uid, (uids) => {
+                    if (uids.includes(uid)) {
+                        socket.unsubscribe(ESocketTopic.User, [uid]);
+                    }
+                });
+            }
         }, 100);
 
         this.subscribeSocketEvents([useUserUpdatedHandlers], {

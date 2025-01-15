@@ -3,7 +3,7 @@ import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
-import { AuthUser } from "@/core/models";
+import { AuthUser, UserNotification } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
 
@@ -79,13 +79,14 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 userRef.current = null;
             }
 
-            const response = await api.get<{ user: AuthUser.Interface }>(API_ROUTES.AUTH.ABOUT_ME, {
+            const response = await api.get<{ user: AuthUser.Interface; notifications: UserNotification.Interface[] }>(API_ROUTES.AUTH.ABOUT_ME, {
                 headers: {
                     Authorization: `Bearer ${getAccessToken()}`,
                 },
             });
 
             const user = AuthUser.Model.fromObject(response.data.user);
+            UserNotification.Model.fromObjectArray(response.data.notifications);
 
             sessionStorage.setItem(
                 "about-me",

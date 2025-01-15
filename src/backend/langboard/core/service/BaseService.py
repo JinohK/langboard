@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Sequence, TypeVar, overload
+from typing import Any, Callable, Sequence, TypeVar, cast, overload
 from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ..db import BaseSqlModel, DbSession, SnowflakeID
+from ... import models
+from ..ai import Bot
+from ..db import BaseSqlModel, DbSession, SnowflakeID, User
+from ..setting import AppSetting
 
 
 _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
@@ -156,3 +159,16 @@ class BaseService(ABC):
         elif isinstance(data, datetime):
             return data.isoformat()
         return data
+
+    def _get_model_by_table_name(self, table_name: str) -> type[BaseSqlModel] | None:
+        if table_name == User.__tablename__:
+            return User
+        elif table_name == Bot.__tablename__:
+            return Bot
+        elif table_name == AppSetting.__tablename__:
+            return AppSetting
+        for model_name in models.__all__:
+            model = cast(type[BaseSqlModel], models.__dict__[model_name])
+            if model.__tablename__ == table_name:
+                return model
+        return None

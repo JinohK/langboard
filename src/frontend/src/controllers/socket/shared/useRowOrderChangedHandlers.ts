@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCard } from "@/core/models";
+import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { StringCase } from "@/core/utils/StringUtils";
 
 interface IBaseRowOrderChangedResponse {
@@ -24,7 +24,7 @@ interface IMovedColumnRowOrderChangedResponse extends IBaseRowOrderChangedRespon
 export type TRowOrderChangedResponse = IInColumnRowOrderChangedResponse | IMovedColumnRowOrderChangedResponse;
 
 export interface IUseRowOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<TRowOrderChangedResponse> {
-    type: "ProjectCard" | "ProjectCardSubCheckitem";
+    type: "ProjectCard" | "ProjectCardCheckitem";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -33,17 +33,20 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
     let onEventName = "";
     const sendEventName = "";
     let targetModel;
+    let targetModelColumn;
     let topic = ESocketTopic.None;
     switch (type) {
         case "ProjectCard":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED;
             targetModel = ProjectCard.Model;
+            targetModelColumn = "column_uid";
             topic = ESocketTopic.Board;
             break;
-        case "ProjectCardSubCheckitem":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.SUB_CHECKITEM.ORDER_CHANGED;
-            targetModel = ProjectCard.Model;
-            topic = ESocketTopic.Board;
+        case "ProjectCardCheckitem":
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
+            targetModel = ProjectCheckitem.Model;
+            targetModelColumn = "check_group_uid";
+            topic = ESocketTopic.BoardCard;
             break;
     }
 
@@ -60,7 +63,7 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
                 if (model) {
                     model.order = data.order;
                     if (data.move_type === "to_column") {
-                        model.column_uid = data.column_uid;
+                        model[targetModelColumn as "uid"] = data.column_uid;
                     }
                 }
                 return data;

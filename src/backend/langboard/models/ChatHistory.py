@@ -19,5 +19,8 @@ class ChatHistory(SoftDeleteModel, table=True):
             "updated_at": self.updated_at,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["filterable", "sender_id", "receiver_id", "history_type", "message"]

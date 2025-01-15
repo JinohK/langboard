@@ -3,7 +3,7 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { TBaseModelInstance } from "@/core/models/Base";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface IColumn {
     uid: string;
@@ -65,6 +65,10 @@ function useReorderColumn<TColumn extends TBaseModelInstance<IColumn>>({
         );
         return true;
     };
+
+    useEffect(() => {
+        setColumns(flatColumns.sort((a, b) => a.order - b.order));
+    }, [flatColumns]);
 
     return { columns, setColumns, reorder, sendColumnOrderChanged: handlers.send };
 }

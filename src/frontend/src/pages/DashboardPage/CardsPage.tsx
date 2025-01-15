@@ -35,11 +35,11 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
     }
 
     const next = (page: number) => {
-        return new Promise((resolve) => {
+        return new Promise<bool>((resolve) => {
             setTimeout(() => {
                 curPage = page;
                 createCards();
-                resolve(undefined);
+                resolve(true);
             }, 3500);
         });
     };

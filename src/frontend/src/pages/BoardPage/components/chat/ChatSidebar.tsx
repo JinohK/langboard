@@ -4,7 +4,6 @@ import { Box, Button, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/
 import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import Conversation from "@/pages/BoardPage/components/chat/Conversation";
@@ -13,6 +12,7 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
+import { ChatMessageModel } from "@/core/models";
 
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID, isSending, setIsSending } = useBoardChat();
@@ -21,7 +21,6 @@ const ChatSidebar = memo((): JSX.Element => {
     const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
-    const { queryClient } = useQueryMutation();
     const chatInputRef = useRef<HTMLInputElement>(null);
 
     const sendChat = () => {
@@ -86,10 +85,7 @@ const ChatSidebar = memo((): JSX.Element => {
             { uid: projectUID },
             {
                 onSuccess: () => {
-                    queryClient.resetQueries({
-                        queryKey: [`get-project-chat-messages-${projectUID}`],
-                        exact: true,
-                    });
+                    ChatMessageModel.Model.deleteModels((model) => model.projectUID === projectUID);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

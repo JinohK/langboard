@@ -35,5 +35,8 @@ class ProjectLabel(BaseSqlModel, table=True):
             "color": self.color,
         }
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["project_id", "name", "color", "order", "is_bot"]

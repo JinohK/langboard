@@ -30,6 +30,7 @@ import { AudioPlugin, FilePlugin, ImagePlugin, MediaEmbedPlugin, PlaceholderPlug
 import { MentionInputPlugin, MentionPlugin } from "@udecode/plate-mention/react";
 import { SlashInputPlugin } from "@udecode/plate-slash-command/react";
 import { TableCellHeaderPlugin, TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 import { editorPlugins, viewPlugins } from "@/components/Editor/plugins/editor-plugins";
 import { AILeaf } from "@/components/plate-ui/ai-leaf";
 import { BlockquoteElement } from "@/components/plate-ui/blockquote-element";
@@ -62,6 +63,7 @@ import { MediaAudioElement } from "@/components/plate-ui/media-audio-element";
 import { MediaFileElement } from "@/components/plate-ui/media-file-element";
 import { EquationElement } from "@/components/plate-ui/equation-element";
 import { InlineEquationElement } from "@/components/plate-ui/inline-equation-element";
+import { PlantUmlElement } from "@/components/plate-ui/plantuml-element";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 
 interface IBaseUseCreateEditor {
@@ -156,6 +158,7 @@ const getComponents = ({ currentUser, mentionables, uploadPath, uploadedCallback
         }),
         [ParagraphPlugin.key]: ParagraphElement,
         [PlaceholderPlugin.key]: withProps(MediaPlaceholderElement, { uploadPath, uploadedCallback }),
+        [PlantUmlPlugin.key]: PlantUmlElement,
         [StrikethroughPlugin.key]: withProps(PlateLeaf, { as: "s" }),
         [SubscriptPlugin.key]: withProps(PlateLeaf, { as: "sub" }),
         [SuperscriptPlugin.key]: withProps(PlateLeaf, { as: "sup" }),

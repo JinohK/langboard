@@ -29,9 +29,7 @@ function Conversation() {
         isFetchingRef.current = true;
         await new Promise((resolve) => {
             setTimeout(async () => {
-                await mutateAsync({
-                    current_date: new Date(),
-                });
+                await mutateAsync({});
                 isFetchingRef.current = false;
                 resolve(null);
             }, 2500);

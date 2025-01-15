@@ -14,5 +14,8 @@ class CardRelationship(BaseSqlModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {}
 
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["relation_type_id", "card_id_parent", "card_id_child"]
