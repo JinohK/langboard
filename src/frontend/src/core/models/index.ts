@@ -10,7 +10,7 @@ export * as ProjectCard from "@/core/models/ProjectCard";
 export * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 export * as ProjectCardComment from "@/core/models/ProjectCardComment";
 export * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
-export * as ProjectCheckGroup from "@/core/models/ProjectCheckGroup";
+export * as ProjectChecklist from "@/core/models/ProjectChecklist";
 export * as ProjectCheckitem from "@/core/models/ProjectCheckitem";
 export * as ProjectColumn from "@/core/models/ProjectColumn";
 export * as ProjectLabel from "@/core/models/ProjectLabel";

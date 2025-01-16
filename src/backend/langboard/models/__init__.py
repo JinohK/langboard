@@ -6,9 +6,9 @@ from .CardComment import CardComment
 from .CardCommentReaction import CardCommentReaction
 from .CardRelationship import CardRelationship
 from .ChatHistory import ChatHistory
-from .CheckGroup import CheckGroup
 from .Checkitem import Checkitem
 from .CheckitemTimerRecord import CheckitemTimerRecord
+from .Checklist import Checklist
 from .GlobalCardRelationshipType import GlobalCardRelationshipType
 from .Project import Project
 from .ProjectAssignedBot import ProjectAssignedBot
@@ -36,7 +36,7 @@ __all__ = [
     "CardCommentReaction",
     "CardRelationship",
     "ChatHistory",
-    "CheckGroup",
+    "Checklist",
     "Checkitem",
     "CheckitemTimerRecord",
     "GlobalCardRelationshipType",

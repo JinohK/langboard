@@ -1,16 +1,16 @@
 import { Toast } from "@/components/base";
 import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
-import useNotifyCardCheckGroup from "@/controllers/api/card/checkgroup/useNotifyCardCheckGroup";
+import useNotifyCardChecklist from "@/controllers/api/card/checklist/useNotifyCardChecklist";
 import { User, UserGroup } from "@/core/models";
-import { useBoardCardCheckGroup } from "@/core/providers/BoardCardCheckGroupProvider";
+import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useTranslation } from "react-i18next";
 
-function BoardCardCheckGroupNotify() {
+function BoardCardChecklistNotify() {
     const { projectUID, card, currentUser, sharedClassNames } = useBoardCard();
-    const { checkGroup, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckGroup();
-    const { mutateAsync: notifyCheckGroupMutateAsync } = useNotifyCardCheckGroup();
+    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
+    const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist();
     const [t] = useTranslation();
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
@@ -23,10 +23,10 @@ function BoardCardCheckGroupNotify() {
         setIsValidating(true);
 
         endCallback();
-        const promise = notifyCheckGroupMutateAsync({
+        const promise = notifyChecklistMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            check_group_uid: checkGroup.uid,
+            checklist_uid: checklist.uid,
             member_uids: selectedItems.map((item) => item.uid),
         });
 
@@ -85,4 +85,4 @@ function BoardCardCheckGroupNotify() {
     );
 }
 
-export default BoardCardCheckGroupNotify;
+export default BoardCardChecklistNotify;

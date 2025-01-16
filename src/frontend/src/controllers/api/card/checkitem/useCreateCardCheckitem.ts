@@ -6,7 +6,7 @@ import { format } from "@/core/utils/StringUtils";
 export interface ICreateCardCheckitemForm {
     project_uid: string;
     card_uid: string;
-    check_group_uid: string;
+    checklist_uid: string;
     title: string;
 }
 
@@ -17,7 +17,7 @@ const useCreateCardCheckitem = (options?: TMutationOptions<ICreateCardCheckitemF
         const url = format(API_ROUTES.BOARD.CARD.CHECKITEM.CREATE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
-            check_group_uid: params.check_group_uid,
+            checklist_uid: params.checklist_uid,
         });
         const res = await api.post(url, {
             title: params.title,

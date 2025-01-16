@@ -1,6 +1,6 @@
 from .Attachment import ChangeAttachmentNameForm
 from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm, UpdateCardRelationshipsForm
-from .Check import CardCheckGroupNotifyForm, CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm
+from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
 from .Project import (
@@ -36,7 +36,7 @@ __all__ = [
     "ToggleCardCommentReactionForm",
     "CardCheckRelatedForm",
     "ChangeCardCheckitemStatusForm",
-    "CardCheckGroupNotifyForm",
+    "CardChecklistNotifyForm",
     "CardifyCheckitemForm",
     "WikiForm",
     "ChangeWikiDetailsForm",

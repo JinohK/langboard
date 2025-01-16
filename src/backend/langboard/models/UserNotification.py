@@ -12,7 +12,7 @@ class NotificationType(Enum):
     MentionedAtComment = "mentioned_at_comment"
     MentionedAtWiki = "mentioned_at_wiki"
     AssignedToCard = "assigned_to_card"
-    NotifiedFromCheckGroup = "notified_from_check_group"
+    NotifiedFromChecklist = "notified_from_checklist"
 
 
 class UserNotification(BaseSqlModel, table=True):

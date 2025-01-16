@@ -6,8 +6,6 @@ from .Constants import BASE_DIR
 from .core.logger import Logger
 
 
-logger = Logger.main
-
 _TBase = TypeVar("_TBase", bound=Type)
 
 
@@ -42,5 +40,5 @@ def load_modules(
         exports = get_exports(namespace, module)
         modules[namespace] = exports
     if log:
-        logger.info(f"Loaded [b green]{file_pattern}[/] modules in [b green]{dir_path}[/]")
+        Logger.main.info(f"Loaded [b green]{file_pattern}[/] modules in [b green]{dir_path}[/]")
     return modules

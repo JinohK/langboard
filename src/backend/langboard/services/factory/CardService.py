@@ -20,7 +20,7 @@ from ...models import (
 )
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
-from .CheckGroupService import CheckGroupService
+from .ChecklistService import ChecklistService
 from .NotificationService import NotificationService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
@@ -63,8 +63,8 @@ class CardService(BaseService):
         project_column_service = self._get_service(ProjectColumnService)
         api_card["project_all_columns"] = await project_column_service.get_list(project)
 
-        check_group_service = self._get_service(CheckGroupService)
-        api_card["check_groups"] = await check_group_service.get_list(card, as_api=True)
+        checklist_service = self._get_service(ChecklistService)
+        api_card["checklists"] = await checklist_service.get_list(card, as_api=True)
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)

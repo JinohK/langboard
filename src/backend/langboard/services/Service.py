@@ -96,5 +96,5 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.NotificationService)
 
     @property
-    def check_group(self):
-        return self._create_or_get_service(factory.CheckGroupService)
+    def checklist(self):
+        return self._create_or_get_service(factory.ChecklistService)

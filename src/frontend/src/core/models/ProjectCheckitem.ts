@@ -16,7 +16,7 @@ export enum ECheckitemStatus {
 
 export interface Interface extends IBaseModel {
     card_uid: string;
-    check_group_uid: string;
+    checklist_uid: string;
     cardified_card?: ProjectCard.IStore;
     user?: User.Interface;
     title: string;
@@ -79,11 +79,11 @@ class ProjectCheckitem extends BaseModel<Interface> {
         this.update({ card_uid: value });
     }
 
-    public get check_group_uid() {
-        return this.getValue("check_group_uid");
+    public get checklist_uid() {
+        return this.getValue("checklist_uid");
     }
-    public set check_group_uid(value: string) {
-        this.update({ check_group_uid: value });
+    public set checklist_uid(value: string) {
+        this.update({ checklist_uid: value });
     }
 
     public get cardified_card(): ProjectCard.TModel | undefined {

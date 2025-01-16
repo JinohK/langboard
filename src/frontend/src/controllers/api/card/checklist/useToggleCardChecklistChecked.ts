@@ -3,27 +3,27 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
 
-export interface IToggleCardCheckGroupCheckedForm {
+export interface IToggleCardChecklistCheckedForm {
     project_uid: string;
     card_uid: string;
-    check_group_uid: string;
+    checklist_uid: string;
 }
 
-const useToggleCardCheckGroupChecked = (options?: TMutationOptions<IToggleCardCheckGroupCheckedForm>) => {
+const useToggleCardChecklistChecked = (options?: TMutationOptions<IToggleCardChecklistCheckedForm>) => {
     const { mutate } = useQueryMutation();
 
-    const toggleCheckGroupChecked = async (params: IToggleCardCheckGroupCheckedForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECK_GROUP.TOGGLE_CHECKED, {
+    const toggleChecklistChecked = async (params: IToggleCardChecklistCheckedForm) => {
+        const url = format(API_ROUTES.BOARD.CARD.CHECKLIST.TOGGLE_CHECKED, {
             uid: params.project_uid,
             card_uid: params.card_uid,
-            check_group_uid: params.check_group_uid,
+            checklist_uid: params.checklist_uid,
         });
         const res = await api.put(url);
 
         return res.data;
     };
 
-    const result = mutate(["toggle-card-check-group-checked"], toggleCheckGroupChecked, {
+    const result = mutate(["toggle-card-checklist-checked"], toggleChecklistChecked, {
         ...options,
         retry: 0,
     });
@@ -31,4 +31,4 @@ const useToggleCardCheckGroupChecked = (options?: TMutationOptions<IToggleCardCh
     return result;
 };
 
-export default useToggleCardCheckGroupChecked;
+export default useToggleCardChecklistChecked;

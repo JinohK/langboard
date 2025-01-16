@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCardAttachment, ProjectCheckGroup, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
+import { ProjectCardAttachment, ProjectChecklist, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
 import { StringCase } from "@/core/utils/StringUtils";
 
 export interface IColumnOrderChangedResponse {
@@ -10,7 +10,7 @@ export interface IColumnOrderChangedResponse {
 }
 
 export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<IColumnOrderChangedResponse> {
-    type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectCheckGroup" | "ProjectWiki" | "ProjectLabel";
+    type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectChecklist" | "ProjectWiki" | "ProjectLabel";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -31,9 +31,9 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
             targetModel = ProjectCardAttachment.Model;
             topic = ESocketTopic.BoardCard;
             break;
-        case "ProjectCheckGroup":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECK_GROUP.ORDER_CHANGED;
-            targetModel = ProjectCheckGroup.Model;
+        case "ProjectChecklist":
+            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.ORDER_CHANGED;
+            targetModel = ProjectChecklist.Model;
             topic = ESocketTopic.BoardCard;
             break;
         case "ProjectWiki":

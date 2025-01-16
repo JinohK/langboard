@@ -1,12 +1,12 @@
 import { Button, DropdownMenu, IconComponent } from "@/components/base";
-import { useBoardCardCheckGroup } from "@/core/providers/BoardCardCheckGroupProvider";
-import BoardCardCheckGroupMoreDelete from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupMoreDelete";
-import BoardCardCheckGroupMoreEdit from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupMoreEdit";
+import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
+import BoardCardChecklistMoreDelete from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMoreDelete";
+import BoardCardChecklistMoreEdit from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMoreEdit";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-function BoardCardCheckGroupMore(): JSX.Element {
-    const { isValidating } = useBoardCardCheckGroup();
+function BoardCardChecklistMore(): JSX.Element {
+    const { isValidating } = useBoardCardChecklist();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
 
@@ -27,11 +27,11 @@ function BoardCardCheckGroupMore(): JSX.Element {
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
-                <BoardCardCheckGroupMoreEdit setIsMoreMenuOpened={setIsOpened} />
-                <BoardCardCheckGroupMoreDelete setIsMoreMenuOpened={setIsOpened} />
+                <BoardCardChecklistMoreEdit setIsMoreMenuOpened={setIsOpened} />
+                <BoardCardChecklistMoreDelete setIsMoreMenuOpened={setIsOpened} />
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     );
 }
 
-export default BoardCardCheckGroupMore;
+export default BoardCardChecklistMore;

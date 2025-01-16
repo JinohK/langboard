@@ -2,37 +2,37 @@ import { createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { ProjectCheckGroup } from "@/core/models";
+import { ProjectChecklist } from "@/core/models";
 
-export interface IBoardCardCheckGroupContext {
-    checkGroup: ProjectCheckGroup.TModel;
+export interface IBoardCardChecklistContext {
+    checklist: ProjectChecklist.TModel;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
     sharedErrorHandler: (error: unknown) => string;
 }
 
-interface IBoardCardCheckGroupProviderProps {
-    checkGroup: ProjectCheckGroup.TModel;
+interface IBoardCardChecklistProviderProps {
+    checklist: ProjectChecklist.TModel;
     isValidating: bool;
     setIsValidating: (value: bool) => void;
     children: React.ReactNode;
 }
 
 const initialContext = {
-    checkGroup: {} as ProjectCheckGroup.TModel,
+    checklist: {} as ProjectChecklist.TModel,
     isValidating: false,
     setIsValidating: () => {},
     sharedErrorHandler: () => "",
 };
 
-const BoardCardCheckGroupContext = createContext<IBoardCardCheckGroupContext>(initialContext);
+const BoardCardChecklistContext = createContext<IBoardCardChecklistContext>(initialContext);
 
-export const BoardCardCheckGroupProvider = ({
-    checkGroup,
+export const BoardCardChecklistProvider = ({
+    checklist,
     isValidating,
     setIsValidating,
     children,
-}: IBoardCardCheckGroupProviderProps): React.ReactNode => {
+}: IBoardCardChecklistProviderProps): React.ReactNode => {
     const [t] = useTranslation();
 
     const sharedErrorHandler = (error: unknown) => {
@@ -42,7 +42,7 @@ export const BoardCardCheckGroupProvider = ({
                 message = t("errors.Forbidden");
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                message = t("card.errors.Check group not found.");
+                message = t("card.errors.Checklist not found.");
             },
             nonApiError: () => {
                 message = t("errors.Unknown error");
@@ -57,23 +57,23 @@ export const BoardCardCheckGroupProvider = ({
     };
 
     return (
-        <BoardCardCheckGroupContext.Provider
+        <BoardCardChecklistContext.Provider
             value={{
-                checkGroup,
+                checklist,
                 isValidating,
                 setIsValidating,
                 sharedErrorHandler,
             }}
         >
             {children}
-        </BoardCardCheckGroupContext.Provider>
+        </BoardCardChecklistContext.Provider>
     );
 };
 
-export const useBoardCardCheckGroup = () => {
-    const context = useContext(BoardCardCheckGroupContext);
+export const useBoardCardChecklist = () => {
+    const context = useContext(BoardCardChecklistContext);
     if (!context) {
-        throw new Error("useBoardCardCheckGroup must be used within a BoardCardCheckGroupProvider");
+        throw new Error("useBoardCardChecklist must be used within a BoardCardChecklistProvider");
     }
     return context;
 };

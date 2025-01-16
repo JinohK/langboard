@@ -1,21 +1,21 @@
 import { Box, Button, Collapsible, Flex, Toast } from "@/components/base";
-import useChangeCardCheckGroupOrder from "@/controllers/api/card/checkgroup/useChangeCardCheckGroupOrder";
+import useChangeCardChecklistOrder from "@/controllers/api/card/checklist/useChangeCardChecklistOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
-import { ProjectCheckGroup, ProjectCheckitem } from "@/core/models";
+import { ProjectChecklist, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
-import BoardCardCheckGroup from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroup";
-import BoardCardCheckitem from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitem";
-import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checkgroup/SkeletonBoardCardCheckitem";
+import BoardCardChecklist from "@/pages/BoardPage/components/card/checklist/BoardCardChecklist";
+import BoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitem";
+import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/SkeletonBoardCardCheckitem";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-export function SkeletonBoardCardCheckGroupList() {
+export function SkeletonBoardCardChecklistGroup() {
     return (
         <>
             <SkeletonBoardCardCheckitem />
@@ -25,45 +25,45 @@ export function SkeletonBoardCardCheckGroupList() {
     );
 }
 
-function BoardCardCheckGroupList(): JSX.Element {
+function BoardCardChecklistGroup(): JSX.Element {
     const [t] = useTranslation();
     const { card, socket } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
-    const flatCheckGroups = card.useForeignField<ProjectCheckGroup.TModel>("check_groups");
-    const { mutate: changeOrderMutate } = useChangeCardCheckGroupOrder();
-    const { columns: checkGroups, reorder: reorderCheckitems } = useReorderColumn({
-        type: "ProjectCheckGroup",
+    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const { mutate: changeOrderMutate } = useChangeCardChecklistOrder();
+    const { columns: checklists, reorder: reorderCheckitems } = useReorderColumn({
+        type: "ProjectChecklist",
         eventNameParams: { uid: card.uid },
         topicId: card.uid,
-        columns: flatCheckGroups,
+        columns: flatChecklists,
         socket,
     });
-    const checkGroupUIDs = useMemo(() => checkGroups.map((checkGroup) => checkGroup.uid), [checkGroups]);
+    const checklistUIDs = useMemo(() => checklists.map((checklist) => checklist.uid), [checklists]);
     const checkitemsMap = useMemo<Record<string, ProjectCheckitem.TModel>>(() => {
         const map: Record<string, ProjectCheckitem.TModel> = {};
-        checkGroups.forEach((checkGroup) => {
-            checkGroup.checkitems.forEach((checkitem) => {
+        checklists.forEach((checklist) => {
+            checklist.checkitems.forEach((checkitem) => {
                 map[checkitem.uid] = checkitem;
             });
         });
         return map;
-    }, [checkGroups]);
+    }, [checklists]);
     const dndContextId = useId();
     const {
-        activeColumn: activeCheckGroup,
+        activeColumn: activeChecklist,
         activeRow: activeCheckitem,
         containerIdRowDragCallbacksRef: callbacksRef,
         sensors,
         onDragStart,
         onDragEnd,
         onDragOverOrMove,
-    } = useColumnRowSortable<ProjectCheckGroup.TModel, ProjectCheckitem.TModel>({
-        columnDragDataType: "CheckGroup",
+    } = useColumnRowSortable<ProjectChecklist.TModel, ProjectCheckitem.TModel>({
+        columnDragDataType: "Checklist",
         rowDragDataType: "Checkitem",
         columnCallbacks: {
-            onDragEnd: (originalCheckGroup, index) => {
-                const originalCheckitemOrder = originalCheckGroup.order;
-                if (!reorderCheckitems(originalCheckGroup, index)) {
+            onDragEnd: (originalChecklist, index) => {
+                const originalCheckitemOrder = originalChecklist.order;
+                if (!reorderCheckitems(originalChecklist, index)) {
                     return;
                 }
 
@@ -71,7 +71,7 @@ function BoardCardCheckGroupList(): JSX.Element {
                     {
                         project_uid: card.project_uid,
                         card_uid: card.uid,
-                        check_group_uid: originalCheckGroup.uid,
+                        checklist_uid: originalChecklist.uid,
                         order: index,
                     },
                     {
@@ -79,7 +79,7 @@ function BoardCardCheckGroupList(): JSX.Element {
                             const { handle } = setupApiErrorHandler({
                                 wildcardError: () => {
                                     Toast.Add.error(t("errors.Internal server error"));
-                                    reorderCheckitems(originalCheckGroup, originalCheckitemOrder);
+                                    reorderCheckitems(originalChecklist, originalCheckitemOrder);
                                 },
                             });
 
@@ -90,29 +90,29 @@ function BoardCardCheckGroupList(): JSX.Element {
             },
         },
         transformContainerId: (item) => {
-            return `board-check-group-${(item as ProjectCheckitem.TModel).check_group_uid ?? item.uid}`;
+            return `board-checklist-${(item as ProjectCheckitem.TModel).checklist_uid ?? item.uid}`;
         },
     });
 
     return (
         <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
-            <SortableContext items={checkGroupUIDs} strategy={verticalListSortingStrategy}>
-                {checkGroups.slice(0, 5).map((checkGroup) => (
-                    <BoardCardCheckGroup
-                        key={`board-check-group-${checkGroup.uid}`}
-                        checkGroup={checkGroup}
+            <SortableContext items={checklistUIDs} strategy={verticalListSortingStrategy}>
+                {checklists.slice(0, 5).map((checklist) => (
+                    <BoardCardChecklist
+                        key={`board-checklist-${checklist.uid}`}
+                        checklist={checklist}
                         checkitemsMap={checkitemsMap}
                         callbacksRef={callbacksRef}
                     />
                 ))}
-                {checkGroups.length > 5 && (
+                {checklists.length > 5 && (
                     <Collapsible.Root open={isOpened} onOpenChange={setIsOpened}>
                         <Collapsible.Content asChild>
                             <Box>
-                                {checkGroups.slice(5).map((checkGroup) => (
-                                    <BoardCardCheckGroup
-                                        key={`board-check-group-${checkGroup.uid}`}
-                                        checkGroup={checkGroup}
+                                {checklists.slice(5).map((checklist) => (
+                                    <BoardCardChecklist
+                                        key={`board-checklist-${checklist.uid}`}
+                                        checklist={checklist}
                                         checkitemsMap={checkitemsMap}
                                         callbacksRef={callbacksRef}
                                     />
@@ -122,8 +122,8 @@ function BoardCardCheckGroupList(): JSX.Element {
                         <Collapsible.Trigger asChild>
                             <Flex justify="start" mt="2">
                                 <Button size="sm" variant="secondary">
-                                    {t(`card.${isOpened ? "Show fewer check groups" : "Show all check groups ({checkGroups} hidden)"}`, {
-                                        checkGroups: checkGroups.length - 5,
+                                    {t(`card.${isOpened ? "Show fewer checklists" : "Show all checklists ({checklists} hidden)"}`, {
+                                        checklists: checklists.length - 5,
                                     })}
                                 </Button>
                             </Flex>
@@ -135,10 +135,10 @@ function BoardCardCheckGroupList(): JSX.Element {
             {!TypeUtils.isUndefined(window) &&
                 createPortal(
                     <DragOverlay>
-                        {activeCheckGroup && (
-                            <BoardCardCheckGroup
-                                key={`board-check-group-${activeCheckGroup.uid}`}
-                                checkGroup={activeCheckGroup}
+                        {activeChecklist && (
+                            <BoardCardChecklist
+                                key={`board-checklist-${activeChecklist.uid}`}
+                                checklist={activeChecklist}
                                 checkitemsMap={checkitemsMap}
                                 callbacksRef={callbacksRef}
                                 isOverlay
@@ -152,4 +152,4 @@ function BoardCardCheckGroupList(): JSX.Element {
     );
 }
 
-export default BoardCardCheckGroupList;
+export default BoardCardChecklistGroup;

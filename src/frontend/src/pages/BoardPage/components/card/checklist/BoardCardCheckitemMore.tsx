@@ -1,8 +1,8 @@
 import { Button, DropdownMenu, IconComponent } from "@/components/base";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
-import BoardCardCheckitemMoreCardify from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemMoreCardify";
-import BoardCardCheckitemMoreDelete from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemMoreDelete";
-import BoardCardCheckitemMoreEdit from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemMoreEdit";
+import BoardCardCheckitemMoreCardify from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMoreCardify";
+import BoardCardCheckitemMoreDelete from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMoreDelete";
+import BoardCardCheckitemMoreEdit from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMoreEdit";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProjectCard } from "@/core/models";

@@ -9,17 +9,17 @@ export interface ICardCheckitemCreatedRawResponse {
 
 export interface IUseCardCheckitemCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     cardUID: string;
-    checkGroupUID: string;
+    checklistUID: string;
 }
 
-const useCardCheckitemCreatedHandlers = ({ callback, cardUID, checkGroupUID }: IUseCardCheckitemCreatedHandlersProps) => {
+const useCardCheckitemCreatedHandlers = ({ callback, cardUID, checklistUID }: IUseCardCheckitemCreatedHandlersProps) => {
     return useSocketHandler<{}, ICardCheckitemCreatedRawResponse>({
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,
-        eventKey: `board-card-checkitem-created-${checkGroupUID}`,
+        eventKey: `board-card-checkitem-created-${checklistUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CREATED,
-            params: { uid: checkGroupUID },
+            params: { uid: checklistUID },
             callback,
             responseConverter: (data) => {
                 ProjectCheckitem.Model.fromObject(data.checkitem, true);

@@ -4,9 +4,9 @@ from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
-from ...models import Card, CheckGroup, Checkitem, CheckitemTimerRecord, ProjectColumn
+from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, ProjectColumn
 from ...models.Checkitem import CheckitemStatus
-from .Types import TCardParam, TCheckGroupParam, TCheckitemParam, TUserOrBot
+from .Types import TCardParam, TCheckitemParam, TChecklistParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:card:checkitem"
@@ -23,18 +23,18 @@ class CheckitemService(BaseService):
 
     @overload
     async def get_list(
-        self, card: TCardParam, check_group: TCheckGroupParam, as_api: Literal[False]
+        self, card: TCardParam, checklist: TChecklistParam, as_api: Literal[False]
     ) -> list[tuple[Checkitem, Card | None, User | None]]: ...
     @overload
     async def get_list(
-        self, card: TCardParam, check_group: TCheckGroupParam, as_api: Literal[True]
+        self, card: TCardParam, checklist: TChecklistParam, as_api: Literal[True]
     ) -> list[dict[str, Any]]: ...
     async def get_list(
-        self, card: TCardParam, check_group: TCheckGroupParam, as_api: bool
+        self, card: TCardParam, checklist: TChecklistParam, as_api: bool
     ) -> list[tuple[Checkitem, Card | None, User | None]] | list[dict[str, Any]]:
         card = cast(Card, await self._get_by_param(Card, card))
-        check_group = cast(CheckGroup, await self._get_by_param(CheckGroup, check_group))
-        if not card or not check_group or check_group.card_id != card.id:
+        checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+        if not card or not checklist or checklist.card_id != card.id:
             return []
 
         result = await self._db.exec(
@@ -42,7 +42,7 @@ class CheckitemService(BaseService):
             .tables(Checkitem, Card, User)
             .outerjoin(Card, Card.column("id") == Checkitem.column("cardified_id"))
             .outerjoin(User, User.column("id") == Checkitem.column("user_id"))
-            .where(Checkitem.column("check_group_id") == check_group.id)
+            .where(Checkitem.column("checklist_id") == checklist.id)
         )
         records = result.all()
         if not as_api:
@@ -62,16 +62,16 @@ class CheckitemService(BaseService):
         return checkitems
 
     async def create(
-        self, user_or_bot: TUserOrBot, card: TCardParam, check_group: TCheckGroupParam, title: str
+        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam, title: str
     ) -> Checkitem | None:
         card = cast(Card, await self._get_by_param(Card, card))
-        check_group = cast(CheckGroup, await self._get_by_param(CheckGroup, check_group))
-        if not card or not check_group or check_group.card_id != card.id:
+        checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+        if not card or not checklist or checklist.card_id != card.id:
             return None
 
-        max_order = await self._get_max_order(Checkitem, "check_group_id", check_group.id)
+        max_order = await self._get_max_order(Checkitem, "checklist_id", checklist.id)
 
-        checkitem = Checkitem(check_group_id=check_group.id, title=title, order=max_order + 1)
+        checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order + 1)
         self._db.insert(checkitem)
         await self._db.commit()
 
@@ -80,7 +80,7 @@ class CheckitemService(BaseService):
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:created:{check_group.get_uid()}",
+            event=f"{_SOCKET_PREFIX}:created:{checklist.get_uid()}",
             data_keys="checkitem",
         )
 
@@ -143,7 +143,7 @@ class CheckitemService(BaseService):
         card: TCardParam,
         checkitem: TCheckitemParam,
         order: int,
-        check_group_uid: str = "",
+        checklist_uid: str = "",
     ) -> bool | None:
         card = cast(Card, await self._get_by_param(Card, card))
         checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
@@ -151,36 +151,34 @@ class CheckitemService(BaseService):
             return None
 
         original_order = checkitem.order
-        original_check_group = None
-        new_check_group = None
-        if check_group_uid:
-            original_check_group = await self._get_by_param(CheckGroup, checkitem.check_group_id)
-            new_check_group = await self._get_by_param(CheckGroup, check_group_uid)
+        original_checklist = None
+        new_checklist = None
+        if checklist_uid:
+            original_checklist = await self._get_by_param(Checklist, checkitem.checklist_id)
+            new_checklist = await self._get_by_param(Checklist, checklist_uid)
             if (
-                not original_check_group
-                or not new_check_group
-                or original_check_group.card_id != card.id
-                or new_check_group.card_id != card.id
+                not original_checklist
+                or not new_checklist
+                or original_checklist.card_id != card.id
+                or new_checklist.card_id != card.id
             ):
                 return None
 
         shared_update_query = self._db.query("update").table(Checkitem)
-        if original_check_group and new_check_group:
+        if original_checklist and new_checklist:
             update_query = shared_update_query.values({Checkitem.order: Checkitem.order - 1}).where(
                 (Checkitem.column("order") >= original_order)
-                & (Checkitem.column("check_group_id") == original_check_group.id)
+                & (Checkitem.column("checklist_id") == original_checklist.id)
             )
             await self._db.exec(update_query)
 
             update_query = shared_update_query.values({Checkitem.order: Checkitem.order + 1}).where(
-                (Checkitem.column("order") >= order) & (Checkitem.column("check_group_id") == new_check_group.id)
+                (Checkitem.column("order") >= order) & (Checkitem.column("checklist_id") == new_checklist.id)
             )
             await self._db.exec(update_query)
-            checkitem.check_group_id = new_check_group.id
+            checkitem.checklist_id = new_checklist.id
         else:
-            shared_update_query = shared_update_query.where(
-                Checkitem.column("check_group_id") == checkitem.check_group_id
-            )
+            shared_update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
             if original_order < order:
                 update_query = shared_update_query.values(
                     {Checkitem.column("order"): Checkitem.column("order") - 1}
@@ -200,22 +198,22 @@ class CheckitemService(BaseService):
         publish_models: list[SocketPublishModel] = []
         topic_id = card.get_uid()
 
-        if original_check_group and new_check_group:
+        if original_checklist and new_checklist:
             publish_models.extend(
                 [
                     SocketPublishModel(
                         topic=SocketTopic.BoardCard,
                         topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{new_check_group.get_uid()}",
+                        event=f"{_SOCKET_PREFIX}:order:changed:{new_checklist.get_uid()}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "to_column", "column_uid": new_check_group.get_uid()},
+                        custom_data={"move_type": "to_column", "column_uid": new_checklist.get_uid()},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.BoardCard,
                         topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{original_check_group.get_uid()}",
+                        event=f"{_SOCKET_PREFIX}:order:changed:{original_checklist.get_uid()}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "from_column", "column_uid": original_check_group.get_uid()},
+                        custom_data={"move_type": "from_column", "column_uid": original_checklist.get_uid()},
                     ),
                 ]
             )
@@ -224,7 +222,7 @@ class CheckitemService(BaseService):
                 SocketPublishModel(
                     topic=SocketTopic.BoardCard,
                     topic_id=topic_id,
-                    event=f"{_SOCKET_PREFIX}:order:changed:{checkitem.check_group_id.to_short_code()}",
+                    event=f"{_SOCKET_PREFIX}:order:changed:{checkitem.checklist_id.to_short_code()}",
                     data_keys=["uid", "order"],
                     custom_data={"move_type": "in_column"},
                 )
@@ -423,7 +421,7 @@ class CheckitemService(BaseService):
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:deleted:{checkitem.check_group_id.to_short_code()}",
+            event=f"{_SOCKET_PREFIX}:deleted:{checkitem.checklist_id.to_short_code()}",
             data_keys="uid",
         )
 

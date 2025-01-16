@@ -19,7 +19,7 @@ import type { Model as ProjectCardModel } from "@/core/models/ProjectCard";
 import type { Model as ProjectCardAttachmentModel } from "@/core/models/ProjectCardAttachment";
 import type { Model as ProjectCardCommentModel } from "@/core/models/ProjectCardComment";
 import type { Model as ProjectCardRelationshipModel } from "@/core/models/ProjectCardRelationship";
-import type { Model as ProjectCheckGroupModel } from "@/core/models/ProjectCheckGroup";
+import type { Model as ProjectChecklistModel } from "@/core/models/ProjectChecklist";
 import type { Model as ProjectCheckitemModel } from "@/core/models/ProjectCheckitem";
 import type { Model as ProjectColumnModel } from "@/core/models/ProjectColumn";
 import type { Model as ProjectLabelModel } from "@/core/models/ProjectLabel";
@@ -56,7 +56,7 @@ interface IModelMap {
     ProjectCardAttachment: typeof ProjectCardAttachmentModel;
     ProjectCardComment: typeof ProjectCardCommentModel;
     ProjectCardRelationship: typeof ProjectCardRelationshipModel;
-    ProjectCheckGroup: typeof ProjectCheckGroupModel;
+    ProjectChecklist: typeof ProjectChecklistModel;
     ProjectCheckitem: typeof ProjectCheckitemModel;
     ProjectColumn: typeof ProjectColumnModel;
     ProjectLabel: typeof ProjectLabelModel;

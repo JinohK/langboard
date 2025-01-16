@@ -78,16 +78,16 @@ export const API_ROUTES = {
                 DELETE: "/board/{uid}/card/{card_uid}/comment/{comment_uid}",
                 REACT: "/board/{uid}/card/{card_uid}/comment/{comment_uid}/react",
             },
-            CHECK_GROUP: {
-                CREATE: "/board/{uid}/card/{card_uid}/checkgroup",
-                NOTIFY: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/notify",
-                CHANGE_TITLE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/title",
-                CHANGE_ORDER: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/order",
-                TOGGLE_CHECKED: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/toggle-checked",
-                DELETE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}",
+            CHECKLIST: {
+                CREATE: "/board/{uid}/card/{card_uid}/checklist",
+                NOTIFY: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}/notify",
+                CHANGE_TITLE: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}/title",
+                CHANGE_ORDER: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}/order",
+                TOGGLE_CHECKED: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}/toggle-checked",
+                DELETE: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}",
             },
             CHECKITEM: {
-                CREATE: "/board/{uid}/card/{card_uid}/checkgroup/{check_group_uid}/checkitem",
+                CREATE: "/board/{uid}/card/{card_uid}/checklist/{checklist_uid}/checkitem",
                 CHANGE_TITLE: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/title",
                 CHANGE_ORDER: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
                 CHANGE_STATUS: "/board/{uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
@@ -199,12 +199,12 @@ export const SOCKET_SERVER_EVENTS = {
                 DELETED: "board:card:comment:deleted:{uid}",
                 REACTED: "board:card:comment:reacted:{uid}",
             },
-            CHECK_GROUP: {
-                CREATED: "board:card:checkgroup:created",
-                TITLE_CHANGED: "board:card:checkgroup:title:changed:{uid}",
-                ORDER_CHANGED: "board:card:checkgroup:order:changed:{uid}",
-                CHECKED_CHANGED: "board:card:checkgroup:checked:changed:{uid}",
-                DELETED: "board:card:checkgroup:deleted",
+            CHECKLIST: {
+                CREATED: "board:card:checklist:created",
+                TITLE_CHANGED: "board:card:checklist:title:changed:{uid}",
+                ORDER_CHANGED: "board:card:checklist:order:changed:{uid}",
+                CHECKED_CHANGED: "board:card:checklist:checked:changed:{uid}",
+                DELETED: "board:card:checklist:deleted",
             },
             CHECKITEM: {
                 CREATED: "board:card:checkitem:created:{uid}",

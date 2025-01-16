@@ -3,21 +3,21 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
 
-export interface IChangeCardCheckGroupTitleForm {
+export interface IChangeCardChecklistTitleForm {
     project_uid: string;
     card_uid: string;
-    check_group_uid: string;
+    checklist_uid: string;
     title: string;
 }
 
-const useChangeCardCheckGroupTitle = (options?: TMutationOptions<IChangeCardCheckGroupTitleForm>) => {
+const useChangeCardChecklistTitle = (options?: TMutationOptions<IChangeCardChecklistTitleForm>) => {
     const { mutate } = useQueryMutation();
 
-    const changeCheckGroupTitle = async (params: IChangeCardCheckGroupTitleForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECK_GROUP.CHANGE_TITLE, {
+    const changeChecklistTitle = async (params: IChangeCardChecklistTitleForm) => {
+        const url = format(API_ROUTES.BOARD.CARD.CHECKLIST.CHANGE_TITLE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
-            check_group_uid: params.check_group_uid,
+            checklist_uid: params.checklist_uid,
         });
         const res = await api.put(url, {
             title: params.title,
@@ -26,7 +26,7 @@ const useChangeCardCheckGroupTitle = (options?: TMutationOptions<IChangeCardChec
         return res.data;
     };
 
-    const result = mutate(["change-card-check-group-title"], changeCheckGroupTitle, {
+    const result = mutate(["change-card-checklist-title"], changeChecklistTitle, {
         ...options,
         retry: 0,
     });
@@ -34,4 +34,4 @@ const useChangeCardCheckGroupTitle = (options?: TMutationOptions<IChangeCardChec
     return result;
 };
 
-export default useChangeCardCheckGroupTitle;
+export default useChangeCardChecklistTitle;

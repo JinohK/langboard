@@ -3,15 +3,15 @@ import useChangeCardCheckitemOrder, { IChangeCardCheckitemOrderForm } from "@/co
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useReorderRow from "@/core/hooks/useReorderRow";
-import { Project, ProjectCheckGroup, ProjectCheckitem } from "@/core/models";
-import { BoardCardCheckGroupProvider } from "@/core/providers/BoardCardCheckGroupProvider";
+import { Project, ProjectChecklist, ProjectCheckitem } from "@/core/models";
+import { BoardCardChecklistProvider } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import BoardCardCheckGroupAddItem from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupAddItem";
-import BoardCardCheckGroupCheckbox from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupCheckbox";
-import BoardCardCheckGroupMore from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupMore";
-import BoardCardCheckGroupNotify from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupNotify";
-import BoardCardCheckitem from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitem";
+import BoardCardChecklistAddItem from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistAddItem";
+import BoardCardChecklistCheckbox from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistCheckbox";
+import BoardCardChecklistMore from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMore";
+import BoardCardChecklistNotify from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistNotify";
+import BoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitem";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -20,22 +20,22 @@ import { memo, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 
-export interface IBoardCardCheckGroupProps {
-    checkGroup: ProjectCheckGroup.TModel;
+export interface IBoardCardChecklistProps {
+    checklist: ProjectChecklist.TModel;
     callbacksRef: React.RefObject<Record<string, IRowDragCallback<ProjectCheckitem.TModel>>>;
     checkitemsMap: Record<string, ProjectCheckitem.TModel>;
     isOverlay?: bool;
 }
 
-interface IBoardCardCheckGroupDragData extends ISortableDragData<ProjectCheckGroup.TModel> {
-    type: "CheckGroup";
+interface IBoardCardChecklistDragData extends ISortableDragData<ProjectChecklist.TModel> {
+    type: "Checklist";
 }
 
-const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isOverlay }: IBoardCardCheckGroupProps): JSX.Element => {
+const BoardCardChecklist = memo(({ checklist, checkitemsMap, callbacksRef, isOverlay }: IBoardCardChecklistProps): JSX.Element => {
     const { projectUID, card, socket, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
-    const isOpenedInBoardCard = checkGroup.useField("isOpenedInBoardCard");
-    const checkGroupId = `board-check-group-${checkGroup.uid}`;
+    const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
+    const checklistId = `board-checklist-${checklist.uid}`;
     const updater = useReducer((x) => x + 1, 0);
     const [updated] = updater;
     const groupCheckitems = ProjectCheckitem.Model.useModels(
@@ -43,9 +43,9 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
             if (!checkitemsMap[model.uid]) {
                 checkitemsMap[model.uid] = model;
             }
-            return model.check_group_uid === checkGroup.uid;
+            return model.checklist_uid === checklist.uid;
         },
-        [checkGroup, updated]
+        [checklist, updated]
     );
     const checkitems = groupCheckitems.sort((a, b) => a.order - b.order);
     const checkitemsUIDs = useMemo(() => checkitems.map((checkitem) => checkitem.uid), [checkitems]);
@@ -53,29 +53,29 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
         type: "ProjectCardCheckitem",
         topicId: card.uid,
-        eventNameParams: { uid: checkGroup.uid },
+        eventNameParams: { uid: checklist.uid },
         allRowsMap: checkitemsMap,
         rows: checkitems,
-        columnKey: "check_group_uid",
-        currentColumnId: checkGroup.uid,
+        columnKey: "checklist_uid",
+        currentColumnId: checklist.uid,
         socket,
         updater,
     });
     const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: checkGroup.uid,
+        id: checklist.uid,
         data: {
-            type: "CheckGroup",
-            data: checkGroup,
-        } satisfies IBoardCardCheckGroupDragData,
+            type: "Checklist",
+            data: checklist,
+        } satisfies IBoardCardChecklistDragData,
         attributes: {
-            roleDescription: `CheckGroup: ${checkGroup.title}`,
+            roleDescription: `Checklist: ${checklist.title}`,
         },
     });
 
-    callbacksRef.current[checkGroupId] = {
+    callbacksRef.current[checklistId] = {
         onDragEnd: (originalCheckitem, index) => {
-            const isOrderUpdated = originalCheckitem.check_group_uid !== checkGroup.uid || originalCheckitem.order !== index;
+            const isOrderUpdated = originalCheckitem.checklist_uid !== checklist.uid || originalCheckitem.order !== index;
             reorderInColumn(originalCheckitem.uid, index);
             if (!isOrderUpdated) {
                 return;
@@ -87,12 +87,12 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
                 checkitem_uid: originalCheckitem.uid,
                 order: index,
             };
-            if (originalCheckitem.check_group_uid !== checkGroup.uid) {
-                form.parent_uid = checkGroup.uid;
+            if (originalCheckitem.checklist_uid !== checklist.uid) {
+                form.parent_uid = checklist.uid;
             }
 
             checkitemsMap[originalCheckitem.uid].order = index;
-            checkitemsMap[originalCheckitem.uid].check_group_uid = checkGroup.uid;
+            checkitemsMap[originalCheckitem.uid].checklist_uid = checklist.uid;
 
             changeCheckitemOrderMutate(form, {
                 onError: (error) => {
@@ -102,7 +102,7 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
                             reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
 
                             checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
-                            checkitemsMap[originalCheckitem.uid].check_group_uid = originalCheckitem.check_group_uid;
+                            checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
                         },
                     });
 
@@ -116,14 +116,14 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
             }
 
             if (!isOpenedInBoardCard) {
-                checkGroup.isOpenedInBoardCard = true;
+                checklist.isOpenedInBoardCard = true;
             }
 
             const shouldRemove = index === -1;
             if (shouldRemove) {
                 removeFromColumn(activeCheckitem.uid);
             } else {
-                moveToColumn(activeCheckitem.uid, index, checkGroup.uid);
+                moveToColumn(activeCheckitem.uid, index, checklist.uid);
             }
         },
     };
@@ -160,38 +160,38 @@ const BoardCardCheckGroup = memo(({ checkGroup, checkitemsMap, callbacksRef, isO
     }
 
     return (
-        <Box id={checkGroupId} {...props}>
+        <Box id={checklistId} {...props}>
             <Collapsible.Root
                 open={isOpenedInBoardCard}
                 onOpenChange={(opened) => {
-                    checkGroup.isOpenedInBoardCard = opened;
+                    checklist.isOpenedInBoardCard = opened;
                 }}
             >
-                <BoardCardCheckGroupInner checkGroup={checkGroup} attributes={attributes} listeners={listeners} />
-                <BoardCardCheckitemList checkGroup={checkGroup} checkGroupId={checkGroupId} checkitemsUIDs={checkitemsUIDs} checkitems={checkitems} />
+                <BoardCardChecklistInner checklist={checklist} attributes={attributes} listeners={listeners} />
+                <BoardCardCheckitemList checklist={checklist} checklistId={checklistId} checkitemsUIDs={checkitemsUIDs} checkitems={checkitems} />
             </Collapsible.Root>
         </Box>
     );
 });
 
-interface IBaordCardCheckGroupInnerProps {
-    checkGroup: ProjectCheckGroup.TModel;
+interface IBaordCardChecklistInnerProps {
+    checklist: ProjectChecklist.TModel;
     attributes?: DraggableAttributes;
     listeners?: SyntheticListenerMap;
 }
 
-const BoardCardCheckGroupInner = memo(({ checkGroup, attributes, listeners }: IBaordCardCheckGroupInnerProps) => {
+const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBaordCardChecklistInnerProps) => {
     const { hasRoleAction, sharedClassNames } = useBoardCard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isTitleOpened, setIsTitleOpened] = useState(false);
-    const title = checkGroup.useField("title");
-    const isChecked = checkGroup.useField("is_checked");
-    const isOpenedInBoardCard = checkGroup.useField("isOpenedInBoardCard");
+    const title = checklist.useField("title");
+    const isChecked = checklist.useField("is_checked");
+    const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
     const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
 
     return (
-        <BoardCardCheckGroupProvider checkGroup={checkGroup} isValidating={isValidating} setIsValidating={setIsValidating}>
+        <BoardCardChecklistProvider checklist={checklist} isValidating={isValidating} setIsValidating={setIsValidating}>
             <Flex
                 items="center"
                 justify="between"
@@ -218,8 +218,8 @@ const BoardCardCheckGroupInner = memo(({ checkGroup, attributes, listeners }: IB
                                 >
                                     <IconComponent icon="grip-vertical" size="4" />
                                 </Button>
-                                <BoardCardCheckGroupCheckbox key={`board-card-check-group-checkbox-${checkGroup.uid}`} />
-                                <BoardCardCheckGroupNotify key={`board-card-check-group-notify-${checkGroup.uid}`} />
+                                <BoardCardChecklistCheckbox key={`board-card-checklist-checkbox-${checklist.uid}`} />
+                                <BoardCardChecklistNotify key={`board-card-checklist-notify-${checklist.uid}`} />
                             </>
                         )}
                         <Collapsible.Trigger asChild>
@@ -259,24 +259,24 @@ const BoardCardCheckGroupInner = memo(({ checkGroup, attributes, listeners }: IB
                 <Flex items="center" gap="1.5">
                     {canEdit && (
                         <>
-                            <BoardCardCheckGroupAddItem key={`board-card-check-group-add-item-${checkGroup.uid}`} />
-                            <BoardCardCheckGroupMore key={`board-card-check-group-more-${checkGroup.uid}`} />
+                            <BoardCardChecklistAddItem key={`board-card-checklist-add-item-${checklist.uid}`} />
+                            <BoardCardChecklistMore key={`board-card-checklist-more-${checklist.uid}`} />
                         </>
                     )}
                 </Flex>
             </Flex>
-        </BoardCardCheckGroupProvider>
+        </BoardCardChecklistProvider>
     );
 });
 
 interface IBoardCardCheckitemListProps {
-    checkGroup: ProjectCheckGroup.TModel;
-    checkGroupId: string;
+    checklist: ProjectChecklist.TModel;
+    checklistId: string;
     checkitemsUIDs: string[];
     checkitems: ProjectCheckitem.TModel[];
 }
 
-const BoardCardCheckitemList = memo(({ checkGroup, checkGroupId, checkitemsUIDs, checkitems }: IBoardCardCheckitemListProps) => {
+const BoardCardCheckitemList = memo(({ checklist, checklistId, checkitemsUIDs, checkitems }: IBoardCardCheckitemListProps) => {
     return (
         <Collapsible.Content
             className={cn(
@@ -284,13 +284,13 @@ const BoardCardCheckitemList = memo(({ checkGroup, checkGroupId, checkitemsUIDs,
                 "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
             )}
         >
-            <SortableContext id={checkGroupId} items={checkitemsUIDs} strategy={verticalListSortingStrategy}>
+            <SortableContext id={checklistId} items={checkitemsUIDs} strategy={verticalListSortingStrategy}>
                 {checkitems.map((checkitem) => (
-                    <BoardCardCheckitem key={`board-check-group-${checkGroup.uid}-${checkitem.uid}`} checkitem={checkitem} />
+                    <BoardCardCheckitem key={`board-checklist-${checklist.uid}-${checkitem.uid}`} checkitem={checkitem} />
                 ))}
             </SortableContext>
         </Collapsible.Content>
     );
 });
 
-export default BoardCardCheckGroup;
+export default BoardCardChecklist;

@@ -4,7 +4,7 @@ import BoardCardActionAttachFile from "@/pages/BoardPage/components/card/action/
 import BoardCardActionShare from "@/pages/BoardPage/components/card/action/BoardCardActionShare";
 import BoardCardActionSetLabel from "@/pages/BoardPage/components/card/action/label/BoardCardActionSetLabel";
 import BoardCardActionRelationship from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationship";
-import BoardCardActionAddCheckGroup from "@/pages/BoardPage/components/card/action/checkgroup/BoardCardActionAddCheckGroup";
+import BoardCardActionAddChecklist from "@/pages/BoardPage/components/card/action/checklist/BoardCardActionAddChecklist";
 import { memo } from "react";
 
 const sharedButtonClassName = "mb-2 w-full justify-start gap-2 rounded-none px-2 py-1 sm:h-7";
@@ -27,7 +27,7 @@ const BoardCardActionList = memo(() => {
             <BoardCardActionSetLabel buttonClassName={sharedButtonClassName} />
             <BoardCardActionRelationship buttonClassName={sharedButtonClassName} />
             <BoardCardActionAttachFile buttonClassName={sharedButtonClassName} />
-            <BoardCardActionAddCheckGroup buttonClassName={sharedButtonClassName} />
+            <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />
             <BoardCardActionActivity buttonClassName={sharedButtonClassName} />
             <BoardCardActionShare buttonClassName={sharedButtonClassName} />
         </>

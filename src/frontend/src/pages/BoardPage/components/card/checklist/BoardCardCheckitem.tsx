@@ -6,10 +6,10 @@ import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemP
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import BoardCardCheckitemAssignedMember from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemAssignedMember";
-import BoardCardCheckitemCheckbox from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemCheckbox";
-import BoardCardCheckitemMore from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemMore";
-import BoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckitemTimer";
+import BoardCardCheckitemAssignedMember from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemAssignedMember";
+import BoardCardCheckitemCheckbox from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemCheckbox";
+import BoardCardCheckitemMore from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMore";
+import BoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemTimer";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";

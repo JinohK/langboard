@@ -1,5 +1,5 @@
-import useCardCheckGroupCheckedChangedHandlers from "@/controllers/socket/card/checkgroup/useCardCheckGroupCheckedChangedHandlers";
-import useCardCheckGroupTitleChangedHandlers from "@/controllers/socket/card/checkgroup/useCardCheckGroupTitleChangedHandlers";
+import useCardChecklistCheckedChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistCheckedChangedHandlers";
+import useCardChecklistTitleChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistTitleChangedHandlers";
 import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
@@ -19,14 +19,14 @@ export interface IStore extends Interface {
     isOpenedInBoardCard: bool;
 }
 
-class ProjectCheckGroup extends BaseModel<IStore> {
+class ProjectChecklist extends BaseModel<IStore> {
     static get FOREIGN_MODELS() {
         return {
             checkitems: ProjectCheckitem.Model.MODEL_NAME,
         };
     }
     static get MODEL_NAME() {
-        return "ProjectCheckGroup" as const;
+        return "ProjectChecklist" as const;
     }
 
     constructor(model: Record<string, unknown>) {
@@ -36,13 +36,13 @@ class ProjectCheckGroup extends BaseModel<IStore> {
             [
                 useCardCheckitemCreatedHandlers,
                 useCardCheckitemDeletedHandlers,
-                useCardCheckGroupTitleChangedHandlers,
-                useCardCheckGroupCheckedChangedHandlers,
+                useCardChecklistTitleChangedHandlers,
+                useCardChecklistCheckedChangedHandlers,
             ],
             {
                 cardUID: this.card_uid,
-                checkGroupUID: this.uid,
-                checkGroup: this,
+                checklistUID: this.uid,
+                checklist: this,
             }
         );
 
@@ -52,7 +52,7 @@ class ProjectCheckGroup extends BaseModel<IStore> {
             (models) => {
                 this.checkitems = [...this.checkitems, ...models];
             },
-            (model) => model.check_group_uid === this.uid
+            (model) => model.checklist_uid === this.uid
         );
         ProjectCheckitem.Model.subscribe("DELETION", this.uid, (uids) => {
             this.checkitems = this.checkitems.filter((checkitem) => !uids.includes(checkitem.uid));
@@ -106,7 +106,7 @@ class ProjectCheckGroup extends BaseModel<IStore> {
     }
 }
 
-registerModel(ProjectCheckGroup);
+registerModel(ProjectChecklist);
 
-export type TModel = ProjectCheckGroup;
-export const Model = ProjectCheckGroup;
+export type TModel = ProjectChecklist;
+export const Model = ProjectChecklist;

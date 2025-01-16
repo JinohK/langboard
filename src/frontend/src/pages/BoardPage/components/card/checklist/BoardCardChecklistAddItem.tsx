@@ -1,12 +1,12 @@
 import { Button, IconComponent, Toast } from "@/components/base";
 import useCreateCardCheckitem from "@/controllers/api/card/checkitem/useCreateCardCheckitem";
-import { useBoardCardCheckGroup } from "@/core/providers/BoardCardCheckGroupProvider";
+import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useTranslation } from "react-i18next";
 
-function BoardCardCheckGroupAddItem(): JSX.Element {
+function BoardCardChecklistAddItem(): JSX.Element {
     const { projectUID, card } = useBoardCard();
-    const { checkGroup, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckGroup();
+    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const [t] = useTranslation();
     const { mutateAsync: createCheckitemMutateAsync } = useCreateCardCheckitem();
 
@@ -20,7 +20,7 @@ function BoardCardCheckGroupAddItem(): JSX.Element {
         const promise = createCheckitemMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            check_group_uid: checkGroup.uid,
+            checklist_uid: checklist.uid,
             title: "New checkitem",
         });
 
@@ -51,4 +51,4 @@ function BoardCardCheckGroupAddItem(): JSX.Element {
     );
 }
 
-export default BoardCardCheckGroupAddItem;
+export default BoardCardChecklistAddItem;

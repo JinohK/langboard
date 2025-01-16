@@ -1,20 +1,20 @@
 import { Button, DropdownMenu, Flex, Floating, Popover, SubmitButton, Toast } from "@/components/base";
-import useChangeCardCheckGroupTitle from "@/controllers/api/card/checkgroup/useChangeCardCheckGroupTitle";
-import { useBoardCardCheckGroup } from "@/core/providers/BoardCardCheckGroupProvider";
+import useChangeCardChecklistTitle from "@/controllers/api/card/checklist/useChangeCardChecklistTitle";
+import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
+function BoardCardChecklistMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpened: (value: bool) => void }): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
-    const { checkGroup, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckGroup();
+    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const [t] = useTranslation();
-    const { mutateAsync: changeCheckGroupTitleMutateAsync } = useChangeCardCheckGroupTitle();
+    const { mutateAsync: changeChecklistTitleMutateAsync } = useChangeCardChecklistTitle();
     const [isOpened, setIsOpened] = useState(false);
-    const title = checkGroup.useField("title");
+    const title = checklist.useField("title");
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const changeCheckGroupTitle = () => {
+    const changeChecklistTitle = () => {
         if (isValidating || !titleInputRef.current) {
             return;
         }
@@ -24,7 +24,7 @@ function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpe
         const newValue = titleInputRef.current.value.trim();
 
         if (!newValue) {
-            Toast.Add.error(t("card.errors.Check group title cannot be empty."));
+            Toast.Add.error(t("card.errors.Checklist title cannot be empty."));
             setIsValidating(false);
             titleInputRef.current.focus();
             return;
@@ -37,10 +37,10 @@ function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpe
             return;
         }
 
-        const promise = changeCheckGroupTitleMutateAsync({
+        const promise = changeChecklistTitleMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            check_group_uid: checkGroup.uid,
+            checklist_uid: checklist.uid,
             title: newValue,
         });
 
@@ -74,11 +74,11 @@ function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpe
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Floating.LabelInput
-                    label={t("card.Check group title")}
+                    label={t("card.Checklist title")}
                     defaultValue={title}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                            changeCheckGroupTitle();
+                            changeChecklistTitle();
                         }
                     }}
                     ref={titleInputRef}
@@ -87,7 +87,7 @@ function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpe
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}
                     </Button>
-                    <SubmitButton type="button" size="sm" onClick={changeCheckGroupTitle} isValidating={isValidating}>
+                    <SubmitButton type="button" size="sm" onClick={changeChecklistTitle} isValidating={isValidating}>
                         {t("common.Save")}
                     </SubmitButton>
                 </Flex>
@@ -96,4 +96,4 @@ function BoardCardCheckGroupMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpe
     );
 }
 
-export default BoardCardCheckGroupMoreEdit;
+export default BoardCardChecklistMoreEdit;

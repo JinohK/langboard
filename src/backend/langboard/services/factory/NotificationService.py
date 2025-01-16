@@ -6,13 +6,13 @@ from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
 from ...core.utils.EditorContentParser import find_mentioned
-from ...models import Card, CardComment, CheckGroup, Project, ProjectInvitation, ProjectWiki, UserNotification
+from ...models import Card, CardComment, Checklist, Project, ProjectInvitation, ProjectWiki, UserNotification
 from ...models.UserNotification import NotificationType
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
 _TModel = TypeVar(
-    "_TModel", bound=User | Bot | Project | ProjectInvitation | ProjectWiki | Card | CardComment | CheckGroup
+    "_TModel", bound=User | Bot | Project | ProjectInvitation | ProjectWiki | Card | CardComment | Checklist
 )
 
 
@@ -147,14 +147,14 @@ class NotificationService(BaseService):
             notifier, target_user, NotificationType.AssignedToCard, [(project, "project"), (card, "card")]
         )
 
-    async def notify_check_group(
-        self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card, check_group: CheckGroup
+    async def notify_checklist(
+        self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card, checklist: Checklist
     ):
         await self.__notify(
             notifier,
             target_user,
-            NotificationType.NotifiedFromCheckGroup,
-            [(project, "project"), (card, "card"), (check_group, "check_group")],
+            NotificationType.NotifiedFromChecklist,
+            [(project, "project"), (card, "card"), (checklist, "checklist")],
         )
 
     # to here, notifiable types are added

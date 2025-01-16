@@ -3,28 +3,30 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { format } from "@/core/utils/StringUtils";
 
-export interface ICreateCardCheckGroupForm {
+export interface INotifyCardChecklistForm {
     project_uid: string;
     card_uid: string;
-    title: string;
+    checklist_uid: string;
+    member_uids: string[];
 }
 
-const useCreateCardCheckGroup = (options?: TMutationOptions<ICreateCardCheckGroupForm>) => {
+const useNotifyCardChecklist = (options?: TMutationOptions<INotifyCardChecklistForm>) => {
     const { mutate } = useQueryMutation();
 
-    const createCheckGroup = async (params: ICreateCardCheckGroupForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECK_GROUP.CREATE, {
+    const notifyChecklist = async (params: INotifyCardChecklistForm) => {
+        const url = format(API_ROUTES.BOARD.CARD.CHECKLIST.NOTIFY, {
             uid: params.project_uid,
             card_uid: params.card_uid,
+            checklist_uid: params.checklist_uid,
         });
         const res = await api.post(url, {
-            title: params.title,
+            member_uids: params.member_uids,
         });
 
         return res.data;
     };
 
-    const result = mutate(["create-card-check-group"], createCheckGroup, {
+    const result = mutate(["notify-card-checklist"], notifyChecklist, {
         ...options,
         retry: 0,
     });
@@ -32,4 +34,4 @@ const useCreateCardCheckGroup = (options?: TMutationOptions<ICreateCardCheckGrou
     return result;
 };
 
-export default useCreateCardCheckGroup;
+export default useNotifyCardChecklist;

@@ -5,7 +5,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardActionList, { SkeletonBoardCardActionList } from "@/pages/BoardPage/components/card/action/BoardCardActionList";
-import BoardCardCheckGroupList, { SkeletonBoardCardCheckGroupList } from "@/pages/BoardPage/components/card/checkgroup/BoardCardCheckGroupList";
+import BoardCardChecklistGroup, { SkeletonBoardCardChecklistGroup } from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistGroup";
 import BoardCardColumnName, { SkeletonBoardCardColumnName } from "@/pages/BoardPage/components/card/BoardCardColumnName";
 import BoardCardDeadline, { SkeletonBoardCardDeadline } from "@/pages/BoardPage/components/card/BoardCardDeadline";
 import BoardCardDescription, { SkeletonBoardCardDescription } from "@/pages/BoardPage/components/card/BoardCardDescription";
@@ -123,8 +123,8 @@ export function SkeletonBoardCard(): JSX.Element {
                     <BoardCardSection title="card.Attached files">
                         <SkeletonBoardCardAttachmentList />
                     </BoardCardSection>
-                    <BoardCardSection title="card.Check groups">
-                        <SkeletonBoardCardCheckGroupList />
+                    <BoardCardSection title="card.Checklists">
+                        <SkeletonBoardCardChecklistGroup />
                     </BoardCardSection>
                     <BoardCardSection title="card.Comments">
                         <SkeletonBoardCommentList />
@@ -188,9 +188,9 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                             <BoardCardAttachmentList key={`board-card-attachment-list-${card.uid}`} />
                         </BoardCardSection>
                     )}
-                    {card.check_groups.length > 0 && (
-                        <BoardCardSection title="card.Check groups">
-                            <BoardCardCheckGroupList key={`board-card-check group-${card.uid}`} />
+                    {card.checklists.length > 0 && (
+                        <BoardCardSection title="card.Checklists">
+                            <BoardCardChecklistGroup key={`board-card-checklist-${card.uid}`} />
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">

@@ -1,15 +1,15 @@
 import { Checkbox, Toast } from "@/components/base";
-import useToggleCardCheckGroupChecked from "@/controllers/api/card/checkgroup/useToggleCardCheckGroupChecked";
-import { useBoardCardCheckGroup } from "@/core/providers/BoardCardCheckGroupProvider";
+import useToggleCardChecklistChecked from "@/controllers/api/card/checklist/useToggleCardChecklistChecked";
+import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useTranslation } from "react-i18next";
 
-function BoardCardCheckGroupCheckbox() {
+function BoardCardChecklistCheckbox() {
     const { projectUID, card } = useBoardCard();
-    const { checkGroup, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckGroup();
+    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const [t] = useTranslation();
-    const isChecked = checkGroup.useField("is_checked");
-    const { mutateAsync: toggleCheckGroupMutateAsync } = useToggleCardCheckGroupChecked();
+    const isChecked = checklist.useField("is_checked");
+    const { mutateAsync: toggleChecklistMutateAsync } = useToggleCardChecklistChecked();
 
     const toggleChecked = () => {
         if (isValidating) {
@@ -18,17 +18,17 @@ function BoardCardCheckGroupCheckbox() {
 
         setIsValidating(true);
 
-        const promise = toggleCheckGroupMutateAsync({
+        const promise = toggleChecklistMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            check_group_uid: checkGroup.uid,
+            checklist_uid: checklist.uid,
         });
 
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
-                return t("card.successes.Toggled check group successfully.");
+                return t("card.successes.Toggled checklist successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -40,4 +40,4 @@ function BoardCardCheckGroupCheckbox() {
     return <Checkbox checked={isChecked} onClick={toggleChecked} disabled={isValidating} />;
 }
 
-export default BoardCardCheckGroupCheckbox;
+export default BoardCardChecklistCheckbox;

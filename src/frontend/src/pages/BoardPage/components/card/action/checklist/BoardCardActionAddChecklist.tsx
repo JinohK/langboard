@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Floating, IconComponent, Input, Popover, ScrollArea, SubmitButton, Toast } from "@/components/base";
-import useCreateCardCheckGroup from "@/controllers/api/card/checkgroup/useCreateCardCheckGroup";
+import useCreateCardChecklist from "@/controllers/api/card/checklist/useCreateCardChecklist";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project } from "@/core/models";
@@ -8,15 +8,15 @@ import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/a
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardCardActionAddCheckGroupProps extends ISharedBoardCardActionProps {}
+export interface IBoardCardActionAddChecklistProps extends ISharedBoardCardActionProps {}
 
-const BoardCardActionAddCheckGroup = memo(({ buttonClassName }: IBoardCardActionAddCheckGroupProps) => {
+const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionAddChecklistProps) => {
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const { mutateAsync: createCheckGroupMutateAsync } = useCreateCardCheckGroup();
+    const { mutateAsync: createChecklistMutateAsync } = useCreateCardChecklist();
 
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {
@@ -39,7 +39,7 @@ const BoardCardActionAddCheckGroup = memo(({ buttonClassName }: IBoardCardAction
             return;
         }
 
-        const promise = createCheckGroupMutateAsync({
+        const promise = createChecklistMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
             title: titleInputRef.current?.value,
@@ -68,7 +68,7 @@ const BoardCardActionAddCheckGroup = memo(({ buttonClassName }: IBoardCardAction
                 return message;
             },
             success: () => {
-                return t("card.successes.Check group added successfully.");
+                return t("card.successes.Checklist added successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -96,11 +96,11 @@ const BoardCardActionAddCheckGroup = memo(({ buttonClassName }: IBoardCardAction
             <Popover.Trigger asChild>
                 <Button variant="secondary" className={buttonClassName}>
                     <IconComponent icon="list-todo" size="4" />
-                    {t("card.Add check group")}
+                    {t("card.Add checklist")}
                 </Button>
             </Popover.Trigger>
             <Popover.Content align="end" className="w-[min(theme(spacing.96),80vw)]">
-                <Floating.LabelInput label={t("card.Check group title")} autoFocus defaultValue={""} disabled={isValidating} ref={titleInputRef} />
+                <Floating.LabelInput label={t("card.Checklist title")} autoFocus defaultValue={""} disabled={isValidating} ref={titleInputRef} />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => changeOpenedState(false)}>
                         {t("common.Cancel")}
@@ -114,4 +114,4 @@ const BoardCardActionAddCheckGroup = memo(({ buttonClassName }: IBoardCardAction
     );
 });
 
-export default BoardCardActionAddCheckGroup;
+export default BoardCardActionAddChecklist;

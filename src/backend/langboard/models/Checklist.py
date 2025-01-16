@@ -4,7 +4,7 @@ from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel
 from .Card import Card
 
 
-class CheckGroup(SoftDeleteModel, table=True):
+class Checklist(SoftDeleteModel, table=True):
     card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     title: str = Field(nullable=False)
     order: int = Field(default=0, nullable=False)

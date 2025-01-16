@@ -13,7 +13,7 @@ class ChangeCardCheckitemStatusForm(BaseFormModel):
 
 
 @form_model
-class CardCheckGroupNotifyForm(BaseFormModel):
+class CardChecklistNotifyForm(BaseFormModel):
     member_uids: list[str]
 
 

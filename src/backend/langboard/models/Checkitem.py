@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Field
 from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 from .Card import Card
-from .CheckGroup import CheckGroup
+from .Checklist import Checklist
 
 
 class CheckitemStatus(Enum):
@@ -13,7 +13,7 @@ class CheckitemStatus(Enum):
 
 
 class Checkitem(SoftDeleteModel, table=True):
-    check_group_id: SnowflakeID = SnowflakeIDField(foreign_key=CheckGroup.expr("id"), nullable=False)
+    checklist_id: SnowflakeID = SnowflakeIDField(foreign_key=Checklist.expr("id"), nullable=False)
     cardified_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
     title: str = Field(nullable=False)
@@ -25,7 +25,7 @@ class Checkitem(SoftDeleteModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
-            "check_group_uid": self.check_group_id.to_short_code(),
+            "checklist_uid": self.checklist_id.to_short_code(),
             "title": self.title,
             "status": self.status.value,
             "order": self.order,
@@ -38,7 +38,7 @@ class Checkitem(SoftDeleteModel, table=True):
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return [
-            "check_group_id",
+            "checklist_id",
             "cardified_id",
             "user_id",
             "title",

@@ -5,8 +5,8 @@ from ...models import (
     Card,
     CardAttachment,
     CardComment,
-    CheckGroup,
     Checkitem,
+    Checklist,
     GlobalCardRelationshipType,
     Project,
     ProjectColumn,
@@ -23,7 +23,7 @@ TColumnParam = ProjectColumn | int | str
 TCardParam = Card | int | str
 TAttachmentParam = CardAttachment | int | str
 TCommentParam = CardComment | int | str
-TCheckGroupParam = CheckGroup | int | str
+TChecklistParam = Checklist | int | str
 TCheckitemParam = Checkitem | int | str
 TWikiParam = ProjectWiki | int | str
 TUserParam = User | int | str
