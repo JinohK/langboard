@@ -1,23 +1,20 @@
-from typing import Any, Literal, TypeVar, cast, overload
+from typing import Any, Literal, cast, overload
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from ...core.ai import Bot
-from ...core.db import BaseSqlModel, SnowflakeID, User
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
-from ...models import Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
+from ...models import Card, Checkitem, Checklist, Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
+from ...models.Checkitem import CheckitemStatus
+from ...tasks import ProjectActivityTask
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
-from .RevertService import RevertService, RevertType
 from .RoleService import RoleService
 from .Types import TProjectParam, TUserOrBot
-
-
-_TBaseModel1 = TypeVar("_TBaseModel1", bound=BaseSqlModel)
-_TBaseModel2 = TypeVar("_TBaseModel2", bound=BaseSqlModel)
 
 
 class ProjectService(BaseService):
@@ -38,22 +35,29 @@ class ProjectService(BaseService):
 
     @overload
     async def get_assigned_bots(
-        self, project: TProjectParam, as_api: Literal[False]
+        self, project: TProjectParam, as_api: Literal[False], where_bot_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[Bot, ProjectAssignedBot]]: ...
     @overload
-    async def get_assigned_bots(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_assigned_bots(
-        self, project: TProjectParam, as_api: bool
+        self, project: TProjectParam, as_api: Literal[True], where_bot_ids_in: list[SnowflakeID] | None = None
+    ) -> list[dict[str, Any]]: ...
+    async def get_assigned_bots(
+        self, project: TProjectParam, as_api: bool, where_bot_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[Bot, ProjectAssignedBot]] | list[dict[str, Any]]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
+        query = (
             self._db.query("select")
             .tables(Bot, ProjectAssignedBot)
             .join(ProjectAssignedBot, Bot.column("id") == ProjectAssignedBot.bot_id)
             .where(ProjectAssignedBot.project_id == project.id)
         )
+
+        if where_bot_ids_in is not None:
+            query = query.where(Bot.column("id").in_(where_bot_ids_in))
+
+        result = await self._db.exec(query)
         raw_bots = result.all()
         if not as_api:
             return list(raw_bots)
@@ -85,12 +89,7 @@ class ProjectService(BaseService):
         if where_user_ids_in is not None:
             query = query.where(User.column("id").in_(where_user_ids_in))
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(User, ProjectAssignedUser)
-            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
-            .where(ProjectAssignedUser.project_id == project.id)
-        )
+        result = await self._db.exec(query)
         raw_users = result.all()
         if not as_api:
             return list(raw_users)
@@ -227,7 +226,7 @@ class ProjectService(BaseService):
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
     ) -> Project | None:
-        if not user.id or not title:
+        if not title:
             return None
 
         project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
@@ -243,11 +242,13 @@ class ProjectService(BaseService):
         await role_service.project.grant_all(user_id=user.id, project_id=project.id)
         await self._db.commit()
 
+        ProjectActivityTask.project_created(user, project)
+
         return project
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, form: dict
-    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
+    ) -> dict[str, Any] | Literal[True] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -268,13 +269,8 @@ class ProjectService(BaseService):
         if not old_project_record:
             return True
 
-        if isinstance(user_or_bot, Bot):
-            await self._db.update(project)
-            await self._db.commit()
-            revert_key = None
-        else:
-            revert_service = self._get_service(RevertService)
-            revert_key = await revert_service.record(revert_service.create_record_model(project, RevertType.Update))
+        await self._db.update(project)
+        await self._db.commit()
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -292,16 +288,18 @@ class ProjectService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, model
+        ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
+
+        return model
 
     async def update_assigned_bots(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, assign_bot_uids: list[str]
+        self, user: User, project: TProjectParam, assign_bot_uids: list[str]
     ) -> list[Bot] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
 
-        # old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
+        old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
 
         await self._db.exec(
             self._db.query("delete")
@@ -320,28 +318,22 @@ class ProjectService(BaseService):
 
         model = {"assigned_bots": [bot.api_response() for bot in bots]}
         topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"board:assigned-bots:updated:{topic_id}",
-                data_keys="assigned_bots",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.BoardCard,
-                topic_id=topic_id,
-                event=f"board:assigned-bots:updated:{topic_id}",
-                data_keys="assigned_bots",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.BoardWiki,
-                topic_id=topic_id,
-                event=f"board:assigned-bots:updated:{topic_id}",
-                data_keys="assigned_bots",
-            ),
-        ]
+        publish_models: list[SocketPublishModel] = []
+        for topic in [SocketTopic.Board, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
+            publish_models.append(
+                SocketPublishModel(
+                    topic=topic,
+                    topic_id=topic_id,
+                    event=f"board:assigned-bots:updated:{topic_id}",
+                    data_keys="assigned_bots",
+                )
+            )
 
         SocketPublishService.put_dispather(model, publish_models)
+
+        ProjectActivityTask.project_assigned_bots_updated(
+            user, project, [bot.id for bot, _ in old_assigned_bots], [bot.id for bot in bots]
+        )
 
         return list(bots)
 
@@ -351,6 +343,8 @@ class ProjectService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
+
+        old_assigned_users = await self.get_assigned_users(project, as_api=False)
 
         invitation_service = self._get_service(ProjectInvitationService)
         invitation_related_data = await invitation_service.get_invitation_related_data(project, emails)
@@ -368,39 +362,73 @@ class ProjectService(BaseService):
             user, project, lang, url, token_query_name, invitation_related_data
         )
 
+        new_assigned_users = await self.get_assigned_users(project, as_api=False)
         model = {
-            "assigned_members": await self.get_assigned_users(project, as_api=True),
+            "assigned_members": [user.api_response() for user, _ in new_assigned_users],
             "invited_members": await invitation_service.get_invited_users(project, as_api=True),
         }
 
         topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"board:assigned-users:updated:{topic_id}",
-                data_keys=["assigned_members", "invited_members"],
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:assigned-users:updated:{topic_id}",
-                data_keys="assigned_members",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.BoardCard,
-                topic_id=topic_id,
-                event=f"board:assigned-users:updated:{topic_id}",
-                data_keys="assigned_members",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.BoardWiki,
-                topic_id=topic_id,
-                event=f"board:assigned-users:updated:{topic_id}",
-                data_keys="assigned_members",
-            ),
-        ]
+        publish_models: list[SocketPublishModel] = []
+        for topic in [SocketTopic.Board, SocketTopic.Dashboard, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
+            event_prefix = "board" if topic != SocketTopic.Dashboard else "dashboard:project"
+            data_keys = "assigned_members" if topic != SocketTopic.Board else ["assigned_members", "invited_members"]
+            publish_models.append(
+                SocketPublishModel(
+                    topic=topic,
+                    topic_id=topic_id,
+                    event=f"{event_prefix}:assigned-users:updated:{topic_id}",
+                    data_keys=data_keys,
+                )
+            )
 
         SocketPublishService.put_dispather(model, publish_models)
 
+        ProjectActivityTask.project_assigned_users_updated(
+            user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
+        )
+
         return urls
+
+    async def delete(self, user: User, project: TProjectParam) -> bool:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return False
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .tables(Checkitem, Card)
+            .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
+            .join(Card, Checklist.column("card_id") == Card.column("id"))
+            .where((Card.column("project_id") == project.id) & (Checkitem.column("status") == CheckitemStatus.Started))
+        )
+        started_checkitems = result.all()
+
+        checkitem_service = self._get_service_by_name("checkitem")
+        current_time = now()
+        for checkitem, card in started_checkitems:
+            await checkitem_service.change_status(
+                user, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+            )
+
+        await self._db.delete(project)
+        await self._db.commit()
+
+        model = {"fake": True}
+        topic_id = project.get_uid()
+        publish_models: list[SocketPublishModel] = []
+        for topic in [SocketTopic.Board, SocketTopic.Dashboard]:
+            event_prefix = "board" if topic != SocketTopic.Dashboard else "dashboard:project"
+            publish_models.append(
+                SocketPublishModel(
+                    topic=topic,
+                    topic_id=topic_id,
+                    event=f"{event_prefix}:deleted:{topic_id}",
+                )
+            )
+
+        SocketPublishService.put_dispather(model, publish_models)
+
+        ProjectActivityTask.project_deleted(user, project)
+
+        return True

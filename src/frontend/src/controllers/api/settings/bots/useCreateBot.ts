@@ -1,8 +1,6 @@
-import { IRevertKeyBaseResponse } from "@/controllers/api/revert/useRevertMutate";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import useRevert from "@/core/hooks/useRevert";
 import { BotModel } from "@/core/models";
 
 export interface ICreateBotForm {
@@ -11,11 +9,8 @@ export interface ICreateBotForm {
     avatar?: File;
 }
 
-const useCreateBot = (options?: TMutationOptions<ICreateBotForm, IRevertKeyBaseResponse>) => {
+const useCreateBot = (options?: TMutationOptions<ICreateBotForm>) => {
     const { mutate } = useQueryMutation();
-    const { createToastCreator } = useRevert<string>(API_ROUTES.SETTINGS.BOTS.CREATE, (newBotUID) => {
-        BotModel.Model.deleteModel(newBotUID);
-    });
 
     const createBot = async (params: ICreateBotForm) => {
         const formData = new FormData();
@@ -35,12 +30,9 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm, IRevertKeyBaseR
 
         const res = await api.post(API_ROUTES.SETTINGS.BOTS.CREATE, formData);
 
-        const bot = BotModel.Model.fromObject(res.data.bot, true);
+        BotModel.Model.fromObject(res.data.bot, true);
 
-        return {
-            revert_key: res.data.revert_key,
-            createToast: createToastCreator(res.data.revert_key, bot.uid),
-        };
+        return res.data;
     };
 
     const result = mutate(["create-bot"], createBot, {

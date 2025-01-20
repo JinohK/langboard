@@ -6,6 +6,7 @@ import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser, UserNotification } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
+import { cleanModels } from "@/core/models/Base";
 
 export interface IAuthContext {
     getAccessToken: () => string | null;
@@ -123,6 +124,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     const signOut = () => {
         userRef.current = null;
+        cleanModels();
         sessionStorage.removeItem("about-me");
         removeTokens();
         queryClient.clear();

@@ -17,7 +17,7 @@ import { ChatMessageModel } from "@/core/models";
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID, isSending, setIsSending } = useBoardChat();
     const [t] = useTranslation();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
@@ -91,7 +91,7 @@ const ChatSidebar = memo((): JSX.Element => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     });
 

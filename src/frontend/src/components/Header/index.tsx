@@ -14,7 +14,7 @@ import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
 function Header({ navs }: IHeaderProps) {
     const { aboutMe, updated } = useAuth();
     const [isOpened, setIsOpen] = useState(false);
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const [currentUser, setCurrentUser] = useState(aboutMe());
 
     useEffect(() => {
@@ -22,7 +22,7 @@ function Header({ navs }: IHeaderProps) {
     }, [updated]);
 
     const toDashboard = () => {
-        navigate.current(ROUTES.DASHBOARD.PROJECTS.ALL);
+        navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
     };
 
     const separator = <Separator className="h-5" orientation="vertical" />;
@@ -99,9 +99,9 @@ function Header({ navs }: IHeaderProps) {
                 {currentUser ? (
                     <>
                         {separator}
-                        <HeaderUserNotification currentUser={currentUser} />
+                        <HeaderUserNotification currentUser={currentUser} navigateRef={navigateRef} />
                         {separator}
-                        <HeaderUserMenu currentUser={currentUser} navigate={navigate} />
+                        <HeaderUserMenu currentUser={currentUser} navigateRef={navigateRef} />
                     </>
                 ) : null}
             </Flex>

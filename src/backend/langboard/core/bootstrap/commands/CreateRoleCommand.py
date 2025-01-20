@@ -21,7 +21,7 @@ class CreateRoleCommand(BaseCommand):
 
     @property
     def description(self) -> str:
-        return "Role's model and service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Role' suffix)"
+        return "Role model and service to create (If you give snake_case or camelCase, it will convert to PascalCase, and it will remove 'Role' suffix)"
 
     @property
     def choices(self) -> list[str] | None:

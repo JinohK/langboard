@@ -103,9 +103,7 @@ async def change_card_details(
             response[key] = service.card._convert_to_python(value)
         return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
-    _, response = result
-
-    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=result, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/card/{card_uid}/assigned-users")
@@ -170,6 +168,22 @@ async def update_card_relationships(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card_relationship.update(user, project_uid, card_uid, form.is_parent, form.relationships)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/board/{project_uid}/card/{card_uid}")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], project_role_finder)
+@AuthFilter.add
+async def delete_card(
+    project_uid: str,
+    card_uid: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.card.delete(user, project_uid, card_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

@@ -18,17 +18,20 @@ class ProjectWiki(SoftDeleteModel, table=True):
             "title": self.title,
             "content": self.content.model_dump() if self.content else None,
             "order": self.order,
+            "forbidden": False,
             "is_public": self.is_public,
         }
 
     def convert_to_private_api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "project_uid": self.project_id.to_short_code(),
             "title": "",
             "content": None,
             "order": self.order,
             "is_public": False,
             "forbidden": True,
+            "assigned_bots": [],
             "assigned_members": [],
         }
 

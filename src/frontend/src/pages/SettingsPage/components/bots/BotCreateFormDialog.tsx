@@ -64,8 +64,8 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 bot_uname: botUNameValue,
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Bot created successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("settings.successes.Bot created successfully."));
                     if (dataTransferRef.current.items.length) {
                         dataTransferRef.current.items.clear();
                     }

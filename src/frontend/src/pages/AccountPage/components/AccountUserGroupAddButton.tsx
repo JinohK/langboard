@@ -22,8 +22,8 @@ function AccountUserGroupAddButton(): JSX.Element {
                 name: "New Group",
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("myAccount.successes.User group created successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("myAccount.successes.User group created successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

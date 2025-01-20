@@ -48,12 +48,8 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
                     handle(error);
                     return message;
                 },
-                success: (data) => {
-                    data.createToast(t("settings.successes.API key name changed successfully."));
-                    setTimeout(() => {
-                        Toast.Add.dismiss(toastId.toString());
-                    }, 0);
-                    return null;
+                success: () => {
+                    return t("settings.successes.API key name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

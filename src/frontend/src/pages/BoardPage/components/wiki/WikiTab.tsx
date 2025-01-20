@@ -26,7 +26,7 @@ export function SkeletonWikiTab() {
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
     const isInBin = wiki.useField("isInBin");
-    const { canAccessWiki, disabledReorder, wikiTabListId } = useBoardWiki();
+    const { disabledReorder, wikiTabListId } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
         data: {
@@ -37,7 +37,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
             roleDescription: "Wiki",
         },
     });
-    const canReorder = canAccessWiki(false, wiki.uid);
+    const forbidden = wiki.useField("forbidden");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
     const title = wiki.useField("title");
 
@@ -57,7 +57,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     });
 
     let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
-    if (canReorder) {
+    if (!forbidden) {
         props = {
             style,
             className: variants({
@@ -82,8 +82,8 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
 
     if (isOverlay) {
         return (
-            <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={!canReorder} {...props}>
-                <span className="max-w-40 truncate">{wiki.forbidden ? t("wiki.Private") : title}</span>
+            <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={forbidden} {...props}>
+                <span className="max-w-40 truncate">{forbidden ? t("wiki.Private") : title}</span>
             </Tabs.Trigger>
         );
     }
@@ -103,17 +103,17 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
                     <Tabs.Trigger
                         value={wiki.uid}
                         key={`board-wiki-${wiki.uid}-tab`}
-                        disabled={!canReorder}
+                        disabled={forbidden}
                         onPointerDown={scrollHorizontal}
                         {...props}
                     >
                         <Tooltip.Trigger asChild>
                             <span className="max-w-40 truncate" onPointerDown={scrollHorizontal}>
-                                {wiki.forbidden ? t("wiki.Private") : title}
+                                {forbidden ? t("wiki.Private") : title}
                             </span>
                         </Tooltip.Trigger>
                     </Tabs.Trigger>
-                    <Tooltip.Content>{wiki.forbidden ? t("wiki.Private") : title}</Tooltip.Content>
+                    <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
                 </Tooltip.Root>
             </Tooltip.Provider>
         </Box>

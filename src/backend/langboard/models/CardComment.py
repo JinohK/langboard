@@ -7,8 +7,8 @@ from .Card import Card
 
 class CardComment(SoftDeleteModel, table=True):
     card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
-    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True, index=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
     content: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
 
     def api_response(self) -> dict[str, Any]:

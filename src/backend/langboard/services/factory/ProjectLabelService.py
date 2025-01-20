@@ -4,7 +4,7 @@ from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
-from .RevertService import RevertService, RevertType
+from ...tasks import ProjectLabelActivityTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
 
@@ -127,15 +127,20 @@ class ProjectLabelService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
+
         return label, api_label
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
-    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
+    ) -> dict[str, Any] | Literal[True] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
             return None
         project, label = params
+
+        if label.is_bot and not isinstance(user_or_bot, Bot):
+            return None
 
         old_label_record = {}
         mutable_keys = ["name", "color", "description"]
@@ -153,13 +158,8 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        if isinstance(user_or_bot, Bot):
-            await self._db.update(label)
-            await self._db.commit()
-            revert_key = None
-        else:
-            revert_service = self._get_service(RevertService)
-            revert_key = await revert_service.record(revert_service.create_record_model(label, RevertType.Update))
+        await self._db.update(label)
+        await self._db.commit()
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -177,7 +177,9 @@ class ProjectLabelService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, model
+        ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
+
+        return model
 
     async def change_order(
         self, user: User, project: TProjectParam, label: TProjectLabelParam, order: int
@@ -187,20 +189,16 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
+        if label.is_bot:
+            return None
+
         original_order = label.order
         update_query = (
             self._db.query("update")
             .table(ProjectLabel)
             .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
         )
-        if original_order < order:
-            update_query = update_query.values({ProjectLabel.order: ProjectLabel.order - 1}).where(
-                (ProjectLabel.column("order") <= order) & (ProjectLabel.column("order") > original_order)
-            )
-        else:
-            update_query = update_query.values({ProjectLabel.order: ProjectLabel.order + 1}).where(
-                (ProjectLabel.column("order") >= order) & (ProjectLabel.column("order") < original_order)
-            )
+        update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
         await self._db.exec(update_query)
 
         label.order = order
@@ -225,6 +223,9 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
+        if label.is_bot and not isinstance(user_or_bot, Bot):
+            return None
+
         await self._db.delete(label)
         await self._db.commit()
 
@@ -237,6 +238,8 @@ class ProjectLabelService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
 
         return True
 

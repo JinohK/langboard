@@ -1,5 +1,4 @@
 import { Avatar, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/components/base";
-import { IRevertKeyBaseResponse } from "@/controllers/api/revert/useRevertMutate";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -60,7 +59,7 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
         });
     };
 
-    const showToast = (promise: Promise<IRevertKeyBaseResponse>, onSuccess: () => string) => {
+    const showToast = (promise: Promise<unknown>, onSuccess: () => string) => {
         const toastId = Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: (error) => {
@@ -81,13 +80,7 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                data.createToast(onSuccess());
-                setTimeout(() => {
-                    Toast.Add.dismiss(toastId.toString());
-                }, 0);
-                return null;
-            },
+            success: onSuccess,
             finally: () => {
                 setIsValidating(false);
                 setIsOpened(false);

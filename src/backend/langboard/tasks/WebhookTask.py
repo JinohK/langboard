@@ -1,7 +1,8 @@
 from httpx import post
-from ..core.broker import Broker, WebhookModel
+from ..core.broker import Broker
 from ..core.db import DbSession
 from ..core.setting import AppSetting, AppSettingType
+from .models import WebhookModel
 
 
 @Broker.wrap_async_task_decorator

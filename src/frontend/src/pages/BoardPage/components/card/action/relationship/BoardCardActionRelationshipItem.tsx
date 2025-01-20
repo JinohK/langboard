@@ -11,7 +11,7 @@ export interface IBoardCardActionRelationshipItemProps {
 }
 
 const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCardActionRelationshipItemProps) => {
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
     const relationshipType = relationship.relationship_type;
@@ -21,7 +21,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
     const name = relationshipType.useField(isParent ? "parent_name" : "child_name");
 
     const toRelatedCard = () => {
-        navigate.current(ROUTES.BOARD.CARD(projectUID, targetCardUID));
+        navigateRef.current(ROUTES.BOARD.CARD(projectUID, targetCardUID));
     };
 
     return (

@@ -4,6 +4,7 @@ from ...core.db import EditorContentModel, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardComment, CardCommentReaction, Project
+from ...tasks import CardCommentActivityTask
 from .NotificationService import NotificationService
 from .ReactionService import ReactionService
 from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot
@@ -81,14 +82,12 @@ class CardCommentService(BaseService):
         self._db.insert(comment)
         await self._db.commit()
 
-        reaction_service = self._get_service(ReactionService)
-
         api_comment = comment.api_response()
         if isinstance(user_or_bot, User):
             api_comment["user"] = user_or_bot.api_response()
         else:
             api_comment["bot"] = user_or_bot.api_response()
-        api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
+        api_comment["reactions"] = {}
 
         model = {"comment": api_comment}
         publish_model = SocketPublishModel(
@@ -102,6 +101,8 @@ class CardCommentService(BaseService):
 
         notification_service = self._get_service(NotificationService)
         await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
+
+        CardCommentActivityTask.card_comment_added(user_or_bot, project, card, comment)
 
         return comment, api_comment
 
@@ -121,7 +122,7 @@ class CardCommentService(BaseService):
         if isinstance(content, dict):
             content = EditorContentModel(**content)
 
-        # old_content = comment.content
+        old_content = comment.content
         comment.content = content
         await self._db.update(comment)
         await self._db.commit()
@@ -136,10 +137,15 @@ class CardCommentService(BaseService):
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"{_SOCKET_PREFIX}:updated:{card.get_uid()}",
-            data_keys=["content", "card_uid", "uid", "commented_at"],
+            data_keys=list(model.keys()),
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        notification_service = self._get_service(NotificationService)
+        await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
+
+        CardCommentActivityTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
 
         return comment
 
@@ -167,6 +173,8 @@ class CardCommentService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        CardCommentActivityTask.card_comment_deleted(user_or_bot, project, card, comment)
 
         return comment
 
@@ -205,6 +213,15 @@ class CardCommentService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        if is_reacted and comment.user_id:
+            notification_service = self._get_service(NotificationService)
+            await notification_service.notify_reacted_to_comment(user_or_bot, project, card, comment, reaction)
+
+        if is_reacted:
+            CardCommentActivityTask.card_comment_reacted(user_or_bot, project, card, comment, reaction)
+        else:
+            CardCommentActivityTask.card_comment_unreacted(user_or_bot, project, card, comment, reaction)
 
         return is_reacted
 

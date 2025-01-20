@@ -17,7 +17,7 @@ class ChatHistoryService(BaseService):
         self,
         user: User,
         history_type: str,
-        current_date: datetime,
+        refer_time: datetime,
         pagination: Pagination,
         filterable: str | None = None,
     ) -> list[dict[str, Any]]:
@@ -25,7 +25,7 @@ class ChatHistoryService(BaseService):
             self._db.query("select")
             .table(ChatHistory)
             .where((ChatHistory.sender_id == user.id) | (ChatHistory.receiver_id == user.id))
-            .where((ChatHistory.history_type == history_type) & (ChatHistory.created_at <= current_date))
+            .where((ChatHistory.history_type == history_type) & (ChatHistory.created_at <= refer_time))
         )
 
         if filterable is not None:

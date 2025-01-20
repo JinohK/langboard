@@ -35,7 +35,7 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
     const { projectUID, card } = useBoardCard();
     const { data: commentsData, error } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
     const [t] = useTranslation();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
 
     useEffect(() => {
         if (!error) {
@@ -45,11 +45,11 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 

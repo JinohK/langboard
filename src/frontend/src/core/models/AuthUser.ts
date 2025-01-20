@@ -1,3 +1,4 @@
+import useUserNotificationDeletedHandlers from "@/controllers/socket/user/useUserNotificationDeletedHandlers";
 import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import * as User from "@/core/models/User";
@@ -21,13 +22,17 @@ class AuthUser extends User.Model<Interface> {
         };
     }
 
+    static get currentUser() {
+        return AuthUser.getModel(() => true)!;
+    }
+
     constructor(model: Record<string, unknown>) {
         super(model);
 
         const socket = useSocketOutsideProvider();
         socket.subscribe(ESocketTopic.UserPrivate, [this.uid]);
 
-        this.subscribeSocketEvents([useUserNotifiedHandlers], {
+        this.subscribeSocketEvents([useUserNotifiedHandlers, useUserNotificationDeletedHandlers], {
             currentUser: this,
         });
 

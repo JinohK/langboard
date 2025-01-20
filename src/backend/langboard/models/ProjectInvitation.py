@@ -1,4 +1,5 @@
 from json import dumps as json_dumps
+from json import loads as json_loads
 from typing import Any
 from sqlmodel import Field
 from ..Constants import COMMON_SECRET_KEY
@@ -11,6 +12,18 @@ class ProjectInvitation(BaseSqlModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     email: str = Field(nullable=False)
     token: str = Field(nullable=False)
+
+    @staticmethod
+    def validate_token(token: str) -> tuple[str, SnowflakeID] | None:
+        try:
+            token_info = json_loads(Encryptor.decrypt(token, COMMON_SECRET_KEY))
+            if not token_info or "token" not in token_info or "uid" not in token_info:
+                return None
+            invitation_token = token_info["token"]
+            invitation_id = SnowflakeID.from_short_code(token_info["uid"])
+        except Exception:
+            return None
+        return invitation_token, invitation_id
 
     def api_response(self) -> dict[str, Any]:
         return {}

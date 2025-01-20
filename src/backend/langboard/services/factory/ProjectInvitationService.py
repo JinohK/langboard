@@ -1,4 +1,4 @@
-from json import loads as json_loads
+from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
@@ -7,7 +7,9 @@ from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail
+from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail, UserNotification
+from ...models.UserNotification import NotificationType
+from ...tasks import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService
 from .NotificationService import NotificationService
 from .RoleService import RoleService
@@ -72,11 +74,18 @@ class ProjectInvitationService(BaseService):
 
         return users
 
+    async def get_project_by_token(self, user: User, token: str) -> Project | None:
+        invitation = await self.__get_invitation_by_token(user, token)
+        if not invitation:
+            return None
+
+        project = await self._get_by_param(Project, invitation.project_id)
+        return project
+
     async def get_invitation_related_data(self, project: Project, emails: list[str]) -> InvitationRelatedResult:
         invitation_result = InvitationRelatedResult()
         for email in emails:
             user = await self._get_by(User, "email", email)
-            user_email = None
             if not user:
                 result = await self._db.exec(
                     self._db.query("select")
@@ -84,7 +93,7 @@ class ProjectInvitationService(BaseService):
                     .join(User, User.column("id") == UserEmail.column("user_id"))
                     .where(UserEmail.column("email") == email)
                 )
-                user_email, user = result.first() or (None, None)
+                _, user = result.first() or (None, None)
 
             if user:
                 assigned_user = await self._get_by(ProjectAssignedUser, "user_id", user.id)
@@ -144,25 +153,8 @@ class ProjectInvitationService(BaseService):
 
         return True, urls
 
-    async def accept(self, user: User, token: str) -> bool:
-        try:
-            token_info = json_loads(Encryptor.decrypt(token, COMMON_SECRET_KEY))
-            if not token_info or "token" not in token_info or "uid" not in token_info:
-                return False
-            invitation_token = token_info["token"]
-            invitation_id = SnowflakeID.from_short_code(token_info["uid"])
-        except Exception:
-            return False
-
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectInvitation)
-            .where(
-                (ProjectInvitation.column("id") == invitation_id)
-                & (ProjectInvitation.column("token") == invitation_token)
-            )
-        )
-        invitation = result.first()
+    async def accept(self, user: User, token: str) -> Literal[False] | str:
+        invitation = await self.__get_invitation_by_token(user, token)
         if not invitation:
             return False
 
@@ -170,10 +162,7 @@ class ProjectInvitationService(BaseService):
         if not project:
             return False
 
-        if user.email != invitation.email:
-            subemails = [subemail.email for subemail in await self._get_all_by(UserEmail, "user_id", user.id)]
-            if invitation.email not in subemails:
-                return False
+        await self.__delete_notification(user, project, invitation)
 
         assign_user = ProjectAssignedUser(project_id=invitation.project_id, user_id=user.id)
 
@@ -188,7 +177,7 @@ class ProjectInvitationService(BaseService):
         project_service = self._get_service_by_name("project")
 
         model = {
-            "assigned_members": project_service.get_assigned_users(project, as_api=True),
+            "assigned_members": await project_service.get_assigned_users(project, as_api=True),
             "invited_members": await self.get_invited_users(project, as_api=True),
             "invitation_uid": invitation.get_uid(),
         }
@@ -199,8 +188,27 @@ class ProjectInvitationService(BaseService):
             event=f"board:assigned-users:updated:{project.get_uid()}",
             data_keys=list(model.keys()),
         )
-
         SocketPublishService.put_dispather(model, publish_model)
+
+        ProjectActivityTask.project_invited_user_accepted(user, project)
+
+        return project.get_uid()
+
+    async def decline(self, user: User, token: str) -> bool:
+        invitation = await self.__get_invitation_by_token(user, token)
+        if not invitation:
+            return False
+
+        project = await self._get_by_param(Project, invitation.project_id)
+        if not project:
+            return False
+
+        await self.__delete_notification(user, project, invitation)
+
+        await self._db.delete(invitation)
+        await self._db.commit()
+
+        UserActivityTask.declined_project_invitation(user, project)
 
         return True
 
@@ -221,3 +229,56 @@ class ProjectInvitationService(BaseService):
         ).geturl()
 
         return token_url
+
+    async def __get_invitation_by_token(self, user: User, token: str) -> ProjectInvitation | None:
+        invitation_token, invitation_id = ProjectInvitation.validate_token(token) or (None, None)
+        if not invitation_token or not invitation_id:
+            return None
+
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(ProjectInvitation)
+            .where(
+                (ProjectInvitation.column("id") == invitation_id)
+                & (ProjectInvitation.column("token") == invitation_token)
+            )
+        )
+        invitation = result.first()
+        if not invitation:
+            return None
+
+        if user.email != invitation.email:
+            subemails = [subemail.email for subemail in await self._get_all_by(UserEmail, "user_id", user.id)]
+            if invitation.email not in subemails:
+                return None
+
+        return invitation
+
+    async def __delete_notification(self, user: User, project: Project, invitation: ProjectInvitation):
+        notification_service = self._get_service(NotificationService)
+        record_list = json_dumps(
+            notification_service.create_record_list([(project, "project"), (invitation, "invitation")])
+        )
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(UserNotification)
+            .where(
+                (UserNotification.column("receiver_id") == user.id)
+                & (UserNotification.column("notification_type") == NotificationType.ProjectInvited)
+                & (UserNotification.column("record_list") == record_list)
+            )
+        )
+        notification = result.first()
+        if not notification:
+            return
+
+        await self._db.delete(notification)
+
+        model = {"notification_uid": notification.get_uid()}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.UserPrivate,
+            topic_id=user.get_uid(),
+            event="user:notification:deleted",
+            data_keys="notification_uid",
+        )
+        SocketPublishService.put_dispather(model, publish_model)

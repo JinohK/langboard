@@ -8,7 +8,7 @@ import useSocketHandler from "@/core/helpers/SocketHandler";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { createUUID } from "@/core/utils/StringUtils";
-import type { Model as ActivityModel } from "@/core/models/Activity";
+import type { Model as ActivityModel } from "@/core/models/ActivityModel";
 import type { Model as AppSettingModel } from "@/core/models/AppSettingModel";
 import type { Model as AuthUserModel } from "@/core/models/AuthUser";
 import type { Model as BotModel } from "@/core/models/BotModel";
@@ -45,7 +45,7 @@ export type TStateStore<T = any, V = undefined> = V extends undefined
       };
 
 interface IModelMap {
-    Activity: typeof ActivityModel;
+    ActivityModel: typeof ActivityModel;
     AppSettingModel: typeof AppSettingModel;
     AuthUser: typeof AuthUserModel;
     BotModel: typeof BotModel;
@@ -467,6 +467,15 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         delete BaseModel.#socketSubscriptions[modelName][uid];
     }
 
+    public static cleanUp() {
+        const modelName = this.MODEL_NAME;
+
+        delete BaseModel.#MODELS[modelName];
+        delete BaseModel.#NOTIFIERS.CREATION[modelName];
+        delete BaseModel.#NOTIFIERS.DELETION[modelName];
+        delete BaseModel.#socketSubscriptions[modelName];
+    }
+
     static #notify(type: "CREATION", modelName: keyof IModelMap, targetModels: BaseModel<any> | BaseModel<any>[]): void;
     static #notify(type: "DELETION", modelName: keyof IModelMap, uids: string | string[]): void;
     static #notify(
@@ -759,3 +768,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return this.constructor as TBaseModelClass<TModel>;
     }
 }
+
+export const cleanModels = () => {
+    Object.values(MODELS).forEach((model) => model.cleanUp());
+};

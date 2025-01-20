@@ -25,7 +25,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
         const url = format(API_ROUTES.BOARD.CHAT_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
-                current_date: lastCurrentDateRef.current,
+                refer_time: lastCurrentDateRef.current,
                 page: pageRef.current,
                 limit,
             },

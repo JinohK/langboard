@@ -8,7 +8,6 @@ from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import FileModel
 from ...core.utils.String import generate_random_string
 from ...models import GlobalCardRelationshipType
-from .RevertService import RevertService, RevertType
 from .Types import TBotParam, TGlobalCardRelationshipTypeParam, TSettingParam
 
 
@@ -81,18 +80,14 @@ class AppSettingService(BaseService):
             api_key = f"sk-{generate_random_string(53)}"
         return api_key
 
-    async def create(
-        self, setting_type: AppSettingType, setting_name: str, setting_value: Any
-    ) -> tuple[str, AppSetting]:
+    async def create(self, setting_type: AppSettingType, setting_name: str, setting_value: Any) -> AppSetting:
         setting = AppSetting(setting_type=setting_type, setting_name=setting_name)
         setting.set_value(setting_value)
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=setting, revert_type=RevertType.Delete)
-        )
+        self._db.insert(setting)
+        await self._db.commit()
 
-        return revert_key, setting
+        return setting
 
     async def init_langflow(self):
         settings = await self._get_all_by(
@@ -109,7 +104,7 @@ class AppSettingService(BaseService):
 
     async def update(
         self, setting: TSettingParam, setting_name: str | None = None, setting_value: Any | None = None
-    ) -> str | Literal[True] | None:
+    ) -> AppSetting | Literal[True] | None:
         setting = cast(AppSetting, await self._get_by_param(AppSetting, setting))
         if not setting:
             return None
@@ -122,42 +117,29 @@ class AppSettingService(BaseService):
         if not setting.has_changes():
             return True
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=setting, revert_type=RevertType.Update)
-        )
+        await self._db.update(setting)
+        await self._db.commit()
 
-        return revert_key
+        return setting
 
-    async def delete(self, setting: TSettingParam) -> str | None:
+    async def delete(self, setting: TSettingParam) -> bool:
         setting = cast(AppSetting, await self._get_by_param(AppSetting, setting))
         if not setting:
-            return None
+            return False
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=setting, revert_type=RevertType.Insert)
-        )
+        await self._db.delete(setting)
+        await self._db.commit()
+        return True
 
-        return revert_key
-
-    async def delete_selected(self, uids: list[str]) -> str | None:
+    async def delete_selected(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        settings = await self._get_all_by(AppSetting, "id", ids)
-        if not settings:
-            return None
+        await self._db.exec(self._db.query("delete").table(AppSetting).where(AppSetting.column("id").in_(ids)))
+        await self._db.commit()
 
-        revert_service = self._get_service(RevertService)
-        record_models = [
-            revert_service.create_record_model(unsaved_model=setting, revert_type=RevertType.Insert)
-            for setting in settings
-        ]
-        revert_key = await revert_service.record(*record_models)
+        return True
 
-        return revert_key
-
-    async def create_bot(self, name: str, bot_uname: str, avatar: FileModel | None = None) -> tuple[str, Bot] | None:
+    async def create_bot(self, name: str, bot_uname: str, avatar: FileModel | None = None) -> Bot | None:
         existing_bot = await self._get_by(Bot, "bot_uname", bot_uname)
         if existing_bot:
             return None
@@ -168,12 +150,8 @@ class AppSettingService(BaseService):
             avatar=avatar,
         )
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(
-                unsaved_model=bot, revert_type=RevertType.Delete, file_columns=["avatar"]
-            )
-        )
+        self._db.insert(bot)
+        await self._db.commit()
 
         model = {"bot": bot.api_response()}
         publish_model = SocketPublishModel(
@@ -185,9 +163,9 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, bot
+        return bot
 
-    async def update_bot(self, bot: TBotParam, form: dict) -> bool | tuple[str, Bot, dict[str, Any]] | None:
+    async def update_bot(self, bot: TBotParam, form: dict) -> bool | tuple[Bot, dict[str, Any]] | None:
         bot = cast(Bot, await self._get_by_param(Bot, bot))
         if not bot:
             return None
@@ -217,12 +195,8 @@ class AppSettingService(BaseService):
         if not old_bot_record:
             return True
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(
-                unsaved_model=bot, revert_type=RevertType.Update, file_columns=["avatar"]
-            )
-        )
+        await self._db.update(bot)
+        await self._db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -245,19 +219,15 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, bot, model
+        return bot, model
 
-    async def delete_bot(self, bot: TBotParam) -> str | None:
+    async def delete_bot(self, bot: TBotParam) -> bool:
         bot = cast(Bot, await self._get_by_param(Bot, bot))
         if not bot:
-            return None
+            return False
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(
-                unsaved_model=bot, revert_type=RevertType.Insert, file_columns=["avatar"]
-            )
-        )
+        await self._db.delete(bot)
+        await self._db.commit()
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
@@ -267,21 +237,19 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather({}, publish_model)
 
-        return revert_key
+        return True
 
     async def create_global_relationship(
         self, parent_name: str, child_name: str, description: str = ""
-    ) -> tuple[str, GlobalCardRelationshipType]:
+    ) -> GlobalCardRelationshipType:
         global_relationship = GlobalCardRelationshipType(
             parent_name=parent_name,
             child_name=child_name,
             description=description,
         )
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Delete)
-        )
+        self._db.insert(global_relationship)
+        await self._db.commit()
 
         model = {"global_relationships": global_relationship.api_response()}
         publish_model = SocketPublishModel(
@@ -293,11 +261,11 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, global_relationship
+        return global_relationship
 
     async def update_global_relationship(
         self, global_relationship: TGlobalCardRelationshipTypeParam, form: dict
-    ) -> bool | tuple[str, GlobalCardRelationshipType, dict[str, Any]] | None:
+    ) -> bool | tuple[GlobalCardRelationshipType, dict[str, Any]] | None:
         global_relationship = cast(
             GlobalCardRelationshipType, await self._get_by_param(GlobalCardRelationshipType, global_relationship)
         )
@@ -320,10 +288,8 @@ class AppSettingService(BaseService):
         if not old_global_relationship_record:
             return True
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Update)
-        )
+        await self._db.update(global_relationship)
+        await self._db.commit()
 
         model = {}
         for key in form:
@@ -340,19 +306,17 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key, global_relationship, model
+        return global_relationship, model
 
-    async def delete_global_relationship(self, global_relationship: TGlobalCardRelationshipTypeParam) -> str | None:
+    async def delete_global_relationship(self, global_relationship: TGlobalCardRelationshipTypeParam) -> bool:
         global_relationship = cast(
             GlobalCardRelationshipType, await self._get_by_param(GlobalCardRelationshipType, global_relationship)
         )
         if not global_relationship:
-            return None
+            return False
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Insert)
-        )
+        await self._db.delete(global_relationship)
+        await self._db.commit()
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
@@ -362,21 +326,17 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather({}, publish_model)
 
-        return revert_key
+        return True
 
-    async def delete_selected_global_relationships(self, uids: list[str]) -> str | None:
+    async def delete_selected_global_relationships(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        global_relationships = await self._get_all_by(GlobalCardRelationshipType, "id", ids)
-        if not global_relationships:
-            return None
-
-        revert_service = self._get_service(RevertService)
-        record_models = [
-            revert_service.create_record_model(unsaved_model=global_relationship, revert_type=RevertType.Insert)
-            for global_relationship in global_relationships
-        ]
-        revert_key = await revert_service.record(*record_models)
+        await self._db.exec(
+            self._db.query("delete")
+            .table(GlobalCardRelationshipType)
+            .where(GlobalCardRelationshipType.column("id").in_(ids))
+        )
+        await self._db.commit()
 
         model = {"uids": uids}
         publish_model = SocketPublishModel(
@@ -388,4 +348,4 @@ class AppSettingService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key
+        return True

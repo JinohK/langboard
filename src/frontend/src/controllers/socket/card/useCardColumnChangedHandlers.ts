@@ -9,25 +9,21 @@ export interface ICardColumnChangedRawResponse {
 }
 
 export interface IUseCardColumnChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
-    cardUID: string;
+    card: ProjectCard.TModel;
 }
 
-const useCardColumnChangedHandlers = ({ callback, projectUID, cardUID }: IUseCardColumnChangedHandlersProps) => {
+const useCardColumnChangedHandlers = ({ callback, card }: IUseCardColumnChangedHandlersProps) => {
     return useSocketHandler<{}, ICardColumnChangedRawResponse>({
-        topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-card-column-changed-${cardUID}`,
+        topic: ESocketTopic.BoardCard,
+        topicId: card.uid,
+        eventKey: `board-card-column-changed-${card.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED,
-            params: { uid: cardUID },
+            params: { uid: card.uid },
             callback,
             responseConverter: (data) => {
-                const card = ProjectCard.Model.getModel(cardUID);
-                if (card) {
-                    card.column_uid = data.column_uid;
-                    card.column_name = data.column_name;
-                }
+                card.column_uid = data.column_uid;
+                card.column_name = data.column_name;
                 return {};
             },
         },

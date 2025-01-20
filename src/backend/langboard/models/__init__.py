@@ -11,6 +11,7 @@ from .CheckitemTimerRecord import CheckitemTimerRecord
 from .Checklist import Checklist
 from .GlobalCardRelationshipType import GlobalCardRelationshipType
 from .Project import Project
+from .ProjectActivity import ProjectActivity
 from .ProjectAssignedBot import ProjectAssignedBot
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectColumn import ProjectColumn
@@ -18,9 +19,11 @@ from .ProjectInvitation import ProjectInvitation
 from .ProjectLabel import ProjectLabel
 from .ProjectRole import ProjectRole
 from .ProjectWiki import ProjectWiki
+from .ProjectWikiActivity import ProjectWikiActivity
+from .ProjectWikiAssignedBot import ProjectWikiAssignedBot
 from .ProjectWikiAssignedUser import ProjectWikiAssignedUser
 from .ProjectWikiAttachment import ProjectWikiAttachment
-from .RevertableRecord import RevertableRecord
+from .UserActivity import UserActivity
 from .UserEmail import UserEmail
 from .UserGroup import UserGroup
 from .UserGroupAssignedEmail import UserGroupAssignedEmail
@@ -36,11 +39,12 @@ __all__ = [
     "CardCommentReaction",
     "CardRelationship",
     "ChatHistory",
-    "Checklist",
     "Checkitem",
     "CheckitemTimerRecord",
+    "Checklist",
     "GlobalCardRelationshipType",
     "Project",
+    "ProjectActivity",
     "ProjectAssignedBot",
     "ProjectAssignedUser",
     "ProjectColumn",
@@ -48,9 +52,11 @@ __all__ = [
     "ProjectLabel",
     "ProjectRole",
     "ProjectWiki",
+    "ProjectWikiActivity",
+    "ProjectWikiAssignedBot",
     "ProjectWikiAssignedUser",
     "ProjectWikiAttachment",
-    "RevertableRecord",
+    "UserActivity",
     "UserEmail",
     "UserGroup",
     "UserGroupAssignedEmail",

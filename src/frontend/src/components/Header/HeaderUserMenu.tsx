@@ -9,10 +9,10 @@ import { useAuth } from "@/core/providers/AuthProvider";
 
 interface IHeaderUserMenuProps {
     currentUser: AuthUser.TModel;
-    navigate: React.RefObject<NavigateFunction>;
+    navigateRef: React.RefObject<NavigateFunction>;
 }
 
-const HeaderUserMenu = memo(({ currentUser, navigate }: IHeaderUserMenuProps) => {
+const HeaderUserMenu = memo(({ currentUser, navigateRef }: IHeaderUserMenuProps) => {
     const { signOut } = useAuth();
     const [t] = useTranslation();
     const { close: closeSocket } = useSocket();
@@ -29,13 +29,13 @@ const HeaderUserMenu = memo(({ currentUser, navigate }: IHeaderUserMenuProps) =>
             className="mx-1"
         >
             <UserAvatar.List>
-                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.ACCOUNT.PROFILE)}>
+                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigateRef.current(ROUTES.ACCOUNT.PROFILE)}>
                     {t("myAccount.My account")}
                 </UserAvatar.ListItem>
                 {isAdmin && (
                     <>
                         <UserAvatar.ListSeparator />
-                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate.current(ROUTES.SETTINGS.ROUTE)}>
+                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigateRef.current(ROUTES.SETTINGS.ROUTE)}>
                             {t("settings.App settings")}
                         </UserAvatar.ListItem>
                     </>

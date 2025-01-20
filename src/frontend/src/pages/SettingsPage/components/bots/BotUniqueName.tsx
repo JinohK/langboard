@@ -51,12 +51,8 @@ const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
                     handle(error);
                     return message;
                 },
-                success: (data) => {
-                    data.createToast(t("settings.successes.Bot unique name changed successfully."));
-                    setTimeout(() => {
-                        Toast.Add.dismiss(toastId.toString());
-                    }, 0);
-                    return null;
+                success: () => {
+                    return t("settings.successes.Bot unique name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

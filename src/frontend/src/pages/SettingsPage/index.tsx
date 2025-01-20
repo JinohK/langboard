@@ -23,7 +23,7 @@ function SettingsProxy(): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const [t] = useTranslation();
     const { aboutMe } = useAuth();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const pathname = location.pathname.split("/").slice(0, 3).join("/");
     const { data, isFetching, error } = useIsSettingsAvailable();
     const { mutate: getAllSettingsMutate } = useGetAllSettings();
@@ -37,7 +37,7 @@ function SettingsProxy(): JSX.Element {
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
         });
 
@@ -61,7 +61,7 @@ function SettingsProxy(): JSX.Element {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     });
 
@@ -78,7 +78,7 @@ function SettingsProxy(): JSX.Element {
             icon: "key-round",
             name: "settings.API keys",
             onClick: () => {
-                navigate.current(ROUTES.SETTINGS.API_KEYS);
+                navigateRef.current(ROUTES.SETTINGS.API_KEYS);
                 setIsLoadingRef.current(false);
             },
         },
@@ -86,7 +86,7 @@ function SettingsProxy(): JSX.Element {
             icon: "bot",
             name: "settings.Bots",
             onClick: () => {
-                navigate.current(ROUTES.SETTINGS.BOTS);
+                navigateRef.current(ROUTES.SETTINGS.BOTS);
                 setIsLoadingRef.current(false);
             },
         },
@@ -94,7 +94,7 @@ function SettingsProxy(): JSX.Element {
             icon: "langflow-icon",
             name: "settings.Langflow",
             onClick: () => {
-                navigate.current(ROUTES.SETTINGS.LANGFLOW);
+                navigateRef.current(ROUTES.SETTINGS.LANGFLOW);
                 setIsLoadingRef.current(false);
             },
         },
@@ -102,7 +102,7 @@ function SettingsProxy(): JSX.Element {
             icon: "waypoints",
             name: "settings.Global relationships",
             onClick: () => {
-                navigate.current(ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS);
+                navigateRef.current(ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS);
                 setIsLoadingRef.current(false);
             },
         },
@@ -110,7 +110,7 @@ function SettingsProxy(): JSX.Element {
             icon: "webhook",
             name: "settings.Webhooks",
             onClick: () => {
-                navigate.current(ROUTES.SETTINGS.WEBHOOKS);
+                navigateRef.current(ROUTES.SETTINGS.WEBHOOKS);
                 setIsLoadingRef.current(false);
             },
         },
@@ -148,7 +148,7 @@ function SettingsProxy(): JSX.Element {
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={Object.values(sidebarNavs)}>
             {isReady && aboutMe() ? (
-                <AppSettingProvider currentUser={aboutMe()!} navigate={navigate}>
+                <AppSettingProvider currentUser={aboutMe()!} navigate={navigateRef}>
                     {pageContent}
                 </AppSettingProvider>
             ) : (

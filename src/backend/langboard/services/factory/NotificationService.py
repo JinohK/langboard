@@ -1,11 +1,11 @@
 from datetime import timedelta
 from typing import Any, TypeVar, cast
 from ...core.ai import Bot
-from ...core.db import EditorContentModel, User
+from ...core.db import EditorContentModel, SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
-from ...core.utils.EditorContentParser import find_mentioned
+from ...core.utils.EditorContentParser import change_date_element, find_mentioned
 from ...models import Card, CardComment, Checklist, Project, ProjectInvitation, ProjectWiki, UserNotification
 from ...models.UserNotification import NotificationType
 from .Types import TNotificationParam, TUserOrBot, TUserParam
@@ -147,6 +147,26 @@ class NotificationService(BaseService):
             notifier, target_user, NotificationType.AssignedToCard, [(project, "project"), (card, "card")]
         )
 
+    async def notify_reacted_to_comment(
+        self,
+        notifier: TUserOrBot,
+        project: Project,
+        card: Card,
+        comment: CardComment,
+        reaction_type: str,
+    ):
+        first_line = ""
+        if comment.content:
+            content = change_date_element(comment.content).strip().splitlines()
+            first_line = content.pop() if content else ""
+        await self.__notify(
+            notifier,
+            cast(int, comment.user_id),
+            NotificationType.ReactedToComment,
+            [(project, "project"), (card, "card"), (comment, "comment")],
+            {"reaction_type": reaction_type, "line": first_line},
+        )
+
     async def notify_checklist(
         self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card, checklist: Checklist
     ):
@@ -156,6 +176,9 @@ class NotificationService(BaseService):
             NotificationType.NotifiedFromChecklist,
             [(project, "project"), (card, "card"), (checklist, "checklist")],
         )
+
+    def create_record_list(self, record_list: list[tuple[_TModel, str]]) -> list[tuple[str, SnowflakeID, str]]:
+        return [(type(record).__tablename__, record.id, key_name) for record, key_name in record_list]
 
     # to here, notifiable types are added
 
@@ -175,7 +198,7 @@ class NotificationService(BaseService):
                 user_uid,
                 notification_type,
                 record_with_key_names,
-                {"mentioned_line": mentioned_lines[user_uid]},
+                {"line": mentioned_lines[user_uid]},
             )
 
     async def __notify(
@@ -196,9 +219,7 @@ class NotificationService(BaseService):
             receiver_id=target_user.id,
             notification_type=notification_type,
             message_vars=message_vars,
-            record_list=[
-                (type(record).__tablename__, record.id, key_name) for record, key_name in record_with_key_names
-            ],
+            record_list=self.create_record_list(record_with_key_names),
         )
         self._db.insert(notification)
         await self._db.commit()

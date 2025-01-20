@@ -19,13 +19,14 @@ from .scopes import (
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_title(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: CardCheckRelatedForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checkitem.change_title(user, card_uid, checkitem_uid, form.title)
+    result = await service.checkitem.change_title(user, project_uid, card_uid, checkitem_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -36,13 +37,16 @@ async def change_checkitem_title(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_order(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: ChangeOrderForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checkitem.change_order(user, card_uid, checkitem_uid, form.order, form.parent_uid)
+    result = await service.checkitem.change_order(
+        user, project_uid, card_uid, checkitem_uid, form.order, form.parent_uid
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -53,6 +57,7 @@ async def change_checkitem_order(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_status(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: ChangeCardCheckitemStatusForm,
@@ -66,7 +71,7 @@ async def change_checkitem_status(
     if checkitem.user_id and checkitem.user_id != user.id:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.checkitem.change_status(user, card_uid, checkitem, form.status)
+    result = await service.checkitem.change_status(user, project_uid, card_uid, checkitem, form.status)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -77,6 +82,7 @@ async def change_checkitem_status(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def cardify_checkitem(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     form: CardifyCheckitemForm,
@@ -90,7 +96,7 @@ async def cardify_checkitem(
     if checkitem.user_id and checkitem.user_id != user.id:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    cardified_card = await service.checkitem.cardify(user, card_uid, checkitem, form.column_uid)
+    cardified_card = await service.checkitem.cardify(user, project_uid, card_uid, checkitem, form.column_uid)
     if not cardified_card:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -104,6 +110,7 @@ async def cardify_checkitem(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def toggle_checkitem_checked(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     user: User = Auth.scope("api"),
@@ -116,7 +123,7 @@ async def toggle_checkitem_checked(
     if checkitem.user_id and checkitem.user_id != user.id:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.checkitem.toggle_checked(user, card_uid, checkitem)
+    result = await service.checkitem.toggle_checked(user, project_uid, card_uid, checkitem)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -127,6 +134,7 @@ async def toggle_checkitem_checked(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def delete_checkitem(
+    project_uid: str,
     card_uid: str,
     checkitem_uid: str,
     user: User = Auth.scope("api"),
@@ -139,7 +147,7 @@ async def delete_checkitem(
     if checkitem.user_id and checkitem.user_id != user.id:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.checkitem.delete(user, card_uid, checkitem)
+    result = await service.checkitem.delete(user, project_uid, card_uid, checkitem)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

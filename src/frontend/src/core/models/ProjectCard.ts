@@ -20,6 +20,8 @@ import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachme
 import useCardDetailsChangedHandlers from "@/controllers/socket/card/useCardDetailsChangedHandlers";
 import useCardProjectUsersUpdatedHandlers from "@/controllers/socket/card/useCardProjectUsersUpdatedHandlers";
 import useCardProjectBotsUpdatedHandlers from "@/controllers/socket/card/useCardProjectBotsUpdatedHandlers";
+import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColumnChangedHandlers";
+import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -84,6 +86,8 @@ class ProjectCard extends BaseModel<IStore> {
                 useCardChecklistDeletedHandlers,
                 useCardAttachmentUploadedHandlers,
                 useCardAttachmentDeletedHandlers,
+                useCardColumnChangedHandlers,
+                useCardDeletedHandlers,
             ],
             {
                 projectUID: this.project_uid,

@@ -33,7 +33,9 @@ export const API_ROUTES = {
     },
     ACTIVITIY: {
         USER: "/activity/user",
+        PROJECT: "/activity/project/{uid}",
         CARD: "/activity/project/{uid}/card/{card_uid}",
+        PROJECT_WIKI: "/activity/project/{uid}/wiki/{wiki_uid}",
     },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",
@@ -44,6 +46,7 @@ export const API_ROUTES = {
     BOARD: {
         GET: "/board/{uid}",
         DETAILS: "/board/{uid}/details",
+        GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
         CAN_USE_SETTINGS: "/board/{uid}/settings/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
@@ -52,6 +55,7 @@ export const API_ROUTES = {
         GET_COLUMN_CARDS: "/board/{uid}/column/{column_uid}/cards",
         UPDATE_ASSIGNED_USERS: "/board/{uid}/assigned-users",
         ACCEPT_INVITATION: "/project/invite/accept",
+        DECLINE_INVITATION: "/project/invite/decline",
         COLUMN: {
             CREATE: "/board/{uid}/column",
             CHANGE_NAME: "/board/{uid}/column/{column_uid}/name",
@@ -65,6 +69,7 @@ export const API_ROUTES = {
             UPDATE_ASSIGNED_USERS: "/board/{uid}/card/{card_uid}/assigned-users",
             UPDATE_LABELS: "/board/{uid}/card/{card_uid}/labels",
             UPDATE_RELATIONSHIPS: "/board/{uid}/card/{card_uid}/relationships",
+            DELETE: "/board/{uid}/card/{card_uid}",
             ATTACHMENT: {
                 UPLOAD: "/board/{uid}/card/{card_uid}/attachment",
                 CHANGE_NAME: "/board/{uid}/card/{card_uid}/attachment/{attachment_uid}/name",
@@ -107,12 +112,13 @@ export const API_ROUTES = {
             CHANGE_DETAILS: "/board/{uid}/wiki/{wiki_uid}/details",
             CHANGE_ORDER: "/board/{uid}/wiki/{wiki_uid}/order",
             CHANGE_PUBLIC: "/board/{uid}/wiki/{wiki_uid}/public",
-            UPDATE_ASSIGNED_USERS: "/board/{uid}/wiki/{wiki_uid}/assigned-users",
+            UPDATE_ASSIGNEES: "/board/{uid}/wiki/{wiki_uid}/assignees",
             DELETE: "/board/{uid}/wiki/{wiki_uid}",
         },
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
             UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
+            DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
                 CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
@@ -140,13 +146,13 @@ export const API_ROUTES = {
             DELETE_SELECTED: "/settings/global-relationship",
         },
     },
-    REVERT: (path: string) => `/revert/${path}`,
 } as const;
 
 export const SOCKET_SERVER_EVENTS = {
     DASHBOARD: {
         PROJECT: {
             ASSIGNED_USERS_UPDATED: "dashboard:project:assigned-users:updated:{uid}",
+            DELETED: "dashboard:project:deleted:{uid}",
             COLUMN: {
                 CREATED: "dashboard:project:column:created:{uid}",
                 NAME_CHANGED: "dashboard:project:column:name:changed:{uid}",
@@ -155,6 +161,7 @@ export const SOCKET_SERVER_EVENTS = {
             CARD: {
                 CREATED: "dashboard:project:card:created:{uid}",
                 ORDER_CHANGED: "dashboard:project:card:order:changed:{uid}",
+                DELETED: "dashboard:project:card:deleted:{uid}",
             },
         },
     },
@@ -166,6 +173,7 @@ export const SOCKET_SERVER_EVENTS = {
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
+        DELETED: "board:deleted:{uid}",
         LABEL: {
             CREATED: "board:label:created:{uid}",
             DETAILS_CHANGED: "board:label:details:changed:{uid}",
@@ -187,6 +195,7 @@ export const SOCKET_SERVER_EVENTS = {
             EDITOR_USERS: "board:card:editor:users:{uid}",
             EDITOR_START_EDITING: "board:card:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:card:editor:stop:{uid}",
+            DELETED: "board:card:deleted:{uid}",
             ATTACHMENT: {
                 UPLOADED: "board:card:attachment:uploaded",
                 NAME_CHANGED: "board:card:attachment:name:changed:{uid}",
@@ -218,12 +227,13 @@ export const SOCKET_SERVER_EVENTS = {
         },
         WIKI: {
             CREATED: "board:wiki:created:{uid}",
+            GOT_DETAILS: "board:wiki:details:{uid}",
             EDITOR_USERS: "board:wiki:editor:users:{uid}",
             EDITOR_START_EDITING: "board:wiki:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:wiki:editor:stop:{uid}",
             DETAILS_CHANGED: "board:wiki:details:changed:{uid}",
             PUBLIC_CHANGED: "board:wiki:public:changed:{uid}",
-            ASSIGNED_USERS_UPDATED: "board:wiki:assigned-users:updated:{uid}",
+            ASSIGNEES_UPDATED: "board:wiki:assignees:updated:{uid}",
             PROJECT_USERS_UPDATED: "board:wiki:project-users:updated:{uid}",
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",
             DELETED: "board:wiki:deleted:{uid}",
@@ -232,6 +242,7 @@ export const SOCKET_SERVER_EVENTS = {
     USER: {
         UPDATED: "user:updated",
         NOTIFIED: "user:notified",
+        NOTIFICATION_DELETED: "user:notification:deleted",
     },
     GLOBALS: {
         BOTS: {
@@ -259,6 +270,7 @@ export const SOCKET_CLIENT_EVENTS = {
             EDITOR_STOP_EDITING: "board:card:editor:stop",
         },
         WIKI: {
+            GET_DETAILS: "board:wiki:details",
             EDITOR_USERS: "board:wiki:editor:users",
             EDITOR_START_EDITING: "board:wiki:editor:start",
             EDITOR_STOP_EDITING: "board:wiki:editor:stop",

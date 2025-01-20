@@ -1,8 +1,6 @@
-import { IRevertKeyBaseResponse } from "@/controllers/api/revert/useRevertMutate";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import useRevert from "@/core/hooks/useRevert";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 
@@ -13,16 +11,13 @@ export interface ICreateSettingForm {
     setting_value: any;
 }
 
-export interface ICreateSettingResponse extends IRevertKeyBaseResponse {
+export interface ICreateSettingResponse {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     revealed_value: any;
 }
 
 const useCreateSetting = (options?: TMutationOptions<ICreateSettingForm, ICreateSettingResponse>) => {
     const { mutate } = useQueryMutation();
-    const { createToastCreator } = useRevert<string>(API_ROUTES.SETTINGS.CREATE, (settingUID) => {
-        AppSettingModel.Model.deleteModel(settingUID);
-    });
 
     const createSetting = async (params: ICreateSettingForm) => {
         const res = await api.post(API_ROUTES.SETTINGS.CREATE, {
@@ -35,8 +30,6 @@ const useCreateSetting = (options?: TMutationOptions<ICreateSettingForm, ICreate
 
         return {
             revealed_value: res.data.revealed_value,
-            revert_key: res.data.revert_key,
-            createToast: createToastCreator(res.data.revert_key, res.data.setting.uid),
         };
     };
 

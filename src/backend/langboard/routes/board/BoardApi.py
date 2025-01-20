@@ -6,7 +6,7 @@ from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import AcceptProjectInvitationForm, ChatHistoryPagination, InviteProjectMemberForm, project_role_finder
+from .scopes import ChatHistoryPagination, InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
 
 
 @AppRouter.api.post("/board/{project_uid}/available")
@@ -42,7 +42,7 @@ async def get_project_chat(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    histories = await service.chat_history.get_list(user, "project", query.current_date, query, project_uid)
+    histories = await service.chat_history.get_list(user, "project", query.refer_time, query, project_uid)
 
     return JsonResponse(content={"histories": histories}, status_code=status.HTTP_200_OK)
 
@@ -100,14 +100,42 @@ async def update_project_member(
     return JsonResponse(content={"urls": result}, status_code=status.HTTP_200_OK)
 
 
+@AppRouter.api.post("/project/invite/details/{token}")
+@AuthFilter.add
+async def get_project_title(
+    token: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    project = await service.project_invitation.get_project_by_token(user, token)
+    if not project:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"project": {"title": project.title}}, status_code=status.HTTP_200_OK)
+
+
 @AppRouter.api.post("/project/invite/accept")
 @AuthFilter.add
 async def accept_project_invitation(
-    form: AcceptProjectInvitationForm,
+    form: ProjectInvitationForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.project_invitation.accept(user, form.invitation_token)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    return JsonResponse(content={"project_uid": result}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.post("/project/invite/decline")
+@AuthFilter.add
+async def decline_project_invitation(
+    form: ProjectInvitationForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_invitation.decline(user, form.invitation_token)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 

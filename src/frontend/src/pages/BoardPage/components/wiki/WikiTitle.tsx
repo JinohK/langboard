@@ -13,13 +13,13 @@ export interface IWikiTitleProps {
 }
 
 const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
-    const { projectUID, canAccessWiki } = useBoardWiki();
+    const { projectUID } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title");
     const title = wiki.useField("title");
-    const canEdit = canAccessWiki(false, wiki.uid);
+    const forbidden = wiki.useField("forbidden");
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
-        canEdit: () => canEdit,
+        canEdit: () => !forbidden,
         valueType: "textarea",
         disableNewLine: true,
         save: (value, endCallback) => {

@@ -18,8 +18,14 @@ function ActivatePage(): JSX.Element {
     const location = useLocation();
     const { mutate } = useActivateUser();
     const [description, setDescription] = useState<JSX.Element | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
+        if (!isLoaded) {
+            setIsLoaded(true);
+            return;
+        }
+
         const searchParams = new URLSearchParams(location.search);
         const token = searchParams.get(SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME);
 
@@ -66,7 +72,7 @@ function ActivatePage(): JSX.Element {
                 },
             }
         );
-    }, []);
+    }, [isLoaded]);
 
     return (
         <FormOnlyLayout size="sm" useLogo>

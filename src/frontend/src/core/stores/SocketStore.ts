@@ -142,6 +142,7 @@ export interface ISocketStore {
     unsubscribe: (topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, topicIds: string[], callback?: () => void) => void;
     subscribeTopicNotifier: (props: TSocketTopicNotifierProps) => void;
     unsubscribeTopicNotifier: (props: TSocketTopicNotifierRemoveProps) => void;
+    isSubscribed: (topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, topicId: string) => bool;
 }
 
 const socketMap: ISocketMap = {
@@ -510,6 +511,10 @@ const useSocketStore = create<ISocketStore>(() => {
         delete socketMap.subscribedTopicNotifiers[topic][topicId][key];
     };
 
+    const isSubscribed = (topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, topicId: string) => {
+        return socketMap.subscribedTopics[topic]?.includes(topicId) ?? false;
+    };
+
     return {
         getSocket,
         createSocket,
@@ -522,6 +527,7 @@ const useSocketStore = create<ISocketStore>(() => {
         unsubscribe,
         subscribeTopicNotifier,
         unsubscribeTopicNotifier,
+        isSubscribed,
     };
 });
 

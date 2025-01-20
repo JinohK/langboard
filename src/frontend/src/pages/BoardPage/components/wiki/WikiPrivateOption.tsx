@@ -2,12 +2,12 @@ import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/compone
 import { Flex, Label, Skeleton, Switch, Toast } from "@/components/base";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
-import useUpdateWikiAssignedUsers from "@/controllers/api/wiki/useUpdateWikiAssignedUsers";
+import useUpdateWikiAssignees from "@/controllers/api/wiki/useUpdateWikiAssignees";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectWiki, User, UserGroup } from "@/core/models";
+import { BotModel, ProjectWiki, User, UserGroup } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiPrivateOptionProps {
@@ -29,24 +29,27 @@ export function SkeletonWikiPrivateOption() {
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
-    const { projectUID, projectMembers, currentUser } = useBoardWiki();
+    const { projectUID, projectBots, projectMembers, currentUser } = useBoardWiki();
     const isPublic = wiki.useField("is_public");
-    const isForbidden = wiki.useField("forbidden");
+    const forbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);
+    const assignedBots = wiki.useForeignField<BotModel.TModel>("assigned_bots");
     const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const allItems = useMemo(() => [...projectBots, ...projectMembers], [projectBots, projectMembers]);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
-    const { mutateAsync: updateWikiAssignedUsersMutateAsync } = useUpdateWikiAssignedUsers();
+    const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees();
 
     useEffect(() => {
-        if (isForbidden && !isChangedTabRef.current) {
+        if (forbidden && !isChangedTabRef.current) {
             Toast.Add.error(t("wiki.errors.Can't access this wiki."));
             changeTab("");
+            isChangedTabRef.current = true;
         } else {
             isChangedTabRef.current = false;
         }
-    }, [isForbidden]);
+    }, [forbidden]);
 
     const savePrivateState = (privateState: bool) => {
         if (isValidating || privateState === !isPublic) {
@@ -87,17 +90,17 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         });
     };
 
-    const saveAssignedUsers = (items: TMultiSelectAssigneeItem[]) => {
+    const saveAssignees = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
         if (isValidating || isPublic) {
             return;
         }
 
         setIsValidating(true);
 
-        const promise = updateWikiAssignedUsersMutateAsync({
+        const promise = updateWikiAssigneesMutateAsync({
             project_uid: projectUID,
             wiki_uid: wiki.uid,
-            assigned_users: User.filterValidUserUIDs(items as User.TModel[]),
+            assignees: items.map((item) => item.uid),
         });
 
         const toastId = Toast.Add.promise(promise, {
@@ -117,10 +120,11 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 return message;
             },
             success: () => {
-                return t("wiki.successes.Assigned users updated successfully.");
+                return t("wiki.successes.Assigned bots and members updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);
+                endCallback();
                 Toast.Add.dismiss(toastId);
             },
         });
@@ -159,12 +163,20 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
                     }}
                     addIconSize="6"
-                    onSave={saveAssignedUsers}
+                    onSave={saveAssignees}
                     isValidating={isValidating}
-                    allItems={projectMembers}
+                    allItems={allItems}
                     groups={groups}
-                    assignedFilter={(item) => assignedMembers.includes(item as User.TModel)}
-                    initialSelectedItems={assignedMembers}
+                    assignedFilter={(item) => {
+                        if (item instanceof User.Model) {
+                            return assignedMembers.includes(item);
+                        } else {
+                            return assignedBots.includes(item);
+                        }
+                    }}
+                    initialSelectedItems={allItems.filter(
+                        (item) => assignedBots.includes(item as BotModel.TModel) || assignedMembers.includes(item as User.TModel)
+                    )}
                 />
             )}
         </Flex>

@@ -24,6 +24,7 @@ class BaseService(ABC):
     def __init__(self, get_service: Callable, get_service_by_name: Callable, db: DbSession):
         self._raw_get_service = get_service
         self._get_service_by_name = get_service_by_name
+        self.__tables: dict[str, type[BaseSqlModel]] = {}
         self._db = db
 
     def _get_service(self, service: type[_TService]) -> _TService:
@@ -161,14 +162,34 @@ class BaseService(ABC):
         return data
 
     def _get_model_by_table_name(self, table_name: str) -> type[BaseSqlModel] | None:
+        if table_name in self.__tables:
+            return self.__tables[table_name]
+
         if table_name == User.__tablename__:
+            self.__tables[table_name] = User
             return User
         elif table_name == Bot.__tablename__:
+            self.__tables[table_name] = Bot
             return Bot
         elif table_name == AppSetting.__tablename__:
+            self.__tables[table_name] = AppSetting
             return AppSetting
         for model_name in models.__all__:
             model = cast(type[BaseSqlModel], models.__dict__[model_name])
             if model.__tablename__ == table_name:
+                self.__tables[table_name] = model
                 return model
         return None
+
+    def _set_order_in_column(
+        self, query: Update, model_class: type[_TBaseModel], original_order: int, order: int
+    ) -> Update:
+        if original_order < order:
+            query = query.values({model_class.column("order"): model_class.column("order") - 1}).where(
+                (model_class.column("order") <= order) & (model_class.column("order") > original_order)
+            )
+        else:
+            query = query.values({model_class.column("order"): model_class.column("order") + 1}).where(
+                (model_class.column("order") >= order) & (model_class.column("order") < original_order)
+            )
+        return query

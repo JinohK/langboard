@@ -12,6 +12,11 @@ class AssignUsersForm(BaseFormModel):
 
 
 @form_model
+class AssigneesForm(BaseFormModel):
+    assignees: list[str]
+
+
+@form_model
 class ChangeColumnOrderForm(BaseFormModel):
     order: int
 

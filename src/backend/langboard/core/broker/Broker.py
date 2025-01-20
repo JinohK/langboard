@@ -70,6 +70,8 @@ class Broker:
             new_args, new_kwargs = self.__unpack_task_parameters(func, *args, **kwargs)
             return async_run(func(*new_args, **new_kwargs))
 
+        task.__name__ = func.__name__
+
         return self.__run_async_task(cast(Any, self.celery.task(task)))
 
     def wrap_sync_task_decorator(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
@@ -83,6 +85,8 @@ class Broker:
         def task(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:
             new_args, new_kwargs = self.__unpack_task_parameters(func, *args, **kwargs)
             return func(*new_args, **new_kwargs)
+
+        task.__name__ = func.__name__
 
         return self.__run_sync_task(cast(Any, self.celery.task(task)))
 

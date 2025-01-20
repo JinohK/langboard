@@ -6,7 +6,6 @@ from .Project import Project
 class ProjectRoleAction(Enum):
     Read = "read"  # included card_read
     Update = "update"
-    Delete = "delete"
     CardWrite = "card_write"
     CardUpdate = "card_update"
     CardDelete = "card_delete"

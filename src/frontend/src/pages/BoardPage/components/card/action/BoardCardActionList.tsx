@@ -1,11 +1,14 @@
 import { Skeleton } from "@/components/base";
+import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { Project } from "@/core/models";
+import { memo } from "react";
 import BoardCardActionActivity from "@/pages/BoardPage/components/card/action/BoardCardActionActivity";
 import BoardCardActionAttachFile from "@/pages/BoardPage/components/card/action/file/BoardCardActionAttachFile";
 import BoardCardActionShare from "@/pages/BoardPage/components/card/action/BoardCardActionShare";
 import BoardCardActionSetLabel from "@/pages/BoardPage/components/card/action/label/BoardCardActionSetLabel";
 import BoardCardActionRelationship from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationship";
 import BoardCardActionAddChecklist from "@/pages/BoardPage/components/card/action/checklist/BoardCardActionAddChecklist";
-import { memo } from "react";
+import BoardCardActionDelete from "@/pages/BoardPage/components/card/action/BoardCardActionDelete";
 
 const sharedButtonClassName = "mb-2 w-full justify-start gap-2 rounded-none px-2 py-1 sm:h-7";
 
@@ -22,6 +25,7 @@ export function SkeletonBoardCardActionList() {
 }
 
 const BoardCardActionList = memo(() => {
+    const { currentUser, hasRoleAction } = useBoardCard();
     return (
         <>
             <BoardCardActionSetLabel buttonClassName={sharedButtonClassName} />
@@ -30,6 +34,9 @@ const BoardCardActionList = memo(() => {
             <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />
             <BoardCardActionActivity buttonClassName={sharedButtonClassName} />
             <BoardCardActionShare buttonClassName={sharedButtonClassName} />
+            {hasRoleAction(Project.ERoleAction.CARD_DELETE) || currentUser.is_admin ? (
+                <BoardCardActionDelete buttonClassName={sharedButtonClassName} />
+            ) : null}
         </>
     );
 });

@@ -1,20 +1,16 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { IRevertKeyBaseResponse } from "@/controllers/api/revert/useRevertMutate";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import useRevert from "@/core/hooks/useRevert";
 import { User } from "@/core/models";
 
 export interface IUpdateProfileForm extends Pick<User.Interface, "firstname" | "lastname"> {
     affiliation?: string;
     position?: string;
     avatar?: File;
-    revert_key?: string;
 }
 
-const useUpdateProfile = (updatedUser: () => void, options?: TMutationOptions<IUpdateProfileForm, IRevertKeyBaseResponse>) => {
+const useUpdateProfile = (options?: TMutationOptions<IUpdateProfileForm>) => {
     const { mutate } = useQueryMutation();
-    const { createToastCreator } = useRevert(API_ROUTES.ACCOUNT.UPDATE_PROFILE, updatedUser);
 
     const updateProfile = async (params: IUpdateProfileForm) => {
         const formData = new FormData();
@@ -32,10 +28,7 @@ const useUpdateProfile = (updatedUser: () => void, options?: TMutationOptions<IU
 
         const res = await api.put(API_ROUTES.ACCOUNT.UPDATE_PROFILE, formData);
 
-        return {
-            revert_key: res.data.revert_key,
-            createToast: createToastCreator(res.data.revert_key, undefined),
-        };
+        return res.data;
     };
 
     const result = mutate(["update-profile"], updateProfile, {

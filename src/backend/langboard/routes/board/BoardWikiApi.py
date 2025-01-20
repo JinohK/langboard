@@ -8,7 +8,7 @@ from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
-    AssignUsersForm,
+    AssigneesForm,
     ChangeOrderForm,
     ChangeWikiDetailsForm,
     ChangeWikiPublicForm,
@@ -108,17 +108,17 @@ async def change_wiki_public(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/assigned-users")
+@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/assignees")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def update_wiki_assigned_users(
+async def update_wiki_assignees(
     project_uid: str,
     wiki_uid: str,
-    form: AssignUsersForm,
+    form: AssigneesForm,
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.update_assigned_users(user, project_uid, wiki_uid, form.assigned_users)
+    result = await service.project_wiki.update_assignees(user, project_uid, wiki_uid, form.assignees)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

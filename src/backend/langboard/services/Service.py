@@ -40,10 +40,6 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.ChatHistoryService)
 
     @property
-    def revert(self):
-        return self._create_or_get_service(factory.RevertService)
-
-    @property
     def project_column(self):
         return self._create_or_get_service(factory.ProjectColumnService)
 
@@ -54,6 +50,10 @@ class Service(ServiceFactory):
     @property
     def user_group(self):
         return self._create_or_get_service(factory.UserGroupService)
+
+    @property
+    def checklist(self):
+        return self._create_or_get_service(factory.ChecklistService)
 
     @property
     def checkitem(self):
@@ -96,5 +96,5 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.NotificationService)
 
     @property
-    def checklist(self):
-        return self._create_or_get_service(factory.ChecklistService)
+    def activity(self):
+        return self._create_or_get_service(factory.ActivityService)

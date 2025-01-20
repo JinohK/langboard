@@ -97,13 +97,11 @@ export const BoardWikiProvider = ({
         setWikis(flatWikis.sort((a, b) => a.order - b.order));
 
         const unsubscribes: (() => void)[] = [];
-        setTimeout(() => {
-            for (let i = 0; i < wikis.length; ++i) {
-                const wiki = wikis[i];
-                const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser);
-                unsubscribes.push(unsubscribe);
-            }
-        }, 0);
+        for (let i = 0; i < wikis.length; ++i) {
+            const wiki = wikis[i];
+            const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser);
+            unsubscribes.push(unsubscribe);
+        }
 
         return () => {
             unsubscribes.forEach((unsubscribe) => unsubscribe());

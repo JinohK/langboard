@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Flex, Form, Input, Label, SubmitButton } from "@/components/base";
+import { Box, Flex, Form, Input, Label, SubmitButton, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/api/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
 import { createNameInitials } from "@/core/utils/StringUtils";
@@ -12,7 +12,7 @@ import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 function ProfilePage(): JSX.Element {
     const { currentUser, updatedUser } = useAccountSetting();
     const [t] = useTranslation();
-    const { mutate } = useUpdateProfile(updatedUser);
+    const { mutate } = useUpdateProfile();
     const dataTransferRef = useRef(new DataTransfer());
     const isAvatarDeletedRef = useRef(false);
     const { errors, isValidating, handleSubmit, formRef, focusComponentRef } = useForm({
@@ -34,9 +34,9 @@ function ProfilePage(): JSX.Element {
             delete_avatar: isAvatarDeletedRef,
         },
         mutate,
-        mutateOnSuccess: (data) => {
+        mutateOnSuccess: () => {
             updatedUser();
-            data.createToast(t("myAccount.successes.Profile updated successfully."));
+            Toast.Add.success(t("myAccount.successes.Profile updated successfully."));
         },
         mutateOnSettled: () => {
             if (!focusComponentRef.current) {

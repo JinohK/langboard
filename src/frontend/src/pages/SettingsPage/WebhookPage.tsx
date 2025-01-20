@@ -30,8 +30,8 @@ function WebhooksPage() {
                 setting_uids: selectedWebhooks,
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Selected webhooks deleted successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("settings.successes.Selected webhooks deleted successfully."));
                     setSelectedWebhooks([]);
                 },
                 onError: (error) => {

@@ -3,6 +3,7 @@ from ...core.db import SnowflakeID
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
+from ...tasks import CardRelationshipActivityTask
 from .Types import TCardParam, TProjectParam, TUserOrBot
 
 
@@ -100,8 +101,9 @@ class CardRelationshipService(BaseService):
             return None
         project, card = params
 
-        # original_relationships = await self.get_by_card_with_type(project, card, is_parent)
-        # original_relationship_ids = [related_card.id for _, _, related_card in original_relationships]
+        original_relationships = await self.get_by_card_with_type(project, card, is_parent)
+        original_relationship_ids = [relationship.id for relationship, _, _ in original_relationships]
+
         opposite_relationship_ids = [
             related_card.id for _, _, related_card in await self.get_by_card_with_type(project, card, not is_parent)
         ]
@@ -152,6 +154,10 @@ class CardRelationshipService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        CardRelationshipActivityTask.card_relationship_updated(
+            user_or_bot, project, card, list(original_relationship_ids), list(new_relationships_dict.keys()), is_parent
+        )
 
         return True
 

@@ -1,4 +1,4 @@
-import { Box, Flex, Skeleton, Toast } from "@/components/base";
+import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
@@ -164,8 +164,11 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     className={cn(
                         "h-full px-6 py-3",
                         isEditing
-                            ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))] min-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))]"
-                            : "min-h-[calc(100vh_-_theme(spacing.56))]"
+                            ? cn(
+                                  "max-h-[calc(100vh_-_theme(spacing.72)_-_theme(spacing.6)_-_1px)]",
+                                  "min-h-[calc(100vh_-_theme(spacing.72)_-_theme(spacing.6)_-_1px)]"
+                              )
+                            : "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.5))] min-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.5))]"
                     )}
                     readOnly={!isEditing}
                     socket={socket}
@@ -190,6 +193,9 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     </Flex>
                 )}
             </Box>
+            <Flex items="center" justify="start" pt="2" mx="2" className="border-t">
+                <Button variant="secondary">Activity</Button>
+            </Flex>
         </Box>
     );
 });

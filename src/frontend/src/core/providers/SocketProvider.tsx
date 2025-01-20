@@ -89,6 +89,7 @@ export interface ISocketContext {
     subscribeTopicNotifier: ISocketStore["subscribeTopicNotifier"];
     unsubscribeTopicNotifier: ISocketStore["unsubscribeTopicNotifier"];
     close: ISocketStore["close"];
+    isSubscribed: ISocketStore["isSubscribed"];
 }
 
 interface ISocketProviderProps {
@@ -109,6 +110,7 @@ const initialContext = {
     subscribeTopicNotifier: () => {},
     unsubscribeTopicNotifier: () => {},
     close: () => {},
+    isSubscribed: () => false,
 };
 
 const SocketContext = createContext<ISocketContext>(initialContext);
@@ -124,6 +126,7 @@ const createSharedSocketHandlers = () => {
         unsubscribe,
         subscribeTopicNotifier,
         unsubscribeTopicNotifier,
+        isSubscribed,
     } = useSocketStore.getState();
 
     const isConnected = () => {
@@ -204,6 +207,7 @@ const createSharedSocketHandlers = () => {
         subscribeTopicNotifier,
         unsubscribeTopicNotifier,
         close,
+        isSubscribed,
     };
 };
 

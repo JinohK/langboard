@@ -9,7 +9,7 @@ import { memo, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 const BoardCardPage = memo(() => {
-    const navigate = useRef(useNavigate());
+    const navigateRef = useRef(useNavigate());
     const { aboutMe } = useAuth();
     const [projectUID, cardUID] = location.pathname.split("/").slice(2);
     const { selectCardViewType } = useBoardRelationshipController();
@@ -20,7 +20,7 @@ const BoardCardPage = memo(() => {
     }
 
     const close = () => {
-        navigate.current(ROUTES.BOARD.MAIN(projectUID));
+        navigateRef.current(ROUTES.BOARD.MAIN(projectUID));
     };
 
     return (

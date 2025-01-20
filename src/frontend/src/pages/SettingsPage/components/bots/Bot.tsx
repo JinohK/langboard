@@ -49,12 +49,8 @@ const Bot = memo(({ bot }: IBotProps) => {
                 handle(error);
                 return message;
             },
-            success: (data) => {
-                data.createToast(t("settings.successes.Bot deleted successfully."));
-                setTimeout(() => {
-                    Toast.Add.dismiss(toastId.toString());
-                });
-                return null;
+            success: () => {
+                return t("settings.successes.Bot deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

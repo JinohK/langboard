@@ -40,12 +40,8 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                     handle(error);
                     return message;
                 },
-                success: (data) => {
-                    data.createToast(t("myAccount.successes.User group name changed successfully."));
-                    setTimeout(() => {
-                        Toast.Add.dismiss(toastId.toString());
-                    }, 0);
-                    return null;
+                success: () => {
+                    return t("myAccount.successes.User group name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

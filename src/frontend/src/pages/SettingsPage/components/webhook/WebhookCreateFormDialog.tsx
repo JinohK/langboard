@@ -69,8 +69,8 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                 setting_value: urlValue,
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Webhook created successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("settings.successes.Webhook created successfully."));
                     setTimeout(() => {
                         setOpened(false);
                     }, 0);

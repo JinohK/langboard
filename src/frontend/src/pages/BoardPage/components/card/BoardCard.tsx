@@ -23,6 +23,7 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
 import { AuthUser } from "@/core/models";
+import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -36,7 +37,18 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
     const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
+    const { on: onCardDeletedHandlers } = useCardDeletedHandlers({
+        projectUID,
+        cardUID,
+        callback: () => {
+            Toast.Add.error(t("card.errors.Card deleted."));
+            navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
+            setTimeout(() => {
+                setIsLoadingRef.current(false);
+            }, 0);
+        },
+    });
 
     useEffect(() => {
         if (!error) {
@@ -46,11 +58,11 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                Toast.Add.error(t("project.errors.Project not found"));
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 
@@ -63,7 +75,9 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
         }
 
         setIsLoadingRef.current(false);
-        socket.subscribe(ESocketTopic.BoardCard, [projectUID, cardUID]);
+        socket.subscribe(ESocketTopic.BoardCard, [projectUID, cardUID], () => {
+            onCardDeletedHandlers();
+        });
 
         return () => {
             socket.unsubscribe(ESocketTopic.BoardCard, [projectUID, cardUID]);

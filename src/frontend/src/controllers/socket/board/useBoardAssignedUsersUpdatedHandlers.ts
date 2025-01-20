@@ -9,12 +9,16 @@ export interface IBoardAssignedUsersUpdatedRawResponse {
     invitation_uid?: string;
 }
 
-export interface IUseBoardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IBoardAssignedUsersUpdatedResponse {
+    assigned_member_uids: string[];
+}
+
+export interface IUseBoardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardAssignedUsersUpdatedResponse> {
     projectUID: string;
 }
 
 const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoardAssignedUsersUpdatedHandlersProps) => {
-    return useSocketHandler<{}, IBoardAssignedUsersUpdatedRawResponse>({
+    return useSocketHandler<IBoardAssignedUsersUpdatedResponse, IBoardAssignedUsersUpdatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-assigned-users-updated-${projectUID}`,
@@ -25,14 +29,16 @@ const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoar
             responseConverter: (data) => {
                 const model = Project.Model.getModel(projectUID);
                 if (model) {
-                    model.members = data.assigned_members;
-                    model.invited_members = data.invited_members;
+                    model.members = [...data.assigned_members];
+                    model.invited_members = [...data.invited_members];
                 }
 
                 if (data.invitation_uid) {
                     User.Model.deleteModel(data.invitation_uid);
                 }
-                return {};
+                return {
+                    assigned_member_uids: data.assigned_members.map((member) => member.uid),
+                };
             },
         },
     });

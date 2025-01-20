@@ -22,6 +22,8 @@ import BoardSettingsPage from "@/pages/BoardPage/BoardSettings";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
+import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
 
 const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -37,7 +39,7 @@ const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
 const BoardProxy = memo((): JSX.Element => {
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const { aboutMe } = useAuth();
     const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
     const [isReady, setIsReady] = useState(false);
@@ -73,6 +75,23 @@ const BoardProxy = memo((): JSX.Element => {
             setIsReady(() => true);
         },
     });
+    const { on: onBoardAssignedUsersUpdated } = useBoardAssignedUsersUpdatedHandlers({
+        projectUID,
+        callback: (data) => {
+            const currentUser = aboutMe()!;
+            if (!data.assigned_member_uids.includes(currentUser.uid) && !currentUser.is_admin) {
+                Toast.Add.error(t("errors.Forbidden"));
+            }
+        },
+    });
+    const { on: onProjectDeleted } = useProjectDeletedHandlers({
+        topic: ESocketTopic.Board,
+        projectUID,
+        callback: () => {
+            Toast.Add.error(t("project.errors.Project closed."));
+            navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
+        },
+    });
 
     useEffect(() => {
         if (!error) {
@@ -82,11 +101,11 @@ const BoardProxy = memo((): JSX.Element => {
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                 Toast.Add.error(t("errors.Forbidden"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found"));
-                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                Toast.Add.error(t("project.errors.Project not found"));
+                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
 
@@ -100,6 +119,8 @@ const BoardProxy = memo((): JSX.Element => {
 
         socket.subscribe(ESocketTopic.Board, [projectUID], () => {
             onIsBoardChatAvailable();
+            onBoardAssignedUsersUpdated();
+            onProjectDeleted();
             sendIsBoardChatAvailable({});
         });
 
@@ -125,7 +146,7 @@ const BoardProxy = memo((): JSX.Element => {
             name: "board.Board",
             onClick: () => {
                 setCurrentPage("board");
-                navigate.current(ROUTES.BOARD.MAIN(projectUID));
+                navigateRef.current(ROUTES.BOARD.MAIN(projectUID));
             },
             active: currentPage === "board",
             hidden: !!selectCardViewType,
@@ -134,9 +155,16 @@ const BoardProxy = memo((): JSX.Element => {
             name: "board.Wiki",
             onClick: () => {
                 setCurrentPage("wiki");
-                navigate.current(ROUTES.BOARD.WIKI(projectUID));
+                navigateRef.current(ROUTES.BOARD.WIKI(projectUID));
             },
             active: currentPage === "wiki",
+            hidden: !!selectCardViewType,
+        },
+        {
+            name: "board.Activity",
+            onClick: () => {
+                navigateRef.current(ROUTES.BOARD.ACTIVITY(projectUID));
+            },
             hidden: !!selectCardViewType,
         },
         {
@@ -147,7 +175,7 @@ const BoardProxy = memo((): JSX.Element => {
                 }
 
                 setCurrentPage("settings");
-                navigate.current(ROUTES.BOARD.SETTINGS(projectUID));
+                navigateRef.current(ROUTES.BOARD.SETTINGS(projectUID));
             },
             active: currentPage === "settings",
             hidden: !canUseSettings || !!selectCardViewType,
@@ -157,11 +185,11 @@ const BoardProxy = memo((): JSX.Element => {
     let pageContent;
     switch (currentPage) {
         case "wiki":
-            pageContent = <BoardWikiPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            pageContent = <BoardWikiPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
             break;
         case "settings":
             if (canUseSettings) {
-                pageContent = <BoardSettingsPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+                pageContent = <BoardSettingsPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
             } else if (TypeUtils.isUndefined(canUseSettings)) {
                 pageContent = <></>;
             } else {
@@ -170,7 +198,7 @@ const BoardProxy = memo((): JSX.Element => {
             }
             break;
         default:
-            pageContent = <BoardPage navigate={navigate.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            pageContent = <BoardPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
             break;
     }
 

@@ -1,8 +1,10 @@
 import { Box, Flex } from "@/components/base";
+import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
+import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +15,7 @@ export function SkeletonSettingsList() {
 
 const BoardSettingsList = memo(() => {
     const { setIsLoadingRef } = usePageLoader();
+    const { project, currentUser } = useBoardSettings();
 
     useEffect(() => {
         setIsLoadingRef.current(false);
@@ -29,6 +32,11 @@ const BoardSettingsList = memo(() => {
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />
             </BoardSettingsSection>
+            {currentUser.is_admin || project.owner.uid === currentUser.uid ? (
+                <BoardSettingsSection title="project.settings.Other">
+                    <BoardSettingsOther />
+                </BoardSettingsSection>
+            ) : null}
         </Flex>
     );
 });

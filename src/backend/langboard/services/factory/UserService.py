@@ -1,6 +1,6 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Literal
+from typing import Any
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
@@ -13,8 +13,7 @@ from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, UserEmail
-from ...models.RevertableRecord import RevertType
-from .RevertService import RevertService
+from ...tasks import UserActivityTask
 
 
 class UserService(BaseService):
@@ -160,12 +159,14 @@ class UserService(BaseService):
         await self._db.update(user)
         await self._db.commit()
 
+        UserActivityTask.activated(user)
+
     async def verify_subemail(self, subemail: UserEmail) -> None:
         subemail.verified_at = now()
         await self._db.update(subemail)
         await self._db.commit()
 
-    async def update(self, user: User, form: dict) -> str | Literal[True]:
+    async def update(self, user: User, form: dict) -> bool:
         mutable_keys = ["firstname", "lastname", "affiliation", "position", "avatar"]
         api_keys = ["firstname", "lastname", "avatar"]
 
@@ -188,12 +189,8 @@ class UserService(BaseService):
         if not old_user_record:
             return True
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(
-                unsaved_model=user, revert_type=RevertType.Update, file_columns=["avatar"]
-            )
-        )
+        await self._db.update(user)
+        await self._db.commit()
         await Auth.reset_user(user)
 
         model: dict[str, Any] = {}
@@ -216,20 +213,16 @@ class UserService(BaseService):
 
             SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key
+        return True
 
-    async def change_primary_email(self, user: User, subemail: UserEmail) -> str:
+    async def change_primary_email(self, user: User, subemail: UserEmail) -> bool:
         user_email = user.email
         user.email = subemail.email
         subemail.email = user_email
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(
-                unsaved_model=user, revert_type=RevertType.Update, file_columns=["avatar"]
-            ),
-            revert_service.create_record_model(unsaved_model=subemail, revert_type=RevertType.Update),
-        )
+        await self._db.update(user)
+        await self._db.update(subemail)
+        await self._db.commit()
         await Auth.reset_user(user)
 
         model = {"email": user.email}
@@ -243,14 +236,12 @@ class UserService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        return revert_key
+        return True
 
-    async def delete_email(self, subemail: UserEmail) -> str:
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(unsaved_model=subemail, revert_type=RevertType.Insert)
-        )
-        return revert_key
+    async def delete_email(self, subemail: UserEmail) -> bool:
+        await self._db.delete(subemail)
+        await self._db.commit()
+        return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)

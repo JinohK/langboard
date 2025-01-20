@@ -6,7 +6,9 @@ export interface IAcceptProjectInvitationForm {
     token: string;
 }
 
-export interface IAcceptProjectInvitationResponse {}
+export interface IAcceptProjectInvitationResponse {
+    project_uid: string;
+}
 
 const useAcceptProjectInvitation = (options?: TMutationOptions<IAcceptProjectInvitationForm, IAcceptProjectInvitationResponse>) => {
     const { mutate } = useQueryMutation();

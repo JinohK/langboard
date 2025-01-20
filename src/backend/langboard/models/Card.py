@@ -9,9 +9,7 @@ from .ProjectColumn import ProjectColumn
 
 class Card(SoftDeleteModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
-    project_column_id: SnowflakeID | None = SnowflakeIDField(
-        foreign_key=ProjectColumn.expr("id"), nullable=True, index=True
-    )
+    project_column_id: SnowflakeID | None = SnowflakeIDField(foreign_key=ProjectColumn.expr("id"), nullable=True)
     title: str = Field(nullable=False)
     description: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
     ai_description: str | None = Field(default=None, sa_type=TEXT)

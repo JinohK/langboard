@@ -13,19 +13,22 @@ from ...models import (
     CardComment,
     CardRelationship,
     Checkitem,
+    Checklist,
     GlobalCardRelationshipType,
     Project,
     ProjectColumn,
     ProjectLabel,
 )
+from ...models.Checkitem import CheckitemStatus
+from ...tasks import CardActivityTask
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
+from .CheckitemService import CheckitemService
 from .ChecklistService import ChecklistService
 from .NotificationService import NotificationService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
-from .RevertService import RevertService, RevertType
 from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBot
 
 
@@ -219,11 +222,13 @@ class CardService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
+        CardActivityTask.card_created(user_or_bot, project, card)
+
         return card, api_card
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, form: dict
-    ) -> tuple[str | None, dict[str, Any]] | Literal[True] | None:
+    ) -> dict[str, Any] | Literal[True] | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -251,20 +256,9 @@ class CardService(BaseService):
             if checkitem_cardified_from:
                 checkitem_cardified_from.title = card.title
                 await self._db.update(checkitem_cardified_from)
-                await self._db.commit()
 
-        if isinstance(user_or_bot, Bot):
-            await self._db.update(card)
-            await self._db.commit()
-            revert_key = None
-        else:
-            revert_service = self._get_service(RevertService)
-            revert_record_models = [revert_service.create_record_model(card, RevertType.Update)]
-            if checkitem_cardified_from:
-                revert_record_models.append(
-                    revert_service.create_record_model(checkitem_cardified_from, RevertType.Update)
-                )
-            revert_key = await revert_service.record(*revert_record_models)
+        await self._db.update(card)
+        await self._db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -297,11 +291,13 @@ class CardService(BaseService):
             notification_service = self._get_service(NotificationService)
             await notification_service.notify_mentioned_at_card(user_or_bot, project, card)
 
-        return revert_key, model
+        CardActivityTask.card_updated(user_or_bot, project, old_card_record, card)
+
+        return model
 
     async def change_order(
-        self, user: User, project: TProjectParam, card: TCardParam, order: int, column_uid: str = ""
-    ) -> tuple[Card, ProjectColumn | None, ProjectColumn | None] | None:
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, order: int, column_uid: str = ""
+    ) -> bool | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
             return None
@@ -312,11 +308,10 @@ class CardService(BaseService):
             original_column = await self._get_by_param(ProjectColumn, card.project_column_id)
             if not original_column or original_column.project_id != project.id:
                 return None
+        else:
+            original_column = project
 
-        original_column_id = original_column.id if original_column else project.ARCHIVE_COLUMN_UID()
-        # original_column_name = original_column.name if original_column else project.archive_column_name
         new_column = None
-        new_column_id = SnowflakeID.from_short_code(column_uid)
         if column_uid:
             if column_uid != project.ARCHIVE_COLUMN_UID():
                 new_column = await self._get_by_param(ProjectColumn, column_uid)
@@ -324,8 +319,9 @@ class CardService(BaseService):
                     return None
 
                 card.archived_at = None
-                card.project_column_id = new_column_id
+                card.project_column_id = new_column.id
             else:
+                new_column = project
                 card.archived_at = now()
                 card.project_column_id = None
 
@@ -336,33 +332,21 @@ class CardService(BaseService):
             .table(Card)
             .where((Card.column("id") != card.id) & (Card.column("project_id") == card.project_id))
         )
-        if column_uid:
+        if new_column:
             update_query = self.__filter_column(
-                project,
                 shared_update_query.values({Card.order: Card.order - 1}).where(Card.column("order") >= original_order),
-                original_column_id,
+                original_column,
             )
             await self._db.exec(update_query)
 
             update_query = self.__filter_column(
-                project,
                 (shared_update_query.values({Card.order: Card.order + 1}).where(Card.column("order") >= order)),
-                new_column_id,
+                cast(ProjectColumn, new_column),
             )
             await self._db.exec(update_query)
         else:
-            update_query = shared_update_query
-
-            if original_order < order:
-                update_query = update_query.values({Card.order: Card.order - 1}).where(
-                    (Card.column("order") <= order) & (Card.column("order") > original_order)
-                )
-            else:
-                update_query = update_query.values({Card.order: Card.order + 1}).where(
-                    (Card.column("order") >= order) & (Card.column("order") < original_order)
-                )
-
-            update_query = self.__filter_column(project, update_query, original_column_id)
+            update_query = self._set_order_in_column(shared_update_query, Card, original_order, order)
+            update_query = self.__filter_column(update_query, original_column)
             await self._db.exec(update_query)
 
         card.order = order
@@ -373,14 +357,18 @@ class CardService(BaseService):
             "uid": card.get_uid(),
             "order": card.order,
         }
+
+        original_column_uid = self.__get_column_uid(original_column)
+
         if new_column:
-            new_column_uid = new_column.get_uid()
+            new_column_uid = self.__get_column_uid(new_column)
             model["to_column_uid"] = new_column_uid
-            model["column_name"] = new_column.name
+            model["column_name"] = self.__get_column_name(new_column)
 
         publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
-        if new_column:
+        card_uid = model["uid"]
+        if column_uid:
             publish_models.extend(
                 [
                     SocketPublishModel(
@@ -393,24 +381,21 @@ class CardService(BaseService):
                     SocketPublishModel(
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
+                        event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "from_column", "column_uid": original_column_id},
+                        custom_data={"move_type": "from_column", "column_uid": original_column_uid},
                     ),
                     SocketPublishModel(
-                        topic=SocketTopic.Board,
-                        topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{card.get_uid()}",
+                        topic=SocketTopic.BoardCard,
+                        topic_id=card_uid,
+                        event=f"{_SOCKET_PREFIX}:order:changed:{card_uid}",
                         data_keys=["to_column_uid", "column_name"],
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Dashboard,
                         topic_id=topic_id,
                         event=f"dashboard:project:card:order:changed:{topic_id}",
-                        custom_data={
-                            "from_column_uid": original_column_id,
-                            "to_column_uid": new_column_uid,
-                        },
+                        custom_data={"from_column_uid": original_column_uid, "to_column_uid": new_column_uid},
                     ),
                 ]
             )
@@ -419,7 +404,7 @@ class CardService(BaseService):
                 SocketPublishModel(
                     topic=SocketTopic.Board,
                     topic_id=topic_id,
-                    event=f"{_SOCKET_PREFIX}:order:changed:{original_column_id}",
+                    event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
                     data_keys=["uid", "order"],
                     custom_data={"move_type": "in_column"},
                 )
@@ -427,7 +412,10 @@ class CardService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
-        return card, original_column, new_column
+        if new_column:
+            CardActivityTask.card_moved(user_or_bot, project, card, original_column)
+
+        return True
 
     async def update_assigned_users(
         self,
@@ -481,6 +469,14 @@ class CardService(BaseService):
                 continue
             await notification_service.notify_assigned_to_card(user_or_bot, user, project, card)
 
+        CardActivityTask.card_assigned_users_updated(
+            user_or_bot,
+            project,
+            card,
+            [user_id for user_id in original_assigned_user_ids],
+            [user.id for user in users],
+        )
+
         return list(users)
 
     async def update_labels(
@@ -494,13 +490,7 @@ class CardService(BaseService):
         project_label_service = self._get_service(ProjectLabelService)
         is_bot = isinstance(user_or_bot, Bot)
 
-        # result = await self._db.exec(
-        #     self._db.query("select")
-        #     .column(ProjectLabel.id)
-        #     .join(ProjectLabel, ProjectLabel.column("id") == Card.column("id"))
-        #     .where(Card.column("id") == card.id)
-        # )
-        # original_label_ids = list(result.all())
+        original_labels = await project_label_service.get_all_by_card(card, as_api=False)
 
         query = (
             self._db.query("delete")
@@ -520,9 +510,9 @@ class CardService(BaseService):
             self._db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
         await self._db.commit()
 
-        labels = await project_label_service.get_all_by_card(card, as_api=True)
+        labels = await project_label_service.get_all_by_card(card, as_api=False)
 
-        model = {"labels": labels}
+        model = {"labels": [label.api_response() for label in labels]}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
@@ -532,40 +522,105 @@ class CardService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardActivityTask.card_labels_updated(
+            user_or_bot,
+            project,
+            card,
+            [label.id for label in original_labels],
+            [label.id for label in labels],
+        )
+
         return True
 
-    async def create_publish_assigned_users_model(self, project: Project, card: Card, users: list[User] | None):
-        if users is None:
-            users = [user for user, _ in await self.get_assigned_users(card, as_api=False)]
+    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam) -> bool:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
+            return False
+        project, card = params
 
-        return SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.get_uid()}",
-            custom_data={"assigned_members": [user.api_response() for user in users]},
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(Checkitem)
+            .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
+            .where((Checklist.column("card_id") == card.id) & (Checkitem.column("status") == CheckitemStatus.Started))
         )
+        started_checkitems = result.all()
+
+        checkitem_service = self._get_service(CheckitemService)
+        current_time = now()
+        for checkitem in started_checkitems:
+            await checkitem_service.change_status(
+                user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+            )
+
+        await self._db.exec(
+            self._db.query("delete").table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
+        )
+
+        await self._db.exec(
+            self._db.query("delete")
+            .table(CardRelationship)
+            .where(
+                (CardRelationship.column("card_id_parent") == card.id)
+                | (CardRelationship.column("card_id_child") == card.id)
+            )
+        )
+
+        await self._db.delete(card)
+        await self._db.commit()
+
+        model = {"fake": True}
+        topic_id = project.get_uid()
+        publish_models: list[SocketPublishModel] = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=topic_id,
+                event=f"{_SOCKET_PREFIX}:deleted:{card.get_uid()}",
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
+                event=f"dashboard:project:card:deleted:{topic_id}",
+                custom_data={
+                    "column_uid": card.project_column_id.to_short_code()
+                    if card.project_column_id
+                    else project.ARCHIVE_COLUMN_UID()
+                },
+            ),
+        ]
+
+        SocketPublishService.put_dispather(model, publish_models)
+
+        CardActivityTask.card_deleted(user_or_bot, project, card)
+
+        return True
 
     @overload
     def __filter_column(
-        self, project: Project, query: Select[_TSelectParam], column_id: SnowflakeID | str
+        self, query: Select[_TSelectParam], column: Project | ProjectColumn
     ) -> Select[_TSelectParam]: ...
     @overload
     def __filter_column(
-        self, project: Project, query: SelectOfScalar[_TSelectParam], column_id: SnowflakeID | str
+        self, query: SelectOfScalar[_TSelectParam], column: Project | ProjectColumn
     ) -> SelectOfScalar[_TSelectParam]: ...
     @overload
-    def __filter_column(self, project: Project, query: Update, column_id: SnowflakeID | str) -> Update: ...
+    def __filter_column(self, query: Update, column: Project | ProjectColumn) -> Update: ...
     @overload
-    def __filter_column(self, project: Project, query: Delete, column_id: SnowflakeID | str) -> Delete: ...
+    def __filter_column(self, query: Delete, column: Project | ProjectColumn) -> Delete: ...
     def __filter_column(
         self,
-        project: Project,
         query: Select[_TSelectParam] | SelectOfScalar[_TSelectParam] | Update | Delete,
-        column_id: SnowflakeID | str,
+        column: Project | ProjectColumn,
     ):
-        if column_id == project.ARCHIVE_COLUMN_UID():
-            return query.where(Card.column("archived_at") != None)  # noqa
-        return query.where(Card.column("project_column_id") == column_id)
+        if isinstance(column, Project):
+            return query.where(Card.column("project_column_id") == None)  # noqa
+        return query.where(Card.column("project_column_id") == column.id)
+
+    def __get_column_uid(self, column: Project | ProjectColumn) -> str:
+        return column.ARCHIVE_COLUMN_UID() if isinstance(column, Project) else column.get_uid()
+
+    def __get_column_name(self, column: Project | ProjectColumn) -> str:
+        return column.archive_column_name if isinstance(column, Project) else column.name
 
     async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
         project = cast(Project, await self._get_by_param(Project, project))

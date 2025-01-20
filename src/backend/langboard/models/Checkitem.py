@@ -13,7 +13,7 @@ class CheckitemStatus(Enum):
 
 
 class Checkitem(SoftDeleteModel, table=True):
-    checklist_id: SnowflakeID = SnowflakeIDField(foreign_key=Checklist.expr("id"), nullable=False)
+    checklist_id: SnowflakeID = SnowflakeIDField(foreign_key=Checklist.expr("id"), nullable=False, index=True)
     cardified_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
     title: str = Field(nullable=False)

@@ -3,6 +3,7 @@ import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
+import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
 import useBoardLabelOrderChangedHandlers from "@/controllers/socket/board/label/useBoardLabelOrderChangedHandlers";
 import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
@@ -17,9 +18,11 @@ import useDashboardProjectColumnOrderChangedHandlers from "@/controllers/socket/
 import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/useBoardColumnCreatedHandlers";
 import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
 import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
+import useDashboardProjectCardDeletedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardDeletedHandlers";
 
 export enum ERoleAction {
     READ = "read",
@@ -85,7 +88,9 @@ class Project extends BaseModel<IStore> {
                 useCardRelationshipsUpdatedHandlers,
             ],
             {
+                topic: ESocketTopic.Board,
                 projectUID: this.uid,
+                project: this,
             }
         );
 
@@ -129,11 +134,14 @@ class Project extends BaseModel<IStore> {
                 useDashboardProjectAssignedUsersUpdatedHandlers,
                 useDashboardProjectCardCreatedHandlers,
                 useDashboardProjectCardOrderChangedHandlers,
+                useDashboardProjectCardDeletedHandlers,
                 useDashboardProjectColumnCreatedHandlers,
                 useDashboardProjectColumnNameChangedHandlers,
                 useDashboardProjectColumnOrderChangedHandlers,
+                useProjectDeletedHandlers,
             ],
             {
+                topic: ESocketTopic.Dashboard,
                 projectUID: this.uid,
                 userUID,
             }

@@ -3,7 +3,8 @@ from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, Project, ProjectColumn
-from .Types import TColumnParam, TProjectParam
+from ...tasks import ProjectColumnActivityTask
+from .Types import TColumnParam, TProjectParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:column"
@@ -57,7 +58,7 @@ class ProjectColumnService(BaseService):
         count = result.one()
         return count
 
-    async def create(self, user: User, project: TProjectParam, name: str) -> ProjectColumn | None:
+    async def create(self, user_or_bot: TUserOrBot, project: TProjectParam, name: str) -> ProjectColumn | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -98,15 +99,19 @@ class ProjectColumnService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
+        ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
+
         return column
 
-    async def change_name(self, user: User, project: TProjectParam, column: TColumnParam, name: str) -> bool | None:
+    async def change_name(
+        self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, name: str
+    ) -> bool | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
 
-        if column == project.ARCHIVE_COLUMN_UID():
-            # original_name = project.archive_column_name
+        if column == project.ARCHIVE_COLUMN_UID() or column == project or column == project.id:
+            original_name = project.archive_column_name
             project.archive_column_name = name
             await self._db.update(project)
             column_id = project.ARCHIVE_COLUMN_UID()
@@ -114,7 +119,7 @@ class ProjectColumnService(BaseService):
             column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
             if not column or column.project_id != project.id:
                 return None
-            # original_name = column.name
+            original_name = column.name
             column.name = name
             await self._db.update(column)
             column_id = column.id
@@ -143,6 +148,13 @@ class ProjectColumnService(BaseService):
         ]
 
         SocketPublishService.put_dispather(model, publish_models)
+
+        ProjectColumnActivityTask.project_column_name_changed(
+            user_or_bot,
+            project,
+            original_name,
+            column if isinstance(column, ProjectColumn) else project,
+        )
 
         return True
 

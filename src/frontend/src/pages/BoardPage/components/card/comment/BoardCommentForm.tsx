@@ -45,6 +45,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
+    const isValidatingRef = useRef(isValidating);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const { mutate: addCommentMutate } = useAddCardComment();
     const editorName = `${card.uid}-comment`;
@@ -113,7 +114,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     }, [subscribeEditorSocketEvents]);
 
     const changeOpenState = (opened: bool) => {
-        if (isValidating) {
+        if (isValidatingRef.current) {
             return;
         }
 
@@ -140,6 +141,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setIsValidating(true);
+        isValidatingRef.current = true;
 
         addCommentMutate(
             {
@@ -155,6 +157,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                 },
                 onSettled: () => {
                     setIsValidating(false);
+                    isValidatingRef.current = false;
                     setCurrentEditor("");
                 },
             }

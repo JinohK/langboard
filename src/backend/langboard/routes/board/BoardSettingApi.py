@@ -154,3 +154,23 @@ async def delete_label(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/board/{project_uid}/settings/delete")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def delete_project(
+    project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if project.owner_id != user.id and not user.is_admin:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.delete(user, project_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

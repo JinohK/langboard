@@ -1,5 +1,11 @@
 from inspect import Parameter, signature
-from typing import Any, Callable, Literal
+from types import UnionType
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    _UnionGenericAlias,  # type: ignore
+)
 from pydantic import BaseModel
 
 
@@ -52,11 +58,21 @@ class TaskParameters:
     def __unpack(self, param_name: str, parameter: Parameter) -> tuple[Literal["arg", "kwarg"], Any]:
         annotation = parameter.annotation
 
+        arg_type, value = self.__get_param_value(param_name)
         if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            arg_type, raw_model = self.__get_param_value(param_name)
-            return arg_type, annotation.model_validate_json(raw_model)
+            return arg_type, annotation.model_validate_json(value)
+        elif isinstance(annotation, UnionType) or isinstance(annotation, _UnionGenericAlias):
+            for sub_annotation in annotation.__args__:  # type: ignore
+                try:
+                    if isinstance(sub_annotation, type) and issubclass(sub_annotation, BaseModel):
+                        model = arg_type, sub_annotation.model_validate_json(value)
+                        return model
+                except Exception:
+                    continue
+
+            return arg_type, value
         else:
-            return self.__get_param_value(param_name)
+            return arg_type, value
 
     def __get_param_value(self, param_name: str) -> tuple[Literal["arg", "kwarg"], Any]:
         if param_name in self.__kwargs:

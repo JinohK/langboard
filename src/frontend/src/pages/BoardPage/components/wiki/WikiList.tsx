@@ -29,7 +29,7 @@ const WikiList = memo(() => {
     const [t] = useTranslation();
     const [wikiUID, setWikiUID] = useState(location.pathname.split("/")[4]);
     const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, disabledReorder, setDisabledReorder, wikiTabListId } = useBoardWiki();
-    const paramsLastCheckedRef = useRef<string>(null);
+    const paramsLastCheckedRef = useRef("");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
 
     useEffect(() => {
@@ -52,11 +52,16 @@ const WikiList = memo(() => {
             return;
         }
 
-        if (canAccessWiki(true, wikiUID)) {
-            navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, uid));
+        if (canAccessWiki(true, uid)) {
+            if (!uid) {
+                navigate(ROUTES.BOARD.WIKI(projectUID));
+            } else {
+                navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, uid));
+            }
             setCurrentEditor("");
             setWikiUID(uid);
         } else {
+            navigate(ROUTES.BOARD.WIKI(projectUID));
             setCurrentEditor("");
             setWikiUID("");
         }

@@ -13,12 +13,12 @@ class InviteProjectMemberForm(BaseFormModel):
 
 
 @form_model
-class AcceptProjectInvitationForm(BaseFormModel):
+class ProjectInvitationForm(BaseFormModel):
     invitation_token: str
 
 
 class ChatHistoryPagination(Pagination):
-    current_date: datetime = now()
+    refer_time: datetime = now()
 
 
 @form_model

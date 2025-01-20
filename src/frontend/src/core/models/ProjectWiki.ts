@@ -1,10 +1,14 @@
 import * as AuthUser from "@/core/models/AuthUser";
+import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
 import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
 import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoardWikiDetailsChangedHandlers";
-import useBoardWikiAssignedUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssignedUsersUpdatedHandlers";
+import useBoardWikiAssigneesUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssigneesUpdatedHandlers";
+import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
+import useBoardWikiGetDetailsHandlers from "@/controllers/socket/wiki/useBoardWikiGetDetailsHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -12,7 +16,8 @@ export interface Interface extends IBaseModel {
     content?: IEditorContent;
     order: number;
     is_public: bool;
-    forbidden?: true;
+    forbidden: bool;
+    assigned_bots: BotModel.Interface[];
     assigned_members: User.Interface[];
 
     // variable set from the client side
@@ -22,12 +27,14 @@ export interface Interface extends IBaseModel {
 class ProjectWiki extends BaseModel<Interface> {
     static get FOREIGN_MODELS() {
         return {
+            assigned_bots: BotModel.Model.MODEL_NAME,
             assigned_members: User.Model.MODEL_NAME,
         };
     }
     static get MODEL_NAME() {
         return "ProjectWiki" as const;
     }
+    #isSubscribedOnce = false;
 
     constructor(model: Record<string, unknown>) {
         super(model);
@@ -54,15 +61,24 @@ class ProjectWiki extends BaseModel<Interface> {
     }
 
     public subscribePrivateSocketHandlers(currentUser: AuthUser.TModel) {
-        return this.subscribeSocketEvents(
-            [useBoardWikiDetailsChangedHandlers, useBoardWikiPublicChangedHandlers, useBoardWikiAssignedUsersUpdatedHandlers],
-            {
-                projectUID: this.project_uid,
-                wiki: this,
-                currentUser,
-                isPrivate: true,
-            }
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const handlers: any = [useBoardWikiDetailsChangedHandlers, useBoardWikiGetDetailsHandlers];
+        if (!this.#isSubscribedOnce) {
+            handlers.push(useBoardWikiPublicChangedHandlers, useBoardWikiAssigneesUpdatedHandlers);
+            this.#isSubscribedOnce = true;
+        }
+
+        const unsub = this.subscribeSocketEvents(handlers, {
+            projectUID: this.project_uid,
+            wiki: this,
+            currentUser,
+            isPrivate: true,
+        });
+
+        return () => {
+            this.#isSubscribedOnce = false;
+            unsub();
+        };
     }
 
     public get project_uid() {
@@ -100,6 +116,13 @@ class ProjectWiki extends BaseModel<Interface> {
         this.update({ is_public: value });
     }
 
+    public get assigned_bots(): BotModel.TModel[] {
+        return this.getForeignModels("assigned_bots");
+    }
+    public set assigned_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
+        this.update({ assigned_bots: value });
+    }
+
     public get assigned_members(): User.TModel[] {
         return this.getForeignModels("assigned_members");
     }
@@ -110,7 +133,7 @@ class ProjectWiki extends BaseModel<Interface> {
     public get forbidden() {
         return this.getValue("forbidden");
     }
-    public set forbidden(value: true | undefined) {
+    public set forbidden(value: bool) {
         this.update({ forbidden: value });
     }
 
@@ -122,6 +145,9 @@ class ProjectWiki extends BaseModel<Interface> {
     }
 
     public changeToPrivate() {
+        const socket = useSocketOutsideProvider();
+        socket.unsubscribe(ESocketTopic.BoardWikiPrivate, [this.uid]);
+
         this.title = "";
         this.content = undefined;
         this.is_public = false;

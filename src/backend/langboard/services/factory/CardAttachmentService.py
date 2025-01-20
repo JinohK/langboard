@@ -4,6 +4,7 @@ from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
+from ...tasks import CardAttachmentActivityTask
 from .Types import TAttachmentParam, TCardParam, TProjectParam
 
 
@@ -76,6 +77,8 @@ class CardAttachmentService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardAttachmentActivityTask.card_attachment_uploaded(user, project, card, card_attachment)
+
         return card_attachment
 
     async def change_order(
@@ -88,14 +91,7 @@ class CardAttachmentService(BaseService):
 
         original_order = card_attachment.order
         update_query = self._db.query("update").table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
-        if original_order < order:
-            update_query = update_query.values({CardAttachment.order: CardAttachment.order - 1}).where(
-                (CardAttachment.column("order") <= order) & (CardAttachment.column("order") > original_order)
-            )
-        else:
-            update_query = update_query.values({CardAttachment.order: CardAttachment.order + 1}).where(
-                (CardAttachment.column("order") >= order) & (CardAttachment.column("order") < original_order)
-            )
+        update_query = self._set_order_in_column(update_query, CardAttachment, original_order, order)
         await self._db.exec(update_query)
 
         card_attachment.order = order
@@ -122,7 +118,7 @@ class CardAttachmentService(BaseService):
             return None
         project, card, card_attachment = params
 
-        # original_name = card_attachment.filename
+        original_name = card_attachment.filename
         card_attachment.filename = name
 
         await self._db.update(card_attachment)
@@ -137,6 +133,8 @@ class CardAttachmentService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, original_name, card_attachment)
 
         return True
 
@@ -169,6 +167,8 @@ class CardAttachmentService(BaseService):
         )
 
         SocketPublishService.put_dispather(model, publish_model)
+
+        CardAttachmentActivityTask.card_attachment_deleted(user, project, card, card_attachment)
 
         return True
 

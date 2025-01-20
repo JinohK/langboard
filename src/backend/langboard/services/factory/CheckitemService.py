@@ -4,9 +4,10 @@ from ...core.db import User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
-from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, ProjectColumn
+from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn
 from ...models.Checkitem import CheckitemStatus
-from .Types import TCardParam, TCheckitemParam, TChecklistParam, TUserOrBot
+from ...tasks import CardCheckitemActivityTask
+from .Types import TCardParam, TCheckitemParam, TChecklistParam, TProjectParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:card:checkitem"
@@ -62,11 +63,14 @@ class CheckitemService(BaseService):
         return checkitems
 
     async def create(
-        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam, title: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
     ) -> Checkitem | None:
-        card = cast(Card, await self._get_by_param(Card, card))
+        params = await self.__get_records_by_params(project, card)
+        if not params:
+            return None
+        project, card, _ = params
         checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
-        if not card or not checklist or checklist.card_id != card.id:
+        if not checklist or checklist.card_id != card.id:
             return None
 
         max_order = await self._get_max_order(Checkitem, "checklist_id", checklist.id)
@@ -86,20 +90,24 @@ class CheckitemService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardCheckitemActivityTask.card_checkitem_created(user_or_bot, project, card, checkitem)
+
         return checkitem
 
     async def change_title(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
         title: str,
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checkitem)
+        params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
-        card, checkitem = params
+        project, card, checkitem = params
 
+        original_title = checkitem.title
         checkitem.title = title
         cardified_card = None
         if checkitem.cardified_id:
@@ -135,20 +143,23 @@ class CheckitemService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
+        CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, original_title, checkitem)
+
         return True
 
     async def change_order(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
         order: int,
         checklist_uid: str = "",
     ) -> bool | None:
-        card = cast(Card, await self._get_by_param(Card, card))
-        checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
-        if not card or not checkitem:
+        params = await self.__get_records_by_params(project, card, checkitem)
+        if not params:
             return None
+        project, card, checkitem = params
 
         original_order = checkitem.order
         original_checklist = None
@@ -178,15 +189,8 @@ class CheckitemService(BaseService):
             await self._db.exec(update_query)
             checkitem.checklist_id = new_checklist.id
         else:
-            shared_update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
-            if original_order < order:
-                update_query = shared_update_query.values(
-                    {Checkitem.column("order"): Checkitem.column("order") - 1}
-                ).where((Checkitem.column("order") <= order) & (Checkitem.column("order") > original_order))
-            else:
-                update_query = shared_update_query.values(
-                    {Checkitem.column("order"): Checkitem.column("order") + 1}
-                ).where((Checkitem.column("order") >= order) & (Checkitem.column("order") < original_order))
+            update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
+            update_query = self._set_order_in_column(update_query, Checkitem, original_order, order)
             await self._db.exec(update_query)
         await self._db.commit()
 
@@ -235,16 +239,17 @@ class CheckitemService(BaseService):
     async def change_status(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
         status: CheckitemStatus,
         current_time: datetime | None = None,
         should_publish: bool = True,
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checkitem)
+        params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
-        card, checkitem = params
+        project, card, checkitem = params
         if checkitem.cardified_id:
             return False
 
@@ -265,7 +270,15 @@ class CheckitemService(BaseService):
                 await self._db.update(checkitem)
         else:
             if not checkitem.user_id:
+                if not isinstance(user_or_bot, User):
+                    return False
                 checkitem.user_id = user_or_bot.id
+            elif isinstance(user_or_bot, User):
+                started_checkitem = await self.__find_started_checkitem(user_or_bot)
+                if started_checkitem:
+                    await self.change_status(
+                        user_or_bot, project, card, started_checkitem, CheckitemStatus.Paused, current_time
+                    )
             checkitem.is_checked = False
             await self._db.update(checkitem)
 
@@ -296,23 +309,31 @@ class CheckitemService(BaseService):
 
             SocketPublishService.put_dispather(model, publish_model)
 
+        if status == CheckitemStatus.Started:
+            CardCheckitemActivityTask.card_checkitem_timer_started(user_or_bot, project, card, checkitem)
+        elif status == CheckitemStatus.Paused:
+            CardCheckitemActivityTask.card_checkitem_timer_paused(user_or_bot, project, card, checkitem)
+        elif status == CheckitemStatus.Stopped:
+            CardCheckitemActivityTask.card_checkitem_timer_stopped(user_or_bot, project, card, checkitem)
+
         return True
 
     async def toggle_checked(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checkitem)
+        params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
-        card, checkitem = params
+        project, card, checkitem = params
 
         checkitem.is_checked = not checkitem.is_checked
 
         if checkitem.status != CheckitemStatus.Stopped:
-            await self.change_status(user_or_bot, card, checkitem, CheckitemStatus.Stopped)
+            await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
         else:
             await self._db.update(checkitem)
             await self._db.commit()
@@ -327,19 +348,25 @@ class CheckitemService(BaseService):
 
             SocketPublishService.put_dispather(model, publish_model)
 
+        if checkitem.is_checked:
+            CardCheckitemActivityTask.card_checkitem_checked(user_or_bot, project, card, checkitem)
+        else:
+            CardCheckitemActivityTask.card_checkitem_unchecked(user_or_bot, project, card, checkitem)
+
         return True
 
     async def cardify(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
         column_uid: str | None = None,
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checkitem)
+        params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
-        card, checkitem = params
+        project, card, checkitem = params
 
         if checkitem.cardified_id or column_uid == card.project_id.to_short_code():
             return False
@@ -352,7 +379,7 @@ class CheckitemService(BaseService):
             return False
 
         if checkitem.status != CheckitemStatus.Stopped:
-            await self.change_status(user_or_bot, card, checkitem, CheckitemStatus.Stopped)
+            await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
 
         max_order = await self._get_max_order(
             Card, "project_id", card.project_id, {"project_column_id": target_column.id}
@@ -397,21 +424,24 @@ class CheckitemService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
+        CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
+
         return True
 
     async def delete(
         self,
         user_or_bot: TUserOrBot,
+        project: TProjectParam,
         card: TCardParam,
         checkitem: TCheckitemParam,
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checkitem)
+        params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
             return None
-        card, checkitem = params
+        project, card, checkitem = params
 
         if checkitem.status != CheckitemStatus.Stopped:
-            await self.change_status(user_or_bot, card, checkitem, CheckitemStatus.Stopped)
+            await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
 
         await self._db.delete(checkitem)
         await self._db.commit()
@@ -427,6 +457,8 @@ class CheckitemService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardCheckitemActivityTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)
+
         return True
 
     async def __get_last_timer_record(self, checkitem: Checkitem):
@@ -440,12 +472,35 @@ class CheckitemService(BaseService):
         )
         return result.first()
 
+    async def __find_started_checkitem(self, user: User):
+        result = await self._db.exec(
+            self._db.query("select")
+            .table(Checkitem)
+            .where((Checkitem.column("user_id") == user.id) & (Checkitem.column("status") == CheckitemStatus.Started))
+        )
+        return result.first()
+
+    @overload
     async def __get_records_by_params(
-        self, card: TCardParam, checkitem: TCheckitemParam
-    ) -> tuple[Card, Checkitem] | None:
+        self, project: TProjectParam, card: TCardParam
+    ) -> tuple[Project, Card, None] | None: ...
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
+    ) -> tuple[Project, Card, Checkitem] | None: ...
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam | None = None
+    ) -> tuple[Project, Card, Checkitem | None] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
         card = cast(Card, await self._get_by_param(Card, card))
-        checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
-        if not card or not checkitem:
+        if not card or not project or card.project_id != project.id:
             return None
 
-        return card, checkitem
+        if checkitem:
+            checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
+            if not checkitem:
+                return None
+        else:
+            checkitem = None
+
+        return project, card, checkitem

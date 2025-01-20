@@ -1,13 +1,15 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import User
+from ...core.db import SnowflakeID, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project
 from ...models.Checkitem import CheckitemStatus
+from ...tasks import CardChecklistActivityTask
 from .CheckitemService import CheckitemService
 from .NotificationService import NotificationService
-from .Types import TCardParam, TChecklistParam, TUserOrBot
+from .ProjectService import ProjectService
+from .Types import TCardParam, TChecklistParam, TProjectParam, TUserOrBot
 
 
 _SOCKET_PREFIX = "board:card:checklist"
@@ -52,10 +54,13 @@ class ChecklistService(BaseService):
 
         return checklists
 
-    async def create(self, user_or_bot: TUserOrBot, card: TCardParam, title: str) -> Checklist | None:
-        card = cast(Card, await self._get_by_param(Card, card))
-        if not card:
+    async def create(
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, title: str
+    ) -> Checklist | None:
+        params = await self.__get_records_by_params(project, card)
+        if not params:
             return None
+        project, card, _ = params
 
         max_order = await self._get_max_order(Checklist, "card_id", card.id)
 
@@ -74,19 +79,22 @@ class ChecklistService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
+
         return checklist
 
     async def change_title(
-        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam, title: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checklist)
+        params = await self.__get_records_by_params(project, card, checklist)
         if not params:
             return None
-        card, checklist = params
+        project, card, checklist = params
 
         if checklist.title == title:
             return True
 
+        original_title = checklist.title
         checklist.title = title
         await self._db.update(checklist)
         await self._db.commit()
@@ -102,26 +110,21 @@ class ChecklistService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, original_title, checklist)
+
         return True
 
     async def change_order(
-        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam, order: int
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, order: int
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checklist)
+        params = await self.__get_records_by_params(project, card, checklist)
         if not params:
             return None
-        card, checklist = params
+        project, card, checklist = params
 
         original_order = checklist.order
         update_query = self._db.query("update").table(Checklist).where(Checklist.column("card_id") == card.id)
-        if original_order < order:
-            update_query = update_query.values({Checklist.order: Checklist.order - 1}).where(
-                (Checklist.column("order") <= order) & (Checklist.column("order") > original_order)
-            )
-        else:
-            update_query = update_query.values({Checklist.order: Checklist.order + 1}).where(
-                (Checklist.column("order") >= order) & (Checklist.column("order") < original_order)
-            )
+        update_query = self._set_order_in_column(update_query, Checklist, original_order, order)
         await self._db.exec(update_query)
 
         checklist.order = order
@@ -142,12 +145,12 @@ class ChecklistService(BaseService):
         return True
 
     async def toggle_checked(
-        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checklist)
+        params = await self.__get_records_by_params(project, card, checklist)
         if not params:
             return None
-        card, checklist = params
+        project, card, checklist = params
 
         checklist.is_checked = not checklist.is_checked
         await self._db.update(checklist)
@@ -164,38 +167,51 @@ class ChecklistService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        if checklist.is_checked:
+            CardChecklistActivityTask.card_checklist_checked(user_or_bot, project, card, checklist)
+        else:
+            CardChecklistActivityTask.card_checklist_unchecked(user_or_bot, project, card, checklist)
+
         return True
 
     async def notify(
-        self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam, user_uids: list[str]
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
+        user_uids: list[str],
     ) -> bool | None:
-        params = await self.__get_records_by_params(card, checklist)
+        params = await self.__get_records_by_params(project, card, checklist)
         if not params:
             return None
-        card, checklist = params
+        project, card, checklist = params
 
-        project = await self._get_by_param(Project, card.project_id)
-        if not project:
-            return None
+        project_service = self._get_service(ProjectService)
+        assigned_users = await project_service.get_assigned_users(
+            project, as_api=False, where_user_ids_in=[SnowflakeID.from_short_code(user_uid) for user_uid in user_uids]
+        )
 
-        for user_uid in user_uids:
+        for user, _ in assigned_users:
             notification_service = self._get_service(NotificationService)
-            await notification_service.notify_checklist(user_or_bot, user_uid, project, card, checklist)
+            await notification_service.notify_checklist(user_or_bot, user, project, card, checklist)
 
         return True
 
-    async def delete(self, user_or_bot: TUserOrBot, card: TCardParam, checklist: TChecklistParam) -> bool | None:
-        params = await self.__get_records_by_params(card, checklist)
+    async def delete(
+        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
+    ) -> bool | None:
+        params = await self.__get_records_by_params(project, card, checklist)
         if not params:
             return None
-        card, checklist = params
+        project, card, checklist = params
 
         checkitem_service = self._get_service(CheckitemService)
         checkitems = await checkitem_service.get_list(card, checklist, as_api=False)
         current_time = now()
         for checkitem, _, _ in checkitems:
             await checkitem_service.change_status(
-                user_or_bot, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+                user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
         await self._db.delete(checklist)
@@ -211,14 +227,31 @@ class ChecklistService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
+        CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)
+
         return True
 
+    @overload
     async def __get_records_by_params(
-        self, card: TCardParam, checklist: TChecklistParam
-    ) -> tuple[Card, Checklist] | None:
+        self, project: TProjectParam, card: TCardParam
+    ) -> tuple[Project, Card, None] | None: ...
+    @overload
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
+    ) -> tuple[Project, Card, Checklist] | None: ...
+    async def __get_records_by_params(
+        self, project: TProjectParam, card: TCardParam, checklist: TChecklistParam | None = None
+    ) -> tuple[Project, Card, Checklist | None] | None:
+        project = cast(Project, await self._get_by_param(Project, project))
         card = cast(Card, await self._get_by_param(Card, card))
-        checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
-        if not card or not checklist or card.id != checklist.card_id:
+        if not card or not project or card.project_id != project.id:
             return None
 
-        return card, checklist
+        if checklist:
+            checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+            if not checklist or checklist.card_id != card.id:
+                return None
+        else:
+            checklist = None
+
+        return project, card, checklist

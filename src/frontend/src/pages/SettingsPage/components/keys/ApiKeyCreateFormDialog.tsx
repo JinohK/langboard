@@ -45,7 +45,7 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
             },
             {
                 onSuccess: (data) => {
-                    data.createToast(t("settings.successes.API key created successfully."));
+                    Toast.Add.success(t("settings.successes.API key created successfully."));
                     setRevealedKey(data.revealed_value);
                 },
                 onError: (error) => {

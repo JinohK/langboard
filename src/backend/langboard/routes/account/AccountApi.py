@@ -31,9 +31,9 @@ async def update_profile(
     if file_model:
         form_dict["avatar"] = file_model
 
-    revert_key = await service.user.update(user, form_dict)
+    await service.user.update(user, form_dict)
 
-    return JsonResponse(content={"revert_key": revert_key})
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post("/account/email")
@@ -108,8 +108,8 @@ async def change_primary_email(
     if existed_user.email == form.email:
         return JsonResponse(content={}, status_code=status.HTTP_304_NOT_MODIFIED)
 
-    revert_key = await service.user.change_primary_email(user, subemail)
-    return JsonResponse(content={"revert_key": revert_key})
+    await service.user.change_primary_email(user, subemail)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete("/account/email")
@@ -124,8 +124,8 @@ async def delete_email(
     if existed_user.email == form.email:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
-    revert_key = await service.user.delete_email(subemail)
-    return JsonResponse(content={"revert_key": revert_key})
+    await service.user.delete_email(subemail)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.put("/account/password")
@@ -149,10 +149,10 @@ async def change_password(
 async def create_user_group(
     form: CreateUserGroupForm, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    group, revert_key = await service.user_group.create(user, form.name)
+    group = await service.user_group.create(user, form.name)
     api_group = group.api_response()
     api_group["users"] = await service.user_group.get_user_emails_by_group(group.id, as_api=True)
-    return JsonResponse(content={"revert_key": revert_key, "user_group": api_group})
+    return JsonResponse(content={"user_group": api_group})
 
 
 @AppRouter.api.put("/account/group/{group_uid}/name")
@@ -163,11 +163,11 @@ async def change_user_group_name(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    revert_key = await service.user_group.change_name(user, group_uid, form.name)
-    if not revert_key:
+    result = await service.user_group.change_name(user, group_uid, form.name)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": revert_key})
+    return JsonResponse(content={})
 
 
 @AppRouter.api.put("/account/group/{group_uid}/emails")
@@ -178,13 +178,13 @@ async def update_user_group_assigned_emails(
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    revert_key = await service.user_group.update_assigned_emails(user, group_uid, form.emails)
-    if not revert_key:
+    result = await service.user_group.update_assigned_emails(user, group_uid, form.emails)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     group_users = await service.user_group.get_user_emails_by_group(group_uid, as_api=True)
 
-    return JsonResponse(content={"revert_key": revert_key, "users": group_users})
+    return JsonResponse(content={"users": group_users})
 
 
 @AppRouter.api.delete("/account/group/{group_uid}")
@@ -192,8 +192,8 @@ async def update_user_group_assigned_emails(
 async def delete_user_group(
     group_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    revert_key = await service.user_group.delete(user, group_uid)
-    if not revert_key:
+    result = await service.user_group.delete(user, group_uid)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": revert_key})
+    return JsonResponse(content={})

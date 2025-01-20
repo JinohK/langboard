@@ -2,7 +2,6 @@ from typing import Any, Literal, cast, overload
 from ...core.db import User
 from ...core.service import BaseService
 from ...models import UserEmail, UserGroup, UserGroupAssignedEmail
-from .RevertService import RevertService, RevertType
 from .Types import TUserGroupParam
 
 
@@ -80,56 +79,42 @@ class UserGroupService(BaseService):
                 users.append(User.create_email_user_api_response(assigned_email.id, assigned_email.email))
         return users
 
-    async def create(self, user: User, name: str, emails: list[str] | None = None) -> tuple[UserGroup, str]:
+    async def create(self, user: User, name: str, emails: list[str] | None = None) -> UserGroup:
         max_order = await self._get_max_order(UserGroup, "user_id", user.id)
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(revert_service.create_record_model(user_group, RevertType.Delete))
+        self._db.insert(user_group)
+        await self._db.commit()
 
         if emails:
-            assigned_emails = []
-
             for email in set(emails):
-                assigned_emails.append(UserGroupAssignedEmail(group_id=user_group.id, email=email))
+                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+                self._db.insert(assigned_email)
+            await self._db.commit()
 
-            await revert_service.record(
-                *[
-                    revert_service.create_record_model(assigned_email, RevertType.Delete)
-                    for assigned_email in assigned_emails
-                ],
-                revert_key=revert_key,
-            )
+        return user_group
 
-        return user_group, revert_key
-
-    async def change_name(self, user: User, user_group: TUserGroupParam, name: str) -> str | None:
+    async def change_name(self, user: User, user_group: TUserGroupParam, name: str) -> bool:
         user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
-            return None
+            return False
 
         user_group.name = name
 
-        revert_service = self._get_service(RevertService)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(user_group, RevertType.Insert),
-        )
-        return revert_key
+        await self._db.update(user_group)
+        await self._db.commit()
+        return True
 
-    async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> str | None:
+    async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> bool:
         user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
-            return None
+            return False
 
-        revert_service = self._get_service(RevertService)
-
-        prev_assigned_emails = await self._get_all_by(UserGroupAssignedEmail, "group_id", user_group.id)
-        revert_key = await revert_service.record(
-            *[
-                revert_service.create_record_model(prev_assigned_email, RevertType.Insert)
-                for prev_assigned_email in prev_assigned_emails
-            ],
+        await self._db.exec(
+            self._db.query("delete")
+            .table(UserGroupAssignedEmail)
+            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
         )
 
         app_users = await self._get_all_by(User, "email", emails)
@@ -149,35 +134,25 @@ class UserGroupService(BaseService):
         none_user_emails = [email for email in emails if email not in appended_emails]
         all_emails = unique_app_user_emails.union(none_user_emails)
 
-        assigned_emails = []
         for email in all_emails:
             assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-            assigned_emails.append(assigned_email)
+            self._db.insert(assigned_email)
+        await self._db.commit()
 
-        await revert_service.record(
-            *[
-                revert_service.create_record_model(assigned_email, RevertType.Delete)
-                for assigned_email in assigned_emails
-            ],
-            revert_key=revert_key,
-        )
+        return True
 
-        return revert_key
-
-    async def delete(self, user: User, user_group: TUserGroupParam) -> str | None:
+    async def delete(self, user: User, user_group: TUserGroupParam) -> bool:
         user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
-            return None
+            return False
 
-        revert_service = self._get_service(RevertService)
-
-        assigned_emails = await self._get_all_by(UserGroupAssignedEmail, "group_id", user_group.id)
-        revert_key = await revert_service.record(
-            revert_service.create_record_model(user_group, RevertType.Insert),
-            *[
-                revert_service.create_record_model(assigned_email, RevertType.Insert)
-                for assigned_email in assigned_emails
-            ],
+        await self._db.exec(
+            self._db.query("delete")
+            .table(UserGroupAssignedEmail)
+            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
         )
 
-        return revert_key
+        await self._db.delete(user_group)
+        await self._db.commit()
+
+        return True

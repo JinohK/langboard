@@ -122,3 +122,19 @@ def create_bot_py(name: str, code: str) -> None:
         f.close()
 
     _logger.info(f"Created bot: {name}")
+
+
+def create_task_py(name: str, code: str) -> None:
+    target_dir = BASE_DIR / "tasks"
+    save_path = target_dir / f"{name}Task.py"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    if save_path.exists():
+        raise FileExistsError(f"Task already exists: {name}")
+
+    with open(save_path, "w") as f:
+        f.write(code)
+        f.close()
+
+    _logger.info(f"Created task: {name}")

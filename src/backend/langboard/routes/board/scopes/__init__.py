@@ -4,14 +4,14 @@ from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckit
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
 from .Project import (
-    AcceptProjectInvitationForm,
     ChatHistoryPagination,
     InviteProjectMemberForm,
+    ProjectInvitationForm,
     UpdateProjectDetailsForm,
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
 from .RoleFinder import project_role_finder
-from .Shared import AssignBotsForm, AssignUsersForm, ChangeColumnOrderForm, ChangeOrderForm
+from .Shared import AssignBotsForm, AssigneesForm, AssignUsersForm, ChangeColumnOrderForm, ChangeOrderForm
 from .Wiki import ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
@@ -19,6 +19,7 @@ __all__ = [
     "project_role_finder",
     "AssignBotsForm",
     "AssignUsersForm",
+    "AssigneesForm",
     "ChangeColumnOrderForm",
     "ChangeOrderForm",
     "ColumnForm",
@@ -30,7 +31,7 @@ __all__ = [
     "UpdateProjectDetailsForm",
     "CreateProjectLabelForm",
     "UpdateProjectLabelDetailsForm",
-    "AcceptProjectInvitationForm",
+    "ProjectInvitationForm",
     "ChatHistoryPagination",
     "ChangeAttachmentNameForm",
     "ToggleCardCommentReactionForm",

@@ -28,7 +28,7 @@ function PrimaryEmailForm(): JSX.Element {
     const [t] = useTranslation();
     const [open, setOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
-    const { mutate } = useChangePrimaryEmail(updatedUser);
+    const { mutate } = useChangePrimaryEmail();
 
     const handleSubmit = () => {
         if (!selectedEmail) {
@@ -43,10 +43,10 @@ function PrimaryEmailForm(): JSX.Element {
                 email: selectedEmail,
             },
             {
-                onSuccess: (data) => {
+                onSuccess: () => {
                     setTimeout(() => {
                         updatedUser();
-                        data.createToast(t("myAccount.successes.Primary email updated successfully."));
+                        Toast.Add.success(t("myAccount.successes.Primary email updated successfully."));
                     }, 0);
                 },
                 onError: (error) => {

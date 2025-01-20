@@ -30,8 +30,8 @@ function GlobalRelationshipsPage() {
                 relationship_type_uids: selectedGlobalRelationships,
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Selected global relationship types deleted successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("settings.successes.Selected global relationship types deleted successfully."));
                     setSelectedGlobalRelationships([]);
                 },
                 onError: (error) => {

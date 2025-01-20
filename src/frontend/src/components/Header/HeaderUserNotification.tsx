@@ -2,6 +2,7 @@ import { AnimatedList, Box, Button, Card, Flex, IconComponent, Label, Loading, P
 import { createDataTextRegex } from "@/components/Editor/plugins/markdown";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import UserAvatar from "@/components/UserAvatar";
+import { PROJCT_INVITATION_TOKEN_QUERY_NAME } from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import useDeleteAllUserNotificationsHandlers from "@/controllers/socket/notification/useDeleteAllUserNotificationsHandlers";
 import useDeleteUserNotificationHandlers from "@/controllers/socket/notification/useDeleteUserNotificationHandlers";
 import useReadAllUserNotificationsHandlers from "@/controllers/socket/notification/useReadAllUserNotificationsHandlers";
@@ -13,16 +14,19 @@ import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { AuthUser, User, UserNotification } from "@/core/models";
 import { ENotificationType } from "@/core/models/UserNotification";
 import { useSocket } from "@/core/providers/SocketProvider";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { memo, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { NavigateFunction } from "react-router-dom";
 
 interface IHeaderUserNotificationProps {
+    navigateRef: React.RefObject<NavigateFunction>;
     currentUser: AuthUser.TModel;
 }
 
-const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationProps) => {
+const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNotificationProps) => {
     const [t] = useTranslation();
     const socket = useSocket();
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -119,18 +123,19 @@ const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationPro
                         </Button>
                     </Flex>
                 </Flex>
-                <HeaderUserNotificationList isOnlyUnread={isOnlyUnread} updater={[updated, forceUpdate]} />
+                <HeaderUserNotificationList navigateRef={navigateRef} isOnlyUnread={isOnlyUnread} updater={[updated, forceUpdate]} />
             </Popover.Content>
         </Popover.Root>
     );
 });
 
 interface IHeaderUserNotificationListProps {
+    navigateRef: React.RefObject<NavigateFunction>;
     isOnlyUnread: bool;
     updater: [number, React.DispatchWithoutAction];
 }
 
-function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotificationListProps) {
+function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHeaderUserNotificationListProps) {
     const [t] = useTranslation();
     const [updated] = updater;
     const flatNotifications = UserNotification.Model.useModels(() => true);
@@ -171,7 +176,7 @@ function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotifi
                 <AnimatedList.Root>
                     {notifications.map((notification) => (
                         <AnimatedList.Item key={notification.uid}>
-                            <HeaderUserNotificationItem notification={notification} updater={updater} />
+                            <HeaderUserNotificationItem navigateRef={navigateRef} notification={notification} updater={updater} />
                         </AnimatedList.Item>
                     ))}
                 </AnimatedList.Root>
@@ -181,21 +186,24 @@ function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotifi
 }
 
 interface IHeaderUserNotificationItemProps {
+    navigateRef: React.RefObject<NavigateFunction>;
     notification: UserNotification.TModel;
     updater: [number, React.DispatchWithoutAction];
 }
 
-const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserNotificationItemProps) => {
+const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }: IHeaderUserNotificationItemProps) => {
     const [_, forceUpdate] = updater;
     const [t] = useTranslation();
     const { send: sendReadUserNotification } = useReadUserNotificationHandlers();
     const { send: sendDeleteUserNotification } = useDeleteUserNotificationHandlers();
     const readAt = notification.useField("read_at");
     const createdAt = useUpdateDateDistance(notification.created_at);
-    const readNotification = () => {
+    const readNotification = (shouldUpdate: bool) => {
         sendReadUserNotification({ uid: notification.uid });
         notification.read_at = new Date();
-        forceUpdate();
+        if (shouldUpdate) {
+            forceUpdate();
+        }
     };
     const deleteNotification = () => {
         sendDeleteUserNotification({ uid: notification.uid });
@@ -208,7 +216,7 @@ const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserN
                 user={user}
                 avatarSize="xs"
                 withName
-                labelClassName="inline-flex gap-1 cursor-default select-none"
+                labelClassName="inline-flex gap-1 cursor-pointer select-none"
                 nameClassName="text-base"
             >
                 <UserAvatar.List>
@@ -218,16 +226,30 @@ const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserN
         );
     };
 
+    const movePage = () => {
+        const route = getRoute(notification);
+        readNotification(false);
+        navigateRef.current(route);
+    };
+
     return (
         <Card.Root>
             <Card.Header className="p-3">
                 <Flex items="center" gap="1" justify="between">
-                    <Box as="span" className={cn("truncate font-semibold text-primary", !!readAt && "opacity-50")}>
+                    <Box
+                        as="span"
+                        display="inline-flex"
+                        weight="semibold"
+                        gap="1"
+                        cursor="pointer"
+                        className={cn("truncate text-primary hover:opacity-80", !!readAt && "opacity-50")}
+                        onClick={movePage}
+                    >
                         <Trans
                             i18nKey={`notifications.titles.${notification.type}`}
                             components={{
-                                who: <UserAvatarComp user={notification.notifier_user ?? notification.notifier_bot!.as_user} />,
-                                span: <Box as="span" />,
+                                Who: <UserAvatarComp user={notification.notifier_user ?? notification.notifier_bot!.as_user} />,
+                                Span: <Box as="span" className="truncate" />,
                             }}
                         />
                     </Box>
@@ -240,7 +262,7 @@ const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserN
                                 titleAlign="end"
                                 titleSide="bottom"
                                 className="size-7"
-                                onClick={readNotification}
+                                onClick={() => readNotification(true)}
                             >
                                 <IconComponent icon="check" size="3" />
                             </Button>
@@ -276,7 +298,8 @@ function HeaderUserNotificationItemContent({ notification, className }: { notifi
             case ENotificationType.MentionedAtCard:
             case ENotificationType.MentionedAtComment:
             case ENotificationType.MentionedAtWiki:
-                return <HeaderUserNotificationItemMentionedText content={notification.message_vars.mentioned_line} />;
+            case ENotificationType.ReactedToComment:
+                return <HeaderUserNotificationItemMentionedText content={notification.message_vars.line} />;
             default:
                 return null;
         }
@@ -356,5 +379,26 @@ function HeaderUserNotificationItemMentionedText({ content }: { content: string 
         </Tooltip.Provider>
     );
 }
+
+const getRoute = (notification: UserNotification.TModel) => {
+    switch (notification.type) {
+        case ENotificationType.ProjectInvited:
+            return `${ROUTES.BOARD.INVITATION}?${PROJCT_INVITATION_TOKEN_QUERY_NAME}=${notification.records.invitation.encrypted_token}`;
+        case ENotificationType.MentionedAtCard:
+            return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
+        case ENotificationType.MentionedAtComment:
+            return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
+        case ENotificationType.MentionedAtWiki:
+            return ROUTES.BOARD.WIKI_PAGE(notification.records.project.uid, notification.records.wiki.uid);
+        case ENotificationType.ReactedToComment:
+            return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
+        case ENotificationType.AssignedToCard:
+            return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
+        case ENotificationType.NotifiedFromChecklist:
+            return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
+        default:
+            throw new Error("Invalid notification type.");
+    }
+};
 
 export default HeaderUserNotification;

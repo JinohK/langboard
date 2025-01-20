@@ -30,8 +30,8 @@ function ApiKeysPage() {
                 setting_uids: selectedKeys,
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("settings.successes.Selected API keys deleted successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("settings.successes.Selected API keys deleted successfully."));
                     setSelectedKeys([]);
                 },
                 onError: (error) => {

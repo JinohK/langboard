@@ -1,3 +1,4 @@
+from .ActivityService import ActivityService
 from .AppSettingService import AppSettingService
 from .CardAttachmentService import CardAttachmentService
 from .CardCommentService import CardCommentService
@@ -14,21 +15,21 @@ from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
 from .ProjectWikiService import ProjectWikiService
 from .ReactionService import ReactionService
-from .RevertService import RevertService
 from .RoleService import RoleService
 from .UserGroupService import UserGroupService
 from .UserService import UserService
 
 
 __all__ = [
+    "ActivityService",
     "AppSettingService",
     "CardAttachmentService",
     "CardCommentService",
     "CardRelationshipService",
     "CardService",
     "ChatHistoryService",
-    "ChecklistService",
     "CheckitemService",
+    "ChecklistService",
     "EmailService",
     "NotificationService",
     "ProjectColumnService",
@@ -37,7 +38,6 @@ __all__ = [
     "ProjectService",
     "ProjectWikiService",
     "ReactionService",
-    "RevertService",
     "RoleService",
     "UserGroupService",
     "UserService",

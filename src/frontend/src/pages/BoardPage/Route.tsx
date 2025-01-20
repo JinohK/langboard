@@ -5,6 +5,7 @@ import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
 import { BoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import BoardActivityDialog from "@/pages/BoardPage/BoardActivityDialog";
 
 const BoardProxy = lazy(() => import("./index"));
 const BoardInvitationPage = lazy(() => import("./BoardInvitationPage"));
@@ -34,6 +35,7 @@ function BoardRoute() {
             >
                 <Route path={ROUTES.BOARD.WIKI(":projectUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.WIKI_PAGE(":projectUID", ":wikiUID")} element={<></>} />
+                <Route path={ROUTES.BOARD.ACTIVITY(":projectUID")} element={<BoardActivityDialog />} />
                 <Route path={ROUTES.BOARD.SETTINGS(":projectUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.SETTINGS_PAGE(":projectUID", ":page")} element={<></>} />
                 <Route path={ROUTES.BOARD.CARD(":projectUID", ":cardUID")} element={<BoardCardPage />} />

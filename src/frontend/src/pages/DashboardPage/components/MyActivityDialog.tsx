@@ -1,14 +1,10 @@
-import { Dialog, ScrollArea } from "@/components/base";
+import { Dialog } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { useEffect, useRef, useState } from "react";
-import useGetUserActivities from "@/controllers/api/activity/useGetUserActivities";
-import { Activity } from "@/core/models";
-import { createShortUUID } from "@/core/utils/StringUtils";
-import useCreateActivityTimeline from "@/core/hooks/useCreateActivityTimeline";
-import { cn } from "@/core/utils/ComponentUtils";
-import { TimelineVariants } from "@/components/base/Timeline";
+import { useEffect } from "react";
+import useGetActivities from "@/controllers/api/activity/useGetActivities";
+import { ActivityModel } from "@/core/models";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import InfiniteScroller from "@/components/InfiniteScroller";
+import ActivityList from "@/components/ActivityList";
 
 export interface IMyActivityDialogProps {
     opened: bool;
@@ -18,62 +14,12 @@ export interface IMyActivityDialogProps {
 function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.Element | null {
     const { setIsLoadingRef } = usePageLoader();
     const { aboutMe } = useAuth();
-    const pageRef = useRef(1);
     const user = aboutMe();
-    const [activities, setActivities] = useState<Activity.Interface[]>([]);
-    const { SkeletonActivity, ActivityTimeline } = useCreateActivityTimeline("user");
-    const {
-        data: rawActivities,
-        fetchNextPage,
-        hasNextPage,
-    } = useGetUserActivities(
-        { page: pageRef.current, limit: 20 },
-        {
-            getNextPageParam: (lastPage, _, lastPageParam) => {
-                if (lastPage.activities.length === lastPageParam.limit) {
-                    return {
-                        ...lastPageParam,
-                        page: lastPageParam.page + 1,
-                    };
-                } else {
-                    return undefined;
-                }
-            },
-        }
-    );
-    const userActivityListId = useRef(createShortUUID());
+    const activities = ActivityModel.Model.useModels((model) => model.filterable_type === "user");
 
     useEffect(() => {
         setIsLoadingRef.current(false);
-    }, []);
-
-    useEffect(() => {
-        if (rawActivities) {
-            setActivities((prev) => {
-                return [
-                    ...prev,
-                    ...rawActivities.pages
-                        .flatMap((page) => page.activities)
-                        .filter((activity) => !prev.some((prevActivity) => prevActivity.uid === activity.uid)),
-                ];
-            });
-            setActivities(rawActivities.pages.flatMap((page) => page.activities));
-        }
-    }, [rawActivities]);
-
-    const nextPage = (page: number) => {
-        if (page - pageRef.current > 1) {
-            return false;
-        }
-
-        return new Promise<bool>((resolve) => {
-            setTimeout(async () => {
-                await fetchNextPage();
-                pageRef.current = page;
-                resolve(true);
-            }, 2500);
-        });
-    };
+    }, [setOpened]);
 
     if (!user) {
         return null;
@@ -83,21 +29,12 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
         <Dialog.Root open={opened} onOpenChange={setOpened}>
             <Dialog.Title hidden />
             <Dialog.Content className="p-0 pb-4 pt-8 sm:max-w-md" aria-describedby="">
-                <ScrollArea.Root viewportId={userActivityListId.current} mutable={activities}>
-                    <InfiniteScroller
-                        as="ul"
-                        scrollable={() => document.getElementById(userActivityListId.current)}
-                        loadMore={nextPage}
-                        loader={<SkeletonActivity key={createShortUUID()} />}
-                        hasMore={hasNextPage}
-                        threshold={140}
-                        className={cn(TimelineVariants(), "max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5")}
-                    >
-                        {activities.map((activity) => (
-                            <ActivityTimeline activity={activity} user={user} isCurrentUser key={createShortUUID()} />
-                        ))}
-                    </InfiniteScroller>
-                </ScrollArea.Root>
+                <ActivityList
+                    mutation={() => useGetActivities({ type: "user" })}
+                    activities={activities}
+                    infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
+                    isCurrentUser
+                />
             </Dialog.Content>
         </Dialog.Root>
     );

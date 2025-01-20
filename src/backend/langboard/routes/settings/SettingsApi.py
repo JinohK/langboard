@@ -57,12 +57,11 @@ async def create_setting(
     if form.setting_type == AppSettingType.ApiKey:
         form.setting_value = await service.app_setting.generate_api_key()
 
-    revert_key, setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
+    setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
     revealed_value = setting.get_value()
 
     return JsonResponse(
-        content={"revert_key": revert_key, "setting": setting.api_response(), "revealed_value": revealed_value},
-        status_code=status.HTTP_200_OK,
+        content={"setting": setting.api_response(), "revealed_value": revealed_value}, status_code=status.HTTP_200_OK
     )
 
 
@@ -77,14 +76,14 @@ async def update_setting(
     if not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    revert_key = await service.app_setting.update(setting_uid, form.setting_name, form.setting_value)
-    if not revert_key:
+    result = await service.app_setting.update(setting_uid, form.setting_name, form.setting_value)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if revert_key is True:
+    if result is True:
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
-    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/settings/app/{setting_uid}")
@@ -97,11 +96,11 @@ async def delete_setting(
     if not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    revert_key = await service.app_setting.delete(setting_uid)
-    if not revert_key:
+    result = await service.app_setting.delete(setting_uid)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/settings/app")
@@ -114,11 +113,11 @@ async def delete_selected_settings(
     if not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    revert_key = await service.app_setting.delete_selected(form.setting_uids)
-    if not revert_key:
+    result = await service.app_setting.delete_selected(form.setting_uids)
+    if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": revert_key}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/settings/bot")
@@ -137,13 +136,11 @@ async def create_bot(
     if file_model:
         uploaded_avatar = file_model
 
-    result = await service.app_setting.create_bot(form.bot_name, form.bot_uname, uploaded_avatar)
-    if not result:
+    bot = await service.app_setting.create_bot(form.bot_name, form.bot_uname, uploaded_avatar)
+    if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
-    revert_key, bot = result
-
-    return JsonResponse(content={"revert_key": revert_key, "bot": bot.api_response()}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"bot": bot.api_response()}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/settings/bot/{bot_uid}")
@@ -175,9 +172,9 @@ async def update_bot(
             return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
-    revert_key, _, model = result
+    _, model = result
 
-    return JsonResponse(content={"revert_key": revert_key, **model}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={**model}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/settings/bot/{bot_uid}")
@@ -194,7 +191,7 @@ async def delete_bot(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post("/settings/global-relationship")
@@ -207,14 +204,14 @@ async def create_global_relationship(
     if not user.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.app_setting.create_global_relationship(form.parent_name, form.child_name, form.description)
-    if not result:
+    global_relationship = await service.app_setting.create_global_relationship(
+        form.parent_name, form.child_name, form.description
+    )
+    if not global_relationship:
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
-    revert_key, global_relationship = result
-
     return JsonResponse(
-        content={"revert_key": revert_key, "global_relationship": global_relationship.api_response()},
+        content={"global_relationship": global_relationship.api_response()},
         status_code=status.HTTP_200_OK,
     )
 
@@ -241,9 +238,9 @@ async def update_global_relationship(
             return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
-    revert_key, _, model = result
+    _, model = result
 
-    return JsonResponse(content={"revert_key": revert_key, **model}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={**model}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/settings/global-relationship/{global_relationship_uid}")
@@ -260,7 +257,7 @@ async def delete_global_relationship(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.delete("/settings/global-relationship")
@@ -277,4 +274,4 @@ async def delete_selected_global_relationship(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"revert_key": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

@@ -16,7 +16,7 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { Project } from "@/core/models";
 
 const DashboardProxy = memo((): JSX.Element => {
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const socket = useSocket();
     const [pageType, tabName] = location.pathname.split("/").slice(2);
     const { data, isFetching } = useGetAllStarredProjects();
@@ -54,13 +54,13 @@ const DashboardProxy = memo((): JSX.Element => {
         projects: {
             name: "dashboard.Projects",
             onClick: () => {
-                navigate.current(ROUTES.DASHBOARD.PROJECTS.ALL);
+                navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
         cards: {
             name: "dashboard.Cards",
             onClick: () => {
-                navigate.current(ROUTES.DASHBOARD.CARDS);
+                navigateRef.current(ROUTES.DASHBOARD.CARDS);
             },
         },
         starred: {
@@ -69,14 +69,14 @@ const DashboardProxy = memo((): JSX.Element => {
                 starredProjects.map((project) => ({
                     name: project.title,
                     onClick: () => {
-                        navigate.current(ROUTES.BOARD.MAIN(project.uid));
+                        navigateRef.current(ROUTES.BOARD.MAIN(project.uid));
                     },
                 })) ?? [],
         },
         tacking: {
             name: "dashboard.Tracking",
             onClick: () => {
-                navigate.current(ROUTES.DASHBOARD.TRACKING);
+                navigateRef.current(ROUTES.DASHBOARD.TRACKING);
             },
         },
     };
@@ -86,14 +86,14 @@ const DashboardProxy = memo((): JSX.Element => {
             icon: "plus",
             name: "dashboard.Create New Project",
             onClick: () => {
-                navigate.current(`${location.pathname}/new-project`);
+                navigateRef.current(`${location.pathname}/new-project`);
             },
         },
         {
             icon: "history",
             name: "dashboard.My Activity",
             onClick: () => {
-                navigate.current(`${location.pathname}/my-activity`);
+                navigateRef.current(`${location.pathname}/my-activity`);
             },
         },
     ];
@@ -129,7 +129,7 @@ const DashboardProxy = memo((): JSX.Element => {
 
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs} scrollAreaMutable={scrollAreaMutable}>
-            <DashboardProvider navigate={navigate.current} currentUser={aboutMe()!}>
+            <DashboardProvider navigate={navigateRef.current} currentUser={aboutMe()!}>
                 {pageContent}
             </DashboardProvider>
         </DashboardStyledLayout>

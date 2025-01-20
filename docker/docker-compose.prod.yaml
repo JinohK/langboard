@@ -2,6 +2,7 @@ name: ${PROJECT_NAME}
 
 services:
   server:
+    init: true
     container_name: ${PROJECT_NAME}_server
     image: nginx:latest
     ports:
@@ -20,6 +21,7 @@ services:
     restart: always
 
   frontend:
+    init: true
     container_name: ${PROJECT_NAME}_frontend
     build:
       context: ../src/frontend
@@ -43,6 +45,7 @@ services:
     restart: always
 
   backend:
+    init: true
     container_name: ${PROJECT_NAME}_backend
     build:
       context: ../
@@ -91,6 +94,7 @@ services:
     restart: always
 
   redis:
+    init: true
     container_name: ${PROJECT_NAME}_redis
     command: redis-server --port 6379 --requirepass ${REDIS_PASSWORD}
     image: redis:latest
@@ -109,6 +113,7 @@ services:
     restart: always
 
   db:
+    init: true
     image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db
     ports:
@@ -130,6 +135,7 @@ services:
     restart: always
 
   db-replica:
+    init: true
     image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_replica
     ports:
@@ -151,6 +157,7 @@ services:
     restart: always
 
   db-backup:
+    init: true
     image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_backup
     environment:

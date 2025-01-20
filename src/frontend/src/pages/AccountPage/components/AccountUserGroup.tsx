@@ -38,9 +38,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
     const { currentUser } = useAccountSetting();
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const setSelectedItemsRef = useRef<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>(() => {});
-    const { mutate } = useUpdateUserGroupAssignedEmails(group, (originalUsers) => {
-        setSelectedItemsRef.current(() => originalUsers);
-    });
+    const { mutate } = useUpdateUserGroupAssignedEmails(group);
     const users = group.useForeignField<User.TModel>("users");
 
     const onValueChange = (values: TMultiSelectAssigneeItem[]) => {
@@ -55,8 +53,8 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 emails: (values as User.TModel[]).map((u) => u.email),
             },
             {
-                onSuccess: (data) => {
-                    data.createToast(t("myAccount.successes.User group emails updated successfully."));
+                onSuccess: () => {
+                    Toast.Add.success(t("myAccount.successes.User group emails updated successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

@@ -13,6 +13,9 @@ class Project(SoftDeleteModel, table=True):
     archive_column_name: str = Field(default="Archive", nullable=False)
     archive_column_order: int = Field(default=0, nullable=False)
 
+    def ARCHIVE_COLUMN_ID(self) -> SnowflakeID:
+        return self.id
+
     def ARCHIVE_COLUMN_UID(self) -> str:
         return self.get_uid()
 

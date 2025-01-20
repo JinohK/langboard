@@ -29,7 +29,7 @@ export function SkeletonEmails(): JSX.Element {
 function EmailList(): JSX.Element {
     const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
     const [t, i18n] = useTranslation();
-    const { mutate: deleteSubEmailMutate } = useDeleteSubEmail(updatedUser);
+    const { mutate: deleteSubEmailMutate } = useDeleteSubEmail();
     const { mutate: resendNewEmailLinkMutate } = useAddNewEmail();
 
     const handleSubmit = (email: string) => {
@@ -42,9 +42,9 @@ function EmailList(): JSX.Element {
         deleteSubEmailMutate(
             { email },
             {
-                onSuccess: (data) => {
+                onSuccess: () => {
                     updatedUser();
-                    data.createToast(t("myAccount.successes.Email deleted successfully."));
+                    Toast.Add.success(t("myAccount.successes.Email deleted successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

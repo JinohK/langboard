@@ -12,6 +12,7 @@ class NotificationType(Enum):
     MentionedAtComment = "mentioned_at_comment"
     MentionedAtWiki = "mentioned_at_wiki"
     AssignedToCard = "assigned_to_card"
+    ReactedToComment = "reacted_to_comment"
     NotifiedFromChecklist = "notified_from_checklist"
 
 

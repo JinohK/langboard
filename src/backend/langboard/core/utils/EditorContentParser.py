@@ -39,12 +39,7 @@ def find_mentioned(editor: EditorContentModel) -> tuple[set[str], dict[str, str]
     mention_pattern = create_editor_data_type_regex("mention", 2, False)
     mentions = findall(mention_pattern, editor.content)
 
-    content = editor.content
-    date_regex = create_editor_data_type_regex("date", 1, False)
-    date_matches = findall(date_regex, content)
-    for date in date_matches:
-        date_str = create_editor_data_type_str("date", [date])
-        content = content.replace(date_str, date)
+    content = change_date_element(editor)
 
     result: set[str] = set()
     mentioned_lines: dict[str, str] = {}
@@ -64,3 +59,16 @@ def find_mentioned(editor: EditorContentModel) -> tuple[set[str], dict[str, str]
         mentioned_lines[user_uid] = f"{front_line}{mention_str}{last_line}"
 
     return result, mentioned_lines
+
+
+def change_date_element(editor: EditorContentModel) -> str:
+    if not editor.content:
+        return ""
+
+    content = editor.content
+    date_regex = create_editor_data_type_regex("date", 1, False)
+    date_matches = findall(date_regex, content)
+    for date in date_matches:
+        date_str = create_editor_data_type_str("date", [date])
+        content = content.replace(date_str, date)
+    return content

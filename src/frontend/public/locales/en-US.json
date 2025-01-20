@@ -34,7 +34,6 @@
     "Or": "Or",
     "Adding...": "Adding...",
     "Creating...": "Creating...",
-    "Reverting...": "Reverting...",
     "Deleting...": "Deleting...",
     "Changing...": "Changing...",
     "Updating...": "Updating...",
@@ -376,7 +375,7 @@
       }
     }
   },
-  "notifications": {
+  "notification": {
     "Notifications": "Notifications",
     "{count} notifications received": "{{count}} notifications received",
     "Only show unread": "Only show unread",
@@ -387,12 +386,12 @@
     "Delete notification": "Delete notification",
     "No notifications received.": "No notifications received.",
     "titles": {
-      "project_invited": "<who/> <span>invited you to a project.</span>",
-      "mentioned_at_card": "<who/> <span>mentioned you at card.</span>",
-      "mentioned_at_comment": "<who/> <span>mentioned you at comment.</span>",
-      "mentioned_at_wiki": "<who/> <span>mentioned you at wiki.</span>",
-      "assigned_to_card": "<who/> <span>assigned you to a card.</span>",
-      "notified_from_checklist": "<who/> <span>notified you in a checklist.</span>"
+      "project_invited": "<Who/> <Span>invited you to a project.</Span>",
+      "mentioned_at_card": "<Who/> <Span>mentioned you at card.</Span>",
+      "mentioned_at_comment": "<Who/> <Span>mentioned you at comment.</Span>",
+      "mentioned_at_wiki": "<Who/> <Span>mentioned you at wiki.</Span>",
+      "assigned_to_card": "<Who/> <Span>assigned you to a card.</Span>",
+      "notified_from_checklist": "<Who/> <Span>notified you in a checklist.</Span>"
     },
     "subtitles": {
       "project_invited": "{{records.project.title}}",
@@ -401,6 +400,190 @@
       "mentioned_at_wiki": "{{records.wiki.title}} in {{records.project.title}}",
       "assigned_to_card": "{{records.card.title}} in {{records.project.title}}",
       "notified_from_checklist": "{{records.card.title}} in {{records.project.title}}"
+    }
+  },
+  "activity": {
+    "user": {
+      "activated": "You have activated.",
+      "declined_project_invitation": "You have declined the project invitation."
+    },
+    "project": {
+      "project_created": {
+        "default": "<Recorder/> created a project.",
+        "user_view": "You created a project <Project/>."
+      },
+      "project_updated": {
+        "default": "<Recorder/> updated the project.",
+        "user_view": "You updated the project <Project/>."
+      },
+      "project_assigned_bots_updated": {
+        "default": "<Recorder/> updated the assigned bots of the project.",
+        "user_view": "You updated the assigned bots of the project <Project/>."
+      },
+      "project_assigned_users_updated": {
+        "default": "<Recorder/> updated the assigned users of the project.",
+        "user_view": "You updated the assigned users of the project <Project/>."
+      },
+      "project_invited_user_accepted": {
+        "default": "<Recorder/> accepted the project invitation.",
+        "user_view": "You accepted the project invitation."
+      },
+      "project_column_created": {
+        "default": "<Recorder/> created a column <Column/>.",
+        "user_view": "You created a column <Column/> in the project <Project/>."
+      },
+      "project_column_name_changed": {
+        "default": "<Recorder/> changed the name of the column <Column/>.",
+        "user_view": "You changed the name of the column <Column/> in the project <Project/>."
+      },
+      "project_label_created": {
+        "default": "<Recorder/> created a label <Label/>.",
+        "user_view": "You created a label <Label/> in the project <Project/>."
+      },
+      "project_label_updated": {
+        "default": "<Recorder/> updated the label <Label/>.",
+        "user_view": "You updated the label <Label/> in the project <Project/>."
+      },
+      "project_label_deleted": {
+        "default": "<Recorder/> deleted the label <Label/>.",
+        "user_view": "You deleted the label <Label/> in the project <Project/>."
+      },
+      "card": {
+        "card_created": {
+          "default": "<Recorder/> created a card <Card/> in the column <Column/>.",
+          "user_view": "You created a card <Card/> in the column <Column/> of the project <Project/>."
+        },
+        "card_updated": {
+          "default": "<Recorder/> updated the card <Card/>.",
+          "user_view": "You updated the card <Card/> in the project <Project/>."
+        },
+        "card_moved": {
+          "default": "<Recorder/> moved the card <Card/> from the column <FromColumn/> to the column <Column/>.",
+          "user_view": "You moved the card <Card/> from the column <FromColumn/> to the column <Column/> in the project <Project/>."
+        },
+        "card_assigned_users_updated": {
+          "default": "<Recorder/> updated the assigned users of the card <Card/>.",
+          "user_view": "You updated the assigned users of the card <Card/> in the project <Project/>."
+        },
+        "card_labels_updated": {
+          "default": "<Recorder/> updated the labels of the card <Card/>.",
+          "user_view": "You updated the labels of the card <Card/> in the project <Project/>."
+        },
+        "card_attachment_uploaded": {
+          "default": "<Recorder/> uploaded an attachment <Attachment/> to the card <Card/>.",
+          "user_view": "You uploaded an attachment <Attachment/> to the card <Card/> in the project <Project/>."
+        },
+        "card_attachment_name_changed": {
+          "default": "<Recorder/> changed the name of the attachment <Attachment/> in the card <Card/>.",
+          "user_view": "You changed the name of the attachment <Attachment/> in the card <Card/> of the project <Project/>."
+        },
+        "card_attachment_deleted": {
+          "default": "<Recorder/> deleted the attachment <Attachment/> from the card <Card/>.",
+          "user_view": "You deleted the attachment <Attachment/> from the card <Card/> in the project <Project/>."
+        },
+        "card_comment_added": {
+          "default": "<Recorder/> added a comment to the card <Card/>.",
+          "user_view": "You added a comment to the card <Card/> in the project <Project/>."
+        },
+        "card_comment_updated": {
+          "default": "<Recorder/> updated the comment of the card <Card/>.",
+          "user_view": "You updated the comment of the card <Card/> in the project <Project/>."
+        },
+        "card_comment_deleted": {
+          "default": "<Recorder/> deleted the comment of the card <Card/>.",
+          "user_view": "You deleted the comment of the card <Card/> in the project <Project/>."
+        },
+        "card_comment_reacted": {
+          "default": "<Recorder/> reacted to the comment of the card <Card/>.",
+          "user_view": "You reacted to the comment of the card <Card/> in the project <Project/>."
+        },
+        "card_comment_unreacted": {
+          "default": "<Recorder/> unreacted to the comment of the card <Card/>.",
+          "user_view": "You unreacted to the comment of the card <Card/> in the project <Project/>."
+        },
+        "card_relationships_updated": {
+          "default": "<Recorder/> updated the relationships of the card <Card/>.",
+          "user_view": "You updated the relationships of the card <Card/> in the project <Project/>."
+        },
+        "card_checklist_created": {
+          "default": "<Recorder/> created a checklist <Checklist/> in the card <Card/>.",
+          "user_view": "You created a checklist <Checklist/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checklist_title_changed": {
+          "default": "<Recorder/> changed the title of the checklist <Checklist/> in the card <Card/>.",
+          "user_view": "You changed the title of the checklist <Checklist/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checklist_checked": {
+          "default": "<Recorder/> checked the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You checked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checklist_unchecked": {
+          "default": "<Recorder/> unchecked the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You unchecked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checklist_deleted": {
+          "default": "<Recorder/> deleted the checklist <Checklist/> from the card <Card/>.",
+          "user_view": "You deleted the checklist <Checklist/> from the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_created": {
+          "default": "<Recorder/> created a checklist item <Checkitem/> in the checklist <Checklist/> of the card <Card/>.",
+          "user_view": "You created a checklist item <Checkitem/> in the checklist <Checklist/> of the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_title_changed": {
+          "default": "<Recorder/> changed the title of the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You changed the title of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_timer_started": {
+          "default": "<Recorder/> started the timer of the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You started the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_timer_paused": {
+          "default": "<Recorder/> paused the timer of the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You paused the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_timer_stopped": {
+          "default": "<Recorder/> stopped the timer of the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You stopped the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_checked": {
+          "default": "<Recorder/> checked the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You checked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_unchecked": {
+          "default": "<Recorder/> unchecked the checklist item <Checkitem/> in the card <Card/>.",
+          "user_view": "You unchecked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_cardified": {
+          "default": "<Recorder/> cardified the checklist item <Checkitem/> as <CardifiedCard/> in the card <Card/>.",
+          "user_view": "You cardified the checklist item <Checkitem/> as <CardifiedCard/> in the card <Card/> of the project <Project/>."
+        },
+        "card_checkitem_deleted": {
+          "default": "<Recorder/> deleted the checklist item <Checkitem/> from the card <Card/>.",
+          "user_view": "You deleted the checklist item <Checkitem/> from the card <Card/> of the project <Project/>."
+        }
+      },
+      "project_wiki": {
+        "wiki_created": {
+          "default": "<Recorder/> created a wiki <Wiki/>.",
+          "user_view": "You created a wiki <Wiki/> in the project <Project/>."
+        },
+        "wiki_updated": {
+          "default": "<Recorder/> updated the wiki <Wiki/>.",
+          "user_view": "You updated the wiki <Wiki/> in the project <Project/>."
+        },
+        "wiki_publicity_changed": {
+          "default": "<Recorder/> changed the publicity of the wiki <Wiki/>.",
+          "user_view": "You changed the publicity of the wiki <Wiki/> in the project <Project/>."
+        },
+        "wiki_assignees_updated": {
+          "default": "<Recorder/> updated the assignees of the wiki <Wiki/>.",
+          "user_view": "You updated the assignees of the wiki <Wiki/> in the project <Project/>."
+        },
+        "wiki_deleted": {
+          "default": "<Recorder/> deleted the wiki <Wiki/>.",
+          "user_view": "You deleted the wiki <Wiki/> in the project <Project/>."
+        }
+      }
     }
   },
   "dashboard": {
@@ -426,6 +609,7 @@
   "board": {
     "Board": "Board",
     "Wiki": "Wiki",
+    "Activity": "Activity",
     "Settings": "Settings",
     "Filters": "Filters",
     "filters": {
@@ -471,6 +655,12 @@
     "Children": "Children",
     "Assign members": "Assign members",
     "invited": "invited",
+    "invitations": {
+      "You have been invited to join <highlight>{projectTitle}</highlight>": "You have been invited to join <highlight>{{projectTitle}}</highlight>",
+      "Do you want to join this project?": "Do you want to join this project?",
+      "Aceept": "Aceept",
+      "Decline": "Decline"
+    },
     "types": { },
     "successes": {
       "Assigned members updated and invited new users successfully.": "Assigned members updated and invited new users successfully.",
@@ -478,6 +668,7 @@
     },
     "errors": {
       "Project not found.": "Project not found.",
+      "Project closed.": "Project closed.",
       "missing": {
         "title": "Enter a title."
       }
@@ -494,13 +685,18 @@
       "Description": "Description",
       "Are you sure you want to delete this label?": "Are you sure you want to delete this label?",
       "This action cannot be undone.": "This action cannot be undone.",
+      "Other": "Other",
+      "Delete project": "Delete project",
+      "Are you sure you want to delete this project?": "Are you sure you want to delete this project?",
+      "All data will be lost.": "All data will be lost.",
       "successes": {
         "Assigned bots updated successfully.": "Assigned bots updated successfully.",
         "Label added successfully.": "Label added successfully.",
         "Label name changed successfully.": "Label name changed successfully.",
         "Color changed successfully.": "Color changed successfully.",
         "Description changed successfully.": "Description changed successfully.",
-        "Label deleted successfully.": "Label deleted successfully."
+        "Label deleted successfully.": "Label deleted successfully.",
+        "Project deleted successfully.": "Project deleted successfully."
       },
       "errors": {
         "You are not a member of this project.": "You are not a member of this project.",
@@ -523,6 +719,10 @@
     "Activity": "Activity",
     "Share": "Share",
     "Share this card": "Share this card",
+    "Delete card": "Delete card",
+    "Delete this card": "Delete this card",
+    "Are you sure you want to delete this card?": "Are you sure you want to delete this card?",
+    "All data will be lost.": "All data will be lost.",
     "Assign members": "Assign members",
     "Select members...": "Select members...",
     "Members": "Members",
@@ -574,6 +774,7 @@
       "Title changed successfully.": "Title changed successfully.",
       "Labels updated successfully.": "Labels updated successfully.",
       "Files have been uploaded successfully.": "Files have been uploaded successfully.",
+      "Card deleted successfully.": "Card deleted successfully.",
       "Assigned members updated successfully.": "Assigned members updated successfully.",
       "Description changed successfully.": "Description changed successfully.",
       "File name changed successfully.": "File name changed successfully.",
@@ -602,7 +803,8 @@
       "Checkitem not found.": "Checkitem not found.",
       "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
       "Comment not found.": "Comment not found.",
-      "Comment content cannot be empty.": "Comment content cannot be empty."
+      "Comment content cannot be empty.": "Comment content cannot be empty.",
+      "Card deleted.": "Card deleted."
     }
   },
   "reaction": {
@@ -630,7 +832,7 @@
       "New wiki page created successfully.": "New wiki page created successfully.",
       "Wiki page deleted successfully.": "Wiki page deleted successfully.",
       "Public state changed successfully.": "Public state changed successfully.",
-      "Assigned users updated successfully.": "Assigned users updated successfully."
+      "Assigned bots and members updated successfully.": "Assigned bots and members updated successfully."
     },
     "errors": {
       "Can't access this wiki.": "Can't access this wiki."

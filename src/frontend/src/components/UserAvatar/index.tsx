@@ -8,6 +8,7 @@ import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
+import { tv } from "tailwind-variants";
 
 interface IBaseUserAvatarProps {
     user: User.TModel;
@@ -121,6 +122,15 @@ export interface IUserAvatarTriggerProps extends Omit<TUserAvatarProps, "listAli
     setIsOpened: (opened: bool) => void;
 }
 
+const TriggerVariants = tv({
+    base: "relative after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
+    variants: {
+        hoverable: {
+            true: "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer",
+        },
+    },
+});
+
 const Trigger = memo(
     ({
         user,
@@ -144,11 +154,6 @@ const Trigger = memo(
         const isDeletedUser = user.isDeletedUser(userType);
         const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
 
-        const avatarAfterPseudoClassNames = cn(
-            "after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
-            children && !isDeletedUser ? "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer" : ""
-        );
-
         const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
 
         const styles: Record<string, string> = {
@@ -157,11 +162,11 @@ const Trigger = memo(
         };
 
         const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
-        let avatarRootClassName = cn("relative", className);
+        let avatarRootClassName = className;
         let avatarRootOnClick;
 
         if (children) {
-            avatarRootClassName = cn(avatarRootClassName, avatarAfterPseudoClassNames);
+            avatarRootClassName = cn(avatarRootClassName, TriggerVariants({ hoverable: !!children && !isDeletedUser }));
             if (!isDeletedUser && !isPresentableUnknownUser) {
                 avatarRootOnClick = () => setIsOpened(!isOpened);
             }
@@ -249,4 +254,4 @@ const ListSeparator = forwardRef<React.ComponentRef<typeof SeparatorPrimitive.Ro
     }
 );
 
-export default { Root, List, ListLabel, ListItem, ListSeparator };
+export default { Root, List, ListLabel, ListItem, ListSeparator, TriggerVariants };

@@ -90,7 +90,7 @@ interface IBoardCardSubCheckitemListProps {
 
 const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoardCardSubCheckitemListProps) => {
     const { projectUID, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
-    const navigate = useRef(usePageNavigate());
+    const navigateRef = useRef(usePageNavigate());
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isTitleOpened, setIsTitleOpened] = useState(false);
@@ -108,7 +108,7 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
             return;
         }
 
-        navigate.current(ROUTES.BOARD.CARD(projectUID, cardifiedCard.uid));
+        navigateRef.current(ROUTES.BOARD.CARD(projectUID, cardifiedCard.uid));
     };
 
     return (

@@ -1,4 +1,4 @@
-export * as Activity from "@/core/models/Activity";
+export * as ActivityModel from "@/core/models/ActivityModel";
 export * as AppSettingModel from "@/core/models/AppSettingModel";
 export * as AuthUser from "@/core/models/AuthUser";
 export * as BotModel from "@/core/models/BotModel";
