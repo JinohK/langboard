@@ -200,3 +200,6 @@ uploads
 
 **/backend/**/bots/*
 !**/backend/**/bots/.gitkeep
+
+**/tests/**
+!**/tests/**/.gitkeep

@@ -60,20 +60,6 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage.report]
 omit = [
-    "src/backend/langboard/core/bootstrap/commands/*.py",
-    "src/backend/langboard/core/bootstrap/creators/*.py",
-    "src/backend/langboard/core/bootstrap/BaseCommand.py",
-    "src/backend/langboard/core/bootstrap/CLIHelpFormatter.py",
-    "src/backend/langboard/core/bootstrap/CLIRichParser.py",
-    "src/backend/langboard/core/bootstrap/Commander.py",
-    "src/backend/langboard/core/bootstrap/WebSocketOptions.py",
-    "src/backend/langboard/core/filter/BaseFilter.py",
-    "src/backend/langboard/core/routing/WebSocket.py",
-    "src/backend/langboard/core/routing/BaseMiddleware.py",
-    "src/backend/langboard/App.py",
-    "src/backend/langboard/CLI.py",
-    "src/backend/langboard/Constants.py",
-    "src/backend/langboard/Loader.py",
     "**/__init__.py",
 ]
 
