@@ -1,10 +1,10 @@
-from fastapi import status
+from fastapi import Depends, status
 from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...services import Service
-from .DashboardProject import DashboardProjectCreateForm
+from .DashboardForm import DashboardProjectCreateForm, DashboardTrackingPagination
 
 
 @AppRouter.api.get("/dashboard/user/projects/starred")
@@ -55,3 +55,15 @@ async def toggle_star_project(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.get("/dashboard/tracking")
+@AuthFilter.add
+async def track_checkitems(
+    pagination: DashboardTrackingPagination = Depends(),
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    tracking = await service.tracking.get_dashboard_list(user, pagination)
+
+    return JsonResponse(content={"tracking": tracking}, status_code=status.HTTP_200_OK)

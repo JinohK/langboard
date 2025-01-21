@@ -12,7 +12,7 @@ from pkg_resources import require
 from starlette.datastructures import Headers
 from ...Constants import JWT_ALGORITHM, JWT_AT_EXPIRATION, JWT_RT_EXPIRATION, JWT_SECRET_KEY, PROJECT_NAME
 from ..caching import Cache
-from ..db import DbSession, SnowflakeID, User
+from ..db import DbSession, SnowflakeID, SqlBuilder, User
 from ..filter import AuthFilter
 from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from ..routing.SocketRequest import SocketRequest
@@ -123,10 +123,9 @@ class Auth:
             return cached_user
 
         try:
-            session = DbSession()
-            result = await session.exec(session.query("select").table(User).where(User.id == user_id).limit(1))
+            async with DbSession.use_db() as db:
+                result = await db.exec(SqlBuilder.select.table(User).where(User.id == user_id).limit(1))
             user = result.first()
-            await session.close()
 
             if not user:
                 return InvalidTokenError("Invalid token")

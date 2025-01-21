@@ -11,11 +11,11 @@ from .UserActivityTask import record_project_activity
 
 @Broker.wrap_async_task_decorator
 async def project_label_created(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, label)
-        activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelCreated, project)
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, label)
+    activity = await helper.record(
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelCreated, project)
+    )
     await record_project_activity(user_or_bot, activity)
 
 
@@ -23,24 +23,24 @@ async def project_label_created(user_or_bot: User | Bot, project: Project, label
 async def project_label_updated(
     user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], label: ProjectLabel
 ):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = {
-            **await _get_default_history(helper, project, label),
-            **await ActivityHistoryHelper.create_changes(helper.db, old_dict, label),
-        }
-        activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelUpdated, project)
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = {
+        **await _get_default_history(helper, project, label),
+        **await ActivityHistoryHelper.create_changes(old_dict, label),
+    }
+    activity = await helper.record(
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelUpdated, project)
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def project_label_deleted(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, label)
-        activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelDeleted, project)
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, label)
+    activity = await helper.record(
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectLabelDeleted, project)
+    )
     await record_project_activity(user_or_bot, activity)
 
 

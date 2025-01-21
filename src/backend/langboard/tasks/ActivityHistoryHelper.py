@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from pydantic import BaseModel
 from ..core.ai import Bot
-from ..core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, User
+from ..core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ..core.utils.decorators import staticclass
 from ..core.utils.EditorContentParser import find_mentioned
 from ..models import (
@@ -99,9 +99,9 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    async def create_card_comment_history(db: DbSession, comment: CardComment, user_or_bot: User | Bot):
+    async def create_card_comment_history(comment: CardComment, user_or_bot: User | Bot):
         return {
-            "content": await ActivityHistoryHelper.convert_to_python(db, comment.content),
+            "content": await ActivityHistoryHelper.convert_to_python(comment.content),
             "author": ActivityHistoryHelper.create_user_or_bot_history(user_or_bot),
         }
 
@@ -113,23 +113,25 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    async def create_changes(db: DbSession, before: dict[str, Any], model: BaseSqlModel):
+    async def create_changes(before: dict[str, Any], model: BaseSqlModel):
         after = {key: getattr(model, key) for key in before}
         for key in before:
-            before[key] = await ActivityHistoryHelper.convert_to_python(db, before[key])
-            after[key] = await ActivityHistoryHelper.convert_to_python(db, after[key])
+            before[key] = await ActivityHistoryHelper.convert_to_python(before[key])
+            after[key] = await ActivityHistoryHelper.convert_to_python(after[key])
 
         return {"changes": {"before": before, "after": after}}
 
     @staticmethod
-    async def convert_to_python(db: DbSession, data: Any) -> Any:
+    async def convert_to_python(data: Any) -> Any:
         if isinstance(data, EditorContentModel) or (isinstance(data, dict) and "content" in data):
             new_data = data if isinstance(data, EditorContentModel) else EditorContentModel(**data)
             user_or_bot_uids, _ = find_mentioned(new_data)
             user_or_bot_ids = [SnowflakeID.from_short_code(uid) for uid in user_or_bot_uids]
-            result = await db.exec(db.query("select").table(User).where(User.column("id").in_(user_or_bot_ids)))
+            async with DbSession.use_db() as db:
+                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id").in_(user_or_bot_ids)))
             mentionables: list[Bot | User] = list(result.all())
-            result = await db.exec(db.query("select").table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
+            async with DbSession.use_db() as db:
+                result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
             mentionables.extend(list(result.all()))
 
             return {

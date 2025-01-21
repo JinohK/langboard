@@ -1,7 +1,7 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
-from ...core.db import SnowflakeID
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.routing import GLOBAL_TOPIC_ID, SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.setting import AppSetting, AppSettingType
@@ -84,8 +84,9 @@ class AppSettingService(BaseService):
         setting = AppSetting(setting_type=setting_type, setting_name=setting_name)
         setting.set_value(setting_value)
 
-        self._db.insert(setting)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(setting)
+            await db.commit()
 
         return setting
 
@@ -117,8 +118,9 @@ class AppSettingService(BaseService):
         if not setting.has_changes():
             return True
 
-        await self._db.update(setting)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(setting)
+            await db.commit()
 
         return setting
 
@@ -127,15 +129,17 @@ class AppSettingService(BaseService):
         if not setting:
             return False
 
-        await self._db.delete(setting)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(setting)
+            await db.commit()
         return True
 
     async def delete_selected(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        await self._db.exec(self._db.query("delete").table(AppSetting).where(AppSetting.column("id").in_(ids)))
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
+            await db.commit()
 
         return True
 
@@ -150,8 +154,9 @@ class AppSettingService(BaseService):
             avatar=avatar,
         )
 
-        self._db.insert(bot)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(bot)
+            await db.commit()
 
         model = {"bot": bot.api_response()}
         publish_model = SocketPublishModel(
@@ -195,8 +200,9 @@ class AppSettingService(BaseService):
         if not old_bot_record:
             return True
 
-        await self._db.update(bot)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(bot)
+            await db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -226,8 +232,9 @@ class AppSettingService(BaseService):
         if not bot:
             return False
 
-        await self._db.delete(bot)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(bot)
+            await db.commit()
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
@@ -248,8 +255,9 @@ class AppSettingService(BaseService):
             description=description,
         )
 
-        self._db.insert(global_relationship)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(global_relationship)
+            await db.commit()
 
         model = {"global_relationships": global_relationship.api_response()}
         publish_model = SocketPublishModel(
@@ -288,8 +296,9 @@ class AppSettingService(BaseService):
         if not old_global_relationship_record:
             return True
 
-        await self._db.update(global_relationship)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(global_relationship)
+            await db.commit()
 
         model = {}
         for key in form:
@@ -315,8 +324,9 @@ class AppSettingService(BaseService):
         if not global_relationship:
             return False
 
-        await self._db.delete(global_relationship)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(global_relationship)
+            await db.commit()
 
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
@@ -331,12 +341,13 @@ class AppSettingService(BaseService):
     async def delete_selected_global_relationships(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        await self._db.exec(
-            self._db.query("delete")
-            .table(GlobalCardRelationshipType)
-            .where(GlobalCardRelationshipType.column("id").in_(ids))
-        )
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.delete.table(GlobalCardRelationshipType).where(
+                    GlobalCardRelationshipType.column("id").in_(ids)
+                )
+            )
+            await db.commit()
 
         model = {"uids": uids}
         publish_model = SocketPublishModel(

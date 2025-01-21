@@ -3,6 +3,7 @@ from .DbSession import DbSession
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, EditorContentModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
+from .SqlBuilder import SqlBuilder
 from .User import User
 
 
@@ -19,5 +20,6 @@ __all__ = [
     "SnowflakeID",
     "SnowflakeIDType",
     "SnowflakeIDField",
+    "SqlBuilder",
     "User",
 ]

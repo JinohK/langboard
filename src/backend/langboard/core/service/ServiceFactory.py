@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Any, TypeVar
-from ..db import DbSession
 from .BaseService import BaseService
 
 
@@ -8,8 +7,7 @@ _TService = TypeVar("_TService", bound=BaseService)
 
 
 class ServiceFactory(ABC):
-    def __init__(self, db: DbSession):
-        self._db = db
+    def __init__(self):
         self._services: dict[str, BaseService] = {}
 
     @abstractmethod
@@ -18,9 +16,7 @@ class ServiceFactory(ABC):
     def _create_or_get_service(self, service: type[_TService]) -> _TService:
         service_name = service.name()
         if service_name not in self._services:
-            self._services[service_name] = service(
-                self._create_or_get_service, self._create_or_get_service_by_name, self._db
-            )
+            self._services[service_name] = service(self._create_or_get_service, self._create_or_get_service_by_name)
 
         return self._services[service_name]  # type: ignore
 

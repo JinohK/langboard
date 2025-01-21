@@ -1,5 +1,5 @@
 from fastapi import File, UploadFile, status
-from ...core.db import DbSession, User
+from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth, Role
@@ -63,7 +63,6 @@ async def change_card_attachment_name(
     attachment_uid: str,
     form: ChangeAttachmentNameForm,
     user: User = Auth.scope("api"),
-    db: DbSession = DbSession.scope(),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     card_attachment = await service.card_attachment.get_by_uid(attachment_uid)
@@ -71,7 +70,7 @@ async def change_card_attachment_name(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     if card_attachment.user_id != user.id and not user.is_admin:
-        role_filter = Role(ProjectRole, db)
+        role_filter = Role(ProjectRole)
         if not await role_filter.is_authorized(
             user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
@@ -94,7 +93,6 @@ async def delete_card_attachment(
     card_uid: str,
     attachment_uid: str,
     user: User = Auth.scope("api"),
-    db: DbSession = DbSession.scope(),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     card_attachment = await service.card_attachment.get_by_uid(attachment_uid)
@@ -102,7 +100,7 @@ async def delete_card_attachment(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     if card_attachment.user_id != user.id and not user.is_admin:
-        role_filter = Role(ProjectRole, db)
+        role_filter = Role(ProjectRole)
         if not await role_filter.is_authorized(
             user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):

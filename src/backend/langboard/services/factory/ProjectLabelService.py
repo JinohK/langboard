@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
-from ...core.db import User
+from ...core.db import DbSession, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
@@ -25,13 +25,13 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectLabel)
-            .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
-            .order_by(ProjectLabel.column("order").asc())
-            .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectLabel)
+                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
+                .order_by(ProjectLabel.column("order").asc())
+                .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
+            )
         raw_labels = result.all()
         if not as_api:
             return list(raw_labels)
@@ -41,13 +41,13 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectLabel)
-            .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == True))  # noqa
-            .order_by(ProjectLabel.column("order").asc())
-            .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectLabel)
+                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == True))  # noqa
+                .order_by(ProjectLabel.column("order").asc())
+                .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
+            )
         return list(result.all())
 
     @overload
@@ -59,15 +59,15 @@ class ProjectLabelService(BaseService):
         if not card:
             return []
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectLabel)
-            .join(
-                CardAssignedProjectLabel,
-                ProjectLabel.column("id") == CardAssignedProjectLabel.column("project_label_id"),
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectLabel)
+                .join(
+                    CardAssignedProjectLabel,
+                    ProjectLabel.column("id") == CardAssignedProjectLabel.column("project_label_id"),
+                )
+                .where(CardAssignedProjectLabel.column("card_id") == card.id)
             )
-            .where(CardAssignedProjectLabel.column("card_id") == card.id)
-        )
         raw_labels = result.all()
         if not as_api:
             return list(raw_labels)
@@ -76,17 +76,18 @@ class ProjectLabelService(BaseService):
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
         project = cast(Project, await self._get_by_param(Project, project))
         labels: list[ProjectLabel] = []
-        for default_label in ProjectLabel.DEFAULT_LABELS:
-            label = ProjectLabel(
-                project_id=project.id,
-                name=default_label["name"],
-                color=default_label["color"],
-                description=default_label["description"],
-                order=len(labels),
-            )
-            labels.append(label)
-            self._db.insert(label)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            for default_label in ProjectLabel.DEFAULT_LABELS:
+                label = ProjectLabel(
+                    project_id=project.id,
+                    name=default_label["name"],
+                    color=default_label["color"],
+                    description=default_label["description"],
+                    order=len(labels),
+                )
+                labels.append(label)
+                db.insert(label)
+            await db.commit()
         return labels
 
     async def create(
@@ -110,8 +111,9 @@ class ProjectLabelService(BaseService):
             order=max_order + 1,
             is_bot=is_bot,
         )
-        self._db.insert(label)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(label)
+            await db.commit()
 
         if is_bot:
             return None
@@ -158,8 +160,9 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        await self._db.update(label)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(label)
+            await db.commit()
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -193,17 +196,18 @@ class ProjectLabelService(BaseService):
             return None
 
         original_order = label.order
-        update_query = (
-            self._db.query("update")
-            .table(ProjectLabel)
-            .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
+        update_query = SqlBuilder.update.table(ProjectLabel).where(
+            (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False)  # noqa
         )
         update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
-        await self._db.exec(update_query)
+        async with DbSession.use_db() as db:
+            await db.exec(update_query)
+            await db.commit()
 
-        label.order = order
-        await self._db.update(label)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            label.order = order
+            await db.update(label)
+            await db.commit()
 
         model = {"uid": label.get_uid(), "order": order}
         publish_model = SocketPublishModel(
@@ -226,8 +230,9 @@ class ProjectLabelService(BaseService):
         if label.is_bot and not isinstance(user_or_bot, Bot):
             return None
 
-        await self._db.delete(label)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(label)
+            await db.commit()
 
         model = {"uid": label.get_uid()}
         publish_model = SocketPublishModel(

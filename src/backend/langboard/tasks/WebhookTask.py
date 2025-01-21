@@ -1,6 +1,6 @@
 from httpx import post
 from ..core.broker import Broker
-from ..core.db import DbSession
+from ..core.db import DbSession, SqlBuilder
 from ..core.setting import AppSetting, AppSettingType
 from .models import WebhookModel
 
@@ -24,17 +24,15 @@ async def run_webhook(model: WebhookModel):
 
 
 async def _get_webhook_url() -> list[str]:
-    db = DbSession()
-    result = await db.exec(
-        db.query("select").table(AppSetting).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
-    )
+    async with DbSession.use_db() as db:
+        result = await db.exec(
+            SqlBuilder.select.table(AppSetting).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
+        )
     raw_setting = result.first()
     if not raw_setting:
         return []
     urls = raw_setting.get_value()
     if not isinstance(urls, list):
         return []
-
-    await db.close()
 
     return urls

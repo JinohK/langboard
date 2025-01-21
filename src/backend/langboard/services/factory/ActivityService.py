@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...core.db import User
+from ...core.db import DbSession, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
 from ...models import Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, UserActivity
@@ -190,11 +190,12 @@ class ActivityService(BaseService):
         refer_time: datetime,
         **where_clauses,
     ) -> tuple[list[_TActivityModel], int]:
-        list_query = self._db.query("select").table(activity_class)
+        list_query = SqlBuilder.select.table(activity_class)
         list_query = self.__make_query(list_query, activity_class, **where_clauses)
         list_query = list_query.where((activity_class.column("created_at") <= refer_time))
         list_query = self.paginate(list_query, pagination.page, pagination.limit)
-        result = await self._db.exec(list_query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(list_query)
         result_list = result.all()
 
         count_new_records = await self.__count_new_records(activity_class, refer_time, **where_clauses)
@@ -204,10 +205,11 @@ class ActivityService(BaseService):
     async def __count_new_records(
         self, activity_class: type[_TActivityModel], refer_time: datetime, **where_clauses
     ) -> int:
-        outdated_query = self._db.query("select").count(activity_class, activity_class.column("id"))
+        outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
         outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
         outdated_query = outdated_query.where((activity_class.column("created_at") > refer_time))
-        result = await self._db.exec(outdated_query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(outdated_query)
         return result.first() or 0
 
     @overload

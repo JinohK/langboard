@@ -1,5 +1,5 @@
 from ...core.ai import Bot
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
 from ...models.BaseReactionModel import BaseReactionModel
 from .Types import TUserOrBot
@@ -12,13 +12,13 @@ class ReactionService(BaseService):
         return "reaction"
 
     async def get_all(self, model_class: type[BaseReactionModel], target_id: SnowflakeID) -> dict[str, list[str]]:
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(model_class, User, Bot)
-            .outerjoin(User, model_class.column("user_id") == User.column("id"))
-            .outerjoin(Bot, model_class.column("bot_id") == Bot.column("id"))
-            .where(model_class.column(model_class.get_target_column_name()) == target_id)
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(model_class, User, Bot)
+                .outerjoin(User, model_class.column("user_id") == User.column("id"))
+                .outerjoin(Bot, model_class.column("bot_id") == Bot.column("id"))
+                .where(model_class.column(model_class.get_target_column_name()) == target_id)
+            )
         records = result.all()
 
         reactions: dict[str, list[str]] = {}
@@ -40,33 +40,33 @@ class ReactionService(BaseService):
         user_or_bot_column = (
             model_class.column("user_id") if isinstance(user_or_bot, User) else model_class.column("bot_id")
         )
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(model_class)
-            .where(
-                (user_or_bot_column == user_or_bot.id)
-                & (model_class.column(model_class.get_target_column_name()) == target_id)
-                & (model_class.column("reaction_type") == reaction_type)
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(model_class).where(
+                    (user_or_bot_column == user_or_bot.id)
+                    & (model_class.column(model_class.get_target_column_name()) == target_id)
+                    & (model_class.column("reaction_type") == reaction_type)
+                )
             )
-        )
         reaction = result.first()
         is_reacted = bool(reaction)
 
-        if is_reacted:
-            await self._db.delete(reaction)
-        else:
-            reaction_params = {
-                "reaction_type": reaction_type,
-                model_class.get_target_column_name(): target_id,
-            }
-
-            if isinstance(user_or_bot, User):
-                reaction_params["user_id"] = user_or_bot.id
+        async with DbSession.use_db() as db:
+            if is_reacted:
+                await db.delete(reaction)
             else:
-                reaction_params["bot_id"] = user_or_bot.id
+                reaction_params = {
+                    "reaction_type": reaction_type,
+                    model_class.get_target_column_name(): target_id,
+                }
 
-            reaction = model_class(**reaction_params)
-            self._db.insert(reaction)
-        await self._db.commit()
+                if isinstance(user_or_bot, User):
+                    reaction_params["user_id"] = user_or_bot.id
+                else:
+                    reaction_params["bot_id"] = user_or_bot.id
+
+                reaction = model_class(**reaction_params)
+                db.insert(reaction)
+            await db.commit()
 
         return not is_reacted

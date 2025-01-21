@@ -1,5 +1,5 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
@@ -65,8 +65,9 @@ class ChecklistService(BaseService):
         max_order = await self._get_max_order(Checklist, "card_id", card.id)
 
         checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
-        self._db.insert(checklist)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(checklist)
+            await db.commit()
 
         model = {"checklist": {**checklist.api_response(), "checkitems": []}}
         topic_id = card.get_uid()
@@ -96,8 +97,9 @@ class ChecklistService(BaseService):
 
         old_title = checklist.title
         checklist.title = title
-        await self._db.update(checklist)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(checklist)
+            await db.commit()
 
         model = {"title": title}
         topic_id = card.get_uid()
@@ -123,13 +125,16 @@ class ChecklistService(BaseService):
         project, card, checklist = params
 
         original_order = checklist.order
-        update_query = self._db.query("update").table(Checklist).where(Checklist.column("card_id") == card.id)
+        update_query = SqlBuilder.update.table(Checklist).where(Checklist.column("card_id") == card.id)
         update_query = self._set_order_in_column(update_query, Checklist, original_order, order)
-        await self._db.exec(update_query)
+        async with DbSession.use_db() as db:
+            await db.exec(update_query)
+            await db.commit()
 
-        checklist.order = order
-        await self._db.update(checklist)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            checklist.order = order
+            await db.update(checklist)
+            await db.commit()
 
         model = {"uid": checklist.get_uid(), "order": order}
         topic_id = card.get_uid()
@@ -153,8 +158,9 @@ class ChecklistService(BaseService):
         project, card, checklist = params
 
         checklist.is_checked = not checklist.is_checked
-        await self._db.update(checklist)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(checklist)
+            await db.commit()
 
         model = {"is_checked": checklist.is_checked}
         topic_id = card.get_uid()
@@ -214,7 +220,9 @@ class ChecklistService(BaseService):
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        await self._db.delete(checklist)
+        async with DbSession.use_db() as db:
+            await db.delete(checklist)
+            await db.commit()
 
         model = {"uid": checklist.get_uid()}
         topic_id = card.get_uid()

@@ -1,11 +1,11 @@
-from ....core.db import DbSession
+from ....core.utils.Extractor import extract_func_param
 from ....models import {class_name}Role
 from .BaseRoleService import BaseRoleService
 
 
 class {class_name}RoleService(BaseRoleService[{class_name}Role]):
-    def __init__(self, db: DbSession):
-        super().__init__(db, {class_name}Role)
+    def __init__(self):
+        super().__init__({class_name}Role)
 
     @extract_func_param(4)({class_name}Role)  # type: ignore
     async def get_roles(self, **kwargs):

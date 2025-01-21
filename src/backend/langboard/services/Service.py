@@ -1,5 +1,4 @@
 from fastapi import Depends
-from ..core.db import DbSession
 from ..core.service import ServiceFactory
 from . import factory
 
@@ -7,8 +6,8 @@ from . import factory
 class Service(ServiceFactory):
     @staticmethod
     def scope() -> "Service":
-        async def create_factory(db: DbSession = DbSession.scope()):
-            service = Service(db)
+        async def create_factory():
+            service = Service()
             try:
                 yield service
             finally:

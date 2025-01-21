@@ -1,7 +1,6 @@
-from contextlib import asynccontextmanager
 from typing import Any, Callable, Coroutine, Generic, TypeVar, cast
 from ..core.ai import Bot
-from ..core.db import BaseSqlModel, DbSession, SnowflakeID, User
+from ..core.db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder, User
 from ..models import Card, CardRelationship, GlobalCardRelationshipType, Project, ProjectColumn, ProjectLabel
 from ..models.BaseActivityModel import BaseActivityModel
 from .ActivityHistoryHelper import ActivityHistoryHelper
@@ -13,20 +12,7 @@ _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
 
 class ActivityTaskHelper(Generic[_TActivityModel]):
     def __init__(self, model_class: type[_TActivityModel]):
-        self.db = DbSession()
         self._model_class = model_class
-
-    @asynccontextmanager
-    @staticmethod
-    async def use_helper(model_class: type[_TActivityModel]):
-        try:
-            helper = ActivityTaskHelper(model_class)
-            yield helper
-        finally:
-            await helper.close()
-
-    async def close(self):
-        await self.db.close()
 
     async def record(self, user_or_bot: User | Bot, activity_history: dict[str, Any], **kwargs) -> _TActivityModel:
         activity_history["recorder"] = ActivityHistoryHelper.create_user_or_bot_history(user_or_bot)
@@ -43,8 +29,9 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
 
         activity = self._model_class(**model)
 
-        self.db.insert(activity)
-        await self.db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(activity)
+            await db.commit()
 
         return activity
 
@@ -70,14 +57,16 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         self, old_relationship_ids: list[int], new_relationship_ids: list[int], is_parent: bool
     ):
         async def relationship_converter(relationship: CardRelationship):
-            result = await self.db.exec(
-                self.db.query("select")
-                .table(GlobalCardRelationshipType)
-                .where(GlobalCardRelationshipType.column("id") == relationship.relation_type_id)
-            )
+            async with DbSession.use_db() as db:
+                result = await db.exec(
+                    SqlBuilder.select.table(GlobalCardRelationshipType).where(
+                        GlobalCardRelationshipType.column("id") == relationship.relation_type_id
+                    )
+                )
             global_relationship = cast(GlobalCardRelationshipType, result.first())
             target_card_id = relationship.card_id_parent if is_parent else relationship.card_id_child
-            result = await self.db.exec(self.db.query("select").table(Card).where(Card.column("id") == target_card_id))
+            async with DbSession.use_db() as db:
+                result = await db.exec(SqlBuilder.select.table(Card).where(Card.column("id") == target_card_id))
             related_card = cast(Card, result.first())
 
             return ActivityHistoryHelper.create_card_relationship(global_relationship, related_card, is_parent)
@@ -95,9 +84,10 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
             return history
 
         if card.project_column_id:
-            result = await self.db.exec(
-                self.db.query("select").table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
-            )
+            async with DbSession.use_db() as db:
+                result = await db.exec(
+                    SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
+                )
             column = cast(ProjectColumn, result.first())
         else:
             column = project
@@ -113,9 +103,10 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         new_ids: list[int],
         converter: Callable[[_TBaseModel], Coroutine[Any, Any, dict[str, Any]]],
     ):
-        result = await self.db.exec(
-            self.db.query("select").table(model_class).where(model_class.column("id").in_(set([*old_ids, *new_ids])))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(model_class).where(model_class.column("id").in_(set([*old_ids, *new_ids])))
+            )
         models = result.all()
 
         removed_models: dict[SnowflakeID, dict[str, Any]] = {}

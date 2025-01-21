@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
@@ -24,13 +24,13 @@ class ProjectWikiService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectWiki)
-            .where(ProjectWiki.column("project_id") == project.id)
-            .order_by(ProjectWiki.column("order").asc())
-            .group_by(ProjectWiki.column("id"), ProjectWiki.column("order"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectWiki)
+                .where(ProjectWiki.column("project_id") == project.id)
+                .order_by(ProjectWiki.column("order").asc())
+                .group_by(ProjectWiki.column("id"), ProjectWiki.column("order"))
+            )
         raw_wikis = result.all()
 
         wikis = [await self.convert_to_api_response(user_or_bot, raw_wiki) for raw_wiki in raw_wikis]
@@ -75,12 +75,12 @@ class ProjectWikiService(BaseService):
         wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(Bot, ProjectWikiAssignedBot)
-            .join(ProjectWikiAssignedBot, Bot.column("id") == ProjectWikiAssignedBot.column("bot_id"))
-            .where(ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(Bot, ProjectWikiAssignedBot)
+                .join(ProjectWikiAssignedBot, Bot.column("id") == ProjectWikiAssignedBot.column("bot_id"))
+                .where(ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
+            )
         raw_bots = result.all()
         if not as_api:
             return list(raw_bots)
@@ -100,12 +100,12 @@ class ProjectWikiService(BaseService):
         wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(User, ProjectWikiAssignedUser)
-            .join(ProjectWikiAssignedUser, User.column("id") == ProjectWikiAssignedUser.column("user_id"))
-            .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(User, ProjectWikiAssignedUser)
+                .join(ProjectWikiAssignedUser, User.column("id") == ProjectWikiAssignedUser.column("user_id"))
+                .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
+            )
         raw_users = result.all()
         if not as_api:
             return list(raw_users)
@@ -121,15 +121,15 @@ class ProjectWikiService(BaseService):
         if project_wiki.is_public or user.is_admin:
             return True
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectWikiAssignedUser)
-            .where(
-                (ProjectWikiAssignedUser.column("project_wiki_id") == project_wiki.id)
-                & (ProjectWikiAssignedUser.column("user_id") == user.id)
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectWikiAssignedUser)
+                .where(
+                    (ProjectWikiAssignedUser.column("project_wiki_id") == project_wiki.id)
+                    & (ProjectWikiAssignedUser.column("user_id") == user.id)
+                )
+                .limit(1)
             )
-            .limit(1)
-        )
         return bool(result.first())
 
     async def create(
@@ -147,8 +147,9 @@ class ProjectWikiService(BaseService):
             title=title,
             order=max_order + 1,
         )
-        self._db.insert(wiki)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(wiki)
+            await db.commit()
 
         api_wiki = wiki.api_response()
         api_wiki["assigned_members"] = []
@@ -190,8 +191,9 @@ class ProjectWikiService(BaseService):
         if not old_wiki_record:
             return True
 
-        await self._db.update(wiki)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(wiki)
+            await db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -235,31 +237,37 @@ class ProjectWikiService(BaseService):
         project, wiki = params
 
         if is_public:
-            await self._db.exec(
-                self._db.query("delete")
-                .table(ProjectWikiAssignedBot)
-                .where(ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
-            )
-            await self._db.exec(
-                self._db.query("delete")
-                .table(ProjectWikiAssignedUser)
-                .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
-            )
-        else:
-            if isinstance(user_or_bot, User):
-                assigned_user = ProjectWikiAssignedUser(
-                    project_wiki_id=wiki.id,
-                    user_id=user_or_bot.id,
+            async with DbSession.use_db() as db:
+                await db.exec(
+                    SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
+                        ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
+                    )
                 )
+                await db.commit()
 
-                self._db.insert(assigned_user)
-        await self._db.commit()
+            async with DbSession.use_db() as db:
+                await db.exec(
+                    SqlBuilder.delete.table(ProjectWikiAssignedUser).where(
+                        ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
+                    )
+                )
+                await db.commit()
+        elif isinstance(user_or_bot, User):
+            assigned_user = ProjectWikiAssignedUser(
+                project_wiki_id=wiki.id,
+                user_id=user_or_bot.id,
+            )
+
+            async with DbSession.use_db() as db:
+                db.insert(assigned_user)
+                await db.commit()
 
         was_public = wiki.is_public
         wiki.is_public = is_public
 
-        await self._db.update(wiki)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(wiki)
+            await db.commit()
 
         assigned_users = [user_or_bot] if not wiki.is_public and isinstance(user_or_bot, User) else []
 
@@ -297,16 +305,21 @@ class ProjectWikiService(BaseService):
         original_assigned_bots = await self.get_assigned_bots(wiki, as_api=False)
         original_assigned_users = await self.get_assigned_users(wiki, as_api=False)
 
-        await self._db.exec(
-            self._db.query("delete")
-            .table(ProjectWikiAssignedBot)
-            .where(ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
-        )
-        await self._db.exec(
-            self._db.query("delete")
-            .table(ProjectWikiAssignedUser)
-            .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
-        )
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
+                    ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
+                )
+            )
+            await db.commit()
+
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.delete.table(ProjectWikiAssignedUser).where(
+                    ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
+                )
+            )
+            await db.commit()
 
         bots: list[Bot] = []
         target_users: list[User] = []
@@ -318,21 +331,24 @@ class ProjectWikiService(BaseService):
                 project.id, as_api=False, where_user_ids_in=assignee_ids
             )
 
-            for target_bot, project_assigned_bot in raw_bots:
-                self._db.insert(
-                    ProjectWikiAssignedBot(
-                        project_assigned_id=project_assigned_bot.id, project_wiki_id=wiki.id, bot_id=target_bot.id
+            async with DbSession.use_db() as db:
+                for target_bot, project_assigned_bot in raw_bots:
+                    db.insert(
+                        ProjectWikiAssignedBot(
+                            project_assigned_id=project_assigned_bot.id, project_wiki_id=wiki.id, bot_id=target_bot.id
+                        )
                     )
-                )
-                bots.append(target_bot)
-            for target_user, project_assigned_user in raw_users:
-                self._db.insert(
-                    ProjectWikiAssignedUser(
-                        project_assigned_id=project_assigned_user.id, project_wiki_id=wiki.id, user_id=target_user.id
+                    bots.append(target_bot)
+                for target_user, project_assigned_user in raw_users:
+                    db.insert(
+                        ProjectWikiAssignedUser(
+                            project_assigned_id=project_assigned_user.id,
+                            project_wiki_id=wiki.id,
+                            user_id=target_user.id,
+                        )
                     )
-                )
-                target_users.append(target_user)
-        await self._db.commit()
+                    target_users.append(target_user)
+                await db.commit()
 
         model = {
             "assigned_bots": [bot.api_response() for bot in bots],
@@ -374,11 +390,11 @@ class ProjectWikiService(BaseService):
         ]
         all_wikis = [*all_wikis[:order], wiki, *all_wikis[order:]]
 
-        for index, all_wiki in enumerate(all_wikis):
-            all_wiki.order = index
-            await self._db.update(all_wiki)
-
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            for index, all_wiki in enumerate(all_wikis):
+                all_wiki.order = index
+                await db.update(all_wiki)
+            await db.commit()
 
         model = {
             "uid": wiki.get_uid(),
@@ -413,8 +429,9 @@ class ProjectWikiService(BaseService):
             order=max_order + 1,
         )
 
-        self._db.insert(wiki_attachment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(wiki_attachment)
+            await db.commit()
 
         return wiki_attachment
 
@@ -424,8 +441,9 @@ class ProjectWikiService(BaseService):
             return None
         project, wiki = params
 
-        await self._db.delete(wiki)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(wiki)
+            await db.commit()
 
         model = {"uid": wiki.get_uid()}
         publish_model = SocketPublishModel(

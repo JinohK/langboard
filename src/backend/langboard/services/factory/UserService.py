@@ -4,7 +4,7 @@ from typing import Any
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.security import Auth
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
@@ -33,16 +33,16 @@ class UserService(BaseService):
         user = await self._get_by(User, "email", email)
         if user:
             return user, None
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(User, UserEmail)
-            .join(
-                UserEmail,
-                (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(User, UserEmail)
+                .join(
+                    UserEmail,
+                    (User.column("id") == UserEmail.column("user_id")) & (UserEmail.column("deleted_at") == None),  # noqa
+                )
+                .where(UserEmail.column("email") == email)
+                .limit(1)
             )
-            .where(UserEmail.column("email") == email)
-            .limit(1)
-        )
         return result.first() or (None, None)
 
     async def get_by_token(
@@ -57,14 +57,16 @@ class UserService(BaseService):
         user = User(**form)
         user.avatar = avatar
 
-        self._db.insert(user)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(user)
+            await db.commit()
         return user
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
-        self._db.insert(user_email)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(user_email)
+            await db.commit()
         return user_email
 
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
@@ -78,24 +80,24 @@ class UserService(BaseService):
         if not user or user.is_new():
             return []
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(Project)
-            .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
-            .where(ProjectAssignedUser.column("user_id") == user.id)
-            .where(ProjectAssignedUser.column("starred") == True)  # noqa
-            .order_by(
-                ProjectAssignedUser.column("last_viewed_at").desc(),
-                Project.column("updated_at").desc(),
-                Project.column("id").desc(),
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(Project)
+                .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
+                .where(ProjectAssignedUser.column("user_id") == user.id)
+                .where(ProjectAssignedUser.column("starred") == True)  # noqa
+                .order_by(
+                    ProjectAssignedUser.column("last_viewed_at").desc(),
+                    Project.column("updated_at").desc(),
+                    Project.column("id").desc(),
+                )
+                .group_by(
+                    Project.column("id"),
+                    ProjectAssignedUser.column("id"),
+                    Project.column("updated_at"),
+                    ProjectAssignedUser.column("last_viewed_at"),
+                )
             )
-            .group_by(
-                Project.column("id"),
-                ProjectAssignedUser.column("id"),
-                Project.column("updated_at"),
-                ProjectAssignedUser.column("last_viewed_at"),
-            )
-        )
         raw_projects = result.all()
         projects = [project.api_response() for project in raw_projects]
 
@@ -156,15 +158,17 @@ class UserService(BaseService):
 
     async def activate(self, user: User) -> None:
         user.activated_at = now()
-        await self._db.update(user)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(user)
+            await db.commit()
 
         UserActivityTask.activated(user)
 
     async def verify_subemail(self, subemail: UserEmail) -> None:
         subemail.verified_at = now()
-        await self._db.update(subemail)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(subemail)
+            await db.commit()
 
     async def update(self, user: User, form: dict) -> bool:
         mutable_keys = ["firstname", "lastname", "affiliation", "position", "avatar"]
@@ -189,8 +193,9 @@ class UserService(BaseService):
         if not old_user_record:
             return True
 
-        await self._db.update(user)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(user)
+            await db.commit()
         await Auth.reset_user(user)
 
         model: dict[str, Any] = {}
@@ -220,9 +225,10 @@ class UserService(BaseService):
         user.email = subemail.email
         subemail.email = user_email
 
-        await self._db.update(user)
-        await self._db.update(subemail)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(user)
+            await db.update(subemail)
+            await db.commit()
         await Auth.reset_user(user)
 
         model = {"email": user.email}
@@ -239,11 +245,13 @@ class UserService(BaseService):
         return True
 
     async def delete_email(self, subemail: UserEmail) -> bool:
-        await self._db.delete(subemail)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(subemail)
+            await db.commit()
         return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
-        await self._db.update(user)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(user)
+            await db.commit()

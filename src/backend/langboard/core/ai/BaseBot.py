@@ -4,7 +4,7 @@ from httpx import get, post
 from pydantic import BaseModel
 from requests import Response as HTTPResponse
 from requests import Session as HTTPSession
-from ..db import DbSession
+from ..db import DbSession, SqlBuilder
 from ..setting import AppSetting, AppSettingType
 from ..utils.String import generate_random_string
 from .BotResponse import (
@@ -54,11 +54,9 @@ class BaseBot(metaclass=BotMetadata):
     def bot_avatar() -> str | None:
         return None
 
-    def __init__(self, db: DbSession | None = None):
+    def __init__(self):
         if self.__class__ is BaseBot:
             raise TypeError("Can't instantiate abstract class BaseBot")
-        if not db:
-            self._db = DbSession()
         self.__abortable_tasks: dict[str, list[HTTPSession | HTTPResponse]] = {}
 
     @abstractmethod
@@ -174,14 +172,13 @@ class BaseBot(metaclass=BotMetadata):
             return None
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(AppSetting)
-            .where(
-                (AppSetting.setting_type == AppSettingType.LangflowUrl)
-                | (AppSetting.setting_type == AppSettingType.LangflowApiKey)
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(AppSetting).where(
+                    (AppSetting.setting_type == AppSettingType.LangflowUrl)
+                    | (AppSetting.setting_type == AppSettingType.LangflowApiKey)
+                )
             )
-        )
         raw_settings = result.all()
         settings = {row.setting_type: row.get_value() for row in raw_settings}
 

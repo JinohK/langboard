@@ -1,5 +1,5 @@
+from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
-from fastapi import Depends
 from sqlalchemy import Delete, Insert, Sequence, Update, text
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -12,7 +12,6 @@ from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROL
 from ..logger import Logger
 from ..utils.DateTime import now
 from ..utils.decorators import class_instance, thread_safe_singleton
-from .BaseSqlBuilder import BaseSqlBuilder
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
@@ -34,8 +33,8 @@ class Engine:
 _logger = Logger.use("DbConnection")
 
 
-class DbSession(BaseSqlBuilder):
-    """Manages the database sessions inherited from :class:`BaseSqlBuilder`.
+class DbSession:
+    """Manages the database sessions.
 
     The purpose of this class is to provide a single interface for multiple database sessions.
     """
@@ -53,21 +52,17 @@ class DbSession(BaseSqlBuilder):
         for role in SUB_DATABASE_ROLE:
             self._sessions[DbSessionRole(role)] = sub_session
 
+    @asynccontextmanager
     @staticmethod
-    def scope() -> "DbSession":
-        """Creates a scope for the database session to be used in :class:`fastapi.FastAPI` endpoints."""
-
-        async def get_db():
-            db = DbSession()
-            try:
-                for session in db._sessions.values():
-                    await session.execute(text("PRAGMA journal_mode=WAL;"))
-                    await session.commit()
-                yield db
-            finally:
-                await db.close()
-
-        return Depends(get_db)
+    async def use_db():
+        db = DbSession()
+        try:
+            for session in set(db._sessions.values()):
+                await session.exec(text("PRAGMA journal_mode=WAL;"))  # type: ignore
+                await session.commit()
+            yield db
+        finally:
+            await db.close()
 
     async def close(self):
         if self.should_commit():

@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Any, TypeVar, cast
 from ...core.ai import Bot
-from ...core.db import EditorContentModel, SnowflakeID, User
+from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.DateTime import now
@@ -23,15 +23,11 @@ class NotificationService(BaseService):
         return "notification"
 
     async def get_list(self, user: User) -> list[dict[str, Any]]:
-        sql_query = (
-            self._db.query("select")
-            .table(UserNotification)
-            .where(
-                (UserNotification.column("receiver_id") == user.id)
-                & (
-                    (UserNotification.column("read_at") == None)  # noqa
-                    | (UserNotification.column("read_at") >= now() - timedelta(days=3))
-                )
+        sql_query = SqlBuilder.select.table(UserNotification).where(
+            (UserNotification.column("receiver_id") == user.id)
+            & (
+                (UserNotification.column("read_at") == None)  # noqa
+                | (UserNotification.column("read_at") >= now() - timedelta(days=3))
             )
         )
 
@@ -39,7 +35,8 @@ class NotificationService(BaseService):
             UserNotification.column("created_at").desc(), UserNotification.column("id").desc()
         )
         sql_query = sql_query.group_by(UserNotification.column("id"), UserNotification.column("created_at"))
-        result = await self._db.exec(sql_query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(sql_query)
         raw_notifications = result.all()
 
         notifications = []
@@ -75,39 +72,40 @@ class NotificationService(BaseService):
             return False
 
         notification.read_at = now()
-        await self._db.update(notification)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(notification)
+            await db.commit()
 
         return True
 
     async def read_all(self, user: User):
         sql_query = (
-            self._db.query("update")
-            .table(UserNotification)
+            SqlBuilder.update.table(UserNotification)
             .values({UserNotification.column("read_at"): now()})
             .where(
                 (UserNotification.column("receiver_id") == user.id) & (UserNotification.column("read_at") == None)  # noqa
             )
         )
-        await self._db.exec(sql_query)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.exec(sql_query)
+            await db.commit()
 
     async def delete(self, user: User, notification: TNotificationParam) -> bool:
         notification = cast(UserNotification, await self._get_by_param(UserNotification, notification))
         if not notification or notification.receiver_id != user.id:
             return False
 
-        await self._db.delete(notification)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(notification)
+            await db.commit()
 
         return True
 
     async def delete_all(self, user: User):
-        sql_query = (
-            self._db.query("delete").table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
-        )
-        await self._db.exec(sql_query)
-        await self._db.commit()
+        sql_query = SqlBuilder.delete.table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
+        async with DbSession.use_db() as db:
+            await db.exec(sql_query)
+            await db.commit()
 
     # from here, notifiable types are added
     async def notify_project_invited(
@@ -221,8 +219,9 @@ class NotificationService(BaseService):
             message_vars=message_vars,
             record_list=self.create_record_list(record_with_key_names),
         )
-        self._db.insert(notification)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(notification)
+            await db.commit()
 
         model = {"notification": await self.convert_to_api_response(notification)}
         topic_id = target_user_or_bot.get_uid()

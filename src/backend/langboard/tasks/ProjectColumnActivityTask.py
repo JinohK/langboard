@@ -10,11 +10,11 @@ from .UserActivityTask import record_project_activity
 
 @Broker.wrap_async_task_decorator
 async def project_column_created(user_or_bot: User | Bot, project: Project, column: ProjectColumn):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, column)
-        activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnCreated, project)
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, column)
+    activity = await helper.record(
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnCreated, project)
+    )
     await record_project_activity(user_or_bot, activity)
 
 
@@ -22,15 +22,15 @@ async def project_column_created(user_or_bot: User | Bot, project: Project, colu
 async def project_column_name_changed(
     user_or_bot: User | Bot, project: Project, old_name: str, column: Project | ProjectColumn
 ):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        current_name = column.archive_column_name if isinstance(column, Project) else column.name
-        activity_history = {
-            **await _get_default_history(helper, project, column),
-            "changes": {"before": {"name": old_name}, "after": {"name": current_name}},
-        }
-        activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnNameChanged, project)
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    current_name = column.archive_column_name if isinstance(column, Project) else column.name
+    activity_history = {
+        **await _get_default_history(helper, project, column),
+        "changes": {"before": {"name": old_name}, "after": {"name": current_name}},
+    }
+    activity = await helper.record(
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnNameChanged, project)
+    )
     await record_project_activity(user_or_bot, activity)
 
 

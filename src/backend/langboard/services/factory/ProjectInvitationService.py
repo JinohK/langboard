@@ -2,7 +2,7 @@ from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.utils.Encryptor import Encryptor
@@ -45,21 +45,21 @@ class ProjectInvitationService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(ProjectInvitation, User)
-            .outerjoin(
-                UserEmail,
-                (ProjectInvitation.column("email") == UserEmail.column("email"))
-                & (UserEmail.column("deleted_at") == None),  # noqa
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(ProjectInvitation, User)
+                .outerjoin(
+                    UserEmail,
+                    (ProjectInvitation.column("email") == UserEmail.column("email"))
+                    & (UserEmail.column("deleted_at") == None),  # noqa
+                )
+                .outerjoin(
+                    User,
+                    (User.column("email") == ProjectInvitation.column("email"))
+                    | (User.column("id") == UserEmail.column("user_id")),
+                )
+                .where(ProjectInvitation.column("project_id") == project.id)
             )
-            .outerjoin(
-                User,
-                (User.column("email") == ProjectInvitation.column("email"))
-                | (User.column("id") == UserEmail.column("user_id")),
-            )
-            .where(ProjectInvitation.column("project_id") == project.id)
-        )
         raw_users = result.all()
         if not as_api:
             return list(raw_users)
@@ -87,12 +87,12 @@ class ProjectInvitationService(BaseService):
         for email in emails:
             user = await self._get_by(User, "email", email)
             if not user:
-                result = await self._db.exec(
-                    self._db.query("select")
-                    .tables(UserEmail, User)
-                    .join(User, User.column("id") == UserEmail.column("user_id"))
-                    .where(UserEmail.column("email") == email)
-                )
+                async with DbSession.use_db() as db:
+                    result = await db.exec(
+                        SqlBuilder.select.tables(UserEmail, User)
+                        .join(User, User.column("id") == UserEmail.column("user_id"))
+                        .where(UserEmail.column("email") == email)
+                    )
                 _, user = result.first() or (None, None)
 
             if user:
@@ -140,8 +140,9 @@ class ProjectInvitationService(BaseService):
         notification_service = self._get_service(NotificationService)
         for email in invitation_result.emails_should_invite:
             invitation = ProjectInvitation(project_id=project.id, email=email, token=generate_random_string(32))
-            self._db.insert(invitation)
-            await self._db.commit()
+            async with DbSession.use_db() as db:
+                db.insert(invitation)
+                await db.commit()
 
             token_url = await self.__create_invitation_token_url(invitation, url, token_query_name)
             await email_service.send_template(lang, email, "project_invitation", {"url": token_url})
@@ -166,13 +167,17 @@ class ProjectInvitationService(BaseService):
 
         assign_user = ProjectAssignedUser(project_id=invitation.project_id, user_id=user.id)
 
-        await self._db.delete(invitation)
-        self._db.insert(assign_user)
+        async with DbSession.use_db() as db:
+            await db.delete(invitation)
+            await db.commit()
+
+        async with DbSession.use_db() as db:
+            db.insert(assign_user)
+            await db.commit()
 
         role_service = self._get_service(RoleService)
-        await role_service.project.grant_default(user_id=user.id, project_id=invitation.project_id)
 
-        await self._db.commit()
+        await role_service.project.grant_default(user_id=user.id, project_id=invitation.project_id)
 
         project_service = self._get_service_by_name("project")
 
@@ -205,8 +210,9 @@ class ProjectInvitationService(BaseService):
 
         await self.__delete_notification(user, project, invitation)
 
-        await self._db.delete(invitation)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(invitation)
+            await db.commit()
 
         UserActivityTask.declined_project_invitation(user, project)
 
@@ -235,14 +241,13 @@ class ProjectInvitationService(BaseService):
         if not invitation_token or not invitation_id:
             return None
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectInvitation)
-            .where(
-                (ProjectInvitation.column("id") == invitation_id)
-                & (ProjectInvitation.column("token") == invitation_token)
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectInvitation).where(
+                    (ProjectInvitation.column("id") == invitation_id)
+                    & (ProjectInvitation.column("token") == invitation_token)
+                )
             )
-        )
         invitation = result.first()
         if not invitation:
             return None
@@ -259,20 +264,21 @@ class ProjectInvitationService(BaseService):
         record_list = json_dumps(
             notification_service.create_record_list([(project, "project"), (invitation, "invitation")])
         )
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(UserNotification)
-            .where(
-                (UserNotification.column("receiver_id") == user.id)
-                & (UserNotification.column("notification_type") == NotificationType.ProjectInvited)
-                & (UserNotification.column("record_list") == record_list)
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(UserNotification).where(
+                    (UserNotification.column("receiver_id") == user.id)
+                    & (UserNotification.column("notification_type") == NotificationType.ProjectInvited)
+                    & (UserNotification.column("record_list") == record_list)
+                )
             )
-        )
         notification = result.first()
         if not notification:
             return
 
-        await self._db.delete(notification)
+        async with DbSession.use_db() as db:
+            await db.delete(notification)
+            await db.commit()
 
         model = {"notification_uid": notification.get_uid()}
         publish_model = SocketPublishModel(

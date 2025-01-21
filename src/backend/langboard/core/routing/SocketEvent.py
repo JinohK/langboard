@@ -59,7 +59,6 @@ class SocketEvent:
                     params[f"{key}_id"] = value
 
             is_authorized = await role.is_authorized(req.from_app["auth_user_id"], params, actions, role_finder)
-            await role.close()
             if not is_authorized:
                 return SocketStatusCodeException(code=SocketResponseCode.WS_3003_FORBIDDEN, message="Forbidden")
 

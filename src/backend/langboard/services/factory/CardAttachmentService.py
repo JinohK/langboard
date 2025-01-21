@@ -1,5 +1,5 @@
 from typing import Any, cast, overload
-from ...core.db import User
+from ...core.db import DbSession, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...core.storage import FileModel
@@ -24,14 +24,14 @@ class CardAttachmentService(BaseService):
         card = cast(Card, await self._get_by_param(Card, card))
         if not card:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(CardAttachment, User)
-            .join(User, CardAttachment.column("user_id") == User.column("id"))
-            .where(CardAttachment.column("card_id") == card.id)
-            .order_by(CardAttachment.column("order").asc(), CardAttachment.column("id").desc())
-            .group_by(CardAttachment.column("id"), CardAttachment.column("order"), User.column("id"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(CardAttachment, User)
+                .join(User, CardAttachment.column("user_id") == User.column("id"))
+                .where(CardAttachment.column("card_id") == card.id)
+                .order_by(CardAttachment.column("order").asc(), CardAttachment.column("id").desc())
+                .group_by(CardAttachment.column("id"), CardAttachment.column("order"), User.column("id"))
+            )
         card_attachments = result.all()
 
         return [
@@ -57,8 +57,9 @@ class CardAttachmentService(BaseService):
             order=max_order + 1,
         )
 
-        self._db.insert(card_attachment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(card_attachment)
+            await db.commit()
 
         model = {
             "attachment": {
@@ -90,13 +91,16 @@ class CardAttachmentService(BaseService):
         project, card, card_attachment = params
 
         original_order = card_attachment.order
-        update_query = self._db.query("update").table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
+        update_query = SqlBuilder.update.table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
         update_query = self._set_order_in_column(update_query, CardAttachment, original_order, order)
-        await self._db.exec(update_query)
+        async with DbSession.use_db() as db:
+            await db.exec(update_query)
+            await db.commit()
 
-        card_attachment.order = order
-        await self._db.update(card_attachment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            card_attachment.order = order
+            await db.update(card_attachment)
+            await db.commit()
 
         model = {"uid": card_attachment.get_uid(), "order": order}
         publish_model = SocketPublishModel(
@@ -121,8 +125,9 @@ class CardAttachmentService(BaseService):
         old_name = card_attachment.filename
         card_attachment.filename = name
 
-        await self._db.update(card_attachment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(card_attachment)
+            await db.commit()
 
         model = {"name": name}
         publish_model = SocketPublishModel(
@@ -146,17 +151,20 @@ class CardAttachmentService(BaseService):
             return None
         project, card, card_attachment = params
 
-        await self._db.exec(
-            self._db.query("update")
-            .table(CardAttachment)
-            .values({CardAttachment.order: CardAttachment.order - 1})
-            .where(
-                (CardAttachment.column("order") > card_attachment.order) & (CardAttachment.column("card_id") == card.id)
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.update.table(CardAttachment)
+                .values({CardAttachment.order: CardAttachment.order - 1})
+                .where(
+                    (CardAttachment.column("order") > card_attachment.order)
+                    & (CardAttachment.column("card_id") == card.id)
+                )
             )
-        )
+            await db.commit()
 
-        await self._db.delete(card_attachment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(card_attachment)
+            await db.commit()
 
         model = {"uid": card_attachment.get_uid()}
         publish_model = SocketPublishModel(

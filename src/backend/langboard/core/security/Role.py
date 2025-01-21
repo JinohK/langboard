@@ -1,6 +1,6 @@
 from typing import Any, TypeVar
 from ...models.BaseRoleModel import ALL_GRANTED, BaseRoleModel
-from ..db import DbSession
+from ..db import DbSession, SqlBuilder
 from ..filter.RoleFilter import _RoleFinderFunc
 
 
@@ -8,15 +8,8 @@ _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
 
 
 class Role:
-    def __init__(self, model_class: type[_TRoleModel], db: DbSession | None = None):
+    def __init__(self, model_class: type[_TRoleModel]):
         self._model_class = model_class
-        if db:
-            self._db = db
-        else:
-            self._db = DbSession()
-
-    async def close(self) -> None:
-        await self._db.close()
 
     async def is_authorized(
         self,
@@ -25,7 +18,7 @@ class Role:
         actions: list[str],
         role_finder: _RoleFinderFunc | None,
     ) -> bool:
-        query = self._db.query("select").column(self._model_class.actions).where(self._model_class.user_id == user_id)
+        query = SqlBuilder.select.column(self._model_class.actions).where(self._model_class.user_id == user_id)
 
         if not role_finder:
             for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
@@ -33,7 +26,8 @@ class Role:
         else:
             query = role_finder(query, path_params)
 
-        result = await self._db.exec(query.limit(1))
+        async with DbSession.use_db() as db:
+            result = await db.exec(query.limit(1))
         granted_actions = result.first()
 
         if not granted_actions:

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
 from ...models import ChatHistory
@@ -22,8 +22,7 @@ class ChatHistoryService(BaseService):
         filterable: str | None = None,
     ) -> list[dict[str, Any]]:
         sql_query = (
-            self._db.query("select")
-            .table(ChatHistory)
+            SqlBuilder.select.table(ChatHistory)
             .where((ChatHistory.sender_id == user.id) | (ChatHistory.receiver_id == user.id))
             .where((ChatHistory.history_type == history_type) & (ChatHistory.created_at <= refer_time))
         )
@@ -35,7 +34,8 @@ class ChatHistoryService(BaseService):
         sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
-        result = await self._db.exec(sql_query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(sql_query)
         histories = result.all()
 
         chat_histories = []
@@ -54,7 +54,6 @@ class ChatHistoryService(BaseService):
         filterable: SnowflakeID | str | None = None,
         sender: TUserParam | None = None,
         receiver: TUserParam | None = None,
-        commit: bool = True,
     ) -> ChatHistory:
         sender = await self._get_by_param(User, sender) if sender else None
         receiver = await self._get_by_param(User, receiver) if receiver else None
@@ -67,32 +66,30 @@ class ChatHistoryService(BaseService):
             receiver_id=receiver.id if receiver else None,
         )
 
-        self._db.insert(chat_history)
-        if commit:
-            await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(chat_history)
+            await db.commit()
         return chat_history
 
-    async def update(self, chat_history: ChatHistory, commit: bool = True) -> ChatHistory:
-        await self._db.update(chat_history)
-        if commit:
-            await self._db.commit()
+    async def update(self, chat_history: ChatHistory) -> ChatHistory:
+        async with DbSession.use_db() as db:
+            await db.update(chat_history)
+            await db.commit()
         return chat_history
 
-    async def delete(self, chat_history: ChatHistory, commit: bool = True):
-        await self._db.delete(chat_history)
-        if commit:
-            await self._db.commit()
+    async def delete(self, chat_history: ChatHistory):
+        async with DbSession.use_db() as db:
+            await db.delete(chat_history)
+            await db.commit()
 
     async def clear(
         self,
         user: User,
         history_type: str,
         filterable: str | None = None,
-        commit: bool = True,
     ):
         sql_query = (
-            self._db.query("delete")
-            .table(ChatHistory)
+            SqlBuilder.delete.table(ChatHistory)
             .where((ChatHistory.column("sender_id") == user.id) | (ChatHistory.column("receiver_id") == user.id))
             .where(ChatHistory.column("history_type") == history_type)
         )
@@ -100,6 +97,6 @@ class ChatHistoryService(BaseService):
         if filterable is not None:
             sql_query = sql_query.where(ChatHistory.column("filterable") == SnowflakeID.from_short_code(filterable))
 
-        await self._db.exec(sql_query)
-        if commit:
-            await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.exec(sql_query)
+            await db.commit()

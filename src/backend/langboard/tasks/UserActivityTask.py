@@ -9,34 +9,34 @@ from .ActivityTaskHelper import ActivityTaskHelper
 
 @Broker.wrap_async_task_decorator
 async def activated(user: User):
-    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
-        activity_history = {
-            "activated_at": user.activated_at,
-        }
-        await helper.record(user, activity_history, activity_type=UserActivityType.Activated)
+    helper = ActivityTaskHelper(UserActivity)
+    activity_history = {
+        "activated_at": user.activated_at,
+    }
+    await helper.record(user, activity_history, activity_type=UserActivityType.Activated)
 
 
 @Broker.wrap_async_task_decorator
 async def declined_project_invitation(user: User, project: Project):
-    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
-        activity_history = {
-            "project_title": project.title,
-        }
-        await helper.record(user, activity_history, activity_type=UserActivityType.DeclinedProjectInvitation)
+    helper = ActivityTaskHelper(UserActivity)
+    activity_history = {
+        "project_title": project.title,
+    }
+    await helper.record(user, activity_history, activity_type=UserActivityType.DeclinedProjectInvitation)
 
 
 async def record_project_activity(user_or_bot: User | Bot, activity: ProjectActivity):
     if not isinstance(user_or_bot, User):
         return
-    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
-        await helper.record(user_or_bot, {}, **_refer_activity(activity))
+    helper = ActivityTaskHelper(UserActivity)
+    await helper.record(user_or_bot, {}, **_refer_activity(activity))
 
 
 async def record_wiki_activity(user_or_bot: User | Bot, activity: ProjectWikiActivity):
     if not isinstance(user_or_bot, User):
         return
-    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
-        await helper.record(user_or_bot, {}, **_refer_activity(activity))
+    helper = ActivityTaskHelper(UserActivity)
+    await helper.record(user_or_bot, {}, **_refer_activity(activity))
 
 
 def _refer_activity(activity: BaseActivityModel):

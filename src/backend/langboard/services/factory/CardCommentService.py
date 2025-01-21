@@ -1,6 +1,6 @@
 from typing import Any, cast, overload
 from ...core.ai import Bot
-from ...core.db import EditorContentModel, User
+from ...core.db import DbSession, EditorContentModel, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, CardComment, CardCommentReaction, Project
@@ -26,15 +26,17 @@ class CardCommentService(BaseService):
         card = cast(Card, await self._get_by_param(Card, card))
         if not card:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(CardComment, User, Bot, with_deleted=True)
-            .outerjoin(User, CardComment.column("user_id") == User.column("id"))
-            .outerjoin(Bot, CardComment.column("bot_id") == Bot.column("id"))
-            .where(CardComment.column("card_id") == card.id)
-            .order_by(CardComment.column("created_at").desc(), CardComment.column("id").desc())
-            .group_by(CardComment.column("id"), CardComment.column("created_at"), User.column("id"), Bot.column("id"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(CardComment, User, Bot, with_deleted=True)
+                .outerjoin(User, CardComment.column("user_id") == User.column("id"))
+                .outerjoin(Bot, CardComment.column("bot_id") == Bot.column("id"))
+                .where(CardComment.column("card_id") == card.id)
+                .order_by(CardComment.column("created_at").desc(), CardComment.column("id").desc())
+                .group_by(
+                    CardComment.column("id"), CardComment.column("created_at"), User.column("id"), Bot.column("id")
+                )
+            )
         raw_comments = result.all()
 
         reaction_service = self._get_service(ReactionService)
@@ -79,8 +81,9 @@ class CardCommentService(BaseService):
             comment_params["bot_id"] = user_or_bot.id
 
         comment = CardComment(**comment_params)
-        self._db.insert(comment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(comment)
+            await db.commit()
 
         api_comment = comment.api_response()
         if isinstance(user_or_bot, User):
@@ -124,8 +127,9 @@ class CardCommentService(BaseService):
 
         old_content = comment.content
         comment.content = content
-        await self._db.update(comment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(comment)
+            await db.commit()
 
         model = {
             "content": content.model_dump(),
@@ -161,8 +165,9 @@ class CardCommentService(BaseService):
             return None
         project, card, comment = params
 
-        await self._db.delete(comment)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(comment)
+            await db.commit()
 
         model = {"card_uid": card.get_uid(), "comment_uid": comment.get_uid()}
         publish_model = SocketPublishModel(

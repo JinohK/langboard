@@ -1,5 +1,5 @@
 from typing import Any, cast
-from ...core.db import SnowflakeID, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.routing import SocketTopic
 from ...core.service import BaseService, SocketPublishModel, SocketPublishService
 from ...models import Card, Project, ProjectColumn
@@ -20,13 +20,13 @@ class ProjectColumnService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectColumn)
-            .where(ProjectColumn.column("project_id") == project.id)
-            .order_by(ProjectColumn.column("order").asc())
-            .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectColumn)
+                .where(ProjectColumn.column("project_id") == project.id)
+                .order_by(ProjectColumn.column("order").asc())
+                .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
+            )
         raw_columns = result.all()
         columns = [raw_column.api_response() for raw_column in raw_columns]
         columns.insert(
@@ -49,13 +49,14 @@ class ProjectColumnService(BaseService):
             if isinstance(column_id, str) and column_id != project.ARCHIVE_COLUMN_UID()
             else column_id
         )
-        sql_query = self._db.query("select").count(Card, Card.id).where(Card.column("project_id") == project.id)
+        sql_query = SqlBuilder.select.count(Card, Card.id).where(Card.column("project_id") == project.id)
         if column_id == project.ARCHIVE_COLUMN_UID():
             sql_query = sql_query.where(Card.column("archived_at") != None)  # noqa
         else:
             sql_query = sql_query.where(Card.column("project_column_id") == column_id)
-        result = await self._db.exec(sql_query)
-        count = result.one()
+        async with DbSession.use_db() as db:
+            result = await db.exec(sql_query)
+            count = result.first() or 0
         return count
 
     async def create(self, user_or_bot: TUserOrBot, project: TProjectParam, name: str) -> ProjectColumn | None:
@@ -71,8 +72,9 @@ class ProjectColumnService(BaseService):
             order=max_order + 2,  # due to the archive column, the order is incremented by 2
         )
 
-        self._db.insert(column)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(column)
+            await db.commit()
 
         model = {
             "column": {
@@ -113,7 +115,9 @@ class ProjectColumnService(BaseService):
         if column == project.ARCHIVE_COLUMN_UID() or column == project or column == project.id:
             old_name = project.archive_column_name
             project.archive_column_name = name
-            await self._db.update(project)
+            async with DbSession.use_db() as db:
+                await db.update(project)
+                await db.commit()
             column_id = project.ARCHIVE_COLUMN_UID()
         else:
             column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
@@ -121,10 +125,10 @@ class ProjectColumnService(BaseService):
                 return None
             old_name = column.name
             column.name = name
-            await self._db.update(column)
+            async with DbSession.use_db() as db:
+                await db.update(column)
+                await db.commit()
             column_id = column.id
-
-        await self._db.commit()
 
         model = {
             "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
@@ -165,13 +169,13 @@ class ProjectColumnService(BaseService):
         if not project:
             return None
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(ProjectColumn)
-            .where(ProjectColumn.column("project_id") == project.id)
-            .order_by(ProjectColumn.column("order").asc())
-            .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectColumn)
+                .where(ProjectColumn.column("project_id") == project.id)
+                .order_by(ProjectColumn.column("order").asc())
+                .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
+            )
         columns: list[Project | ProjectColumn] = list(result.all())
         columns.insert(project.archive_column_order, project)
 
@@ -196,14 +200,14 @@ class ProjectColumnService(BaseService):
 
         columns.insert(order, target_column)
 
-        for i, column in enumerate(columns):
-            if isinstance(column, Project):
-                column.archive_column_order = i
-            else:
-                column.order = i
-            await self._db.update(column)
-
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            for i, column in enumerate(columns):
+                if isinstance(column, Project):
+                    column.archive_column_order = i
+                else:
+                    column.order = i
+                await db.update(column)
+            await db.commit()
 
         model = {
             "uid": project_column.get_uid()

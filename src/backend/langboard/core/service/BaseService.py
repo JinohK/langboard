@@ -6,7 +6,7 @@ from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ... import models
 from ..ai import Bot
-from ..db import BaseSqlModel, DbSession, SnowflakeID, User
+from ..db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder, User
 from ..setting import AppSetting
 
 
@@ -21,11 +21,10 @@ class BaseService(ABC):
     @abstractmethod
     def name() -> str: ...
 
-    def __init__(self, get_service: Callable, get_service_by_name: Callable, db: DbSession):
+    def __init__(self, get_service: Callable, get_service_by_name: Callable):
         self._raw_get_service = get_service
         self._get_service_by_name = get_service_by_name
         self.__tables: dict[str, type[BaseSqlModel]] = {}
-        self._db = db
 
     def _get_service(self, service: type[_TService]) -> _TService:
         """This method is from :class:`ServiceFactory`.
@@ -55,26 +54,28 @@ class BaseService(ABC):
     ) -> _TBaseModel | None:
         if not is_none and value is None:
             return None
-        result = await self._db.exec(
-            self._db.query("select")
-            .table(model_class, with_deleted=with_deleted)
-            .where(model_class.column(column) == value)
-            .limit(1)
-        )
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(model_class, with_deleted=with_deleted)
+                .where(model_class.column(column) == value)
+                .limit(1)
+            )
         return result.first()
 
     async def _get_all(self, model_class: type[_TBaseModel], with_deleted: bool = False) -> Sequence[_TBaseModel]:
-        result = await self._db.exec(self._db.query("select").table(model_class, with_deleted=with_deleted))
+        async with DbSession.use_db() as db:
+            result = await db.exec(SqlBuilder.select.table(model_class, with_deleted=with_deleted))
         return result.all()
 
     async def _get_all_by(
         self, model_class: type[_TBaseModel], column: str, values: Any | list[Any], with_deleted: bool = False
     ) -> Sequence[_TBaseModel]:
-        sql_query = self._db.query("select").table(model_class, with_deleted=with_deleted)
+        sql_query = SqlBuilder.select.table(model_class, with_deleted=with_deleted)
         if not isinstance(values, list):
             values = [values]
         sql_query = sql_query.where(model_class.column(column).in_(values))
-        result = await self._db.exec(sql_query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(sql_query)
         return result.all()
 
     @overload
@@ -101,15 +102,15 @@ class BaseService(ABC):
         self, model_class: type[_TBaseModel], column: str, value: Any, where_clauses: dict[str, Any] | None = None
     ) -> int:
         query = (
-            self._db.query("select")
-            .columns(func.max(model_class.column("order")), func.count(model_class.column("id")))
+            SqlBuilder.select.columns(func.max(model_class.column("order")), func.count(model_class.column("id")))
             .where(model_class.column(column) == value)
             .group_by(model_class.column(column))
             .limit(1)
         )
         if where_clauses:
             query = self._where_recursive(query, model_class, **where_clauses)
-        result = await self._db.exec(query)
+        async with DbSession.use_db() as db:
+            result = await db.exec(query)
 
         max_order, count_all = result.first() or (None, None)
         if max_order is None or count_all is None:
@@ -119,22 +120,23 @@ class BaseService(ABC):
         if max_order + 1 != count_all:
             max_order = count_all - 1
             query = (
-                self._db.query("select")
-                .table(model_class)
+                SqlBuilder.select.table(model_class)
                 .where(model_class.column(column) == value)
                 .order_by(model_class.column("order").asc(), model_class.column("id").asc())
                 .group_by(model_class.column("id"), model_class.column("order"))
             )
             if where_clauses:
                 query = self._where_recursive(query, model_class, **where_clauses)
-            result = await self._db.exec(query)
+            async with DbSession.use_db() as db:
+                result = await db.exec(query)
             rows = result.all()
             i = 0
-            for row in rows:
-                row.order = i
-                await self._db.update(row)
-                i += 1
-            await self._db.commit()
+            async with DbSession.use_db() as db:
+                for row in rows:
+                    row.order = i
+                    await db.update(row)
+                    i += 1
+                await db.commit()
 
         return max_order
 

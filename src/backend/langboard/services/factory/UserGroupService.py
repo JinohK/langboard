@@ -1,5 +1,5 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import User
+from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
 from ...models import UserEmail, UserGroup, UserGroupAssignedEmail
 from .Types import TUserGroupParam
@@ -50,23 +50,25 @@ class UserGroupService(BaseService):
         if not user_group:
             return []
 
-        result = await self._db.exec(
-            self._db.query("select")
-            .tables(UserGroupAssignedEmail, User)
-            .outerjoin(
-                UserEmail,
-                (UserEmail.column("email") == UserGroupAssignedEmail.column("email"))
-                & (UserEmail.column("deleted_at") == None),  # noqa
+        async with DbSession.use_db() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(UserGroupAssignedEmail, User)
+                .outerjoin(
+                    UserEmail,
+                    (UserEmail.column("email") == UserGroupAssignedEmail.column("email"))
+                    & (UserEmail.column("deleted_at") == None),  # noqa
+                )
+                .outerjoin(
+                    User,
+                    (User.column("email") == UserGroupAssignedEmail.column("email"))
+                    | (User.column("id") == UserEmail.column("user_id")),
+                )
+                .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
+                .order_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"))
+                .group_by(
+                    UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"), User.column("id")
+                )
             )
-            .outerjoin(
-                User,
-                (User.column("email") == UserGroupAssignedEmail.column("email"))
-                | (User.column("id") == UserEmail.column("user_id")),
-            )
-            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
-            .order_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"))
-            .group_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"), User.column("id"))
-        )
         records = result.all()
         if not as_api:
             return list(records)
@@ -84,14 +86,16 @@ class UserGroupService(BaseService):
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
-        self._db.insert(user_group)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            db.insert(user_group)
+            await db.commit()
 
         if emails:
-            for email in set(emails):
-                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                self._db.insert(assigned_email)
-            await self._db.commit()
+            async with DbSession.use_db() as db:
+                for email in set(emails):
+                    assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+                    db.insert(assigned_email)
+                await db.commit()
 
         return user_group
 
@@ -102,8 +106,9 @@ class UserGroupService(BaseService):
 
         user_group.name = name
 
-        await self._db.update(user_group)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.update(user_group)
+            await db.commit()
         return True
 
     async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> bool:
@@ -111,11 +116,13 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        await self._db.exec(
-            self._db.query("delete")
-            .table(UserGroupAssignedEmail)
-            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
-        )
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.delete.table(UserGroupAssignedEmail).where(
+                    UserGroupAssignedEmail.column("group_id") == user_group.id
+                )
+            )
+            await db.commit()
 
         app_users = await self._get_all_by(User, "email", emails)
         app_user_subemails = await self._get_all_by(UserEmail, "email", emails)
@@ -134,10 +141,11 @@ class UserGroupService(BaseService):
         none_user_emails = [email for email in emails if email not in appended_emails]
         all_emails = unique_app_user_emails.union(none_user_emails)
 
-        for email in all_emails:
-            assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-            self._db.insert(assigned_email)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            for email in all_emails:
+                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+                db.insert(assigned_email)
+            await db.commit()
 
         return True
 
@@ -146,13 +154,16 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        await self._db.exec(
-            self._db.query("delete")
-            .table(UserGroupAssignedEmail)
-            .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
-        )
+        async with DbSession.use_db() as db:
+            await db.exec(
+                SqlBuilder.delete.table(UserGroupAssignedEmail).where(
+                    UserGroupAssignedEmail.column("group_id") == user_group.id
+                )
+            )
+            await db.commit()
 
-        await self._db.delete(user_group)
-        await self._db.commit()
+        async with DbSession.use_db() as db:
+            await db.delete(user_group)
+            await db.commit()
 
         return True

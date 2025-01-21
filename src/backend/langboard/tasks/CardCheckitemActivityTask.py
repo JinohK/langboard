@@ -10,13 +10,13 @@ from .UserActivityTask import record_project_activity
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemCreated, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemCreated, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
@@ -24,103 +24,103 @@ async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card
 async def card_checkitem_title_changed(
     user_or_bot: User | Bot, project: Project, card: Card, old_title: str, checkitem: Checkitem
 ):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = {
-            **await _get_default_history(helper, project, card, checkitem),
-            "changes": {"before": {"title": old_title}, "after": {"title": checkitem.title}},
-        }
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemTitleChanged, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = {
+        **await _get_default_history(helper, project, card, checkitem),
+        "changes": {"before": {"title": old_title}, "after": {"title": checkitem.title}},
+    }
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemTitleChanged, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_started(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemTimerStarted, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemTimerStarted, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_paused(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemTimerPaused, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemTimerPaused, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_stopped(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemTimerStopped, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemTimerStopped, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_checked(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemChecked, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemChecked, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_unchecked(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemUnchecked, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemUnchecked, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_cardified(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = {
-            **await _get_default_history(helper, project, card, checkitem),
-            "record_ids": [(checkitem.cardified_id, "cardified_card")],
-        }
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemDeleted, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = {
+        **await _get_default_history(helper, project, card, checkitem),
+        "record_ids": [(checkitem.cardified_id, "cardified_card")],
+    }
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemDeleted, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
 async def card_checkitem_deleted(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
-        activity_history = await _get_default_history(helper, project, card, checkitem)
-        activity = await helper.record(
-            user_or_bot,
-            activity_history,
-            **_get_activity_params(ProjectActivityType.CardCheckitemDeleted, project, card),
-        )
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = await _get_default_history(helper, project, card, checkitem)
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardCheckitemDeleted, project, card),
+    )
     await record_project_activity(user_or_bot, activity)
 
 
