@@ -5,3 +5,4 @@ from ...core.utils.DateTime import now
 
 class ActivityPagination(Pagination):
     refer_time: datetime = now()
+    only_count: bool = False

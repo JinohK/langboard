@@ -16,7 +16,7 @@ async def project_wiki_created(user_or_bot: User | Bot, project: Project, wiki: 
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectWikiActivityType.WikiCreated, project, wiki)
         )
-    record_wiki_activity(user_or_bot, activity)
+    await record_wiki_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -24,12 +24,12 @@ async def project_wiki_updated(user_or_bot: User | Bot, project: Project, old_di
     async with ActivityTaskHelper.use_helper(ProjectWikiActivity) as helper:
         activity_history = {
             **await _get_default_history(helper, project, wiki),
-            **ActivityHistoryHelper.create_changes(old_dict, wiki),
+            **await ActivityHistoryHelper.create_changes(helper.db, old_dict, wiki),
         }
         activity = await helper.record(
-            user_or_bot, activity_history, **_get_activity_params(ProjectWikiActivityType.WikiCreated, project, wiki)
+            user_or_bot, activity_history, **_get_activity_params(ProjectWikiActivityType.WikiUpdated, project, wiki)
         )
-    record_wiki_activity(user_or_bot, activity)
+    await record_wiki_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -47,7 +47,7 @@ async def project_wiki_publicity_changed(
             activity_history,
             **_get_activity_params(ProjectWikiActivityType.WikiPublicityChanged, project, wiki),
         )
-    record_wiki_activity(user_or_bot, activity)
+    await record_wiki_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -79,7 +79,7 @@ async def project_wiki_assignees_updated(
             activity_history,
             **_get_activity_params(ProjectWikiActivityType.WikiAssigneesUpdated, project, wiki),
         )
-    record_wiki_activity(user, activity)
+    await record_wiki_activity(user, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -89,7 +89,7 @@ async def project_wiki_deleted(user_or_bot: User | Bot, project: Project, wiki: 
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectWikiActivityType.WikiDeleted, project, wiki)
         )
-    record_wiki_activity(user_or_bot, activity)
+    await record_wiki_activity(user_or_bot, activity)
 
 
 async def _get_default_history(helper: ActivityTaskHelper, project: Project, wiki: ProjectWiki):

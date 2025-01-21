@@ -82,8 +82,9 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
             editors = {}
         if uid not in editors:
             editors[uid] = []
-        if user.id not in editors[uid]:
-            editors[uid].append(user.get_uid())
+        user_uid = user.get_uid()
+        if user_uid not in editors[uid]:
+            editors[uid].append(user_uid)
         await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
         await AppRouter.publish(
             topic=editor_topic,
@@ -101,7 +102,8 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
 
         editors: _TEditorCache | None = await Cache.get(f"board:{editor_type}:editors:{project_uid}")
         if editors and uid in editors:
-            editors[uid] = [editor for editor in editors[uid] if editor != user.id]
+            user_uid = user.get_uid()
+            editors[uid] = [editing_user_uid for editing_user_uid in editors[uid] if editing_user_uid != user_uid]
             await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
         await AppRouter.publish(
             topic=editor_topic,

@@ -74,6 +74,10 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
     }, [currentTab]);
 
     useEffect(() => {
+        if (!currentUser) {
+            return;
+        }
+
         const unsubs: (() => void)[] = [];
         for (let i = 0; i < projects.length; ++i) {
             const project = projects[i];
@@ -84,7 +88,7 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
             unsubs.forEach((unsub) => unsub());
             unsubs.splice(0);
         };
-    }, [projects]);
+    }, [currentUser, projects]);
 
     return (
         <Tabs.Root value={currentTab}>

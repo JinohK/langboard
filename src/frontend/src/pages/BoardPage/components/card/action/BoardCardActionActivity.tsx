@@ -1,6 +1,5 @@
 import ActivityList from "@/components/ActivityList";
 import { Button, IconComponent, Popover } from "@/components/base";
-import useGetActivities from "@/controllers/api/activity/useGetActivities";
 import { ActivityModel } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -11,7 +10,7 @@ import { useTranslation } from "react-i18next";
 export interface IBoardCardActionActivityProps extends ISharedBoardCardActionProps {}
 
 const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActivityProps) => {
-    const { projectUID, card } = useBoardCard();
+    const { projectUID, card, currentUser } = useBoardCard();
     const [t] = useTranslation();
     const activities = ActivityModel.Model.useModels(
         (model) =>
@@ -31,7 +30,8 @@ const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActiv
             </Popover.Trigger>
             <Popover.Content align="end" className="w-full p-0">
                 <ActivityList
-                    mutation={() => useGetActivities({ type: "card", project_uid: projectUID, card_uid: card.uid })}
+                    form={{ type: "card", project_uid: projectUID, card_uid: card.uid }}
+                    currentUser={currentUser}
                     activities={activities}
                     scrollAreaClassName={cn(
                         "w-[calc(100vw_-_theme(spacing.9))]",
@@ -39,7 +39,6 @@ const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActiv
                         "lg:w-[calc(theme(screens.md)_-_theme(spacing.9))]"
                     )}
                     infiniteScrollerClassName="max-h-[min(70vh,calc(var(--radix-popper-available-height)_-_theme(spacing.4)))] p-3"
-                    isCurrentUser
                 />
             </Popover.Content>
         </Popover.Root>

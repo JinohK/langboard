@@ -10,7 +10,7 @@ import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardComment, { SkeletonBoardComment } from "@/pages/BoardPage/components/card/comment/BoardComment";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardCommentListProps {
@@ -56,38 +56,18 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
         handle(error);
     }, [error]);
 
-    return <>{!commentsData ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} comments={commentsData.comments} />}</>;
+    return <>{!commentsData ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} />}</>;
 }
 
-interface IBoardCommentListResultProps extends IBoardCommentListProps {
-    comments: ProjectCardComment.TModel[];
-}
+interface IBoardCommentListResultProps extends IBoardCommentListProps {}
 
-function BoardCommentListResult({ comments: flatComments, viewportId }: IBoardCommentListResultProps): JSX.Element {
+function BoardCommentListResult({ viewportId }: IBoardCommentListResultProps): JSX.Element {
     const { card } = useBoardCard();
     const [t] = useTranslation();
     const PAGE_SIZE = 10;
-    const { items: comments, nextPage, forceUpdate, hasMore } = useInfiniteScrollPager({ allItems: flatComments, size: PAGE_SIZE });
-    ProjectCardComment.Model.subscribe(
-        "CREATION",
-        `board-card-comment-list-${card.uid}`,
-        (models) => {
-            flatComments.push(...models);
-            forceUpdate();
-        },
-        (model) => model.card_uid === card.uid
-    );
-    ProjectCardComment.Model.subscribe("DELETION", `board-card-comment-list-${card.uid}`, (uids) => {
-        uids.forEach((uid) => {
-            const index = flatComments.findIndex((c) => c.uid === uid);
-            if (index === -1) {
-                return;
-            }
-
-            flatComments.splice(index, 1);
-        });
-        forceUpdate();
-    });
+    const flatComments = ProjectCardComment.Model.useModels((model) => model.card_uid === card.uid);
+    const sortedComments = useMemo(() => flatComments.sort((a, b) => b.commented_at.getTime() - a.commented_at.getTime()), [flatComments]);
+    const { items: comments, nextPage, forceUpdate, hasMore } = useInfiniteScrollPager({ allItems: sortedComments, size: PAGE_SIZE });
 
     const deletedComment = (commentUID: string) => {
         const index = flatComments.findIndex((c) => c.uid === commentUID);

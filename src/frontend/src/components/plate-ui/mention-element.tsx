@@ -3,8 +3,8 @@
 
 import type { TMentionElement } from "@udecode/plate-mention";
 import { cn, withRef } from "@udecode/cn";
-import { IS_APPLE, getHandler } from "@udecode/plate-common";
-import { useElement } from "@udecode/plate-common/react";
+import { IS_APPLE, getHandler } from "@udecode/plate";
+import { useElement, useReadOnly } from "@udecode/plate/react";
 import { useFocused, useSelected } from "slate-react";
 import { useMounted } from "@/core/hooks/useMounted";
 import { PlateElement } from "@/components/plate-ui/plate-element";
@@ -27,11 +27,14 @@ export const MentionElement = withRef<
     const mounted = useMounted();
     const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
 
+    const readOnly = useReadOnly();
+
     return (
         <PlateElement
             ref={ref}
             className={cn(
-                "inline-block cursor-pointer rounded-md bg-muted px-1.5 py-0.5 align-baseline text-sm font-medium",
+                "inline-block rounded-md bg-muted px-1.5 py-0.5 align-baseline text-sm font-medium",
+                !readOnly && "cursor-pointer",
                 selected && focused && "ring-2 ring-ring",
                 element.children[0].bold === true && "font-bold",
                 element.children[0].italic === true && "italic",

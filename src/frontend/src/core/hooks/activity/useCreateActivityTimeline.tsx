@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Avatar, Box, Flex, IconComponent, Skeleton, Tooltip } from "@/components/base";
+import VersionHistoryPlate from "@/components/Editor/version-history-plate";
 import UserAvatar from "@/components/UserAvatar";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
-import { ActivityModel, Project, ProjectCard, ProjectWiki } from "@/core/models";
+import { ActivityModel, AuthUser, ProjectCard, User } from "@/core/models";
 import { IBotInActivityHistory, IChangesInActivityHistory, IUserInActivityHistory } from "@/core/models/activities/base.type";
 import { IProjectActivityHistory } from "@/core/models/activities/project.activity.type";
 import { IProjectCardActivityHistory } from "@/core/models/activities/project.card.activity.type";
@@ -16,31 +17,36 @@ import { IProjectWikiActivityHistory } from "@/core/models/activities/project.wi
 import { ROUTES } from "@/core/routing/constants";
 import { ColorGenerator, getTextColorFromHex } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createNameInitials } from "@/core/utils/StringUtils";
+import { createNameInitials, createShortUUID } from "@/core/utils/StringUtils";
 import React, { memo, useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 export interface IActivityTimelineProps {
     activity: ActivityModel.TModel | ActivityModel.TActivity;
-    references?: {
-        project?: Project.TModel | Project.Interface;
-        card?: ProjectCard.TModel | ProjectCard.Interface;
-        project_wiki?: ProjectWiki.TModel | ProjectWiki.Interface;
-    };
-    isCurrentUser?: bool;
+    references?: ActivityModel.TModel["references"];
 }
 
 interface IBaseActivityComponentProps {
-    references: IActivityTimelineProps["references"];
+    references: ActivityModel.TModel["references"];
 }
 
-const useCreateActivityTimeline = () => {
+const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bool) => {
     const [t] = useTranslation();
     const navigateRef = useRef(usePageNavigate());
 
-    const SkeletonActivity = memo(() => <Skeleton as="span" h="14" w="56" display="block" />);
+    const SkeletonActivity = memo(() => (
+        <Flex direction="col" gap="1" p="2">
+            <Flex items="start" gap="1">
+                {!isUserView && <Skeleton size="8" rounded="full" />}
+                <Skeleton h="6" mt="1" className="w-3/5 md:w-2/5" />
+            </Flex>
+            <Flex items="center" justify="end">
+                <Skeleton as="span" h="5" w="32" />
+            </Flex>
+        </Flex>
+    ));
 
-    const ActivityTimeline = memo(({ activity, references, isCurrentUser = true }: IActivityTimelineProps) => {
+    const ActivityTimeline = memo(({ activity, references }: IActivityTimelineProps) => {
         const activityType = activity.activity_type;
         const activityHistory = activity.activity_history;
         const activityCreatedAt = useUpdateDateDistance(activity.created_at);
@@ -49,7 +55,7 @@ const useCreateActivityTimeline = () => {
         const refer = activity.refer;
 
         if (refer) {
-            return <ActivityTimeline activity={refer} references={activity.references} isCurrentUser={isCurrentUser} />;
+            return <ActivityTimeline activity={refer} references={activity.references} />;
         }
 
         let i18nKey;
@@ -59,7 +65,7 @@ const useCreateActivityTimeline = () => {
                 break;
             case "project":
                 {
-                    const viewType = isCurrentUser ? "user_view" : "default";
+                    const viewType = isUserView ? "user_view" : "default";
                     const subType = subFilterableType ? `.${subFilterableType}` : "";
                     i18nKey = `activity.project${subType}.${activityType}.${viewType}`;
                 }
@@ -69,7 +75,7 @@ const useCreateActivityTimeline = () => {
         return (
             <Flex direction="col" gap="1" rounded="md" border p="2">
                 <Flex items="start" gap="1">
-                    {!isCurrentUser && (
+                    {!isUserView && (
                         <Box>
                             <UserOrBotComponent userOrBot={activityHistory.recorder} onlyAvatar />
                         </Box>
@@ -95,39 +101,39 @@ const useCreateActivityTimeline = () => {
                     components.Recorder = <UserOrBotComponent userOrBot={value} onlyName />;
                     break;
                 case "project":
-                    components.Project = <ProjectComponent project={value} references={{ ...references, ...history }} />;
+                    components.Project = <ProjectComponent project={value} references={{ ...history, ...references }} />;
                     break;
                 case "column":
-                    components.Column = <ProjectColumnComponent column={value} references={{ ...references, ...history }} />;
+                    components.Column = <ProjectColumnComponent column={value} references={{ ...history, ...references }} />;
                     break;
                 case "from_column":
-                    components.FromColumn = <ProjectColumnComponent column={value} references={{ ...references, ...history }} />;
+                    components.FromColumn = <ProjectColumnComponent column={value} references={{ ...history, ...references }} />;
                     break;
                 case "label":
-                    components.Label = <ProjectLabelComponent label={value} references={{ ...references, ...history }} />;
+                    components.Label = <ProjectLabelComponent label={value} references={{ ...history, ...references }} />;
                     break;
                 case "wiki":
-                    components.Wiki = <ProjectWikiComponent wiki={value} references={{ ...references, ...history }} />;
+                    components.Wiki = <ProjectWikiComponent wiki={value} references={{ ...history, ...references }} />;
                     break;
                 case "card":
-                    components.Card = <ProjectCardComponent card={value} references={{ ...references, ...history }} />;
+                    components.Card = <ProjectCardComponent card={value} references={{ ...history, ...references }} />;
                     break;
                 case "attachment":
-                    components.Attachment = <ProjectCardAttachmentComponent attachment={value} references={{ ...references, ...history }} />;
+                    components.Attachment = <ProjectCardAttachmentComponent attachment={value} references={{ ...history, ...references }} />;
                     break;
                 case "checklist":
-                    components.Checklist = <ProjectCardChecklistComponent checklist={value} references={{ ...references, ...history }} />;
+                    components.Checklist = <ProjectCardChecklistComponent checklist={value} references={{ ...history, ...references }} />;
                     break;
                 case "checkitem":
-                    components.Checkitem = <ProjectCardCheckitemComponent checkitem={value} references={{ ...references, ...history }} />;
+                    components.Checkitem = <ProjectCardCheckitemComponent checkitem={value} references={{ ...history, ...references }} />;
                     break;
                 case "cardified_card":
                     components.CardifiedCard = (
                         <ProjectCardComponent
                             card={value}
                             references={{
-                                ...references,
                                 ...history,
+                                ...references,
                                 card: {
                                     uid: value.uid,
                                     title: history.checkitem.title,
@@ -234,13 +240,100 @@ const useCreateActivityTimeline = () => {
                 return;
             }
 
-            // TODO: Add more diff types
+            if (before?.type === "editor" || after?.type === "editor") {
+                const mentionables = [...(before?.mentionables ?? []), ...(after?.mentionables ?? [])].map(
+                    (mentionable: IBotInActivityHistory | IUserInActivityHistory) => {
+                        const isBot = mentionable.type === "bot";
+                        return User.Model.createFakeUser({
+                            type: mentionable.type,
+                            uid: "0",
+                            firstname: isBot ? mentionable.name : mentionable.firstname,
+                            lastname: isBot ? "" : mentionable.lastname,
+                            username: "",
+                            email: "",
+                            avatar: mentionable.avatar,
+                        });
+                    }
+                );
+
+                elements.push(
+                    <VersionHistoryPlate
+                        mentionables={mentionables}
+                        currentUser={currentUser}
+                        oldValue={before}
+                        newValue={after}
+                        key={createShortUUID()}
+                    />
+                );
+                return;
+            }
+
+            const i18nKey = `activity.changes.${key}`;
+            let beforeElement;
+            let afterElement;
+            switch (key) {
+                case "title":
+                case "name":
+                case "project_type":
+                    beforeElement = <>{before}</>;
+                    afterElement = <>{after}</>;
+                    break;
+                case "description":
+                    beforeElement = <>{before ?? t("activity.changes.No description")}</>;
+                    afterElement = <>{after ?? t("activity.changes.No description")}</>;
+                    break;
+                case "ai_description":
+                    beforeElement = <>{before ?? t("activity.changes.No AI summary")}</>;
+                    afterElement = <>{after ?? t("activity.changes.No AI summary")}</>;
+                    break;
+                case "content":
+                    beforeElement = <>{before ?? t("activity.changes.No content")}</>;
+                    afterElement = <>{after ?? t("activity.changes.No content")}</>;
+                    break;
+                case "deadline_at":
+                    beforeElement = <>{before ?? t("activity.changes.No deadline")}</>;
+                    afterElement = <>{after ?? t("activity.changes.No deadline")}</>;
+                    break;
+                case "color":
+                    beforeElement = (
+                        <ActivityBadge style={{ backgroundColor: before ?? "#000", color: getTextColorFromHex(before ?? "#000") }}>
+                            {changes.before?.name ?? history.label?.name ?? "color"}
+                        </ActivityBadge>
+                    );
+                    afterElement = (
+                        <ActivityBadge style={{ backgroundColor: after ?? "#000", color: getTextColorFromHex(after ?? "#000") }}>
+                            {changes.after?.name ?? history.label?.name ?? "color"}
+                        </ActivityBadge>
+                    );
+                    break;
+                default:
+                    return;
+            }
+
+            elements.push(
+                <Flex items="center" gap="3" key={createShortUUID()}>
+                    <Box>{t(i18nKey)}</Box>
+                    <Flex items="center" gap="1.5">
+                        {beforeElement}
+                        <IconComponent icon="arrow-right" />
+                        {afterElement}
+                    </Flex>
+                </Flex>
+            );
         });
 
-        return <>{elements}</>;
+        if (!elements.length) {
+            return null;
+        }
+
+        return (
+            <Box px="3" py="2" ml={isUserView ? "0" : "9"} my="1" border rounded="md" className="bg-secondary/25">
+                {elements}
+            </Box>
+        );
     };
 
-    const ActivityBadge = ({ moveUrl, style, children }: { moveUrl: string; style?: Record<string, any>; children: React.ReactNode }) => {
+    const ActivityBadge = ({ moveUrl, style, children }: { moveUrl?: string; style?: Record<string, any>; children: React.ReactNode }) => {
         return (
             <Box
                 as="span"
@@ -249,9 +342,9 @@ const useCreateActivityTimeline = () => {
                 px="2"
                 py="0.5"
                 textSize="sm"
-                cursor="pointer"
-                className="bg-muted text-muted-foreground transition-all hover:bg-primary hover:text-primary-foreground"
-                onClick={() => navigateRef.current(moveUrl)}
+                cursor={moveUrl ? "pointer" : undefined}
+                className={cn("bg-muted text-muted-foreground", !!moveUrl && "transition-all hover:bg-primary hover:text-primary-foreground")}
+                onClick={moveUrl ? () => navigateRef.current(moveUrl) : undefined}
                 style={style}
             >
                 {children}

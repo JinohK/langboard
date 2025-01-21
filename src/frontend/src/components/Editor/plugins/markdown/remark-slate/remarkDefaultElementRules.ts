@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { TDescendant, TElement, TText } from "@udecode/plate-common";
+import type { Descendant, TElement, TText } from "@udecode/plate";
 import type { MdastNode, RemarkElementRules } from "@/components/Editor/plugins/markdown/remark-slate/types";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { remarkTransformElementChildren } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElementChildren";
@@ -142,7 +142,7 @@ export const remarkDefaultElementRules: RemarkElementRules = {
                     ({
                         ...child,
                         type: child.type === options.editor.getType({ key: "p" }) ? options.editor.getType({ key: "lic" }) : child.type,
-                    }) as TDescendant
+                    }) as Descendant
             ),
             type: options.editor.getType({ key: "li" }),
         }),
@@ -185,7 +185,7 @@ export const remarkDefaultElementRules: RemarkElementRules = {
             const paragraphType = options.editor.getType({ key: "p" });
             const splitBlockTypes = new Set([options.editor.getType({ key: "img" })]);
 
-            let inlineNodes: TDescendant[] = [];
+            let inlineNodes: Descendant[] = [];
 
             const flushInlineNodes = () => {
                 if (inlineNodes.length > 0) {
@@ -216,7 +216,7 @@ export const remarkDefaultElementRules: RemarkElementRules = {
                     }
 
                     // Handle text containing line breaks
-                    const textParts = child.text.split("\n");
+                    const textParts = (child.text as string).split("\n");
 
                     textParts.forEach((part, index, array) => {
                         const isNotFirstPart = index > 0;

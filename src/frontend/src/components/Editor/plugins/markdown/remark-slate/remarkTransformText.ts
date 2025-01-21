@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { TText } from "@udecode/plate-common";
+import type { TText } from "@udecode/plate";
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
 import { remarkDefaultTextRules } from "@/components/Editor/plugins/markdown/remark-slate/remarkDefaultTextRules";
 import { getDataTextType, isDataTextType } from "@/components/Editor/plugins/markdown/remark-slate/remarkDataText";

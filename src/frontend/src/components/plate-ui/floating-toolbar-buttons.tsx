@@ -1,7 +1,7 @@
 "use client";
 
 import { BoldPlugin, CodePlugin, ItalicPlugin, StrikethroughPlugin, UnderlinePlugin } from "@udecode/plate-basic-marks/react";
-import { useEditorReadOnly } from "@udecode/plate-common/react";
+import { useEditorReadOnly } from "@udecode/plate/react";
 import { BoldIcon, Code2Icon, ItalicIcon, StrikethroughIcon, UnderlineIcon, WandSparklesIcon } from "lucide-react";
 import { AIToolbarButton } from "@/components/plate-ui/ai-toolbar-button";
 import { LinkToolbarButton } from "@/components/plate-ui/link-toolbar-button";

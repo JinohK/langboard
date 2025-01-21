@@ -3,8 +3,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
-import { insertNodes, isUrl } from "@udecode/plate-common";
-import { useEditorRef } from "@udecode/plate-common/react";
+import { isUrl } from "@udecode/plate";
+import { useEditorRef } from "@udecode/plate/react";
 import { AudioPlugin, FilePlugin, ImagePlugin, VideoPlugin } from "@udecode/plate-media/react";
 import { AudioLinesIcon, FileUpIcon, FilmIcon, ImageIcon, LinkIcon } from "lucide-react";
 import { useFilePicker } from "use-file-picker";
@@ -144,7 +144,7 @@ function MediaUrlDialogContent({
         if (!isUrl(url)) return Toast.Add.error(t("editor.errors.invalid.url"));
 
         setOpen(false);
-        insertNodes(editor, {
+        editor.tf.insertNodes({
             children: [{ text: "" }],
             name: nodeType === FilePlugin.key ? url.split("/").pop() : undefined,
             type: nodeType,

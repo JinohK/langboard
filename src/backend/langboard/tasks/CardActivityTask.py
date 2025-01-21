@@ -16,7 +16,7 @@ async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.CardCreated, project, card)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -24,12 +24,12 @@ async def card_updated(user_or_bot: User | Bot, project: Project, old_dict: dict
     async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
         activity_history = {
             **await helper.create_project_default_history(project, card),
-            **ActivityHistoryHelper.create_changes(old_dict, card),
+            **await ActivityHistoryHelper.create_changes(helper.db, old_dict, card),
         }
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.CardUpdated, project, card)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -47,7 +47,7 @@ async def card_moved(
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.CardMoved, project, card)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -69,7 +69,7 @@ async def card_assigned_users_updated(
             activity_history,
             **_get_activity_params(ProjectActivityType.CardAssignedUsersUpdated, project, card),
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -89,7 +89,7 @@ async def card_labels_updated(
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.CardLabelsUpdated, project, card)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -99,7 +99,7 @@ async def card_deleted(user_or_bot: User | Bot, project: Project, card: Card):
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.CardDeleted, project, card)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 def _get_activity_params(activity_type: ProjectActivityType, project: Project, card: Card):

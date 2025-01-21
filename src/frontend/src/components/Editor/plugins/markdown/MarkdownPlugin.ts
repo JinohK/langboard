@@ -1,4 +1,4 @@
-import { type OmitFirst, type PluginConfig, bindFirst, createTSlatePlugin, isUrl } from "@udecode/plate-common";
+import { type OmitFirst, type PluginConfig, bindFirst, createTSlatePlugin, isUrl } from "@udecode/plate";
 import { deserializeMd } from "@/components/Editor/plugins/markdown/deserializer/utils";
 import {
     RemarkDataTextRules,

@@ -1,3 +1,4 @@
+import { IBaseModel } from "@/core/models/Base";
 import { IBaseProjectActivity, IProjectActivityHistory } from "@/core/models/activities/project.activity.type";
 import { EProjectWikiActivityType } from "@/core/models/activities/enum.type";
 import { IBaseActivity, IChangesInActivityHistory, IUpdatedAssigneesInActivityHistory } from "@/core/models/activities/base.type";
@@ -13,6 +14,10 @@ export interface IBaseProjectCardActivity<THistory extends IProjectWikiActivityH
     filterable_uid: string;
     sub_filterable_type: "project_wiki";
     sub_filterable_uid: string;
+    references: {
+        project: IBaseModel;
+        project_wiki: IBaseModel;
+    };
 }
 
 export interface IProjectWikiCreatedActivitiy extends IBaseActivity<IProjectWikiActivityHistory> {

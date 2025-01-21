@@ -75,6 +75,10 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         return createFakeModel(model, User.createFakeMethodsMap(model));
     }
 
+    public static createFakeUser(model: Interface): User {
+        return createFakeModel(model, User.createFakeMethodsMap(model));
+    }
+
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
             model.avatar = convertServerFileURL(model.avatar);

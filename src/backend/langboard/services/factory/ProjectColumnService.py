@@ -111,7 +111,7 @@ class ProjectColumnService(BaseService):
             return None
 
         if column == project.ARCHIVE_COLUMN_UID() or column == project or column == project.id:
-            original_name = project.archive_column_name
+            old_name = project.archive_column_name
             project.archive_column_name = name
             await self._db.update(project)
             column_id = project.ARCHIVE_COLUMN_UID()
@@ -119,7 +119,7 @@ class ProjectColumnService(BaseService):
             column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
             if not column or column.project_id != project.id:
                 return None
-            original_name = column.name
+            old_name = column.name
             column.name = name
             await self._db.update(column)
             column_id = column.id
@@ -152,7 +152,7 @@ class ProjectColumnService(BaseService):
         ProjectColumnActivityTask.project_column_name_changed(
             user_or_bot,
             project,
-            original_name,
+            old_name,
             column if isinstance(column, ProjectColumn) else project,
         )
 

@@ -5,7 +5,7 @@ import { InlineComboboxItem } from "@/components/plate-ui/inline-combobox";
 import { User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { PlateEditor } from "@udecode/plate-common/react";
+import { PlateEditor } from "@udecode/plate/react";
 import { IMentionableUser } from "@/components/plate-ui/mention-input-element";
 
 const onSelectItem = getMentionOnSelectItem();

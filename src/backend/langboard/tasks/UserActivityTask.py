@@ -25,19 +25,17 @@ async def declined_project_invitation(user: User, project: Project):
         await helper.record(user, activity_history, activity_type=UserActivityType.DeclinedProjectInvitation)
 
 
-@Broker.wrap_async_task_decorator
 async def record_project_activity(user_or_bot: User | Bot, activity: ProjectActivity):
     if not isinstance(user_or_bot, User):
         return
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
+    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
         await helper.record(user_or_bot, {}, **_refer_activity(activity))
 
 
-@Broker.wrap_async_task_decorator
 async def record_wiki_activity(user_or_bot: User | Bot, activity: ProjectWikiActivity):
     if not isinstance(user_or_bot, User):
         return
-    async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
+    async with ActivityTaskHelper.use_helper(UserActivity) as helper:
         await helper.record(user_or_bot, {}, **_refer_activity(activity))
 
 

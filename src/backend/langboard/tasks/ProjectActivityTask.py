@@ -16,7 +16,7 @@ async def project_created(user: User, project: Project):
         activity = await helper.record(
             user, activity_history, **_get_activity_params(ProjectActivityType.ProjectCreated, project)
         )
-    record_project_activity(user, activity)
+    await record_project_activity(user, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -24,12 +24,12 @@ async def project_updated(user_or_bot: User | Bot, old_dict: dict[str, Any], pro
     async with ActivityTaskHelper.use_helper(ProjectActivity) as helper:
         activity_history = {
             **await helper.create_project_default_history(project),
-            **ActivityHistoryHelper.create_changes(old_dict, project),
+            **await ActivityHistoryHelper.create_changes(helper.db, old_dict, project),
         }
         activity = await helper.record(
             user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectUpdated, project)
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -47,7 +47,7 @@ async def project_assigned_bots_updated(user: User, project: Project, old_bot_id
         activity = await helper.record(
             user, activity_history, **_get_activity_params(ProjectActivityType.ProjectAssignedBotsUpdated, project)
         )
-    record_project_activity(user, activity)
+    await record_project_activity(user, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -67,7 +67,7 @@ async def project_assigned_users_updated(
         activity = await helper.record(
             user, activity_history, **_get_activity_params(ProjectActivityType.ProjectAssignedUsersUpdated, project)
         )
-    record_project_activity(user, activity)
+    await record_project_activity(user, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -79,7 +79,7 @@ async def project_invited_user_accepted(user: User, project: Project):
             activity_history,
             **_get_activity_params(ProjectActivityType.ProjectInvitedUserAccepted, project),
         )
-    record_project_activity(user, activity)
+    await record_project_activity(user, activity)
 
 
 @Broker.wrap_async_task_decorator
@@ -89,7 +89,7 @@ async def project_deleted(user: User, project: Project):
         activity = await helper.record(
             user, activity_history, **_get_activity_params(ProjectActivityType.ProjectDeleted, project)
         )
-    record_project_activity(user, activity)
+    await record_project_activity(user, activity)
 
 
 def _get_activity_params(activity_type: ProjectActivityType, project: Project):

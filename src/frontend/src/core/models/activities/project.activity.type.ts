@@ -1,3 +1,4 @@
+import { IBaseModel } from "@/core/models/Base";
 import {
     IBaseActivity,
     IChangesInActivityHistory,
@@ -17,6 +18,9 @@ export interface IProjectActivityHistory {
 export interface IBaseProjectActivity<THistory extends IProjectActivityHistory> extends IBaseActivity<THistory> {
     filterable_type: "project";
     filterable_uid: string;
+    references: {
+        project: IBaseModel;
+    };
 }
 
 export interface IProjectCreatedActivity extends IBaseProjectActivity<IProjectActivityHistory> {

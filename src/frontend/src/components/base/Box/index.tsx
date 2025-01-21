@@ -90,7 +90,7 @@ export type TBoxProps = IDivBoxProps | ISpanBoxProps;
 const Box = forwardRef<React.ComponentRef<"div">, TBoxProps>(({ as: Comp = "div", className, children, ...props }, ref) => {
     const variants = extractVariantProps(BoxVariants, props);
     return (
-        <Comp ref={ref} className={cn(BoxVariants({ ...variants }), className)} {...props}>
+        <Comp ref={ref} className={cn(className, BoxVariants({ ...variants }))} {...props}>
             {children}
         </Comp>
     );

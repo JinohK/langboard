@@ -3,7 +3,7 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ActivityModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type TActivityType = "user" | "project" | "card" | "project_wiki";
 
@@ -32,7 +32,9 @@ export type TGetActivitiesForm = IGetUserActivitiesForm | IGerProjectActivitiesF
 const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
     const [isLastPage, setIsLastPage] = useState(true);
-    const [isOutdated, setIsOutdated] = useState(false);
+    const [countNewRecords, setCountNewRecords] = useState(0);
+    const isFetchingRef = useRef(false);
+    const limitRef = useRef(limit);
     const lastCurrentDateRef = useRef(new Date());
     const pageRef = useRef(0);
 
@@ -65,10 +67,12 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
             break;
     }
 
-    const getActivities = async () => {
-        if (isLastPage && pageRef.current) {
-            return { isUpdated: false };
+    const getActivities = useCallback(async () => {
+        if ((isLastPage && pageRef.current) || isFetchingRef.current) {
+            return {};
         }
+
+        isFetchingRef.current = true;
 
         if (!ActivityModel.Model.getModel(activityFilter)) {
             pageRef.current = 0;
@@ -80,19 +84,64 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
             params: {
                 refer_time: lastCurrentDateRef.current,
                 page: pageRef.current,
-                limit,
+                limit: limitRef.current,
             },
         });
+
+        if (res.data.references) {
+            for (let i = 0; i < res.data.activities.length; ++i) {
+                res.data.activities[i].references = res.data.references;
+            }
+        }
 
         ActivityModel.Model.fromObjectArray(res.data.activities, true);
 
         setIsLastPage(res.data.activities.length < limit);
-        if (res.data.is_outdated) {
-            setIsOutdated(true);
+        if (res.data.count_new_records) {
+            setCountNewRecords(res.data.count_new_records);
         }
 
+        isFetchingRef.current = false;
+
         return {};
-    };
+    }, [isLastPage, countNewRecords]);
+
+    const refresh = useCallback(async () => {
+        if (isFetchingRef.current) {
+            return;
+        }
+
+        const curLimit = limitRef.current;
+        const curPage = pageRef.current;
+
+        lastCurrentDateRef.current = new Date();
+        limitRef.current = countNewRecords;
+        pageRef.current = 0;
+        await getActivities();
+
+        limitRef.current = curLimit;
+        pageRef.current = curPage + Math.ceil(countNewRecords / curLimit);
+        setCountNewRecords(0);
+    }, [countNewRecords]);
+
+    const checkOutdated = useCallback(async () => {
+        if (isFetchingRef.current) {
+            return;
+        }
+
+        const res = await api.get(url, {
+            params: {
+                only_count: true,
+                refer_time: lastCurrentDateRef.current,
+                page: pageRef.current,
+                limit: limitRef.current,
+            },
+        });
+
+        if (res.data.count_new_records) {
+            setCountNewRecords(res.data.count_new_records);
+        }
+    }, [countNewRecords]);
 
     useEffect(() => {
         if (pageRef.current) {
@@ -100,7 +149,9 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
         }
 
         lastCurrentDateRef.current = new Date();
-        getActivities();
+        setTimeout(() => {
+            getActivities();
+        }, 0);
 
         return () => {
             pageRef.current = 0;
@@ -112,7 +163,7 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
         retry: 0,
     });
 
-    return { ...result, isLastPage, isOutdated };
+    return { ...result, isLastPage, countNewRecords, refresh, checkOutdated };
 };
 
 export default useGetActivities;

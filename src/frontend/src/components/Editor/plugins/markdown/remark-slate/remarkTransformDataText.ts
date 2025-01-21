@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
-import { TDescendant } from "@udecode/plate-common";
+import { Descendant } from "@udecode/plate";
 
 export const remarkTransformDataText = (
     node: MdastNode,
     options: RemarkPluginOptions,
     inheritedMarkProps: Record<string, bool> = {}
-): TDescendant[] => {
+): Descendant[] => {
     const { dataTextRules } = options;
 
     const { type } = node;

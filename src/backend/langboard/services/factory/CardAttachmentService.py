@@ -118,7 +118,7 @@ class CardAttachmentService(BaseService):
             return None
         project, card, card_attachment = params
 
-        original_name = card_attachment.filename
+        old_name = card_attachment.filename
         card_attachment.filename = name
 
         await self._db.update(card_attachment)
@@ -134,7 +134,7 @@ class CardAttachmentService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, original_name, card_attachment)
+        CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
 
         return True
 

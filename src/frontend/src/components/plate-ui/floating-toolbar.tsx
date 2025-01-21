@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, withRef } from "@udecode/cn";
-import { useComposedRef, useEditorId, useEditorRef, useEventEditorSelectors } from "@udecode/plate-common/react";
+import { useComposedRef, useEditorId, useEditorRef, useEventEditorSelectors } from "@udecode/plate/react";
 import { type FloatingToolbarState, flip, offset, useFloatingToolbar, useFloatingToolbarState } from "@udecode/plate-floating";
 import { Toolbar } from "@/components/plate-ui/toolbar";
 

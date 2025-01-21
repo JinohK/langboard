@@ -43,7 +43,7 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
                 return;
             }
 
-            Toast.Add.info(t("notifications.You have a new notification."));
+            Toast.Add.info(t("notification.You have a new notification."));
         },
     });
     useSwitchSocketHandlers({ socket, handlers: [notifiedHandlers] });
@@ -69,7 +69,7 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
                 <Button
                     variant="ghost"
                     className="relative p-2"
-                    title={t(unreadNotifications.length > 0 ? "notifications.{count} notifications received" : "notifications.Notifications", {
+                    title={t(unreadNotifications.length > 0 ? "notification.{count} notifications received" : "notification.Notifications", {
                         count: unreadNotifications.length,
                     })}
                 >
@@ -92,18 +92,18 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
             <Popover.Content className="min-w-[min(theme(screens.xs),100vw)] max-w-[min(theme(screens.xs),100vw)] p-0">
                 <Flex items="center" justify="between" py="2.5" px="3" className="border-b">
                     <Box textSize="base" weight="semibold">
-                        {t("notifications.Notifications")}
+                        {t("notification.Notifications")}
                     </Box>
                     <Flex gap="1.5" items="center">
                         <Label display="inline-flex" cursor="pointer" items="center" gap="2" textSize="xs">
                             <Switch checked={isOnlyUnread} onCheckedChange={setIsOnlyUnread} />
-                            <Box as="span">{t("notifications.Only show unread")}</Box>
+                            <Box as="span">{t("notification.Only show unread")}</Box>
                         </Label>
                         {unreadNotifications.length > 0 && (
                             <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                title={t("notifications.Read all notifications")}
+                                title={t("notification.Read all notifications")}
                                 titleAlign="end"
                                 titleSide="bottom"
                                 onClick={readAllNotifications}
@@ -114,7 +114,7 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
                         <Button
                             variant="destructiveGhost"
                             size="icon-sm"
-                            title={t("notifications.Delete all notifications")}
+                            title={t("notification.Delete all notifications")}
                             titleAlign="end"
                             titleSide="bottom"
                             onClick={deleteAllNotifications}
@@ -154,7 +154,7 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
         <ScrollArea.Root viewportId={listId} mutable={updated}>
             {!notifications.length && (
                 <Flex items="center" justify="center" maxH="80" minH="80">
-                    {t("notifications.No notifications received.")}
+                    {t("notification.No notifications received.")}
                 </Flex>
             )}
             <InfiniteScroller
@@ -246,7 +246,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                         onClick={movePage}
                     >
                         <Trans
-                            i18nKey={`notifications.titles.${notification.type}`}
+                            i18nKey={`notification.titles.${notification.type}`}
                             components={{
                                 Who: <UserAvatarComp user={notification.notifier_user ?? notification.notifier_bot!.as_user} />,
                                 Span: <Box as="span" className="truncate" />,
@@ -258,7 +258,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                             <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                title={t("notifications.Read notification")}
+                                title={t("notification.Read notification")}
                                 titleAlign="end"
                                 titleSide="bottom"
                                 className="size-7"
@@ -270,7 +270,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                         <Button
                             variant="destructiveGhost"
                             size="icon-sm"
-                            title={t("notifications.Delete notification")}
+                            title={t("notification.Delete notification")}
                             titleAlign="end"
                             titleSide="bottom"
                             className="size-7"
@@ -281,7 +281,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                     </Flex>
                 </Flex>
                 <Card.Description className={cn("truncate text-xs", !!readAt && "opacity-50")}>
-                    {t(`notifications.subtitles.${notification.type}`, { records: notification.records })}
+                    {t(`notification.subtitles.${notification.type}`, { records: notification.records })}
                 </Card.Description>
             </Card.Header>
             <HeaderUserNotificationItemContent notification={notification} className={readAt ? "opacity-50" : ""} />

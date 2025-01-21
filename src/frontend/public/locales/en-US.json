@@ -143,13 +143,16 @@
     "Insert table": "Insert table",
     "Delete table": "Delete table",
     "Column": "Column",
+    "Insert column before": "Insert column before",
     "Insert column after": "Insert column after",
     "Delete column": "Delete column",
     "Row": "Row",
+    "Insert row before": "Insert row before",
     "Insert row after": "Insert row after",
     "Delete row": "Delete row",
-    "Merge": "Merge",
-    "Unmerge": "Unmerge",
+    "Cell": "Cell",
+    "Merge cells": "Merge cells",
+    "Split cells": "Split cells",
     "Create a heading to display the table of contents.": "Create a heading to display the table of contents.",
     "Add a uml code": "Add a uml code",
     "Plant UML Editor": "Plant UML Editor",
@@ -403,6 +406,22 @@
     }
   },
   "activity": {
+    "{count} New Activities": "{{count}} New Activities",
+    "No Activities": "No Activities",
+    "changes": {
+      "title": "Title",
+      "deadline_at": "Deadline",
+      "name": "Name",
+      "color": "Color",
+      "project_type": "Project type",
+      "description": "Description",
+      "ai_description": "AI summary",
+      "content": "Content",
+      "No deadline": "No deadline",
+      "No description": "No description",
+      "No AI summary": "No AI summary",
+      "No content": "No content"
+    },
     "user": {
       "activated": "You have activated.",
       "declined_project_invitation": "You have declined the project invitation."

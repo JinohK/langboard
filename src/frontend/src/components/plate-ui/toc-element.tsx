@@ -31,8 +31,8 @@ export const TocElement = withRef<typeof PlateElement>(({ children, className, .
     const { headingList } = state;
 
     return (
-        <PlateElement ref={ref} className={cn("relative mb-1 p-0", className)} {...props}>
-            <nav contentEditable={false}>
+        <PlateElement ref={ref} className={cn(className, "relative mb-1 p-0")} {...props}>
+            <div contentEditable={false}>
                 {headingList.length > 0 ? (
                     headingList.map((item) => (
                         <Button
@@ -48,7 +48,7 @@ export const TocElement = withRef<typeof PlateElement>(({ children, className, .
                 ) : (
                     <div className="text-sm text-gray-500">{t("editor.Create a heading to display the table of contents.")}</div>
                 )}
-            </nav>
+            </div>
             {children}
         </PlateElement>
     );

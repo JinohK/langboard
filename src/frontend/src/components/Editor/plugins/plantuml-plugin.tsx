@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import TypeUtils from "@/core/utils/TypeUtils";
-import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, createSlatePlugin, insertNodes } from "@udecode/plate-common";
-import { toPlatePlugin } from "@udecode/plate-common/react";
+import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, createSlatePlugin } from "@udecode/plate";
+import { toPlatePlugin } from "@udecode/plate/react";
 import PlantUMLEncoder from "plantuml-encoder";
 import React from "react";
 
@@ -19,14 +18,13 @@ const BasePlantUmlPlugin = createSlatePlugin({
 }));
 
 export const insertPlantUML = (editor: SlateEditor, options?: InsertNodesOptions) => {
-    insertNodes<TPlantUmlElement>(
-        editor,
+    editor.tf.insertNodes(
         {
             children: [{ text: "" }],
             umlCode: "",
             type: editor.getType(BasePlantUmlPlugin),
         },
-        options as any
+        options
     );
 };
 

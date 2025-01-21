@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useEditorRef } from "@udecode/plate-common/react";
+import { useEditorRef } from "@udecode/plate/react";
 import { PlaceholderPlugin, UploadErrorCode } from "@udecode/plate-media/react";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { type WithRequiredKey, isSelectionExpanded } from "@udecode/plate-common";
-import { useEditorSelector, useElement, useRemoveNodeButton } from "@udecode/plate-common/react";
+import { type WithRequiredKey } from "@udecode/plate";
+import { useEditorSelector, useElement, useRemoveNodeButton } from "@udecode/plate/react";
 import { FloatingMedia as FloatingMediaPrimitive, floatingMediaActions, useFloatingMediaSelectors } from "@udecode/plate-media/react";
 import { Link, Trash2Icon } from "lucide-react";
 import { useReadOnly, useSelected } from "slate-react";
@@ -21,7 +21,7 @@ export function MediaPopover({ children, plugin }: MediaPopoverProps) {
     const readOnly = useReadOnly();
     const selected = useSelected();
 
-    const selectionCollapsed = useEditorSelector((editor) => !isSelectionExpanded(editor), []);
+    const selectionCollapsed = useEditorSelector((editor) => !editor.api.isExpanded(), []);
     const isOpen = !readOnly && selected && selectionCollapsed;
     const isEditing = useFloatingMediaSelectors().isEditing();
 

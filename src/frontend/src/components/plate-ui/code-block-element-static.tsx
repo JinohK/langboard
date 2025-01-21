@@ -1,7 +1,7 @@
 import type { TCodeBlockElement } from "@udecode/plate-code-block";
-import type { SlateElementProps } from "@udecode/plate-common";
+import type { SlateElementProps } from "@udecode/plate";
 import { cn } from "@udecode/cn";
-import { SlateElement } from "@udecode/plate-common";
+import { SlateElement } from "@udecode/plate";
 
 export const CodeBlockElementStatic = ({ children, className, ...props }: SlateElementProps<TCodeBlockElement>) => {
     const { element } = props;

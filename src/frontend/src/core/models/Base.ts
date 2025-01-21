@@ -634,6 +634,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
 
         const topicMap: Partial<Record<ESocketTopic, Record<string, ReturnType<typeof useSocketHandler>["on"][]>>> = {};
+        const currentSubscriptions: [ESocketTopic, string, string, (() => void)[]][] = [];
         for (let i = 0; i < events.length; ++i) {
             const handlers = events[i](props);
             const { topic, topicId } = getTopicWithId(handlers);
@@ -656,6 +657,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             Object.entries(topicIdMap!).forEach(([topicId, handlers]) => {
                 const key = createUUID();
                 const offs: (() => void)[] = [];
+                const subscription: [ESocketTopic, string, string, (() => void)[]] = [topic, topicId, key, offs];
                 BaseModel.#SOCKET.subscribeTopicNotifier({
                     topic,
                     topicId: topicId as never,
@@ -676,7 +678,8 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     },
                 });
 
-                BaseModel.#socketSubscriptions[modelName]![this.uid].push([topic, topicId, key, offs]);
+                currentSubscriptions.push(subscription);
+                BaseModel.#socketSubscriptions[modelName]![this.uid].push(subscription);
             });
         });
 
@@ -685,14 +688,20 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 return;
             }
 
-            BaseModel.#socketSubscriptions[modelName][this.uid].forEach(([topic, topicId, key, offs]) => {
-                if (!topicMap[topic]?.[topicId]) {
-                    return;
+            for (let i = 0; i < BaseModel.#socketSubscriptions[modelName][this.uid].length; ++i) {
+                const subscription = BaseModel.#socketSubscriptions[modelName][this.uid][i];
+                const currentSubscriptionIndex = currentSubscriptions.indexOf(subscription);
+                if (currentSubscriptionIndex === -1) {
+                    continue;
                 }
 
+                const [topic, topicId, key, offs] = subscription;
                 offs.forEach((off) => off());
                 BaseModel.#SOCKET.unsubscribeTopicNotifier({ topic, topicId: topicId as never, key });
-            });
+                BaseModel.#socketSubscriptions[modelName][this.uid].splice(i, 1);
+                currentSubscriptions.splice(currentSubscriptionIndex, 1);
+                --i;
+            }
 
             Object.keys(topicMap).forEach((topic) => {
                 delete topicMap[topic];

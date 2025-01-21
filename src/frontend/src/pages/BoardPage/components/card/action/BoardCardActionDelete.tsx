@@ -74,7 +74,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
         });
     };
 
-    const changeOpenState = (state: boolean) => {
+    const changeOpenState = (state: bool) => {
         if (isValidating) {
             return;
         }

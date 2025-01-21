@@ -60,7 +60,7 @@ class ProjectCardComment extends BaseModel<IStore> {
         this.update({ is_edited: value });
     }
 
-    public get commented_at() {
+    public get commented_at(): Date {
         return this.getValue("commented_at");
     }
     public set commented_at(value: string | Date) {

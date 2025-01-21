@@ -191,32 +191,32 @@ class NotificationService(BaseService):
     ):
         if not editor or not editor.content:
             return
-        user_uids, mentioned_lines = find_mentioned(editor)
-        for user_uid in user_uids:
+        user_or_bot_uids, mentioned_lines = find_mentioned(editor)
+        for user_or_bot_uid in user_or_bot_uids:
             await self.__notify(
                 notifier,
-                user_uid,
+                user_or_bot_uid,
                 notification_type,
                 record_with_key_names,
-                {"line": mentioned_lines[user_uid]},
+                {"line": mentioned_lines[user_or_bot_uid]},
             )
 
     async def __notify(
         self,
         notifier: TUserOrBot,
-        target_user: TUserParam,
+        target_user_or_bot: TUserParam,
         notification_type: NotificationType,
         record_with_key_names: list[tuple[_TModel, str]],
         message_vars: dict[str, Any] = {},
     ) -> UserNotification | None:
-        target_user = cast(User, await self._get_by_param(User, target_user))
-        if not target_user:
+        target_user_or_bot = cast(User, await self._get_by_param(User, target_user_or_bot))
+        if not target_user_or_bot:
             return None
 
         notification = UserNotification(
             notifier_type="user" if isinstance(notifier, User) else "bot",
             notifier_id=notifier.id,
-            receiver_id=target_user.id,
+            receiver_id=target_user_or_bot.id,
             notification_type=notification_type,
             message_vars=message_vars,
             record_list=self.create_record_list(record_with_key_names),
@@ -225,7 +225,7 @@ class NotificationService(BaseService):
         await self._db.commit()
 
         model = {"notification": await self.convert_to_api_response(notification)}
-        topic_id = target_user.get_uid()
+        topic_id = target_user_or_bot.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.UserPrivate,
             topic_id=topic_id,

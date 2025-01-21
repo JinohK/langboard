@@ -1,6 +1,6 @@
-import type { SlateLeafProps } from "@udecode/plate-common";
+import type { SlateLeafProps } from "@udecode/plate";
 import { cn } from "@udecode/cn";
-import { SlateLeaf } from "@udecode/plate-common";
+import { SlateLeaf } from "@udecode/plate";
 
 export const CodeLeafStatic = ({ children, className, ...props }: SlateLeafProps) => {
     return (

@@ -107,7 +107,7 @@ class CheckitemService(BaseService):
             return None
         project, card, checkitem = params
 
-        original_title = checkitem.title
+        old_title = checkitem.title
         checkitem.title = title
         cardified_card = None
         if checkitem.cardified_id:
@@ -143,7 +143,7 @@ class CheckitemService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_models)
 
-        CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, original_title, checkitem)
+        CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
 
         return True
 

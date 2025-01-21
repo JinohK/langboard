@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { ParagraphPlugin, useEditorPlugin, useEditorSelector } from "@udecode/plate/react";
 import { AIChatPlugin } from "@udecode/plate-ai/react";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
-import { someNode, unsetNodes } from "@udecode/plate-common";
-import { ParagraphPlugin, focusEditor, useEditorPlugin, useEditorSelector } from "@udecode/plate-common/react";
 import { HEADING_KEYS } from "@udecode/plate-heading";
 import { IndentListPlugin } from "@udecode/plate-indent-list/react";
 import { BLOCK_CONTEXT_MENU_ID, BlockMenuPlugin, BlockSelectionPlugin, useBlockSelectionNodes } from "@udecode/plate-selection/react";
@@ -21,7 +20,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
     const [value, setValue] = useState<Value>(null);
     const isTouch = useIsTouchDevice();
     const tableRelatedKeys: string[] = [TablePlugin.key, TableCellPlugin.key, TableRowPlugin.key];
-    const tableRelatedSelected = useEditorSelector((editor) => someNode(editor, { match: { type: tableRelatedKeys } }), []);
+    const tableRelatedSelected = useEditorSelector((editor) => editor.api.some({ match: { type: tableRelatedKeys } }), []);
     const tableRelatedSelectedInBlock = useBlockSelectionNodes()?.some(([node]) => node && node.type && tableRelatedKeys.includes(node.type));
     const tableSelected = tableRelatedSelected || tableRelatedSelectedInBlock;
 
@@ -32,10 +31,12 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                 .blockSelection.getNodes()
                 .forEach(([node, path]) => {
                     if (node[IndentListPlugin.key]) {
-                        unsetNodes(editor, [IndentListPlugin.key, "indent"], { at: path });
+                        editor.tf.unsetNodes([IndentListPlugin.key, "indent"], {
+                            at: path,
+                        });
                     }
 
-                    editor.tf.toggle.block({ type }, { at: path });
+                    editor.tf.toggleBlock(type, { at: path });
                 });
         },
         [editor]
@@ -98,16 +99,14 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                     <ContextMenu.Item
                         onClick={() => {
                             editor.getTransforms(BlockSelectionPlugin).blockSelection.removeNodes();
-                            focusEditor(editor);
+                            editor.tf.focus();
                         }}
                     >
                         {t("editor.Delete")}
                     </ContextMenu.Item>
                     <ContextMenu.Item
                         onClick={() => {
-                            editor
-                                .getTransforms(BlockSelectionPlugin)
-                                .blockSelection.duplicate(editor.getApi(BlockSelectionPlugin).blockSelection.getNodes());
+                            editor.getTransforms(BlockSelectionPlugin).blockSelection.duplicate();
                         }}
                     >
                         {t("editor.Duplicate")}

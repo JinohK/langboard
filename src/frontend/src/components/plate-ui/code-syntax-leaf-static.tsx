@@ -1,6 +1,6 @@
-import type { SlateLeafProps } from "@udecode/plate-common";
+import type { SlateLeafProps } from "@udecode/plate";
 import { cn } from "@udecode/cn";
-import { SlateLeaf } from "@udecode/plate-common";
+import { SlateLeaf } from "@udecode/plate";
 
 export function CodeSyntaxLeafStatic({ children, className, ...props }: SlateLeafProps) {
     const syntaxClassName = `prism-token token ${props.leaf.tokenType}`;

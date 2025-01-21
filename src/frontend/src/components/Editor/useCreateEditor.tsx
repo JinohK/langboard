@@ -16,7 +16,7 @@ import { createCopilotPlugins } from "@/components/Editor/plugins/copilot-plugin
 import { createAIPlugins } from "@/components/Editor/plugins/ai-plugins";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from "@udecode/plate-code-block/react";
-import { ParagraphPlugin, PlateLeaf, PlatePlugin, usePlateEditor } from "@udecode/plate-common/react";
+import { ParagraphPlugin, PlateLeaf, PlatePlugin, usePlateEditor } from "@udecode/plate/react";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { EmojiInputPlugin } from "@udecode/plate-emoji/react";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
@@ -82,7 +82,7 @@ interface IBaseUseCreateEditor {
     uploadedCallback?: (respones: any) => void;
 }
 
-interface IUseReadonlyEditor extends IBaseUseCreateEditor {
+export interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     readOnly: true;
     value: IEditorContent;
     socket?: never;
@@ -93,7 +93,7 @@ interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     uploadedCallback?: never;
 }
 
-interface IUseEditor extends IBaseUseCreateEditor {
+export interface IUseEditor extends IBaseUseCreateEditor {
     readOnly?: false;
     value?: IEditorContent;
     socket: ISocketContext;
@@ -117,7 +117,13 @@ const createEditorSocketEvents = (baseEvent: string) => ({
     },
 });
 
-const getComponents = ({ currentUser, mentionables, uploadPath, uploadedCallback, readOnly = false }: TUseCreateEditor) => {
+export const getPlateComponents = ({
+    currentUser,
+    mentionables,
+    uploadPath,
+    uploadedCallback,
+    readOnly = false,
+}: Pick<TUseCreateEditor, "currentUser" | "mentionables" | "uploadPath" | "uploadedCallback" | "readOnly">) => {
     const viewComponents = {
         [AudioPlugin.key]: MediaAudioElement,
         [BlockquotePlugin.key]: BlockquoteElement,
@@ -186,7 +192,7 @@ const getComponents = ({ currentUser, mentionables, uploadPath, uploadedCallback
     return editorComponents;
 };
 
-export const useCreateEditor = (props: TUseCreateEditor): ReturnType<typeof usePlateEditor> => {
+export const useCreateEditor = (props: TUseCreateEditor) => {
     const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, plugins: customPlugins } = props;
 
     const reloadPlugins = useCallback(() => {
@@ -200,7 +206,7 @@ export const useCreateEditor = (props: TUseCreateEditor): ReturnType<typeof useP
         }
         return pluginList;
     }, [readOnly]);
-    const [components, setComponents] = useState(getComponents(props));
+    const [components, setComponents] = useState(getPlateComponents(props));
     const [plugins, setPlugins] = useState(reloadPlugins());
     const editor = usePlateEditor(
         {
@@ -223,7 +229,7 @@ export const useCreateEditor = (props: TUseCreateEditor): ReturnType<typeof useP
     );
 
     useEffect(() => {
-        const newComponents = getComponents(props);
+        const newComponents = getPlateComponents(props);
         if (Object.keys(components).length !== Object.keys(newComponents).length) {
             setComponents(newComponents);
         }

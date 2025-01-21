@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { TElement } from "@udecode/plate-common";
+import type { TElement } from "@udecode/plate";
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
 
 export const remarkTransformElement = (node: MdastNode, options: RemarkPluginOptions): TElement | TElement[] => {

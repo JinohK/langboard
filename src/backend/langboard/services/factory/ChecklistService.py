@@ -94,7 +94,7 @@ class ChecklistService(BaseService):
         if checklist.title == title:
             return True
 
-        original_title = checklist.title
+        old_title = checklist.title
         checklist.title = title
         await self._db.update(checklist)
         await self._db.commit()
@@ -110,7 +110,7 @@ class ChecklistService(BaseService):
 
         SocketPublishService.put_dispather(model, publish_model)
 
-        CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, original_title, checklist)
+        CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
 
         return True
 

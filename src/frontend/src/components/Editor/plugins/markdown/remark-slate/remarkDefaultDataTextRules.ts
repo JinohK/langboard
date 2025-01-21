@@ -1,6 +1,6 @@
 import { splitDataText } from "@/components/Editor/plugins/markdown/remark-slate/remarkDataText";
 import type { MdastNode, RemarkDataTextRules, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
-import { TDescendant, TText } from "@udecode/plate-common";
+import { Descendant, TText } from "@udecode/plate";
 import { remarkTransformNode } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformNode";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -25,8 +25,8 @@ const makeDataTextNodes = (
     node: MdastNode,
     splittedDataText: ReturnType<typeof splitDataText>,
     opts: RemarkPluginOptions,
-    transformedNode: TDescendant
-): TDescendant[] => {
+    transformedNode: Descendant
+): Descendant[] => {
     return [...transformChunk(node, splittedDataText.leftChunk, opts), transformedNode, ...transformChunk(node, splittedDataText.rightChunk, opts)];
 };
 

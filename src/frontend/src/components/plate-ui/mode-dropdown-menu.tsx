@@ -2,7 +2,7 @@
 "use client";
 
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
-import { focusEditor, useEditorReadOnly, useEditorRef, usePlateStore } from "@udecode/plate-common/react";
+import { useEditorReadOnly, useEditorRef, usePlateStore } from "@udecode/plate/react";
 import { Eye, Pen } from "lucide-react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
@@ -42,7 +42,7 @@ export function ModeDropdownMenu(props: DropdownMenuProps) {
                 </ToolbarButton>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content className="min-w-[180px]" align="end">
+            <DropdownMenu.Content className="min-w-[180px]" align="start">
                 <DropdownMenu.RadioGroup
                     value={value}
                     onValueChange={(newValue) => {
@@ -55,7 +55,7 @@ export function ModeDropdownMenu(props: DropdownMenuProps) {
                             return;
                         }
                         if (newValue === "editing") {
-                            focusEditor(editor);
+                            editor.tf.focus();
 
                             return;
                         }

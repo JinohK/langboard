@@ -1,3 +1,4 @@
+import { IBaseModel } from "@/core/models/Base";
 import { IBaseProjectActivity } from "@/core/models/activities/project.activity.type";
 import { IProjectColumnActivityHistory } from "@/core/models/activities/project.column.activity.type";
 import { EProjectActivityType } from "@/core/models/activities/enum.type";
@@ -18,6 +19,10 @@ export interface IBaseProjectCardActivity<THistory extends IProjectCardActivityH
     filterable_uid: string;
     sub_filterable_type: "card";
     sub_filterable_uid: string;
+    references: {
+        project: IBaseModel;
+        card: IBaseModel;
+    };
 }
 
 export interface IProjectCardCreatedActivity extends IBaseProjectCardActivity<IProjectCardActivityHistory> {

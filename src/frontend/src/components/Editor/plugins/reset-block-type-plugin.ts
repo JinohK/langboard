@@ -4,8 +4,7 @@ import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CalloutPlugin } from "@udecode/plate-callout/react";
 import { isCodeBlockEmpty, isSelectionAtCodeBlockStart, unwrapCodeBlock } from "@udecode/plate-code-block";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
-import { isBlockAboveEmpty, isSelectionAtBlockStart } from "@udecode/plate-common";
-import { ParagraphPlugin } from "@udecode/plate-common/react";
+import { ParagraphPlugin } from "@udecode/plate/react";
 import { HEADING_LEVELS } from "@udecode/plate-heading";
 import { INDENT_LIST_KEYS, ListStyleType } from "@udecode/plate-indent-list";
 import { ResetNodePlugin } from "@udecode/plate-reset-node/react";
@@ -27,12 +26,12 @@ export const resetBlockTypePlugin = ResetNodePlugin.configure({
             {
                 ...resetBlockTypesCommonRule,
                 hotkey: "Enter",
-                predicate: isBlockAboveEmpty,
+                predicate: (editor) => editor.api.isEmpty(editor.selection, { block: true }),
             },
             {
                 ...resetBlockTypesCommonRule,
                 hotkey: "Backspace",
-                predicate: isSelectionAtBlockStart,
+                predicate: (editor) => editor.api.isAt({ start: true }),
             },
             {
                 ...resetBlockTypesCodeBlockRule,

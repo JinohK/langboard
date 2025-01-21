@@ -1,12 +1,12 @@
 "use client";
 
 import { cn } from "@udecode/cn";
-import { isCollapsed } from "@udecode/plate-common";
+import { RangeApi } from "@udecode/plate";
 import { type CursorData, type CursorOverlayState, useCursorOverlay } from "@udecode/plate-selection/react";
 
 export function Cursor({ id, caretPosition, data, selection, selectionRects }: CursorOverlayState<CursorData>) {
     const { style, selectionStyle = style } = data ?? ({} as CursorData);
-    const isCursor = isCollapsed(selection);
+    const isCursor = RangeApi.isCollapsed(selection);
 
     return (
         <>

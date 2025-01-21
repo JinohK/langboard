@@ -86,9 +86,7 @@ async def change_wiki_details(
             response[key] = service.project_wiki._convert_to_python(value)
         return JsonResponse(content=response, status_code=status.HTTP_200_OK)
 
-    _, response = result
-
-    return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=result, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/public")

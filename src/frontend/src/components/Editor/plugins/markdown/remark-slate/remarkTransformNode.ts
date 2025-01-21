@@ -1,4 +1,4 @@
-import type { TDescendant } from "@udecode/plate-common";
+import type { Descendant } from "@udecode/plate";
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
 import { remarkTextTypes } from "@/components/Editor/plugins/markdown/remark-slate/remarkTextTypes";
 import { remarkTransformElement } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElement";
@@ -7,7 +7,7 @@ import { getDataTextType, isDataTextType } from "@/components/Editor/plugins/mar
 import { remarkDataTypes } from "@/components/Editor/plugins/markdown/remark-slate/remarkDataTypes";
 import { remarkTransformDataText } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformDataText";
 
-export const remarkTransformNode = (node: MdastNode, options: RemarkPluginOptions): TDescendant | TDescendant[] => {
+export const remarkTransformNode = (node: MdastNode, options: RemarkPluginOptions): Descendant | Descendant[] => {
     const { type, value } = node;
     const targetType = isDataTextType(value) ? (getDataTextType(value) ?? "text") : type;
     node.type = targetType;

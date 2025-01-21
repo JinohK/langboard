@@ -11,7 +11,7 @@ export const TodoListElement = withRef<typeof PlateElement>(({ children, classNa
     const { checkboxProps } = useTodoListElement(state);
 
     return (
-        <PlateElement ref={ref} className={cn("flex flex-row py-1", className)} {...props}>
+        <PlateElement ref={ref} className={cn(className, "flex flex-row py-1")} {...props}>
             <div className="mr-1.5 flex select-none items-center justify-center" contentEditable={false}>
                 <Checkbox {...checkboxProps} />
             </div>

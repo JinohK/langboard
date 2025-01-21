@@ -15,11 +15,18 @@ from .ActivityForm import ActivityPagination
 async def get_user_activities(
     pagination: ActivityPagination = Depends(), user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
+    if pagination.only_count:
+        result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time, only_count=True)
+        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+
     result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
-    activities, is_outdated, _ = result
-    return JsonResponse(content={"activities": activities, "is_outdated": is_outdated}, status_code=status.HTTP_200_OK)
+    activities, count_new_records, _ = result
+    return JsonResponse(
+        content={"activities": activities, "count_new_records": count_new_records},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @AppRouter.api.get("/activity/project/{project_uid}")
@@ -28,15 +35,21 @@ async def get_user_activities(
 async def get_project_activities(
     project_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
+    if pagination.only_count:
+        result = await service.activity.get_list_by_project(
+            project_uid, pagination, pagination.refer_time, only_count=True
+        )
+        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+
     result = await service.activity.get_list_by_project(project_uid, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
-    activities, is_outdated, project = result
+    activities, count_new_records, project = result
     return JsonResponse(
         content={
             "activities": activities,
-            "is_outdated": is_outdated,
-            "references": {"project": project.api_response()},
+            "count_new_records": count_new_records,
+            "references": {"project": {"uid": project.get_uid()}},
         },
         status_code=status.HTTP_200_OK,
     )
@@ -48,17 +61,27 @@ async def get_project_activities(
 async def get_card_activities(
     project_uid: str, card_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
+    if pagination.only_count:
+        result = await service.activity.get_list_by_card(
+            project_uid, card_uid, pagination, pagination.refer_time, only_count=True
+        )
+        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+
     result = await service.activity.get_list_by_card(project_uid, card_uid, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
-    activities, is_outdated, project, card = result
+    activities, count_new_records, project, card = result
     return JsonResponse(
         content={
             "activities": activities,
-            "is_outdated": is_outdated,
+            "count_new_records": count_new_records,
             "references": {
-                "project": project.api_response(),
-                "card": card.api_response(),
+                "project": {
+                    "uid": project.get_uid(),
+                },
+                "card": {
+                    "uid": card.get_uid(),
+                },
             },
         },
         status_code=status.HTTP_200_OK,
@@ -71,17 +94,27 @@ async def get_card_activities(
 async def get_wiki_activities(
     project_uid: str, wiki_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
+    if pagination.only_count:
+        result = await service.activity.get_list_by_wiki(
+            project_uid, wiki_uid, pagination, pagination.refer_time, only_count=True
+        )
+        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+
     result = await service.activity.get_list_by_wiki(project_uid, wiki_uid, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
-    activities, is_outdated, project, project_wiki = result
+    activities, count_new_records, project, project_wiki = result
     return JsonResponse(
         content={
             "activities": activities,
-            "is_outdated": is_outdated,
+            "count_new_records": count_new_records,
             "references": {
-                "project": project.api_response(),
-                "project_wiki": project_wiki.api_response(),
+                "project": {
+                    "uid": project.get_uid(),
+                },
+                "project_wiki": {
+                    "uid": project_wiki.get_uid(),
+                },
             },
         },
         status_code=status.HTTP_200_OK,

@@ -11,7 +11,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 
 export const Toolbar = withCn(ToolbarPrimitive.Root, "relative flex select-none items-center");
 
-export const ToolbarToggleGroup = withCn(ToolbarPrimitive.ToolbarToggleGroup, "flex items-center group");
+export const ToolbarToggleGroup = withCn(ToolbarPrimitive.ToolbarToggleGroup, "flex items-center");
 
 export const ToolbarLink = withCn(ToolbarPrimitive.Link, "font-medium underline underline-offset-4");
 
@@ -107,6 +107,7 @@ const ToolbarButton = Tooltip.withTooltip(
                         size,
                         variant,
                     }),
+                    isDropdown && "pr-1",
                     className
                 )}
                 {...props}
@@ -130,28 +131,29 @@ export const ToolbarSplitButton = React.forwardRef<React.ComponentRef<typeof Too
     }
 );
 
-export const ToolbarSplitButtonPrimary = React.forwardRef<
-    React.ComponentRef<typeof ToolbarToggleItem>,
-    Omit<React.ComponentPropsWithoutRef<typeof ToolbarToggleItem>, "value">
->(({ children, className, size, variant, ...props }, ref) => {
-    return (
-        <span
-            ref={ref}
-            className={cn(
-                toolbarButtonVariants({
-                    size,
-                    variant,
-                }),
-                "rounded-r-none",
-                "group-data-[pressed=true]:bg-accent group-data-[pressed=true]:text-accent-foreground",
-                className
-            )}
-            {...props}
-        >
-            {children}
-        </span>
-    );
-});
+export const ToolbarSplitButtonPrimary = Tooltip.withTooltip(
+    React.forwardRef<React.ComponentRef<typeof ToolbarToggleItem>, Omit<React.ComponentPropsWithoutRef<typeof ToolbarToggleItem>, "value">>(
+        ({ children, className, size, variant, ...props }, ref) => {
+            return (
+                <span
+                    ref={ref}
+                    className={cn(
+                        toolbarButtonVariants({
+                            size,
+                            variant,
+                        }),
+                        "rounded-r-none",
+                        "group-data-[pressed=true]:bg-accent group-data-[pressed=true]:text-accent-foreground",
+                        className
+                    )}
+                    {...props}
+                >
+                    {children}
+                </span>
+            );
+        }
+    )
+);
 
 export const ToolbarSplitButtonSecondary = React.forwardRef<
     HTMLButtonElement,
@@ -183,7 +185,7 @@ export const ToolbarToggleItem = withVariants(ToolbarPrimitive.ToggleItem, toolb
 
 export const ToolbarGroup = withRef<"div">(({ children, className }, ref) => {
     return (
-        <div ref={ref} className={cn("group/toolbar-group relative hidden has-[button]:flex", className)}>
+        <div ref={ref} className={cn("group/toolbar-group", "relative hidden has-[button]:flex", className)}>
             <div className="flex items-center gap-1">{children}</div>
 
             <div className="mx-1.5 py-0.5 group-last/toolbar-group:!hidden">

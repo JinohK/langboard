@@ -4,7 +4,7 @@ import React from "react";
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
-import { type PlateEditor, ParagraphPlugin, focusEditor, useEditorRef } from "@udecode/plate-common/react";
+import { type PlateEditor, ParagraphPlugin, useEditorRef } from "@udecode/plate/react";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { HEADING_KEYS } from "@udecode/plate-heading";
 import { TocPlugin } from "@udecode/plate-heading/react";
@@ -202,7 +202,7 @@ export function InsertDropdownMenu(props: DropdownMenuProps) {
                                 className="min-w-[180px]"
                                 onSelect={() => {
                                     onSelect(editor, value);
-                                    focusEditor(editor);
+                                    editor.tf.focus();
                                 }}
                             >
                                 {icon}

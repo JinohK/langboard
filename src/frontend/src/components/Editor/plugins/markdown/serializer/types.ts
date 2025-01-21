@@ -1,4 +1,4 @@
-import { TElement } from "@udecode/plate-common";
+import { TElement } from "@udecode/plate";
 import { ListStyleType } from "@udecode/plate-indent-list";
 import { TMentionElement } from "@udecode/plate-mention";
 

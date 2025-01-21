@@ -82,8 +82,10 @@ class DbSession(BaseSqlBuilder):
 
         await self.rollback()
         for session in self._sessions.values():
-            if session.is_active:
+            try:
                 await session.close()
+            except Exception:
+                pass
         self._sessions.clear()
 
     def insert(self, obj: BaseSqlModel):

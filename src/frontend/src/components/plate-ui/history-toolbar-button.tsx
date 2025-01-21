@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditorRef, useEditorSelector, withRef } from "@udecode/plate-common/react";
+import { useEditorRef, useEditorSelector, withRef } from "@udecode/plate/react";
 import { Redo2Icon, Undo2Icon } from "lucide-react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";

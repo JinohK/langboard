@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as Project from "@/core/models/Project";
-import * as ProjectCard from "@/core/models/ProjectCard";
-import * as ProjectWiki from "@/core/models/ProjectWiki";
+import { IBaseModel } from "@/core/models/Base";
 import { EUserActivityType } from "@/core/models/activities/enum.type";
 import { IBaseActivity } from "@/core/models/activities/base.type";
 import { TProjectRelatedActivityInterface } from "@/core/models/activities/merged.type";
@@ -18,8 +16,8 @@ export interface IProjectReferredActivity extends IBaseReferredActivity {
     refer: TProjectRelatedActivityInterface;
     references: {
         refer_type: "project";
-        project: Project.Interface;
-        card?: ProjectCard.Interface;
+        project: IBaseModel;
+        card?: IBaseModel;
     };
 }
 
@@ -27,8 +25,8 @@ export interface IProjectWikiReferredActivity extends IBaseReferredActivity {
     refer: TProjectWikiActivityInterface;
     references: {
         refer_type: "project_wiki";
-        project: Project.Interface;
-        project_wiki: ProjectWiki.Interface;
+        project: IBaseModel;
+        project_wiki: IBaseModel;
     };
 }
 

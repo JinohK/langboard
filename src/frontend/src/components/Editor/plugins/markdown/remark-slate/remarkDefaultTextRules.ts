@@ -1,5 +1,5 @@
 import type { RemarkTextRules } from "@/components/Editor/plugins/markdown/remark-slate/types";
-import { SlateEditor } from "@udecode/plate-common";
+import { SlateEditor } from "@udecode/plate";
 
 const HTML_TAG_REGEX = /<([a-zA-Z][a-zA-Z0-9_-]*)\b[^>]*>(.*?)<\/\1>/g;
 

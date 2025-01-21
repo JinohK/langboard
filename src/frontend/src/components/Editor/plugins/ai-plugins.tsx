@@ -1,67 +1,11 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import { withProps } from "@udecode/cn";
 import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
-import { BoldPlugin, CodePlugin, ItalicPlugin, StrikethroughPlugin, UnderlinePlugin } from "@udecode/plate-basic-marks/react";
-import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
-import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from "@udecode/plate-code-block/react";
-import { ParagraphPlugin, PlateLeaf, createPlateEditor } from "@udecode/plate-common/react";
-import { HEADING_KEYS } from "@udecode/plate-heading";
-import { HorizontalRulePlugin } from "@udecode/plate-horizontal-rule/react";
-import { LinkPlugin } from "@udecode/plate-link/react";
-import { cursorOverlayPlugin } from "@/components/Editor/plugins/cursor-overlay-plugin";
-import { AIMenu } from "@/components/plate-ui/ai-menu";
-import { BlockquoteElement } from "@/components/plate-ui/blockquote-element";
-import { CodeBlockElement } from "@/components/plate-ui/code-block-element";
-import { CodeLeaf } from "@/components/plate-ui/code-leaf";
-import { CodeLineElement } from "@/components/plate-ui/code-line-element";
-import { CodeSyntaxLeaf } from "@/components/plate-ui/code-syntax-leaf";
-import { HeadingElement } from "@/components/plate-ui/heading-element";
-import { HrElement } from "@/components/plate-ui/hr-element";
-import { LinkElement } from "@/components/plate-ui/link-element";
-import { ParagraphElement } from "@/components/plate-ui/paragraph-element";
-import { basicNodesPlugins } from "@/components/Editor/plugins/basic-nodes-plugins";
-import { blockSelectionReadOnlyPlugin } from "@/components/Editor/plugins/block-selection-plugins";
-import { indentListPlugins } from "@/components/Editor/plugins/indent-list-plugins";
-import { linkPlugin } from "@/components/Editor/plugins/link-plugin";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown";
+import { AIMenu } from "@/components/plate-ui/ai-menu";
+import { cursorOverlayPlugin } from "./cursor-overlay-plugin";
 import { IUseChat } from "@/components/Editor/useChat";
-
-const createAIEditor = () => {
-    const editor = createPlateEditor({
-        id: "ai",
-        override: {
-            components: {
-                [BlockquotePlugin.key]: BlockquoteElement,
-                [BoldPlugin.key]: withProps(PlateLeaf, { as: "strong" }),
-                [CodeBlockPlugin.key]: CodeBlockElement,
-                [CodeLinePlugin.key]: CodeLineElement,
-                [CodePlugin.key]: CodeLeaf,
-                [CodeSyntaxPlugin.key]: CodeSyntaxLeaf,
-                [HEADING_KEYS.h1]: withProps(HeadingElement, { variant: "h1" }),
-                [HEADING_KEYS.h2]: withProps(HeadingElement, { variant: "h2" }),
-                [HEADING_KEYS.h3]: withProps(HeadingElement, { variant: "h3" }),
-                [HorizontalRulePlugin.key]: HrElement,
-                [ItalicPlugin.key]: withProps(PlateLeaf, { as: "em" }),
-                [LinkPlugin.key]: LinkElement,
-                [ParagraphPlugin.key]: ParagraphElement,
-                [StrikethroughPlugin.key]: withProps(PlateLeaf, { as: "s" }),
-                [UnderlinePlugin.key]: withProps(PlateLeaf, { as: "u" }),
-            },
-        },
-        plugins: [
-            ...basicNodesPlugins,
-            ...indentListPlugins,
-            HorizontalRulePlugin,
-            linkPlugin,
-            MarkdownPlugin.configure({ options: { indentList: true } }),
-            blockSelectionReadOnlyPlugin,
-        ],
-    });
-
-    return editor;
-};
 
 const systemCommon = `\
 You are an advanced AI-powered note-taking assistant, designed to enhance productivity and creativity in note management.
@@ -153,7 +97,6 @@ export const createAIPlugins = ({ socket, eventKey, events }: ICreateAIPlugins) 
         AIPlugin,
         AIChatPlugin.configure({
             options: {
-                createAIEditor,
                 promptTemplate: ({ isBlockSelecting, isSelecting }) => {
                     return isBlockSelecting
                         ? PROMPT_TEMPLATES.userBlockSelecting
@@ -171,5 +114,5 @@ export const createAIPlugins = ({ socket, eventKey, events }: ICreateAIPlugins) 
             },
             render: { afterEditable: () => <AIMenu socket={socket} eventKey={eventKey} events={events} /> },
         }),
-    ];
+    ] as const;
 };

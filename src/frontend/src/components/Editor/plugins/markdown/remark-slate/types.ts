@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TDataType } from "@/components/Editor/plugins/markdown/remark-slate/remarkDataText";
-import type { SlateEditor, TDescendant, TElement } from "@udecode/plate-common";
+import type { SlateEditor, Descendant, TElement } from "@udecode/plate";
 
 export type MdastElementType =
     | "audio"
@@ -71,7 +71,7 @@ export type RemarkTextRules = {
 };
 
 export type RemarkDataTextRule = {
-    transform: (node: MdastNode, options: RemarkPluginOptions, inheritedMarkProps: Record<string, bool>) => TDescendant[] | undefined;
+    transform: (node: MdastNode, options: RemarkPluginOptions, inheritedMarkProps: Record<string, bool>) => Descendant[] | undefined;
 };
 
 export type RemarkDataTextRules = {

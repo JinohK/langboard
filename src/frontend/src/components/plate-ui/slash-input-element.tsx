@@ -2,15 +2,17 @@
 
 import React from "react";
 import { withRef } from "@udecode/cn";
+import { type PlateEditor, ParagraphPlugin } from "@udecode/plate/react";
 import { AIChatPlugin } from "@udecode/plate-ai/react";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
-import { type PlateEditor, ParagraphPlugin } from "@udecode/plate-common/react";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { HEADING_KEYS } from "@udecode/plate-heading";
 import { TocPlugin } from "@udecode/plate-heading/react";
 import { INDENT_LIST_KEYS, ListStyleType } from "@udecode/plate-indent-list";
+import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
 import { TablePlugin } from "@udecode/plate-table/react";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 import {
     CalendarIcon,
     Code2,
@@ -40,8 +42,6 @@ import {
 } from "@/components/plate-ui/inline-combobox";
 import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
-import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
-import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 
 type Group = {
     group: string;
@@ -159,7 +159,7 @@ const groups: Group[] = [
                 value: EquationPlugin.key,
             },
             {
-                icon: <GitCompare className="size-4" />,
+                icon: <GitCompare />,
                 label: "editor.Plant UML",
                 value: PlantUmlPlugin.key,
             },
@@ -199,7 +199,7 @@ export const SlashInputElement = withRef<typeof PlateElement>(({ className, ...p
     const { children, editor, element } = props;
 
     return (
-        <PlateElement ref={ref} as="span" data-slate-value={element.value} {...props}>
+        <PlateElement ref={ref} as="span" className={className} data-slate-value={element.value} {...props}>
             <InlineCombobox element={element} trigger="/">
                 <InlineComboboxInput />
 

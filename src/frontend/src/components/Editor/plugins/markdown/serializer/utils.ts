@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ILeafNode, IListNode, MdElementType, MdLeafType, TImgNode, TMentionNode } from "@/components/Editor/plugins/markdown/serializer/types";
 import { TCodeBlockElement } from "@udecode/plate-code-block";
-import { TDescendant, TElement } from "@udecode/plate-common";
+import { Descendant, TElement } from "@udecode/plate";
 import { ListStyleType } from "@udecode/plate-indent-list";
 import { TLinkElement } from "@udecode/plate-link";
 
@@ -50,7 +50,7 @@ export const isMention = (node: MdElementType | MdLeafType): node is TMentionNod
 };
 
 export const nodeToHTML = (
-    node: TDescendant,
+    node: Descendant,
     chunks: string[],
     opts: { closeTag: string; serialize: (node: MdElementType | MdLeafType) => string | undefined }
 ) => {

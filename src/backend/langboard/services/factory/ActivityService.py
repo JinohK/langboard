@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast, overload
+from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.db import User
 from ...core.schema import Pagination
 from ...core.service import BaseService
@@ -9,6 +10,7 @@ from .Types import TCardParam, TProjectParam, TUserParam, TWikiParam
 
 
 _TActivityModel = TypeVar("_TActivityModel", bound=BaseActivityModel)
+_TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
 
 class ActivityService(BaseService):
@@ -17,14 +19,25 @@ class ActivityService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "activity"
 
+    @overload
     async def get_list_by_user(
         self, user: TUserParam, pagination: Pagination, refer_time: datetime
-    ) -> tuple[list[dict[str, Any]], bool, User] | None:
+    ) -> tuple[list[dict[str, Any]], int, User] | None: ...
+    @overload
+    async def get_list_by_user(
+        self, user: TUserParam, pagination: Pagination, refer_time: datetime, only_count: Literal[True]
+    ) -> int | None: ...
+    async def get_list_by_user(
+        self, user: TUserParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
+    ) -> tuple[list[dict[str, Any]], int, User] | int | None:
         user = cast(User, await self._get_by_param(User, user))
         if not user:
             return []
 
-        activities, is_outdated = await self.__get_list(UserActivity, pagination, refer_time, user_id=user.id)
+        if only_count:
+            return await self.__count_new_records(UserActivity, refer_time, user_id=user.id)
+
+        activities, count_new_records = await self.__get_list(UserActivity, pagination, refer_time, user_id=user.id)
         api_user_activties = []
         for user_activity in activities:
             api_user_activity = user_activity.api_response()
@@ -49,43 +62,100 @@ class ActivityService(BaseService):
             api_user_activity["references"] = references
             api_user_activties.append(api_user_activity)
 
-        return api_user_activties, is_outdated, user
+        return api_user_activties, count_new_records, user
 
+    @overload
     async def get_list_by_project(
         self, project: TProjectParam, pagination: Pagination, refer_time: datetime
-    ) -> tuple[list[dict[str, Any]], bool, Project] | None:
+    ) -> tuple[list[dict[str, Any]], int, Project] | None: ...
+    @overload
+    async def get_list_by_project(
+        self, project: TProjectParam, pagination: Pagination, refer_time: datetime, only_count: Literal[True]
+    ) -> int | None: ...
+    async def get_list_by_project(
+        self, project: TProjectParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
+    ) -> tuple[list[dict[str, Any]], int, Project] | int | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
 
-        activities, is_outdated = await self.__get_list(ProjectActivity, pagination, refer_time, project_id=project.id)
-        return [activity.api_response() for activity in activities], is_outdated, project
+        if only_count:
+            return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id)
 
+        activities, count_new_records = await self.__get_list(
+            ProjectActivity, pagination, refer_time, project_id=project.id
+        )
+        return [activity.api_response() for activity in activities], count_new_records, project
+
+    @overload
     async def get_list_by_card(
         self, project: TProjectParam, card: TCardParam, pagination: Pagination, refer_time: datetime
-    ) -> tuple[list[dict[str, Any]], bool, Project, Card] | None:
+    ) -> tuple[list[dict[str, Any]], int, Project, Card] | None: ...
+    @overload
+    async def get_list_by_card(
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: Literal[True],
+    ) -> int: ...
+    async def get_list_by_card(
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: bool = False,
+    ) -> tuple[list[dict[str, Any]], int, Project, Card] | int | None:
         project = cast(Project, await self._get_by_param(Project, project))
         card = cast(Card, await self._get_by_param(Card, card))
         if not project or not card or card.project_id != project.id:
             return None
 
-        activities, is_outdated = await self.__get_list(
+        if only_count:
+            return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id, card_id=card.id)
+
+        activities, count_new_records = await self.__get_list(
             ProjectActivity, pagination, refer_time, project_id=project.id, card_id=card.id
         )
-        return [activity.api_response() for activity in activities], is_outdated, project, card
+        return [activity.api_response() for activity in activities], count_new_records, project, card
 
+    @overload
     async def get_list_by_wiki(
         self, project: TProjectParam, wiki: TWikiParam, pagination: Pagination, refer_time: datetime
-    ) -> tuple[list[dict[str, Any]], bool, Project, ProjectWiki] | None:
+    ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | None: ...
+    @overload
+    async def get_list_by_wiki(
+        self,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: Literal[True],
+    ) -> int | None: ...
+    async def get_list_by_wiki(
+        self,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: bool = False,
+    ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | int | None:
         project = cast(Project, await self._get_by_param(Project, project))
-        wiki = cast(ProjectWiki, await self._get_by_param(Card, wiki))
+        wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
         if not project or not wiki or wiki.project_id != project.id:
             return None
 
-        activities, is_outdated = await self.__get_list(
-            ProjectActivity, pagination, refer_time, project_id=project.id, project_wiki_id=wiki.id
+        if only_count:
+            return await self.__count_new_records(
+                ProjectWikiActivity, refer_time, project_id=project.id, project_wiki_id=wiki.id
+            )
+
+        activities, count_new_records = await self.__get_list(
+            ProjectWikiActivity, pagination, refer_time, project_id=project.id, project_wiki_id=wiki.id
         )
-        return [activity.api_response() for activity in activities], is_outdated, project, wiki
+        return [activity.api_response() for activity in activities], count_new_records, project, wiki
 
     async def __get_refer_record(self, model: _TActivityModel):  # type: ignore
         if isinstance(model, ProjectActivity):
@@ -99,8 +169,8 @@ class ActivityService(BaseService):
                     return None
             return {
                 "refer_type": "project",
-                "project": project.api_response(),
-                "card": card.api_response() if card else None,
+                "project": {"uid": project.get_uid()},
+                "card": {"uid": card.get_uid()} if card else None,
             }
         elif isinstance(model, ProjectWikiActivity):
             project = await self._get_by(Project, "id", model.project_id, with_deleted=True)
@@ -109,8 +179,8 @@ class ActivityService(BaseService):
                 return None
             return {
                 "refer_type": "project_wiki",
-                "project": project.api_response(),
-                "project_wiki": wiki.api_response(),
+                "project": {"uid": project.get_uid()},
+                "project_wiki": {"uid": wiki.api_response()},
             }
 
     async def __get_list(
@@ -119,21 +189,43 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: datetime,
         **where_clauses,
-    ):
-        shared_query = (
-            self._db.query("select")
-            .table(activity_class)
-            .order_by(activity_class.column("created_at").desc())
-            .group_by(activity_class.column("id"), activity_class.column("created_at"))
-        )
-        shared_query = self._where_recursive(shared_query, activity_class, **where_clauses)
-        list_query = shared_query.where((activity_class.column("created_at") <= refer_time))
+    ) -> tuple[list[_TActivityModel], int]:
+        list_query = self._db.query("select").table(activity_class)
+        list_query = self.__make_query(list_query, activity_class, **where_clauses)
+        list_query = list_query.where((activity_class.column("created_at") <= refer_time))
         list_query = self.paginate(list_query, pagination.page, pagination.limit)
         result = await self._db.exec(list_query)
         result_list = result.all()
 
-        outdated_query = shared_query.where((activity_class.column("created_at") > refer_time))
-        result = await self._db.exec(outdated_query)
-        is_outdated = len(result.all()) > 0
+        count_new_records = await self.__count_new_records(activity_class, refer_time, **where_clauses)
 
-        return result_list, is_outdated
+        return list(result_list), count_new_records
+
+    async def __count_new_records(
+        self, activity_class: type[_TActivityModel], refer_time: datetime, **where_clauses
+    ) -> int:
+        outdated_query = self._db.query("select").count(activity_class, activity_class.column("id"))
+        outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
+        outdated_query = outdated_query.where((activity_class.column("created_at") > refer_time))
+        result = await self._db.exec(outdated_query)
+        return result.first() or 0
+
+    @overload
+    def __make_query(
+        self, query: Select[_TSelectParam], activity_class: type[_TActivityModel], **where_clauses
+    ) -> Select[_TSelectParam]: ...
+    @overload
+    def __make_query(
+        self, query: SelectOfScalar[_TSelectParam], activity_class: type[_TActivityModel], **where_clauses
+    ) -> SelectOfScalar[_TSelectParam]: ...
+    def __make_query(
+        self,
+        query: Select[_TSelectParam] | SelectOfScalar[_TSelectParam],
+        activity_class: type[_TActivityModel],
+        **where_clauses,
+    ):
+        query = query.order_by(activity_class.column("created_at").desc()).group_by(
+            activity_class.column("id"), activity_class.column("created_at")
+        )
+        query = self._where_recursive(query, activity_class, **where_clauses)
+        return query

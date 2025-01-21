@@ -1,9 +1,9 @@
-import type { TDescendant, TText } from "@udecode/plate-common";
+import type { Descendant, TText } from "@udecode/plate";
 import type { MdastNode, RemarkPluginOptions } from "@/components/Editor/plugins/markdown/remark-slate/types";
 import { remarkTransformNode } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformNode";
 
-export const remarkSplitLineBreaksCompiler = (node: MdastNode, options: RemarkPluginOptions): TDescendant[] => {
-    const results: TDescendant[] = [];
+export const remarkSplitLineBreaksCompiler = (node: MdastNode, options: RemarkPluginOptions): Descendant[] => {
+    const results: Descendant[] = [];
     let startLine = node.position!.start.line;
 
     const addEmptyParagraphs = (count: number) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, withRef } from "@udecode/cn";
-import { withHOC } from "@udecode/plate-common/react";
+import { withHOC } from "@udecode/plate/react";
 import { useDraggable } from "@udecode/plate-dnd";
 import { Image, ImagePlugin, useMediaState } from "@udecode/plate-media/react";
 import { ResizableProvider, useResizableStore } from "@udecode/plate-resizable";

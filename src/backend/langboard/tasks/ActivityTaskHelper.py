@@ -13,7 +13,7 @@ _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
 
 class ActivityTaskHelper(Generic[_TActivityModel]):
     def __init__(self, model_class: type[_TActivityModel]):
-        self._db = DbSession()
+        self.db = DbSession()
         self._model_class = model_class
 
     @asynccontextmanager
@@ -26,7 +26,7 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
             await helper.close()
 
     async def close(self):
-        await self._db.close()
+        await self.db.close()
 
     async def record(self, user_or_bot: User | Bot, activity_history: dict[str, Any], **kwargs) -> _TActivityModel:
         activity_history["recorder"] = ActivityHistoryHelper.create_user_or_bot_history(user_or_bot)
@@ -43,8 +43,8 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
 
         activity = self._model_class(**model)
 
-        self._db.insert(activity)
-        await self._db.commit()
+        self.db.insert(activity)
+        await self.db.commit()
 
         return activity
 
@@ -70,16 +70,14 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         self, old_relationship_ids: list[int], new_relationship_ids: list[int], is_parent: bool
     ):
         async def relationship_converter(relationship: CardRelationship):
-            result = await self._db.exec(
-                self._db.query("select")
+            result = await self.db.exec(
+                self.db.query("select")
                 .table(GlobalCardRelationshipType)
                 .where(GlobalCardRelationshipType.column("id") == relationship.relation_type_id)
             )
             global_relationship = cast(GlobalCardRelationshipType, result.first())
             target_card_id = relationship.card_id_parent if is_parent else relationship.card_id_child
-            result = await self._db.exec(
-                self._db.query("select").table(Card).where(Card.column("id") == target_card_id)
-            )
+            result = await self.db.exec(self.db.query("select").table(Card).where(Card.column("id") == target_card_id))
             related_card = cast(Card, result.first())
 
             return ActivityHistoryHelper.create_card_relationship(global_relationship, related_card, is_parent)
@@ -97,10 +95,8 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
             return history
 
         if card.project_column_id:
-            result = await self._db.exec(
-                self._db.query("select")
-                .table(ProjectColumn)
-                .where(ProjectColumn.column("id") == card.project_column_id)
+            result = await self.db.exec(
+                self.db.query("select").table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
             )
             column = cast(ProjectColumn, result.first())
         else:
@@ -117,8 +113,8 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         new_ids: list[int],
         converter: Callable[[_TBaseModel], Coroutine[Any, Any, dict[str, Any]]],
     ):
-        result = await self._db.exec(
-            self._db.query("select").table(model_class).where(model_class.column("id").in_(set([*old_ids, *new_ids])))
+        result = await self.db.exec(
+            self.db.query("select").table(model_class).where(model_class.column("id").in_(set([*old_ids, *new_ids])))
         )
         models = result.all()
 

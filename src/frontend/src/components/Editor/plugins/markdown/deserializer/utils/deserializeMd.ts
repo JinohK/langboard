@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { SlateEditor } from "@udecode/plate-common";
+import type { SlateEditor } from "@udecode/plate";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkMath from "remark-math";

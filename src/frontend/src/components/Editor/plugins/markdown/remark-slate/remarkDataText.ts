@@ -77,7 +77,8 @@ export const splitDataText = (type: TDataType, text: string): ISplittedDataText 
     const dataTextChunks = (dataChunks.shift() ?? "])").split("])");
     const params = (dataTextChunks.shift() ?? "").split(":").map((v) => v.replace(/{colon}/g, ":"));
     const value = dataTextChunks.join("])");
-    const rightChunk = dataChunks.join(`([/${wrapper.end}])`);
+    chunks.unshift(dataChunks.join(`([/${wrapper.end}])`));
+    const rightChunk = chunks.join(`!([${wrapper.start}:`);
 
     return {
         leftChunk,

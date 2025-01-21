@@ -1,5 +1,5 @@
-import type { TDescendant } from "@udecode/plate-common";
-import type { PlateEditor } from "@udecode/plate-common/react";
+import type { Descendant } from "@udecode/plate";
+import type { PlateEditor } from "@udecode/plate/react";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { stripMarkdownBlocks } from "@/components/Editor/plugins/markdown/deserializer/utils/stripMarkdown";
 
@@ -9,7 +9,7 @@ export const deserializeInlineMd = (editor: PlateEditor, text: string) => {
 
     const strippedText = stripMarkdownBlocks(text.trim());
 
-    const fragment: TDescendant[] = [];
+    const fragment: Descendant[] = [];
 
     if (leadingSpaces) {
         fragment.push({ text: leadingSpaces });

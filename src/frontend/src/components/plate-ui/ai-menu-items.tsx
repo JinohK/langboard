@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo } from "react";
 import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
-import { type SlateEditor, getAncestorNode, getEndPoint, getNodeString } from "@udecode/plate-common";
-import { type PlateEditor, focusEditor, useEditorPlugin } from "@udecode/plate-common/react";
+import { type SlateEditor, NodeApi } from "@udecode/plate";
+import { type PlateEditor, useEditorPlugin } from "@udecode/plate/react";
 import { useIsSelecting } from "@udecode/plate-selection/react";
 import { Album, BadgeHelp, Check, CornerUpLeft, FeatherIcon, ListEnd, ListMinus, ListPlus, PenLine, Wand, X } from "lucide-react";
 import { Command } from "@/components/base";
@@ -18,7 +18,7 @@ export const aiChatItems = {
         value: "accept",
         onSelect: ({ editor }) => {
             editor.getTransforms(AIChatPlugin).aiChat.accept();
-            focusEditor(editor, getEndPoint(editor, editor.selection!));
+            editor.tf.focus({ edge: "end" });
         },
     },
     continueWrite: {
@@ -26,11 +26,11 @@ export const aiChatItems = {
         label: "editor.Continue writing",
         value: "continueWrite",
         onSelect: ({ editor }) => {
-            const ancestorNode = getAncestorNode(editor);
+            const ancestorNode = editor.api.block({ highest: true });
 
             if (!ancestorNode) return;
 
-            const isEmpty = getNodeString(ancestorNode[0]).trim().length === 0;
+            const isEmpty = NodeApi.string(ancestorNode[0]).trim().length === 0;
 
             void editor.getApi(AIChatPlugin).aiChat.submit({
                 mode: "insert",
@@ -203,10 +203,11 @@ const menuStateItems: Record<
     ],
 };
 
-export const AIMenuItems = ({ aiEditorRef, setValue }: { aiEditorRef: React.RefObject<SlateEditor | null>; setValue: (value: string) => void }) => {
+export const AIMenuItems = ({ setValue }: { setValue: (value: string) => void }) => {
     const [t] = useTranslation();
     const { editor, useOption } = useEditorPlugin(AIChatPlugin);
     const { messages } = useOption("chat");
+    const aiEditor = useOption("aiEditor")!;
     const isSelecting = useIsSelecting();
 
     const menuState = useMemo(() => {
@@ -240,7 +241,7 @@ export const AIMenuItems = ({ aiEditorRef, setValue }: { aiEditorRef: React.RefO
                             value={menuItem.value}
                             onSelect={() => {
                                 menuItem.onSelect?.({
-                                    aiEditor: aiEditorRef.current!,
+                                    aiEditor,
                                     editor: editor,
                                 });
                             }}

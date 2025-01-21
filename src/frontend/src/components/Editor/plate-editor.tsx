@@ -2,7 +2,7 @@
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Plate } from "@udecode/plate-common/react";
+import { Plate } from "@udecode/plate/react";
 import { TUseCreateEditor, useCreateEditor } from "@/components/Editor/useCreateEditor";
 import { Editor, EditorContainer } from "@/components/plate-ui/editor";
 import { IEditorContent } from "@/core/models/Base";
@@ -15,7 +15,7 @@ interface IBasePlateEditorProps extends Omit<TUseCreateEditor, "plugins"> {
     setValue?: (value: IEditorContent) => void;
     variant?: React.ComponentProps<typeof Editor>["variant"];
     className?: string;
-    editorRef?: React.RefObject<TEditor | undefined>;
+    editorRef?: React.RefObject<TEditor | null>;
     editorComponentRef?: React.RefObject<HTMLDivElement | null>;
     placeholder?: string;
 }

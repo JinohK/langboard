@@ -1,9 +1,8 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import type { TElement } from "@udecode/plate-common";
+import type { TElement } from "@udecode/plate";
 import { CopilotPlugin } from "@udecode/plate-ai/react";
-import { getAncestorNode } from "@udecode/plate-common";
 import { GhostText } from "@/components/plate-ui/ghost-text";
 import { serializeMdNodes, stripMarkdown } from "@/components/Editor/plugins/markdown";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -117,7 +116,7 @@ Rules:
                 },
                 debounceDelay: 300,
                 getPrompt: ({ editor }) => {
-                    const contextEntry = getAncestorNode(editor);
+                    const contextEntry = editor.api.block({ highest: true });
 
                     if (!contextEntry) return "";
 

@@ -5,14 +5,13 @@ import React from "react";
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
-import { ParagraphPlugin, focusEditor, useEditorRef, useEditorSelector, useSelectionFragmentProp } from "@udecode/plate-common/react";
+import { ParagraphPlugin, useEditorRef, useEditorSelector, useSelectionFragmentProp } from "@udecode/plate/react";
 import { HEADING_KEYS } from "@udecode/plate-heading";
 import { INDENT_LIST_KEYS, ListStyleType } from "@udecode/plate-indent-list";
 import { FileCodeIcon, Heading1Icon, Heading2Icon, Heading3Icon, ListIcon, ListOrderedIcon, PilcrowIcon, QuoteIcon, SquareIcon } from "lucide-react";
-import { getBlockType, setBlockType } from "@/components/Editor/transforms";
+import { getBlockType, setBlockType, STRUCTURAL_TYPES } from "@/components/Editor/transforms";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
-import { someNode } from "@udecode/plate-common";
 import { TablePlugin } from "@udecode/plate-table/react";
 import { useTranslation } from "react-i18next";
 
@@ -77,11 +76,12 @@ export function TurnIntoDropdownMenu(props: DropdownMenuProps) {
     const [t] = useTranslation();
     const editor = useEditorRef();
     const openState = DropdownMenu.useOpenState();
-    const tableSelected = useEditorSelector((editor) => someNode(editor, { match: { type: TablePlugin.key } }), []);
+    const tableSelected = useEditorSelector((editor) => editor.api.some({ match: { type: TablePlugin.key } }), []);
 
     const value = useSelectionFragmentProp({
         defaultValue: ParagraphPlugin.key,
         getProp: (node) => getBlockType(node as any),
+        structuralTypes: STRUCTURAL_TYPES,
     });
     const selectedItem = React.useMemo(
         () => turnIntoItems.find((item) => item.value === (value ?? ParagraphPlugin.key)) ?? turnIntoItems[0],
@@ -101,7 +101,7 @@ export function TurnIntoDropdownMenu(props: DropdownMenuProps) {
                     value={value}
                     onValueChange={(type) => {
                         setBlockType(editor, type);
-                        focusEditor(editor);
+                        editor.tf.focus();
                     }}
                     label={t("editor.Turn into")}
                 >

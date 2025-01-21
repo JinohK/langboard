@@ -1,22 +1,11 @@
 "use client";
 
-import type { PlateEditor } from "@udecode/plate-common/react";
+import type { PlateEditor } from "@udecode/plate/react";
+import { type NodeEntry, type Path, type TElement, PathApi } from "@udecode/plate";
 import { insertCallout } from "@udecode/plate-callout";
 import { CalloutPlugin } from "@udecode/plate-callout/react";
 import { insertCodeBlock } from "@udecode/plate-code-block";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
-import {
-    type TElement,
-    type TNodeEntry,
-    getBlockAbove,
-    getBlocks,
-    getNodeEntry,
-    insertNodes,
-    removeEmptyPreviousBlock,
-    setNodes,
-    unsetNodes,
-    withoutNormalizing,
-} from "@udecode/plate-common";
 import { insertDate } from "@udecode/plate-date";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { insertToc } from "@udecode/plate-heading";
@@ -28,15 +17,12 @@ import { insertEquation, insertInlineEquation } from "@udecode/plate-math";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
 import { insertAudioPlaceholder, insertFilePlaceholder, insertMedia, insertVideoPlaceholder } from "@udecode/plate-media";
 import { AudioPlugin, FilePlugin, ImagePlugin, MediaEmbedPlugin, VideoPlugin } from "@udecode/plate-media/react";
-import { insertTable } from "@udecode/plate-table";
 import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
-import { Path } from "slate";
 
 export const STRUCTURAL_TYPES: string[] = [TablePlugin.key, TableRowPlugin.key, TableCellPlugin.key];
 
 const insertList = (editor: PlateEditor, type: string) => {
-    insertNodes(
-        editor,
+    editor.tf.insertNodes(
         editor.api.create.block({
             indent: 1,
             listStyleType: type,
@@ -64,7 +50,7 @@ const insertBlockMap: Record<string, (editor: PlateEditor, type: string) => void
             select: true,
             type: MediaEmbedPlugin.key,
         }),
-    [TablePlugin.key]: (editor) => insertTable(editor, {}, { select: true }),
+    [TablePlugin.key]: (editor) => editor.getTransforms(TablePlugin).insert.table({}, { select: true }),
     [TocPlugin.key]: (editor) => insertToc(editor, { select: true }),
     [VideoPlugin.key]: (editor) => insertVideoPlaceholder(editor, { select: true }),
 };
@@ -76,23 +62,21 @@ const insertInlineMap: Record<string, (editor: PlateEditor, type: string) => voi
 };
 
 export const insertBlock = (editor: PlateEditor, type: string) => {
-    withoutNormalizing(editor, () => {
+    editor.tf.withoutNormalizing(() => {
+        const block = editor.api.block();
+
+        if (!block) return;
         if (type in insertBlockMap) {
             insertBlockMap[type](editor, type);
         } else {
-            const path = getBlockAbove(editor)?.[1];
-
-            if (!path) return;
-
-            const at = Path.next(path);
-
-            insertNodes(editor, editor.api.create.block({ type }), {
-                at,
+            editor.tf.insertNodes(editor.api.create.block({ type }), {
+                at: PathApi.next(block[1]),
                 select: true,
             });
         }
-
-        removeEmptyPreviousBlock(editor);
+        if (getBlockType(block[0]) !== type) {
+            editor.tf.removeNodes({ previousEmptyBlock: true });
+        }
     });
 };
 
@@ -102,9 +86,8 @@ export const insertInlineElement = (editor: PlateEditor, type: string) => {
     }
 };
 
-const setList = (editor: PlateEditor, type: string, entry: TNodeEntry<TElement>) => {
-    setNodes(
-        editor,
+const setList = (editor: PlateEditor, type: string, entry: NodeEntry<TElement>) => {
+    editor.tf.setNodes(
         editor.api.create.block({
             indent: 1,
             listStyleType: type,
@@ -115,30 +98,30 @@ const setList = (editor: PlateEditor, type: string, entry: TNodeEntry<TElement>)
     );
 };
 
-const setBlockMap: Record<string, (editor: PlateEditor, type: string, entry: TNodeEntry<TElement>) => void> = {
+const setBlockMap: Record<string, (editor: PlateEditor, type: string, entry: NodeEntry<TElement>) => void> = {
     [INDENT_LIST_KEYS.todo]: setList,
     [ListStyleType.Decimal]: setList,
     [ListStyleType.Disc]: setList,
 };
 
 export const setBlockType = (editor: PlateEditor, type: string, { at }: { at?: Path } = {}) => {
-    withoutNormalizing(editor, () => {
-        const setEntry = (entry: TNodeEntry<TElement>) => {
+    editor.tf.withoutNormalizing(() => {
+        const setEntry = (entry: NodeEntry<TElement>) => {
             const [node, path] = entry;
 
             if (node[IndentListPlugin.key]) {
-                unsetNodes(editor, [IndentListPlugin.key, "indent"], { at: path });
+                editor.tf.unsetNodes([IndentListPlugin.key, "indent"], { at: path });
             }
             if (type in setBlockMap) {
                 return setBlockMap[type](editor, type, entry);
             }
             if (node.type !== type) {
-                editor.setNodes<TElement>({ type }, { at: path });
+                editor.tf.setNodes({ type }, { at: path });
             }
         };
 
         if (at) {
-            const entry = getNodeEntry<TElement>(editor, at);
+            const entry = editor.api.node<TElement>(at);
 
             if (entry) {
                 setEntry(entry);
@@ -147,7 +130,7 @@ export const setBlockType = (editor: PlateEditor, type: string, { at }: { at?: P
             }
         }
 
-        const entries = getBlocks(editor, { mode: "lowest" });
+        const entries = editor.api.blocks({ mode: "lowest" });
 
         entries.forEach((entry) => setEntry(entry));
     });

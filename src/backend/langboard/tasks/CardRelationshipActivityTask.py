@@ -33,7 +33,7 @@ async def card_relationship_updated(
             activity_history,
             **_get_activity_params(ProjectActivityType.CardRelationshipsUpdated, project, card),
         )
-    record_project_activity(user_or_bot, activity)
+    await record_project_activity(user_or_bot, activity)
 
 
 def _get_activity_params(activity_type: ProjectActivityType, project: Project, card: Card):

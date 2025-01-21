@@ -2,18 +2,9 @@
 "use client";
 
 import * as React from "react";
-import { AIChatPlugin, useEditorChat } from "@udecode/plate-ai/react";
-import {
-    type SlateEditor,
-    type TElement,
-    type TNodeEntry,
-    getAncestorNode,
-    getBlocks,
-    isElementEmpty,
-    isHotkey,
-    isSelectionAtBlockEnd,
-} from "@udecode/plate-common";
-import { toDOMNode, useEditorPlugin, useHotkeys } from "@udecode/plate-common/react";
+import { type NodeEntry, isHotkey } from "@udecode/plate";
+import { useEditorPlugin, useHotkeys } from "@udecode/plate/react";
+import { AIChatPlugin, useEditorChat, useLastAssistantMessage } from "@udecode/plate-ai/react";
 import { BlockSelectionPlugin, useIsSelecting } from "@udecode/plate-selection/react";
 import { Loader2Icon } from "lucide-react";
 import { IUseChat, useChat } from "@/components/Editor/useChat";
@@ -31,13 +22,14 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
     const mode = useOption("mode");
     const isSelecting = useIsSelecting();
 
-    const aiEditorRef = React.useRef<SlateEditor>(null);
     const [value, setValue] = React.useState("");
 
     const chat = useChat({ socket, eventKey, events });
 
     const { input, isLoading, messages, setInput } = chat;
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+
+    const content = useLastAssistantMessage()?.content;
 
     const setOpen = (open: bool) => {
         if (open) {
@@ -54,8 +46,8 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
     useEditorChat({
         chat,
-        onOpenBlockSelection: (blocks: TNodeEntry[]) => {
-            show(toDOMNode(editor, blocks.at(-1)![0])!);
+        onOpenBlockSelection: (blocks: NodeEntry[]) => {
+            show(editor.api.toDOMNode(blocks.at(-1)![0])!);
         },
         onOpenChange: (open) => {
             if (!open) {
@@ -64,16 +56,16 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
             }
         },
         onOpenCursor: () => {
-            const ancestor = getAncestorNode(editor)?.[0] as TElement;
+            const [ancestor] = editor.api.block({ highest: true })!;
 
-            if (!isSelectionAtBlockEnd(editor) && !isElementEmpty(editor, ancestor)) {
+            if (!editor.api.isAt({ end: true }) && !editor.api.isEmpty(ancestor)) {
                 editor.getApi(BlockSelectionPlugin).blockSelection.addSelectedRow(ancestor.id as string);
             }
 
-            show(toDOMNode(editor, ancestor)!);
+            show(editor.api.toDOMNode(ancestor)!);
         },
         onOpenSelection: () => {
-            show(toDOMNode(editor, getBlocks(editor).at(-1)![0])!);
+            show(editor.api.toDOMNode(editor.api.blocks().at(-1)![0])!);
         },
     });
 
@@ -108,7 +100,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
                 side="bottom"
             >
                 <Command.Root className="w-full rounded-lg border shadow-md" value={value} onValueChange={setValue}>
-                    {mode === "chat" && isSelecting && messages.length > 0 && <AIChatEditor aiEditorRef={aiEditorRef} />}
+                    {mode === "chat" && isSelecting && content && <AIChatEditor content={content} />}
 
                     {isLoading ? (
                         <div className="flex grow select-none items-center gap-2 p-2 text-sm text-muted-foreground">
@@ -139,7 +131,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
                     {!isLoading && (
                         <Command.List>
-                            <AIMenuItems aiEditorRef={aiEditorRef} setValue={setValue} />
+                            <AIMenuItems setValue={setValue} />
                         </Command.List>
                     )}
                 </Command.Root>

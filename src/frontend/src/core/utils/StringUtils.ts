@@ -133,8 +133,8 @@ export const createShortUUID = (): string => {
     });
 };
 
-export const createNameInitials = (firstname: string, lastname: string): string => {
-    return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
+export const createNameInitials = (firstname?: string, lastname?: string): string => {
+    return `${firstname?.charAt(0) ?? ""}${lastname?.charAt(0) ?? ""}`.toUpperCase();
 };
 
 export const makeReactKey = (name: string): string => {

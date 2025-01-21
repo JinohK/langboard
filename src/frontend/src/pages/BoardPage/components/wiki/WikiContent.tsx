@@ -11,6 +11,7 @@ import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside"
 import { ProjectWiki, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { format } from "@/core/utils/StringUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
@@ -38,7 +39,7 @@ export function SkeletonWikiContent() {
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
-    const { projectUID, projectMembers, projectBots, currentUser, socket, editorsRef, setCurrentEditor } = useBoardWiki();
+    const { projectUID, projectMembers, projectBots, currentUser, socket, editorsRef, setCurrentEditor, navigate } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
@@ -194,7 +195,9 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 )}
             </Box>
             <Flex items="center" justify="start" pt="2" mx="2" className="border-t">
-                <Button variant="secondary">Activity</Button>
+                <Button variant="secondary" onClick={() => navigate(ROUTES.BOARD.WIKI_ACTIVITY(projectUID, wiki.uid))}>
+                    {t("board.Activity")}
+                </Button>
             </Flex>
         </Box>
     );
