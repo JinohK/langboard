@@ -58,6 +58,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
             return <ActivityTimeline activity={refer} references={activity.references} />;
         }
 
+        const activityReferences = { ...(references ?? {}) };
         let i18nKey;
         switch (filterableType) {
             case "user":
@@ -72,6 +73,10 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 break;
         }
 
+        if (subFilterableType && references && !references[subFilterableType]) {
+            activityReferences[subFilterableType] = activity.sub_filterable_uid!;
+        }
+
         return (
             <Flex direction="col" gap="1" rounded="md" border p="2">
                 <Flex items="start" gap="1">
@@ -81,7 +86,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         </Box>
                     )}
                     <Box pt="1" className="break-words leading-6">
-                        <Trans i18nKey={i18nKey} values={activityHistory} components={createComponents(activityHistory, references)} />
+                        <Trans i18nKey={i18nKey} values={activityHistory} components={createComponents(activityHistory, activityReferences)} />
                     </Box>
                 </Flex>
                 <DiffView history={activityHistory} />

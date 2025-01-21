@@ -180,7 +180,7 @@ class ActivityService(BaseService):
             return {
                 "refer_type": "project_wiki",
                 "project": {"uid": project.get_uid()},
-                "project_wiki": {"uid": wiki.api_response()},
+                "project_wiki": {"uid": wiki.get_uid()},
             }
 
     async def __get_list(
