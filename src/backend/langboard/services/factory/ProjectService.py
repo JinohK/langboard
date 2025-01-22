@@ -8,13 +8,14 @@ from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.Checkitem import CheckitemStatus
+from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectPublisher
 from ...tasks import ProjectActivityTask
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
 from .RoleService import RoleService
-from .Types import TProjectParam, TUserOrBot
+from .Types import TProjectParam, TUserOrBot, TUserParam
 
 
 class ProjectService(BaseService):
@@ -133,7 +134,9 @@ class ProjectService(BaseService):
 
         return projects
 
-    async def get_details(self, user: User, project: TProjectParam) -> tuple[Project, dict[str, Any]] | None:
+    async def get_details(
+        self, user: User, project: TProjectParam, with_member_roles: bool
+    ) -> tuple[Project, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
@@ -145,6 +148,14 @@ class ProjectService(BaseService):
         response["bots"] = await self.get_assigned_bots(project, as_api=True)
         response["current_user_role_actions"] = await self.get_user_role_actions(user, project)
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
+        if with_member_roles:
+            role_service = self._get_service(RoleService)
+            roles = await role_service.project.get_roles(project_id=project.id)
+            response["member_roles"] = {
+                role.user_id.to_short_code(): role.actions
+                for role in roles
+                if role.user_id and role.user_id != project.owner_id
+            }
 
         invitation_service = self._get_service(ProjectInvitationService)
         response["invited_members"] = await invitation_service.get_invited_users(project, as_api=True)
@@ -355,6 +366,33 @@ class ProjectService(BaseService):
         )
 
         return urls
+
+    async def update_user_roles(
+        self, user: User, project: TProjectParam, target_user: TUserParam, roles: list[ProjectRoleAction]
+    ):
+        project = cast(Project, await self._get_by_param(Project, project))
+        target_user = cast(User, await self._get_by_param(User, target_user))
+        if not project or not target_user or not await self.is_assigned(target_user, project):
+            return False
+
+        if project.owner_id == target_user.id:
+            return True
+
+        if ProjectRoleAction.Read not in roles:
+            roles.append(ProjectRoleAction.Read)
+
+        role_strs = [role.value for role in roles]
+        role_service = self._get_service(RoleService)
+        if roles == list(ProjectRoleAction._member_map_.values()):
+            await role_service.project.grant_all(user_id=target_user.id, project_id=project.id)
+        elif not roles:
+            await role_service.project.grant_default(user_id=target_user.id, project_id=project.id)
+        else:
+            await role_service.project.grant(actions=role_strs, user_id=target_user.id, project_id=project.id)
+
+        ProjectPublisher.user_roles_updated(project, target_user, role_strs)
+
+        return True
 
     async def delete(self, user: User, project: TProjectParam) -> bool:
         project = cast(Project, await self._get_by_param(Project, project))

@@ -38,6 +38,8 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         After the method is executed, db must be committed to save the changes.
         """
         role = await self._get_or_create_role(**kwargs)
+        if not role.is_new():
+            role.actions = kwargs.get("actions", role.actions)
 
         async with DbSession.use_db() as db:
             if role.is_new():

@@ -7,6 +7,7 @@ from .Project import (
     ChatHistoryPagination,
     InviteProjectMemberForm,
     ProjectInvitationForm,
+    UpdateMemberRolesForm,
     UpdateProjectDetailsForm,
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
@@ -29,6 +30,7 @@ __all__ = [
     "ChangeCardDetailsForm",
     "InviteProjectMemberForm",
     "UpdateProjectDetailsForm",
+    "UpdateMemberRolesForm",
     "CreateProjectLabelForm",
     "UpdateProjectLabelDetailsForm",
     "ProjectInvitationForm",

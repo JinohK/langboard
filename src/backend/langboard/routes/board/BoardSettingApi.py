@@ -11,6 +11,7 @@ from .scopes import (
     AssignBotsForm,
     ChangeColumnOrderForm,
     CreateProjectLabelForm,
+    UpdateMemberRolesForm,
     UpdateProjectDetailsForm,
     UpdateProjectLabelDetailsForm,
     project_role_finder,
@@ -39,7 +40,7 @@ async def can_use_settings(
 async def get_project_details(
     project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user, project_uid)
+    result = await service.project.get_details(user, project_uid, with_member_roles=True)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
@@ -73,6 +74,23 @@ async def update_project_assigned_bots(
     project_uid: str, form: AssignBotsForm, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
     result = await service.project.update_assigned_bots(user, project_uid, form.assigned_bots)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/user-roles/{user_uid}")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def update_project_user_roles(
+    project_uid: str,
+    user_uid: str,
+    form: UpdateMemberRolesForm,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project.update_user_roles(user, project_uid, user_uid, form.roles)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

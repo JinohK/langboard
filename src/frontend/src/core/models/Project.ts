@@ -28,6 +28,7 @@ import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/colum
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
+import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 
 export enum ERoleAction {
     Read = "read",
@@ -58,6 +59,8 @@ export interface IStore extends Interface {
     description: string;
     ai_description?: string;
     last_viewed_at: Date;
+
+    member_roles: Record<string, TRoleActions[]>; // This will be used in board setting.
 }
 
 class Project extends BaseModel<IStore> {
@@ -86,6 +89,7 @@ class Project extends BaseModel<IStore> {
                 useBoardDetailsChangedHandlers,
                 useBoardAssignedBotsUpdatedHandlers,
                 useBoardAssignedUsersUpdatedHandlers,
+                useBoardUserRolesUpdatedHandlers,
                 useBoardLabelCreatedHandlers,
                 useBoardLabelOrderChangedHandlers,
                 useBoardLabelDeletedHandlers,
@@ -253,6 +257,13 @@ class Project extends BaseModel<IStore> {
     }
     public set last_viewed_at(value: string | Date) {
         this.update({ last_viewed_at: value });
+    }
+
+    public get member_roles() {
+        return this.getValue("member_roles");
+    }
+    public set member_roles(value: Record<string, TRoleActions[]>) {
+        this.update({ member_roles: value });
     }
 }
 

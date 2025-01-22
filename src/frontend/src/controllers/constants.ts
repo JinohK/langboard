@@ -120,6 +120,7 @@ export const API_ROUTES = {
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
             UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
+            UPDATE_USER_ROLES: "/board/{uid}/settings/user-roles/{user_uid}",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
@@ -181,6 +182,7 @@ export const SOCKET_SERVER_EVENTS = {
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
+        USER_ROLES_UPDATED: "board:user-roles:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
         DELETED: "board:deleted:{uid}",
         LABEL: {
@@ -252,6 +254,7 @@ export const SOCKET_SERVER_EVENTS = {
         UPDATED: "user:updated",
         NOTIFIED: "user:notified",
         NOTIFICATION_DELETED: "user:notification:deleted",
+        PROJECT_ROLES_UPDATED: "user:project-roles:updated",
     },
     GLOBALS: {
         BOTS: {

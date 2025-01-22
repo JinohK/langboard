@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 from ..core.ai import Bot
+from ..core.db import User
 from ..core.routing import SocketTopic
 from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
@@ -52,6 +53,28 @@ class ProjectPublisher:
                     data_keys=data_keys,
                 )
             )
+
+        SocketPublishService.put_dispather(model, publish_models)
+
+    @staticmethod
+    def user_roles_updated(project: Project, target_user: User, roles: list[str]):
+        topic_id = project.get_uid()
+        model = {"member_uid": target_user.get_uid(), "roles": roles}
+        publish_models = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=topic_id,
+                event=f"board:user-roles:updated:{topic_id}",
+                data_keys=["member_uid", "roles"],
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.UserPrivate,
+                topic_id=target_user.get_uid(),
+                event="user:project-roles:updated",
+                data_keys="roles",
+                custom_data={"project_uid": topic_id},
+            ),
+        ]
 
         SocketPublishService.put_dispather(model, publish_models)
 

@@ -706,6 +706,7 @@
       "Basic info": "Basic info",
       "Bots": "Bots",
       "Add a bot...": "Add a bot...",
+      "Member roles": "Member roles",
       "Label": "Label",
       "Add a label": "Add a label",
       "Label name": "Label name",
@@ -720,6 +721,7 @@
       "All data will be lost.": "All data will be lost.",
       "successes": {
         "Assigned bots updated successfully.": "Assigned bots updated successfully.",
+        "Member roles updated successfully.": "Member roles updated successfully.",
         "Label added successfully.": "Label added successfully.",
         "Label name changed successfully.": "Label name changed successfully.",
         "Color changed successfully.": "Color changed successfully.",
@@ -865,6 +867,15 @@
     },
     "errors": {
       "Can't access this wiki.": "Can't access this wiki."
+    }
+  },
+  "roles": {
+    "project": {
+      "read": "Read",
+      "update": "Update",
+      "card_write": "Card Write",
+      "card_update": "Card Update",
+      "card_delete": "Card Delete"
     }
   },
   "settings": {

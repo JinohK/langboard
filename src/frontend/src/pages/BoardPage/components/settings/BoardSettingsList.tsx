@@ -6,6 +6,7 @@ import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSetti
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
+import BoardSettingsRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsRoleList";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +29,9 @@ const BoardSettingsList = memo(() => {
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Bots">
                 <BoardSettingsBots key={createShortUUID()} />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Member roles">
+                <BoardSettingsRoleList key={createShortUUID()} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />

@@ -25,7 +25,7 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 async def get_project(
     project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user, project_uid)
+    result = await service.project.get_details(user, project_uid, with_member_roles=False)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
