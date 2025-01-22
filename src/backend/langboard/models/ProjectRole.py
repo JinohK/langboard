@@ -15,5 +15,9 @@ class ProjectRole(BaseRoleModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
 
     @staticmethod
+    def get_all_actions() -> list[Enum]:
+        return list(ProjectRoleAction._member_map_.values())
+
+    @staticmethod
     def get_default_actions() -> list[Enum]:
         return [ProjectRoleAction.Read]

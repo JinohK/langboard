@@ -13,5 +13,9 @@ class {class_name}Role(BaseRoleModel, table=True):
     
 
     @staticmethod
+    def get_all_actions() -> list[Enum]:
+        return list({class_name}RoleAction._member_map_.values())
+
+    @staticmethod
     def get_default_actions() -> list[Enum]:
         return [{class_name}RoleAction.Read]

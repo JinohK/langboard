@@ -182,6 +182,10 @@ export const formatTimerDuration = (duration: Duration) => {
         }
     }
 
+    if (!timeTextChunks.length) {
+        timeTextChunks.push("0s");
+    }
+
     return timeTextChunks.join(" ");
 };
 

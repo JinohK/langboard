@@ -1,21 +1,37 @@
 from abc import abstractmethod
 from enum import Enum
 from typing import Any
-from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, CSVType, SnowflakeID, SnowflakeIDField, User
 
 
 ALL_GRANTED = "*"
 
 
 class BaseRoleModel(BaseSqlModel):
-    actions: list[str] = Field(default=[ALL_GRANTED], sa_type=JSON)
+    actions: list[str] = Field(default=[ALL_GRANTED], sa_type=CSVType)
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
 
     @staticmethod
     @abstractmethod
+    def get_all_actions() -> list[Enum]: ...
+
+    @staticmethod
+    @abstractmethod
     def get_default_actions() -> list[Enum]: ...
+
+    def is_all_granted(self) -> bool:
+        if ALL_GRANTED in self.actions:
+            return True
+        if self.actions == [action.value for action in self.get_all_actions()]:
+            return True
+        return False
+
+    def is_granted(self, action: Enum | str):
+        if self.is_all_granted():
+            return True
+        action = action if isinstance(action, str) else action.value
+        return action in self.actions
 
     def get_filterable_columns(self) -> list[str]:
         if not isinstance(self, BaseRoleModel) and (not isinstance(self, type) or not issubclass(self, BaseRoleModel)):

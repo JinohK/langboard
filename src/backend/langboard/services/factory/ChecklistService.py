@@ -1,18 +1,15 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project
 from ...models.Checkitem import CheckitemStatus
+from ...publishers import ChecklistPublisher
 from ...tasks import CardChecklistActivityTask
 from .CheckitemService import CheckitemService
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
 from .Types import TCardParam, TChecklistParam, TProjectParam, TUserOrBot
-
-
-_SOCKET_PREFIX = "board:card:checklist"
 
 
 class ChecklistService(BaseService):
@@ -69,16 +66,7 @@ class ChecklistService(BaseService):
             db.insert(checklist)
             await db.commit()
 
-        model = {"checklist": {**checklist.api_response(), "checkitems": []}}
-        topic_id = card.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:created",
-            data_keys="checklist",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ChecklistPublisher.created(card, checklist)
 
         CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
 
@@ -101,16 +89,7 @@ class ChecklistService(BaseService):
             await db.update(checklist)
             await db.commit()
 
-        model = {"title": title}
-        topic_id = card.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:title:changed:{checklist.get_uid()}",
-            data_keys="title",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ChecklistPublisher.title_changed(card, checklist)
 
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
 
@@ -136,16 +115,7 @@ class ChecklistService(BaseService):
             await db.update(checklist)
             await db.commit()
 
-        model = {"uid": checklist.get_uid(), "order": order}
-        topic_id = card.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:order:changed:{topic_id}",
-            data_keys=["uid", "order"],
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ChecklistPublisher.order_changed(card, checklist)
 
         return True
 
@@ -162,16 +132,7 @@ class ChecklistService(BaseService):
             await db.update(checklist)
             await db.commit()
 
-        model = {"is_checked": checklist.is_checked}
-        topic_id = card.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:checked:changed:{checklist.get_uid()}",
-            data_keys="is_checked",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ChecklistPublisher.checked_changed(card, checklist)
 
         if checklist.is_checked:
             CardChecklistActivityTask.card_checklist_checked(user_or_bot, project, card, checklist)
@@ -224,16 +185,7 @@ class ChecklistService(BaseService):
             await db.delete(checklist)
             await db.commit()
 
-        model = {"uid": checklist.get_uid()}
-        topic_id = card.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:deleted",
-            data_keys="uid",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ChecklistPublisher.deleted(card, checklist)
 
         CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)
 

@@ -2,12 +2,12 @@ from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
-from ...core.routing import GLOBAL_TOPIC_ID, SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import FileModel
 from ...core.utils.String import generate_random_string
 from ...models import GlobalCardRelationshipType
+from ...publishers import AppSettingPublisher
 from .Types import TBotParam, TGlobalCardRelationshipTypeParam, TSettingParam
 
 
@@ -159,14 +159,7 @@ class AppSettingService(BaseService):
             await db.commit()
 
         model = {"bot": bot.api_response()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event="settings:bot:created",
-            data_keys="bot",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        AppSettingPublisher.bot_created(model)
 
         return bot
 
@@ -216,14 +209,7 @@ class AppSettingService(BaseService):
             else:
                 model[key] = self._convert_to_python(getattr(bot, key))
 
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:bot:updated:{bot.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        AppSettingPublisher.bot_updated(bot.get_uid(), model)
 
         return bot, model
 
@@ -236,13 +222,7 @@ class AppSettingService(BaseService):
             await db.delete(bot)
             await db.commit()
 
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:bot:deleted:{bot.get_uid()}",
-        )
-
-        SocketPublishService.put_dispather({}, publish_model)
+        AppSettingPublisher.bot_deleted(bot.get_uid())
 
         return True
 
@@ -260,14 +240,7 @@ class AppSettingService(BaseService):
             await db.commit()
 
         model = {"global_relationships": global_relationship.api_response()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event="settings:global-relationship:created",
-            data_keys="global_relationships",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        AppSettingPublisher.global_relationship_created(model)
 
         return global_relationship
 
@@ -306,14 +279,7 @@ class AppSettingService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(global_relationship, key))
 
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:global-relationship:updated:{global_relationship.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        AppSettingPublisher.global_relationship_updated(global_relationship.get_uid(), model)
 
         return global_relationship, model
 
@@ -328,13 +294,7 @@ class AppSettingService(BaseService):
             await db.delete(global_relationship)
             await db.commit()
 
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:global-relationship:deleted:{global_relationship.get_uid()}",
-        )
-
-        SocketPublishService.put_dispather({}, publish_model)
+        AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
 
         return True
 
@@ -349,14 +309,6 @@ class AppSettingService(BaseService):
             )
             await db.commit()
 
-        model = {"uids": uids}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Global,
-            topic_id=GLOBAL_TOPIC_ID,
-            event="settings:global-relationship:deleted",
-            data_keys="uids",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        AppSettingPublisher.selected_global_relationships_deleted(uids)
 
         return True

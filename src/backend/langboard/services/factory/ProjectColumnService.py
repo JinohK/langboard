@@ -1,13 +1,10 @@
 from typing import Any, cast
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...models import Card, Project, ProjectColumn
+from ...publishers import ProjectColumnPublisher
 from ...tasks import ProjectColumnActivityTask
 from .Types import TColumnParam, TProjectParam, TUserOrBot
-
-
-_SOCKET_PREFIX = "board:column"
 
 
 class ProjectColumnService(BaseService):
@@ -76,30 +73,7 @@ class ProjectColumnService(BaseService):
             db.insert(column)
             await db.commit()
 
-        model = {
-            "column": {
-                **column.api_response(),
-                "count": 0,
-            }
-        }
-
-        topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:created:{topic_id}",
-                data_keys="column",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:column:created{topic_id}",
-                data_keys="column",
-            ),
-        ]
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectColumnPublisher.created(project, column)
 
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
 
@@ -130,28 +104,7 @@ class ProjectColumnService(BaseService):
                 await db.commit()
             column_id = column.id
 
-        model = {
-            "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
-            "name": name,
-        }
-
-        topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:name:changed:{topic_id}",
-                data_keys=list(model.keys()),
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:column:name:changed{topic_id}",
-                data_keys=list(model.keys()),
-            ),
-        ]
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectColumnPublisher.name_changed(project, name, column_id)
 
         ProjectColumnActivityTask.project_column_name_changed(
             user_or_bot,
@@ -180,7 +133,6 @@ class ProjectColumnService(BaseService):
         columns.insert(project.archive_column_order, project)
 
         if project_column == project.ARCHIVE_COLUMN_UID():
-            # original_column_order = project.archive_column_order
             target_column = columns.pop(project.archive_column_order)
         else:
             target_column = None
@@ -194,9 +146,6 @@ class ProjectColumnService(BaseService):
                     break
             if not target_column:
                 return None
-            # original_column_order = (
-            #     target_column.order if isinstance(target_column, ProjectColumn) else project.archive_column_order
-            # )
 
         columns.insert(order, target_column)
 
@@ -209,29 +158,6 @@ class ProjectColumnService(BaseService):
                 await db.update(column)
             await db.commit()
 
-        model = {
-            "uid": project_column.get_uid()
-            if isinstance(project_column, ProjectColumn)
-            else project.ARCHIVE_COLUMN_UID(),
-            "order": order,
-        }
-
-        topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:order:changed:{topic_id}",
-                data_keys=["uid", "order"],
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:column:order:changed{topic_id}",
-                data_keys=["uid", "order"],
-            ),
-        ]
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectColumnPublisher.order_changed(project, cast(ProjectColumn | str, project_column))
 
         return True

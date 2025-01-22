@@ -3,22 +3,21 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project } from "@/core/models";
 
-export interface IDashboardProjectCardOrderChangedRawResponse {
-    from_column_uid: string;
-    to_column_uid: string;
+export interface IDashboardCardCreatedRawResponse {
+    column_uid: string;
 }
 
-export interface IUseDashboardProjectCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseDashboardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID }: IUseDashboardProjectCardOrderChangedHandlersProps) => {
-    return useSocketHandler<{}, IDashboardProjectCardOrderChangedRawResponse>({
+const useDashboardCardCreatedHandlers = ({ callback, projectUID }: IUseDashboardCardCreatedHandlersProps) => {
+    return useSocketHandler<{}, IDashboardCardCreatedRawResponse>({
         topic: ESocketTopic.Dashboard,
         topicId: projectUID,
-        eventKey: `dashboard-project-card-order-changed-${projectUID}`,
+        eventKey: `dashboard-card-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.CARD.ORDER_CHANGED,
+            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
@@ -29,10 +28,9 @@ const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID }: I
 
                 const columns = project.columns;
                 for (let i = 0; i < columns.length; ++i) {
-                    if (columns[i].uid === data.from_column_uid) {
-                        --columns[i].count;
-                    } else if (columns[i].uid === data.to_column_uid) {
+                    if (columns[i].uid === data.column_uid) {
                         ++columns[i].count;
+                        break;
                     }
                 }
                 project.columns = columns;
@@ -42,4 +40,4 @@ const useDashboardProjectCardOrderChangedHandlers = ({ callback, projectUID }: I
     });
 };
 
-export default useDashboardProjectCardOrderChangedHandlers;
+export default useDashboardCardCreatedHandlers;

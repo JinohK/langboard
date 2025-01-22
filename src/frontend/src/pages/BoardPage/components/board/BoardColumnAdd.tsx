@@ -16,7 +16,7 @@ const BoardColumnAdd = memo(() => {
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: createProjectColumnMutateAsync } = useCreateProjectColumn();
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
-        canEdit: () => hasRoleAction(Project.ERoleAction.UPDATE),
+        canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "input",
         disableNewLine: true,
         save: (value, endCallback) => {

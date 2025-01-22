@@ -22,7 +22,7 @@ const BoardColumnHeader = memo(({ isDragging, column }: IBoardColumnHeaderProps)
     const [isValidating, setIsValidating] = useState(false);
     const columnName = column.useField("name");
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
-    const canEdit = hasRoleAction(Project.ERoleAction.UPDATE);
+    const canEdit = hasRoleAction(Project.ERoleAction.Update);
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => canEdit && !isDragging && !selectCardViewType,
         valueType: "input",

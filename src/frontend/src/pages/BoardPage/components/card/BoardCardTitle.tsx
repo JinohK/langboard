@@ -20,7 +20,7 @@ function BoardCardTitle(): JSX.Element {
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title");
     const title = card.useField("title");
-    const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => canEdit,
         valueType: "textarea",

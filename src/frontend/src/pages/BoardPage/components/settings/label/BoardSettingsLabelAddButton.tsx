@@ -61,7 +61,13 @@ function BoardSettingsLabelAddButton() {
     };
 
     return (
-        <SubmitButton type="button" isValidating={isValidating} variant="outline" className="w-full border-2 border-dashed" onClick={createLabel}>
+        <SubmitButton
+            type="button"
+            isValidating={isValidating}
+            variant="outline"
+            className="mb-4 w-full border-2 border-dashed"
+            onClick={createLabel}
+        >
             {t("project.settings.Add a label")}
         </SubmitButton>
     );

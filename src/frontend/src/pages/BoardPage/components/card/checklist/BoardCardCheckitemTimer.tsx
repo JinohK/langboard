@@ -2,7 +2,7 @@ import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvid
 import { memo, useEffect, useMemo, useReducer } from "react";
 import { add as addDate, intervalToDuration, differenceInSeconds } from "date-fns";
 import { Box, Button, Flex, IconComponent, Popover, Toast } from "@/components/base";
-import { ECheckitemStatus } from "@/core/models/ProjectCheckitem";
+import { ProjectCheckitem } from "@/core/models";
 import { useTranslation } from "react-i18next";
 import { formatTimerDuration } from "@/core/utils/StringUtils";
 import useChangeCardCheckitemStatus from "@/controllers/api/card/checkitem/useChangeCardCheckitemStatus";
@@ -18,7 +18,7 @@ const BoardCardCheckitemTimer = memo(() => {
     const duration = useMemo(() => {
         const now = new Date();
         let timerSeconds = accumulatedSeconds;
-        if (status === ECheckitemStatus.Started && timerStartedAt) {
+        if (status === ProjectCheckitem.ECheckitemStatus.Started && timerStartedAt) {
             timerSeconds += differenceInSeconds(now, timerStartedAt);
         }
 
@@ -37,7 +37,7 @@ const BoardCardCheckitemTimer = memo(() => {
 
             let nextMs = 1000;
 
-            if (status === ECheckitemStatus.Started && timerStartedAt) {
+            if (status === ProjectCheckitem.ECheckitemStatus.Started && timerStartedAt) {
                 const startDate = new Date(timerStartedAt);
                 const diff = new Date(new Date().getTime() - startDate.getTime()).getMilliseconds();
                 nextMs = 1000 + startDate.getMilliseconds() - diff;
@@ -59,7 +59,7 @@ const BoardCardCheckitemTimer = memo(() => {
         <Popover.Root>
             <Popover.Trigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 px-2" title={t("card.Manage timer")}>
-                    {(!!accumulatedSeconds || status === ECheckitemStatus.Started) && (
+                    {(!!accumulatedSeconds || status === ProjectCheckitem.ECheckitemStatus.Started) && (
                         <Box textSize={{ initial: "xs", sm: "sm" }}>{formatTimerDuration(duration)}</Box>
                     )}
                     <IconComponent icon="hammer" size="4" />
@@ -79,7 +79,7 @@ function BoardCardCheckitemTimerManager() {
     const status = checkitem.useField("status");
     const { mutateAsync: changeCheckitemStatusMutateAsync } = useChangeCardCheckitemStatus();
 
-    const changeStatus = (newStatus: ECheckitemStatus) => {
+    const changeStatus = (newStatus: ProjectCheckitem.ECheckitemStatus) => {
         const promise = changeCheckitemStatusMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
@@ -89,13 +89,13 @@ function BoardCardCheckitemTimerManager() {
 
         let timerStatus = "";
         switch (newStatus) {
-            case ECheckitemStatus.Started:
+            case ProjectCheckitem.ECheckitemStatus.Started:
                 timerStatus = "started";
                 break;
-            case ECheckitemStatus.Paused:
+            case ProjectCheckitem.ECheckitemStatus.Paused:
                 timerStatus = "paused";
                 break;
-            case ECheckitemStatus.Stopped:
+            case ProjectCheckitem.ECheckitemStatus.Stopped:
                 timerStatus = "stopped";
                 break;
         }
@@ -120,8 +120,8 @@ function BoardCardCheckitemTimerManager() {
                 size="icon"
                 title={t("card.Start timer")}
                 className="rounded-r-none"
-                disabled={isValidating || status === ECheckitemStatus.Started}
-                onClick={() => changeStatus(ECheckitemStatus.Started)}
+                disabled={isValidating || status === ProjectCheckitem.ECheckitemStatus.Started}
+                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Started)}
             >
                 <IconComponent icon="play" size="5" />
             </Button>
@@ -130,8 +130,8 @@ function BoardCardCheckitemTimerManager() {
                 size="icon"
                 title={t("card.Pause timer")}
                 className="rounded-none"
-                disabled={isValidating || status !== ECheckitemStatus.Started}
-                onClick={() => changeStatus(ECheckitemStatus.Paused)}
+                disabled={isValidating || status !== ProjectCheckitem.ECheckitemStatus.Started}
+                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Paused)}
             >
                 <IconComponent icon="pause" size="5" />
             </Button>
@@ -140,8 +140,8 @@ function BoardCardCheckitemTimerManager() {
                 size="icon"
                 title={t("card.Stop timer")}
                 className="rounded-l-none"
-                disabled={isValidating || status === ECheckitemStatus.Stopped}
-                onClick={() => changeStatus(ECheckitemStatus.Stopped)}
+                disabled={isValidating || status === ProjectCheckitem.ECheckitemStatus.Stopped}
+                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Stopped)}
             >
                 <IconComponent icon="circle-stop" size="5" />
             </Button>

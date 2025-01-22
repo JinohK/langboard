@@ -28,6 +28,7 @@ class Card(SoftDeleteModel, table=True):
             "description": self.description.model_dump() if self.description else None,
             "ai_description": self.ai_description,
             "order": self.order,
+            "created_at": self.created_at,
         }
 
     def notification_data(self) -> dict[str, Any]:

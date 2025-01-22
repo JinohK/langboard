@@ -18,7 +18,7 @@ const BoardCardDeadline = memo(() => {
     const { mutate: changeCardDetailsMutate } = useChangeCardDetails("deadline_at");
     const deadline = card.useField("deadline_at");
     const [isSaving, setIsSaving] = useState(false);
-    const editable = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const editable = hasRoleAction(Project.ERoleAction.CardUpdate);
     const changeDeadline = (date: Date | undefined) => {
         if (!editable) {
             return;

@@ -1,14 +1,11 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
+from ...publishers import ProjectLabelPublisher
 from ...tasks import ProjectLabelActivityTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
-
-
-_SOCKET_PREFIX = "board:label"
 
 
 class ProjectLabelService(BaseService):
@@ -118,20 +115,11 @@ class ProjectLabelService(BaseService):
         if is_bot:
             return None
 
-        api_label = label.api_response()
-        model = {"label": api_label}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:created:{project.get_uid()}",
-            data_keys="label",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectLabelPublisher.created(project, label)
 
         ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
 
-        return label, api_label
+        return label, label.api_response()
 
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
@@ -170,15 +158,7 @@ class ProjectLabelService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(label, key))
 
-        topic_id = project.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=topic_id,
-            event=f"{_SOCKET_PREFIX}:details:changed:{label.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectLabelPublisher.updated(project, label, model)
 
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
 
@@ -209,15 +189,7 @@ class ProjectLabelService(BaseService):
             await db.update(label)
             await db.commit()
 
-        model = {"uid": label.get_uid(), "order": order}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:order:changed:{project.get_uid()}",
-            data_keys=["uid", "order"],
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectLabelPublisher.order_changed(project, label)
 
         return True
 
@@ -234,15 +206,7 @@ class ProjectLabelService(BaseService):
             await db.delete(label)
             await db.commit()
 
-        model = {"uid": label.get_uid()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:deleted:{project.get_uid()}",
-            data_keys="uid",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectLabelPublisher.deleted(project, label)
 
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
 

@@ -3,12 +3,12 @@ from typing import Any, Literal, cast, overload
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail, UserNotification
 from ...models.UserNotification import NotificationType
+from ...publishers import ProjectInvitationPublisher
 from ...tasks import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService
 from .NotificationService import NotificationService
@@ -187,13 +187,7 @@ class ProjectInvitationService(BaseService):
             "invitation_uid": invitation.get_uid(),
         }
 
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"board:assigned-users:updated:{project.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectInvitationPublisher.accepted(project, model)
 
         ProjectActivityTask.project_invited_user_accepted(user, project)
 
@@ -280,11 +274,4 @@ class ProjectInvitationService(BaseService):
             await db.delete(notification)
             await db.commit()
 
-        model = {"notification_uid": notification.get_uid()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.UserPrivate,
-            topic_id=user.get_uid(),
-            event="user:notification:deleted",
-            data_keys="notification_uid",
-        )
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectInvitationPublisher.notification_deleted(user, notification)

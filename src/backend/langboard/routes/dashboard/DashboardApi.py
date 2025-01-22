@@ -4,7 +4,7 @@ from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...services import Service
-from .DashboardForm import DashboardProjectCreateForm, DashboardTrackingPagination
+from .DashboardForm import DashboardPagination, DashboardProjectCreateForm
 
 
 @AppRouter.api.get("/dashboard/user/projects/starred")
@@ -57,13 +57,27 @@ async def toggle_star_project(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/dashboard/tracking")
+@AppRouter.api.get("/dashboard/cards")
 @AuthFilter.add
-async def track_checkitems(
-    pagination: DashboardTrackingPagination = Depends(),
+async def get_card_list(
+    pagination: DashboardPagination = Depends(),
     user: User = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    tracking = await service.tracking.get_dashboard_list(user, pagination)
+    cards, projects = await service.card.get_dashboard_list(user, pagination, pagination.refer_time)
 
-    return JsonResponse(content={"tracking": tracking}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"cards": cards, "projects": projects}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.get("/dashboard/tracking")
+@AuthFilter.add
+async def track_checkitems(
+    pagination: DashboardPagination = Depends(),
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    checkitems, cards, projects = await service.checkitem.track_list(user, pagination, pagination.refer_time)
+
+    return JsonResponse(
+        content={"checkitems": checkitems, "cards": cards, "projects": projects}, status_code=status.HTTP_200_OK
+    )

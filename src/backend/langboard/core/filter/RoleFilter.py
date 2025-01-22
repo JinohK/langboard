@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Generic, Protocol, Sequence, TypeVar
+from typing import Any, Callable, Generic, Protocol, TypeVar
 from sqlmodel.sql.expression import SelectOfScalar
 from ...models.BaseRoleModel import BaseRoleModel
 from ..utils.decorators import class_instance, thread_safe_singleton
@@ -10,12 +10,12 @@ _TMethod = TypeVar("_TMethod", bound=Callable)
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
 
 
-class _RoleFinderFunc(Protocol):
+class _RoleFinderFunc(Protocol, Generic[_TRoleModel]):
     def __call__(
         self,
-        query: SelectOfScalar[Sequence[str]],
+        query: SelectOfScalar[_TRoleModel],
         path_params: dict[str, Any],
-    ) -> SelectOfScalar[Sequence[str]]: ...
+    ) -> SelectOfScalar[_TRoleModel]: ...
 
 
 @class_instance()

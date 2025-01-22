@@ -1,14 +1,11 @@
 from typing import Any, cast, overload
 from ...core.db import DbSession, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
+from ...publishers import CardAttachmentPublisher
 from ...tasks import CardAttachmentActivityTask
 from .Types import TAttachmentParam, TCardParam, TProjectParam
-
-
-_SOCKET_PREFIX = "board:card:attachment"
 
 
 class CardAttachmentService(BaseService):
@@ -61,22 +58,7 @@ class CardAttachmentService(BaseService):
             db.insert(card_attachment)
             await db.commit()
 
-        model = {
-            "attachment": {
-                **card_attachment.api_response(),
-                "user": user.api_response(),
-                "card_uid": card.get_uid(),
-            }
-        }
-
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=card.get_uid(),
-            event=f"{_SOCKET_PREFIX}:uploaded",
-            data_keys="attachment",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardAttachmentPublisher.uploaded(user, card, card_attachment)
 
         CardAttachmentActivityTask.card_attachment_uploaded(user, project, card, card_attachment)
 
@@ -102,15 +84,7 @@ class CardAttachmentService(BaseService):
             await db.update(card_attachment)
             await db.commit()
 
-        model = {"uid": card_attachment.get_uid(), "order": order}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=card.get_uid(),
-            event=f"{_SOCKET_PREFIX}:order:changed",
-            data_keys=["uid", "order"],
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardAttachmentPublisher.order_changed(card, card_attachment)
 
         return True
 
@@ -129,15 +103,7 @@ class CardAttachmentService(BaseService):
             await db.update(card_attachment)
             await db.commit()
 
-        model = {"name": name}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=card.get_uid(),
-            event=f"{_SOCKET_PREFIX}:name:changed:{card_attachment.get_uid()}",
-            data_keys="name",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardAttachmentPublisher.name_changed(card, card_attachment)
 
         CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
 
@@ -166,15 +132,7 @@ class CardAttachmentService(BaseService):
             await db.delete(card_attachment)
             await db.commit()
 
-        model = {"uid": card_attachment.get_uid()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardCard,
-            topic_id=card.get_uid(),
-            event=f"{_SOCKET_PREFIX}:deleted",
-            data_keys="uid",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardAttachmentPublisher.deleted(card, card_attachment)
 
         CardAttachmentActivityTask.card_attachment_deleted(user, project, card, card_attachment)
 

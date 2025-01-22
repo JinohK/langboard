@@ -111,12 +111,7 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
             {!data ? (
                 <SkeletonBoard />
             ) : (
-                <BoardProvider
-                    navigate={navigate}
-                    project={project}
-                    currentUser={currentUser}
-                    currentUserRoleActions={project.current_user_role_actions}
-                >
+                <BoardProvider navigate={navigate} project={project} currentUser={currentUser}>
                     <BoardResult />
                 </BoardProvider>
             )}
@@ -222,7 +217,7 @@ const BoardResult = memo(() => {
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
                             ))}
                         </SortableContext>
-                        {hasRoleAction(Project.ERoleAction.UPDATE) && !selectCardViewType && <BoardColumnAdd />}
+                        {hasRoleAction(Project.ERoleAction.Update) && !selectCardViewType && <BoardColumnAdd />}
                     </Flex>
                     <ScrollArea.Bar orientation="horizontal" />
                 </ScrollArea.Root>

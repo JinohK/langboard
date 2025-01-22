@@ -44,10 +44,10 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const disableChangeModeAttr = "data-disable-change-mode";
-    const canWrite = hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn();
+    const canWrite = hasRoleAction(Project.ERoleAction.CardWrite) && !column.isArchiveColumn();
     const { mutateAsync: createCardMutateAsync } = useCreateCard();
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
-        canEdit: () => hasRoleAction(Project.ERoleAction.UPDATE),
+        canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "textarea",
         disableNewLine: true,
         customStartEditing: () => {

@@ -89,12 +89,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
             {!cardData ? (
                 <SkeletonBoardCard />
             ) : (
-                <BoardCardProvider
-                    projectUID={projectUID}
-                    card={cardData.card}
-                    currentUser={currentUser}
-                    currentUserRoleActions={cardData.current_user_role_actions}
-                >
+                <BoardCardProvider projectUID={projectUID} card={cardData.card} currentUser={currentUser}>
                     <BoardCardResult viewportId={viewportId} />
                 </BoardCardProvider>
             )}

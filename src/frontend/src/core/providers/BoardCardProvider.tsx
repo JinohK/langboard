@@ -25,7 +25,6 @@ interface IBoardCardProviderProps {
     projectUID: string;
     card: ProjectCard.TModel;
     currentUser: AuthUser.TModel;
-    currentUserRoleActions: Project.TRoleActions[];
     children: React.ReactNode;
 }
 
@@ -44,11 +43,12 @@ const initialContext = {
 
 const BoardCardContext = createContext<IBoardCardContext>(initialContext);
 
-export const BoardCardProvider = ({ projectUID, card, currentUser, currentUserRoleActions, children }: IBoardCardProviderProps): React.ReactNode => {
+export const BoardCardProvider = ({ projectUID, card, currentUser, children }: IBoardCardProviderProps): React.ReactNode => {
     const socket = useSocket();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
     const replyRef = useRef<(targetUser: User.TModel) => void>(() => {});
+    const currentUserRoleActions = card.useField("current_user_role_actions");
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const sharedClassNames = {
         popoverContent: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",

@@ -39,7 +39,7 @@ function BoardCardCheckitem({ checkitem, isOverlay }: IBoardCardCheckitemProps):
             roleDescription: "Checkitem",
         },
     });
-    const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canReorder = hasRoleAction(Project.ERoleAction.CardUpdate);
 
     const style = {
         transition,
@@ -100,8 +100,8 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
     const cardifiedCard = cardifiedCards[0];
     const assignedUsers = checkitem.useForeignField<User.TModel>("user");
     const assignedUser = assignedUsers[0];
-    const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const canEditCheckitem = (!assignedUser && hasRoleAction(Project.ERoleAction.CARD_UPDATE)) || assignedUser.uid === currentUser.uid;
+    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
+    const canEditCheckitem = (!assignedUser && hasRoleAction(Project.ERoleAction.CardUpdate)) || assignedUser.uid === currentUser.uid;
 
     const toCardifiedCard = () => {
         if (!cardifiedCard) {

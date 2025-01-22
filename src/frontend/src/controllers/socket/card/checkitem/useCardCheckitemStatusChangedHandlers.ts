@@ -2,23 +2,22 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem, User } from "@/core/models";
-import { ECheckitemStatus } from "@/core/models/ProjectCheckitem";
 
-export interface ICardCheckitemTitleChangedRawResponse {
+export interface ICardCheckitemStatusChangedRawResponse {
     user?: User.Interface;
-    status: ECheckitemStatus;
+    status: ProjectCheckitem.ECheckitemStatus;
     accumulated_seconds: number;
     is_checked: bool;
     timer_started_at?: Date;
 }
 
-export interface IUseCardCheckitemTitleChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseCardCheckitemStatusChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     cardUID: string;
     checkitem: ProjectCheckitem.TModel;
 }
 
-const useCardCheckitemTitleChangedHandlers = ({ callback, cardUID, checkitem }: IUseCardCheckitemTitleChangedHandlersProps) => {
-    return useSocketHandler<{}, ICardCheckitemTitleChangedRawResponse>({
+const useCardCheckitemStatusChangedHandlers = ({ callback, cardUID, checkitem }: IUseCardCheckitemStatusChangedHandlersProps) => {
+    return useSocketHandler<{}, ICardCheckitemStatusChangedRawResponse>({
         topic: ESocketTopic.BoardCard,
         topicId: cardUID,
         eventKey: `board-card-checkitem-status-changed-${checkitem.uid}`,
@@ -36,4 +35,4 @@ const useCardCheckitemTitleChangedHandlers = ({ callback, cardUID, checkitem }: 
     });
 };
 
-export default useCardCheckitemTitleChangedHandlers;
+export default useCardCheckitemStatusChangedHandlers;

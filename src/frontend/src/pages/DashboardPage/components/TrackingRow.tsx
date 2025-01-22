@@ -1,0 +1,137 @@
+import { Button, Table } from "@/components/base";
+import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
+import { ProjectCard, ProjectCheckitem } from "@/core/models";
+import { useDashboard } from "@/core/providers/DashboardProvider";
+import { ROUTES } from "@/core/routing/constants";
+import { cn } from "@/core/utils/ComponentUtils";
+import { formatTimerDuration } from "@/core/utils/StringUtils";
+import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fns";
+import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useTranslation } from "react-i18next";
+
+export interface ITrackingRowProps {
+    checkitem: ProjectCheckitem.TModel;
+}
+
+function TrackingRow({ checkitem }: ITrackingRowProps): JSX.Element | null {
+    const [t] = useTranslation();
+    const { navigate } = useDashboard();
+    const projectUIDRef = useRef<string>("");
+    const title = checkitem.useField("title");
+    const rawStatus = checkitem.useField("status");
+    const rawStartedAt = checkitem.useField("initial_timer_started_at");
+    const startedAt = useUpdateDateDistance(rawStartedAt);
+    const isChecked = checkitem.useField("is_checked");
+    let status;
+    switch (rawStatus) {
+        case ProjectCheckitem.ECheckitemStatus.Started:
+            status = t("dashboard.Started");
+            break;
+        case ProjectCheckitem.ECheckitemStatus.Paused:
+            status = t("dashboard.Paused");
+            break;
+        default:
+            status = t("dashboard.Stopped");
+            break;
+    }
+
+    return (
+        <Table.Row
+            className={cn(
+                "relative",
+                isChecked &&
+                    cn(
+                        "text-muted-foreground [&_button]:text-primary/70",
+                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                        "after:h-px after:w-full after:bg-border"
+                    )
+            )}
+        >
+            <Table.Cell className="w-1/4 text-center">
+                <Button
+                    variant="link"
+                    className="size-auto p-0"
+                    onClick={() => navigate(ROUTES.BOARD.CARD(projectUIDRef.current, checkitem.card_uid))}
+                >
+                    {title}
+                </Button>
+            </Table.Cell>
+            <Table.Cell className="w-1/4 text-center">
+                <TrackingRowCardTitle checkitem={checkitem} projectUIDRef={projectUIDRef} />
+            </Table.Cell>
+            <Table.Cell className="w-1/6 text-center">{status}</Table.Cell>
+            <Table.Cell className="w-1/6 text-center">{startedAt}</Table.Cell>
+            <Table.Cell className="w-1/6 text-center">
+                <TrackingRowTimeTaken checkitem={checkitem} />
+            </Table.Cell>
+        </Table.Row>
+    );
+}
+
+interface ITrackingRowCardTitleProps extends ITrackingRowProps {
+    projectUIDRef: React.RefObject<string>;
+}
+
+function TrackingRowCardTitle({ checkitem, projectUIDRef }: ITrackingRowCardTitleProps) {
+    const { navigate } = useDashboard();
+    const card = ProjectCard.Model.getModel(checkitem.card_uid)!;
+    const title = card.useField("title");
+
+    projectUIDRef.current = card.project_uid;
+
+    return (
+        <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
+            {title}
+        </Button>
+    );
+}
+
+function TrackingRowTimeTaken({ checkitem }: ITrackingRowProps) {
+    const status = checkitem.useField("status");
+    const accumulatedSeconds = checkitem.useField("accumulated_seconds");
+    const timerStartedAt = checkitem.useField("timer_started_at");
+    const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
+    const duration = useMemo(() => {
+        const now = new Date();
+        let timerSeconds = accumulatedSeconds;
+        if (status === ProjectCheckitem.ECheckitemStatus.Started && timerStartedAt) {
+            timerSeconds += differenceInSeconds(now, timerStartedAt);
+        }
+
+        return intervalToDuration({
+            start: now,
+            end: addDate(now, { seconds: timerSeconds }),
+        });
+    }, [updated]);
+
+    useEffect(() => {
+        let timerTimeout: NodeJS.Timeout | undefined;
+
+        const updateTimer = () => {
+            clearTimeout(timerTimeout);
+            timerTimeout = undefined;
+
+            let nextMs = 1000;
+
+            if (status === ProjectCheckitem.ECheckitemStatus.Started && timerStartedAt) {
+                const startDate = new Date(timerStartedAt);
+                const diff = new Date(new Date().getTime() - startDate.getTime()).getMilliseconds();
+                nextMs = 1000 + startDate.getMilliseconds() - diff;
+                forceUpdate();
+            }
+
+            timerTimeout = setTimeout(updateTimer, nextMs);
+        };
+
+        updateTimer();
+
+        return () => {
+            clearTimeout(timerTimeout);
+            timerTimeout = undefined;
+        };
+    }, [status]);
+
+    return <>{formatTimerDuration(duration)}</>;
+}
+
+export default TrackingRow;

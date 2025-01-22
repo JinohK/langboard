@@ -14,7 +14,7 @@ const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjects
         const res = await api.get(API_ROUTES.DASHBOARD.ALL_STARRED_PROJECTS);
 
         return {
-            projects: Project.Model.fromObjectArray(res.data.projects),
+            projects: Project.Model.fromObjectArray(res.data.projects, true),
         };
     };
 

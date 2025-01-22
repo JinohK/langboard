@@ -5,6 +5,7 @@ import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship"
 import * as ProjectChecklist from "@/core/models/ProjectChecklist";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
+import * as Project from "@/core/models/Project";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -29,6 +30,7 @@ export interface Interface extends IBaseModel {
     title: string;
     description?: IEditorContent;
     order: number;
+    created_at: Date;
 }
 
 export interface IStore extends Interface {
@@ -37,6 +39,8 @@ export interface IStore extends Interface {
     label_uids: string[];
     deadline_at?: Date;
     column_name: string;
+    archived_at?: Date;
+    current_user_role_actions: Project.TRoleActions[];
     project_all_columns: ProjectColumn.Interface[];
     project_members: User.Interface[];
     project_bots: BotModel.Interface[];
@@ -158,8 +162,14 @@ class ProjectCard extends BaseModel<IStore> {
     }
 
     public static convertModel(model: IStore): IStore {
+        if (TypeUtils.isString(model.created_at)) {
+            model.created_at = new Date(model.created_at);
+        }
         if (TypeUtils.isString(model.deadline_at)) {
             model.deadline_at = new Date(model.deadline_at);
+        }
+        if (TypeUtils.isString(model.archived_at)) {
+            model.archived_at = new Date(model.archived_at);
         }
         if (model.column_uid && model.project_uid) {
             model.isArchived = model.column_uid === model.project_uid;
@@ -205,6 +215,13 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ order: value });
     }
 
+    public get created_at(): Date {
+        return this.getValue("created_at");
+    }
+    public set created_at(value: string | Date) {
+        this.update({ created_at: value });
+    }
+
     public get count_comment() {
         return this.getValue("count_comment");
     }
@@ -238,6 +255,20 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set column_name(value: string) {
         this.update({ column_name: value });
+    }
+
+    public get archived_at(): Date | undefined {
+        return this.getValue("archived_at");
+    }
+    public set archived_at(value: string | Date | undefined) {
+        this.update({ archived_at: value });
+    }
+
+    public get current_user_role_actions() {
+        return this.getValue("current_user_role_actions");
+    }
+    public set current_user_role_actions(value: Project.TRoleActions[]) {
+        this.update({ current_user_role_actions: value });
     }
 
     public get project_all_columns(): ProjectColumn.TModel[] {

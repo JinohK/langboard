@@ -31,13 +31,9 @@ async def get_card_detail(
     if card is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
-    current_user_role_actions = await service.project.get_user_role_actions(user, project)
+    card["current_user_role_actions"] = await service.project.get_user_role_actions(user, project)
     return JsonResponse(
-        content={
-            "card": card,
-            "global_relationships": global_relationships,
-            "current_user_role_actions": current_user_role_actions,
-        },
+        content={"card": card, "global_relationships": global_relationships},
         status_code=status.HTTP_200_OK,
     )
 
@@ -51,7 +47,7 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
 
 
 @AppRouter.api.post("/board/{project_uid}/card")
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardWrite], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def create_card(
     project_uid: str, form: CreateCardForm, user: User = Auth.scope("api"), service: Service = Service.scope()

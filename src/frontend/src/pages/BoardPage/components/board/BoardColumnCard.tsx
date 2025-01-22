@@ -104,7 +104,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     });
 
     let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (hasRoleAction(Project.ERoleAction.CARD_UPDATE) && !selectCardViewType) {
+    if (hasRoleAction(Project.ERoleAction.CardUpdate) && !selectCardViewType) {
         props = {
             style,
             className: variants({

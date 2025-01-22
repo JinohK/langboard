@@ -138,3 +138,22 @@ def create_task_py(name: str, code: str) -> None:
         f.close()
 
     _logger.info(f"Created task: {name}")
+
+
+def create_publisher_py(name: str, code: str) -> None:
+    target_dir = BASE_DIR / "publishers"
+    save_path = target_dir / f"{name}Publisher.py"
+    init_path = target_dir / "__init__.py"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    if save_path.exists():
+        raise FileExistsError(f"Publisher already exists: {name}")
+
+    with open(save_path, "w") as f:
+        f.write(code)
+        f.close()
+
+    _logger.info(f"Created publisher: {name}")
+
+    update_init_py(target_dir, init_path)

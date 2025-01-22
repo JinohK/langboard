@@ -40,7 +40,6 @@ interface IBoardProviderProps {
     navigate: NavigateFunction;
     project: Project.TModel;
     currentUser: AuthUser.TModel;
-    currentUserRoleActions: Project.TRoleActions[];
     children: React.ReactNode;
 }
 
@@ -65,7 +64,7 @@ const initialContext = {
 
 const BoardContext = createContext<IBoardContext>(initialContext);
 
-export const BoardProvider = memo(({ navigate, project, currentUser, currentUserRoleActions, children }: IBoardProviderProps): React.ReactNode => {
+export const BoardProvider = memo(({ navigate, project, currentUser, children }: IBoardProviderProps): React.ReactNode => {
     const socket = useSocket();
     const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
@@ -77,6 +76,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, currentUser
         const newFilters = transformStringFilters(rawFilters);
         return newFilters;
     }, [navigated, location, location.search]);
+    const currentUserRoleActions = project.useField("current_user_role_actions");
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
     const cards = ProjectCard.Model.useModels((model) => model.project_uid === project.uid);

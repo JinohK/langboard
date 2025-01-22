@@ -3,13 +3,20 @@ import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
 import useBoardLabelOrderChangedHandlers from "@/controllers/socket/board/label/useBoardLabelOrderChangedHandlers";
 import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
-import useDashboardProjectCardCreatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardCreatedHandlers";
-import useDashboardProjectCardOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardOrderChangedHandlers";
+import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/card/useDashboardCardCreatedHandlers";
+import useDashboardCardOrderChangedHandlers from "@/controllers/socket/dashboard/card/useDashboardCardOrderChangedHandlers";
+import useDashboardCardDeletedHandlers from "@/controllers/socket/dashboard/card/useDashboardCardDeletedHandlers";
+import useDashboardCardTitleChangedHandlers from "@/controllers/socket/dashboard/card/useDashboardCardTitleChangedHandlers";
+import useDashboardCheckitemTitleChangedHandlers from "@/controllers/socket/dashboard/checkitem/useDashboardCheckitemTitleChangedHandlers";
+import useDashboardCheckitemStatusChangedHandlers from "@/controllers/socket/dashboard/checkitem/useDashboardCheckitemStatusChangedHandlers";
+import useDashboardCheckitemCheckedChangedHandlers from "@/controllers/socket/dashboard/checkitem/useDashboardCheckitemCheckedChangedHandlers";
+import useDashboardCheckitemDeletedHandlers from "@/controllers/socket/dashboard/checkitem/useDashboardCheckitemDeletedHandlers";
 import useCardRelationshipsUpdatedHandlers from "@/controllers/socket/card/useCardRelationshipsUpdatedHandlers";
 import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardDetailsChangedHandlers";
 import useDashboardProjectColumnCreatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnCreatedHandlers";
@@ -20,17 +27,14 @@ import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column
 import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
-import useDashboardProjectCardDeletedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectCardDeletedHandlers";
 
 export enum ERoleAction {
-    READ = "read",
-    UPDATE = "update",
-    DELETE = "delete",
-    CARD_WRITE = "card_write",
-    CARD_UPDATE = "card_update",
-    CARD_DELETE = "card_delete",
+    Read = "read",
+    Update = "update",
+    CardWrite = "card_write",
+    CardUpdate = "card_update",
+    CardDelete = "card_delete",
 }
 export type TRoleActions = ERoleAction | keyof typeof ERoleAction;
 
@@ -132,12 +136,17 @@ class Project extends BaseModel<IStore> {
         return this.subscribeSocketEvents(
             [
                 useDashboardProjectAssignedUsersUpdatedHandlers,
-                useDashboardProjectCardCreatedHandlers,
-                useDashboardProjectCardOrderChangedHandlers,
-                useDashboardProjectCardDeletedHandlers,
                 useDashboardProjectColumnCreatedHandlers,
                 useDashboardProjectColumnNameChangedHandlers,
                 useDashboardProjectColumnOrderChangedHandlers,
+                useDashboardCardCreatedHandlers,
+                useDashboardCardOrderChangedHandlers,
+                useDashboardCardTitleChangedHandlers,
+                useDashboardCardDeletedHandlers,
+                useDashboardCheckitemTitleChangedHandlers,
+                useDashboardCheckitemStatusChangedHandlers,
+                useDashboardCheckitemCheckedChangedHandlers,
+                useDashboardCheckitemDeletedHandlers,
                 useProjectDeletedHandlers,
             ],
             {

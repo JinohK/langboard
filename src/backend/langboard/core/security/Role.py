@@ -1,5 +1,5 @@
 from typing import Any, TypeVar
-from ...models.BaseRoleModel import ALL_GRANTED, BaseRoleModel
+from ...models.BaseRoleModel import BaseRoleModel
 from ..db import DbSession, SqlBuilder
 from ..filter.RoleFilter import _RoleFinderFunc
 
@@ -18,7 +18,7 @@ class Role:
         actions: list[str],
         role_finder: _RoleFinderFunc | None,
     ) -> bool:
-        query = SqlBuilder.select.column(self._model_class.actions).where(self._model_class.user_id == user_id)
+        query = SqlBuilder.select.table(self._model_class).where(self._model_class.user_id == user_id)
 
         if not role_finder:
             for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
@@ -28,15 +28,15 @@ class Role:
 
         async with DbSession.use_db() as db:
             result = await db.exec(query.limit(1))
-        granted_actions = result.first()
+        role = result.first()
 
-        if not granted_actions:
+        if not role or not role.actions:
             return False
 
-        if ALL_GRANTED in granted_actions:
+        if role.is_all_granted():
             return True
 
         for action in actions:
-            if action not in granted_actions:
+            if not role.is_granted(action):
                 return False
         return True

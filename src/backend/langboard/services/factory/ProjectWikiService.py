@@ -1,10 +1,10 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedBot, ProjectWikiAssignedUser, ProjectWikiAttachment
+from ...publishers import ProjectWikiPublisher
 from ...tasks import ProjectWikiTask
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
@@ -153,15 +153,7 @@ class ProjectWikiService(BaseService):
 
         api_wiki = wiki.api_response()
         api_wiki["assigned_members"] = []
-        model = {"wiki": api_wiki}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardWiki,
-            topic_id=project.get_uid(),
-            event=f"board:wiki:created:{project.get_uid()}",
-            data_keys="wiki",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.created(project, wiki)
 
         ProjectWikiTask.project_wiki_created(user_or_bot, project, wiki)
 
@@ -201,24 +193,7 @@ class ProjectWikiService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(wiki, key))
 
-        topic_id = project.get_uid()
-        wiki_uid = wiki.get_uid()
-        if wiki.is_public:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.BoardWiki,
-                topic_id=topic_id,
-                event=f"board:wiki:details:changed:{wiki_uid}",
-                data_keys=list(model.keys()),
-            )
-        else:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.BoardWikiPrivate,
-                topic_id=wiki_uid,
-                event=f"board:wiki:details:changed:{wiki_uid}",
-                data_keys=list(model.keys()),
-            )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.updated(project, wiki, model)
 
         notification_service = self._get_service(NotificationService)
         if "content" in model:
@@ -230,7 +205,7 @@ class ProjectWikiService(BaseService):
 
     async def change_public(
         self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, is_public: bool
-    ) -> tuple[ProjectWiki, Project, list[User]] | None:
+    ) -> tuple[ProjectWiki, Project] | None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -269,28 +244,11 @@ class ProjectWikiService(BaseService):
             await db.update(wiki)
             await db.commit()
 
-        assigned_users = [user_or_bot] if not wiki.is_public and isinstance(user_or_bot, User) else []
-
-        model = {
-            "wiki": {
-                **wiki.api_response(),
-                "assigned_members": [assigned_user.api_response() for assigned_user in assigned_users],
-                "assigned_bots": [],
-            },
-        }
-        wiki_uid = wiki.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardWiki,
-            topic_id=project.get_uid(),
-            event=f"board:wiki:public:changed:{wiki_uid}",
-            data_keys="wiki",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
 
         ProjectWikiTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
 
-        return wiki, project, assigned_users
+        return wiki, project
 
     async def update_assignees(
         self, user: User, project: TProjectParam, wiki: TWikiParam, assign_user_or_bot_uids: list[str]
@@ -350,18 +308,7 @@ class ProjectWikiService(BaseService):
                     target_users.append(target_user)
                 await db.commit()
 
-        model = {
-            "assigned_bots": [bot.api_response() for bot in bots],
-            "assigned_members": [target_user.api_response() for target_user in target_users],
-        }
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardWiki,
-            topic_id=project.get_uid(),
-            event=f"board:wiki:assignees:updated:{wiki.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
 
         ProjectWikiTask.project_wiki_assignees_updated(
             user,
@@ -396,18 +343,7 @@ class ProjectWikiService(BaseService):
                 await db.update(all_wiki)
             await db.commit()
 
-        model = {
-            "uid": wiki.get_uid(),
-            "order": wiki.order,
-        }
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardWiki,
-            topic_id=project.get_uid(),
-            event=f"board:wiki:order:changed:{project.get_uid()}",
-            data_keys=["uid", "order"],
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.order_changed(project, wiki)
 
         return project, wiki
 
@@ -445,15 +381,7 @@ class ProjectWikiService(BaseService):
             await db.delete(wiki)
             await db.commit()
 
-        model = {"uid": wiki.get_uid()}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.BoardWiki,
-            topic_id=project.get_uid(),
-            event=f"board:wiki:deleted:{project.get_uid()}",
-            data_keys=["uid"],
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectWikiPublisher.deleted(project, wiki)
 
         ProjectWikiTask.project_wiki_deleted(user, project, wiki)
 

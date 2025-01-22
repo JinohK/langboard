@@ -61,7 +61,7 @@ const BoardCardChecklist = memo(({ checklist, checkitemsMap, callbacksRef, isOve
         socket,
         updater,
     });
-    const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canReorder = hasRoleAction(Project.ERoleAction.CardUpdate);
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: checklist.uid,
         data: {
@@ -188,7 +188,7 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
     const title = checklist.useField("title");
     const isChecked = checklist.useField("is_checked");
     const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
-    const canEdit = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
 
     return (
         <BoardCardChecklistProvider checklist={checklist} isValidating={isValidating} setIsValidating={setIsValidating}>

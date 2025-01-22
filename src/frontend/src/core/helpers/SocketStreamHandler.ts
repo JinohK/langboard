@@ -33,16 +33,14 @@ const useSocketStreamHandler = (props: IBaseUseSocketStreamHandlerProps) => {
             callbacks,
         });
 
-        return {
-            off: () => {
-                socket.streamOff({
-                    topic: props.topic as never,
-                    topicId: props.topicId,
-                    event: eventName,
-                    eventKey: eventKey,
-                    callbacks,
-                });
-            },
+        return () => {
+            socket.streamOff({
+                topic: props.topic as never,
+                topicId: props.topicId,
+                event: eventName,
+                eventKey: eventKey,
+                callbacks,
+            });
         };
     };
 

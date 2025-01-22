@@ -669,7 +669,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
                         if (isSubscribed) {
                             for (let i = 0; i < handlers.length; ++i) {
-                                offs.push(handlers[i]().off);
+                                offs.push(handlers[i]());
                             }
                         } else {
                             offs.forEach((off) => off());

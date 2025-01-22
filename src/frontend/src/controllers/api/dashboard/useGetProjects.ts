@@ -17,7 +17,7 @@ const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) 
             const res = await api.get(API_ROUTES.DASHBOARD.PROJECTS);
 
             return {
-                projects: Project.Model.fromObjectArray(res.data.projects),
+                projects: Project.Model.fromObjectArray(res.data.projects, true),
             };
         } catch (e) {
             if (!isAxiosError(e)) {

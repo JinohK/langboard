@@ -1,14 +1,14 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ECheckitemStatus } from "@/core/models/ProjectCheckitem";
+import { ProjectCheckitem } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IChangeCardCheckitemStatusForm {
     project_uid: string;
     card_uid: string;
     checkitem_uid: string;
-    status: ECheckitemStatus;
+    status: ProjectCheckitem.ECheckitemStatus;
 }
 
 const useChangeCardCheckitemStatus = (options?: TMutationOptions<IChangeCardCheckitemStatusForm>) => {

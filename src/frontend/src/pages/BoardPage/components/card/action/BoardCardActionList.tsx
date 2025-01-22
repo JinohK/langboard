@@ -34,7 +34,7 @@ const BoardCardActionList = memo(() => {
             <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />
             <BoardCardActionActivity buttonClassName={sharedButtonClassName} />
             <BoardCardActionShare buttonClassName={sharedButtonClassName} />
-            {hasRoleAction(Project.ERoleAction.CARD_DELETE) || currentUser.is_admin ? (
+            {hasRoleAction(Project.ERoleAction.CardDelete) || currentUser.is_admin ? (
                 <BoardCardActionDelete buttonClassName={sharedButtonClassName} />
             ) : null}
         </>

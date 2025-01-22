@@ -1,0 +1,72 @@
+import { Button, Table } from "@/components/base";
+import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
+import { ProjectCard } from "@/core/models";
+import { useDashboard } from "@/core/providers/DashboardProvider";
+import { ROUTES } from "@/core/routing/constants";
+import { cn } from "@/core/utils/ComponentUtils";
+import { formatTimerDuration } from "@/core/utils/StringUtils";
+import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fns";
+import { useMemo } from "react";
+
+export interface ICardRowProps {
+    card: ProjectCard.TModel;
+}
+
+function CardRow({ card }: ICardRowProps): JSX.Element | null {
+    const { navigate } = useDashboard();
+    const title = card.useField("title");
+    const columnName = card.useField("column_name");
+    const isArchived = card.useField("isArchived");
+    const rawCreatedAt = card.useField("created_at");
+    const createdAt = useUpdateDateDistance(rawCreatedAt);
+
+    return (
+        <Table.Row
+            className={cn(
+                "relative",
+                isArchived &&
+                    cn(
+                        "text-muted-foreground [&_button]:text-primary/70",
+                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                        "after:h-px after:w-full after:bg-border"
+                    )
+            )}
+        >
+            <Table.Cell className="w-1/4 text-center">
+                <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
+                    {title}
+                </Button>
+            </Table.Cell>
+            <Table.Cell className="w-1/6 text-center">
+                <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
+                    {columnName}
+                </Button>
+            </Table.Cell>
+            <Table.Cell className="w-1/6 text-center">{createdAt}</Table.Cell>
+            <Table.Cell className="w-1/6 text-center">
+                <CardRowTimeTaken card={card} />
+            </Table.Cell>
+        </Table.Row>
+    );
+}
+
+function CardRowTimeTaken({ card }: ICardRowProps) {
+    const createdAt = card.useField("created_at");
+    const archivedAt = card.useField("archived_at");
+    const duration = useMemo(() => {
+        if (!archivedAt) {
+            return {};
+        }
+
+        const now = new Date();
+
+        return intervalToDuration({
+            start: now,
+            end: addDate(now, { seconds: differenceInSeconds(archivedAt.getTime(), createdAt.getTime()) }),
+        });
+    }, [archivedAt]);
+
+    return <>{archivedAt && formatTimerDuration(duration)}</>;
+}
+
+export default CardRow;

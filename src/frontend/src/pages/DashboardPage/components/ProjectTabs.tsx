@@ -33,7 +33,7 @@ interface IProjectTabsProps {
 
 const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarredProjects, scrollAreaUpdater }: IProjectTabsProps) => {
     const { setIsLoadingRef } = usePageLoader();
-    const { currentUser, navigate } = useDashboard();
+    const { navigate } = useDashboard();
     const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [t] = useTranslation();
     const projects = Project.Model.useModels(
@@ -72,23 +72,6 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
             setIsLoadingRef.current(false);
         }, 0);
     }, [currentTab]);
-
-    useEffect(() => {
-        if (!currentUser) {
-            return;
-        }
-
-        const unsubs: (() => void)[] = [];
-        for (let i = 0; i < projects.length; ++i) {
-            const project = projects[i];
-            unsubs.push(project.subscribeDashboardSocketHandlers(currentUser.uid));
-        }
-
-        return () => {
-            unsubs.forEach((unsub) => unsub());
-            unsubs.splice(0);
-        };
-    }, [currentUser, projects]);
 
     return (
         <Tabs.Root value={currentTab}>

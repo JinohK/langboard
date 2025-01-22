@@ -76,7 +76,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
         setIsOpened(opened);
     };
 
-    if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+    if (!hasRoleAction(Project.ERoleAction.CardUpdate)) {
         return null;
     }
 

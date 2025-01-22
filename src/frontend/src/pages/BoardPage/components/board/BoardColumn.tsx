@@ -174,7 +174,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
 
     let rootProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
     let headerProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (hasRoleAction(Project.ERoleAction.UPDATE) || !selectCardViewType) {
+    if (hasRoleAction(Project.ERoleAction.Update) || !selectCardViewType) {
         rootProps = {
             style,
             className: variants({
@@ -205,7 +205,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                     <Card.Content
                         className={cn(
                             "flex flex-grow flex-col gap-2 p-3",
-                            hasRoleAction(Project.ERoleAction.CARD_WRITE) && !column.isArchiveColumn()
+                            hasRoleAction(Project.ERoleAction.CardWrite) && !column.isArchiveColumn()
                                 ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.1))]"
                                 : "max-h-[calc(100vh_-_theme(spacing.56))]"
                         )}

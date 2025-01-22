@@ -63,7 +63,7 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
                 continue;
             }
 
-            offs.push(on().off);
+            offs.push(on());
         }
 
         return () => {

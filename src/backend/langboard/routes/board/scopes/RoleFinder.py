@@ -1,13 +1,11 @@
-from typing import Any, Sequence
+from typing import Any
 from sqlmodel.sql.expression import SelectOfScalar
 from ....core.db import SnowflakeID
 from ....core.routing import SocketTopic
 from ....models import Project, ProjectRole
 
 
-def project_role_finder(
-    query: SelectOfScalar[Sequence[str]], path_params: dict[str, Any]
-) -> SelectOfScalar[Sequence[str]]:
+def project_role_finder(query: SelectOfScalar[ProjectRole], path_params: dict[str, Any]) -> SelectOfScalar[ProjectRole]:
     key_prefixes = [SocketTopic.Board.value, SocketTopic.BoardWiki.value]
     project_uid = path_params.get("project_uid", None)
     if not project_uid:

@@ -42,6 +42,8 @@ export const API_ROUTES = {
         PROJECTS: "/dashboard/projects",
         TOGGLE_STAR_PROJECT: "/dashboard/projects/{uid}/star",
         CREATE_PROJECT: "/dashboard/projects/new",
+        CARDS: "/dashboard/cards",
+        TRACKING: "/dashboard/tracking",
     },
     BOARD: {
         GET: "/board/{uid}",
@@ -158,11 +160,18 @@ export const SOCKET_SERVER_EVENTS = {
                 NAME_CHANGED: "dashboard:project:column:name:changed:{uid}",
                 ORDER_CHANGED: "dashboard:project:column:order:changed:{uid}",
             },
-            CARD: {
-                CREATED: "dashboard:project:card:created:{uid}",
-                ORDER_CHANGED: "dashboard:project:card:order:changed:{uid}",
-                DELETED: "dashboard:project:card:deleted:{uid}",
-            },
+        },
+        CARD: {
+            CREATED: "dashboard:card:created:{uid}",
+            TITLE_CHANGED: "dashboard:card:title:changed:{uid}",
+            ORDER_CHANGED: "dashboard:card:order:changed:{uid}",
+            DELETED: "dashboard:card:deleted:{uid}",
+        },
+        CHECKITEM: {
+            TITLE_CHANGED: "dashboard:checkitem:title:changed:{uid}",
+            STATUS_CHANGED: "dashboard:checkitem:status:changed:{uid}",
+            CHECKED_CHANGED: "dashboard:checkitem:checked:changed:{uid}",
+            DELETED: "dashboard:checkitem:deleted:{uid}",
         },
     },
     BOARD: {

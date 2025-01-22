@@ -91,3 +91,14 @@ def DateTimeField(default: Callable | None, nullable: bool, onupdate: bool = Fal
         return Field(default=None, **kwargs)
     else:
         return Field(default_factory=default, **kwargs)
+
+
+class CSVType(TypeDecorator):
+    impl = TEXT
+    cache_ok = True
+
+    def process_bind_param(self, value: list[str], dialect) -> str:
+        return ",".join(value)
+
+    def process_result_value(self, value: str, dialect) -> list[str]:
+        return value.split(",")

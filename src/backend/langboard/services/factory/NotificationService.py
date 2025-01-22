@@ -2,12 +2,12 @@ from datetime import timedelta
 from typing import Any, TypeVar, cast
 from ...core.ai import Bot
 from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...core.utils.EditorContentParser import change_date_element, find_mentioned
 from ...models import Card, CardComment, Checklist, Project, ProjectInvitation, ProjectWiki, UserNotification
 from ...models.UserNotification import NotificationType
+from ...publishers import NotificationPublisher
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
@@ -208,7 +208,7 @@ class NotificationService(BaseService):
         message_vars: dict[str, Any] = {},
     ) -> UserNotification | None:
         target_user_or_bot = cast(User, await self._get_by_param(User, target_user_or_bot))
-        if not target_user_or_bot:
+        if not target_user_or_bot or target_user_or_bot.id == notifier.id:
             return None
 
         notification = UserNotification(
@@ -223,15 +223,7 @@ class NotificationService(BaseService):
             db.insert(notification)
             await db.commit()
 
-        model = {"notification": await self.convert_to_api_response(notification)}
-        topic_id = target_user_or_bot.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.UserPrivate,
-            topic_id=topic_id,
-            event="user:notified",
-            data_keys="notification",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        api_notification = await self.convert_to_api_response(notification)
+        NotificationPublisher.notified(target_user_or_bot, api_notification)
 
         return notification

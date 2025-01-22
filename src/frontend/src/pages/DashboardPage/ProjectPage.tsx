@@ -9,7 +9,6 @@ import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { TProjectTab } from "@/pages/DashboardPage/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 
 interface IProjectPageProps {
     currentTab: TProjectTab;
@@ -19,7 +18,7 @@ interface IProjectPageProps {
 
 const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
     const { setIsLoadingRef } = usePageLoader();
-    const { navigate, socket, currentUser } = useDashboard();
+    const { navigate, currentUser } = useDashboard();
     const [t] = useTranslation();
     const { data, isFetching, error } = useGetProjects();
 
@@ -43,29 +42,12 @@ const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater
     }, [error]);
 
     useEffect(() => {
-        if (!data || isFetching) {
+        if (!data || isFetching || !currentUser) {
             return;
         }
 
-        socket.subscribe(
-            ESocketTopic.Dashboard,
-            data.projects.map((project) => project.uid)
-        );
-
-        for (let i = 0; i < data.projects.length; ++i) {
-            const project = data.projects[i];
-            project.subscribeDashboardSocketHandlers(currentUser.uid);
-        }
-
         setIsLoadingRef.current(false);
-
-        return () => {
-            socket.unsubscribe(
-                ESocketTopic.Dashboard,
-                data.projects.map((project) => project.uid)
-            );
-        };
-    }, [isFetching]);
+    }, [currentUser, isFetching]);
 
     return (
         <>

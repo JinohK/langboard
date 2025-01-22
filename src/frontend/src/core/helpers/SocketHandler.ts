@@ -88,16 +88,14 @@ const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknow
             callback: event,
         });
 
-        return {
-            off: () => {
-                socket.off({
-                    topic: props.topic as never,
-                    topicId: props.topicId,
-                    event: eventName,
-                    eventKey: eventKey,
-                    callback: event,
-                });
-            },
+        return () => {
+            socket.off({
+                topic: props.topic as never,
+                topicId: props.topicId,
+                event: eventName,
+                eventKey: eventKey,
+                callback: event,
+            });
         };
     };
 

@@ -78,7 +78,7 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
         });
     };
 
-    if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+    if (!hasRoleAction(Project.ERoleAction.CardUpdate)) {
         return null;
     }
 

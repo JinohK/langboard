@@ -35,7 +35,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const description = card.useField("description");
     const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
-        canEdit: () => hasRoleAction(Project.ERoleAction.CARD_UPDATE),
+        canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
         customStartEditing: () => setCurrentEditor(editorName),
         valueType: "editor",
         save: (value) => {
@@ -78,7 +78,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
 
     editorsRef.current[editorName] = (editing: bool) => {
-        if (hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+        if (hasRoleAction(Project.ERoleAction.CardUpdate)) {
             setIsEditing(editing);
         }
     };

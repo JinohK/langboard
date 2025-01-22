@@ -1,8 +1,8 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
+from ...publishers import CardRelationshipPublisher
 from ...tasks import CardRelationshipActivityTask
 from .Types import TCardParam, TProjectParam, TUserOrBot
 
@@ -146,18 +146,7 @@ class CardRelationshipService(BaseService):
 
         new_relationships = await self.get_all_by_card(card, as_api=True)
 
-        model = {
-            "card_uid": card.get_uid(),
-            "relationships": new_relationships,
-        }
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"board:card:relationships:updated:{project.get_uid()}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardRelationshipPublisher.updated(project, card, new_relationships)
 
         CardRelationshipActivityTask.card_relationship_updated(
             user_or_bot, project, card, list(original_relationship_ids), list(new_relationships_dict.keys()), is_parent

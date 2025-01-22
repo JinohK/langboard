@@ -5,14 +5,14 @@ from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY
 from ...core.caching import Cache
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
 from ...core.security import Auth
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, UserEmail
+from ...publishers import UserPublisher
 from ...tasks import UserActivityTask
 
 
@@ -26,8 +26,7 @@ class UserService(BaseService):
         return f"{cache_type}:{email}"
 
     async def get_by_uid(self, uid: str) -> User | None:
-        user_id = SnowflakeID.from_short_code(uid)
-        return await self._get_by(User, "id", user_id)
+        return await self._get_by_param(User, uid)
 
     async def get_by_email(self, email: str | None) -> tuple[User, UserEmail | None] | tuple[None, None]:
         user = await self._get_by(User, "email", email)
@@ -207,16 +206,7 @@ class UserService(BaseService):
             else:
                 model[key] = self._convert_to_python(getattr(user, key))
 
-        if model:
-            topic_id = user.get_uid()
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.User,
-                topic_id=topic_id,
-                event="user:updated",
-                data_keys=list(model.keys()),
-            )
-
-            SocketPublishService.put_dispather(model, publish_model)
+        UserPublisher.updated(user, model)
 
         return True
 
@@ -232,15 +222,7 @@ class UserService(BaseService):
         await Auth.reset_user(user)
 
         model = {"email": user.email}
-        topic_id = user.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.User,
-            topic_id=topic_id,
-            event="user:updated",
-            data_keys="email",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        UserPublisher.updated(user, model)
 
         return True
 

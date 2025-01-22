@@ -19,7 +19,7 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
     const { mutateAsync: updateCardLabelsMutateAsync } = useUpdateCardLabels();
     const [selectedLabelUIDs, setSelectedLabelUIDs] = useState(card.labels.map((label) => label.uid));
 
-    if (!hasRoleAction(Project.ERoleAction.CARD_UPDATE)) {
+    if (!hasRoleAction(Project.ERoleAction.CardUpdate)) {
         return null;
     }
 

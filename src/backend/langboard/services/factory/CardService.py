@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.schema import Pagination
+from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -18,8 +19,10 @@ from ...models import (
     Project,
     ProjectColumn,
     ProjectLabel,
+    ProjectRole,
 )
 from ...models.Checkitem import CheckitemStatus
+from ...publishers import CardPublisher
 from ...tasks import CardActivityTask
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
@@ -33,7 +36,6 @@ from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBot
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
-_SOCKET_PREFIX = "board:card"
 
 
 class CardService(BaseService):
@@ -51,17 +53,15 @@ class CardService(BaseService):
             return None
         project, card = params
 
+        column = project
         if card.project_column_id:
             column = await self._get_by_param(ProjectColumn, card.project_column_id)
             if not column:
                 return None
-            column_name = column.name
-        else:
-            column_name = project.archive_column_name
 
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
-        api_card["column_name"] = column_name
+        api_card["column_name"] = self.__get_column_name(column)
 
         project_column_service = self._get_service(ProjectColumnService)
         api_card["project_all_columns"] = await project_column_service.get_list(project)
@@ -112,6 +112,52 @@ class CardService(BaseService):
             cards.append(card_api)
 
         return cards
+
+    async def get_dashboard_list(
+        self, user: User, pagination: Pagination, refer_time: datetime
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        query = (
+            SqlBuilder.select.tables(Card, Project)
+            .join(Project, Card.column("project_id") == Project.column("id"))
+            .join(ProjectRole, Project.column("id") == ProjectRole.column("project_id"))
+            .outerjoin(CardAssignedUser, Card.column("id") == CardAssignedUser.column("card_id"))
+            .where(
+                (ProjectRole.column("user_id") == user.id)
+                & (
+                    (
+                        (ProjectRole.column("actions") == "*")
+                        & (
+                            (CardAssignedUser.column("card_id") == None)  # noqa
+                            | (CardAssignedUser.column("user_id") == user.id)
+                        )
+                    )
+                    | ((ProjectRole.column("actions") != "*") & (CardAssignedUser.column("user_id") == user.id))
+                )
+            )
+            .where(Checkitem.column("created_at") <= refer_time)
+            .order_by(Card.column("created_at").desc())
+            .group_by(Card.column("id"), Card.column("created_at"))
+        )
+        query = self.paginate(query, pagination.page, pagination.limit)
+        async with DbSession.use_db() as db:
+            result = await db.exec(query)
+        cards = result.all()
+
+        api_cards = []
+        api_projects: dict[int, dict[str, Any]] = {}
+        for card, project in cards:
+            api_card = card.api_response()
+            api_card["archived_at"] = card.archived_at
+            column = project
+            if card.project_column_id:
+                column = await self._get_by_param(ProjectColumn, card.project_column_id)
+                if not column:
+                    continue
+            api_card["column_name"] = self.__get_column_name(column)
+            if project.id not in api_projects:
+                api_projects[project.id] = project.api_response()
+            api_cards.append(api_card)
+        return api_cards, list(api_projects.values())
 
     @overload
     async def get_assigned_users(
@@ -206,23 +252,7 @@ class CardService(BaseService):
 
         api_card = await self.convert_board_list_api_response(card)
         model = {"card": api_card}
-        topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:created:{column.get_uid()}",
-                data_keys="card",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:card:created{topic_id}",
-                custom_data={"column_uid": column.get_uid()},
-            ),
-        ]
-
-        SocketPublishService.put_dispather(model, publish_models)
+        CardPublisher.created(project, column, model)
 
         CardActivityTask.card_created(user_or_bot, project, card)
 
@@ -271,26 +301,7 @@ class CardService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(card, key))
 
-        topic_id = project.get_uid()
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:details:changed:{card.get_uid()}",
-                data_keys=list(model.keys()),
-            )
-        ]
-        if "title" in model and checkitem_cardified_from:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.BoardCard,
-                    topic_id=card.get_uid(),
-                    event=f"{_SOCKET_PREFIX}:checkitem:title:changed:{checkitem_cardified_from.get_uid()}",
-                    data_keys="title",
-                )
-            )
-
-        SocketPublishService.put_dispather(model, publish_models)
+        CardPublisher.updated(project, card, checkitem_cardified_from, model)
 
         if "description" in model and card.description:
             notification_service = self._get_service(NotificationService)
@@ -363,64 +374,7 @@ class CardService(BaseService):
             await db.update(card)
             await db.commit()
 
-        model = {
-            "uid": card.get_uid(),
-            "order": card.order,
-        }
-
-        original_column_uid = self.__get_column_uid(original_column)
-
-        if new_column:
-            new_column_uid = self.__get_column_uid(new_column)
-            model["to_column_uid"] = new_column_uid
-            model["column_name"] = self.__get_column_name(new_column)
-
-        publish_models: list[SocketPublishModel] = []
-        topic_id = project.get_uid()
-        card_uid = model["uid"]
-        if column_uid:
-            publish_models.extend(
-                [
-                    SocketPublishModel(
-                        topic=SocketTopic.Board,
-                        topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{new_column_uid}",
-                        data_keys=["uid", "order"],
-                        custom_data={"move_type": "to_column", "column_uid": new_column_uid},
-                    ),
-                    SocketPublishModel(
-                        topic=SocketTopic.Board,
-                        topic_id=topic_id,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
-                        data_keys=["uid", "order"],
-                        custom_data={"move_type": "from_column", "column_uid": original_column_uid},
-                    ),
-                    SocketPublishModel(
-                        topic=SocketTopic.BoardCard,
-                        topic_id=card_uid,
-                        event=f"{_SOCKET_PREFIX}:order:changed:{card_uid}",
-                        data_keys=["to_column_uid", "column_name"],
-                    ),
-                    SocketPublishModel(
-                        topic=SocketTopic.Dashboard,
-                        topic_id=topic_id,
-                        event=f"dashboard:project:card:order:changed:{topic_id}",
-                        custom_data={"from_column_uid": original_column_uid, "to_column_uid": new_column_uid},
-                    ),
-                ]
-            )
-        else:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=SocketTopic.Board,
-                    topic_id=topic_id,
-                    event=f"{_SOCKET_PREFIX}:order:changed:{original_column_uid}",
-                    data_keys=["uid", "order"],
-                    custom_data={"move_type": "in_column"},
-                )
-            )
-
-        SocketPublishService.put_dispather(model, publish_models)
+        CardPublisher.order_changed(project, card, original_column, new_column)
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
@@ -467,15 +421,7 @@ class CardService(BaseService):
                     users.append(user)
             await db.commit()
 
-        model = {"assigned_members": [user.api_response() for user in users]}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:assigned-users:updated:{card.get_uid()}",
-            data_keys="assigned_members",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardPublisher.assigned_users_updated(project, card, users)
 
         notification_service = self._get_service(NotificationService)
         for user in users:
@@ -527,15 +473,7 @@ class CardService(BaseService):
 
         labels = await project_label_service.get_all_by_card(card, as_api=False)
 
-        model = {"labels": [label.api_response() for label in labels]}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=project.get_uid(),
-            event=f"{_SOCKET_PREFIX}:labels:updated:{card.get_uid()}",
-            data_keys="labels",
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        CardPublisher.labels_updated(project, card, labels)
 
         CardActivityTask.card_labels_updated(
             user_or_bot,
@@ -589,27 +527,7 @@ class CardService(BaseService):
             await db.delete(card)
             await db.commit()
 
-        model = {"fake": True}
-        topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = [
-            SocketPublishModel(
-                topic=SocketTopic.Board,
-                topic_id=topic_id,
-                event=f"{_SOCKET_PREFIX}:deleted:{card.get_uid()}",
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.Dashboard,
-                topic_id=topic_id,
-                event=f"dashboard:project:card:deleted:{topic_id}",
-                custom_data={
-                    "column_uid": card.project_column_id.to_short_code()
-                    if card.project_column_id
-                    else project.ARCHIVE_COLUMN_UID()
-                },
-            ),
-        ]
-
-        SocketPublishService.put_dispather(model, publish_models)
+        CardPublisher.deleted(project, card)
 
         CardActivityTask.card_deleted(user_or_bot, project, card)
 
@@ -635,9 +553,6 @@ class CardService(BaseService):
         if isinstance(column, Project):
             return query.where(Card.column("project_column_id") == None)  # noqa
         return query.where(Card.column("project_column_id") == column.id)
-
-    def __get_column_uid(self, column: Project | ProjectColumn) -> str:
-        return column.ARCHIVE_COLUMN_UID() if isinstance(column, Project) else column.get_uid()
 
     def __get_column_name(self, column: Project | ProjectColumn) -> str:
         return column.archive_column_name if isinstance(column, Project) else column.name

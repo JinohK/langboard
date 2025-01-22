@@ -69,12 +69,11 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
     User.Model.deleteModels((model) => memberUIDs.includes(model.uid));
     Project.Model.deleteModel(projectUID);
 
-    if (subscribedTopics[ESocketTopic.BoardCard].length) {
-        socket.unsubscribe(ESocketTopic.BoardCard, subscribedTopics[ESocketTopic.BoardCard]);
-    }
-    if (subscribedTopics[ESocketTopic.BoardWiki].length) {
-        socket.unsubscribe(ESocketTopic.BoardWiki, subscribedTopics[ESocketTopic.BoardWiki]);
-    }
+    Object.entries(subscribedTopics).forEach(([topic, uids]) => {
+        if (uids.length) {
+            socket.unsubscribe(topic, uids);
+        }
+    });
 };
 
 export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
@@ -85,14 +84,16 @@ export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
         return;
     }
 
-    if (shouldUnsubscribe) {
-        socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);
-    }
-
     ProjectCardAttachment.Model.deleteModels((attachment) => attachment.card_uid === cardUID);
     ProjectCardComment.Model.deleteModels((comment) => comment.card_uid === cardUID);
     ProjectCardRelationship.Model.deleteModels((relationship) => relationship.parent_card_uid === cardUID || relationship.child_card_uid === cardUID);
     ProjectChecklist.Model.deleteModels((checklist) => checklist.card_uid === cardUID);
     ProjectCheckitem.Model.deleteModels((checkitem) => checkitem.card_uid === cardUID);
     ProjectCard.Model.deleteModel(cardUID);
+
+    if (shouldUnsubscribe) {
+        socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);
+    }
+
+    return;
 };

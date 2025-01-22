@@ -89,7 +89,7 @@ class ActivityHistoryHelper:
     def create_card_attachment_history(attachment: CardAttachment):
         return {
             "name": attachment.filename,
-            "url": attachment.file.path,
+            "url": attachment.file["path"] if isinstance(attachment.file, dict) else attachment.file.path,
         }
 
     @staticmethod

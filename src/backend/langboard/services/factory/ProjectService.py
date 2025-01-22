@@ -3,12 +3,12 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.routing import SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.Checkitem import CheckitemStatus
+from ...publishers import ProjectPublisher
 from ...tasks import ProjectActivityTask
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
@@ -279,15 +279,7 @@ class ProjectService(BaseService):
                 continue
             model[key] = self._convert_to_python(getattr(project, key))
 
-        topic_id = project.get_uid()
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=topic_id,
-            event=f"board:details:changed:{topic_id}",
-            data_keys=list(model.keys()),
-        )
-
-        SocketPublishService.put_dispather(model, publish_model)
+        ProjectPublisher.updated(project, model)
 
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
 
@@ -317,20 +309,7 @@ class ProjectService(BaseService):
                     db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
             await db.commit()
 
-        model = {"assigned_bots": [bot.api_response() for bot in bots]}
-        topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=topic,
-                    topic_id=topic_id,
-                    event=f"board:assigned-bots:updated:{topic_id}",
-                    data_keys="assigned_bots",
-                )
-            )
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectPublisher.assigned_bots_updated(project, bots)
 
         ProjectActivityTask.project_assigned_bots_updated(
             user, project, [bot.id for bot, _ in old_assigned_bots], [bot.id for bot in bots]
@@ -369,21 +348,7 @@ class ProjectService(BaseService):
             "invited_members": await invitation_service.get_invited_users(project, as_api=True),
         }
 
-        topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.Dashboard, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
-            event_prefix = "board" if topic != SocketTopic.Dashboard else "dashboard:project"
-            data_keys = "assigned_members" if topic != SocketTopic.Board else ["assigned_members", "invited_members"]
-            publish_models.append(
-                SocketPublishModel(
-                    topic=topic,
-                    topic_id=topic_id,
-                    event=f"{event_prefix}:assigned-users:updated:{topic_id}",
-                    data_keys=data_keys,
-                )
-            )
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectPublisher.assigned_users_updated(project, model)
 
         ProjectActivityTask.project_assigned_users_updated(
             user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
@@ -418,20 +383,7 @@ class ProjectService(BaseService):
             await db.delete(project)
             await db.commit()
 
-        model = {"fake": True}
-        topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.Dashboard]:
-            event_prefix = "board" if topic != SocketTopic.Dashboard else "dashboard:project"
-            publish_models.append(
-                SocketPublishModel(
-                    topic=topic,
-                    topic_id=topic_id,
-                    event=f"{event_prefix}:deleted:{topic_id}",
-                )
-            )
-
-        SocketPublishService.put_dispather(model, publish_models)
+        ProjectPublisher.deleted(project)
 
         ProjectActivityTask.project_deleted(user, project)
 

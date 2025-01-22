@@ -214,7 +214,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                     ) : (
                         <>
                             <BoardCommentReaction comment={comment} />
-                            {hasRoleAction(Project.ERoleAction.READ) &&
+                            {hasRoleAction(Project.ERoleAction.Read) &&
                                 currentUser.uid !== commentAuthor.uid &&
                                 currentUser.isValidUser() &&
                                 card.project_members.find((user) => user.uid === commentAuthor.uid) && (

@@ -1,72 +1,47 @@
-import { useState } from "react";
-import { Flex, IconComponent, Table, Tooltip } from "@/components/base";
+import { useCallback, useEffect, useRef } from "react";
+import { Flex, Loading, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
+import useGetDashboardCards from "@/controllers/api/dashboard/useGetDashboardCards";
+import { useTranslation } from "react-i18next";
+import CardRow from "@/pages/DashboardPage/components/CardRow";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { ProjectCard } from "@/core/models";
 
-export interface ICardsPageProps {}
-
-let curPage = 1;
-function CardsPage(props: ICardsPageProps): JSX.Element {
-    // TODO: Card, Implemnting the table
-    const [cards, setCards] = useState<
-        {
-            name: string;
-            status: string;
-            startedAt: Date;
-            timeTaken: string;
-        }[]
-    >([]);
-
-    const createCards = () => {
-        const status = ["Request", "Preparation", "Development", "Testing", "Deployment", "Completed"];
-        for (let i = 0; i < 30; ++i) {
-            cards.push({
-                name: `Card ${createShortUUID()}`,
-                status: status[Math.floor(Math.random() * status.length)],
-                startedAt: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))),
-                timeTaken: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
-            });
+function CardsPage(): JSX.Element {
+    const { setIsLoadingRef } = usePageLoader();
+    const [t] = useTranslation();
+    const { mutateAsync, cardUIDs, isLastPage } = useGetDashboardCards();
+    const cards = ProjectCard.Model.useModels((model) => cardUIDs.includes(model.uid), [cardUIDs]);
+    const isFetchingRef = useRef(false);
+    const nextPage = useCallback(async () => {
+        if (isFetchingRef.current || isLastPage) {
+            return false;
         }
-        setCards([...cards]);
-    };
 
-    if (cards.length === 0) {
-        createCards();
-    }
-
-    const next = (page: number) => {
-        return new Promise<bool>((resolve) => {
-            setTimeout(() => {
-                curPage = page;
-                createCards();
+        isFetchingRef.current = true;
+        return await new Promise<bool>((resolve) => {
+            setTimeout(async () => {
+                await mutateAsync({});
+                isFetchingRef.current = false;
                 resolve(true);
-            }, 3500);
+            }, 2500);
         });
-    };
+    }, [isLastPage, mutateAsync]);
 
-    const createCell = (isHead: bool, value: string, className: string) => {
-        const Comp = isHead ? Table.Head : Table.Cell;
-        return (
-            <Comp className={className}>
-                <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger>{value}</Tooltip.Trigger>
-                        <Tooltip.Content>{value}</Tooltip.Content>
-                    </Tooltip.Root>
-                </Tooltip.Provider>
-            </Comp>
-        );
-    };
+    useEffect(() => {
+        setIsLoadingRef.current(false);
+    }, [mutateAsync, cards]);
 
     return (
         <InfiniteScroller
             scrollable={() => document.getElementById("main")}
-            loadMore={next}
-            hasMore={true}
-            threshold={43}
+            loadMore={nextPage}
+            hasMore={!isLastPage}
+            threshold={18}
             loader={
                 <Flex justify="center" mt="6" key={createShortUUID()}>
-                    <IconComponent icon="loader" size="8" className="animate-spin text-gray-500" />
+                    <Loading size="3" variant="secondary" />
                 </Flex>
             }
             className="!overflow-y-hidden"
@@ -74,31 +49,23 @@ function CardsPage(props: ICardsPageProps): JSX.Element {
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
-                        {createCell(true, "ID", "w-1/12 text-center")}
-                        {createCell(true, "Name", "text-center")}
-                        {createCell(true, "Status", "w-1/6 text-center")}
-                        {createCell(true, "Started at", "w-1/6 text-center")}
-                        {createCell(true, "Time taken", "w-1/6 text-center")}
+                        <Table.Head className="w-1/3 text-center" title={t("dashboard.Title")}>
+                            {t("dashboard.Title")}
+                        </Table.Head>
+                        <Table.Head className="w-1/3 text-center" title={t("dashboard.Column")}>
+                            {t("dashboard.Column")}
+                        </Table.Head>
+                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Started at")}>
+                            {t("dashboard.Started at")}
+                        </Table.Head>
+                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Time taken")}>
+                            {t("dashboard.Time taken")}
+                        </Table.Head>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {cards.map((card, index) => (
-                        <Table.Row key={card.name}>
-                            {createCell(false, (index + 1).toString(), "max-w-0 truncate text-center")}
-                            {createCell(false, card.name, "max-w-0 truncate text-left")}
-                            {createCell(false, card.status, "max-w-0 truncate text-center")}
-                            {createCell(
-                                false,
-                                card.startedAt.toLocaleDateString(undefined, {
-                                    year: "numeric",
-                                    month: "numeric",
-                                    day: "numeric",
-                                    hour12: false,
-                                }),
-                                "max-w-0 truncate text-center"
-                            )}
-                            {createCell(false, card.timeTaken, "max-w-0 truncate text-center")}
-                        </Table.Row>
+                    {cards.map((card) => (
+                        <CardRow card={card} key={`cards-list-${card.uid}`} />
                     ))}
                 </Table.Body>
             </Table.Root>

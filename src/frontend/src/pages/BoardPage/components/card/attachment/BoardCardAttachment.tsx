@@ -56,8 +56,8 @@ function BoardCardAttachment({ attachment, isOverlay }: IBoardCardAttachmentProp
         },
     });
     const [isValidating, setIsValidating] = useState(false);
-    const canReorder = hasRoleAction(Project.ERoleAction.CARD_UPDATE);
-    const canEdit = currentUser.uid === attachment.user.uid || hasRoleAction(Project.ERoleAction.CARD_UPDATE);
+    const canReorder = hasRoleAction(Project.ERoleAction.CardUpdate);
+    const canEdit = currentUser.uid === attachment.user.uid || hasRoleAction(Project.ERoleAction.CardUpdate);
 
     const style = {
         transition,

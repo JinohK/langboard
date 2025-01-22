@@ -11,5 +11,5 @@ class DashboardProjectCreateForm(BaseFormModel):
     project_type: str = "Other"
 
 
-class DashboardTrackingPagination(Pagination):
+class DashboardPagination(Pagination):
     refer_time: datetime = now()
