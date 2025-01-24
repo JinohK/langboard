@@ -1,8 +1,8 @@
+import { QUERY_NAMES } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
-import { ROUTES } from "@/core/routing/constants";
 
 export interface ISignUpForm extends Omit<User.Interface, "uid" | "username" | "avatar" | "groups"> {
     password: string;
@@ -11,10 +11,7 @@ export interface ISignUpForm extends Omit<User.Interface, "uid" | "username" | "
     affiliation?: string;
     position?: string;
     avatar?: File;
-    lang?: string;
 }
-
-export const SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME = "sAVk";
 
 const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
     const { mutate } = useQueryMutation();
@@ -33,8 +30,7 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
             }
         });
 
-        formData.append("url", `${window.location.origin}${ROUTES.SIGN_UP.ACTIVATE}`);
-        formData.append("activate_token_query_name", SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME);
+        formData.append("activate_token_query_name", QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN);
 
         const res = await api.post(API_ROUTES.AUTH.SIGN_UP.SEND_LINK, formData);
 

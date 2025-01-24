@@ -57,3 +57,19 @@ async def update_column_order(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.delete("/board/{project_uid}/column/{column_uid}")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def delete_column(
+    project_uid: str,
+    column_uid: str,
+    user: User = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    result = await service.project_column.delete(user, project_uid, column_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)

@@ -1,0 +1,36 @@
+from enum import Enum
+from typing import Any, ClassVar
+from sqlmodel import Field
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
+from .UserNotification import NotificationType
+
+
+class NotificationChannel(Enum):
+    Web = "web"
+    Email = "email"
+    Mobile = "mobile"
+    IoT = "iot"
+
+
+class NotificationScope(Enum):
+    All = "all"
+    Specific = "specific"
+
+
+class UserNotificationUnsubscription(BaseSqlModel, table=True):
+    UNAVAILABLE_TYPES: ClassVar[list[NotificationType]] = [NotificationType.ProjectInvited]
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    channel: NotificationChannel = Field(nullable=False)
+    notification_type: NotificationType = Field(nullable=False)
+    scope_type: NotificationScope = Field(nullable=False)
+    specific_table: str | None = Field(nullable=True)
+    specific_id: SnowflakeID | None = SnowflakeIDField(nullable=True)
+
+    def api_response(self) -> dict[str, Any]:
+        return {}
+
+    def notification_data(self) -> dict[str, Any]:
+        return {}
+
+    def _get_repr_keys(self) -> list[str | tuple[str, str]]:
+        return []

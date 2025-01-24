@@ -7,7 +7,11 @@ export interface IIsProjectAvailableForm {
     uid: string;
 }
 
-const useIsProjectAvailable = (form: IIsProjectAvailableForm, options?: TQueryOptions) => {
+export interface IIsProjectAvailableResponse {
+    title: string;
+}
+
+const useIsProjectAvailable = (form: IIsProjectAvailableForm, options?: TQueryOptions<unknown, IIsProjectAvailableResponse>) => {
     const { query } = useQueryMutation();
 
     const isProjectAvailable = async () => {

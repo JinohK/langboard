@@ -34,7 +34,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
             card_uid: card.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: (error) => {
                 let message = "";
@@ -69,7 +69,6 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
                 setIsValidating(false);
                 setIsOpened(false);
                 deleteCardModel(card.uid, true);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

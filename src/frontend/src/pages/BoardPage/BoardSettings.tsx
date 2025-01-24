@@ -6,8 +6,9 @@ import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
 import useGetProjetDetails from "@/controllers/api/board/useGetProjectDetails";
-import BoardSettingsList, { SkeletonSettingsList } from "@/pages/BoardPage/components/settings/BoardSettingsList";
+import BoardSettingsList from "@/pages/BoardPage/components/settings/BoardSettingsList";
 import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
+import BoardSettingsUserList from "@/pages/BoardPage/components/settings/BoardSettingsUserList";
 
 const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
@@ -19,10 +20,7 @@ const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRel
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
-            },
+            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {},
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("dashboard.errors.Project not found"));
                 navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
@@ -34,9 +32,8 @@ const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRel
 
     return (
         <>
-            {!data ? (
-                <SkeletonSettingsList />
-            ) : (
+            <BoardSettingsUserList currentUser={currentUser} projectUID={projectUID} />
+            {data && (
                 <BoardSettingsProvider navigate={navigate} project={data.project} currentUser={currentUser}>
                     <BoardSettingsList />
                 </BoardSettingsProvider>

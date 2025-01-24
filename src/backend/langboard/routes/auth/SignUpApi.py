@@ -1,4 +1,5 @@
 from fastapi import File, UploadFile, status
+from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
 from ...core.routing import AppRouter, JsonResponse
 from ...core.storage import Storage, StorageName
@@ -25,9 +26,9 @@ async def signup(
 
     cache_key = service.user.create_cache_name("signup", user.email)
 
-    token_url = await service.user.create_token_url(user, cache_key, form.url, form.activate_token_query_name)
+    token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN)
 
-    result = await service.email.send_template(form.lang, user.email, "signup", {"url": token_url})
+    result = await service.email.send_template(user.preferred_lang, user.email, "signup", {"url": token_url})
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -48,9 +49,9 @@ async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) 
 
     await Cache.delete(cache_key)
 
-    token_url = await service.user.create_token_url(user, cache_key, form.url, form.activate_token_query_name)
+    token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN)
 
-    result = await service.email.send_template(form.lang, user.email, "signup", {"url": token_url})
+    result = await service.email.send_template(user.preferred_lang, user.email, "signup", {"url": token_url})
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 

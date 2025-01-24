@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import AccountUserGroupList, { SkeletonAccountUserGroupList } from "@/pages/AccountPage/components/AccountUserGroupList";
+import AccountUserGroupList, { SkeletonAccountUserGroupList } from "@/pages/AccountPage/components/group/AccountUserGroupList";
 
 export function SkeletonGroupsPage(): JSX.Element {
     const [t] = useTranslation();

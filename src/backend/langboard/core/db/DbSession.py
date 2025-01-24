@@ -54,7 +54,7 @@ class DbSession:
 
     @asynccontextmanager
     @staticmethod
-    async def use_db():
+    async def use():
         db = DbSession()
         try:
             for session in set(db._sessions.values()):

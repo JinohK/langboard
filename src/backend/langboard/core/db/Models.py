@@ -148,6 +148,8 @@ class BaseSqlModel(ABC, SQLModel):
         """Get the short code of the object's ID."""
         if not isinstance(self, BaseSqlModel):
             return ""
+        if not isinstance(self.id, SnowflakeID) and isinstance(self.id, int):
+            return SnowflakeID(self.id).to_short_code()
         return self.id.to_short_code()
 
     def has_changes(self) -> bool:

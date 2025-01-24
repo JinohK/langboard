@@ -26,7 +26,7 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled
 
     return (
         <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
-            <Flex wrap="wrap" gap="1">
+            <Flex wrap gap="1">
                 {reactionOrders.map((reaction) => {
                     if (!reactions[reaction] || reactions[reaction].length === 0) {
                         return null;

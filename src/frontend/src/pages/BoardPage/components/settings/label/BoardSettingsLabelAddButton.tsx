@@ -28,7 +28,7 @@ function BoardSettingsLabelAddButton() {
             description: "Sample label description",
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Adding..."),
             error: (error: unknown) => {
                 let message = "";
@@ -55,7 +55,6 @@ function BoardSettingsLabelAddButton() {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

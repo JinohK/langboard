@@ -24,11 +24,11 @@ export const IconVariants = tv(
 type TSVGElementAttributes = React.RefAttributes<SVGSVGElement> & Partial<React.SVGProps<SVGSVGElement>>;
 type TImageElementAttributes = React.RefAttributes<HTMLImageElement> & React.HTMLAttributes<HTMLImageElement>;
 
-interface ICountryIconProps extends TImageElementAttributes, VariantProps<typeof IconVariants> {
+export interface ICountryIconProps extends TImageElementAttributes, VariantProps<typeof IconVariants> {
     icon: `country-${string}`;
 }
 
-interface ILucideIconProps extends TSVGElementAttributes, VariantProps<typeof IconVariants> {
+export interface ILucideIconProps extends TSVGElementAttributes, VariantProps<typeof IconVariants> {
     icon: keyof typeof dynamicIconImports | (string & {});
 }
 

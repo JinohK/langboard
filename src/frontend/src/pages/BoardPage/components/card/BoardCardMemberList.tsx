@@ -31,7 +31,7 @@ const BoardCardMemberList = memo(() => {
             assigned_users: User.filterValidUserUIDs(items as User.TModel[]),
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 let message = "";
@@ -59,7 +59,6 @@ const BoardCardMemberList = memo(() => {
             finally: () => {
                 endCallback();
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

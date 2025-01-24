@@ -76,7 +76,7 @@ function LangflowPage() {
             promises.push(updateApiKeySettingMutateAsync({ setting_value: newApiKeyValue }));
         }
 
-        const toastId = Toast.Add.promise(Promise.all(promises), {
+        Toast.Add.promise(Promise.all(promises), {
             loading: t("common.Changing..."),
             error: (error) => {
                 let message = "";
@@ -103,7 +103,6 @@ function LangflowPage() {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

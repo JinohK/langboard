@@ -1,6 +1,7 @@
 from typing import Any, cast
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
+from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn
 from ...publishers import ProjectColumnPublisher
 from ...tasks import ProjectColumnActivityTask
@@ -17,7 +18,7 @@ class ProjectColumnService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectColumn)
                 .where(ProjectColumn.column("project_id") == project.id)
@@ -25,33 +26,56 @@ class ProjectColumnService(BaseService):
                 .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
             )
         raw_columns = result.all()
+        columns = []
+        has_archive_column = False
+        for raw_column in raw_columns:
+            columns.append(raw_column.api_response())
+            if raw_column.is_archive:
+                has_archive_column = True
+
+        if not has_archive_column:
+            archive_column = await self.get_or_create_archive_if_not_exists(project)
+            columns.append(archive_column.api_response())
+
         columns = [raw_column.api_response() for raw_column in raw_columns]
-        columns.insert(
-            project.archive_column_order,
-            {
-                "uid": project.ARCHIVE_COLUMN_UID(),
-                "project_uid": project.get_uid(),
-                "name": project.archive_column_name,
-                "order": project.archive_column_order,
-            },
-        )
         return columns
 
-    async def count_cards(self, project: TProjectParam, column_id: SnowflakeID | str) -> int:
-        project = cast(Project, await self._get_by_param(Project, project))
-        if not project:
-            return 0
-        column_id = (
-            SnowflakeID.from_short_code(column_id)
-            if isinstance(column_id, str) and column_id != project.ARCHIVE_COLUMN_UID()
-            else column_id
+    async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(ProjectColumn).where(
+                    (ProjectColumn.column("project_id") == project.id) & ProjectColumn.column("is_archive") == True  # noqa
+                )
+            )
+        archive_column = result.first()
+        if archive_column:
+            return archive_column
+
+        max_order = await self._get_max_order(ProjectColumn, "project_id", project.id)
+
+        column = ProjectColumn(
+            project_id=project.id,
+            name=ProjectColumn.DEFAULT_ARCHIVE_COLUMN_NAME,
+            order=max_order + 1,
+            is_archive=True,
         )
-        sql_query = SqlBuilder.select.count(Card, Card.id).where(Card.column("project_id") == project.id)
-        if column_id == project.ARCHIVE_COLUMN_UID():
-            sql_query = sql_query.where(Card.column("archived_at") != None)  # noqa
-        else:
-            sql_query = sql_query.where(Card.column("project_column_id") == column_id)
-        async with DbSession.use_db() as db:
+
+        async with DbSession.use() as db:
+            db.insert(column)
+            await db.commit()
+
+        return column
+
+    async def count_cards(self, project: TProjectParam, column: TColumnParam) -> int:
+        params = await self.__get_records_by_params(project, column)
+        if not params:
+            return 0
+        project, column = params
+
+        sql_query = SqlBuilder.select.count(Card, Card.id).where(
+            (Card.column("project_id") == project.id) & (Card.column("project_column_id") == column.id)
+        )
+        async with DbSession.use() as db:
             result = await db.exec(sql_query)
             count = result.first() or 0
         return count
@@ -66,10 +90,10 @@ class ProjectColumnService(BaseService):
         column = ProjectColumn(
             project_id=project.id,
             name=name,
-            order=max_order + 2,  # due to the archive column, the order is incremented by 2
+            order=max_order + 1,
         )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(column)
             await db.commit()
 
@@ -82,29 +106,18 @@ class ProjectColumnService(BaseService):
     async def change_name(
         self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, name: str
     ) -> bool | None:
-        project = cast(Project, await self._get_by_param(Project, project))
-        if not project:
+        params = await self.__get_records_by_params(project, column)
+        if not params:
             return None
+        project, column = params
 
-        if column == project.ARCHIVE_COLUMN_UID() or column == project or column == project.id:
-            old_name = project.archive_column_name
-            project.archive_column_name = name
-            async with DbSession.use_db() as db:
-                await db.update(project)
-                await db.commit()
-            column_id = project.ARCHIVE_COLUMN_UID()
-        else:
-            column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
-            if not column or column.project_id != project.id:
-                return None
-            old_name = column.name
-            column.name = name
-            async with DbSession.use_db() as db:
-                await db.update(column)
-                await db.commit()
-            column_id = column.id
+        old_name = column.name
+        column.name = name
+        async with DbSession.use() as db:
+            await db.update(project)
+            await db.commit()
 
-        ProjectColumnPublisher.name_changed(project, name, column_id)
+        ProjectColumnPublisher.name_changed(project, column, name)
 
         ProjectColumnActivityTask.project_column_name_changed(
             user_or_bot,
@@ -115,49 +128,83 @@ class ProjectColumnService(BaseService):
 
         return True
 
-    async def change_order(
-        self, user: User, project: TProjectParam, project_column: TColumnParam, order: int
-    ) -> bool | None:
-        project = cast(Project, await self._get_by_param(Project, project))
-        if not project:
-            return None
+    async def change_order(self, user: User, project: TProjectParam, column: TColumnParam, order: int) -> bool:
+        params = await self.__get_records_by_params(project, column)
+        if not params:
+            return False
+        project, column = params
 
-        async with DbSession.use_db() as db:
-            result = await db.exec(
-                SqlBuilder.select.table(ProjectColumn)
-                .where(ProjectColumn.column("project_id") == project.id)
-                .order_by(ProjectColumn.column("order").asc())
-                .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
-            )
-        columns: list[Project | ProjectColumn] = list(result.all())
-        columns.insert(project.archive_column_order, project)
-
-        if project_column == project.ARCHIVE_COLUMN_UID():
-            target_column = columns.pop(project.archive_column_order)
-        else:
-            target_column = None
-            project_column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, project_column))
-            if not project_column or project_column.project_id != project.id:
-                return None
-            for column in columns:
-                if column.id == project_column.id:
-                    target_column = column
-                    columns.remove(column)
-                    break
-            if not target_column:
-                return None
-
-        columns.insert(order, target_column)
-
-        async with DbSession.use_db() as db:
-            for i, column in enumerate(columns):
-                if isinstance(column, Project):
-                    column.archive_column_order = i
-                else:
-                    column.order = i
-                await db.update(column)
+        original_order = column.order
+        update_query = SqlBuilder.update.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
+        update_query = self._set_order_in_column(update_query, ProjectColumn, original_order, order)
+        async with DbSession.use() as db:
+            await db.exec(update_query)
             await db.commit()
 
-        ProjectColumnPublisher.order_changed(project, cast(ProjectColumn | str, project_column))
+        column.order = order
+        async with DbSession.use() as db:
+            await db.update(column)
+            await db.commit()
+
+        ProjectColumnPublisher.order_changed(project, column)
 
         return True
+
+    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam) -> bool:
+        params = await self.__get_records_by_params(project, column)
+        if not params:
+            return False
+        project, column = params
+        if column.is_archive:
+            return False
+
+        archive_column = await self.get_or_create_archive_if_not_exists(project)
+        all_cards_in_column = await self._get_all_by(Card, "project_column_id", column.id)
+        count_cards_in_column = len(all_cards_in_column)
+
+        current_time = now()
+
+        query = (
+            SqlBuilder.update.table(Card)
+            .values({Card.order: Card.order + count_cards_in_column})
+            .where(Card.column("project_column_id") == archive_column.id)
+        )
+        async with DbSession.use() as db:
+            await db.exec(query)
+            await db.commit()
+
+        for i in range(count_cards_in_column):
+            card = all_cards_in_column[i]
+            card.project_column_id = archive_column.id
+            card.archived_at = current_time
+            async with DbSession.use() as db:
+                await db.update(card)
+                await db.commit()
+
+        async with DbSession.use() as db:
+            await db.delete(column)
+            await db.commit()
+
+        async with DbSession.use() as db:
+            await db.exec(
+                SqlBuilder.update.table(ProjectColumn)
+                .values({ProjectColumn.order: ProjectColumn.order - 1})
+                .where(
+                    (ProjectColumn.column("project_id") == project.id) & (ProjectColumn.column("order") > column.order)
+                )
+            )
+            await db.commit()
+
+        ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
+
+        ProjectColumnActivityTask.project_column_deleted(user_or_bot, project, column)
+
+        return True
+
+    async def __get_records_by_params(self, project: TProjectParam, column: TColumnParam):
+        project = cast(Project, await self._get_by_param(Project, project))
+        column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
+        if not project or not column or column.project_id != project.id:
+            return None
+
+        return project, column

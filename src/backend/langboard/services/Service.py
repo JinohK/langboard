@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from fastapi import Depends
 from ..core.service import ServiceFactory
 from . import factory
@@ -14,6 +15,13 @@ class Service(ServiceFactory):
                 service.close()
 
         return Depends(create_factory)
+
+    @contextmanager
+    @staticmethod
+    def use():
+        service = Service()
+        yield service
+        service.close()
 
     def close(self):
         self._services.clear()
@@ -97,3 +105,7 @@ class Service(ServiceFactory):
     @property
     def activity(self):
         return self._create_or_get_service(factory.ActivityService)
+
+    @property
+    def user_notification_setting(self):
+        return self._create_or_get_service(factory.UserNotificationSettingService)

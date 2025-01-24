@@ -172,7 +172,7 @@ class BaseBot(metaclass=BotMetadata):
             return None
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(AppSetting).where(
                     (AppSetting.setting_type == AppSettingType.LangflowUrl)

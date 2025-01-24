@@ -5,6 +5,7 @@ export interface Interface extends IBaseModel {
     project_uid: string;
     name: string;
     order: number;
+    is_archive: bool;
 }
 
 export interface IStore extends Interface {
@@ -22,13 +23,6 @@ class ProjectColumn extends BaseModel<IStore> {
             projectUID: this.project_uid,
             columnUID: this.uid,
         });
-    }
-
-    public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
-        const map = {
-            isArchiveColumn: () => model.uid === model.project_uid,
-        };
-        return map as TMethodMap;
     }
 
     public get project_uid() {
@@ -59,8 +53,11 @@ class ProjectColumn extends BaseModel<IStore> {
         this.update({ count: value });
     }
 
-    public isArchiveColumn() {
-        return this.uid === this.project_uid;
+    public get is_archive() {
+        return this.getValue("is_archive");
+    }
+    public set is_archive(value: bool) {
+        this.update({ is_archive: value });
     }
 }
 

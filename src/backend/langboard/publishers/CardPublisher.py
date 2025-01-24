@@ -9,7 +9,7 @@ from ..models import Card, Checkitem, Project, ProjectColumn, ProjectLabel
 @staticclass
 class CardPublisher:
     @staticmethod
-    def created(project: Project, column: Project | ProjectColumn, model: dict[str, Any]):
+    def created(project: Project, column: ProjectColumn, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_models = [
             SocketPublishModel(
@@ -70,20 +70,19 @@ class CardPublisher:
         SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def order_changed(
-        project: Project, card: Card, old_column: Project | ProjectColumn, new_column: Project | ProjectColumn | None
-    ):
+    def order_changed(project: Project, card: Card, old_column: ProjectColumn, new_column: ProjectColumn | None):
         model = {
             "uid": card.get_uid(),
             "order": card.order,
+            "archived_at": card.archived_at,
         }
 
-        old_column_uid = CardPublisher.__get_column_uid(old_column)
+        old_column_uid = old_column.get_uid()
 
         if new_column:
-            new_column_uid = CardPublisher.__get_column_uid(new_column)
+            new_column_uid = new_column.get_uid()
             model["to_column_uid"] = new_column_uid
-            model["column_name"] = CardPublisher.__get_column_name(new_column)
+            model["column_name"] = new_column.name
 
         publish_models: list[SocketPublishModel] = []
         topic_id = project.get_uid()
@@ -95,31 +94,30 @@ class CardPublisher:
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
                         event=f"board:card:order:changed:{new_column_uid}",
-                        data_keys=["uid", "order"],
+                        data_keys=["uid", "order", "archived_at"],
                         custom_data={"move_type": "to_column", "column_uid": new_column_uid},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
                         event=f"board:card:order:changed:{old_column_uid}",
-                        data_keys=["uid", "order"],
+                        data_keys=["uid", "order", "archived_at"],
                         custom_data={"move_type": "from_column", "column_uid": old_column_uid},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.BoardCard,
                         topic_id=card_uid,
                         event=f"board:card:order:changed:{card_uid}",
-                        data_keys=["to_column_uid", "column_name"],
+                        data_keys=["to_column_uid", "column_name", "archived_at"],
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.Dashboard,
                         topic_id=topic_id,
                         event=f"dashboard:card:order:changed:{topic_id}",
-                        data_keys=["to_column_uid", "column_name"],
+                        data_keys=["to_column_uid", "column_name", "archived_at"],
                         custom_data={
                             "uid": card_uid,
                             "from_column_uid": old_column_uid,
-                            "archived_at": card.archived_at,
                         },
                     ),
                 ]
@@ -165,7 +163,7 @@ class CardPublisher:
     def deleted(project: Project, card: Card):
         topic_id = project.get_uid()
         card_uid = card.get_uid()
-        column_uid = card.project_column_id.to_short_code() if card.project_column_id else project.ARCHIVE_COLUMN_UID()
+        column_uid = card.project_column_id.to_short_code()
         publish_models: list[SocketPublishModel] = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
@@ -184,11 +182,3 @@ class CardPublisher:
         ]
 
         SocketPublishService.put_dispather({}, publish_models)
-
-    @staticmethod
-    def __get_column_uid(column: Project | ProjectColumn) -> str:
-        return column.ARCHIVE_COLUMN_UID() if isinstance(column, Project) else column.get_uid()
-
-    @staticmethod
-    def __get_column_name(column: Project | ProjectColumn) -> str:
-        return column.archive_column_name if isinstance(column, Project) else column.name

@@ -33,7 +33,7 @@ const BoardSettingsRole = memo(({ member, isValidating, setIsValidating }: IBoar
             roles: roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role],
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error) => {
                 let message = "";
@@ -60,7 +60,6 @@ const BoardSettingsRole = memo(({ member, isValidating, setIsValidating }: IBoar
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };
@@ -72,7 +71,7 @@ const BoardSettingsRole = memo(({ member, isValidating, setIsValidating }: IBoar
                     <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                 </UserAvatar.List>
             </UserAvatar.Root>
-            <Flex wrap="wrap" gap="2">
+            <Flex wrap gap="2">
                 {Object.keys(Project.ERoleAction).map((key) => {
                     const disabled = key === "Read" || isValidating;
                     return (

@@ -1,4 +1,4 @@
-from ..core.db import SnowflakeID
+from datetime import datetime
 from ..core.routing import SocketTopic
 from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
@@ -35,9 +35,9 @@ class ProjectColumnPublisher:
         SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def name_changed(project: Project, name: str, column_id: SnowflakeID | str):
+    def name_changed(project: Project, column: ProjectColumn, name: str):
         model = {
-            "uid": project.ARCHIVE_COLUMN_UID() if isinstance(column_id, str) else column_id.to_short_code(),
+            "uid": column.get_uid(),
             "name": name,
         }
 
@@ -60,12 +60,10 @@ class ProjectColumnPublisher:
         SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def order_changed(project: Project, column: ProjectColumn | str):
-        column_uid = column.get_uid() if isinstance(column, ProjectColumn) else project.ARCHIVE_COLUMN_UID()
-        column_order = column.order if isinstance(column, ProjectColumn) else project.archive_column_order
+    def order_changed(project: Project, column: ProjectColumn):
         model = {
-            "uid": column_uid,
-            "order": column_order,
+            "uid": column.get_uid(),
+            "order": column.order,
         }
 
         topic_id = project.get_uid()
@@ -81,6 +79,39 @@ class ProjectColumnPublisher:
                 topic_id=topic_id,
                 event=f"dashboard:project:column:order:changed:{topic_id}",
                 data_keys=["uid", "order"],
+            ),
+        ]
+
+        SocketPublishService.put_dispather(model, publish_models)
+
+    @staticmethod
+    def deleted(
+        project: Project,
+        column: ProjectColumn,
+        archive_column: ProjectColumn,
+        archived_at: datetime,
+        count_all_cards_in_column: int,
+    ):
+        model = {
+            "uid": column.get_uid(),
+            "archive_column_uid": archive_column.get_uid(),
+            "archived_at": archived_at,
+            "count_all_cards_in_column": count_all_cards_in_column,
+        }
+
+        topic_id = project.get_uid()
+        publish_models = [
+            SocketPublishModel(
+                topic=SocketTopic.Board,
+                topic_id=topic_id,
+                event=f"board:column:deleted:{topic_id}",
+                data_keys=list(model.keys()),
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.Dashboard,
+                topic_id=topic_id,
+                event=f"dashboard:project:column:deleted:{topic_id}",
+                data_keys=list(model.keys()),
             ),
         ]
 

@@ -50,7 +50,7 @@ class UserGroupService(BaseService):
         if not user_group:
             return []
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(UserGroupAssignedEmail, User)
                 .outerjoin(
@@ -86,12 +86,12 @@ class UserGroupService(BaseService):
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(user_group)
             await db.commit()
 
         if emails:
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 for email in set(emails):
                     assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
                     db.insert(assigned_email)
@@ -106,7 +106,7 @@ class UserGroupService(BaseService):
 
         user_group.name = name
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(user_group)
             await db.commit()
         return True
@@ -116,7 +116,7 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
@@ -141,7 +141,7 @@ class UserGroupService(BaseService):
         none_user_emails = [email for email in emails if email not in appended_emails]
         all_emails = unique_app_user_emails.union(none_user_emails)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             for email in all_emails:
                 assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
                 db.insert(assigned_email)
@@ -154,7 +154,7 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
@@ -162,7 +162,7 @@ class UserGroupService(BaseService):
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(user_group)
             await db.commit()
 

@@ -22,9 +22,6 @@ class SignUpForm(BaseFormModel):
     purpose: str
     affiliation: str | None = None
     position: str | None = None
-    url: str
-    activate_token_query_name: str
-    lang: str = "en-US"
 
     @field_validator("email")
     @classmethod
@@ -47,9 +44,6 @@ class SignUpForm(BaseFormModel):
 @form_model
 class ResendLinkForm(BaseFormModel):
     email: str
-    url: str
-    activate_token_query_name: str
-    lang: str = "en-US"
 
 
 @form_model

@@ -5,6 +5,7 @@ import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
+import BoardCardNotificationSettings from "@/pages/BoardPage/components/card/BoardCardNotificationSettings";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardTitle() {
@@ -32,7 +33,7 @@ function BoardCardTitle(): JSX.Element {
                 title: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -53,17 +54,28 @@ function BoardCardTitle(): JSX.Element {
                 },
                 finally: () => {
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },
         originalValue: title,
     });
 
+    const handleClickTitle = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("button") || target.closest("[data-radix-popper-content-wrapper]")) {
+            return;
+        }
+
+        changeMode("edit");
+    };
+
     return (
-        <Dialog.Title className="mr-7 cursor-text text-2xl" onClick={() => changeMode("edit")}>
+        <Dialog.Title className="mr-7 cursor-text text-2xl" onClick={handleClickTitle}>
             {!isEditing ? (
-                <span className="break-all">{title}</span>
+                <span className="break-all">
+                    {title}
+                    <BoardCardNotificationSettings key={`board-card-notification-settings-${card.uid}`} />
+                </span>
             ) : (
                 <Textarea
                     ref={valueRef}

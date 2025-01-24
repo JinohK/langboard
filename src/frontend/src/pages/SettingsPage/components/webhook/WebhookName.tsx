@@ -28,7 +28,7 @@ const WebhookName = memo(({ url }: IWebhookNameProps) => {
                 setting_name: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -53,7 +53,6 @@ const WebhookName = memo(({ url }: IWebhookNameProps) => {
                 },
                 finally: () => {
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

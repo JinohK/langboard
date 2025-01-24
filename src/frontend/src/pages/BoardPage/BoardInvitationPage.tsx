@@ -1,9 +1,9 @@
 import { Box, Button, Flex, Toast } from "@/components/base";
 import { FormOnlyLayout } from "@/components/Layout";
+import { QUERY_NAMES } from "@/constants";
 import useAcceptProjectInvitation from "@/controllers/api/board/useAcceptProjectInvitation";
 import useDeclineProjectInvitation from "@/controllers/api/board/useDeclineProjectInvitation";
 import useGetProjetInvitation from "@/controllers/api/board/useGetProjectInvitation";
-import { PROJCT_INVITATION_TOKEN_QUERY_NAME } from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
@@ -19,7 +19,7 @@ function BoardInvitationPage() {
     const location = useLocation();
     const navigate = usePageNavigate();
     const searchParams = new URLSearchParams(location.search);
-    const token = searchParams.get(PROJCT_INVITATION_TOKEN_QUERY_NAME);
+    const token = searchParams.get(QUERY_NAMES.PROJCT_INVITATION_TOKEN);
     const [isValidating, setIsValidating] = useState(false);
     const [projectTitle, setProjectTitle] = useState("");
     const { mutate: getProjectInvitationMutate } = useGetProjetInvitation();

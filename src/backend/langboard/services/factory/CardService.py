@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Any, Literal, TypeVar, cast, overload
-from sqlalchemy import Delete, Update, func
-from sqlmodel.sql.expression import Select, SelectOfScalar
+from typing import Any, Literal, cast, overload
+from sqlalchemy import func
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
@@ -35,9 +34,6 @@ from .ProjectService import ProjectService
 from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBot
 
 
-_TSelectParam = TypeVar("_TSelectParam", bound=Any)
-
-
 class CardService(BaseService):
     @staticmethod
     def name() -> str:
@@ -53,15 +49,13 @@ class CardService(BaseService):
             return None
         project, card = params
 
-        column = project
-        if card.project_column_id:
-            column = await self._get_by_param(ProjectColumn, card.project_column_id)
-            if not column:
-                return None
+        column = await self._get_by_param(ProjectColumn, card.project_column_id)
+        if not column:
+            return None
 
         api_card = card.api_response()
         api_card["deadline_at"] = card.deadline_at
-        api_card["column_name"] = self.__get_column_name(column)
+        api_card["column_name"] = column.name
 
         project_column_service = self._get_service(ProjectColumnService)
         api_card["project_all_columns"] = await project_column_service.get_list(project)
@@ -90,7 +84,7 @@ class CardService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(
                     Card,
@@ -139,7 +133,7 @@ class CardService(BaseService):
             .group_by(Card.column("id"), Card.column("created_at"))
         )
         query = self.paginate(query, pagination.page, pagination.limit)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
         cards = result.all()
 
@@ -147,13 +141,10 @@ class CardService(BaseService):
         api_projects: dict[int, dict[str, Any]] = {}
         for card, project in cards:
             api_card = card.api_response()
-            api_card["archived_at"] = card.archived_at
-            column = project
-            if card.project_column_id:
-                column = await self._get_by_param(ProjectColumn, card.project_column_id)
-                if not column:
-                    continue
-            api_card["column_name"] = self.__get_column_name(column)
+            column = await self._get_by_param(ProjectColumn, card.project_column_id)
+            if not column:
+                continue
+            api_card["column_name"] = column.name
             if project.id not in api_projects:
                 api_projects[project.id] = project.api_response()
             api_cards.append(api_card)
@@ -171,7 +162,7 @@ class CardService(BaseService):
         card = cast(Card, await self._get_by_param(Card, card))
         if not card:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(User, CardAssignedUser)
                 .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
@@ -186,7 +177,7 @@ class CardService(BaseService):
 
     async def convert_board_list_api_response(self, card: Card, count_comment: int | None = None) -> dict[str, Any]:
         if count_comment is None:
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 result = await db.exec(
                     SqlBuilder.select.count(CardComment, "id").where(CardComment.column("card_id") == card.id)
                 )
@@ -195,7 +186,7 @@ class CardService(BaseService):
         project_label_service = self._get_service(ProjectLabelService)
         raw_labels = await project_label_service.get_all_by_card(card, as_api=False)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 (
                     SqlBuilder.select.table(CardRelationship)
@@ -231,7 +222,8 @@ class CardService(BaseService):
         self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, title: str
     ) -> tuple[Card, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
-        if not project or column == project.ARCHIVE_COLUMN_UID():
+        column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
+        if not project or not column or column.project_id != project.id or column.is_archive:
             return None
 
         column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
@@ -246,7 +238,7 @@ class CardService(BaseService):
             title=title,
             order=max_order + 1,
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(card)
             await db.commit()
 
@@ -274,7 +266,7 @@ class CardService(BaseService):
                 continue
             old_value = getattr(card, key)
             new_value = form[key]
-            if old_value == new_value:
+            if old_value == new_value or (key == "title" and not new_value):
                 continue
             old_card_record[key] = self._convert_to_python(old_value)
             setattr(card, key, new_value)
@@ -287,11 +279,11 @@ class CardService(BaseService):
             checkitem_cardified_from = await self._get_by(Checkitem, "cardified_id", card.id)
             if checkitem_cardified_from:
                 checkitem_cardified_from.title = card.title
-                async with DbSession.use_db() as db:
+                async with DbSession.use() as db:
                     await db.update(checkitem_cardified_from)
                     await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(card)
             await db.commit()
 
@@ -312,7 +304,12 @@ class CardService(BaseService):
         return model
 
     async def change_order(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, order: int, column_uid: str = ""
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        order: int,
+        new_column: TColumnParam | None,
     ) -> bool | None:
         params = await self.__get_records_by_params(project, card)
         if not params:
@@ -320,61 +317,51 @@ class CardService(BaseService):
         project, card = params
 
         original_column = None
-        if card.project_column_id:
-            original_column = await self._get_by_param(ProjectColumn, card.project_column_id)
-            if not original_column or original_column.project_id != project.id:
+        original_column = await self._get_by_param(ProjectColumn, card.project_column_id)
+        if not original_column or original_column.project_id != project.id:
+            return None
+
+        if new_column:
+            new_column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, new_column))
+            if not new_column or new_column.project_id != card.project_id:
                 return None
-        else:
-            original_column = project
 
-        new_column = None
-        if column_uid:
-            if column_uid != project.ARCHIVE_COLUMN_UID():
-                new_column = await self._get_by_param(ProjectColumn, column_uid)
-                if not new_column or new_column.project_id != card.project_id:
-                    return None
-
-                card.archived_at = None
-                card.project_column_id = new_column.id
-            else:
-                new_column = project
-                card.archived_at = now()
-                card.project_column_id = None
+            card.project_column_id = new_column.id
+            card.archived_at = now() if new_column.is_archive else None
 
         original_order = card.order
 
         shared_update_query = SqlBuilder.update.table(Card).where(
             (Card.column("id") != card.id) & (Card.column("project_id") == card.project_id)
         )
+
         if new_column:
-            update_query = self.__filter_column(
-                shared_update_query.values({Card.order: Card.order - 1}).where(Card.column("order") >= original_order),
-                original_column,
+            update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
+                (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
             )
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
 
-            update_query = self.__filter_column(
-                (shared_update_query.values({Card.order: Card.order + 1}).where(Card.column("order") >= order)),
-                cast(ProjectColumn, new_column),
+            update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
+                (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
             )
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
         else:
             update_query = self._set_order_in_column(shared_update_query, Card, original_order, order)
-            update_query = self.__filter_column(update_query, original_column)
-            async with DbSession.use_db() as db:
+            update_query = update_query.where(Card.column("project_column_id") == original_column.id)
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             card.order = order
             await db.update(card)
             await db.commit()
 
-        CardPublisher.order_changed(project, card, original_column, new_column)
+        CardPublisher.order_changed(project, card, original_column, cast(ProjectColumn, new_column))
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
@@ -393,19 +380,19 @@ class CardService(BaseService):
             return None
         project, card = params
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.column(CardAssignedUser.user_id).where(CardAssignedUser.card_id == card.id)
             )
         original_assigned_user_ids = list(result.all())
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             users = []
             if assign_user_uids:
                 assign_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
@@ -459,11 +446,11 @@ class CardService(BaseService):
             bot_labels = await project_label_service.get_all_bot(project)
             bot_label_ids = [label.id for label in bot_labels]
             query = query.where(CardAssignedProjectLabel.column("project_label_id").not_in(bot_label_ids))
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(query)
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             for label_uid in label_uids:
                 label = await self._get_by_param(ProjectLabel, label_uid)
                 if not label or label.project_id != project.id or (not is_bot and label.is_bot):
@@ -491,7 +478,10 @@ class CardService(BaseService):
             return False
         project, card = params
 
-        async with DbSession.use_db() as db:
+        if not card.archived_at:
+            return False
+
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(Checkitem)
                 .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
@@ -508,13 +498,13 @@ class CardService(BaseService):
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(CardRelationship).where(
                     (CardRelationship.column("card_id_parent") == card.id)
@@ -523,8 +513,20 @@ class CardService(BaseService):
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(card)
+            await db.commit()
+
+        async with DbSession.use() as db:
+            await db.exec(
+                SqlBuilder.update.table(Card)
+                .values({Card.order: Card.order - 1})
+                .where(
+                    (Card.column("project_id") == project.id)
+                    & (Card.column("project_column_id") == card.project_column_id)
+                    & (Card.column("order") > card.order)
+                )
+            )
             await db.commit()
 
         CardPublisher.deleted(project, card)
@@ -532,30 +534,6 @@ class CardService(BaseService):
         CardActivityTask.card_deleted(user_or_bot, project, card)
 
         return True
-
-    @overload
-    def __filter_column(
-        self, query: Select[_TSelectParam], column: Project | ProjectColumn
-    ) -> Select[_TSelectParam]: ...
-    @overload
-    def __filter_column(
-        self, query: SelectOfScalar[_TSelectParam], column: Project | ProjectColumn
-    ) -> SelectOfScalar[_TSelectParam]: ...
-    @overload
-    def __filter_column(self, query: Update, column: Project | ProjectColumn) -> Update: ...
-    @overload
-    def __filter_column(self, query: Delete, column: Project | ProjectColumn) -> Delete: ...
-    def __filter_column(
-        self,
-        query: Select[_TSelectParam] | SelectOfScalar[_TSelectParam] | Update | Delete,
-        column: Project | ProjectColumn,
-    ):
-        if isinstance(column, Project):
-            return query.where(Card.column("project_column_id") == None)  # noqa
-        return query.where(Card.column("project_column_id") == column.id)
-
-    def __get_column_name(self, column: Project | ProjectColumn) -> str:
-        return column.archive_column_name if isinstance(column, Project) else column.name
 
     async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
         project = cast(Project, await self._get_by_param(Project, project))

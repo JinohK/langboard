@@ -19,6 +19,7 @@ class ProjectActivityType(Enum):
     # Project Column
     ProjectColumnCreated = "project_column_created"
     ProjectColumnNameChanged = "project_column_name_changed"
+    ProjectColumnDeleted = "project_column_deleted"
 
     # Project Label
     ProjectLabelCreated = "project_label_created"

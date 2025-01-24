@@ -5,8 +5,8 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
-import AccountUserGroupDeleteButton from "@/pages/AccountPage/components/AccountUserGroupDeleteButton";
-import AccountUserGroupName from "@/pages/AccountPage/components/AccountUserGroupName";
+import AccountUserGroupDeleteButton from "@/pages/AccountPage/components/group/AccountUserGroupDeleteButton";
+import AccountUserGroupName from "@/pages/AccountPage/components/group/AccountUserGroupName";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +17,7 @@ export function SkeletonAccountUserGroup(): JSX.Element {
                 <Skeleton h="6" w="28" />
             </Card.Header>
             <Card.Content>
-                <Flex gap="3" w="full" wrap="wrap" rounded="md" border px="3" py="2" className="border-input">
+                <Flex gap="3" w="full" wrap rounded="md" border px="3" py="2" className="border-input">
                     <Skeleton w="24" className="h-[calc(theme(spacing.5)_+_2px)]" />
                     <Skeleton w="20" className="h-[calc(theme(spacing.5)_+_2px)]" />
                     <Skeleton w="32" className="h-[calc(theme(spacing.5)_+_2px)]" />

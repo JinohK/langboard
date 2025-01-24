@@ -13,7 +13,7 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const navigate = usePageNavigate();
     const { mutate } = useSignUp();
     const failCallback = useCallback((errors?: Record<string, string>) => {
@@ -133,7 +133,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                 <Button type="button" variant="outline" onClick={() => moveStep(values, ROUTES.SIGN_UP.OPTIONAL)} disabled={isValidating}>
                     {t("common.Back")}
                 </Button>
-                <SubmitButton type="button" onClick={() => handleSubmit({ ...values, lang: i18n.language })} isValidating={isValidating}>
+                <SubmitButton type="button" onClick={() => handleSubmit({ ...values })} isValidating={isValidating}>
                     {t("signUp.Sign up")}
                 </SubmitButton>
             </Flex>

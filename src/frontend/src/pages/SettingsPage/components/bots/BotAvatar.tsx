@@ -60,7 +60,7 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
     };
 
     const showToast = (promise: Promise<unknown>, onSuccess: () => string) => {
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: (error) => {
                 let message = "";
@@ -84,7 +84,6 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
             finally: () => {
                 setIsValidating(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

@@ -223,7 +223,7 @@ const MultiSelect = React.memo(
                     className="group border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0"
                     ref={setWrapper}
                 >
-                    <Flex wrap="wrap" gap="1">
+                    <Flex wrap gap="1">
                         {selected.map((selectedValue) => {
                             let selection = selections.find((selection) => selection.value === selectedValue);
                             if (!selection && canCreateNew) {

@@ -1,3 +1,4 @@
+from enum import Enum
 from importlib import metadata
 from os import environ
 from os.path import dirname
@@ -23,6 +24,9 @@ DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local"
 # URL
 HOST = _get_env("BACKEND_HOST", "localhost")
 PORT = int(_get_env("BACKEND_PORT", "5381"))
+FRONTEND_PORT = int(_get_env("FRONTEND_PORT", "5173"))
+PUBLIC_FRONTEND_URL = _get_env("PUBLIC_FRONTEND_URL", f"http://{HOST}:{FRONTEND_PORT}")
+FRONTEND_REDIRECT_URL = f"{PUBLIC_FRONTEND_URL}/redirect"
 
 # Environment
 ENVIRONMENT = _get_env("ENVIRONMENT", "local")
@@ -79,3 +83,16 @@ S3_ACCESS_KEY_ID = _get_env("S3_ACCESS_KEY_ID")
 S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
 S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
 S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
+
+
+# Frontend query names
+class QUERY_NAMES(Enum):
+    SUB_EMAIL_VERIFY_TOKEN = "bEvt"
+    RECOVERY_TOKEN = "rtK"
+    SIGN_UP_ACTIVATE_TOKEN = "sAVk"
+    PROJCT_INVITATION_TOKEN = "PikQ"
+    BOARD = "bp"
+    BOARD_CARD = "BpC"
+    BOARD_CARD_CHUNK = "BpCC"
+    BOARD_WIKI = "bPw"
+    BOARD_WIKI_CHUNK = "BpWc"

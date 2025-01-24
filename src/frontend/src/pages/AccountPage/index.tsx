@@ -5,17 +5,20 @@ import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { RedirectToSignIn } from "@/core/helpers/AuthHelper";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider";
 import EmailPage, { SkeletonEmailPage } from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import GroupsPage, { SkeletonGroupsPage } from "@/pages/AccountPage/GroupsPage";
+import PreferencesPage from "@/pages/AccountPage/PreferencesPage";
 import { useEffect, useState } from "react";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider";
+import { useTranslation } from "react-i18next";
 
 function AccountPage(): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
+    const [t] = useTranslation();
     const { isAuthenticated, aboutMe, updated } = useAuth();
     const navigate = usePageNavigate();
     const location = useLocation();
@@ -40,30 +43,37 @@ function AccountPage(): JSX.Element {
     const sidebarNavs: Record<string, ISidebarNavItem> = {
         [ROUTES.ACCOUNT.PROFILE]: {
             icon: "user-pen",
-            name: "myAccount.Profile",
+            name: t("myAccount.Profile"),
             onClick: () => {
                 navigate(ROUTES.ACCOUNT.PROFILE);
             },
         },
         [ROUTES.ACCOUNT.EMAILS.ROUTE]: {
             icon: "mail",
-            name: "myAccount.Emails",
+            name: t("myAccount.Emails"),
             onClick: () => {
                 navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
             },
         },
         [ROUTES.ACCOUNT.PASSWORD]: {
             icon: "shield-alert",
-            name: "user.Password",
+            name: t("user.Password"),
             onClick: () => {
                 navigate(ROUTES.ACCOUNT.PASSWORD);
             },
         },
         [ROUTES.ACCOUNT.GROUPS]: {
             icon: "users",
-            name: "myAccount.Groups",
+            name: t("myAccount.Groups"),
             onClick: () => {
                 navigate(ROUTES.ACCOUNT.GROUPS);
+            },
+        },
+        [ROUTES.ACCOUNT.PREFERENCES]: {
+            icon: "users",
+            name: t("myAccount.Preferences"),
+            onClick: () => {
+                navigate(ROUTES.ACCOUNT.PREFERENCES);
             },
         },
     };
@@ -90,6 +100,10 @@ function AccountPage(): JSX.Element {
         case ROUTES.ACCOUNT.GROUPS:
             pageContent = <GroupsPage />;
             skeletonContent = <SkeletonGroupsPage />;
+            break;
+        case ROUTES.ACCOUNT.PREFERENCES:
+            pageContent = <PreferencesPage />;
+            skeletonContent = <></>;
             break;
     }
 

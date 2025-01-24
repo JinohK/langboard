@@ -57,7 +57,7 @@ export function SkeletonBoard() {
 
     return (
         <>
-            <Flex justify="between" px="4" pt="4" wrap="wrap">
+            <Flex justify="between" px="4" pt="4" wrap>
                 <SkeletonUserAvatarList count={6} size={{ initial: "sm", xs: "default" }} spacing="none" />
                 <Flex items="center" gap="1">
                     <SkeletonBoardFilter />
@@ -180,13 +180,13 @@ const BoardResult = memo(() => {
             {selectCardViewType && (
                 <Flex justify="center" items="center" position="fixed" top="-2" left="0" h="20" w="full" z="50" gap="3" px="1">
                     <Box position="absolute" top="0" left="0" size="full" className="bg-secondary/70 bg-cover blur-md backdrop-blur-sm" />
-                    <Flex wrap="wrap" position="relative" z="50" textSize={{ initial: "base", sm: "lg" }} weight="semibold" className="text-primary">
+                    <Flex wrap position="relative" z="50" textSize={{ initial: "base", sm: "lg" }} weight="semibold" className="text-primary">
                         <Box mr="2">{t(`board.Select ${selectCardViewType === "parents" ? "parent" : "child"} cards`)}</Box>
                         {selectedRelationshipUIDs.length > 0 && (
                             <Box>({t("board.{count} selected", { count: selectedRelationshipUIDs.length })})</Box>
                         )}
                     </Flex>
-                    <Flex wrap="wrap" position="relative" justify="end" z="50" className="text-right">
+                    <Flex wrap position="relative" justify="end" z="50" className="text-right">
                         <Button
                             type="button"
                             variant="secondary"
@@ -202,7 +202,7 @@ const BoardResult = memo(() => {
                 </Flex>
             )}
 
-            <Flex justify="between" px="4" pt="4" wrap="wrap">
+            <Flex justify="between" px="4" pt="4" wrap>
                 <BoardMemberList project={project} isSelectCardView={!!selectCardViewType} currentUser={currentUser} />
                 <Flex items="center" gap="1">
                     <BoardFilter />

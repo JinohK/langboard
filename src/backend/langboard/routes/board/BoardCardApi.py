@@ -170,14 +170,30 @@ async def update_card_relationships(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
+@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/archive")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@AuthFilter.add
+async def archive_card(
+    project_uid: str, card_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    column = await service.project_column.get_or_create_archive_if_not_exists(project)
+
+    result = await service.card.change_order(user, project, card_uid, 0, column)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
 @AppRouter.api.delete("/board/{project_uid}/card/{card_uid}")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], project_role_finder)
 @AuthFilter.add
 async def delete_card(
-    project_uid: str,
-    card_uid: str,
-    user: User = Auth.scope("api"),
-    service: Service = Service.scope(),
+    project_uid: str, card_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
     result = await service.card.delete(user, project_uid, card_uid)
     if not result:

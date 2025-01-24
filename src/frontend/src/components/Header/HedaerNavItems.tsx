@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { IHeaderNavItem, THeaderNavItemsProps } from "@/components/Header/types";
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -51,7 +50,6 @@ interface IHeaderNavItemProps extends Omit<THeaderNavItemsProps, "isMobile" | "n
 }
 
 function AccordionNav({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
-    const [t] = useTranslation();
     const key = makeReactKey(item.name);
     const subProps = {
         isMobile: true as false,
@@ -70,7 +68,7 @@ function AccordionNav({ item, setIsOpen, activatedClass, deactivatedClass, shard
                     disabled={subProps.navs!.length === 0}
                     hidden={item.hidden}
                 >
-                    {t(item.name)}
+                    {item.name}
                 </Accordion.Trigger>
                 <Accordion.Content className="pb-0 pl-4 pt-2">
                     <HedaerNavItems {...subProps} />
@@ -81,7 +79,6 @@ function AccordionNav({ item, setIsOpen, activatedClass, deactivatedClass, shard
 }
 
 function DropdownMenuNav({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
-    const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const setDropdownMenuOpenedRef = useRef(setIsOpened);
     setDropdownMenuOpenedRef.current = setIsOpened;
@@ -100,7 +97,7 @@ function DropdownMenuNav({ item, setIsOpen, activatedClass, deactivatedClass, sh
             <DropdownMenu.Root open={isOpened} onOpenChange={setIsOpened}>
                 <DropdownMenu.Trigger asChild>
                     <NavigationMenu.Trigger data-active={item.active ? true : null} disabled={subProps.navs!.length === 0} hidden={item.hidden}>
-                        {t(item.name)}
+                        {item.name}
                     </NavigationMenu.Trigger>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content>
@@ -115,7 +112,6 @@ function DropdownMenuNav({ item, setIsOpen, activatedClass, deactivatedClass, sh
 
 function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
-    const [t] = useTranslation();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (
@@ -134,14 +130,13 @@ function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, s
                 }
             }}
         >
-            <h3 className="py-2 text-base">{t(item.name)}</h3>
+            <h3 className="py-2 text-base">{item.name}</h3>
         </a>
     );
 }
 
 function NavLinkItem({ item, activatedClass, deactivatedClass, shardClass, setDropdownMenuOpenedRef }: IHeaderNavItemProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
-    const [t] = useTranslation();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (
@@ -161,7 +156,7 @@ function NavLinkItem({ item, activatedClass, deactivatedClass, shardClass, setDr
                     }
                 }}
             >
-                {t(item.name)}
+                {item.name}
             </NavigationMenu.Link>
         </NavigationMenu.Item>
     );

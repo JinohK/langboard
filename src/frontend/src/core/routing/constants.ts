@@ -1,6 +1,7 @@
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 
 export const ROUTES = {
+    REDIRECT: "/redirect",
     SIGN_IN: {
         EMAIL: "/auth/signin",
         PASSWORD: "/auth/signin/pwd",
@@ -28,6 +29,7 @@ export const ROUTES = {
         },
         PASSWORD: "/account/password",
         GROUPS: "/account/groups",
+        PREFERENCES: "/account/preferences",
     },
     BOARD: {
         ROUTE: "/board",
@@ -69,5 +71,3 @@ export const ROUTES = {
     },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
 } as const;
-
-export const REDIRECT_QUERY_NAME = "continue";

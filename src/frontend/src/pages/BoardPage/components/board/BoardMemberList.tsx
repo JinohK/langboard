@@ -15,7 +15,7 @@ export interface IBoardMemberListProps {
 }
 
 const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoardMemberListProps) => {
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const owners = project.useForeignField<User.TModel>("owner");
     const owner = owners[0];
     const members = project.useForeignField<User.TModel>("members");
@@ -36,10 +36,9 @@ const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoard
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
             emails: (items as User.TModel[]).map((user) => user.email),
-            lang: i18n.language,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 let message = "";
@@ -67,7 +66,6 @@ const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoard
             finally: () => {
                 endCallback();
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

@@ -11,7 +11,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCardCheckitem();
-    const [allColumns] = useState(card.project_all_columns.filter((column) => !column.isArchiveColumn()));
+    const [allColumns] = useState(card.project_all_columns.filter((column) => !column.is_archive));
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
@@ -30,7 +30,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
             column_uid: selectedColumnUID,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
@@ -40,7 +40,6 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
                 setIsValidating(false);
                 setIsMoreMenuOpened(false);
                 changeOpenState(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };
@@ -51,7 +50,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
         }
 
         if (!opened) {
-            setSelectedColumnUID(!card.isArchived ? card.column_uid : card.project_all_columns[0]?.uid);
+            setSelectedColumnUID(!card.archived_at ? card.column_uid : card.project_all_columns[0]?.uid);
         }
 
         setIsOpened(opened);

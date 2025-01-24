@@ -25,7 +25,7 @@ function BoardCardChecklistMoreDelete({ setIsMoreMenuOpened }: { setIsMoreMenuOp
             checklist_uid: checklist.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
@@ -35,7 +35,6 @@ function BoardCardChecklistMoreDelete({ setIsMoreMenuOpened }: { setIsMoreMenuOp
                 setIsValidating(false);
                 setIsMoreMenuOpened(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

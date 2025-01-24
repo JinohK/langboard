@@ -24,7 +24,7 @@ function BoardCardChecklistCheckbox() {
             checklist_uid: checklist.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
@@ -32,7 +32,6 @@ function BoardCardChecklistCheckbox() {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

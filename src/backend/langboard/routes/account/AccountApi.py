@@ -1,4 +1,5 @@
 from fastapi import File, UploadFile, status
+from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
 from ...core.db import User
 from ...core.filter import AuthFilter
@@ -7,11 +8,12 @@ from ...core.routing.Exception import InvalidError, InvalidException
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
 from ...services import Service
-from .Form import (
+from .AccountForm import (
     AddNewEmailForm,
     ChangePasswordForm,
     CreateUserGroupForm,
     EmailForm,
+    UpdatePreferredLangForm,
     UpdateProfileForm,
     UpdateUserGroupAssignedEmailForm,
     VerifyNewEmailForm,
@@ -58,9 +60,9 @@ async def add_new_email(
         await Cache.delete(cache_key)
 
     token_url = await service.user.create_token_url(
-        user, cache_key, form.url, form.verify_token_query_name, {"email": form.new_email}
+        user, cache_key, QUERY_NAMES.SUB_EMAIL_VERIFY_TOKEN, {"email": form.new_email}
     )
-    result = await service.email.send_template(form.lang, form.new_email, "subemail", {"url": token_url})
+    result = await service.email.send_template(user.preferred_lang, form.new_email, "subemail", {"url": token_url})
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -195,5 +197,17 @@ async def delete_user_group(
     result = await service.user_group.delete(user, group_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={})
+
+
+@AppRouter.api.put("/account/preferred-language")
+@AuthFilter.add
+async def update_preferred_language(
+    form: UpdatePreferredLangForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    result = await service.user.update_preferred_lang(user, form.lang)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
     return JsonResponse(content={})

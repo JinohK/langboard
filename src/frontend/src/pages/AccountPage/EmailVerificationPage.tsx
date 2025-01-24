@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { QUERY_NAMES } from "@/constants";
 import { Toast } from "@/components/base";
-import { SUB_EMAIL_VERIFY_TOKEN_QUERY_NAME } from "@/controllers/api/account/useAddNewEmail";
 import useVerifyNewEmail from "@/controllers/api/account/useVerifyNewEmail";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -19,7 +19,7 @@ function EmailVerificationPage() {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const token = searchParams.get(SUB_EMAIL_VERIFY_TOKEN_QUERY_NAME);
+        const token = searchParams.get(QUERY_NAMES.SUB_EMAIL_VERIFY_TOKEN);
 
         if (!token) {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));

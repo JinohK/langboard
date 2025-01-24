@@ -17,6 +17,7 @@ from .ProjectWikiService import ProjectWikiService
 from .ReactionService import ReactionService
 from .RoleService import RoleService
 from .UserGroupService import UserGroupService
+from .UserNotificationSettingService import UserNotificationSettingService
 from .UserService import UserService
 
 
@@ -40,5 +41,6 @@ __all__ = [
     "ReactionService",
     "RoleService",
     "UserGroupService",
+    "UserNotificationSettingService",
     "UserService",
 ]

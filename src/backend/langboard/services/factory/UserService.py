@@ -1,8 +1,8 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
-from ...Constants import COMMON_SECRET_KEY
+from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.caching import Cache
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.security import Auth
@@ -11,7 +11,8 @@ from ...core.storage import FileModel
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, UserEmail
+from ...locales.LangEnum import LangEnum
+from ...models import Project, ProjectAssignedUser, UserEmail, UserProfile
 from ...publishers import UserPublisher
 from ...tasks import UserActivityTask
 
@@ -32,7 +33,7 @@ class UserService(BaseService):
         user = await self._get_by(User, "email", email)
         if user:
             return user, None
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(User, UserEmail)
                 .join(
@@ -52,18 +53,26 @@ class UserService(BaseService):
         email = Encryptor.decrypt(token, key)
         return await self.get_by_email(email)
 
+    async def get_profile(self, user: User) -> UserProfile:
+        return cast(UserProfile, await self._get_by(UserProfile, "user_id", user.id))
+
     async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
         user.avatar = avatar
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(user)
+            await db.commit()
+
+        user_profile = UserProfile(user_id=user.id, **form)
+        async with DbSession.use() as db:
+            db.insert(user_profile)
             await db.commit()
         return user
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(user_email)
             await db.commit()
         return user_email
@@ -79,7 +88,7 @@ class UserService(BaseService):
         if not user or user.is_new():
             return []
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(Project)
                 .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
@@ -103,19 +112,19 @@ class UserService(BaseService):
         return projects
 
     async def create_token_url(
-        self, user: User, cache_key: str, url: str, token_query_name: str, extra_token_data: dict | None = None
+        self, user: User, cache_key: str, token_query_name: QUERY_NAMES, extra_token_data: dict | None = None
     ) -> str:
         token = generate_random_string(32)
         token_expire_hours = 24
         token_data = json_dumps({"token": token, "id": user.id})
         encrypted_token = Encryptor.encrypt(token_data, COMMON_SECRET_KEY)
 
-        url_chunks = urlparse(url)
+        url_chunks = urlparse(FRONTEND_REDIRECT_URL)
         token_url = url_chunks._replace(
             query=concat(
                 url_chunks.query,
                 "&" if url_chunks.query else "",
-                token_query_name,
+                token_query_name.value,
                 "=",
                 encrypted_token,
             )
@@ -157,7 +166,7 @@ class UserService(BaseService):
 
     async def activate(self, user: User) -> None:
         user.activated_at = now()
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(user)
             await db.commit()
 
@@ -165,13 +174,14 @@ class UserService(BaseService):
 
     async def verify_subemail(self, subemail: UserEmail) -> None:
         subemail.verified_at = now()
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(subemail)
             await db.commit()
 
     async def update(self, user: User, form: dict) -> bool:
-        mutable_keys = ["firstname", "lastname", "affiliation", "position", "avatar"]
-        api_keys = ["firstname", "lastname", "avatar"]
+        profile = await self.get_profile(user)
+        mutable_keys = ["firstname", "lastname", "avatar"]
+        profile_mutable_keys = ["affiliation", "position"]
 
         old_user_record = {}
 
@@ -185,6 +195,16 @@ class UserService(BaseService):
             old_user_record[key] = self._convert_to_python(old_value)
             setattr(user, key, new_value)
 
+        for key in profile_mutable_keys:
+            if key not in form or not hasattr(profile, key):
+                continue
+            old_value = getattr(profile, key)
+            new_value = form[key]
+            if old_value == new_value or new_value is None:
+                continue
+            old_user_record[key] = self._convert_to_python(old_value)
+            setattr(profile, key, new_value)
+
         if "delete_avatar" in form and form["delete_avatar"]:
             old_user_record["avatar"] = self._convert_to_python(user.avatar)
             user.avatar = None
@@ -192,14 +212,15 @@ class UserService(BaseService):
         if not old_user_record:
             return True
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(user)
+            await db.update(profile)
             await db.commit()
         await Auth.reset_user(user)
 
         model: dict[str, Any] = {}
         for key in form:
-            if key not in api_keys or key not in old_user_record:
+            if key not in mutable_keys or key not in old_user_record:
                 continue
             if key == "avatar":
                 model[key] = user.avatar.path if user.avatar else None
@@ -210,12 +231,27 @@ class UserService(BaseService):
 
         return True
 
+    async def update_preferred_lang(self, user: User, lang: str):
+        if lang in LangEnum.__members__:
+            lang = LangEnum[lang].value
+        elif lang in LangEnum._value2member_map_:
+            lang = lang
+        else:
+            return False
+
+        user.preferred_lang = lang
+        async with DbSession.use() as db:
+            await db.update(user)
+            await db.commit()
+
+        return True
+
     async def change_primary_email(self, user: User, subemail: UserEmail) -> bool:
         user_email = user.email
         user.email = subemail.email
         subemail.email = user_email
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(user)
             await db.update(subemail)
             await db.commit()
@@ -227,13 +263,13 @@ class UserService(BaseService):
         return True
 
     async def delete_email(self, subemail: UserEmail) -> bool:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(subemail)
             await db.commit()
         return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(user)
             await db.commit()

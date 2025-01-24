@@ -1,14 +1,14 @@
-import { Box, Flex } from "@/components/base";
+import { Flex } from "@/components/base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
+import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import BoardSettingsRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsRoleList";
 import { memo, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 
 export function SkeletonSettingsList() {
     return <></>;
@@ -42,22 +42,6 @@ const BoardSettingsList = memo(() => {
                 </BoardSettingsSection>
             ) : null}
         </Flex>
-    );
-});
-
-interface IBoardSettingsSectionProps {
-    title: string;
-    children: React.ReactNode;
-}
-
-const BoardSettingsSection = memo(({ title, children }: IBoardSettingsSectionProps) => {
-    const [t] = useTranslation();
-
-    return (
-        <Box w="full" className="max-w-screen-sm">
-            <h2 className="scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight">{t(title)}</h2>
-            {children}
-        </Box>
     );
 });
 

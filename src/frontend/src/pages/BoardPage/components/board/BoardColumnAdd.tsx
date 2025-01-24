@@ -6,7 +6,7 @@ import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { BoardColumnHeaderInput } from "@/pages/BoardPage/components/board/BoardColumnHeader";
+import { BoardColumnTitleInput } from "@/pages/BoardPage/components/board/BoardColumnTitle";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -27,13 +27,13 @@ const BoardColumnAdd = memo(() => {
                 name: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Adding..."),
                 error: (error) => {
                     let message = "";
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            message = t("project.Project not found");
+                            message = t("project.errors.Project not found");
                         },
                         nonApiError: () => {
                             message = t("errors.Unknown error");
@@ -52,7 +52,6 @@ const BoardColumnAdd = memo(() => {
                 finally: () => {
                     setIsValidating(false);
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },
@@ -72,7 +71,7 @@ const BoardColumnAdd = memo(() => {
             ) : (
                 <Card.Root className={cn(sharedRootClassNames, "w-80 flex-shrink-0 snap-center")}>
                     <Card.Header className="flex flex-row items-start space-y-0 pb-1 pt-4 text-left font-semibold">
-                        <BoardColumnHeaderInput
+                        <BoardColumnTitleInput
                             isEditing={true}
                             canEdit={true}
                             changeMode={changeMode}

@@ -2,9 +2,23 @@ import useUserNotificationDeletedHandlers from "@/controllers/socket/user/useUse
 import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
 import useUserProjectRolesUpdatedHandlers from "@/controllers/socket/user/useUserProjectRolesUpdatedHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { ENotificationChannel, ENotificationScope, TNotificationType } from "@/core/models/notification.type";
 import * as User from "@/core/models/User";
 import * as UserGroup from "@/core/models/UserGroup";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+
+interface INotificationUnsubscriptionMap {
+    [ENotificationScope.All]?: {
+        [T in TNotificationType]?: {
+            [C in ENotificationChannel]?: bool;
+        };
+    };
+    [ENotificationScope.Specific]?: {
+        [K in TNotificationType]?: {
+            [C in ENotificationChannel]?: string[];
+        };
+    };
+}
 
 export interface Interface extends User.Interface {
     is_admin?: bool;
@@ -14,6 +28,8 @@ export interface Interface extends User.Interface {
     position?: string;
     user_groups: { uid: string; name: string; users: User.TModel[] }[];
     subemails: { email: string; verified_at: string }[];
+    preferred_lang: string;
+    notification_unsubs: INotificationUnsubscriptionMap;
 }
 
 class AuthUser extends User.Model<Interface> {
@@ -101,6 +117,20 @@ class AuthUser extends User.Model<Interface> {
     }
     public set subemails(value: { email: string; verified_at: string }[]) {
         this.update({ subemails: value });
+    }
+
+    public get preferred_lang() {
+        return this.getValue("preferred_lang");
+    }
+    public set preferred_lang(value: string) {
+        this.update({ preferred_lang: value });
+    }
+
+    public get notification_unsubs() {
+        return this.getValue("notification_unsubs");
+    }
+    public set notification_unsubs(value: INotificationUnsubscriptionMap) {
+        this.update({ notification_unsubs: value });
     }
 }
 

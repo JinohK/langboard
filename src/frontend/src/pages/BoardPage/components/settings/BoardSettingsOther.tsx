@@ -27,7 +27,7 @@ const BoardSettingsOther = memo(() => {
             project_uid: project.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: (error) => {
                 let message = "";
@@ -59,7 +59,6 @@ const BoardSettingsOther = memo(() => {
                 setIsValidating(false);
                 setIsOpened(false);
                 deleteProjectModel(ESocketTopic.Board, project.uid);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

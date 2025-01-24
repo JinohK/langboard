@@ -123,7 +123,7 @@ class Auth:
             return cached_user
 
         try:
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 result = await db.exec(SqlBuilder.select.table(User).where(User.id == user_id).limit(1))
             user = result.first()
 

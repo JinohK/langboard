@@ -27,7 +27,7 @@ const BoardSettingsBots = memo(() => {
             assigned_bots: (items as BotModel.TModel[]).map((bot) => bot.uid),
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 let message = "";
@@ -54,7 +54,6 @@ const BoardSettingsBots = memo(() => {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

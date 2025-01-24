@@ -43,7 +43,7 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
             relationships: newRelationships,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 let message = "";
@@ -70,7 +70,6 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
             },
             finally: () => {
                 setIsValidating(() => false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

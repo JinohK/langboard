@@ -46,7 +46,7 @@ function BoardCardAttachmentMoreRename({
             attachment_name: name,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
@@ -56,7 +56,6 @@ function BoardCardAttachmentMoreRename({
                 setIsValidating(false);
                 setIsMoreMenuOpened(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

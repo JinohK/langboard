@@ -1,16 +1,12 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ROUTES } from "@/core/routing/constants";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IUpdateProjectAssignedUsersForm {
     uid: string;
     emails: string[];
-    lang?: string;
 }
-
-export const PROJCT_INVITATION_TOKEN_QUERY_NAME = "PikQ";
 
 const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProjectAssignedUsersForm>) => {
     const { mutate } = useQueryMutation();
@@ -21,8 +17,6 @@ const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProject
         });
         const res = await api.put(url, {
             ...params,
-            url: `${window.location.origin}${ROUTES.BOARD.INVITATION}`,
-            token_query_name: PROJCT_INVITATION_TOKEN_QUERY_NAME,
         });
 
         return res.data;

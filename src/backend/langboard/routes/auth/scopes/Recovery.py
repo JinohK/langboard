@@ -5,12 +5,9 @@ from ....core.routing import BaseFormModel, form_model
 class SendResetLinkForm(BaseFormModel):
     sign_token: str
     email_token: str
-    url: str
-    recovery_token_query_name: str
     firstname: str = ""
     lastname: str = ""
     is_resend: bool = False
-    lang: str = "en-US"
 
 
 @form_model

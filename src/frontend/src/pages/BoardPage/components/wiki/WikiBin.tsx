@@ -31,7 +31,7 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
                 wiki_uid: originalWiki.uid,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Deleting..."),
                 error: (error) => {
                     let message = "";
@@ -51,9 +51,7 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
                     setWikis((prev) => prev.filter((wiki) => wiki.uid !== originalWiki.uid));
                     return t("wiki.successes.Wiki page deleted successfully.");
                 },
-                finally: () => {
-                    Toast.Add.dismiss(toastId);
-                },
+                finally: () => {},
             });
         },
         onDragOverOrMove: (activeWiki) => {

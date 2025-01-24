@@ -64,7 +64,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             is_public: !privateState,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: (error) => {
                 let message = "";
@@ -85,7 +85,6 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };
@@ -103,7 +102,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             assignees: items.map((item) => item.uid),
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error) => {
                 let message = "";
@@ -125,7 +124,6 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             finally: () => {
                 setIsValidating(false);
                 endCallback();
-                Toast.Add.dismiss(toastId);
             },
         });
     };

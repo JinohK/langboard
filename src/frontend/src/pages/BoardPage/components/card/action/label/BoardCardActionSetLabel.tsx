@@ -47,7 +47,7 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
             labels: selectedLabelUIDs,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 let message = "";
@@ -75,7 +75,6 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
             finally: () => {
                 setIsValidating(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

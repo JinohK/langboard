@@ -4,16 +4,7 @@ import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
-
-export enum ENotificationType {
-    ProjectInvited = "project_invited",
-    MentionedAtCard = "mentioned_at_card",
-    MentionedAtComment = "mentioned_at_comment",
-    MentionedAtWiki = "mentioned_at_wiki",
-    AssignedToCard = "assigned_to_card",
-    ReactedToComment = "reacted_to_comment",
-    NotifiedFromChecklist = "notified_from_checklist",
-}
+import { ENotificationType } from "@/core/models/notification.type";
 
 export interface Interface extends IBaseModel {
     uid: string;

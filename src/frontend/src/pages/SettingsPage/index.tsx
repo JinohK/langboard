@@ -76,7 +76,7 @@ function SettingsProxy(): JSX.Element {
     const sidebarNavs: Record<string, ISidebarNavItem> = {
         [ROUTES.SETTINGS.API_KEYS]: {
             icon: "key-round",
-            name: "settings.API keys",
+            name: t("settings.API keys"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.API_KEYS);
                 setIsLoadingRef.current(false);
@@ -84,7 +84,7 @@ function SettingsProxy(): JSX.Element {
         },
         [ROUTES.SETTINGS.BOTS]: {
             icon: "bot",
-            name: "settings.Bots",
+            name: t("settings.Bots"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.BOTS);
                 setIsLoadingRef.current(false);
@@ -92,7 +92,7 @@ function SettingsProxy(): JSX.Element {
         },
         [ROUTES.SETTINGS.LANGFLOW]: {
             icon: "langflow-icon",
-            name: "settings.Langflow",
+            name: t("settings.Langflow"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.LANGFLOW);
                 setIsLoadingRef.current(false);
@@ -100,7 +100,7 @@ function SettingsProxy(): JSX.Element {
         },
         [ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS]: {
             icon: "waypoints",
-            name: "settings.Global relationships",
+            name: t("settings.Global relationships"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS);
                 setIsLoadingRef.current(false);
@@ -108,7 +108,7 @@ function SettingsProxy(): JSX.Element {
         },
         [ROUTES.SETTINGS.WEBHOOKS]: {
             icon: "webhook",
-            name: "settings.Webhooks",
+            name: t("settings.Webhooks"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.WEBHOOKS);
                 setIsLoadingRef.current(false);

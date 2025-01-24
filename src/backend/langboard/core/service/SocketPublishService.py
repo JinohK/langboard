@@ -1,12 +1,8 @@
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any
 from pydantic import BaseModel
 from ..broadcast import DispatcherModel, DispatcherQueue
 from ..utils.decorators import staticclass
-
-
-_TModel = TypeVar("_TModel")
-_TData = TypeVar("_TData")
 
 
 class SocketPublishModel(BaseModel):

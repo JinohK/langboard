@@ -26,7 +26,7 @@ class CardRelationshipService(BaseService):
         if not card:
             return []
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType)
                 .join(
@@ -70,7 +70,7 @@ class CardRelationshipService(BaseService):
             return []
         project, card = params
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType, Card)
                 .join(
@@ -109,7 +109,7 @@ class CardRelationshipService(BaseService):
             related_card.id for _, _, related_card in await self.get_by_card_with_type(project, card, not is_parent)
         ]
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(CardRelationship).where(
                     CardRelationship.column("card_id_child" if is_parent else "card_id_parent") == card.id
@@ -117,7 +117,7 @@ class CardRelationshipService(BaseService):
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             new_relationships_dict: dict[SnowflakeID, bool] = {}
             for related_card_uid, relationship_type_uid in relationships:
                 related_card = await self._get_by_param(Card, related_card_uid)

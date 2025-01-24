@@ -24,7 +24,7 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                 name: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -45,7 +45,6 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                 },
                 finally: () => {
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

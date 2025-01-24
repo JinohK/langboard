@@ -28,7 +28,7 @@ export function SkeletonEmails(): JSX.Element {
 
 function EmailList(): JSX.Element {
     const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const { mutate: deleteSubEmailMutate } = useDeleteSubEmail();
     const { mutate: resendNewEmailLinkMutate } = useAddNewEmail();
 
@@ -66,7 +66,7 @@ function EmailList(): JSX.Element {
         setIsValidating(true);
 
         resendNewEmailLinkMutate(
-            { is_resend: true, new_email: email, lang: i18n.language },
+            { is_resend: true, new_email: email },
             {
                 onSuccess: () => {
                     Toast.Add.success(t("myAccount.successes.Please check your inbox to verify your email."));

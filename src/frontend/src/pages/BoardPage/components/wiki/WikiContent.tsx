@@ -62,7 +62,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 content: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -83,7 +83,6 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 },
                 finally: () => {
                     setCurrentEditor("");
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

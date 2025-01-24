@@ -132,7 +132,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
             comment_uid: comment.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: (error) => {
                 let message = "";
@@ -160,7 +160,6 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

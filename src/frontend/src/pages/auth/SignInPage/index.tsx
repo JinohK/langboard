@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import { ROUTES } from "@/core/routing/constants";
 import { generateToken } from "@/core/utils/StringUtils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
-import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import { Flex } from "@/components/base";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
@@ -21,13 +21,13 @@ function SignInPage(): JSX.Element {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME);
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
+        const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN);
+        const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
 
         if (!signTokenParam || signTokenParam.length !== SIGN_IN_TOKEN_LENGTH) {
             const token = generateToken(SIGN_IN_TOKEN_LENGTH);
 
-            searchParams.set(SIGN_IN_TOKEN_QUERY_NAME, token);
+            searchParams.set(QUERY_NAMES.SIGN_IN_TOKEN, token);
 
             navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
                 replace: true,
@@ -55,7 +55,7 @@ function SignInPage(): JSX.Element {
                         }
                     },
                     onError: () => {
-                        searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+                        searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
                         navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
                     },
                 }
@@ -65,8 +65,8 @@ function SignInPage(): JSX.Element {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME) ?? "";
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
+        const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN) ?? "";
+        const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
 
         if (signTokenParam && emailTokenParam) {
             setForm(

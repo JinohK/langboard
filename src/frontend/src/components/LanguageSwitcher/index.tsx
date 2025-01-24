@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
+import { useMemo } from "react";
 
 export interface ILanguageSwitcherProps {
     variant?: ButtonProps["variant"];
@@ -8,12 +9,30 @@ export interface ILanguageSwitcherProps {
     buttonClassNames?: string;
     hideTriggerIcon?: bool;
     size?: ButtonProps["size"];
+    asForm?: {
+        initialValue: string;
+        disabled?: bool;
+        onChange: (lang: string) => void;
+    };
 }
 
-function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerIcon, size = "default" }: ILanguageSwitcherProps): JSX.Element {
+function LanguageSwitcher({
+    variant,
+    triggerType,
+    buttonClassNames,
+    hideTriggerIcon,
+    size = "default",
+    asForm,
+}: ILanguageSwitcherProps): JSX.Element {
     const [t, i18n] = useTranslation();
+    const curLang = useMemo(() => (asForm ? asForm.initialValue : i18n.language), [asForm, asForm?.initialValue, i18n, i18n.language]);
 
     const changeLanguageHandler = (lang: string) => {
+        if (asForm) {
+            asForm.onChange(lang);
+            return;
+        }
+
         if (!i18n.languages.includes(lang)) {
             return;
         }
@@ -21,13 +40,19 @@ function LanguageSwitcher({ variant, triggerType, buttonClassNames, hideTriggerI
         i18n.changeLanguage(lang);
     };
 
-    const langs = i18n.languages.filter((locale) => locale !== i18n.language);
+    const langs = i18n.languages.filter((locale) => locale !== curLang);
 
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button variant={variant ?? "default"} className={cn("inline-flex", buttonClassNames)} title={t("locales.title")} size={size}>
-                    {triggerType === "text" ? t(`locales.${i18n.language}`) : <IconComponent icon={`country-${i18n.language.split("-").pop()}`} />}
+                <Button
+                    variant={variant ?? "default"}
+                    className={cn("inline-flex", buttonClassNames)}
+                    title={t("locales.title")}
+                    size={size}
+                    disabled={asForm?.disabled}
+                >
+                    {triggerType === "text" ? t(`locales.${curLang}`) : <IconComponent icon={`country-${curLang.split("-").pop()}`} />}
                     {hideTriggerIcon ? null : <IconComponent icon="chevron-down" size="4" className="ml-3" />}
                 </Button>
             </DropdownMenu.Trigger>

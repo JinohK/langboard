@@ -65,6 +65,10 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
                     if (data.move_type === "to_column") {
                         model[targetModelColumn as "uid"] = data.column_uid;
                     }
+
+                    if (data.move_type !== "in_column" && type === "ProjectCard") {
+                        (model as ProjectCard.TModel).archived_at = (data as unknown as Record<string, Date>).archived_at;
+                    }
                 }
                 return data;
             },

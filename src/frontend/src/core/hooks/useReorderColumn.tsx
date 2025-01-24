@@ -67,7 +67,7 @@ function useReorderColumn<TColumn extends TBaseModelInstance<IColumn>>({
     };
 
     useEffect(() => {
-        setColumns(flatColumns.sort((a, b) => a.order - b.order));
+        setColumns(() => flatColumns.sort((a, b) => a.order - b.order));
     }, [flatColumns]);
 
     return { columns, setColumns, reorder, sendColumnOrderChanged: handlers.send };

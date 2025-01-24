@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import AddSubEmailForm, { SkeletonAddSubEmailForm } from "@/pages/AccountPage/components/AddSubEmailForm";
-import EmailList, { SkeletonEmails } from "@/pages/AccountPage/components/EmailList";
-import PrimaryEmailForm, { SkeletonPrimaryEmailForm } from "@/pages/AccountPage/components/PrimaryEmailForm";
+import AddSubEmailForm, { SkeletonAddSubEmailForm } from "@/pages/AccountPage/components/email/AddSubEmailForm";
+import EmailList, { SkeletonEmails } from "@/pages/AccountPage/components/email/EmailList";
+import PrimaryEmailForm, { SkeletonPrimaryEmailForm } from "@/pages/AccountPage/components/email/PrimaryEmailForm";
 import { Flex } from "@/components/base";
 
 export function SkeletonEmailPage(): JSX.Element {

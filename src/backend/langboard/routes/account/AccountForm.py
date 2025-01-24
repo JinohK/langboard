@@ -13,9 +13,6 @@ class UpdateProfileForm(BaseFormModel):
 @form_model
 class AddNewEmailForm(BaseFormModel):
     new_email: str
-    url: str
-    verify_token_query_name: str
-    lang: str = "en-US"
     is_resend: bool = False
 
 
@@ -43,3 +40,8 @@ class CreateUserGroupForm(BaseFormModel):
 @form_model
 class UpdateUserGroupAssignedEmailForm(BaseFormModel):
     emails: list[str]
+
+
+@form_model
+class UpdatePreferredLangForm(BaseFormModel):
+    lang: str

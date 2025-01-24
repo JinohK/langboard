@@ -11,7 +11,7 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 import HeaderUserMenu from "@/components/Header/HeaderUserMenu";
 import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
 
-function Header({ navs }: IHeaderProps) {
+function Header({ navs, title, mobileSections }: IHeaderProps) {
     const { aboutMe, updated } = useAuth();
     const [isOpened, setIsOpen] = useState(false);
     const navigateRef = useRef(usePageNavigate());
@@ -28,7 +28,7 @@ function Header({ navs }: IHeaderProps) {
     const separator = <Separator className="h-5" orientation="vertical" />;
 
     return (
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6">
             <Flex
                 items="center"
                 gap={{
@@ -46,6 +46,7 @@ function Header({ navs }: IHeaderProps) {
                 <a onClick={toDashboard} className="flex size-6 cursor-pointer items-center gap-2 text-lg font-semibold md:text-base">
                     <CachedImage src="/images/logo.png" alt="Logo" size="full" />
                 </a>
+                {!!title && <span className="text-lg font-semibold">{title}</span>}
                 {navs.length > 0 && (
                     <NavigationMenu.Root>
                         <NavigationMenu.List>
@@ -64,11 +65,26 @@ function Header({ navs }: IHeaderProps) {
                             <span className="sr-only">Toggle navigation menu</span>
                         </Button>
                     </Sheet.Trigger>
-                    <Sheet.Content side="left">
-                        <nav className="grid gap-2 text-lg font-medium">
-                            <a onClick={toDashboard} className="mb-4 flex cursor-pointer items-center gap-2 text-lg font-semibold">
+                    <Sheet.Content side="left" className="flex flex-col justify-between">
+                        <Flex
+                            items="center"
+                            position="absolute"
+                            left="6"
+                            top="6"
+                            gap="2"
+                            className="max-w-[calc(75vw_-_theme(spacing.16))] truncate sm:max-w-[calc(24rem_-_theme(spacing.16))]"
+                        >
+                            <a onClick={toDashboard} className="flex cursor-pointer items-center gap-2 text-lg font-semibold">
                                 <CachedImage src="/images/logo.png" alt="Logo" size="6" />
                             </a>
+                            {!!title && (
+                                <>
+                                    <IconComponent icon="chevron-right" size="5" />
+                                    <span className="max-w-[calc(100%_-_theme(spacing.16))] truncate text-lg font-semibold">{title}</span>
+                                </>
+                            )}
+                        </Flex>
+                        <nav className="mt-9 grid gap-2 overflow-y-auto text-lg font-medium">
                             <HedaerNavItems
                                 isMobile
                                 navs={navs}
@@ -77,6 +93,7 @@ function Header({ navs }: IHeaderProps) {
                                 deactivatedClass="text-muted-foreground"
                                 shardClass="hover:text-foreground"
                             />
+                            {!!mobileSections && mobileSections}
                         </nav>
                     </Sheet.Content>
                 </Sheet.Root>
@@ -88,7 +105,6 @@ function Header({ navs }: IHeaderProps) {
                     initial: "2",
                     md: "3",
                 }}
-                w="full"
                 ml={{
                     md: "auto",
                 }}

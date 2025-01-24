@@ -7,6 +7,7 @@ import { AuthUser, UserNotification } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
 import { cleanModels } from "@/core/models/Base";
+import { useTranslation } from "react-i18next";
 
 export interface IAuthContext {
     getAccessToken: () => string | null;
@@ -38,7 +39,11 @@ const initialContext = {
 
 const AuthContext = createContext<IAuthContext>(initialContext);
 
+const ABOUT_ME_STORAGE_KEY = "about-me";
+const HAS_SET_LANG_STORAGE_KEY = "has-set-lang";
+
 export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode => {
+    const [_, i18n] = useTranslation();
     const cookieStore = useCookieStore();
     const { queryClient } = useQueryMutation();
     const userRef = useRef<AuthUser.TModel | null>(null);
@@ -65,7 +70,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         }
 
         const getUser = async () => {
-            const cachedData = sessionStorage.getItem("about-me");
+            const cachedData = sessionStorage.getItem(ABOUT_ME_STORAGE_KEY);
             if (cachedData) {
                 const { expiresAt, userUID } = JSON.parse(cachedData);
                 if (expiresAt > Date.now()) {
@@ -76,7 +81,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                     }
                 }
 
-                sessionStorage.removeItem("about-me");
+                sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
                 userRef.current = null;
             }
 
@@ -89,8 +94,14 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
             const user = AuthUser.Model.fromObject(response.data.user);
             UserNotification.Model.fromObjectArray(response.data.notifications);
 
+            const hasSetLang = localStorage.getItem(HAS_SET_LANG_STORAGE_KEY);
+            if (!hasSetLang) {
+                i18n.changeLanguage(user.preferred_lang);
+                localStorage.setItem(HAS_SET_LANG_STORAGE_KEY, "true");
+            }
+
             sessionStorage.setItem(
-                "about-me",
+                ABOUT_ME_STORAGE_KEY,
                 JSON.stringify({
                     userUID: user.uid,
                     expiresAt: Date.now() + 1000 * 60 * 5,
@@ -106,7 +117,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     }, [updated]);
 
     const updatedUser = () => {
-        sessionStorage.removeItem("about-me");
+        sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
         userRef.current = null;
         update();
     };
@@ -125,7 +136,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     const signOut = () => {
         userRef.current = null;
         cleanModels();
-        sessionStorage.removeItem("about-me");
+        sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
         removeTokens();
         queryClient.clear();
         location.href = ROUTES.SIGN_IN.EMAIL;

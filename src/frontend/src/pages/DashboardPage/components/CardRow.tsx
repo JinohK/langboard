@@ -16,7 +16,7 @@ function CardRow({ card }: ICardRowProps): JSX.Element | null {
     const { navigate } = useDashboard();
     const title = card.useField("title");
     const columnName = card.useField("column_name");
-    const isArchived = card.useField("isArchived");
+    const archivedAt = card.useField("archived_at");
     const rawCreatedAt = card.useField("created_at");
     const createdAt = useUpdateDateDistance(rawCreatedAt);
 
@@ -24,7 +24,7 @@ function CardRow({ card }: ICardRowProps): JSX.Element | null {
         <Table.Row
             className={cn(
                 "relative",
-                isArchived &&
+                !!archivedAt &&
                     cn(
                         "text-muted-foreground [&_button]:text-primary/70",
                         "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",

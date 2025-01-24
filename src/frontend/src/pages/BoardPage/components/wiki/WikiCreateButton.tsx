@@ -20,7 +20,7 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
             title: "New page",
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
             error: (error) => {
                 let message = "";
@@ -48,9 +48,7 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
                 }, 0);
                 return t("wiki.successes.New wiki page created successfully.");
             },
-            finally: () => {
-                Toast.Add.dismiss(toastId);
-            },
+            finally: () => {},
         });
     };
 

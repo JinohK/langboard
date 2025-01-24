@@ -1,5 +1,5 @@
 export interface IHeaderNavItem {
-    name: string;
+    name: React.ReactNode;
     subNavs?: Omit<IHeaderNavItem, "subNavs">[];
     href?: string;
     onClick?: () => void;
@@ -9,6 +9,8 @@ export interface IHeaderNavItem {
 
 export interface IHeaderProps {
     navs: IHeaderNavItem[];
+    title?: React.ReactNode;
+    mobileSections?: React.ReactNode;
 }
 
 interface IBaseHeaderNavItemsProps {

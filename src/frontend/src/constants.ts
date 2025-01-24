@@ -14,3 +14,20 @@ export const LANGUAGE_LOCALES = ["en-US"];
 export const EMAIL_REGEX = /.+@.+\..+/;
 
 export const DISABLE_DRAGGING_ATTR = "data-drag-disabled";
+
+export const QUERY_NAMES = {
+    REDIRECT: "continue",
+    SUB_EMAIL_VERIFY_TOKEN: "bEvt",
+    RECOVERY_TOKEN: "rtK",
+    SIGN_UP_ACTIVATE_TOKEN: "sAVk",
+    PROJCT_INVITATION_TOKEN: "PikQ",
+    SIGN_IN_TOKEN: "itkl",
+    EMAIL_TOKEN: "TKE",
+    BOARD: "bp",
+    BOARD_CARD: "BpC",
+    BOARD_CARD_CHUNK: "bPCC",
+    BOARD_WIKI: "bPw",
+    BOARD_WIKI_CHUNK: "BpWc",
+} as const;
+
+export const SIGN_IN_TOKEN_LENGTH = 64;

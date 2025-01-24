@@ -20,6 +20,7 @@ export const API_ROUTES = {
         GET_SUBEMAILS: "/account/subemails",
         UPDATE_PROFILE: "/account/profile",
         CHANGE_PASSWORD: "/account/password",
+        UPDATE_PREFERRED_LANGUAGE: "/account/preferred-language",
         EMAIL: {
             CRUD: "/account/email",
             VERIFY: "/account/email/verify",
@@ -29,6 +30,20 @@ export const API_ROUTES = {
             CHANGE_NAME: "/account/group/{group_uid}/name",
             UPDATE_ASSIGNED_EMAILS: "/account/group/{group_uid}/emails",
             DELETE: "/account/group/{group_uid}",
+        },
+    },
+    NOTIFICATION: {
+        SETTINGS: {
+            ALL: "/notification/setting/all",
+            TYPE: "/notification/setting/type",
+            ALL_PROJECT: "/notification/setting/project",
+            PROJECT: "/notification/setting/project/{uid}",
+            ALL_COLUMN: "/notification/setting/column",
+            COLUMN: "/notification/setting/project/{uid}/column/{column_uid}",
+            ALL_CARD: "/notification/setting/card",
+            CARD: "/notification/setting/project/{uid}/card/{card_uid}",
+            ALL_WIKI: "/notification/setting/wiki",
+            WIKI: "/notification/setting/project/{uid}/wiki/{wiki_uid}",
         },
     },
     ACTIVITIY: {
@@ -50,7 +65,6 @@ export const API_ROUTES = {
         DETAILS: "/board/{uid}/details",
         GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
-        CAN_USE_SETTINGS: "/board/{uid}/settings/available",
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
         GET_CARDS: "/board/{uid}/cards",
@@ -62,6 +76,7 @@ export const API_ROUTES = {
             CREATE: "/board/{uid}/column",
             CHANGE_NAME: "/board/{uid}/column/{column_uid}/name",
             CHANGE_ORDER: "/board/{uid}/column/{column_uid}/order",
+            DELETE: "/board/{uid}/column/{column_uid}",
         },
         CARD: {
             CREATE: "/board/{uid}/card",
@@ -71,6 +86,7 @@ export const API_ROUTES = {
             UPDATE_ASSIGNED_USERS: "/board/{uid}/card/{card_uid}/assigned-users",
             UPDATE_LABELS: "/board/{uid}/card/{card_uid}/labels",
             UPDATE_RELATIONSHIPS: "/board/{uid}/card/{card_uid}/relationships",
+            ARCHIVE: "/board/{uid}/card/{card_uid}/archive",
             DELETE: "/board/{uid}/card/{card_uid}",
             ATTACHMENT: {
                 UPLOAD: "/board/{uid}/card/{card_uid}/attachment",
@@ -160,6 +176,7 @@ export const SOCKET_SERVER_EVENTS = {
                 CREATED: "dashboard:project:column:created:{uid}",
                 NAME_CHANGED: "dashboard:project:column:name:changed:{uid}",
                 ORDER_CHANGED: "dashboard:project:column:order:changed:{uid}",
+                DELETED: "dashboard:project:column:deleted:{uid}",
             },
         },
         CARD: {
@@ -195,6 +212,7 @@ export const SOCKET_SERVER_EVENTS = {
             CREATED: "board:column:created:{uid}",
             NAME_CHANGED: "board:column:name:changed:{uid}",
             ORDER_CHANGED: "board:column:order:changed:{uid}",
+            DELETED: "board:column:deleted:{uid}",
         },
         CARD: {
             CREATED: "board:card:created:{uid}",

@@ -22,7 +22,7 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
@@ -38,7 +38,7 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == True))  # noqa
@@ -56,7 +56,7 @@ class ProjectLabelService(BaseService):
         if not card:
             return []
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .join(
@@ -73,7 +73,7 @@ class ProjectLabelService(BaseService):
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
         project = cast(Project, await self._get_by_param(Project, project))
         labels: list[ProjectLabel] = []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             for default_label in ProjectLabel.DEFAULT_LABELS:
                 label = ProjectLabel(
                     project_id=project.id,
@@ -108,7 +108,7 @@ class ProjectLabelService(BaseService):
             order=max_order + 1,
             is_bot=is_bot,
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(label)
             await db.commit()
 
@@ -148,7 +148,7 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(label)
             await db.commit()
 
@@ -180,11 +180,11 @@ class ProjectLabelService(BaseService):
             (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False)  # noqa
         )
         update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(update_query)
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             label.order = order
             await db.update(label)
             await db.commit()
@@ -202,7 +202,7 @@ class ProjectLabelService(BaseService):
         if label.is_bot and not isinstance(user_or_bot, Bot):
             return None
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(label)
             await db.commit()
 

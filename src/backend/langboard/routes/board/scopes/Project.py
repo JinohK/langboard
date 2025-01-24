@@ -7,10 +7,7 @@ from ....models.ProjectRole import ProjectRoleAction
 
 @form_model
 class InviteProjectMemberForm(BaseFormModel):
-    url: str
-    token_query_name: str
     emails: list[str]
-    lang: str = "en-US"
 
 
 @form_model

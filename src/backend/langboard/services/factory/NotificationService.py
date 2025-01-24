@@ -1,13 +1,25 @@
 from datetime import timedelta
 from typing import Any, TypeVar, cast
+from urllib.parse import urlparse
+from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.ai import Bot
-from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
+from ...core.service import BaseService, NotificationPublishModel, NotificationPublishService
 from ...core.utils.DateTime import now
 from ...core.utils.EditorContentParser import change_date_element, find_mentioned
-from ...models import Card, CardComment, Checklist, Project, ProjectInvitation, ProjectWiki, UserNotification
+from ...core.utils.String import concat
+from ...locales.EmailTemplateNames import TEmailTemplateNames
+from ...models import (
+    Card,
+    CardComment,
+    Checklist,
+    Project,
+    ProjectColumn,
+    ProjectInvitation,
+    ProjectWiki,
+    UserNotification,
+)
 from ...models.UserNotification import NotificationType
-from ...publishers import NotificationPublisher
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
@@ -35,7 +47,7 @@ class NotificationService(BaseService):
             UserNotification.column("created_at").desc(), UserNotification.column("id").desc()
         )
         sql_query = sql_query.group_by(UserNotification.column("id"), UserNotification.column("created_at"))
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(sql_query)
         raw_notifications = result.all()
 
@@ -49,10 +61,7 @@ class NotificationService(BaseService):
         api_notification = notification.api_response()
         records: dict[str, Any] = {}
         for table_name, record_id, key_name in notification.record_list:
-            model = self._get_model_by_table_name(table_name)
-            if not model:
-                continue
-            record = await self._get_by(model, "id", record_id)
+            record = await self.get_record_by_table_name_with_id(table_name, record_id)
             if not record:
                 continue
 
@@ -72,7 +81,7 @@ class NotificationService(BaseService):
             return False
 
         notification.read_at = now()
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(notification)
             await db.commit()
 
@@ -86,7 +95,7 @@ class NotificationService(BaseService):
                 (UserNotification.column("receiver_id") == user.id) & (UserNotification.column("read_at") == None)  # noqa
             )
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(sql_query)
             await db.commit()
 
@@ -95,7 +104,7 @@ class NotificationService(BaseService):
         if not notification or notification.receiver_id != user.id:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(notification)
             await db.commit()
 
@@ -103,7 +112,7 @@ class NotificationService(BaseService):
 
     async def delete_all(self, user: User):
         sql_query = SqlBuilder.delete.table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(sql_query)
             await db.commit()
 
@@ -115,34 +124,60 @@ class NotificationService(BaseService):
             notifier,
             target_user,
             NotificationType.ProjectInvited,
+            None,
             [(project, "project"), (project_invitation, "invitation")],
         )
 
     async def notify_mentioned_at_card(self, notifier: TUserOrBot, project: Project, card: Card):
+        column = await self.__get_column_by_card(card)
         await self.__notify_mentioned(
-            notifier, card.description, NotificationType.MentionedAtCard, [(project, "project"), (card, "card")]
+            notifier,
+            card.description,
+            NotificationType.MentionedAtCard,
+            [project, column, card],
+            [(project, "project"), (card, "card")],
+            "mentioned_at_card",
+            {"url": self.__create_redirect_url(project, card)},
         )
 
     async def notify_mentioned_at_comment(
         self, notifier: TUserOrBot, project: Project, card: Card, comment: CardComment
     ):
+        column = await self.__get_column_by_card(card)
         await self.__notify_mentioned(
             notifier,
             comment.content,
             NotificationType.MentionedAtComment,
+            [project, column, card],
             [(project, "project"), (card, "card"), (comment, "comment")],
+            "mentioned_at_comment",
+            {"url": self.__create_redirect_url(project, card)},
         )
 
     async def notify_mentioned_at_wiki(self, notifier: TUserOrBot, project: Project, wiki: ProjectWiki):
         await self.__notify_mentioned(
-            notifier, wiki.content, NotificationType.MentionedAtWiki, [(project, "project"), (wiki, "wiki")]
+            notifier,
+            wiki.content,
+            NotificationType.MentionedAtWiki,
+            [project, wiki],
+            [(project, "project"), (wiki, "wiki")],
+            "mentioned_at_wiki",
+            {"url": self.__create_redirect_url(project, wiki)},
         )
 
     async def notify_assigned_to_card(
         self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card
     ):
+        column = await self.__get_column_by_card(card)
         await self.__notify(
-            notifier, target_user, NotificationType.AssignedToCard, [(project, "project"), (card, "card")]
+            notifier,
+            target_user,
+            NotificationType.AssignedToCard,
+            [project, column, card],
+            [(project, "project"), (card, "card")],
+            {},
+            "assigned_to_card",
+            {"url": self.__create_redirect_url(project, card)},
         )
 
     async def notify_reacted_to_comment(
@@ -153,6 +188,7 @@ class NotificationService(BaseService):
         comment: CardComment,
         reaction_type: str,
     ):
+        column = await self.__get_column_by_card(card)
         first_line = ""
         if comment.content:
             content = change_date_element(comment.content).strip().splitlines()
@@ -161,18 +197,26 @@ class NotificationService(BaseService):
             notifier,
             cast(int, comment.user_id),
             NotificationType.ReactedToComment,
+            [project, column, card],
             [(project, "project"), (card, "card"), (comment, "comment")],
             {"reaction_type": reaction_type, "line": first_line},
+            "reacted_to_comment",
+            {"url": self.__create_redirect_url(project, card)},
         )
 
     async def notify_checklist(
         self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card, checklist: Checklist
     ):
+        column = await self.__get_column_by_card(card)
         await self.__notify(
             notifier,
             target_user,
             NotificationType.NotifiedFromChecklist,
+            [project, column, card],
             [(project, "project"), (card, "card"), (checklist, "checklist")],
+            None,
+            "notified_from_checklist",
+            {"url": self.__create_redirect_url(project, card)},
         )
 
     def create_record_list(self, record_list: list[tuple[_TModel, str]]) -> list[tuple[str, SnowflakeID, str]]:
@@ -185,7 +229,10 @@ class NotificationService(BaseService):
         notifier: TUserOrBot,
         editor: EditorContentModel | None,
         notification_type: NotificationType,
+        scope_models: list[BaseSqlModel],
         record_with_key_names: list[tuple[_TModel, str]],
+        email_template_name: TEmailTemplateNames,
+        email_formats: dict[str, str],
     ):
         if not editor or not editor.content:
             return
@@ -195,35 +242,81 @@ class NotificationService(BaseService):
                 notifier,
                 user_or_bot_uid,
                 notification_type,
+                scope_models,
                 record_with_key_names,
                 {"line": mentioned_lines[user_or_bot_uid]},
+                email_template_name,
+                email_formats,
             )
 
     async def __notify(
         self,
         notifier: TUserOrBot,
-        target_user_or_bot: TUserParam,
+        target_user: TUserParam,
         notification_type: NotificationType,
+        scope_models: list[BaseSqlModel] | None,
         record_with_key_names: list[tuple[_TModel, str]],
-        message_vars: dict[str, Any] = {},
+        message_vars: dict[str, Any] | None = None,
+        email_template_name: TEmailTemplateNames | None = None,
+        email_formats: dict[str, str] | None = None,
     ) -> UserNotification | None:
-        target_user_or_bot = cast(User, await self._get_by_param(User, target_user_or_bot))
-        if not target_user_or_bot or target_user_or_bot.id == notifier.id:
+        target_user = cast(User, await self._get_by_param(User, target_user))
+        if not target_user or target_user.id == notifier.id:
             return None
 
-        notification = UserNotification(
-            notifier_type="user" if isinstance(notifier, User) else "bot",
-            notifier_id=notifier.id,
-            receiver_id=target_user_or_bot.id,
-            notification_type=notification_type,
-            message_vars=message_vars,
-            record_list=self.create_record_list(record_with_key_names),
+        raw_record_list = self.create_record_list(record_with_key_names)
+        record_list = [(table_name, int(record_id), key_name) for table_name, record_id, key_name in raw_record_list]
+        self.create_record_list(record_with_key_names)
+
+        scope_model_tuples = (
+            [(type(scope_model).__tablename__, int(scope_model.id)) for scope_model in scope_models]
+            if scope_models
+            else None
         )
-        async with DbSession.use_db() as db:
-            db.insert(notification)
-            await db.commit()
 
-        api_notification = await self.convert_to_api_response(notification)
-        NotificationPublisher.notified(target_user_or_bot, api_notification)
+        model = NotificationPublishModel(
+            notifier=notifier,
+            target_user=target_user,
+            notification_type=notification_type,
+            scope_models=scope_model_tuples,
+            # web
+            record_list=record_list,
+            message_vars=message_vars or {},
+            # email
+            email_template_name=email_template_name,
+            email_formats=email_formats,
+        )
+        NotificationPublishService.put_dispather(model)
 
-        return notification
+    def __create_redirect_url(self, project: Project, card_or_wiki: ProjectWiki | Card | None = None):
+        url_chunks = urlparse(FRONTEND_REDIRECT_URL)
+        query_string = ""
+        if card_or_wiki:
+            chunk_query = (
+                QUERY_NAMES.BOARD_CARD_CHUNK if isinstance(card_or_wiki, Card) else QUERY_NAMES.BOARD_WIKI_CHUNK
+            )
+            main_query = QUERY_NAMES.BOARD_CARD if isinstance(card_or_wiki, Card) else QUERY_NAMES.BOARD_WIKI
+            query_string = concat(
+                chunk_query.value,
+                "=",
+                project.get_uid(),
+                "&",
+                main_query.value,
+                "=",
+                card_or_wiki.get_uid(),
+            )
+        else:
+            query_string = concat(QUERY_NAMES.BOARD.value, "=", project.get_uid())
+        url = url_chunks._replace(
+            query=concat(
+                url_chunks.query,
+                "&" if url_chunks.query else "",
+                query_string,
+            )
+        ).geturl()
+
+        return url
+
+    async def __get_column_by_card(self, card: Card):
+        column = await self._get_by(ProjectColumn, "id", card.project_column_id)
+        return cast(ProjectColumn, column)

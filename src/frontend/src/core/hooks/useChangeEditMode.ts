@@ -29,6 +29,7 @@ export interface IUseChangeEditModeProps<TValue extends TValueType> {
     originalValue?: TValue extends "editor" ? IEditorContent : string;
     disableNewLine?: bool;
     canEmpty?: bool;
+    isEditingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
 }
 
 interface IUseChangeEditMode<TValue extends TValueType> {
@@ -51,10 +52,11 @@ const useChangeEditMode = <
     disableNewLine,
     valueType,
     canEmpty = false,
+    isEditingState,
 }: IUseChangeEditModeProps<TValue>): IUseChangeEditMode<TValue> => {
     const valueRef = useRef<TRef>((valueType === "editor" ? originalValue : undefined) as unknown as TRef);
     const [height, setHeight] = useState(0);
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = isEditingState ?? useState(false);
 
     const trimValue = <T extends string | undefined, TReturn extends T extends string ? string : undefined>(value: T): TReturn => {
         if (!value) {

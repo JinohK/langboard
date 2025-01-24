@@ -24,7 +24,7 @@ class ProjectWikiService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectWiki)
                 .where(ProjectWiki.column("project_id") == project.id)
@@ -75,7 +75,7 @@ class ProjectWikiService(BaseService):
         wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(Bot, ProjectWikiAssignedBot)
                 .join(ProjectWikiAssignedBot, Bot.column("id") == ProjectWikiAssignedBot.column("bot_id"))
@@ -100,7 +100,7 @@ class ProjectWikiService(BaseService):
         wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(User, ProjectWikiAssignedUser)
                 .join(ProjectWikiAssignedUser, User.column("id") == ProjectWikiAssignedUser.column("user_id"))
@@ -121,7 +121,7 @@ class ProjectWikiService(BaseService):
         if project_wiki.is_public or user.is_admin:
             return True
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectWikiAssignedUser)
                 .where(
@@ -147,7 +147,7 @@ class ProjectWikiService(BaseService):
             title=title,
             order=max_order + 1,
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(wiki)
             await db.commit()
 
@@ -175,7 +175,7 @@ class ProjectWikiService(BaseService):
                 continue
             old_value = getattr(wiki, key)
             new_value = form[key]
-            if old_value == new_value:
+            if old_value == new_value or (key == "title" and not new_value):
                 continue
             old_wiki_record[key] = self._convert_to_python(old_value)
             setattr(wiki, key, new_value)
@@ -183,7 +183,7 @@ class ProjectWikiService(BaseService):
         if not old_wiki_record:
             return True
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(wiki)
             await db.commit()
 
@@ -212,7 +212,7 @@ class ProjectWikiService(BaseService):
         project, wiki = params
 
         if is_public:
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(
                     SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
                         ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
@@ -220,7 +220,7 @@ class ProjectWikiService(BaseService):
                 )
                 await db.commit()
 
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(
                     SqlBuilder.delete.table(ProjectWikiAssignedUser).where(
                         ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
@@ -233,14 +233,14 @@ class ProjectWikiService(BaseService):
                 user_id=user_or_bot.id,
             )
 
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 db.insert(assigned_user)
                 await db.commit()
 
         was_public = wiki.is_public
         wiki.is_public = is_public
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(wiki)
             await db.commit()
 
@@ -263,7 +263,7 @@ class ProjectWikiService(BaseService):
         original_assigned_bots = await self.get_assigned_bots(wiki, as_api=False)
         original_assigned_users = await self.get_assigned_users(wiki, as_api=False)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
                     ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
@@ -271,7 +271,7 @@ class ProjectWikiService(BaseService):
             )
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(ProjectWikiAssignedUser).where(
                     ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
@@ -289,7 +289,7 @@ class ProjectWikiService(BaseService):
                 project.id, as_api=False, where_user_ids_in=assignee_ids
             )
 
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 for target_bot, project_assigned_bot in raw_bots:
                     db.insert(
                         ProjectWikiAssignedBot(
@@ -337,7 +337,7 @@ class ProjectWikiService(BaseService):
         ]
         all_wikis = [*all_wikis[:order], wiki, *all_wikis[order:]]
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             for index, all_wiki in enumerate(all_wikis):
                 all_wiki.order = index
                 await db.update(all_wiki)
@@ -365,7 +365,7 @@ class ProjectWikiService(BaseService):
             order=max_order + 1,
         )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(wiki_attachment)
             await db.commit()
 
@@ -377,7 +377,7 @@ class ProjectWikiService(BaseService):
             return None
         project, wiki = params
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(wiki)
             await db.commit()
 

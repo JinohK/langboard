@@ -29,7 +29,7 @@ const GlobalRelationshipDescription = memo(({ globalRelationship }: IGlobalRelat
                 description: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -54,7 +54,6 @@ const GlobalRelationshipDescription = memo(({ globalRelationship }: IGlobalRelat
                 },
                 finally: () => {
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

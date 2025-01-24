@@ -31,6 +31,7 @@ class SnowflakeIDType(TypeDecorator):
 def SnowflakeIDField(
     primary_key: bool | None = None,
     foreign_key: Any = Undefined,
+    unique: bool | None = None,
     nullable: bool | None = None,
     index: bool | None = None,
 ) -> Any:
@@ -42,6 +43,7 @@ def SnowflakeIDField(
         sa_type=SnowflakeIDType,
         sa_column_kwargs={"nullable": nullable if nullable is not None else True},
         nullable=nullable if nullable is not None else True,
+        unique=unique if unique is not None else False,
         index=index if index is not None else False,
         ondelete="CASCADE" if isinstance(foreign_key, str) else Undefined,
     )

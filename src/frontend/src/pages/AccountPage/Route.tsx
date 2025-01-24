@@ -67,6 +67,14 @@ function AccountRoute() {
                     </AuthGuard>
                 }
             />
+            <Route
+                path={ROUTES.ACCOUNT.PREFERENCES}
+                element={
+                    <AuthGuard>
+                        <AccountPage />
+                    </AuthGuard>
+                }
+            />
         </Route>
     );
 }

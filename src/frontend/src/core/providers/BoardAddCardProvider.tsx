@@ -44,7 +44,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const disableChangeModeAttr = "data-disable-change-mode";
-    const canWrite = hasRoleAction(Project.ERoleAction.CardWrite) && !column.isArchiveColumn();
+    const canWrite = hasRoleAction(Project.ERoleAction.CardWrite) && !column.is_archive;
     const { mutateAsync: createCardMutateAsync } = useCreateCard();
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.Update),
@@ -82,13 +82,13 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                 title: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Adding..."),
                 error: (error) => {
                     let message = "";
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            message = t("project.Project not found");
+                            message = t("project.errors.Project not found");
                         },
                         nonApiError: () => {
                             message = t("errors.Unknown error");
@@ -117,8 +117,8 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                 },
                 finally: () => {
                     setIsValidating(false);
+                    setIsEditing(() => false);
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

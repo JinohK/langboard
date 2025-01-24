@@ -8,6 +8,7 @@ import BoardCardActionShare from "@/pages/BoardPage/components/card/action/Board
 import BoardCardActionSetLabel from "@/pages/BoardPage/components/card/action/label/BoardCardActionSetLabel";
 import BoardCardActionRelationship from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationship";
 import BoardCardActionAddChecklist from "@/pages/BoardPage/components/card/action/checklist/BoardCardActionAddChecklist";
+import BoardCardActionArchive from "@/pages/BoardPage/components/card/action/BoardCardActionArchive";
 import BoardCardActionDelete from "@/pages/BoardPage/components/card/action/BoardCardActionDelete";
 
 const sharedButtonClassName = "mb-2 w-full justify-start gap-2 rounded-none px-2 py-1 sm:h-7";
@@ -25,7 +26,9 @@ export function SkeletonBoardCardActionList() {
 }
 
 const BoardCardActionList = memo(() => {
-    const { currentUser, hasRoleAction } = useBoardCard();
+    const { card, currentUser, hasRoleAction } = useBoardCard();
+    const archivedAt = card.useField("archived_at");
+
     return (
         <>
             <BoardCardActionSetLabel buttonClassName={sharedButtonClassName} />
@@ -34,7 +37,10 @@ const BoardCardActionList = memo(() => {
             <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />
             <BoardCardActionActivity buttonClassName={sharedButtonClassName} />
             <BoardCardActionShare buttonClassName={sharedButtonClassName} />
-            {hasRoleAction(Project.ERoleAction.CardDelete) || currentUser.is_admin ? (
+            {!archivedAt && (hasRoleAction(Project.ERoleAction.CardUpdate) || currentUser.is_admin) ? (
+                <BoardCardActionArchive buttonClassName={sharedButtonClassName} />
+            ) : null}
+            {!!archivedAt && (hasRoleAction(Project.ERoleAction.CardDelete) || currentUser.is_admin) ? (
                 <BoardCardActionDelete buttonClassName={sharedButtonClassName} />
             ) : null}
         </>

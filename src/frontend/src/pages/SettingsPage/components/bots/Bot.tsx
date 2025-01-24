@@ -29,7 +29,7 @@ const Bot = memo(({ bot }: IBotProps) => {
 
         const promise = mutateAsync({});
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: (error) => {
                 let message = "";
@@ -54,7 +54,6 @@ const Bot = memo(({ bot }: IBotProps) => {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

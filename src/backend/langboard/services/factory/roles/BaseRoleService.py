@@ -24,7 +24,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             if arg in self._model_class.model_fields and value is not None:
                 query = query.where(getattr(self._model_class, arg) == value)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
         return result.all()
 
@@ -41,7 +41,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         if not role.is_new():
             role.actions = kwargs.get("actions", role.actions)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             if role.is_new():
                 db.insert(role)
             else:
@@ -61,7 +61,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         role = await self._get_or_create_role(**kwargs)
         role.set_all_actions()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             if role.is_new():
                 db.insert(role)
             else:
@@ -81,7 +81,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         role = await self._get_or_create_role(**kwargs)
         role.set_default_actions()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             if role.is_new():
                 db.insert(role)
             else:
@@ -102,7 +102,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         if role.is_new():
             return None
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(role)
             await db.commit()
         return role
@@ -120,7 +120,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             if arg in filterable_columns and value is not None:
                 query = query.where(getattr(self._model_class, arg) == value)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query.limit(1))
         role = result.first()
         return self._model_class(**kwargs) if not role else role

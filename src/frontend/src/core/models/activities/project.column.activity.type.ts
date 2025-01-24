@@ -14,5 +14,8 @@ export interface IProjectColumnCreatedActivitiy extends IBaseProjectActivity<IPr
 export interface IProjectColumnNameChangedActivitiy extends IBaseProjectActivity<IProjectColumnActivityHistory & IChangesInActivityHistory> {
     activity_type: EProjectActivityType.ProjectColumnNameChanged;
 }
+export interface IProjectColumnDeletedActivitiy extends IBaseProjectActivity<IProjectColumnActivityHistory & IChangesInActivityHistory> {
+    activity_type: EProjectActivityType.ProjectColumnDeleted;
+}
 
-export type TProjectColumnActivityInterface = IProjectColumnCreatedActivitiy | IProjectColumnNameChangedActivitiy;
+export type TProjectColumnActivityInterface = IProjectColumnCreatedActivitiy | IProjectColumnNameChangedActivitiy | IProjectColumnDeletedActivitiy;

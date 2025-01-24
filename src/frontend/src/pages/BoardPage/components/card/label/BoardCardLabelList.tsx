@@ -12,7 +12,7 @@ function BoardCardLabelList(): JSX.Element {
     });
 
     return (
-        <Flex inline wrap="wrap" gap="1.5">
+        <Flex inline wrap gap="1.5">
             {labels.map((label) => (
                 <BoardCardLabel key={`board-card-label-${label.uid}`} label={label} />
             ))}

@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Box, Button } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
-import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSendResetLink";
 import useValidateRecoveryToken from "@/controllers/api/auth/useValidateRecoveryToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
-import { EMAIL_TOKEN_QUERY_NAME, SIGN_IN_TOKEN_LENGTH, SIGN_IN_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
@@ -31,13 +30,13 @@ function AccountRecoveryPage(): JSX.Element {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME);
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
-        const recoveryTokenParam = searchParams.get(RECOVERY_TOKEN_QUERY_NAME);
+        const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN);
+        const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
+        const recoveryTokenParam = searchParams.get(QUERY_NAMES.RECOVERY_TOKEN);
 
         if (location.pathname === ROUTES.ACCOUNT_RECOVERY.RESET) {
             if (!recoveryTokenParam) {
-                searchParams.delete(RECOVERY_TOKEN_QUERY_NAME);
+                searchParams.delete(QUERY_NAMES.RECOVERY_TOKEN);
                 navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
                 return;
             }
@@ -65,8 +64,8 @@ function AccountRecoveryPage(): JSX.Element {
         }
 
         if (!signTokenParam || signTokenParam.length !== SIGN_IN_TOKEN_LENGTH || !emailTokenParam) {
-            searchParams.delete(SIGN_IN_TOKEN_QUERY_NAME);
-            searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+            searchParams.delete(QUERY_NAMES.SIGN_IN_TOKEN);
+            searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
             navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
             return;
         }
@@ -94,9 +93,9 @@ function AccountRecoveryPage(): JSX.Element {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const signTokenParam = searchParams.get(SIGN_IN_TOKEN_QUERY_NAME);
-        const emailTokenParam = searchParams.get(EMAIL_TOKEN_QUERY_NAME);
-        const recoveryTokenParam = searchParams.get(RECOVERY_TOKEN_QUERY_NAME);
+        const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN);
+        const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
+        const recoveryTokenParam = searchParams.get(QUERY_NAMES.RECOVERY_TOKEN);
 
         switch (location.pathname) {
             case ROUTES.ACCOUNT_RECOVERY.NAME:

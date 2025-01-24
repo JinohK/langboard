@@ -1,4 +1,5 @@
 from fastapi import status
+from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
 from ...core.routing import AppRouter, JsonResponse
 from ...core.routing.Exception import InvalidError, InvalidException
@@ -24,9 +25,9 @@ async def send_link(form: SendResetLinkForm, service: Service = Service.scope())
         if user.get_fullname() != make_fullname(form.firstname, form.lastname):
             raise InvalidException(InvalidError(loc="body", field="name", inputs=form.model_dump()))
 
-    token_url = await service.user.create_token_url(user, cache_key, form.url, form.recovery_token_query_name)
+    token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.RECOVERY_TOKEN)
 
-    result = await service.email.send_template(form.lang, user.email, "recovery", {"url": token_url})
+    result = await service.email.send_template(user.preferred_lang, user.email, "recovery", {"url": token_url})
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 

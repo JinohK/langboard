@@ -30,7 +30,7 @@ function BoardCardChecklistNotify() {
             member_uids: selectedItems.map((item) => item.uid),
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
@@ -39,7 +39,6 @@ function BoardCardChecklistNotify() {
             finally: () => {
                 setIsValidating(false);
                 endCallback();
-                Toast.Add.dismiss(toastId);
             },
         });
     };

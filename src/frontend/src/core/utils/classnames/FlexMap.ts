@@ -6,7 +6,7 @@ export const direction = {
 };
 
 export const wrap = {
-    wrap: "flex-wrap",
+    true: "flex-wrap",
     nowrap: "flex-nowrap",
     "wrap-reverse": "flex-wrap-reverse",
 };

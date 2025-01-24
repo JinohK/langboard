@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Box, Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -30,7 +29,6 @@ function ResizableSidebar({
     hidden,
 }: IResizableSidebarProps) {
     const isResizing = useRef(false);
-    const [t] = useTranslation();
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [isMobile, setIsMobile] = useState(window.innerWidth < ScreenMap.size.md);
 
@@ -165,7 +163,7 @@ function ResizableSidebar({
                     {floatingFullScreen && <Floating.Button.CloseButton />}
                     {isMobile && children}
                 </Floating.Button.Content>
-                <Floating.Button.Trigger icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+                <Floating.Button.Trigger icon={floatingIcon} title={floatingTitle} titleSide="right" />
             </Floating.Button.Root>
         </>
     );

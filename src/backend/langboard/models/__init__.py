@@ -28,6 +28,8 @@ from .UserEmail import UserEmail
 from .UserGroup import UserGroup
 from .UserGroupAssignedEmail import UserGroupAssignedEmail
 from .UserNotification import UserNotification
+from .UserNotificationUnsubscription import UserNotificationUnsubscription
+from .UserProfile import UserProfile
 
 
 __all__ = [
@@ -61,4 +63,6 @@ __all__ = [
     "UserGroup",
     "UserGroupAssignedEmail",
     "UserNotification",
+    "UserNotificationUnsubscription",
+    "UserProfile",
 ]

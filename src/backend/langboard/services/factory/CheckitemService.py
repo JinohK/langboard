@@ -36,7 +36,7 @@ class CheckitemService(BaseService):
         if not card or not checklist or checklist.card_id != card.id:
             return []
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(Checkitem, Card, User)
                 .outerjoin(Card, Card.column("id") == Checkitem.column("cardified_id"))
@@ -73,7 +73,7 @@ class CheckitemService(BaseService):
             .group_by(Checkitem.column("id"), Checkitem.column("created_at"))
         )
         query = self.paginate(query, pagination.page, pagination.limit)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
         records = result.all()
 
@@ -113,7 +113,7 @@ class CheckitemService(BaseService):
         max_order = await self._get_max_order(Checkitem, "checklist_id", checklist.id)
 
         checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order + 1)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(checkitem)
             await db.commit()
 
@@ -145,11 +145,11 @@ class CheckitemService(BaseService):
                 checkitem.cardified_id = None
             else:
                 cardified_card.title = title
-                async with DbSession.use_db() as db:
+                async with DbSession.use() as db:
                     await db.update(cardified_card)
                     await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(checkitem)
             await db.commit()
 
@@ -193,25 +193,25 @@ class CheckitemService(BaseService):
                 (Checkitem.column("order") >= original_order)
                 & (Checkitem.column("checklist_id") == original_checklist.id)
             )
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
 
             update_query = shared_update_query.values({Checkitem.order: Checkitem.order + 1}).where(
                 (Checkitem.column("order") >= order) & (Checkitem.column("checklist_id") == new_checklist.id)
             )
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
             checkitem.checklist_id = new_checklist.id
         else:
             update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
             update_query = self._set_order_in_column(update_query, Checkitem, original_order, order)
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.exec(update_query)
                 await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             checkitem.order = order
             await db.update(checkitem)
             await db.commit()
@@ -251,7 +251,7 @@ class CheckitemService(BaseService):
                 last_timer_record = cast(CheckitemTimerRecord, await self.__get_timer_record(checkitem, "last"))
                 accumulated_seconds = calculate_time_diff_in_seconds(current_time, last_timer_record.created_at)
                 checkitem.accumulated_seconds += accumulated_seconds
-                async with DbSession.use_db() as db:
+                async with DbSession.use() as db:
                     await db.update(checkitem)
                     await db.commit()
         else:
@@ -269,7 +269,7 @@ class CheckitemService(BaseService):
 
         checkitem.status = status
         timer_record = CheckitemTimerRecord(checkitem_id=checkitem.id, status=status, created_at=current_time)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(checkitem)
             db.insert(timer_record)
             await db.commit()
@@ -307,7 +307,7 @@ class CheckitemService(BaseService):
         if checkitem.status != CheckitemStatus.Stopped:
             await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
         else:
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 await db.update(checkitem)
                 await db.commit()
 
@@ -333,14 +333,11 @@ class CheckitemService(BaseService):
             return None
         project, card, checkitem = params
 
-        if checkitem.cardified_id or column_uid == card.project_id.to_short_code():
+        if checkitem.cardified_id or (card.archived_at and not column_uid):
             return False
 
-        if not card.project_column_id and not column_uid:
-            return False
-
-        target_column = await self._get_by_param(ProjectColumn, column_uid or cast(int, card.project_column_id))
-        if not target_column:
+        target_column = await self._get_by_param(ProjectColumn, column_uid or card.project_column_id)
+        if not target_column or target_column.is_archive:
             return False
 
         if checkitem.status != CheckitemStatus.Stopped:
@@ -355,11 +352,11 @@ class CheckitemService(BaseService):
             title=checkitem.title,
             order=max_order + 1,
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(new_card)
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             checkitem.cardified_id = new_card.id
             await db.update(checkitem)
             await db.commit()
@@ -387,7 +384,7 @@ class CheckitemService(BaseService):
         if checkitem.status != CheckitemStatus.Stopped:
             await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(checkitem)
             await db.commit()
 
@@ -403,7 +400,7 @@ class CheckitemService(BaseService):
             if arc_type == "first"
             else CheckitemTimerRecord.column("created_at").desc()
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(CheckitemTimerRecord)
                 .where(CheckitemTimerRecord.column("checkitem_id") == checkitem.id)
@@ -414,7 +411,7 @@ class CheckitemService(BaseService):
         return result.first()
 
     async def __find_started_checkitem(self, user: User):
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(Checkitem).where(
                     (Checkitem.column("user_id") == user.id) & (Checkitem.column("status") == CheckitemStatus.Started)

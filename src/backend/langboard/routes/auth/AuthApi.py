@@ -6,6 +6,7 @@ from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
+from ...models.UserNotificationUnsubscription import NotificationScope
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
 
@@ -67,14 +68,37 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
 @AppRouter.api.get("/auth/me")
 @AuthFilter.add
 async def about_me(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
-    response = user.api_response()
-    response["industry"] = user.industry
-    response["purpose"] = user.purpose
-    response["affiliation"] = user.affiliation
-    response["position"] = user.position
+    profile = await service.user.get_profile(user)
+    response = {
+        **user.api_response(),
+        **profile.api_response(),
+        "preferred_lang": user.preferred_lang,
+    }
     response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
     response["subemails"] = await service.user.get_subemails(user)
     notifications = await service.notification.get_list(user)
+
+    notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user).all()
+    unsubs = {}
+    for unsub in notification_unsubs:
+        if unsub.scope_type.value not in unsubs:
+            unsubs[unsub.scope_type.value] = {}
+        if unsub.notification_type.value not in unsubs[unsub.scope_type.value]:
+            unsubs[unsub.scope_type.value][unsub.notification_type.value] = {}
+
+        if unsub.scope_type.value == NotificationScope.All.value:
+            unsubs[unsub.scope_type.value][unsub.notification_type.value][unsub.channel.value] = True
+            continue
+
+        if not unsub.specific_id:
+            continue
+
+        unsubs[unsub.scope_type.value][unsub.notification_type.value][unsub.channel.value] = []
+        unsubs[unsub.scope_type.value][unsub.notification_type.value][unsub.channel.value].append(
+            unsub.specific_id.to_short_code()
+        )
+
+    response["notification_unsubs"] = unsubs
 
     if user.is_admin:
         response["is_admin"] = True

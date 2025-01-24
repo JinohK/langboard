@@ -14,12 +14,14 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
 import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardColumnAddCardButton";
 import BoardColumnCard, { IBoardColumnCardProps, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
-import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { memo, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { tv } from "tailwind-variants";
 import InfiniteScroller from "@/components/InfiniteScroller";
+import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
+import useBoardUIColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardUIColumnDeletedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
@@ -116,6 +118,17 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
 
         listeners?.onKeyDown?.(e);
     }, []);
+    const columnDeletedHandlers = useBoardUIColumnDeletedHandlers({
+        project,
+        callback: () => {
+            if (!column.is_archive) {
+                return;
+            }
+
+            forceUpdate();
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers: [columnDeletedHandlers] });
 
     callbacksRef.current[columnId] = {
         onDragEnd: (originalCard, index) => {
@@ -198,16 +211,14 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     return (
         <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={toLastPage}>
             <Card.Root {...rootProps}>
-                <Card.Header className="flex flex-row items-start space-y-0 pb-1 pt-4 text-left font-semibold" {...headerProps}>
-                    <BoardColumnHeader isDragging={isDragging} column={column} />
-                </Card.Header>
+                <BoardColumnHeader isDragging={isDragging} column={column} headerProps={headerProps} />
                 <ScrollArea.Root viewportId={columnId} mutable={updated} onScroll={() => closeHoverCardRef.current?.()}>
                     <Card.Content
                         className={cn(
                             "flex flex-grow flex-col gap-2 p-3",
-                            hasRoleAction(Project.ERoleAction.CardWrite) && !column.isArchiveColumn()
-                                ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.1))]"
-                                : "max-h-[calc(100vh_-_theme(spacing.56))]"
+                            hasRoleAction(Project.ERoleAction.CardWrite) && !column.is_archive
+                                ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))]"
+                                : "max-h-[calc(100vh_-_theme(spacing.56)_-_theme(spacing.1))]"
                         )}
                         onWheel={(e) => {
                             e.stopPropagation();

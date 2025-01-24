@@ -9,7 +9,7 @@ from .ProjectColumn import ProjectColumn
 
 class Card(SoftDeleteModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
-    project_column_id: SnowflakeID | None = SnowflakeIDField(foreign_key=ProjectColumn.expr("id"), nullable=True)
+    project_column_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectColumn.expr("id"), nullable=False, index=True)
     title: str = Field(nullable=False)
     description: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
     ai_description: str | None = Field(default=None, sa_type=TEXT)
@@ -21,14 +21,13 @@ class Card(SoftDeleteModel, table=True):
         return {
             "uid": self.get_uid(),
             "project_uid": self.project_id.to_short_code(),
-            "column_uid": self.project_column_id.to_short_code()
-            if self.project_column_id
-            else self.project_id.to_short_code(),
+            "column_uid": self.project_column_id.to_short_code(),
             "title": self.title,
             "description": self.description.model_dump() if self.description else None,
             "ai_description": self.ai_description,
             "order": self.order,
             "created_at": self.created_at,
+            "archived_at": self.archived_at,
         }
 
     def notification_data(self) -> dict[str, Any]:

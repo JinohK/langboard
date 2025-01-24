@@ -5,6 +5,7 @@ export { default as AutoComplete } from "@/components/base/AutoComplete";
 export * as Avatar from "@/components/base/Avatar";
 export { default as Badge, BadgeVariants, type BadgeProps } from "@/components/base/Badge";
 export { default as Box } from "@/components/base/Box";
+export * as Breadcrumb from "@/components/base/Breadcrumb";
 export { default as Button, ButtonVariants, type ButtonProps } from "@/components/base/Button";
 export { default as Calendar } from "@/components/base/Calendar";
 export * as Card from "@/components/base/Card";

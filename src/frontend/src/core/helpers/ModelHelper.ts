@@ -91,6 +91,12 @@ export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
     ProjectCheckitem.Model.deleteModels((checkitem) => checkitem.card_uid === cardUID);
     ProjectCard.Model.deleteModel(cardUID);
 
+    ProjectCard.Model.getModels((model) => model.column_uid === card.column_uid).forEach((model) => {
+        if (model.order > card.order) {
+            model.order -= 1;
+        }
+    });
+
     if (shouldUnsubscribe) {
         socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);
     }

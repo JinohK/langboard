@@ -1,10 +1,8 @@
 from json import loads as json_loads
-from typing import Literal, overload
+from typing import overload
 from ...Constants import BASE_DIR, PROJECT_NAME
 from ...core.service import BaseService
-
-
-_TTemplateNames = Literal["recovery", "signup", "subemail", "project_invitation"]
+from ...locales.EmailTemplateNames import TEmailTemplateNames
 
 
 class EmailService(BaseService):
@@ -15,14 +13,14 @@ class EmailService(BaseService):
 
     @overload
     async def send_template(
-        self, lang: str, to: str, template_name: _TTemplateNames, formats: dict[str, str]
+        self, lang: str, to: str, template_name: TEmailTemplateNames, formats: dict[str, str]
     ) -> bool: ...
     @overload
     async def send_template(
-        self, lang: str, to: list[str], template_name: _TTemplateNames, formats: dict[str, str]
+        self, lang: str, to: list[str], template_name: TEmailTemplateNames, formats: dict[str, str]
     ) -> bool: ...
     async def send_template(
-        self, lang: str, to: str | list[str], template_name: _TTemplateNames, formats: dict[str, str]
+        self, lang: str, to: str | list[str], template_name: TEmailTemplateNames, formats: dict[str, str]
     ) -> bool:
         subject, template = self.__get_template(lang, template_name)
         subject = self.__create_subject(subject)
@@ -32,7 +30,7 @@ class EmailService(BaseService):
 
         return True
 
-    def __get_template(self, lang: str, template_name: _TTemplateNames) -> tuple[str, str]:
+    def __get_template(self, lang: str, template_name: TEmailTemplateNames) -> tuple[str, str]:
         locale_path = BASE_DIR / "locales" / lang
         template_path = locale_path / f"{template_name}_email.html"
         lang_path = locale_path / "lang.json"

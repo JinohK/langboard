@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { QUERY_NAMES } from "@/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton, Toast } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { REDIRECT_QUERY_NAME, ROUTES } from "@/core/routing/constants";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { EMAIL_TOKEN_QUERY_NAME } from "@/pages/auth/SignInPage/constants";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
@@ -46,7 +46,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
             }
 
             const searchParams = new URLSearchParams(location.search);
-            const redirectUrl = searchParams.get(REDIRECT_QUERY_NAME) ?? ROUTES.AFTER_SIGN_IN;
+            const redirectUrl = searchParams.get(QUERY_NAMES.REDIRECT) ?? ROUTES.AFTER_SIGN_IN;
             signIn(data.access_token, data.refresh_token);
             navigate(decodeURIComponent(redirectUrl));
         },
@@ -61,7 +61,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                 Toast.Add.error(t("signIn.errors.Email is not verified yet."));
                 setEmail("");
                 const searchParams = new URLSearchParams(location.search);
-                searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+                searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
                 navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
             },
             [EHttpStatus.HTTP_423_LOCKED]: () => {
@@ -78,7 +78,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
     const backToEmail = () => {
         setEmail("");
         const searchParams = new URLSearchParams(location.search);
-        searchParams.delete(EMAIL_TOKEN_QUERY_NAME);
+        searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
         navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
     };
 

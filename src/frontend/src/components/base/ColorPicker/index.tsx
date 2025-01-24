@@ -93,7 +93,7 @@ const ColorPicker = forwardRef<HTMLInputElement, Omit<ButtonProps, "value" | "di
                                 ref={ref}
                             />
                         </Box>
-                        <Flex gap={{ initial: "1.5", sm: "2" }} wrap="wrap" justify="center" maxW={{ sm: "16" }}>
+                        <Flex gap={{ initial: "1.5", sm: "2" }} wrap justify="center" maxW={{ sm: "16" }}>
                             {COLOR_PRESETS.map((color) => (
                                 <Button
                                     key={color}

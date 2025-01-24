@@ -12,8 +12,10 @@ import { Navigate } from "react-router-dom";
 import { DashboardProvider } from "@/core/providers/DashboardProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { Project } from "@/core/models";
+import { useTranslation } from "react-i18next";
 
 const DashboardProxy = memo((): JSX.Element => {
+    const [t] = useTranslation();
     const navigateRef = useRef(usePageNavigate());
     const [pageType, tabName] = location.pathname.split("/").slice(2);
     const { data, isFetching } = useGetAllStarredProjects();
@@ -25,19 +27,19 @@ const DashboardProxy = memo((): JSX.Element => {
 
     const headerNavs: Record<string, IHeaderNavItem> = {
         projects: {
-            name: "dashboard.Projects",
+            name: t("dashboard.Projects"),
             onClick: () => {
                 navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
             },
         },
         cards: {
-            name: "dashboard.Cards",
+            name: t("dashboard.Cards"),
             onClick: () => {
                 navigateRef.current(ROUTES.DASHBOARD.CARDS);
             },
         },
         starred: {
-            name: "dashboard.Starred",
+            name: t("dashboard.Starred"),
             subNavs:
                 starredProjects.map((project) => ({
                     name: project.title,
@@ -47,7 +49,7 @@ const DashboardProxy = memo((): JSX.Element => {
                 })) ?? [],
         },
         tacking: {
-            name: "dashboard.Tracking",
+            name: t("dashboard.Tracking"),
             onClick: () => {
                 navigateRef.current(ROUTES.DASHBOARD.TRACKING);
             },
@@ -57,14 +59,14 @@ const DashboardProxy = memo((): JSX.Element => {
     const sidebarNavs: ISidebarNavItem[] = [
         {
             icon: "plus",
-            name: "dashboard.Create New Project",
+            name: t("dashboard.Create New Project"),
             onClick: () => {
                 navigateRef.current(`${location.pathname}/new-project`);
             },
         },
         {
             icon: "history",
-            name: "dashboard.My Activity",
+            name: t("dashboard.My Activity"),
             onClick: () => {
                 navigateRef.current(`${location.pathname}/my-activity`);
             },

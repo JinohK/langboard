@@ -12,7 +12,7 @@ class ReactionService(BaseService):
         return "reaction"
 
     async def get_all(self, model_class: type[BaseReactionModel], target_id: SnowflakeID) -> dict[str, list[str]]:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(model_class, User, Bot)
                 .outerjoin(User, model_class.column("user_id") == User.column("id"))
@@ -40,7 +40,7 @@ class ReactionService(BaseService):
         user_or_bot_column = (
             model_class.column("user_id") if isinstance(user_or_bot, User) else model_class.column("bot_id")
         )
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(model_class).where(
                     (user_or_bot_column == user_or_bot.id)
@@ -51,7 +51,7 @@ class ReactionService(BaseService):
         reaction = result.first()
         is_reacted = bool(reaction)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             if is_reacted:
                 await db.delete(reaction)
             else:

@@ -9,52 +9,54 @@ const BoardColumnAddCard = memo(() => {
     const [t] = useTranslation();
     const [height, setHeight] = useState(0);
 
-    if (!isEditing || !canWrite) {
-        return null;
-    }
-
     return (
-        <Box
-            mt="3"
-            maxH="28"
-            py="1"
-            pl="2"
-            pr="1"
-            rounded="md"
-            mb="-2.5"
-            className="overflow-y-auto bg-secondary/70"
-            {...{ [disableChangeModeAttr]: true }}
-            onClick={(e) => {
-                if ((e.target as HTMLElement) === e.currentTarget) {
-                    textareaRef.current?.focus();
-                }
-            }}
-        >
-            <Textarea
-                ref={textareaRef}
-                className={cn(
-                    "min-h-12 resize-none break-all border-none bg-transparent p-0 scrollbar-hide",
-                    "focus-visible:shadow-none focus-visible:ring-transparent focus-visible:ring-offset-transparent"
-                )}
-                style={{ height }}
-                placeholder={t("board.Enter a title")}
-                disabled={isValidating}
-                onChange={() => {
-                    setHeight(measureTextAreaHeight(textareaRef.current!));
-                    setTimeout(() => {
-                        scrollToBottom();
-                    }, 0);
-                }}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        changeMode("view");
-                        return;
-                    }
-                }}
-            />
-        </Box>
+        <>
+            {!isEditing || !canWrite ? (
+                <></>
+            ) : (
+                <Box
+                    mt="3"
+                    maxH="28"
+                    py="1"
+                    pl="2"
+                    pr="1"
+                    rounded="md"
+                    mb="-2.5"
+                    className="overflow-y-auto bg-secondary/70"
+                    {...{ [disableChangeModeAttr]: true }}
+                    onClick={(e) => {
+                        if ((e.target as HTMLElement) === e.currentTarget) {
+                            textareaRef.current?.focus();
+                        }
+                    }}
+                >
+                    <Textarea
+                        ref={textareaRef}
+                        className={cn(
+                            "min-h-12 resize-none break-all border-none bg-transparent p-0 scrollbar-hide",
+                            "focus-visible:shadow-none focus-visible:ring-transparent focus-visible:ring-offset-transparent"
+                        )}
+                        style={{ height }}
+                        placeholder={t("board.Enter a title")}
+                        disabled={isValidating}
+                        onChange={() => {
+                            setHeight(measureTextAreaHeight(textareaRef.current!));
+                            setTimeout(() => {
+                                scrollToBottom();
+                            }, 0);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                changeMode("view");
+                                return;
+                            }
+                        }}
+                    />
+                </Box>
+            )}
+        </>
     );
 });
 

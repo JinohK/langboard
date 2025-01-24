@@ -25,7 +25,7 @@ export function SkeletonAddSubEmailForm(): JSX.Element {
 
 function AddSubEmailForm(): JSX.Element {
     const { currentUser, updatedUser, isValidating, setIsValidating } = useAccountSetting();
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const { mutate } = useAddNewEmail();
     const { errors, setErrors, handleSubmit, formRef } = useForm({
         errorLangPrefix: "myAccount.errors",
@@ -52,7 +52,6 @@ function AddSubEmailForm(): JSX.Element {
             },
         },
         isValidatingState: [isValidating, setIsValidating],
-        predefineValues: () => ({ lang: i18n.language }),
         mutate,
         mutateOnSuccess: () => {
             setErrors({});

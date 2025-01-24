@@ -22,9 +22,11 @@ import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardD
 import useDashboardProjectColumnCreatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnCreatedHandlers";
 import useDashboardProjectColumnNameChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnNameChangedHandlers";
 import useDashboardProjectColumnOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnOrderChangedHandlers";
+import useDashboardProjectColumnDeletedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnDeletedHandlers";
 import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/useBoardColumnCreatedHandlers";
 import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
 import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
+import useBoardColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardColumnDeletedHandlers";
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
@@ -86,6 +88,7 @@ class Project extends BaseModel<IStore> {
                 useBoardColumnCreatedHandlers,
                 useBoardColumnNameChangedHandlers,
                 useBoardColumnOrderChangedHandlers,
+                useBoardColumnDeletedHandlers,
                 useBoardDetailsChangedHandlers,
                 useBoardAssignedBotsUpdatedHandlers,
                 useBoardAssignedUsersUpdatedHandlers,
@@ -143,6 +146,7 @@ class Project extends BaseModel<IStore> {
                 useDashboardProjectColumnCreatedHandlers,
                 useDashboardProjectColumnNameChangedHandlers,
                 useDashboardProjectColumnOrderChangedHandlers,
+                useDashboardProjectColumnDeletedHandlers,
                 useDashboardCardCreatedHandlers,
                 useDashboardCardOrderChangedHandlers,
                 useDashboardCardTitleChangedHandlers,
@@ -156,6 +160,7 @@ class Project extends BaseModel<IStore> {
             {
                 topic: ESocketTopic.Dashboard,
                 projectUID: this.uid,
+                project: this,
                 userUID,
             }
         );

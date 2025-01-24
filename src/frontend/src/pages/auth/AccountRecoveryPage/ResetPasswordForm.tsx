@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import PasswordInput from "@/components/PasswordInput";
+import { QUERY_NAMES } from "@/constants";
 import { Button, Flex, Form, SubmitButton } from "@/components/base";
 import useRecoveryPassword from "@/controllers/api/auth/useRecoveryPassword";
-import { RECOVERY_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
@@ -37,7 +37,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
             },
             [EHttpStatus.HTTP_410_GONE]: () => {
                 const searchParams = new URLSearchParams(location.search);
-                searchParams.delete(RECOVERY_TOKEN_QUERY_NAME);
+                searchParams.delete(QUERY_NAMES.RECOVERY_TOKEN);
 
                 navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`);
             },

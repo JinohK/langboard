@@ -31,7 +31,7 @@ const BoardSettingsLabelColor = memo(() => {
             color,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
@@ -40,7 +40,6 @@ const BoardSettingsLabelColor = memo(() => {
             finally: () => {
                 setIsValidating(false);
                 endCallback();
-                Toast.Add.dismiss(toastId);
             },
         });
     };

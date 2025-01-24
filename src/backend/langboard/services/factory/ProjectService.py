@@ -57,7 +57,7 @@ class ProjectService(BaseService):
         if where_bot_ids_in is not None:
             query = query.where(Bot.column("id").in_(where_bot_ids_in))
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
         raw_bots = result.all()
         if not as_api:
@@ -89,7 +89,7 @@ class ProjectService(BaseService):
         if where_user_ids_in is not None:
             query = query.where(User.column("id").in_(where_user_ids_in))
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
         raw_users = result.all()
         if not as_api:
@@ -111,7 +111,7 @@ class ProjectService(BaseService):
             Project.column("id"), ProjectAssignedUser.column("id"), ProjectAssignedUser.column("updated_at")
         )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(sql_query)
         raw_projects = result.all()
 
@@ -167,7 +167,7 @@ class ProjectService(BaseService):
         if not project:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectAssignedUser)
                 .where(
@@ -182,7 +182,7 @@ class ProjectService(BaseService):
         user_a = aliased(ProjectAssignedUser)
         user_b = aliased(ProjectAssignedUser)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.column(user_a.id)
                 .join(user_b, cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id)
@@ -192,7 +192,7 @@ class ProjectService(BaseService):
         return bool(result.first())
 
     async def toggle_star(self, user: User, uid: str) -> bool:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.columns(ProjectAssignedUser.starred, Project.id)
                 .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.project_id)
@@ -207,7 +207,7 @@ class ProjectService(BaseService):
         if project_id is None:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.update.table(ProjectAssignedUser)
                 .values(starred=not starred)
@@ -221,7 +221,7 @@ class ProjectService(BaseService):
         return result > 0
 
     async def set_last_view(self, user: User, project: Project) -> None:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.update.table(ProjectAssignedUser)
                 .values(last_viewed_at=now())
@@ -239,14 +239,17 @@ class ProjectService(BaseService):
             return None
 
         project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(project)
             await db.commit()
+
+        column_service = self._get_service(ProjectColumnService)
+        await column_service.get_or_create_archive_if_not_exists(project)
 
         await self._get_service(ProjectLabelService).init_defaults(project)
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(assigned_user)
             await db.commit()
 
@@ -280,7 +283,7 @@ class ProjectService(BaseService):
         if not old_project_record:
             return True
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(project)
             await db.commit()
 
@@ -305,14 +308,14 @@ class ProjectService(BaseService):
 
         old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("project_id") == project.id)
             )
             await db.commit()
 
         bots = []
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             if assign_bot_uids:
                 assigned_bot_ids = [SnowflakeID.from_short_code(uid) for uid in assign_bot_uids]
                 bots = await self._get_all_by(Bot, "id", assigned_bot_ids)
@@ -329,7 +332,7 @@ class ProjectService(BaseService):
         return list(bots)
 
     async def update_assigned_users(
-        self, user: User, project: TProjectParam, lang: str, url: str, token_query_name: str, emails: list[str]
+        self, user: User, project: TProjectParam, emails: list[str]
     ) -> dict[str, str] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
@@ -340,7 +343,7 @@ class ProjectService(BaseService):
         invitation_service = self._get_service(ProjectInvitationService)
         invitation_related_data = await invitation_service.get_invitation_related_data(project, emails)
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.delete.table(ProjectAssignedUser).where(
                     ProjectAssignedUser.column("id").in_(invitation_related_data.assigned_ids_should_delete)
@@ -348,10 +351,7 @@ class ProjectService(BaseService):
             )
             await db.commit()
 
-        project_invitation_service = self._get_service(ProjectInvitationService)
-        _, urls = await project_invitation_service.invite_emails(
-            user, project, lang, url, token_query_name, invitation_related_data
-        )
+        _, urls = await invitation_service.invite_emails(user, project, invitation_related_data)
 
         new_assigned_users = await self.get_assigned_users(project, as_api=False)
         model = {
@@ -399,7 +399,7 @@ class ProjectService(BaseService):
         if not project:
             return False
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.tables(Checkitem, Card)
                 .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
@@ -417,7 +417,7 @@ class ProjectService(BaseService):
                 user, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(project)
             await db.commit()
 

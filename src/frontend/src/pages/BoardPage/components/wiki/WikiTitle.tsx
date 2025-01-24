@@ -29,7 +29,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                 title: value,
             });
 
-            const toastId = Toast.Add.promise(promise, {
+            Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
                     let message = "";
@@ -50,7 +50,6 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                 },
                 finally: () => {
                     endCallback();
-                    Toast.Add.dismiss(toastId);
                 },
             });
         },

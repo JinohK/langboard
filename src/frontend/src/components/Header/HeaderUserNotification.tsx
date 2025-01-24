@@ -2,7 +2,7 @@ import { AnimatedList, Box, Button, Card, Flex, IconComponent, Label, Loading, P
 import { createDataTextRegex } from "@/components/Editor/plugins/markdown";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import UserAvatar from "@/components/UserAvatar";
-import { PROJCT_INVITATION_TOKEN_QUERY_NAME } from "@/controllers/api/board/useUpdateProjectAssignedUsers";
+import { QUERY_NAMES } from "@/constants";
 import useDeleteAllUserNotificationsHandlers from "@/controllers/socket/notification/useDeleteAllUserNotificationsHandlers";
 import useDeleteUserNotificationHandlers from "@/controllers/socket/notification/useDeleteUserNotificationHandlers";
 import useReadAllUserNotificationsHandlers from "@/controllers/socket/notification/useReadAllUserNotificationsHandlers";
@@ -12,7 +12,7 @@ import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { AuthUser, User, UserNotification } from "@/core/models";
-import { ENotificationType } from "@/core/models/UserNotification";
+import { ENotificationType } from "@/core/models/notification.type";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -383,7 +383,7 @@ function HeaderUserNotificationItemMentionedText({ content }: { content: string 
 const getRoute = (notification: UserNotification.TModel) => {
     switch (notification.type) {
         case ENotificationType.ProjectInvited:
-            return `${ROUTES.BOARD.INVITATION}?${PROJCT_INVITATION_TOKEN_QUERY_NAME}=${notification.records.invitation.encrypted_token}`;
+            return `${ROUTES.BOARD.INVITATION}?${QUERY_NAMES.PROJCT_INVITATION_TOKEN}=${notification.records.invitation.encrypted_token}`;
         case ENotificationType.MentionedAtCard:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
         case ENotificationType.MentionedAtComment:

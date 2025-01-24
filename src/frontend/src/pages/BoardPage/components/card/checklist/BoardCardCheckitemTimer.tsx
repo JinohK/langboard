@@ -100,7 +100,7 @@ function BoardCardCheckitemTimerManager() {
                 break;
         }
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: sharedErrorHandler,
             success: () => {
@@ -108,7 +108,6 @@ function BoardCardCheckitemTimerManager() {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

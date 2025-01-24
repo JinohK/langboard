@@ -44,17 +44,13 @@ class ActivityService(BaseService):
             if not user_activity.refer_activity_id or not user_activity.refer_activity_table:
                 continue
 
-            model_class = cast(
-                type[BaseActivityModel], self._get_model_by_table_name(user_activity.refer_activity_table)
+            model = await self.get_record_by_table_name_with_id(
+                user_activity.refer_activity_table, user_activity.refer_activity_id
             )
-            if not model_class:
-                continue
-
-            model = await self._get_by(model_class, "id", user_activity.refer_activity_id)
             if not model:
                 continue
 
-            references = await self.__get_refer_record(model)
+            references = await self.__get_refer_record(cast(BaseActivityModel, model))
             if not references:
                 continue
 
@@ -194,7 +190,7 @@ class ActivityService(BaseService):
         list_query = self.__make_query(list_query, activity_class, **where_clauses)
         list_query = list_query.where((activity_class.column("created_at") <= refer_time))
         list_query = self.paginate(list_query, pagination.page, pagination.limit)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(list_query)
         result_list = result.all()
 
@@ -208,7 +204,7 @@ class ActivityService(BaseService):
         outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
         outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
         outdated_query = outdated_query.where((activity_class.column("created_at") > refer_time))
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(outdated_query)
         return result.first() or 0
 

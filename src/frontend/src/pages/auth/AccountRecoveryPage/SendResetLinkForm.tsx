@@ -18,7 +18,7 @@ export interface ISendResetLinkFormProps {
 
 function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLinkFormProps): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const navigate = usePageNavigate();
     const location = useLocation();
     const { mutate } = useSendResetLink();
@@ -34,9 +34,9 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
         },
         predefineValues: () => {
             if (isResendRef.current) {
-                return { sign_token: signToken, email_token: emailToken, is_resend: true, lang: i18n.language };
+                return { sign_token: signToken, email_token: emailToken, is_resend: true };
             } else {
-                return { sign_token: signToken, email_token: emailToken, lang: i18n.language };
+                return { sign_token: signToken, email_token: emailToken };
             }
         },
         mutate,

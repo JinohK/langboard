@@ -45,7 +45,7 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
             title: titleInputRef.current?.value,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Adding..."),
             error: (error: unknown) => {
                 let message = "";
@@ -73,7 +73,6 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
             finally: () => {
                 setIsValidating(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

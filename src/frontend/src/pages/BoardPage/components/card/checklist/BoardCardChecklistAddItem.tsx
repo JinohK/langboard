@@ -24,7 +24,7 @@ function BoardCardChecklistAddItem(): JSX.Element {
             title: "New checkitem",
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
             error: sharedErrorHandler,
             success: () => {
@@ -32,7 +32,6 @@ function BoardCardChecklistAddItem(): JSX.Element {
             },
             finally: () => {
                 setIsValidating(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

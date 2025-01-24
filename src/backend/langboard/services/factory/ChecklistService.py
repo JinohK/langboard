@@ -62,7 +62,7 @@ class ChecklistService(BaseService):
         max_order = await self._get_max_order(Checklist, "card_id", card.id)
 
         checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             db.insert(checklist)
             await db.commit()
 
@@ -85,7 +85,7 @@ class ChecklistService(BaseService):
 
         old_title = checklist.title
         checklist.title = title
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(checklist)
             await db.commit()
 
@@ -106,11 +106,11 @@ class ChecklistService(BaseService):
         original_order = checklist.order
         update_query = SqlBuilder.update.table(Checklist).where(Checklist.column("card_id") == card.id)
         update_query = self._set_order_in_column(update_query, Checklist, original_order, order)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.exec(update_query)
             await db.commit()
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             checklist.order = order
             await db.update(checklist)
             await db.commit()
@@ -128,7 +128,7 @@ class ChecklistService(BaseService):
         project, card, checklist = params
 
         checklist.is_checked = not checklist.is_checked
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.update(checklist)
             await db.commit()
 
@@ -181,7 +181,7 @@ class ChecklistService(BaseService):
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             await db.delete(checklist)
             await db.commit()
 

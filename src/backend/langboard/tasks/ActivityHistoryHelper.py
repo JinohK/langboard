@@ -57,9 +57,9 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    def create_project_column_history(column: Project | ProjectColumn):
+    def create_project_column_history(column: ProjectColumn):
         return {
-            "name": column.name if isinstance(column, ProjectColumn) else column.archive_column_name,
+            "name": column.DEFAULT_ARCHIVE_COLUMN_NAME,
         }
 
     @staticmethod
@@ -76,7 +76,7 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    def create_card_history(card: Card, column: Project | ProjectColumn):
+    def create_card_history(card: Card, column: ProjectColumn):
         history = {
             "card": {
                 "title": card.title,
@@ -127,10 +127,10 @@ class ActivityHistoryHelper:
             new_data = data if isinstance(data, EditorContentModel) else EditorContentModel(**data)
             user_or_bot_uids, _ = find_mentioned(new_data)
             user_or_bot_ids = [SnowflakeID.from_short_code(uid) for uid in user_or_bot_uids]
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 result = await db.exec(SqlBuilder.select.table(User).where(User.column("id").in_(user_or_bot_ids)))
             mentionables: list[Bot | User] = list(result.all())
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
             mentionables.extend(list(result.all()))
 

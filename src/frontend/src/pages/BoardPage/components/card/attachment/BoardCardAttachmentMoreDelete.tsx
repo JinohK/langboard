@@ -34,7 +34,7 @@ function BoardCardAttachmentMoreDelete({
             attachment_uid: attachment.uid,
         });
 
-        const toastId = Toast.Add.promise(promise, {
+        Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
             error: sharedErrorHandler,
             success: () => {
@@ -44,7 +44,6 @@ function BoardCardAttachmentMoreDelete({
                 setIsValidating(false);
                 setIsMoreMenuOpened(false);
                 setIsOpened(false);
-                Toast.Add.dismiss(toastId);
             },
         });
     };

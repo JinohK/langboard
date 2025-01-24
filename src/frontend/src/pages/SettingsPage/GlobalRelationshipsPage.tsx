@@ -58,7 +58,7 @@ function GlobalRelationshipsPage() {
         <>
             <Flex justify="between" mb="4" pb="2" textSize="3xl" weight="semibold" className="scroll-m-20 tracking-tight">
                 <span className="max-w-72 truncate">{t("settings.Global relationships")}</span>
-                <Flex gap="2" wrap="wrap" justify="end">
+                <Flex gap="2" wrap justify="end">
                     {selectedGlobalRelationships.length > 0 && (
                         <Button variant="destructive" disabled={isValidating} className="gap-2 pl-2 pr-3" onClick={deleteSelectedGlobalRelationships}>
                             <IconComponent icon="trash" size="4" />

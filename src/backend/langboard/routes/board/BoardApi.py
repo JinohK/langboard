@@ -16,7 +16,7 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"title": project.title}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.get("/board/{project_uid}")
@@ -90,10 +90,8 @@ async def update_project_member(
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    result = await service.project.update_assigned_users(
-        user, project, form.lang, form.url, form.token_query_name, form.emails
-    )
-    if not result:
+    result = await service.project.update_assigned_users(user, project, form.emails)
+    if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     # TODO: Email, Remove urls after implementing email sending

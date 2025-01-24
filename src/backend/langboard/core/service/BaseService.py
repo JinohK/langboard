@@ -6,7 +6,7 @@ from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ... import models
 from ..ai import Bot
-from ..db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder, User
+from ..db import BaseSqlModel, DbSession, SnowflakeID, SoftDeleteModel, SqlBuilder, User
 from ..setting import AppSetting
 
 
@@ -49,12 +49,21 @@ class BaseService(ABC):
     ) -> Select[_TSelect] | SelectOfScalar[_TSelect]:
         return statement.limit(limit).offset((page - 1) * limit)
 
+    async def get_record_by_table_name_with_id(
+        self, table_name: str, record_id: SnowflakeID | int
+    ) -> BaseSqlModel | None:
+        table = self._get_model_by_table_name(table_name)
+        if not table:
+            return None
+
+        return await self._get_by_param(table, record_id)
+
     async def _get_by(
         self, model_class: type[_TBaseModel], column: str, value: Any, is_none: bool = False, with_deleted: bool = False
     ) -> _TBaseModel | None:
         if not is_none and value is None:
             return None
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(model_class, with_deleted=with_deleted)
                 .where(model_class.column(column) == value)
@@ -63,7 +72,7 @@ class BaseService(ABC):
         return result.first()
 
     async def _get_all(self, model_class: type[_TBaseModel], with_deleted: bool = False) -> Sequence[_TBaseModel]:
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(SqlBuilder.select.table(model_class, with_deleted=with_deleted))
         return result.all()
 
@@ -74,7 +83,7 @@ class BaseService(ABC):
         if not isinstance(values, list):
             values = [values]
         sql_query = sql_query.where(model_class.column(column).in_(values))
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(sql_query)
         return result.all()
 
@@ -107,9 +116,11 @@ class BaseService(ABC):
             .group_by(model_class.column(column))
             .limit(1)
         )
+        if issubclass(model_class, SoftDeleteModel):
+            query = query.where(model_class.column("deleted_at") == None)  # noqa
         if where_clauses:
             query = self._where_recursive(query, model_class, **where_clauses)
-        async with DbSession.use_db() as db:
+        async with DbSession.use() as db:
             result = await db.exec(query)
 
         max_order, count_all = result.first() or (None, None)
@@ -127,11 +138,11 @@ class BaseService(ABC):
             )
             if where_clauses:
                 query = self._where_recursive(query, model_class, **where_clauses)
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 result = await db.exec(query)
             rows = result.all()
             i = 0
-            async with DbSession.use_db() as db:
+            async with DbSession.use() as db:
                 for row in rows:
                     row.order = i
                     await db.update(row)

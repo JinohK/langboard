@@ -1,5 +1,4 @@
 import { forwardRef, memo } from "react";
-import { useTranslation } from "react-i18next";
 import { ISidebarNavItem, TSidebarNavItemsProps } from "@/components/Sidebar/types";
 import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -7,8 +6,6 @@ import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 
 const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element => {
-    const [t] = useTranslation();
-
     return (
         <>
             {navs.map((item) => {
@@ -22,7 +19,7 @@ const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.
                                 <Comp key={key} item={item} />
                             </Tooltip.Trigger>
                             <Tooltip.Content side="right" className="hidden group-data-[collapsed=true]/sidebar:block">
-                                {t(item.name)}
+                                {item.name}
                             </Tooltip.Content>
                         </Tooltip.Root>
                     </Tooltip.Provider>
@@ -66,7 +63,6 @@ const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ i
 
 const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
     const { setIsLoadingRef } = usePageLoader();
-    const [t] = useTranslation();
 
     return (
         <a
@@ -101,7 +97,7 @@ const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ it
                     "stroke-2 transition-all duration-100 group-data-[collapsed=true]/sidebar:stroke-1"
                 )}
             />
-            <span className="hidden truncate transition-all duration-100 group-data-[collapsed=false]/sidebar:block">{t(item.name)}</span>
+            <span className="hidden truncate transition-all duration-100 group-data-[collapsed=false]/sidebar:block">{item.name}</span>
         </a>
     );
 });

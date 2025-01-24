@@ -31,6 +31,7 @@ export interface Interface extends IBaseModel {
     description?: IEditorContent;
     order: number;
     created_at: Date;
+    archived_at?: Date;
 }
 
 export interface IStore extends Interface {
@@ -39,7 +40,6 @@ export interface IStore extends Interface {
     label_uids: string[];
     deadline_at?: Date;
     column_name: string;
-    archived_at?: Date;
     current_user_role_actions: Project.TRoleActions[];
     project_all_columns: ProjectColumn.Interface[];
     project_members: User.Interface[];
@@ -51,7 +51,6 @@ export interface IStore extends Interface {
     checklists: ProjectChecklist.IStore[];
 
     // variable set from the client side
-    isArchived: bool;
     isOpenedInBoardColumn: bool;
 }
 
@@ -171,9 +170,6 @@ class ProjectCard extends BaseModel<IStore> {
         if (TypeUtils.isString(model.archived_at)) {
             model.archived_at = new Date(model.archived_at);
         }
-        if (model.column_uid && model.project_uid) {
-            model.isArchived = model.column_uid === model.project_uid;
-        }
         if (TypeUtils.isNullOrUndefined(model.isOpenedInBoardColumn)) {
             model.isOpenedInBoardColumn = false;
         }
@@ -191,7 +187,7 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("column_uid");
     }
     public set column_uid(value: string) {
-        this.update({ column_uid: value, isArchived: value === this.project_uid });
+        this.update({ column_uid: value });
     }
 
     public get title() {
@@ -220,6 +216,13 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set created_at(value: string | Date) {
         this.update({ created_at: value });
+    }
+
+    public get archived_at(): Date | undefined {
+        return this.getValue("archived_at");
+    }
+    public set archived_at(value: string | Date | undefined) {
+        this.update({ archived_at: value });
     }
 
     public get count_comment() {
@@ -255,13 +258,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set column_name(value: string) {
         this.update({ column_name: value });
-    }
-
-    public get archived_at(): Date | undefined {
-        return this.getValue("archived_at");
-    }
-    public set archived_at(value: string | Date | undefined) {
-        this.update({ archived_at: value });
     }
 
     public get current_user_role_actions() {
@@ -325,13 +321,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set checklists(value: (ProjectChecklist.TModel | ProjectChecklist.IStore)[]) {
         this.update({ checklists: value });
-    }
-
-    public get isArchived() {
-        return this.getValue("isArchived");
-    }
-    public set isArchived(value: bool) {
-        this.update({ isArchived: value });
     }
 
     public get isOpenedInBoardColumn() {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { QUERY_NAMES } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex, Toast } from "@/components/base";
 import useActivateUser from "@/controllers/api/auth/useActivateUser";
-import { SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME } from "@/controllers/api/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
@@ -27,7 +27,7 @@ function ActivatePage(): JSX.Element {
         }
 
         const searchParams = new URLSearchParams(location.search);
-        const token = searchParams.get(SIGN_UP_ACTIVATE_TOKEN_QUERY_NAME);
+        const token = searchParams.get(QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN);
 
         if (!token) {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));

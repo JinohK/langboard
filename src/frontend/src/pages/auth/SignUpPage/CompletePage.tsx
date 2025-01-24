@@ -12,7 +12,7 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function CompletePage(): JSX.Element {
     const { setIsLoadingRef } = usePageLoader();
-    const [t, i18n] = useTranslation();
+    const [t] = useTranslation();
     const navigate = usePageNavigate();
     const location = useLocation();
     const { mutate } = useResendSignUpLink();
@@ -36,7 +36,7 @@ function CompletePage(): JSX.Element {
         setIsResending(true);
 
         mutate(
-            { email: location.state.email, lang: i18n.language },
+            { email: location.state.email },
             {
                 onSuccess: () => {
                     Toast.Add.success(t("signUp.complete.Email has been resent."));

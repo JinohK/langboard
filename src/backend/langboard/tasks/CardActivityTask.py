@@ -37,7 +37,7 @@ async def card_moved(
     user_or_bot: User | Bot,
     project: Project,
     card: Card,
-    from_column: Project | ProjectColumn,
+    from_column: ProjectColumn,
 ):
     helper = ActivityTaskHelper(ProjectActivity)
     activity_history = {
