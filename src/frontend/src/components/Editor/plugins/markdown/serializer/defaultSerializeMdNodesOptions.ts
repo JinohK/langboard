@@ -219,7 +219,7 @@ export const defaultSerializeMdNodesOptions: SerializeMdOptions["nodes"] = {
             let isMarkdown = true;
             (node as unknown as TTableElement).children.forEach((row, i) => {
                 const rowHtmlChunks = ["<tr>"];
-                let rowMarkdown = "|";
+                let rowMarkdown = "| ";
                 (row as TTableRowElement).children.forEach((cell) => {
                     if (isMarkdown && (((cell as TTableCellElement).colSpan ?? 1) > 1 || ((cell as TTableCellElement).rowSpan ?? 1) > 1)) {
                         isMarkdown = false;
@@ -228,16 +228,16 @@ export const defaultSerializeMdNodesOptions: SerializeMdOptions["nodes"] = {
                     const cellHtmlChunks = ["<td>"];
                     const cellMarkdown = serializeMdNode(cell, opts)?.replace(/\n/g, "");
 
-                    rowMarkdown = `${rowMarkdown}${cellMarkdown ?? "&nbsp;"}|`;
+                    rowMarkdown = `${rowMarkdown}${cellMarkdown ?? "&nbsp;"} | `;
                     nodeToHTML(cell, cellHtmlChunks, { closeTag: "", serialize: (node) => serializeMdNode(node, opts) });
                     cellHtmlChunks.push("</td>");
 
                     rowHtmlChunks.push(...cellHtmlChunks);
                 });
 
-                rowMarkdown = `${rowMarkdown}\n`;
+                rowMarkdown = `${rowMarkdown.trim()}\n`;
                 if (isMarkdown && i === 0) {
-                    rowMarkdown = `${rowMarkdown}|${"-----|".repeat((row.children as unknown[]).length)}\n`;
+                    rowMarkdown = `${rowMarkdown}| ${"----- | ".repeat((row.children as unknown[]).length)}\n`;
                 }
                 tableMarkdown = `${tableMarkdown}${rowMarkdown}`;
             });

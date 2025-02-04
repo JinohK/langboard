@@ -70,7 +70,7 @@ export interface SerializeMdOptions {
 
 export function serializeMdNode(node: MdElementType | MdLeafType, opts: SerializeMdOptions) {
     const { customNodes, nodes } = opts;
-    opts.breakTag = opts.breakTag ?? "<br>";
+    opts.breakTag = opts.breakTag ?? "<br>\n";
     opts.ignoreParagraphNewline = opts.ignoreParagraphNewline ?? false;
     opts.listDepth = opts.listDepth ?? 0;
     opts.ulListStyleTypes = opts.ulListStyleTypes ?? ["disc", "circle", "square", "todo"];

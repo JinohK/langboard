@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import emojiMartData from "@emoji-mart/data";
 import { CalloutPlugin } from "@udecode/plate-callout/react";
 import { ParagraphPlugin } from "@udecode/plate/react";
 import { DatePlugin } from "@udecode/plate-date/react";
@@ -36,7 +38,7 @@ import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 export const viewPlugins = [
     ...basicNodesPlugins,
     ...equationPlugins,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     PlantUmlPlugin as any,
     HorizontalRulePlugin,
     linkPlugin,
@@ -71,7 +73,7 @@ export const editorPlugins = [
     cursorOverlayPlugin,
     ...blockMenuPlugins,
     ...dndPlugins,
-    EmojiPlugin,
+    EmojiPlugin.configure({ options: { data: emojiMartData as any } }),
     exitBreakPlugin,
     resetBlockTypePlugin,
     ...deletePlugins,

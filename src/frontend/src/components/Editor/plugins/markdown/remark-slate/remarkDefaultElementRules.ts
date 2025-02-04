@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Descendant, TElement, TText } from "@udecode/plate";
+import { BaseParagraphPlugin, type Descendant, type TElement, type TText } from "@udecode/plate";
 import type { MdastNode, RemarkElementRules } from "@/components/Editor/plugins/markdown/remark-slate/types";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { remarkTransformElementChildren } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElementChildren";
@@ -259,7 +259,7 @@ export const remarkDefaultElementRules: RemarkElementRules = {
                                         if (!child.type) {
                                             return {
                                                 children: [child],
-                                                type: options.editor.getType({ key: "p" }),
+                                                type: options.editor.getType(BaseParagraphPlugin),
                                             };
                                         }
 

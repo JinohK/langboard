@@ -12,6 +12,7 @@ from alembic.autogenerate.api import AutogenContext
 from langboard.Constants import MAIN_DATABASE_URL
 from langboard.core.ai import Bot, BotTrigger
 from langboard.core.db import User
+from langboard.core.setting import AppSetting
 from langboard.models import * # type: ignore
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
