@@ -1,18 +1,21 @@
 import { Box, Flex, Tooltip } from "@/components/base";
-import { ProjectLabel } from "@/core/models";
+import { IBaseModel, TBaseModelInstance } from "@/core/models/Base";
 import { getTextColorFromHex } from "@/core/utils/ColorUtils";
 import { memo } from "react";
 
-export interface IBoardCardLabelProps {
-    label: ProjectLabel.TModel;
+interface ILabelModel {
+    name: string;
+    color: string;
+    description?: string;
 }
 
-const BoardCardLabel = memo(({ label }: IBoardCardLabelProps) => {
-    const name = label.useField("name");
-    const color = label.useField("color");
-    const description = label.useField("description");
+export interface ILabelBadgeProps extends ILabelModel {
+    textColor?: string;
+}
 
+export const LabelBadge = memo(({ name, color, textColor, description }: ILabelBadgeProps) => {
     const currentColor = color || "#FFFFFF";
+    const currentDescription = description || name;
 
     return (
         <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
@@ -28,7 +31,7 @@ const BoardCardLabel = memo(({ label }: IBoardCardLabelProps) => {
                             left="0"
                             style={{
                                 backgroundColor: currentColor,
-                                color: getTextColorFromHex(currentColor),
+                                color: textColor ?? getTextColorFromHex(currentColor),
                             }}
                         />
                         <Flex
@@ -47,10 +50,20 @@ const BoardCardLabel = memo(({ label }: IBoardCardLabelProps) => {
                         </Flex>
                     </Box>
                 </Tooltip.Trigger>
-                <Tooltip.Content side="bottom">{description}</Tooltip.Content>
+                <Tooltip.Content side="bottom">{currentDescription}</Tooltip.Content>
             </Tooltip.Root>
         </Tooltip.Provider>
     );
 });
 
-export default BoardCardLabel;
+export interface ILabelModelBadgeProps {
+    model: TBaseModelInstance<IBaseModel & ILabelModel>;
+}
+
+export const LabelModelBadge = memo(({ model }: ILabelModelBadgeProps) => {
+    const name = model.useField("name");
+    const color = model.useField("color");
+    const description = model.useField("description");
+
+    return <LabelBadge name={name} color={color} description={description} />;
+});

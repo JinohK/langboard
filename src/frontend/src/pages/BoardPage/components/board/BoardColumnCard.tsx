@@ -2,7 +2,7 @@ import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollA
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import { BotModel, Project, ProjectCard, ProjectCardRelationship, User } from "@/core/models";
+import { BotModel, Project, ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -16,6 +16,8 @@ import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectR
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
+import UserAvatar from "@/components/UserAvatar";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
@@ -47,13 +49,13 @@ export const SkeletonBoardColumnCard = memo(() => {
 
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
-    const { project, currentUser, hasRoleAction } = useBoard();
+    const { hasRoleAction } = useBoard();
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
     const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
-    const projectMembers = project.useForeignField<User.TModel>("members");
-    const projectBots = project.useForeignField<BotModel.TModel>("bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
+    const cardMembers = card.useForeignField<User.TModel>("members");
+    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
+    const checklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
         data: {
@@ -127,9 +129,9 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
         };
     }
 
-    let cardInner = <BoardColumnCardInner isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
+    let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
-    if (!isOverlay && !isDragging && description?.content.trim().length) {
+    if (!isOverlay && !isDragging && (description?.content.trim().length || cardMembers.length || labels.length || checklists.length)) {
         cardInner = (
             <HoverCard.Root
                 open={isHoverCardOpened}
@@ -146,15 +148,11 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 <HoverCard.Content
                     side="right"
                     align="end"
-                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-0"
+                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
                     {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                     hidden={isHoverCardHidden}
                 >
-                    <ScrollArea.Root>
-                        <Box p="4" className="max-h-[calc(100vh-_theme(spacing.4))] break-all [&_img]:max-w-full">
-                            <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly />
-                        </Box>
-                    </ScrollArea.Root>
+                    <BoardColumnCardPreview card={card} />
                 </HoverCard.Content>
             </HoverCard.Root>
         );
@@ -163,13 +161,13 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
     return <Box {...props}>{cardInner}</Box>;
 });
 
-interface IBoardColumnCardInnerProps {
+interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;
     card: IBoardColumnCardProps["card"];
     setIsHoverCardHidden: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardInnerProps) => {
+const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardCollapsibleProps) => {
     const { selectCardViewType, selectedRelationshipUIDs, currentCardUIDRef, isDisabledCard } = useBoardRelationshipController();
     const { project, filters, cardsMap, globalRelationshipTypes, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
@@ -177,6 +175,7 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
     const commentCount = card.useField("count_comment");
     const isOpenedInBoardColumn = card.useField("isOpenedInBoardColumn");
     const cardRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
+    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
@@ -301,6 +300,13 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
                     }}
                 >
                     <Card.Header className="relative block space-y-0 py-4">
+                        {isOpenedInBoardColumn && !!labels.length && (
+                            <Flex items="center" gap="1" mb="1.5" wrap>
+                                {labels.map((label) => (
+                                    <LabelModelBadge key={`board-card-label-${label.uid}`} model={label} />
+                                ))}
+                            </Flex>
+                        )}
                         <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] break-all leading-tight">{title}</Card.Title>
                         <Collapsible.Trigger asChild>
                             <Button
@@ -345,6 +351,79 @@ const BoardColumnCardInner = memo(({ isDragging, card, setIsHoverCardHidden }: I
             </Card.Root>
             <SelectRelationshipDialog card={card} isOpened={isSelectRelationshipDialogOpened} setIsOpened={setIsSelectRelationshipDialogOpened} />
         </>
+    );
+});
+
+interface IBoardColumnCardPreviewProps {
+    card: ProjectCard.TModel;
+}
+
+const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => {
+    const { project, currentUser } = useBoard();
+    const projectMembers = project.useForeignField<User.TModel>("members");
+    const projectBots = project.useForeignField<BotModel.TModel>("bots");
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
+    const description = card.useField("description");
+    const cardMembers = card.useForeignField<User.TModel>("members");
+    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
+    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
+
+    return (
+        <Flex direction="col" gap="1.5">
+            {!!labels.length && (
+                <Flex items="center" gap="1.5">
+                    {labels.slice(0, 2).map((label) => (
+                        <LabelModelBadge key={`board-card-preview-label-${label.uid}`} model={label} />
+                    ))}
+                    {labels.length > 2 && (
+                        <LabelBadge name={`+${labels.length - 2}`} color="hsl(var(--secondary))" textColor="hsl(var(--secondary-foreground))" />
+                    )}
+                </Flex>
+            )}
+            {!!cardMembers.length && (
+                <Flex items="center" gap="1.5">
+                    {cardMembers.slice(0, 2).map((member) => (
+                        <UserAvatar.Root
+                            user={member}
+                            withName
+                            noAvatar
+                            labelClassName={cn(
+                                "relative rounded-xl border text-xs px-2",
+                                "after:absolute after:left-0 after:top-0 after:z-0 after:opacity-70",
+                                "after:bg-[var(--avatar-bg)] after:text-[var(--avatar-text-color)]",
+                                "after:rounded-xl after:size-full"
+                            )}
+                            nameClassName="relative z-10"
+                        >
+                            <UserAvatar.List>
+                                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
+                            </UserAvatar.List>
+                        </UserAvatar.Root>
+                    ))}
+                    {cardMembers.length > 2 && (
+                        <LabelBadge name={`+${cardMembers.length - 2}`} color="hsl(var(--secondary))" textColor="hsl(var(--secondary-foreground))" />
+                    )}
+                </Flex>
+            )}
+            {!!description?.content.trim().length && (
+                <ScrollArea.Root>
+                    <Box p="4" className="max-h-24 break-all [&_img]:max-w-full">
+                        <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly />
+                    </Box>
+                </ScrollArea.Root>
+            )}
+            {!!checklists.length && (
+                <ul className="list-inside list-disc">
+                    {checklists.map((checklist) => (
+                        <li key={`board-card-preview-checklist-${checklist.uid}`} className="mb-1 text-sm leading-4">
+                            <span className="-ml-2">{checklist.title}</span>
+                        </li>
+                    ))}
+                    {flatChecklists.length > 1 && <Box className="-mt-2">...</Box>}
+                </ul>
+            )}
+        </Flex>
     );
 });
 

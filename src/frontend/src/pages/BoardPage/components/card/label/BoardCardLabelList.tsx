@@ -1,7 +1,7 @@
 import { Flex } from "@/components/base";
+import { LabelModelBadge } from "@/components/LabelBadge";
 import { ProjectLabel } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import BoardCardLabel from "@/pages/BoardPage/components/card/label/BoardCardLabel";
 
 function BoardCardLabelList(): JSX.Element {
     const { card } = useBoardCard();
@@ -14,7 +14,7 @@ function BoardCardLabelList(): JSX.Element {
     return (
         <Flex inline wrap gap="1.5">
             {labels.map((label) => (
-                <BoardCardLabel key={`board-card-label-${label.uid}`} label={label} />
+                <LabelModelBadge key={`board-card-label-${label.uid}`} model={label} />
             ))}
         </Flex>
     );

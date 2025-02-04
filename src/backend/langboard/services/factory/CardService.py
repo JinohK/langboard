@@ -14,7 +14,6 @@ from ...models import (
     CardRelationship,
     Checkitem,
     Checklist,
-    GlobalCardRelationshipType,
     Project,
     ProjectColumn,
     ProjectLabel,
@@ -95,8 +94,8 @@ class CardService(BaseService):
         raw_cards = result.all()
         cards = []
         for card, count_comment in raw_cards:
-            card_api = await self.convert_board_list_api_response(card, count_comment)
-            cards.append(card_api)
+            api_card = await self.convert_board_list_api_response(card, count_comment)
+            cards.append(api_card)
 
         return cards
 
@@ -176,39 +175,18 @@ class CardService(BaseService):
                 )
             count_comment = result.first() or 0
 
-        async with DbSession.use() as db:
-            result = await db.exec(
-                (
-                    SqlBuilder.select.table(CardRelationship)
-                    .join(
-                        GlobalCardRelationshipType,
-                        CardRelationship.column("relationship_type_id") == GlobalCardRelationshipType.column("id"),
-                    )
-                    .where(
-                        (CardRelationship.column("card_id_parent") == card.id)
-                        | (CardRelationship.column("card_id_child") == card.id)
-                    )
-                )
-            )
-        raw_relationship = result.all()
-
-        parents = []
-        children = []
-        for relationship in raw_relationship:
-            if relationship.card_id_parent == card.id:
-                children.append(relationship.card_id_child)
-            else:
-                parents.append(relationship.card_id_parent)
-
         project_label_service = self._get_service(ProjectLabelService)
-
-        card_api = card.api_response()
-        card_api["count_comment"] = count_comment
-        card_api["members"] = await self.get_assigned_users(card, as_api=True)
         card_relationship_service = self._get_service(CardRelationshipService)
-        card_api["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
-        card_api["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
-        return card_api
+        checklist_service = self._get_service(ChecklistService)
+
+        api_card = card.api_response()
+        api_card["count_comment"] = count_comment
+        api_card["members"] = await self.get_assigned_users(card, as_api=True)
+        api_card["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
+        api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
+        api_card["checklists"] = await checklist_service.get_list_only(card, as_api=True)
+
+        return api_card
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, title: str

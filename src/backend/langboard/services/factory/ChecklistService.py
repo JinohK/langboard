@@ -51,6 +51,21 @@ class ChecklistService(BaseService):
 
         return checklists
 
+    @overload
+    async def get_list_only(self, card: TCardParam, as_api: Literal[False]) -> list[Checklist]: ...
+    @overload
+    async def get_list_only(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_list_only(self, card: TCardParam, as_api: bool) -> list[Checklist] | list[dict[str, Any]]:
+        card = cast(Card, await self._get_by_param(Card, card))
+        if not card:
+            return []
+
+        raw_checklists = await self._get_all_by(Checklist, "card_id", card.id)
+        if not as_api:
+            return list(raw_checklists)
+
+        return [checklist.api_response() for checklist in raw_checklists]
+
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, title: str
     ) -> Checklist | None:

@@ -200,7 +200,7 @@ const Trigger = memo(
             }
 
             avatarWrapper = (
-                <Flex items="center" className={labelClassName} onClick={avatarRootOnClick}>
+                <Flex items="center" style={styles} className={labelClassName} onClick={avatarRootOnClick}>
                     {!noAvatar && avatar}
                     {customName ? customName : <span className={nameClassName}>{names}</span>}
                 </Flex>
