@@ -1,4 +1,5 @@
 from fastapi import Depends, status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -23,13 +24,14 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project(
-    project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user, project_uid, with_member_roles=False)
+    result = await service.project.get_details(user_or_bot, project_uid, with_roles=False)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
-    await service.project.set_last_view(user, project)
+    if isinstance(user_or_bot, User):
+        await service.project.set_last_view(user_or_bot, project)
     return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
 
 
@@ -39,10 +41,13 @@ async def get_project(
 async def get_project_chat(
     project_uid: str,
     query: ChatHistoryPagination = Depends(),
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    histories = await service.chat_history.get_list(user, "project", query.refer_time, query, project_uid)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    histories = await service.chat_history.get_list(user_or_bot, "project", query.refer_time, query, project_uid)
 
     return JsonResponse(content={"histories": histories}, status_code=status.HTTP_200_OK)
 
@@ -51,9 +56,12 @@ async def get_project_chat(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def clear_project_chat(
-    project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    await service.chat_history.clear(user, "project", project_uid)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    await service.chat_history.clear(user_or_bot, "project", project_uid)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
@@ -83,14 +91,17 @@ async def get_project_cards(
 async def update_project_member(
     project_uid: str,
     form: InviteProjectMemberForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     project = await service.project.get_by_uid(project_uid)
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    result = await service.project.update_assigned_users(user, project, form.emails)
+    result = await service.project.update_assigned_users(user_or_bot, project, form.emails)
     if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -102,10 +113,13 @@ async def update_project_member(
 @AuthFilter.add
 async def get_project_title(
     token: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    project = await service.project_invitation.get_project_by_token(user, token)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    project = await service.project_invitation.get_project_by_token(user_or_bot, token)
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -116,10 +130,13 @@ async def get_project_title(
 @AuthFilter.add
 async def accept_project_invitation(
     form: ProjectInvitationForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_invitation.accept(user, form.invitation_token)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_invitation.accept(user_or_bot, form.invitation_token)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -130,10 +147,13 @@ async def accept_project_invitation(
 @AuthFilter.add
 async def decline_project_invitation(
     form: ProjectInvitationForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_invitation.decline(user, form.invitation_token)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_invitation.decline(user_or_bot, form.invitation_token)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 

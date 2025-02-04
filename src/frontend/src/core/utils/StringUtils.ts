@@ -2,6 +2,7 @@ import { differenceInDays, Duration, formatDistanceToNow } from "date-fns";
 import { TFunction, i18n } from "i18next";
 import * as dateLocale from "date-fns/locale";
 import { API_URL } from "@/constants";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 type TStringCase = "flat" | "upper" | "camel" | "pascal" | "snake" | "upperSnake" | "kebab";
 
@@ -219,4 +220,22 @@ export const convertServerFileURL = <TURL extends string | undefined>(url: TURL)
     }
 
     return `${API_URL}${url}` as unknown as TURL extends string ? string : undefined;
+};
+
+export const isValidURL = (str: unknown): bool => {
+    if (!TypeUtils.isString(str)) {
+        return false;
+    }
+
+    try {
+        new URL(str);
+        return true;
+    } catch (err) {
+        return false;
+    }
+};
+
+export const isValidIpv4OrRnage = (str: string): bool => {
+    const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}(\/24)?$/;
+    return ipv4Pattern.test(str);
 };

@@ -1,4 +1,5 @@
-import { Avatar, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/components/base";
+import AvatarUploader from "@/components/AvatarUploader";
+import { Flex, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -14,9 +15,11 @@ export interface IBotAvatarProps {
 
 const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
     const [t] = useTranslation();
-    const [isOpened, setIsOpened] = useState(false);
     const avatar = bot.useField("avatar");
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigate } = useAppSetting();
+    const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
+    const isAvatarDeletedRef = useRef(false);
+    const [isValidating, setIsValidating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { mutateAsync } = useUpdateBot(bot);
 
@@ -83,47 +86,27 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
             success: onSuccess,
             finally: () => {
                 setIsValidating(false);
-                setIsOpened(false);
             },
         });
     };
 
     return (
         <Flex items="center" direction="col" gap="2">
-            <Input type="file" accept="image/*" onChange={onChange} className="hidden" disabled={isValidating} ref={fileInputRef} />
-            <DropdownMenu.Root open={isOpened} onOpenChange={setIsOpened}>
-                <DropdownMenu.Trigger asChild disabled={isValidating}>
-                    <Avatar.Root className="cursor-pointer transition-all duration-200 hover:opacity-80">
-                        <Avatar.Image src={avatar} />
-                        <Avatar.Fallback>
-                            <IconComponent icon="bot" className="size-2/3" />
-                        </Avatar.Fallback>
-                    </Avatar.Root>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="start">
-                    <DropdownMenu.Item
-                        className="flex"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            fileInputRef.current?.click();
-                        }}
-                    >
-                        {t(avatar ? "common.Change" : "common.Upload")}
-                    </DropdownMenu.Item>
-                    {avatar && (
-                        <DropdownMenu.Item
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onDeleted();
-                            }}
-                        >
-                            {t("common.Delete")}
-                        </DropdownMenu.Item>
-                    )}
-                </DropdownMenu.Content>
-            </DropdownMenu.Root>
+            <AvatarUploader
+                isBot
+                notInForm
+                initialAvatarUrl={avatar}
+                dataTransferRef={dataTransferRef}
+                isDeletedRef={isAvatarDeletedRef}
+                isValidating={isValidating}
+                canRevertUrl
+                avatarSize={{
+                    initial: "lg",
+                    md: "2xl",
+                }}
+                onChange={onChange}
+                onDeleted={onDeleted}
+            />
         </Flex>
     );
 });

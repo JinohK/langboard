@@ -1,11 +1,12 @@
-import { Dialog, Skeleton, Textarea, Toast } from "@/components/base";
+import { Button, Dialog, Flex, IconComponent, Skeleton, Textarea, Toast } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { cn } from "@/core/utils/ComponentUtils";
+import { cn, setElementStyles } from "@/core/utils/ComponentUtils";
 import BoardCardNotificationSettings from "@/pages/BoardPage/components/card/BoardCardNotificationSettings";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardCardTitle() {
@@ -22,6 +23,9 @@ function BoardCardTitle(): JSX.Element {
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title");
     const title = card.useField("title");
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
+    const titleSpanRef = useRef<HTMLSpanElement>(null);
+    const [isOpened, setIsOpened] = useState(false);
+    const [showCollapse, setShowCollapse] = useState(false);
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => canEdit,
         valueType: "textarea",
@@ -69,13 +73,68 @@ function BoardCardTitle(): JSX.Element {
         changeMode("edit");
     };
 
+    useEffect(() => {
+        setTimeout(() => {
+            if (!titleSpanRef.current) {
+                return;
+            }
+
+            const truncatedCloned = titleSpanRef.current.cloneNode(true) as HTMLSpanElement;
+            truncatedCloned.classList.add("truncate", "text-2xl", "font-semibold", "tracking-tight");
+
+            const allTextedCloned = titleSpanRef.current.cloneNode(true) as HTMLSpanElement;
+            allTextedCloned.classList.add("text-2xl", "font-semibold", "tracking-tight");
+            allTextedCloned.classList.remove("truncate");
+
+            const width = titleSpanRef.current.offsetWidth;
+            setElementStyles([truncatedCloned, allTextedCloned], {
+                display: "block",
+                position: "absolute",
+                visibility: "hidden",
+                zIndex: "-1",
+                maxWidth: `${width}px`,
+                width: "100%",
+            });
+
+            document.body.appendChild(truncatedCloned);
+            document.body.appendChild(allTextedCloned);
+
+            const truncatedHeight = truncatedCloned.offsetHeight;
+            const allTextedHeight = allTextedCloned.offsetHeight;
+
+            document.body.removeChild(truncatedCloned);
+            document.body.removeChild(allTextedCloned);
+            truncatedCloned.remove();
+            allTextedCloned.remove();
+
+            if (truncatedHeight !== allTextedHeight) {
+                setShowCollapse(() => true);
+            } else {
+                setShowCollapse(() => false);
+            }
+        }, 0);
+    }, [title]);
+
     return (
         <Dialog.Title className="mr-7 cursor-text text-2xl" onClick={handleClickTitle}>
             {!isEditing ? (
-                <span className="break-all">
-                    {title}
-                    <BoardCardNotificationSettings key={`board-card-notification-settings-${card.uid}`} />
-                </span>
+                <Flex>
+                    <span className={isOpened ? "" : "truncate"} ref={titleSpanRef}>
+                        {title}
+                    </span>
+                    <Flex items="start" gap="1" ml="2.5">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setIsOpened(!isOpened)}
+                            title={t(`card.${isOpened ? "Hide" : "Show"} title`)}
+                            className={showCollapse ? "" : "hidden"}
+                        >
+                            <IconComponent icon="chevron-down" size="5" className={cn("transition-all", isOpened ? "rotate-180" : "")} />
+                        </Button>
+                        <BoardCardNotificationSettings key={`board-card-notification-settings-${card.uid}`} />
+                    </Flex>
+                </Flex>
             ) : (
                 <Textarea
                     ref={valueRef}

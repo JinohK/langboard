@@ -1,9 +1,10 @@
 from fastapi import status
+from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import CardComment, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ToggleCardCommentReactionForm, project_role_finder
@@ -16,10 +17,10 @@ async def add_card_comment(
     project_uid: str,
     card_uid: str,
     comment: EditorContentModel,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.card_comment.create(user, project_uid, card_uid, comment)
+    result = await service.card_comment.create(user_or_bot, project_uid, card_uid, comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -34,15 +35,15 @@ async def update_card_comment(
     card_uid: str,
     comment_uid: str,
     comment: EditorContentModel,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    if card_comment.user_id != user.id and not user.is_admin:
+    if not _is_owner(user_or_bot, card_comment):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    result = await service.card_comment.update(user, project_uid, card_uid, card_comment, comment)
+    result = await service.card_comment.update(user_or_bot, project_uid, card_uid, card_comment, comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -56,15 +57,15 @@ async def delete_card_comment(
     project_uid: str,
     card_uid: str,
     comment_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    if card_comment.user_id != user.id and not user.is_admin:
+    if not _is_owner(user_or_bot, card_comment):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    result = await service.card_comment.delete(user, project_uid, card_uid, card_comment)
+    result = await service.card_comment.delete(user_or_bot, project_uid, card_uid, card_comment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -79,14 +80,21 @@ async def react_card_comment(
     card_uid: str,
     comment_uid: str,
     form: ToggleCardCommentReactionForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    result = await service.card_comment.toggle_reaction(user, project_uid, card_uid, card_comment, form.reaction)
+    result = await service.card_comment.toggle_reaction(user_or_bot, project_uid, card_uid, card_comment, form.reaction)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"is_reacted": result}, status_code=status.HTTP_200_OK)
+
+
+def _is_owner(user_or_bot: User | Bot, card_comment: CardComment):
+    if isinstance(user_or_bot, User):
+        return card_comment.user_id == user_or_bot.id or not user_or_bot.is_admin
+    else:
+        return card_comment.bot_id == user_or_bot.id

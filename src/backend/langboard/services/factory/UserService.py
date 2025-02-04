@@ -14,7 +14,7 @@ from ...core.utils.String import concat, generate_random_string
 from ...locales.LangEnum import LangEnum
 from ...models import Project, ProjectAssignedUser, UserEmail, UserProfile
 from ...publishers import UserPublisher
-from ...tasks import UserActivityTask
+from ...tasks.activities import UserActivityTask
 
 
 class UserService(BaseService):

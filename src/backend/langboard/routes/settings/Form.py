@@ -1,4 +1,5 @@
 from typing import Any
+from ...core.ai import BotAPIAuthType, BotTriggerCondition
 from ...core.routing import BaseFormModel, form_model
 from ...core.setting import AppSettingType
 
@@ -25,13 +26,25 @@ class DeleteSelectedSettingsForm(BaseFormModel):
 class CreateBotForm(BaseFormModel):
     bot_name: str
     bot_uname: str
+    api_url: str
+    api_auth_type: BotAPIAuthType
+    api_key: str
 
 
 @form_model
 class UpdateBotForm(BaseFormModel):
     bot_name: str | None = None
     bot_uname: str | None = None
+    api_url: str | None = None
+    api_auth_type: BotAPIAuthType | None = None
+    api_key: str | None = None
+    ip_whitelist: str | None = None
     delete_avatar: bool = False
+
+
+@form_model
+class ToggleBotTriggerConditionForm(BaseFormModel):
+    condition: BotTriggerCondition
 
 
 @form_model

@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { GlobalRelationshipType, ProjectCard } from "@/core/models";
+import { GlobalRelationshipType, ProjectCard, ProjectColumn, ProjectLabel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetCardDetailsForm {
@@ -12,6 +12,8 @@ export interface IGetCardDetailsForm {
 export interface IGetCardDetailsResponse {
     card: ProjectCard.TModel;
     global_relationships: GlobalRelationshipType.TModel[];
+    project_columns: ProjectColumn.TModel[];
+    project_labels: ProjectLabel.TModel[];
 }
 
 const useGetCardDetails = (params: IGetCardDetailsForm, options?: TQueryOptions<unknown, IGetCardDetailsResponse>) => {
@@ -24,6 +26,8 @@ const useGetCardDetails = (params: IGetCardDetailsForm, options?: TQueryOptions<
         return {
             card: ProjectCard.Model.fromObject(res.data.card),
             global_relationships: GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships, true),
+            project_columns: ProjectColumn.Model.fromObjectArray(res.data.project_columns, true),
+            project_labels: ProjectLabel.Model.fromObjectArray(res.data.project_labels, true),
         };
     };
 

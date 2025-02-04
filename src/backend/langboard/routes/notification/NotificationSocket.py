@@ -22,5 +22,5 @@ async def delete_notification(
 
 
 @AppRouter.socket.on("user:notification:delete-all")
-async def delete_notifications(user: User = Auth.scope("api"), service: Service = Service.scope()):
+async def delete_notifications(user: User = Auth.scope("socket"), service: Service = Service.scope()):
     await service.notification.delete_all(user)

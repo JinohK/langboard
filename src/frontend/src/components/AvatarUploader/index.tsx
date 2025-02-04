@@ -19,6 +19,7 @@ interface IBaseAvatarUploaderProps {
     canRevertUrl?: bool;
     avatarSize?: VariantProps<typeof AvatarVariants>["size"];
     hideDock?: bool;
+    notInForm?: bool;
     onChange?: () => void;
     onDeleted?: () => void;
 }
@@ -48,6 +49,7 @@ function AvatarUploader({
     canRevertUrl = false,
     avatarSize = "2xl",
     hideDock = false,
+    notInForm,
     onChange,
     onDeleted,
 }: TAvatarUploaderProps): JSX.Element {
@@ -117,43 +119,38 @@ function AvatarUploader({
         setAvatarUrl(initialAvatarUrl);
     };
 
+    const input = <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />;
+
+    const avatar = (
+        <>
+            <Flex justify="center" position="relative" cursor="pointer" className="transition-all duration-200 hover:opacity-80">
+                {isDragActive && (
+                    <Flex
+                        items="center"
+                        justify="center"
+                        size="full"
+                        position="absolute"
+                        left="0"
+                        top="0"
+                        z="50"
+                        className="border-2 border-dashed border-primary bg-background"
+                    >
+                        {t("user.Drop avatar here")}
+                    </Flex>
+                )}
+                <Avatar.Root size={avatarSize} onClick={() => !isValidating && inputRef.current?.click()}>
+                    <Avatar.Image src={avatarUrl} alt="" />
+                    <Avatar.Fallback className="text-4xl">{isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}</Avatar.Fallback>
+                </Avatar.Root>
+                {!notInForm ? <Form.Control asChild>{input}</Form.Control> : input}
+            </Flex>
+            {errorMessage && <FormErrorMessage error={errorMessage} icon="circle-alert" wrapperClassName="justify-center" notInForm={notInForm} />}
+        </>
+    );
+
     return (
         <Box position="relative">
-            <Form.Field {...getRootProps({ name })}>
-                <Flex justify="center" position="relative" cursor="pointer" className="transition-all duration-200 hover:opacity-80">
-                    {isDragActive && (
-                        <Flex
-                            items="center"
-                            justify="center"
-                            size="full"
-                            position="absolute"
-                            left="0"
-                            top="0"
-                            z="50"
-                            className="border-2 border-dashed border-primary bg-background"
-                        >
-                            {t("user.Drop avatar here")}
-                        </Flex>
-                    )}
-                    <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                        <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                                <Avatar.Root size={avatarSize} onClick={() => !isValidating && inputRef.current?.click()}>
-                                    <Avatar.Image src={avatarUrl} alt="" />
-                                    <Avatar.Fallback className="text-4xl">
-                                        {isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}
-                                    </Avatar.Fallback>
-                                </Avatar.Root>
-                            </Tooltip.Trigger>
-                            <Tooltip.Content side="bottom">{t("user.Upload avatar")}</Tooltip.Content>
-                        </Tooltip.Root>
-                    </Tooltip.Provider>
-                    <Form.Control asChild>
-                        <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />
-                    </Form.Control>
-                </Flex>
-                {errorMessage && <FormErrorMessage error={errorMessage} icon="circle-alert" wrapperClassName="justify-center" />}
-            </Form.Field>
+            {!notInForm ? <Form.Field {...getRootProps({ name })}>{avatar}</Form.Field> : avatar}
             {!hideDock && (
                 <Dock.Root direction="middle" magnification={50} distance={100} size="sm">
                     <Dock.Button

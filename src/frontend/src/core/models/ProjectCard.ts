@@ -3,7 +3,6 @@ import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
 import * as ProjectChecklist from "@/core/models/ProjectChecklist";
-import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as Project from "@/core/models/Project";
 import * as User from "@/core/models/User";
@@ -37,14 +36,11 @@ export interface Interface extends IBaseModel {
 export interface IStore extends Interface {
     count_comment: number;
     members: User.Interface[];
-    label_uids: string[];
     deadline_at?: Date;
     column_name: string;
-    current_user_role_actions: Project.TRoleActions[];
-    project_all_columns: ProjectColumn.Interface[];
+    current_auth_role_actions: Project.TRoleActions[];
     project_members: User.Interface[];
     project_bots: BotModel.Interface[];
-    project_labels: ProjectLabel.Interface[];
     labels: ProjectLabel.Interface[];
     relationships: ProjectCardRelationship.Interface[];
     attachments: ProjectCardAttachment.IStore[];
@@ -58,10 +54,8 @@ class ProjectCard extends BaseModel<IStore> {
     static get FOREIGN_MODELS() {
         return {
             members: User.Model.MODEL_NAME,
-            project_all_columns: ProjectColumn.Model.MODEL_NAME,
             project_members: User.Model.MODEL_NAME,
             project_bots: BotModel.Model.MODEL_NAME,
-            project_labels: ProjectLabel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
             relationships: ProjectCardRelationship.Model.MODEL_NAME,
             attachments: ProjectCardAttachment.Model.MODEL_NAME,
@@ -99,27 +93,7 @@ class ProjectCard extends BaseModel<IStore> {
                 card: this,
             }
         );
-        ProjectColumn.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.project_all_columns = [...this.project_all_columns, ...models];
-            },
-            (model) => model.project_uid === this.project_uid
-        );
-        ProjectColumn.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.project_all_columns = this.project_all_columns.filter((column) => !uids.includes(column.uid));
-        });
-        ProjectLabel.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.project_labels = [...this.project_labels, ...models];
-            },
-            (model) => model.project_uid === this.project_uid
-        );
         ProjectLabel.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.project_labels = this.project_labels.filter((label) => !uids.includes(label.uid));
             this.labels = this.labels.filter((label) => !uids.includes(label.uid));
         });
         GlobalRelationshipType.Model.subscribe("DELETION", this.uid, (uids) => {
@@ -239,13 +213,6 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ members: value });
     }
 
-    public get label_uids() {
-        return this.getValue("label_uids");
-    }
-    public set label_uids(value: string[]) {
-        this.update({ label_uids: value });
-    }
-
     public get deadline_at(): Date | undefined {
         return this.getValue("deadline_at");
     }
@@ -260,18 +227,11 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ column_name: value });
     }
 
-    public get current_user_role_actions() {
-        return this.getValue("current_user_role_actions");
+    public get current_auth_role_actions() {
+        return this.getValue("current_auth_role_actions");
     }
-    public set current_user_role_actions(value: Project.TRoleActions[]) {
-        this.update({ current_user_role_actions: value });
-    }
-
-    public get project_all_columns(): ProjectColumn.TModel[] {
-        return this.getForeignModels("project_all_columns");
-    }
-    public set project_all_columns(value: (ProjectColumn.TModel | ProjectColumn.Interface)[]) {
-        this.update({ project_all_columns: value });
+    public set current_auth_role_actions(value: Project.TRoleActions[]) {
+        this.update({ current_auth_role_actions: value });
     }
 
     public get project_members(): User.TModel[] {
@@ -286,13 +246,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set project_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
         this.update({ project_bots: value });
-    }
-
-    public get project_labels(): ProjectLabel.TModel[] {
-        return this.getForeignModels("project_labels");
-    }
-    public set project_labels(value: (ProjectLabel.TModel | ProjectLabel.Interface)[]) {
-        this.update({ project_labels: value });
     }
 
     public get labels(): ProjectLabel.TModel[] {

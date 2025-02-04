@@ -1,0 +1,96 @@
+{
+  "project": {
+    "Category": "Project",
+    "conditions": {
+      "project_created": "Created",
+      "project_updated": "Updated",
+      "project_deleted": "Deleted"
+    }
+  },
+
+  "project_column": {
+    "Category": "Project column",
+    "conditions": {
+      "project_column_created": "Created",
+      "project_column_name_changed": "Name changed",
+      "project_column_deleted": "Deleted"
+    }
+  },
+
+  "project_label": {
+    "Category": "Project label",
+    "conditions": {
+      "project_label_created": "Created",
+      "project_label_updated": "Updated",
+      "project_label_deleted": "Deleted"
+    }
+  },
+
+  "card": {
+    "Category": "Card",
+    "conditions": {
+      "card_created": "Created",
+      "card_updated": "Updated",
+      "card_moved": "Moved",
+      "card_labels_updated": "Labels updated",
+      "card_relationships_updated": "Relationships updated",
+      "card_deleted": "Deleted"
+    }
+  },
+
+  "card_attachment": {
+    "Category": "Card attachment",
+    "conditions": {
+      "card_attachment_uploaded": "Uploaded",
+      "card_attachment_name_changed": "Name changed",
+      "card_attachment_deleted": "Deleted"
+    }
+  },
+
+  "card_comment": {
+    "Category": "Card comment",
+    "conditions": {
+      "card_comment_added": "Added",
+      "card_comment_updated": "Updated",
+      "card_comment_deleted": "Deleted",
+      "card_comment_reacted": "Reacted",
+      "card_comment_unreacted": "Unreacted"
+    }
+  },
+
+  "card_checklist": {
+    "Category": "Card checklist",
+    "conditions": {
+      "card_checklist_created": "Created",
+      "card_checklist_title_changed": "Title changed",
+      "card_checklist_checked": "Checked",
+      "card_checklist_unchecked": "Unchecked",
+      "card_checklist_deleted": "Deleted"
+    }
+  },
+
+  "card_checkitem": {
+    "Category": "Card checkitem",
+    "conditions": {
+      "card_checkitem_created": "Created",
+      "card_checkitem_title_changed": "Title changed",
+      "card_checkitem_timer_started": "Timer started",
+      "card_checkitem_timer_paused": "Timer paused",
+      "card_checkitem_timer_stopped": "Timer stopped",
+      "card_checkitem_checked": "Checked",
+      "card_checkitem_unchecked": "Unchecked",
+      "card_checkitem_cardified": "Cardified",
+      "card_checkitem_deleted": "Deleted"
+    }
+  },
+
+  "project_wiki": {
+    "Category": "Project wiki",
+    "conditions": {
+      "wiki_created": "Created",
+      "wiki_updated": "Updated",
+      "wiki_publicity_changed": "Publicity changed",
+      "wiki_deleted": "Deleted"
+    }
+  }
+}

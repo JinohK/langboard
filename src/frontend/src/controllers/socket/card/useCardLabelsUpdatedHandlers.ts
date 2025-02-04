@@ -25,7 +25,6 @@ const useCardLabelsUpdatedHandlers = ({ callback, projectUID, cardUID }: IUseCar
                 const card = ProjectCard.Model.getModel(cardUID);
                 if (card) {
                     card.labels = data.labels;
-                    card.label_uids = data.labels.map((label) => label.uid);
                 }
                 return {};
             },

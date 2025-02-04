@@ -22,13 +22,12 @@ from ...models import (
 )
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CardPublisher
-from ...tasks import CardActivityTask
+from ...tasks.activities import CardActivityTask
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
 from .CheckitemService import CheckitemService
 from .ChecklistService import ChecklistService
 from .NotificationService import NotificationService
-from .ProjectColumnService import ProjectColumnService
 from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
 from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBot
@@ -54,11 +53,6 @@ class CardService(BaseService):
             return None
 
         api_card = card.api_response()
-        api_card["deadline_at"] = card.deadline_at
-        api_card["column_name"] = column.name
-
-        project_column_service = self._get_service(ProjectColumnService)
-        api_card["project_all_columns"] = await project_column_service.get_list(project)
 
         checklist_service = self._get_service(ChecklistService)
         api_card["checklists"] = await checklist_service.get_list(card, as_api=True)
@@ -71,7 +65,6 @@ class CardService(BaseService):
         api_card["attachments"] = await card_attachment_service.get_board_list(card)
 
         project_label_service = self._get_service(ProjectLabelService)
-        api_card["project_labels"] = await project_label_service.get_all(project, as_api=True)
         api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
 
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
@@ -183,16 +176,13 @@ class CardService(BaseService):
                 )
             count_comment = result.first() or 0
 
-        project_label_service = self._get_service(ProjectLabelService)
-        raw_labels = await project_label_service.get_all_by_card(card, as_api=False)
-
         async with DbSession.use() as db:
             result = await db.exec(
                 (
                     SqlBuilder.select.table(CardRelationship)
                     .join(
                         GlobalCardRelationshipType,
-                        CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
+                        CardRelationship.column("relationship_type_id") == GlobalCardRelationshipType.column("id"),
                     )
                     .where(
                         (CardRelationship.column("card_id_parent") == card.id)
@@ -210,12 +200,14 @@ class CardService(BaseService):
             else:
                 parents.append(relationship.card_id_parent)
 
+        project_label_service = self._get_service(ProjectLabelService)
+
         card_api = card.api_response()
         card_api["count_comment"] = count_comment
         card_api["members"] = await self.get_assigned_users(card, as_api=True)
         card_relationship_service = self._get_service(CardRelationshipService)
         card_api["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
-        card_api["label_uids"] = [label.get_uid() for label in raw_labels]
+        card_api["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
         return card_api
 
     async def create(
@@ -453,7 +445,7 @@ class CardService(BaseService):
         async with DbSession.use() as db:
             for label_uid in label_uids:
                 label = await self._get_by_param(ProjectLabel, label_uid)
-                if not label or label.project_id != project.id or (not is_bot and label.is_bot):
+                if not label or label.project_id != project.id or (not is_bot and label.bot_id):
                     return None
                 db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
             await db.commit()

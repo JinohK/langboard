@@ -1,0 +1,19 @@
+{
+  "Private": "Private",
+  "Public": "Public",
+  "Toggle reorder mode": "Toggle reorder mode",
+  "New wiki page": "New wiki page",
+  "Wiki page has been deleted.": "Wiki page has been deleted.",
+  "No content": "No content",
+  "successes": {
+    "Title changed successfully.": "Title changed successfully.",
+    "Content changed successfully.": "Content changed successfully.",
+    "New wiki page created successfully.": "New wiki page created successfully.",
+    "Wiki page deleted successfully.": "Wiki page deleted successfully.",
+    "Public state changed successfully.": "Public state changed successfully.",
+    "Assigned bots and members updated successfully.": "Assigned bots and members updated successfully."
+  },
+  "errors": {
+    "Can't access this wiki.": "Can't access this wiki."
+  }
+}

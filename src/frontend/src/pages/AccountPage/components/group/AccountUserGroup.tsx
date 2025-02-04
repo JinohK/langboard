@@ -35,6 +35,7 @@ export interface IAccountUserGroupProps {
 const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
+    const isValidatingRef = useRef(isValidating);
     const { currentUser } = useAccountSetting();
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const setSelectedItemsRef = useRef<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>(() => {});
@@ -42,11 +43,12 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
     const users = group.useForeignField<User.TModel>("users");
 
     const onValueChange = (values: TMultiSelectAssigneeItem[]) => {
-        if (values.length === users.length || isValidating) {
+        if (values.length === users.length || isValidatingRef.current) {
             return;
         }
 
         setIsValidating(true);
+        isValidatingRef.current = true;
 
         mutate(
             {
@@ -67,6 +69,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 },
                 onSettled: () => {
                     setIsValidating(false);
+                    isValidatingRef.current = false;
                 },
             }
         );
@@ -84,7 +87,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                         placeholder: t("myAccount.Add an email..."),
                         className: "w-full",
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-                        commandItemForNew: (values) => t("myAccount.Add '{emails}'", { emails: values }),
+                        createNewCommandItemLabel: (values) => t("myAccount.Add '{emails}'", { emails: values }),
                     }}
                     allItems={users}
                     groups={groups.filter((g) => g.uid !== group.uid)}

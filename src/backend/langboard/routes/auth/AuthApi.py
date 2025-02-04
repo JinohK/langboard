@@ -1,6 +1,7 @@
 from typing import Annotated
 from fastapi import Header, status
 from jwt import ExpiredSignatureError
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -67,18 +68,21 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
 
 @AppRouter.api.get("/auth/me")
 @AuthFilter.add
-async def about_me(user: User = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
-    profile = await service.user.get_profile(user)
-    response = {
-        **user.api_response(),
-        **profile.api_response(),
-        "preferred_lang": user.preferred_lang,
-    }
-    response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
-    response["subemails"] = await service.user.get_subemails(user)
-    notifications = await service.notification.get_list(user)
+async def about_me(user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user).all()
+    profile = await service.user.get_profile(user_or_bot)
+    response = {
+        **user_or_bot.api_response(),
+        **profile.api_response(),
+        "preferred_lang": user_or_bot.preferred_lang,
+    }
+    response["user_groups"] = await service.user_group.get_all_by_user(user_or_bot, as_api=True)
+    response["subemails"] = await service.user.get_subemails(user_or_bot)
+    notifications = await service.notification.get_list(user_or_bot)
+
+    notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user_or_bot).all()
     unsubs = {}
     for unsub in notification_unsubs:
         if unsub.scope_type.value not in unsubs:
@@ -100,7 +104,7 @@ async def about_me(user: User = Auth.scope("api"), service: Service = Service.sc
 
     response["notification_unsubs"] = unsubs
 
-    if user.is_admin:
+    if user_or_bot.is_admin:
         response["is_admin"] = True
 
     return JsonResponse(content={"user": response, "notifications": notifications})

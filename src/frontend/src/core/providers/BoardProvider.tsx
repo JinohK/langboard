@@ -76,7 +76,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         const newFilters = transformStringFilters(rawFilters);
         return newFilters;
     }, [navigated, location, location.search]);
-    const currentUserRoleActions = project.useField("current_user_role_actions");
+    const currentUserRoleActions = project.useField("current_auth_role_actions");
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
     const cards = ProjectCard.Model.useModels((model) => model.project_uid === project.uid);
@@ -220,7 +220,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
             return true;
         }
 
-        return !!card.label_uids.length && filters.labels.some((labelUID) => card.label_uids.includes(labelUID));
+        return !!card.labels.length && filters.labels.some((labelUID) => card.labels.map((label) => label.uid).includes(labelUID));
     };
 
     const filterCardRelationships = (card: ProjectCard.TModel) => {

@@ -1,0 +1,36 @@
+{
+  "Board": "Board",
+  "Wiki": "Wiki",
+  "Activity": "Activity",
+  "Settings": "Settings",
+  "Filters": "Filters",
+  "Add Column": "Add Column",
+  "filters": {
+    "Clear": "Clear",
+    "Keyword": "Keyword",
+    "Members": "Members",
+    "Labels": "Labels",
+    "relationships": {
+      "parents": "Parents of",
+      "children": "Children of"
+    },
+    "No members assigned": "No members assigned",
+    "Assigned to me": "Assigned to me",
+    "Select members": "Select members",
+    "Select labels": "Select labels",
+    "Select cards": "Select cards",
+    "Clear selections": "Clear selections"
+  },
+  "Add column": "Add column",
+  "Add a card": "Add a card",
+  "Add card": "Add card",
+  "Enter a name": "Enter a name",
+  "Enter a title": "Enter a title",
+  "Select parent cards": "Select parent cards",
+  "Select child cards": "Select child cards",
+  "{count} selected": "{{count}} selected",
+  "successes": {
+    "Column added successfully.": "Column added successfully.",
+    "Card added successfully.": "Card added successfully."
+  }
+}

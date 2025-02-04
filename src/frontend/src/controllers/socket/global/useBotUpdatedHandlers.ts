@@ -25,16 +25,20 @@ const useBotUpdatedHandlers = ({ callback, bot }: IUseBotUpdatedHandlersProps) =
             responseConverter: (data) => {
                 if (data.name) {
                     bot.name = data.name;
+                    bot.as_user.firstname = data.name;
                 }
 
                 if (data.bot_uname) {
                     bot.bot_uname = data.bot_uname;
+                    bot.as_user.username = data.bot_uname;
                 }
 
                 if (data.deleted_avatar) {
                     bot.avatar = undefined;
+                    bot.as_user.avatar = undefined;
                 } else if (data.avatar) {
                     bot.avatar = data.avatar;
+                    bot.as_user.avatar = data.avatar;
                 }
 
                 return {};

@@ -3,12 +3,26 @@ import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
+import { EBotTriggerCondition } from "@/core/models/bot.type";
+
+export enum EAPIAuthType {
+    Basic = "basic",
+    Bearer = "bearer",
+    Langflow = "langflow",
+    OpenAI = "openai",
+}
 
 export interface Interface extends IBaseModel {
     name: string;
     bot_uname: string;
     avatar?: string;
     as_user: User.Interface;
+    api_url: string;
+    api_auth_type: EAPIAuthType;
+    api_key: string;
+    app_api_token: string;
+    ip_whitelist: string[];
+    conditions: Partial<Record<EBotTriggerCondition, { is_predefined: bool }>>;
 }
 
 class BotModel extends BaseModel<Interface> {
@@ -66,6 +80,48 @@ class BotModel extends BaseModel<Interface> {
     }
     public set as_user(value: User.TModel | User.Interface) {
         this.update({ as_user: value });
+    }
+
+    public get api_url() {
+        return this.getValue("api_url");
+    }
+    public set api_url(value: string) {
+        this.update({ api_url: value });
+    }
+
+    public get api_auth_type() {
+        return this.getValue("api_auth_type");
+    }
+    public set api_auth_type(value: EAPIAuthType) {
+        this.update({ api_auth_type: value });
+    }
+
+    public get api_key() {
+        return this.getValue("api_key");
+    }
+    public set api_key(value: string) {
+        this.update({ api_key: value });
+    }
+
+    public get app_api_token() {
+        return this.getValue("app_api_token");
+    }
+    public set app_api_token(value: string) {
+        this.update({ app_api_token: value });
+    }
+
+    public get ip_whitelist() {
+        return this.getValue("ip_whitelist");
+    }
+    public set ip_whitelist(value: string[]) {
+        this.update({ ip_whitelist: value });
+    }
+
+    public get conditions() {
+        return this.getValue("conditions");
+    }
+    public set conditions(value: Partial<Record<EBotTriggerCondition, { is_predefined: bool }>>) {
+        this.update({ conditions: value });
     }
 }
 

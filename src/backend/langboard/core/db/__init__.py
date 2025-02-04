@@ -1,6 +1,7 @@
 from .ColumnTypes import (
     CSVType,
     DateTimeField,
+    EnumLikeType,
     ModelColumnType,
     SecretStr,
     SecretStrType,
@@ -28,6 +29,7 @@ __all__ = [
     "SnowflakeID",
     "SnowflakeIDType",
     "SnowflakeIDField",
+    "EnumLikeType",
     "CSVType",
     "SqlBuilder",
     "User",

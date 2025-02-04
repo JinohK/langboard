@@ -1,0 +1,26 @@
+{
+  "Password recovery": "Password recovery",
+  "Please enter your name to verify your account.": "Please enter your name to verify your account.",
+  "Password Reset Link Sent": "Password Reset Link Sent",
+  "A password reset link has been successfully sent to your registered email address.": "A password reset link has been successfully sent to your registered email address.",
+  "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.": "Please check your inbox (and spam/junk folder) for the email. Follow the instructions in the email to reset your password.",
+  "If you do not receive the email within a few minutes, please try again or contact support for assistance.": "If you do not receive the email within a few minutes, please try again or contact support for assistance.",
+  "Please enter your new password.": "Please enter your new password.",
+  "Resend Link": "Resend Link",
+  "Resent link successfully.": "Resent link successfully.",
+  "Password Reset Successful": "Password Reset Successful",
+  "Your password has been successfully reset.": "Your password has been successfully reset.",
+  "You can now sign in with your new password.": "You can now sign in with your new password.",
+  "errors": {
+    "missing": {
+      "firstname": "Enter your first name.",
+      "lastname": "Enter your last name.",
+      "password": "Enter a new password.",
+      "password-confirm": "Enter a password confirmation."
+    },
+    "invalid": {
+      "name": "Wrong name. Try again.",
+      "password-confirm": "Wrong password confirmation. Try again."
+    }
+  }
+}

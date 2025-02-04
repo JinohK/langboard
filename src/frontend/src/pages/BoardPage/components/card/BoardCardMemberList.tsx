@@ -6,7 +6,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardCardMemberList = memo(() => {
@@ -16,14 +16,16 @@ const BoardCardMemberList = memo(() => {
     const members = card.useForeignField<User.TModel>("members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const [isValidating, setIsValidating] = useState(false);
+    const isValidatingRef = useRef(isValidating);
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers();
 
     const onSave = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidating) {
+        if (isValidatingRef.current) {
             return;
         }
 
         setIsValidating(true);
+        isValidatingRef.current = true;
 
         const promise = updateCardAssignedUsersMutateAsync({
             project_uid: projectUID,
@@ -59,6 +61,7 @@ const BoardCardMemberList = memo(() => {
             finally: () => {
                 endCallback();
                 setIsValidating(false);
+                isValidatingRef.current = false;
             },
         });
     };

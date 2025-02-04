@@ -1,4 +1,5 @@
 from fastapi import status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -15,10 +16,10 @@ from .scopes import ChangeColumnOrderForm, ColumnForm, project_role_finder
 async def create_column(
     project_uid: str,
     form: ColumnForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_column.create(user, project_uid, form.name)
+    result = await service.project_column.create(user_or_bot, project_uid, form.name)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -32,10 +33,10 @@ async def update_column_name(
     project_uid: str,
     column_uid: str,
     form: ColumnForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_column.change_name(user, project_uid, column_uid, form.name)
+    result = await service.project_column.change_name(user_or_bot, project_uid, column_uid, form.name)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -49,10 +50,13 @@ async def update_column_order(
     project_uid: str,
     column_uid: str,
     form: ChangeColumnOrderForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_column.change_order(user, project_uid, column_uid, form.order)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_column.change_order(user_or_bot, project_uid, column_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -65,10 +69,10 @@ async def update_column_order(
 async def delete_column(
     project_uid: str,
     column_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_column.delete(user, project_uid, column_uid)
+    result = await service.project_column.delete(user_or_bot, project_uid, column_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

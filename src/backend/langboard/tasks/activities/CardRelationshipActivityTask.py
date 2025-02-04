@@ -1,0 +1,46 @@
+from ...core.ai import Bot
+from ...core.broker import Broker
+from ...core.db import User
+from ...models import Card, Project, ProjectActivity
+from ...models.ProjectActivity import ProjectActivityType
+from .UserActivityTask import record_project_activity
+from .utils import ActivityTaskHelper
+
+
+@Broker.wrap_async_task_decorator
+async def card_relationship_updated(
+    user_or_bot: User | Bot,
+    project: Project,
+    card: Card,
+    old_relationship_ids: list[int],
+    new_relationship_ids: list[int],
+    is_parent: bool,
+):
+    helper = ActivityTaskHelper(ProjectActivity)
+    removed_relationships, added_relationships = await helper.get_updated_card_relationships(
+        old_relationship_ids, new_relationship_ids, is_parent
+    )
+    if not removed_relationships and not added_relationships:
+        return
+
+    activity_history = {
+        **await helper.create_project_default_history(project, card),
+        "removed_relationships": removed_relationships,
+        "added_relationships": added_relationships,
+    }
+    activity = await helper.record(
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.CardRelationshipsUpdated, project, card),
+    )
+    await record_project_activity(user_or_bot, activity)
+
+
+def _get_activity_params(activity_type: ProjectActivityType, project: Project, card: Card):
+    activity_params = {
+        "activity_type": activity_type,
+        "project_id": project.id,
+        "card_id": card.id,
+    }
+
+    return activity_params

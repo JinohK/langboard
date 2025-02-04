@@ -11,7 +11,7 @@ export interface IBoardCardActionLabelListProps {
 
 const BoardCardActionLabelList = memo(({ selectedLabelUIDs, setSelectedLabelUIDs }: IBoardCardActionLabelListProps) => {
     const { card } = useBoardCard();
-    const flatProjectLabels = card.useForeignField<ProjectLabel.TModel>("project_labels");
+    const flatProjectLabels = ProjectLabel.Model.useModels((model) => model.project_uid === card.project_uid);
     const projectLabels = flatProjectLabels.sort((a, b) => a.order - b.order);
     ProjectLabel.Model.subscribe("DELETION", `board-card-action-label-list-${card.uid}`, (uids) => {
         setSelectedLabelUIDs((prev) => prev.filter((uid) => !uids.includes(uid)));

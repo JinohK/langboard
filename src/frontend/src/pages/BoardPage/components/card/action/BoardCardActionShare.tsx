@@ -1,4 +1,5 @@
 import { Box, Button, IconComponent, Input, Popover } from "@/components/base";
+import { copyToClipboard, selectAllText } from "@/core/utils/ComponentUtils";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,15 +13,8 @@ const BoardCardActionShare = memo(({ buttonClassName }: IBoardCardActionSharePro
     const link = location.href; // TODO: Get the link of the card
 
     const copyLink = (e: React.MouseEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
-        e.currentTarget.selectionStart = 0;
-        e.currentTarget.selectionEnd = 0;
-        e.currentTarget.selectionEnd = link.length;
-        if (!navigator?.clipboard) {
-            document.execCommand("copy");
-            return;
-        } else {
-            navigator.clipboard.writeText(link);
-        }
+        selectAllText(e.currentTarget);
+        copyToClipboard(e.currentTarget.value);
         setIsCopied(true);
     };
 

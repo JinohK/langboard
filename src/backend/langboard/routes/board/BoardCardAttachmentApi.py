@@ -1,4 +1,5 @@
 from fastapi import File, UploadFile, status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -17,9 +18,12 @@ async def upload_card_attachment(
     project_uid: str,
     card_uid: str,
     attachment: UploadFile = File(),
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     if not attachment:
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -27,12 +31,12 @@ async def upload_card_attachment(
     if not file_model:
         return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    result = await service.card_attachment.create(user, project_uid, card_uid, file_model)
+    result = await service.card_attachment.create(user_or_bot, project_uid, card_uid, file_model)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
-        content={**result.api_response(), "user": user.api_response()},
+        content={**result.api_response(), "user": user_or_bot.api_response()},
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -45,8 +49,12 @@ async def change_attachment_order(
     card_uid: str,
     attachment_uid: str,
     form: ChangeOrderForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     result = await service.card_attachment.change_order(project_uid, card_uid, attachment_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -62,22 +70,25 @@ async def change_card_attachment_name(
     card_uid: str,
     attachment_uid: str,
     form: ChangeAttachmentNameForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     card_attachment = await service.card_attachment.get_by_uid(attachment_uid)
     if not card_attachment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if card_attachment.user_id != user.id and not user.is_admin:
+    if card_attachment.user_id != user_or_bot.id and not user_or_bot.is_admin:
         role_filter = Role(ProjectRole)
         if not await role_filter.is_authorized(
-            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user_or_bot.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.card_attachment.change_name(
-        user, project_uid, card_uid, card_attachment, form.attachment_name
+        user_or_bot, project_uid, card_uid, card_attachment, form.attachment_name
     )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -92,21 +103,24 @@ async def delete_card_attachment(
     project_uid: str,
     card_uid: str,
     attachment_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     card_attachment = await service.card_attachment.get_by_uid(attachment_uid)
     if not card_attachment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if card_attachment.user_id != user.id and not user.is_admin:
+    if card_attachment.user_id != user_or_bot.id and not user_or_bot.is_admin:
         role_filter = Role(ProjectRole)
         if not await role_filter.is_authorized(
-            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user_or_bot.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
             return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.card_attachment.delete(user, project_uid, card_uid, card_attachment)
+    result = await service.card_attachment.delete(user_or_bot, project_uid, card_uid, card_attachment)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

@@ -3,6 +3,7 @@ from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
+from ..core.ai import Bot
 from ..core.db import User
 from ..core.filter import AuthFilter, FilterMiddleware
 from ..core.routing import JsonResponse
@@ -30,17 +31,28 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
 
         if should_filter:
             headers = Headers(scope=scope)
-            validation_result = await Auth.validate(headers)
 
-            if isinstance(validation_result, User):
-                scope["user"] = validation_result
-            elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-                response = JsonResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
-                await response(scope, receive, send)
-                return
+            if headers.get("X-Api-Token", headers.get("x-api-token")):
+                validation_result = await Auth.validate_bot(headers)
+
+                if isinstance(validation_result, Bot):
+                    scope["auth"] = validation_result
+                else:
+                    response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                    await response(scope, receive, send)
+                    return
             else:
-                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
-                await response(scope, receive, send)
-                return
+                validation_result = await Auth.validate(headers)
+
+                if isinstance(validation_result, User):
+                    scope["auth"] = validation_result
+                elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
+                    response = JsonResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                    await response(scope, receive, send)
+                    return
+                else:
+                    response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                    await response(scope, receive, send)
+                    return
 
         await self.app(scope, receive, send)

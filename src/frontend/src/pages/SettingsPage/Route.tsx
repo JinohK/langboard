@@ -21,6 +21,7 @@ function SettingsRoute() {
             <Route index element={<Navigate to={ROUTES.SETTINGS.API_KEYS} replace />} />
             <Route path={ROUTES.SETTINGS.API_KEYS} element={<></>} />
             <Route path={ROUTES.SETTINGS.BOTS} element={<></>} />
+            <Route path={ROUTES.SETTINGS.BOT_DETAILS(":botUID")} element={<></>} />
             <Route path={ROUTES.SETTINGS.LANGFLOW} element={<></>} />
             <Route path={ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS} element={<></>} />
             <Route path={ROUTES.SETTINGS.WEBHOOKS} element={<></>} />

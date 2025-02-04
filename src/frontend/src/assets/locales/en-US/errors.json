@@ -1,0 +1,9 @@
+{
+  "Unknown error": "Unknown error",
+  "Internal server error": "Internal server error",
+  "Network error": "Network error",
+  "Malformed request": "Malformed request",
+  "Forbidden": "Forbidden",
+  "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later.",
+  "Server has been temporarily disabled. Please try again later.": "Server has been temporarily disabled. Please try again later."
+}

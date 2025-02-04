@@ -1,7 +1,15 @@
+from enum import Enum
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..db import ModelColumnType, SoftDeleteModel, User
+from ..db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel, User
 from ..storage import FileModel
+
+
+class BotAPIAuthType(Enum):
+    Basic = "basic"
+    Bearer = "bearer"
+    Langflow = "langflow"
+    OpenAI = "openai"
 
 
 class Bot(SoftDeleteModel, table=True):
@@ -9,18 +17,32 @@ class Bot(SoftDeleteModel, table=True):
     name: str = Field(nullable=False)
     bot_uname: str = Field(nullable=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
+    api_url: str = Field(nullable=False)
+    api_auth_type: BotAPIAuthType = Field(nullable=False, sa_type=EnumLikeType(BotAPIAuthType))
+    api_key: str = Field(nullable=False)
+    app_api_token: str = Field(nullable=False)
+    ip_whitelist: list[str] = Field(default=[], sa_type=CSVType)
 
-    def api_response(self) -> dict[str, Any]:
+    def api_response(self, is_setting_response: bool = False) -> dict[str, Any]:
         if self.deleted_at is not None:
             return self.create_unknown_bot_api_response()
 
-        return {
+        response = {
             "uid": self.get_uid(),
             "name": self.name,
             "bot_uname": self.bot_uname,
             "avatar": self.avatar.path if self.avatar else None,
             "as_user": self.as_user_api_response(),
         }
+        if is_setting_response:
+            response["api_url"] = self.api_url
+            response["api_auth_type"] = self.api_auth_type.value
+            response["api_key"] = self.api_key
+            hide_rest_value = "*" * (len(self.app_api_token) - 8)
+            response["app_api_token"] = f"{self.app_api_token[:8]}{hide_rest_value}"
+            response["ip_whitelist"] = self.ip_whitelist
+
+        return response
 
     def as_user_api_response(self) -> dict[str, Any]:
         return {

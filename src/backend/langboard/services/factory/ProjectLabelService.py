@@ -4,7 +4,7 @@ from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from ...publishers import ProjectLabelPublisher
-from ...tasks import ProjectLabelActivityTask
+from ...tasks.activities import ProjectLabelActivityTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
 
@@ -25,7 +25,7 @@ class ProjectLabelService(BaseService):
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
-                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False))  # noqa
+                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
@@ -41,7 +41,7 @@ class ProjectLabelService(BaseService):
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
-                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == True))  # noqa
+                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
@@ -102,11 +102,11 @@ class ProjectLabelService(BaseService):
 
         label = ProjectLabel(
             project_id=project.id,
+            bot_id=user_or_bot.id if is_bot else None,
             name=name,
             color=color,
             description=description,
             order=max_order + 1,
-            is_bot=is_bot,
         )
         async with DbSession.use() as db:
             db.insert(label)
@@ -129,7 +129,7 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
-        if label.is_bot and not isinstance(user_or_bot, Bot):
+        if label.bot_id and not isinstance(user_or_bot, Bot):
             return None
 
         old_label_record = {}
@@ -172,12 +172,12 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
-        if label.is_bot:
+        if label.bot_id:
             return None
 
         original_order = label.order
         update_query = SqlBuilder.update.table(ProjectLabel).where(
-            (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("is_bot") == False)  # noqa
+            (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None)  # noqa
         )
         update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
         async with DbSession.use() as db:
@@ -199,7 +199,7 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
-        if label.is_bot and not isinstance(user_or_bot, Bot):
+        if label.bot_id and not isinstance(user_or_bot, Bot):
             return None
 
         async with DbSession.use() as db:

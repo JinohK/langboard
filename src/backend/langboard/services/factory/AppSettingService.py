@@ -1,14 +1,12 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
-from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService
 from ...core.setting import AppSetting, AppSettingType
-from ...core.storage import FileModel
 from ...core.utils.String import generate_random_string
 from ...models import GlobalCardRelationshipType
 from ...publishers import AppSettingPublisher
-from .Types import TBotParam, TGlobalCardRelationshipTypeParam, TSettingParam
+from .Types import TGlobalCardRelationshipTypeParam, TSettingParam
 
 
 class AppSettingService(BaseService):
@@ -50,16 +48,6 @@ class AppSettingService(BaseService):
         if as_api:
             return [setting.api_response() for setting in settings]
         return list(settings)
-
-    @overload
-    async def get_bots(self, as_api: Literal[False]) -> list[Bot]: ...
-    @overload
-    async def get_bots(self, as_api: Literal[True]) -> list[dict[str, Any]]: ...
-    async def get_bots(self, as_api: bool) -> list[Bot] | list[dict[str, Any]]:
-        bots = await self._get_all(Bot)
-        if as_api:
-            return [bot.api_response() for bot in bots]
-        return list(bots)
 
     @overload
     async def get_global_relationships(self, as_api: Literal[False]) -> list[GlobalCardRelationshipType]: ...
@@ -140,89 +128,6 @@ class AppSettingService(BaseService):
         async with DbSession.use() as db:
             await db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
             await db.commit()
-
-        return True
-
-    async def create_bot(self, name: str, bot_uname: str, avatar: FileModel | None = None) -> Bot | None:
-        existing_bot = await self._get_by(Bot, "bot_uname", bot_uname)
-        if existing_bot:
-            return None
-
-        bot = Bot(
-            name=name,
-            bot_uname=bot_uname,
-            avatar=avatar,
-        )
-
-        async with DbSession.use() as db:
-            db.insert(bot)
-            await db.commit()
-
-        model = {"bot": bot.api_response()}
-        AppSettingPublisher.bot_created(model)
-
-        return bot
-
-    async def update_bot(self, bot: TBotParam, form: dict) -> bool | tuple[Bot, dict[str, Any]] | None:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
-        if not bot:
-            return None
-        mutable_keys = ["name", "bot_uname", "avatar"]
-
-        old_bot_record = {}
-
-        for key in mutable_keys:
-            if key not in form or not hasattr(bot, key):
-                continue
-            old_value = getattr(bot, key)
-            new_value = form[key]
-            if old_value == new_value or new_value is None:
-                continue
-            old_bot_record[key] = self._convert_to_python(old_value)
-            setattr(bot, key, new_value)
-
-        if "bot_uname" in form:
-            existing_bot = await self._get_by(Bot, "bot_uname", form["bot_uname"])
-            if existing_bot:
-                return False
-
-        if "delete_avatar" in form and form["delete_avatar"]:
-            old_bot_record["avatar"] = self._convert_to_python(bot.avatar)
-            bot.avatar = None
-
-        if not old_bot_record:
-            return True
-
-        async with DbSession.use() as db:
-            await db.update(bot)
-            await db.commit()
-
-        model: dict[str, Any] = {}
-        for key in form:
-            if key not in mutable_keys or key not in old_bot_record:
-                continue
-            if key == "avatar":
-                if bot.avatar:
-                    model[key] = bot.avatar.path
-                else:
-                    model["deleted_avatar"] = True
-            else:
-                model[key] = self._convert_to_python(getattr(bot, key))
-
-        AppSettingPublisher.bot_updated(bot.get_uid(), model)
-
-        return bot, model
-
-    async def delete_bot(self, bot: TBotParam) -> bool:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
-        if not bot:
-            return False
-
-        async with DbSession.use() as db:
-            await db.delete(bot)
-            await db.commit()
-
-        AppSettingPublisher.bot_deleted(bot.get_uid())
 
         return True
 

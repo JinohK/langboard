@@ -136,7 +136,8 @@ export const API_ROUTES = {
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
             UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
-            UPDATE_USER_ROLES: "/board/{uid}/settings/user-roles/{user_uid}",
+            UPDATE_BOT_ROLES: "/board/{uid}/settings/roles/bot/{bot_uid}",
+            UPDATE_USER_ROLES: "/board/{uid}/settings/roles/user/{user_uid}",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
@@ -156,6 +157,8 @@ export const API_ROUTES = {
         BOTS: {
             CREATE: "/settings/bot",
             UPDATE: "/settings/bot/{bot_uid}",
+            GENERATE_NEW_API_TOKEN: "/settings/bot/{bot_uid}/new-api-token",
+            TOGGLE_TRIGGER_CONDITION: "/settings/bot/{bot_uid}/trigger-condition",
             DELETE: "/settings/bot/{bot_uid}",
         },
         GLOBAL_RELATIONSHIPS: {
@@ -199,7 +202,8 @@ export const SOCKET_SERVER_EVENTS = {
         CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
-        USER_ROLES_UPDATED: "board:user-roles:updated:{uid}",
+        BOT_ROLES_UPDATED: "board:roles:bot:updated:{uid}",
+        USER_ROLES_UPDATED: "board:roles:user:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
         DELETED: "board:deleted:{uid}",
         LABEL: {

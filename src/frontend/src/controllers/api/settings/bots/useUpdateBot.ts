@@ -7,6 +7,10 @@ import { format } from "@/core/utils/StringUtils";
 export interface IUpdateBotForm {
     bot_name?: string;
     bot_uname?: string;
+    api_url?: string;
+    api_auth_type?: BotModel.EAPIAuthType;
+    api_key?: string;
+    ip_whitelist?: string[];
     avatar?: File;
     delete_avatar?: bool;
 }
@@ -31,19 +35,14 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
 
         const res = await api.put(url, formData);
 
-        if (res.data.name) {
-            bot.name = res.data.name;
-        }
+        Object.entries(res.data).forEach(([key, value]) => {
+            if (key === "deleted_avatar") {
+                bot.avatar = undefined;
+                return;
+            }
 
-        if (res.data.bot_uname) {
-            bot.bot_uname = res.data.bot_uname;
-        }
-
-        if (res.data.deleted_avatar) {
-            bot.avatar = undefined;
-        } else if (res.data.avatar) {
-            bot.avatar = res.data.avatar;
-        }
+            bot[key as keyof BotModel.Interface] = value;
+        });
 
         return res.data;
     };

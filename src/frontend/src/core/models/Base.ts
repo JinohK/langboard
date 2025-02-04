@@ -124,9 +124,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         DELETION: {},
     };
     static readonly #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
+    readonly #mForeignModelUIDs: Record<string, string[]> = {};
+    readonly #mForeignModelVersions: Record<string, number> = {};
     #mStore: TStateStore<TModel>;
-    readonly #foreignModelUIDs: Record<string, string[]> = {};
-    readonly #foreignModelVersions: Record<string, number> = {};
 
     static get FOREIGN_MODELS(): Partial<Record<string, string>> {
         return {};
@@ -363,7 +363,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 "CREATION",
                 key,
                 (newModels) => {
-                    if (newModels.length === 0) {
+                    if (!newModels.length) {
                         return;
                     }
 
@@ -372,7 +372,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 filter
             );
             const unsubscribeDeletion = this.subscribe("DELETION", key, (uids) => {
-                if (uids.length === 0) {
+                if (!uids.length) {
                     return;
                 }
 
@@ -383,7 +383,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 unsubscribeCreation();
                 unsubscribeDeletion();
             };
-        }, []);
+        }, [models]);
 
         useEffect(() => {
             if (dependencies && dependencies.length > 0) {
@@ -748,29 +748,29 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     #getForeignModelUIDs(field: keyof TModel) {
         const foreignModels = this.#getConstructor().FOREIGN_MODELS;
         const fieldKey = `${field as string}.${foreignModels[field]}`;
-        if (!this.#foreignModelUIDs[fieldKey]) {
-            this.#foreignModelUIDs[fieldKey] = [];
+        if (!this.#mForeignModelUIDs[fieldKey]) {
+            this.#mForeignModelUIDs[fieldKey] = [];
         }
 
-        return this.#foreignModelUIDs[fieldKey];
+        return this.#mForeignModelUIDs[fieldKey];
     }
 
     #getForeignModelVersions(field: keyof TModel) {
         const foreignModels = this.#getConstructor().FOREIGN_MODELS;
         const fieldKey = `${field as string}.${foreignModels[field]}`;
-        if (!this.#foreignModelVersions[fieldKey]) {
-            this.#foreignModelVersions[fieldKey] = 0;
+        if (!this.#mForeignModelVersions[fieldKey]) {
+            this.#mForeignModelVersions[fieldKey] = 0;
         }
 
-        return this.#foreignModelVersions[fieldKey];
+        return this.#mForeignModelVersions[fieldKey];
     }
 
     #updateForeignModelVersions(field: keyof TModel) {
         const foreignModels = this.#getConstructor().FOREIGN_MODELS;
         const fieldKey = `${field as string}.${foreignModels[field]}`;
 
-        this.#foreignModelVersions[fieldKey] = this.#getForeignModelVersions(field) + 1;
-        return this.#foreignModelVersions[fieldKey];
+        this.#mForeignModelVersions[fieldKey] = this.#getForeignModelVersions(field) + 1;
+        return this.#mForeignModelVersions[fieldKey];
     }
 
     #getConstructor(): TBaseModelClass<TModel> {

@@ -42,10 +42,10 @@ const Label = React.forwardRef<React.ComponentRef<typeof BaseLabel>, React.Compo
 );
 Label.displayName = "FloatingLabel";
 
-type LabelInputProps = InputProps & { label: string; isFormControl?: bool };
+type LabelInputProps = InputProps & { wrapperClassNames?: string; label: string; isFormControl?: bool };
 
 const LabelInput = React.forwardRef<React.ComponentRef<typeof Input>, React.PropsWithoutRef<LabelInputProps>>(
-    ({ label, isFormControl, id, ...props }, ref) => {
+    ({ wrapperClassNames, label, isFormControl, id, ...props }, ref) => {
         id = id ?? `floating-input-${createShortUUID()}`;
 
         let comp = <Input id={id} ref={ref} {...props} />;
@@ -54,7 +54,7 @@ const LabelInput = React.forwardRef<React.ComponentRef<typeof Input>, React.Prop
         }
 
         return (
-            <div className="relative">
+            <div className={cn("relative", wrapperClassNames)}>
                 {comp}
                 <Label className="select-none" htmlFor={id}>
                     {label}
@@ -65,10 +65,10 @@ const LabelInput = React.forwardRef<React.ComponentRef<typeof Input>, React.Prop
 );
 LabelInput.displayName = "FloatingLabelInput";
 
-type LabelTextareaProps = BaseTextareaProps & { label: string; isFormControl?: bool };
+type LabelTextareaProps = BaseTextareaProps & { wrapperClassNames?: string; label: string; isFormControl?: bool };
 
 const LabelTextarea = React.forwardRef<React.ComponentRef<typeof Textarea>, React.PropsWithoutRef<LabelTextareaProps>>(
-    ({ label, isFormControl, id, ...props }, ref) => {
+    ({ wrapperClassNames, label, isFormControl, id, ...props }, ref) => {
         id = id ?? `floating-textarea-${createShortUUID()}`;
 
         let comp = <Textarea id={id} ref={ref} {...props} />;
@@ -77,7 +77,7 @@ const LabelTextarea = React.forwardRef<React.ComponentRef<typeof Textarea>, Reac
         }
 
         return (
-            <div className="relative">
+            <div className={cn("relative", wrapperClassNames)}>
                 {comp}
                 <Label className="select-none" htmlFor={id} isTextarea>
                     {label}

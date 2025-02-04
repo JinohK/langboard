@@ -4,7 +4,7 @@ from ...core.service import BaseService
 from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn
 from ...publishers import ProjectColumnPublisher
-from ...tasks import ProjectColumnActivityTask
+from ...tasks.activities import ProjectColumnActivityTask
 from .Types import TColumnParam, TProjectParam, TUserOrBot
 
 

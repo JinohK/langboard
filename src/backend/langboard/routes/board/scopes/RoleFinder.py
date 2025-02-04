@@ -16,6 +16,6 @@ def project_role_finder(query: SelectOfScalar[ProjectRole], path_params: dict[st
 
     query = query.join(
         Project,
-        (Project.column("id") == ProjectRole.project_id) & (Project.deleted_at == None),  # noqa
-    ).where(Project.id == SnowflakeID.from_short_code(project_uid))
+        (Project.column("id") == ProjectRole.column("project_id")) & (Project.column("deleted_at") == None),  # noqa
+    ).where(Project.column("id") == SnowflakeID.from_short_code(project_uid))
     return query

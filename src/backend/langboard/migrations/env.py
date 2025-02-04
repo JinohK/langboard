@@ -10,6 +10,7 @@ from alembic import context
 from alembic.autogenerate.api import AutogenContext
 
 from langboard.Constants import MAIN_DATABASE_URL
+from langboard.core.ai import Bot, BotTrigger
 from langboard.core.db import User
 from langboard.models import * # type: ignore
 # this is the Alembic Config object, which provides
@@ -49,6 +50,14 @@ def render_item(type_: str, obj: Any, autogen_context: AutogenContext):
             autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeIDType")
             autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeID")
             return "SnowflakeIDType"
+        elif obj.__class__.__name__ == "CSVType":
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import CSVType")
+            return "CSVType"
+        elif obj.__class__.__name__ == "_EnumLikeType":
+            enum_type_class: type = obj._enum_type_class # type: ignore
+            autogen_context.imports.add(f"from {obj.__class__.__module__} import EnumLikeType")
+            autogen_context.imports.add(f"from {enum_type_class.__module__} import {enum_type_class.__name__}")
+            return f"EnumLikeType({enum_type_class.__name__})"
 
     return False
 

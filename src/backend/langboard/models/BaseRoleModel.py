@@ -2,6 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
+from ..core.ai import Bot
 from ..core.db import BaseSqlModel, CSVType, SnowflakeID, SnowflakeIDField, User
 
 
@@ -11,6 +12,7 @@ ALL_GRANTED = "*"
 class BaseRoleModel(BaseSqlModel):
     actions: list[str] = Field(default=[ALL_GRANTED], sa_type=CSVType)
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
 
     @staticmethod
     @abstractmethod

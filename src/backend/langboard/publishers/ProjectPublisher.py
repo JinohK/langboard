@@ -57,15 +57,28 @@ class ProjectPublisher:
         SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
+    def bot_roles_updated(project: Project, target_bot: Bot, roles: list[str]):
+        topic_id = project.get_uid()
+        model = {"bot_uid": target_bot.get_uid(), "roles": roles}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:roles:bot:updated:{topic_id}",
+            data_keys=["bot_uid", "roles"],
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
+    @staticmethod
     def user_roles_updated(project: Project, target_user: User, roles: list[str]):
         topic_id = project.get_uid()
-        model = {"member_uid": target_user.get_uid(), "roles": roles}
+        model = {"user_uid": target_user.get_uid(), "roles": roles}
         publish_models = [
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
-                event=f"board:user-roles:updated:{topic_id}",
-                data_keys=["member_uid", "roles"],
+                event=f"board:roles:user:updated:{topic_id}",
+                data_keys=["user_uid", "roles"],
             ),
             SocketPublishModel(
                 topic=SocketTopic.UserPrivate,

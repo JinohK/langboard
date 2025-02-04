@@ -5,7 +5,7 @@ from json import loads as json_loads
 from typing import Any
 from sqlalchemy import Text
 from sqlmodel import Field
-from ..db import BaseSqlModel, DateTimeField
+from ..db import BaseSqlModel, DateTimeField, EnumLikeType
 
 
 class AppSettingType(Enum):
@@ -16,7 +16,7 @@ class AppSettingType(Enum):
 
 
 class AppSetting(BaseSqlModel, table=True):
-    setting_type: AppSettingType = Field(nullable=False)
+    setting_type: AppSettingType = Field(nullable=False, sa_type=EnumLikeType(AppSettingType))
     setting_name: str = Field(nullable=False)
     setting_value: str = Field(default="", sa_type=Text)
     last_used_at: datetime | None = DateTimeField(default=None, nullable=True)

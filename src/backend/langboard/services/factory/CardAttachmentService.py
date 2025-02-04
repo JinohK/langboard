@@ -4,7 +4,7 @@ from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
 from ...publishers import CardAttachmentPublisher
-from ...tasks import CardAttachmentActivityTask
+from ...tasks.activities import CardAttachmentActivityTask
 from .Types import TAttachmentParam, TCardParam, TProjectParam
 
 

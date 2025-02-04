@@ -5,17 +5,22 @@ from .GlobalCardRelationshipType import GlobalCardRelationshipType
 
 
 class CardRelationship(BaseSqlModel, table=True):
-    relation_type_id: SnowflakeID = SnowflakeIDField(
+    relationship_type_id: SnowflakeID = SnowflakeIDField(
         foreign_key=GlobalCardRelationshipType.expr("id"), nullable=False, index=True
     )
     card_id_parent: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     card_id_child: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
 
     def api_response(self) -> dict[str, Any]:
-        return {}
+        return {
+            "uid": self.get_uid(),
+            "relationship_type_uid": self.relationship_type_id.to_short_code(),
+            "parent_card_uid": self.card_id_parent.to_short_code(),
+            "child_card_uid": self.card_id_child.to_short_code(),
+        }
 
     def notification_data(self) -> dict[str, Any]:
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["relation_type_id", "card_id_parent", "card_id_child"]
+        return ["relationship_type_id", "card_id_parent", "card_id_child"]

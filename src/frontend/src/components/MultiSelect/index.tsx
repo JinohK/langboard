@@ -7,6 +7,7 @@ import { Badge, Box, Command, Flex, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useFloating, autoUpdate, offset, shift, limitShift, hide, flip, size } from "@floating-ui/react-dom";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { createShortUUID } from "@/core/utils/StringUtils";
 
 export interface IMultiSelectItem {
     label: string;
@@ -24,26 +25,41 @@ interface IBaseMultiSelectProps {
     createBadgeWrapper?: (badge: JSX.Element, value: string) => JSX.Element | null;
     canCreateNew?: bool;
     validateCreatedNewValue?: (value: string) => bool;
-    commandItemForNew?: (values: string[]) => string;
+    createNewCommandItemLabel?: ((values: string[]) => string) | ((value: string) => { label: string; value: string }[]);
     multipleSplitter?: string;
+    isNewCommandItemMultiple?: bool;
     disabled?: bool;
 }
 
-interface IAllowingCreateNewMultiSelectProps extends IBaseMultiSelectProps {
+interface IAllowedCreateNewMultiSelectProps extends IBaseMultiSelectProps {
     canCreateNew: true;
     validateCreatedNewValue: (value: string) => bool;
-    commandItemForNew?: (values: string[]) => string;
+    createNewCommandItemLabel?: ((values: string[]) => string) | ((value: string) => { label: string; value: string }[]);
     multipleSplitter?: string;
+    isNewCommandItemMultiple?: bool;
+}
+
+interface IAllowedCreateNewWithMultipleCommandItemMultiSelectProps extends IAllowedCreateNewMultiSelectProps {
+    createNewCommandItemLabel: (value: string) => { label: string; value: string }[];
+    isNewCommandItemMultiple: true;
+}
+
+export interface IAllowedCreateNewWithSingleCommandItemMultiSelectProps extends IAllowedCreateNewMultiSelectProps {
+    createNewCommandItemLabel: (values: string[]) => string;
+    isNewCommandItemMultiple?: false;
 }
 
 interface IDefaultMultiSelectProps extends IBaseMultiSelectProps {
     canCreateNew?: false;
     validateCreatedNewValue?: never;
-    commandItemForNew?: never;
+    createNewCommandItemLabel?: never;
     multipleSplitter?: never;
 }
 
-export type TMultiSelectProps = IAllowingCreateNewMultiSelectProps | IDefaultMultiSelectProps;
+export type TMultiSelectProps =
+    | IAllowedCreateNewWithMultipleCommandItemMultiSelectProps
+    | IAllowedCreateNewWithSingleCommandItemMultiSelectProps
+    | IDefaultMultiSelectProps;
 
 const MultiSelect = React.memo(
     ({
@@ -57,57 +73,67 @@ const MultiSelect = React.memo(
         createBadgeWrapper,
         canCreateNew,
         validateCreatedNewValue,
-        commandItemForNew,
+        createNewCommandItemLabel,
         multipleSplitter = ",",
+        isNewCommandItemMultiple,
         disabled,
     }: TMultiSelectProps) => {
         const [wrapper, setWrapper] = React.useState<HTMLDivElement | null>(null);
         const inputRef = React.useRef<HTMLInputElement>(null);
         const [open, setOpen] = React.useState(false);
         const [selected, setSelected] = React.useState(selectedValue ?? []);
-        const setSelectedWithFireEvent = (action: React.SetStateAction<string[]>) => {
-            setSelected((prev) => {
-                const newSelected = TypeUtils.isFunction(action) ? action(prev) : action;
-                if (onValueChange) {
-                    setTimeout(() => {
-                        setInputValue("");
-                        onValueChange(newSelected);
-                    }, 0);
-                }
-                return newSelected;
-            });
-        };
+        const setSelectedWithFireEvent = React.useCallback(
+            (action: React.SetStateAction<string[]>) => {
+                setSelected((prev) => {
+                    const newSelected = TypeUtils.isFunction(action) ? action(prev) : action;
+                    if (onValueChange) {
+                        setTimeout(() => {
+                            setInputValue("");
+                            onValueChange(newSelected);
+                        }, 0);
+                    }
+                    return newSelected;
+                });
+            },
+            [setSelected, onValueChange]
+        );
         const selectables = React.useMemo(
             () => selections.filter((selection) => !selected.includes(selection.value)),
             [selections, selectedValue, selected]
         );
         const [inputValue, setInputValue] = React.useState("");
-        const handleUnselect = React.useCallback((item: string) => {
-            setSelectedWithFireEvent((prev) => prev.filter((selected) => selected !== item));
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 0);
-        }, []);
-        const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-            const input = inputRef.current;
-            if (!input) {
-                return;
-            }
-
-            if (e.key === "Delete" || e.key === "Backspace") {
-                if (input.value === "") {
-                    setSelectedWithFireEvent((prev) => {
-                        const newSelected = [...prev];
-                        newSelected.pop();
-                        return newSelected;
-                    });
+        const handleUnselect = React.useCallback(
+            (item: string) => {
+                setSelectedWithFireEvent((prev) => prev.filter((selected) => selected !== item));
+                setTimeout(() => {
+                    inputRef.current?.focus();
+                }, 0);
+            },
+            [setSelectedWithFireEvent]
+        );
+        const handleKeyDown = React.useCallback(
+            (e: React.KeyboardEvent<HTMLDivElement>) => {
+                const input = inputRef.current;
+                if (!input) {
+                    return;
                 }
-            }
 
-            if (e.key === "Escape") {
-                input.blur();
-            }
-        }, []);
+                if (e.key === "Delete" || e.key === "Backspace") {
+                    if (input.value === "") {
+                        setSelectedWithFireEvent((prev) => {
+                            const newSelected = [...prev];
+                            newSelected.pop();
+                            return newSelected;
+                        });
+                    }
+                }
+
+                if (e.key === "Escape") {
+                    input.blur();
+                }
+            },
+            [setSelectedWithFireEvent]
+        );
         const handleChangeInputValue = React.useCallback(
             (value: string) => {
                 if (!canCreateNew || Math.abs(value.length - inputValue.length) === 1) {
@@ -135,9 +161,9 @@ const MultiSelect = React.memo(
                     setSelectedWithFireEvent((prev) => [...prev, ...valuesCanBeAdded]);
                 }
             },
-            [selected, inputValue]
+            [selected, inputValue, setSelectedWithFireEvent]
         );
-        const parseMultipleValues = React.useCallback(() => {
+        const parsedMultipleValues = React.useMemo(() => {
             if (!canCreateNew) {
                 return [];
             }
@@ -149,7 +175,7 @@ const MultiSelect = React.memo(
         }, [inputValue]);
         const hasSearchedValue = React.useCallback(
             (target: IMultiSelectItem) => {
-                const values = canCreateNew ? parseMultipleValues() : [inputValue];
+                const values = canCreateNew ? parsedMultipleValues : [inputValue];
                 return values.some((value) => target.value.includes(value) || target.label.includes(value));
             },
             [inputValue]
@@ -210,7 +236,8 @@ const MultiSelect = React.memo(
         };
 
         const isDisabled = (!canCreateNew && !selectables.length) || !!disabled;
-        const isCreatable = canCreateNew && !!inputValue && inputValue.split(multipleSplitter).some((value) => validateCreatedNewValue(value.trim()));
+        const isCreatable =
+            !!canCreateNew && !!inputValue && inputValue.split(multipleSplitter).some((value) => validateCreatedNewValue(value.trim()));
 
         return (
             <Command.Root onKeyDown={handleKeyDown} className={cn("overflow-visible bg-transparent", className)}>
@@ -302,54 +329,19 @@ const MultiSelect = React.memo(
                         ref={refs.setFloating}
                     >
                         {open && (selectables.length > 0 || isCreatable) ? (
-                            <Box w="full" className="outline-none animate-in">
-                                <Command.Group className="h-full overflow-auto" forceMount>
-                                    {isCreatable && (
-                                        <Command.Item
-                                            onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }}
-                                            onSelect={() => {
-                                                setInputValue("");
-                                                setSelectedWithFireEvent((prev) => [
-                                                    ...prev,
-                                                    ...parseMultipleValues().filter((value) => !selected.includes(value)),
-                                                ]);
-                                            }}
-                                            disabled={disabled}
-                                            className="cursor-pointer"
-                                        >
-                                            {commandItemForNew ? commandItemForNew(parseMultipleValues()) : inputValue}
-                                        </Command.Item>
-                                    )}
-                                    {selectables.map((selectable) => {
-                                        if (inputValue.length > 0) {
-                                            if (!hasSearchedValue(selectable)) {
-                                                return null;
-                                            }
-                                        }
-
-                                        return (
-                                            <Command.Item
-                                                key={selectable.value}
-                                                onMouseDown={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                }}
-                                                onSelect={() => {
-                                                    setInputValue("");
-                                                    setSelectedWithFireEvent((prev) => [...prev, selectable.value]);
-                                                }}
-                                                disabled={disabled}
-                                                className={"cursor-pointer"}
-                                            >
-                                                {selectable.label}
-                                            </Command.Item>
-                                        );
-                                    })}
-                                </Command.Group>
-                            </Box>
+                            <MultiSelectItemList
+                                isCreatable={isCreatable}
+                                selectables={selectables}
+                                selected={selected}
+                                inputValue={inputValue}
+                                setInputValue={setInputValue}
+                                hasSearchedValue={hasSearchedValue}
+                                createNewCommandItemLabel={createNewCommandItemLabel as never}
+                                parsedMultipleValues={parsedMultipleValues}
+                                isNewCommandItemMultiple={isNewCommandItemMultiple as never}
+                                setSelectedWithFireEvent={setSelectedWithFireEvent}
+                                disabled={isDisabled}
+                            />
                         ) : null}
                     </Command.List>
                 </Box>
@@ -358,5 +350,125 @@ const MultiSelect = React.memo(
     }
 );
 MultiSelect.displayName = "MultiSelect";
+
+interface IBaseMultiSelectItemListProps {
+    isCreatable: bool;
+    selectables: IMultiSelectItem[];
+    selected: string[];
+    inputValue: string;
+    setInputValue: React.Dispatch<React.SetStateAction<string>>;
+    createNewCommandItemLabel?: ((values: string[]) => string) | ((value: string) => { label: string; value: string }[]);
+    hasSearchedValue: (target: IMultiSelectItem) => bool;
+    parsedMultipleValues: string[];
+    isNewCommandItemMultiple?: bool;
+    setSelectedWithFireEvent: (action: React.SetStateAction<string[]>) => void;
+    disabled?: bool;
+}
+
+interface IMultipleCommandItemMultiSelectItemListProps extends IBaseMultiSelectItemListProps {
+    isNewCommandItemMultiple: true;
+    createNewCommandItemLabel: (value: string) => { label: string; value: string }[];
+}
+
+interface IDefaultMultiSelectItemListProps extends IBaseMultiSelectItemListProps {
+    isNewCommandItemMultiple?: false;
+    createNewCommandItemLabel?: (values: string[]) => string;
+}
+
+export type TMultiSelectItemListProps = IMultipleCommandItemMultiSelectItemListProps | IDefaultMultiSelectItemListProps;
+
+const MultiSelectItemList = React.memo(
+    ({
+        isCreatable,
+        selectables,
+        selected,
+        inputValue,
+        setInputValue,
+        hasSearchedValue,
+        createNewCommandItemLabel,
+        parsedMultipleValues,
+        isNewCommandItemMultiple,
+        setSelectedWithFireEvent,
+        disabled,
+    }: TMultiSelectItemListProps) => {
+        const newItems = React.useMemo(() => {
+            if (!isCreatable) {
+                return [];
+            }
+
+            if (!isNewCommandItemMultiple) {
+                return [
+                    {
+                        label: createNewCommandItemLabel ? createNewCommandItemLabel(parsedMultipleValues) : parsedMultipleValues.join(", "),
+                        value: parsedMultipleValues,
+                    },
+                ];
+            }
+
+            return parsedMultipleValues
+                .map((value) =>
+                    createNewCommandItemLabel
+                        ? createNewCommandItemLabel(value)
+                        : [
+                              {
+                                  label: value,
+                                  value,
+                              },
+                          ]
+                )
+                .flat();
+        }, [parsedMultipleValues]);
+
+        const onMouseDown = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+
+        const onSelect = React.useCallback(
+            (values: string[]) => {
+                setInputValue("");
+                setSelectedWithFireEvent((prev) => [...prev, ...values.filter((value) => !selected.includes(value))]);
+            },
+            [setSelectedWithFireEvent]
+        );
+
+        return (
+            <Box w="full" className="outline-none animate-in">
+                <Command.Group className="h-full overflow-auto" forceMount>
+                    {newItems.map((newItem) => (
+                        <Command.Item
+                            key={createShortUUID()}
+                            onMouseDown={onMouseDown}
+                            onSelect={() => onSelect(TypeUtils.isArray(newItem.value) ? newItem.value : [newItem.value])}
+                            disabled={disabled}
+                            className="cursor-pointer"
+                        >
+                            {newItem.label}
+                        </Command.Item>
+                    ))}
+                    {selectables.map((selectable) => {
+                        if (inputValue.length > 0) {
+                            if (!hasSearchedValue(selectable)) {
+                                return null;
+                            }
+                        }
+
+                        return (
+                            <Command.Item
+                                key={selectable.value}
+                                onMouseDown={onMouseDown}
+                                onSelect={() => onSelect([selectable.value])}
+                                disabled={disabled}
+                                className="cursor-pointer"
+                            >
+                                {selectable.label}
+                            </Command.Item>
+                        );
+                    })}
+                </Command.Group>
+            </Box>
+        );
+    }
+);
 
 export default MultiSelect;

@@ -9,7 +9,7 @@ from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail, UserNotification
 from ...models.UserNotification import NotificationType
 from ...publishers import ProjectInvitationPublisher
-from ...tasks import ProjectActivityTask, UserActivityTask
+from ...tasks.activities import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService
 from .NotificationService import NotificationService
 from .RoleService import RoleService
@@ -26,6 +26,7 @@ class InvitationRelatedResult:
         self.emails_should_invite: list[str] = []
         self.emails_should_remove: dict[str, tuple[ProjectInvitation, User | None]] = {}
         self.users_by_email: dict[str, User] = {}
+        self.user_ids_should_delete: list[SnowflakeID] = []
         self.assigned_ids_should_delete: list[SnowflakeID] = []
 
 
@@ -131,6 +132,7 @@ class ProjectInvitationService(BaseService):
                 continue
 
             if assigned_user.id not in invitation_result.already_assigned_ids:
+                invitation_result.user_ids_should_delete.append(assigned_user.user_id)
                 invitation_result.assigned_ids_should_delete.append(assigned_user.id)
 
         return invitation_result

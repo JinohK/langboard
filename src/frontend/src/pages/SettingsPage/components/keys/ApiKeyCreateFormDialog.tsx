@@ -8,6 +8,7 @@ import { ESettingType } from "@/core/models/AppSettingModel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
+import { copyToClipboard, selectAllText } from "@/core/utils/ComponentUtils";
 
 export interface IApiKeyCreateFormDialogProps {
     opened: bool;
@@ -87,17 +88,8 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
             return;
         }
 
-        e.currentTarget.selectionStart = 0;
-        e.currentTarget.selectionEnd = 0;
-        e.currentTarget.selectionEnd = revealedKey.length;
-
-        if (!navigator?.clipboard) {
-            document.execCommand("copy");
-            return;
-        } else {
-            navigator.clipboard.writeText(revealedKey);
-        }
-        navigator.clipboard.writeText(revealedKey);
+        selectAllText(e.currentTarget);
+        copyToClipboard(revealedKey);
         setIsCopied(true);
     };
 

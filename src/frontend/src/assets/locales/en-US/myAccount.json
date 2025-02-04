@@ -1,0 +1,57 @@
+{
+  "My account": "My account",
+  "Sign out": "Sign out",
+  "Profile": "Profile",
+  "Emails": "Emails",
+  "Add new email": "Add new email",
+  "Primary email": "Primary email",
+  "Primary": "Primary",
+  "Sub": "Sub",
+  "Unverified": "Unverified",
+  "Search email...": "Search email...",
+  "Resend": "Resend",
+  "Groups": "Groups",
+  "Add an email...": "Add an email...",
+  "Add '{emails}'": "Add '{{emails, list}}'",
+  "Add new group": "Add new group",
+  "Preferences": "Preferences",
+  "Language": "Language",
+  "successes": {
+    "Profile updated successfully.": "Profile updated successfully.",
+    "Please check your inbox to verify your email.": "Please check your inbox to verify your email.",
+    "The email verified successfully.": "The email verified successfully.",
+    "Email deleted successfully.": "Email deleted successfully.",
+    "Primary email updated successfully.": "Primary email updated successfully.",
+    "Password updated successfully.": "Password updated successfully.",
+    "User group created successfully.": "User group created successfully.",
+    "User group name changed successfully.": "User group name changed successfully.",
+    "User group emails updated successfully.": "User group emails updated successfully.",
+    "User group deleted successfully.": "User group deleted successfully.",
+    "Preferred language updated successfully.": "Preferred language updated successfully."
+  },
+  "errors": {
+    "Cannot delete primary email.": "Cannot delete primary email..",
+    "The email is not verified yet.": "The email is not verified yet.",
+    "You must sign in before verifying your email.": "You must sign in before verifying your email.",
+    "The email is already verified.": "The email is already verified.",
+    "The email is already primary.": "The email is already primary.",
+    "The email is probably deleted.": "The email is probably deleted.",
+    "missing": {
+      "firstname": "Enter your first name.",
+      "lastname": "Enter your last name.",
+      "new_email": "Enter a new email address.",
+      "current_password": "Enter your current password.",
+      "new_password": "Enter a new password.",
+      "password-confirm": "Enter a new password confirmation."
+    },
+    "invalid": {
+      "new_email": "Enter a valid email address.",
+      "current_password": "Wrong current password. Try again.",
+      "password-confirm": "Wrong password confirmation. Try again."
+    },
+    "exists": {
+      "new_email": "Email already exists. Try another one."
+    },
+    "Invalid language.": "Invalid language."
+  }
+}

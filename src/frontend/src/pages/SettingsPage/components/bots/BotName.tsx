@@ -62,14 +62,14 @@ const BotName = memo(({ bot }: IBotNameProps) => {
     return (
         <Box>
             {!isEditing ? (
-                <Box cursor="text" onClick={() => changeMode("edit")}>
+                <Box cursor="text" textSize="lg" weight="semibold" onClick={() => changeMode("edit")}>
                     {name}
                 </Box>
             ) : (
                 <Input
                     ref={valueRef}
                     className={cn(
-                        "h-6 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-base scrollbar-hide",
+                        "h-7 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-lg font-semibold scrollbar-hide",
                         "focus-visible:border-b-primary focus-visible:ring-0"
                     )}
                     defaultValue={name}

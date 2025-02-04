@@ -119,8 +119,14 @@ MultiSelectAssigneesPopover.displayName = "MultiSelectAssigneesPopover";
 
 export interface IBaseMultiSelectAssigneesFormProps {
     multiSelectProps: Pick<
-        TMultiSelectProps,
-        "placeholder" | "className" | "badgeClassName" | "inputClassName" | "validateCreatedNewValue" | "commandItemForNew" | "multipleSplitter"
+        TMultiSelectProps & { isNewCommandItemMultiple?: false },
+        | "placeholder"
+        | "className"
+        | "badgeClassName"
+        | "inputClassName"
+        | "validateCreatedNewValue"
+        | "createNewCommandItemLabel"
+        | "multipleSplitter"
     >;
     isValidating: bool;
     canAssignNonMembers?: bool;
@@ -193,41 +199,48 @@ export const MultiSelectAssigneesForm = memo(
                             newItems.push(user);
                         }
                     }
-                    onValueChange?.(newItems);
+                    setTimeout(() => {
+                        onValueChange?.(newItems);
+                    }, 0);
                     return newItems;
                 });
             },
             [groups]
         );
-        const onSelected = (values: string[]) => {
-            const filteredValues = values.filter((value) => !!findItemByValue(value));
-            let isChanged = filteredValues.length !== selectedItems.length;
-            if (!isChanged) {
-                for (let i = 0; i < filteredValues.length; ++i) {
-                    const item = findItemByValue(filteredValues[i]);
-                    if (!item || !selectedItems.includes(item)) {
-                        isChanged = true;
-                        break;
+        const onSelected = useCallback(
+            (values: string[]) => {
+                const filteredValues = values.filter((value) => !!findItemByValue(value));
+                let isChanged = filteredValues.length !== selectedItems.length;
+                if (!isChanged) {
+                    for (let i = 0; i < filteredValues.length; ++i) {
+                        const item = findItemByValue(filteredValues[i]);
+                        if (!item || !selectedItems.includes(item)) {
+                            isChanged = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!isChanged) {
-                return;
-            }
-
-            setSelectedItems(() => {
-                const newItems = [];
-                for (let i = 0; i < filteredValues.length; ++i) {
-                    const item = findItemByValue(filteredValues[i]);
-                    if (item) {
-                        newItems.push(item);
-                    }
+                if (!isChanged) {
+                    return;
                 }
-                onValueChange?.(newItems);
-                return newItems;
-            });
-        };
+
+                setSelectedItems(() => {
+                    const newItems: User.TModel[] = [];
+                    for (let i = 0; i < filteredValues.length; ++i) {
+                        const item = findItemByValue(filteredValues[i]);
+                        if (item) {
+                            newItems.push(item);
+                        }
+                    }
+                    setTimeout(() => {
+                        onValueChange?.(newItems);
+                    }, 0);
+                    return newItems;
+                });
+            },
+            [selectedItems]
+        );
 
         useEffect(() => {
             setSelectedItems(initialSelectedItems);
@@ -265,7 +278,7 @@ export const MultiSelectAssigneesForm = memo(
                     onValueChange={onSelected}
                     canCreateNew={canAssignNonMembers as false}
                     validateCreatedNewValue={((value: string) => EMAIL_REGEX.test(value)) as never}
-                    commandItemForNew={((values: string[]) => t("common.Assign '{emails}'", { emails: values })) as never}
+                    createNewCommandItemLabel={((values: string[]) => t("common.Assign '{emails}'", { emails: values })) as never}
                     {...(multiSelectProps as Record<string, unknown>)}
                 />
                 {groups && (

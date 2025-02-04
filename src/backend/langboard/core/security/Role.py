@@ -13,12 +13,16 @@ class Role:
 
     async def is_authorized(
         self,
-        user_id: int,
+        user_or_bot_id: int,
         path_params: dict[str, Any],
         actions: list[str],
         role_finder: _RoleFinderFunc | None,
+        is_bot: bool = False,
     ) -> bool:
-        query = SqlBuilder.select.table(self._model_class).where(self._model_class.user_id == user_id)
+        column_name = "bot_id" if is_bot else "user_id"
+        query = SqlBuilder.select.table(self._model_class).where(
+            self._model_class.column(column_name) == user_or_bot_id
+        )
 
         if not role_finder:
             for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore

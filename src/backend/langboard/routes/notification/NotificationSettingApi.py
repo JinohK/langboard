@@ -1,4 +1,5 @@
 from fastapi import status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -15,10 +16,15 @@ from .NotificationSettingForm import NotificationSettingForm, NotificationSettin
 @AuthFilter.add
 async def toggle_all_notification_subscription(
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    notification_types = await service.user_notification_setting.toggle_all(user, form.channel, form.is_unsubscribed)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    notification_types = await service.user_notification_setting.toggle_all(
+        user_or_bot, form.channel, form.is_unsubscribed
+    )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
         status_code=status.HTTP_200_OK,
@@ -29,14 +35,17 @@ async def toggle_all_notification_subscription(
 @AuthFilter.add
 async def toggle_all_type_notification_subscription(
     form: NotificationSettingTypeForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     if form.notification_type not in NotificationType and form.notification_type not in NotificationType._member_names_:
         return JsonResponse(content={"notification_types": []}, status_code=status.HTTP_200_OK)
 
     notification_types = await service.user_notification_setting.toggle_type(
-        user, form.channel, form.notification_type, form.is_unsubscribed
+        user_or_bot, form.channel, form.notification_type, form.is_unsubscribed
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
@@ -48,11 +57,14 @@ async def toggle_all_type_notification_subscription(
 @AuthFilter.add
 async def toggle_all_project_notification_subscription(
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     notification_types = await service.user_notification_setting.toggle_project(
-        user, form.channel, form.is_unsubscribed
+        user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
@@ -64,10 +76,15 @@ async def toggle_all_project_notification_subscription(
 @AuthFilter.add
 async def toggle_all_column_notification_subscription(
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    notification_types = await service.user_notification_setting.toggle_column(user, form.channel, form.is_unsubscribed)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    notification_types = await service.user_notification_setting.toggle_column(
+        user_or_bot, form.channel, form.is_unsubscribed
+    )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
         status_code=status.HTTP_200_OK,
@@ -78,10 +95,15 @@ async def toggle_all_column_notification_subscription(
 @AuthFilter.add
 async def toggle_all_card_notification_subscription(
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    notification_types = await service.user_notification_setting.toggle_card(user, form.channel, form.is_unsubscribed)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    notification_types = await service.user_notification_setting.toggle_card(
+        user_or_bot, form.channel, form.is_unsubscribed
+    )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
         status_code=status.HTTP_200_OK,
@@ -92,10 +114,15 @@ async def toggle_all_card_notification_subscription(
 @AuthFilter.add
 async def toggle_all_wiki_notification_subscription(
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    notification_types = await service.user_notification_setting.toggle_wiki(user, form.channel, form.is_unsubscribed)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    notification_types = await service.user_notification_setting.toggle_wiki(
+        user_or_bot, form.channel, form.is_unsubscribed
+    )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
         status_code=status.HTTP_200_OK,
@@ -108,11 +135,14 @@ async def toggle_all_wiki_notification_subscription(
 async def toggle_project_notification_subscription(
     project_uid: str,
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     notification_types = await service.user_notification_setting.toggle_project(
-        user, form.channel, form.is_unsubscribed, project_uid
+        user_or_bot, form.channel, form.is_unsubscribed, project_uid
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
@@ -127,11 +157,14 @@ async def toggle_column_notification_subscription(
     project_uid: str,
     column_uid: str,
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     notification_types = await service.user_notification_setting.toggle_column(
-        user, form.channel, form.is_unsubscribed, project_uid, column_uid
+        user_or_bot, form.channel, form.is_unsubscribed, project_uid, column_uid
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
@@ -146,11 +179,14 @@ async def toggle_card_notification_subscription(
     project_uid: str,
     card_uid: str,
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     notification_types = await service.user_notification_setting.toggle_card(
-        user, form.channel, form.is_unsubscribed, project_uid, card_uid
+        user_or_bot, form.channel, form.is_unsubscribed, project_uid, card_uid
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},
@@ -165,11 +201,14 @@ async def toggle_wiki_notification_subscription(
     project_uid: str,
     wiki_uid: str,
     form: NotificationSettingForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     notification_types = await service.user_notification_setting.toggle_wiki(
-        user, form.channel, form.is_unsubscribed, project_uid, wiki_uid
+        user_or_bot, form.channel, form.is_unsubscribed, project_uid, wiki_uid
     )
     return JsonResponse(
         content={"notification_types": [notification_type.value for notification_type in notification_types]},

@@ -6,23 +6,28 @@ import { BotModel } from "@/core/models";
 export interface ICreateBotForm {
     bot_name: string;
     bot_uname: string;
+    api_url: string;
+    api_auth_type: BotModel.EAPIAuthType;
+    api_key: string;
     avatar?: File;
 }
 
-const useCreateBot = (options?: TMutationOptions<ICreateBotForm>) => {
+export interface ICreateBotResponse {
+    revealed_app_api_token: string;
+}
+
+const useCreateBot = (options?: TMutationOptions<ICreateBotForm, ICreateBotResponse>) => {
     const { mutate } = useQueryMutation();
 
-    const createBot = async (params: ICreateBotForm) => {
+    const createBot = async (form: ICreateBotForm) => {
         const formData = new FormData();
-        Object.entries(params).forEach(([key, value]) => {
+        Object.entries(form).forEach(([key, value]) => {
             if (!value) {
                 return;
             }
 
             if (key === "avatar") {
-                if (value) {
-                    formData.append(key, value as unknown as File, (value as unknown as File).name);
-                }
+                formData.append(key, value as unknown as File, (value as unknown as File).name);
             } else {
                 formData.append(key, value);
             }
@@ -32,7 +37,9 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm>) => {
 
         BotModel.Model.fromObject(res.data.bot, true);
 
-        return res.data;
+        return {
+            revealed_app_api_token: res.data.revealed_app_api_token,
+        };
     };
 
     const result = mutate(["create-bot"], createBot, {

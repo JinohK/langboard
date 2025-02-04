@@ -28,13 +28,13 @@ const useUserProjectRolesUpdatedHandlers = ({ callback, currentUser }: IUseUserP
                         memberRoles[currentUser.uid] = data.roles;
                         project.member_roles = memberRoles;
                     }
-                    project.current_user_role_actions = data.roles;
+                    project.current_auth_role_actions = data.roles;
                 }
 
-                const cards = ProjectCard.Model.getModels((model) => model.project_uid === data.project_uid && !!model.current_user_role_actions);
+                const cards = ProjectCard.Model.getModels((model) => model.project_uid === data.project_uid && !!model.current_auth_role_actions);
                 for (let i = 0; i < cards.length; ++i) {
                     const card = cards[i];
-                    card.current_user_role_actions = data.roles;
+                    card.current_auth_role_actions = data.roles;
                 }
 
                 return {};

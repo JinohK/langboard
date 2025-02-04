@@ -8,6 +8,7 @@ import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { isValidURL } from "@/core/utils/StringUtils";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +38,7 @@ function LangflowPage() {
         const newErrors: Record<string, string> = {};
         let focusableInput: HTMLInputElement | null = null;
 
-        if (!newUrlValue.startsWith("http://") && !newUrlValue.startsWith("https://")) {
+        if (!isValidURL(newUrlValue)) {
             newErrors.url = t("settings.errors.invalid.langflow_url");
             focusableInput = urlInputRef.current;
         }

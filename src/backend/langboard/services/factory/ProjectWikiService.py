@@ -5,7 +5,7 @@ from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedBot, ProjectWikiAssignedUser, ProjectWikiAttachment
 from ...publishers import ProjectWikiPublisher
-from ...tasks import ProjectWikiTask
+from ...tasks.activities import ProjectWikiTask
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
 from .Types import TProjectParam, TUserOrBot, TWikiParam
@@ -371,7 +371,7 @@ class ProjectWikiService(BaseService):
 
         return wiki_attachment
 
-    async def delete(self, user: User, project: TProjectParam, wiki: TWikiParam) -> None:
+    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam) -> None:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
             return None
@@ -383,7 +383,7 @@ class ProjectWikiService(BaseService):
 
         ProjectWikiPublisher.deleted(project, wiki)
 
-        ProjectWikiTask.project_wiki_deleted(user, project, wiki)
+        ProjectWikiTask.project_wiki_deleted(user_or_bot, project, wiki)
 
         return None
 

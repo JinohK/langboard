@@ -1,4 +1,5 @@
 from fastapi import status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -21,15 +22,15 @@ from .scopes import (
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def get_project_details(
-    project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user, project_uid, with_member_roles=True)
+    result = await service.project.get_details(user_or_bot, project_uid, with_roles=True)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
-    bots = await service.app_setting.get_bots(as_api=True)
+    bots = await service.bot.get_list(as_api=True)
 
     return JsonResponse(content={"project": response, "bots": bots}, status_code=status.HTTP_200_OK)
 
@@ -38,9 +39,12 @@ async def get_project_details(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def change_project_details(
-    project_uid: str, form: UpdateProjectDetailsForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    form: UpdateProjectDetailsForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project.update(user, project_uid, form.model_dump())
+    result = await service.project.update(user_or_bot, project_uid, form.model_dump())
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -54,26 +58,55 @@ async def change_project_details(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def update_project_assigned_bots(
-    project_uid: str, form: AssignBotsForm, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    form: AssignBotsForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project.update_assigned_bots(user, project_uid, form.assigned_bots)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.update_assigned_bots(user_or_bot, project_uid, form.assigned_bots)
+    if result is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+
+
+@AppRouter.api.put("/board/{project_uid}/settings/roles/bot/{bot_uid}")
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def update_project_bot_roles(
+    project_uid: str,
+    bot_uid: str,
+    form: UpdateMemberRolesForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.update_bot_roles(project_uid, bot_uid, form.roles)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/settings/user-roles/{user_uid}")
+@AppRouter.api.put("/board/{project_uid}/settings/roles/user/{user_uid}")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def update_project_user_roles(
     project_uid: str,
     user_uid: str,
     form: UpdateMemberRolesForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project.update_user_roles(user, project_uid, user_uid, form.roles)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.update_user_roles(project_uid, user_uid, form.roles)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -86,10 +119,10 @@ async def update_project_user_roles(
 async def create_label_details(
     project_uid: str,
     form: CreateProjectLabelForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_label.create(user, project_uid, form.name, form.color, form.description)
+    result = await service.project_label.create(user_or_bot, project_uid, form.name, form.color, form.description)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_label = result
@@ -104,10 +137,10 @@ async def change_label_details(
     project_uid: str,
     label_uid: str,
     form: UpdateProjectLabelDetailsForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_label.update(user, project_uid, label_uid, form.model_dump())
+    result = await service.project_label.update(user_or_bot, project_uid, label_uid, form.model_dump())
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -132,10 +165,13 @@ async def change_label_order(
     project_uid: str,
     label_uid: str,
     form: ChangeColumnOrderForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_label.change_order(user, project_uid, label_uid, form.order)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_label.change_order(user_or_bot, project_uid, label_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -146,9 +182,9 @@ async def change_label_order(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def delete_label(
-    project_uid: str, label_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, label_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project_label.delete(user, project_uid, label_uid)
+    result = await service.project_label.delete(user_or_bot, project_uid, label_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -159,16 +195,19 @@ async def delete_label(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def delete_project(
-    project_uid: str, user: User = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if project.owner_id != user.id and not user.is_admin:
+    if project.owner_id != user_or_bot.id and not user_or_bot.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.project.delete(user, project_uid)
+    result = await service.project.delete(user_or_bot, project_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

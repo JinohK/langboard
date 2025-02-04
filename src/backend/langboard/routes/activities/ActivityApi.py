@@ -1,4 +1,5 @@
 from fastapi import Depends, status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -13,13 +14,20 @@ from .ActivityForm import ActivityPagination
 @AppRouter.api.get("/activity/user")
 @AuthFilter.add
 async def get_user_activities(
-    pagination: ActivityPagination = Depends(), user: User = Auth.scope("api"), service: Service = Service.scope()
+    pagination: ActivityPagination = Depends(),
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     if pagination.only_count:
-        result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time, only_count=True)
+        result = await service.activity.get_list_by_user(
+            user_or_bot, pagination, pagination.refer_time, only_count=True
+        )
         return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
 
-    result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time)
+    result = await service.activity.get_list_by_user(user_or_bot, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
     activities, count_new_records, _ = result

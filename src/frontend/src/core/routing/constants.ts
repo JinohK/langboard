@@ -63,6 +63,7 @@ export const ROUTES = {
         CREATE_API_KEY: "/settings/api-keys/create",
         BOTS: "/settings/bots",
         CREATE_BOT: "/settings/bots/create",
+        BOT_DETAILS: (uid: string) => `/settings/bots/${uid}`,
         LANGFLOW: "/settings/langflow",
         GLOBAL_RELATIONSHIPS: "/settings/global-relationships",
         CREATE_GLOBAL_RELATIONSHIP: "/settings/global-relationships/create",

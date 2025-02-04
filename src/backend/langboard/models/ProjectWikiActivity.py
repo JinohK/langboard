@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField
+from ..core.db import EnumLikeType, SnowflakeID, SnowflakeIDField
 from .BaseActivityModel import BaseActivityModel
 from .Project import Project
 from .ProjectWiki import ProjectWiki
@@ -18,7 +18,7 @@ class ProjectWikiActivityType(Enum):
 class ProjectWikiActivity(BaseActivityModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), index=True)
     project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), index=True)
-    activity_type: ProjectWikiActivityType = Field(nullable=False)
+    activity_type: ProjectWikiActivityType = Field(nullable=False, sa_type=EnumLikeType(ProjectWikiActivityType))
 
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()

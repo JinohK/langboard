@@ -1,3 +1,4 @@
+from typing import Any
 from httpx import post
 from ..core.broker import Broker
 from ..core.db import DbSession, SqlBuilder
@@ -6,7 +7,11 @@ from .models import WebhookModel
 
 
 @Broker.wrap_async_task_decorator
-async def run_webhook(model: WebhookModel):
+async def webhook_task(model: WebhookModel):
+    await run_webhook(model.event, model.data)
+
+
+async def run_webhook(event: str, data: dict[str, Any]):
     urls = await _get_webhook_url()
     if not urls:
         return
@@ -15,7 +20,7 @@ async def run_webhook(model: WebhookModel):
         try:
             res = post(
                 url,
-                json=model.model_dump(),
+                json={"event": event, "data": data},
             )
             if res.status_code != 200:
                 Broker.logger.error("Failed to request webhook: %s", res.text)

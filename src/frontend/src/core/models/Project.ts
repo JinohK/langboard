@@ -30,6 +30,7 @@ import useBoardColumnDeletedHandlers from "@/controllers/socket/board/column/use
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
+import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 
 export enum ERoleAction {
@@ -55,13 +56,14 @@ export interface IStore extends Interface {
     columns: ProjectColumn.Interface[];
     members: User.Interface[];
     bots: BotModel.Interface[];
-    current_user_role_actions: TRoleActions[];
+    current_auth_role_actions: TRoleActions[];
     invited_members: User.Interface[];
     labels: ProjectLabel.Interface[];
     description: string;
     ai_description?: string;
     last_viewed_at: Date;
 
+    bot_roles: Record<string, TRoleActions[]>; // This will be used in board setting.
     member_roles: Record<string, TRoleActions[]>; // This will be used in board setting.
 }
 
@@ -92,6 +94,7 @@ class Project extends BaseModel<IStore> {
                 useBoardDetailsChangedHandlers,
                 useBoardAssignedBotsUpdatedHandlers,
                 useBoardAssignedUsersUpdatedHandlers,
+                useBoardBotRolesUpdatedHandlers,
                 useBoardUserRolesUpdatedHandlers,
                 useBoardLabelCreatedHandlers,
                 useBoardLabelOrderChangedHandlers,
@@ -229,11 +232,11 @@ class Project extends BaseModel<IStore> {
         this.update({ bots: value });
     }
 
-    public get current_user_role_actions() {
-        return this.getValue("current_user_role_actions");
+    public get current_auth_role_actions() {
+        return this.getValue("current_auth_role_actions");
     }
-    public set current_user_role_actions(value: TRoleActions[]) {
-        this.update({ current_user_role_actions: value });
+    public set current_auth_role_actions(value: TRoleActions[]) {
+        this.update({ current_auth_role_actions: value });
     }
 
     public get invited_members(): User.TModel[] {
@@ -262,6 +265,13 @@ class Project extends BaseModel<IStore> {
     }
     public set last_viewed_at(value: string | Date) {
         this.update({ last_viewed_at: value });
+    }
+
+    public get bot_roles() {
+        return this.getValue("bot_roles");
+    }
+    public set bot_roles(value: Record<string, TRoleActions[]>) {
+        this.update({ bot_roles: value });
     }
 
     public get member_roles() {

@@ -109,3 +109,7 @@ class Service(ServiceFactory):
     @property
     def user_notification_setting(self):
         return self._create_or_get_service(factory.UserNotificationSettingService)
+
+    @property
+    def bot(self):
+        return self._create_or_get_service(factory.BotService)

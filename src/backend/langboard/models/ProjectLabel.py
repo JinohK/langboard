@@ -1,5 +1,6 @@
 from typing import Any, ClassVar
 from sqlmodel import Field
+from ..core.ai import Bot
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
 from .Project import Project
 
@@ -19,11 +20,11 @@ class ProjectLabel(BaseSqlModel, table=True):
         {"name": "Fetch", "color": "#1DE9B6", "description": "Tasks that are fetching data."},
     ]
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
     name: str = Field(nullable=False)
     color: str = Field(nullable=False)
     description: str = Field(nullable=False)
     order: int = Field(default=0, nullable=False)
-    is_bot: bool = Field(default=False, nullable=False)
 
     def api_response(self) -> dict[str, Any]:
         return {
@@ -39,4 +40,4 @@ class ProjectLabel(BaseSqlModel, table=True):
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["project_id", "name", "color", "order", "is_bot"]
+        return ["project_id", "bot_id", "name", "color", "order"]

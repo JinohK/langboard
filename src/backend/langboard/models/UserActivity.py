@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField
+from ..core.db import EnumLikeType, SnowflakeID, SnowflakeIDField
 from .BaseActivityModel import BaseActivityModel
 
 
@@ -11,7 +11,7 @@ class UserActivityType(Enum):
 
 
 class UserActivity(BaseActivityModel, table=True):
-    activity_type: UserActivityType | None = Field(default=None, nullable=True)
+    activity_type: UserActivityType | None = Field(default=None, nullable=True, sa_type=EnumLikeType(UserActivityType))
     refer_activity_table: str | None = Field(default=None, nullable=True)
     refer_activity_id: SnowflakeID | None = SnowflakeIDField(nullable=True)
 

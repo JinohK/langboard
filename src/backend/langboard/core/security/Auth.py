@@ -2,7 +2,7 @@ from calendar import timegm
 from datetime import timedelta
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Literal
+from typing import Any, Literal, overload
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.openapi.utils import get_openapi
 from jwt import ExpiredSignatureError, InvalidTokenError
@@ -11,6 +11,7 @@ from jwt import encode as jwt_encode
 from pkg_resources import require
 from starlette.datastructures import Headers
 from ...Constants import JWT_ALGORITHM, JWT_AT_EXPIRATION, JWT_RT_EXPIRATION, JWT_SECRET_KEY, PROJECT_NAME
+from ..ai import Bot
 from ..caching import Cache
 from ..db import DbSession, SnowflakeID, SqlBuilder, User
 from ..filter import AuthFilter
@@ -19,10 +20,15 @@ from ..routing.SocketRequest import SocketRequest
 from ..utils.DateTime import now
 from ..utils.decorators import staticclass
 from ..utils.Encryptor import Encryptor
+from ..utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_range
 
 
 @staticclass
 class Auth:
+    AUTHORIZATION_HEADER = "Authorization"
+    IP_HEADER = "X-Forwarded-For"
+    API_TOKEN_HEADER = "X-Api-Token"
+
     @staticmethod
     def authenticate(user_id: SnowflakeID) -> tuple[str, str]:
         """Authenticates the user and returns the access and refresh tokens.
@@ -57,23 +63,29 @@ class Auth:
         return access_token
 
     @staticmethod
-    def scope(where: Literal["api", "socket"]) -> User:
+    @overload
+    def scope(where: Literal["api"]) -> User | Bot: ...
+    @staticmethod
+    @overload
+    def scope(where: Literal["socket"]) -> User: ...
+    @staticmethod
+    def scope(where: Literal["api", "socket"]) -> User | Bot:
         """Creates a scope for the user to be used in :class:`fastapi.FastAPI` endpoints."""
         if where == "api":
 
-            def get_user(req: Request) -> User | None:  # type: ignore
-                return req.user
+            def get_user_or_bot(req: Request) -> User | Bot | None:  # type: ignore
+                return req.auth
 
         elif where == "socket":
 
-            async def get_user(req: SocketRequest) -> User | None:
+            async def get_user_or_bot(req: SocketRequest) -> User | None:
                 user = await Auth.get_user_by_id(req.from_app["auth_user_id"])
                 return user  # type: ignore
 
         else:
             raise ValueError("Auth.scope must be called with either 'api' or 'socket'")
 
-        return Depends(get_user)
+        return Depends(get_user_or_bot)
 
     @staticmethod
     async def get_user_by_token(token: str) -> User | InvalidTokenError | ExpiredSignatureError | None:
@@ -124,15 +136,47 @@ class Auth:
 
         try:
             async with DbSession.use() as db:
-                result = await db.exec(SqlBuilder.select.table(User).where(User.id == user_id).limit(1))
+                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
             user = result.first()
-
             if not user:
                 return InvalidTokenError("Invalid token")
 
             await Cache.set(cache_key, user, 60 * 5)
 
             return user
+        except Exception:
+            return None
+
+    @staticmethod
+    async def get_bot_by_api_token(api_token: str) -> Bot | None:
+        """Gets the bot from the given API token.
+
+        If the bot is cached, it will return the cached bot.
+
+        Otherwise, it will get the bot from the database.
+
+        :param api_token: The API token to get the bot from.
+
+        :return Bot: The bot if the bot exists.
+        :return None: If the bot does not exist.
+        """
+        cache_key = f"auth-bot-{api_token}"
+        cached_bot = await Cache.get(cache_key, Bot.model_validate)
+        if cached_bot:
+            return cached_bot
+
+        try:
+            async with DbSession.use() as db:
+                result = await db.exec(
+                    SqlBuilder.select.table(Bot).where(Bot.column("app_api_token") == api_token).limit(1)
+                )
+            bot = result.first()
+            if not bot:
+                return None
+
+            await Cache.set(cache_key, bot, 60 * 5)
+
+            return bot
         except Exception:
             return None
 
@@ -160,7 +204,9 @@ class Auth:
         :return 401: If the token is invalid. :class:`fastapi.status.HTTP_401_UNAUTHORIZED`
         :return 422: If the signature has expired. :class:`fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY`
         """
-        authorization = queries_headers.get("Authorization", queries_headers.get("authorization", None))
+        authorization = queries_headers.get(
+            Auth.AUTHORIZATION_HEADER, queries_headers.get(Auth.AUTHORIZATION_HEADER.lower(), None)
+        )
         if not authorization:
             return status.HTTP_401_UNAUTHORIZED
 
@@ -187,6 +233,33 @@ class Auth:
             return status.HTTP_422_UNPROCESSABLE_ENTITY
         else:
             return status.HTTP_401_UNAUTHORIZED
+
+    @staticmethod
+    async def validate_bot(queries_headers: Headers) -> Bot | Literal[403]:
+        ip = queries_headers.get(Auth.IP_HEADER, queries_headers.get(Auth.IP_HEADER.lower(), None))
+        api_token = queries_headers.get(Auth.API_TOKEN_HEADER, queries_headers.get(Auth.API_TOKEN_HEADER.lower(), None))
+        if not ip or not api_token:
+            return status.HTTP_403_FORBIDDEN
+
+        if "," in ip:
+            ip = ip.split(",")[0]
+
+        if not is_valid_ipv4_address_or_range(ip):
+            return status.HTTP_403_FORBIDDEN
+
+        bot = await Auth.get_bot_by_api_token(api_token)
+        if not bot:
+            return status.HTTP_403_FORBIDDEN
+
+        for ip_range in bot.ip_whitelist:
+            if ip_range.endswith(".0/24"):
+                if is_ipv4_in_range(ip, ip_range):
+                    return bot
+            else:
+                if ip == ip_range:
+                    return bot
+
+        return status.HTTP_403_FORBIDDEN
 
     @staticmethod
     def get_openai_schema(app: FastAPI) -> dict[str, Any]:

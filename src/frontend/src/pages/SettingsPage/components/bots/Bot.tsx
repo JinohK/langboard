@@ -1,13 +1,10 @@
-import { Box, Button, Flex, Form, IconComponent, Toast } from "@/components/base";
+import { Avatar, Box, Button, Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteBot from "@/controllers/api/settings/bots/useDeleteBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
-import BotAvatar from "@/pages/SettingsPage/components/bots/BotAvatar";
-import BotName from "@/pages/SettingsPage/components/bots/BotName";
-import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -19,8 +16,14 @@ const Bot = memo(({ bot }: IBotProps) => {
     const [t] = useTranslation();
     const { navigate, isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteBot(bot);
+    const name = bot.useField("name");
+    const uname = bot.useField("bot_uname");
+    const avatar = bot.useField("avatar");
 
-    const deleteBot = () => {
+    const deleteBot = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (isValidating) {
             return;
         }
@@ -58,15 +61,35 @@ const Bot = memo(({ bot }: IBotProps) => {
         });
     };
 
+    const toBotDetails = () => {
+        navigate.current(ROUTES.SETTINGS.BOT_DETAILS(bot.uid));
+    };
+
     return (
-        <Flex items="center" justify="between" border rounded="md" py="2" px="3" gap="4">
+        <Flex
+            items="center"
+            justify="between"
+            border
+            rounded="md"
+            py="2"
+            px="3"
+            gap="4"
+            cursor="pointer"
+            className="transition-all duration-200 hover:bg-accent"
+            onClick={toBotDetails}
+        >
             <Flex items="center" gap="2" w="full">
-                <Form.Root>
-                    <BotAvatar bot={bot} />
-                </Form.Root>
+                <Avatar.Root>
+                    <Avatar.Image src={avatar} />
+                    <Avatar.Fallback>
+                        <IconComponent icon="bot" className="size-2/3" />
+                    </Avatar.Fallback>
+                </Avatar.Root>
                 <Box w="full">
-                    <BotName bot={bot} />
-                    <BotUniqueName bot={bot} />
+                    <Box>{name}</Box>
+                    <Box w="full" textSize="sm">
+                        {uname}
+                    </Box>
                 </Box>
             </Flex>
             <Box>

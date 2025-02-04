@@ -1,13 +1,13 @@
 import { Flex } from "@/components/base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
-import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
-import BoardSettingsRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsRoleList";
+import BoardSettingsBotRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsBotRoleList";
+import BoardSettingsMemberRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsMemberRoleList";
 import { memo, useEffect } from "react";
 
 export function SkeletonSettingsList() {
@@ -28,10 +28,13 @@ const BoardSettingsList = memo(() => {
                 <BoardSettingsBasic />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Bots">
-                <BoardSettingsBots key={createShortUUID()} />
+                <BoardSettingsBots key={`board-settings-bots-${project.uid}`} />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Bot roles">
+                <BoardSettingsBotRoleList key={`board-settings-bot-roles-${project.uid}`} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Member roles">
-                <BoardSettingsRoleList key={createShortUUID()} />
+                <BoardSettingsMemberRoleList key={`board-settings-member-roles-${project.uid}`} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />

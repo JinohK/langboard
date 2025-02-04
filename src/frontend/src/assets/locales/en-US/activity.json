@@ -1,0 +1,200 @@
+{
+  "{count} New Activities": "{{count}} New Activities",
+  "No Activities": "No Activities",
+  "changes": {
+    "title": "Title",
+    "deadline_at": "Deadline",
+    "name": "Name",
+    "color": "Color",
+    "project_type": "Project type",
+    "description": "Description",
+    "ai_description": "AI summary",
+    "content": "Content",
+    "No deadline": "No deadline",
+    "No description": "No description",
+    "No AI summary": "No AI summary",
+    "No content": "No content"
+  },
+  "user": {
+    "activated": "You have activated.",
+    "declined_project_invitation": "You have declined the project invitation."
+  },
+  "project": {
+    "project_created": {
+      "default": "<Recorder/> created a project.",
+      "user_view": "You created a project <Project/>."
+    },
+    "project_updated": {
+      "default": "<Recorder/> updated the project.",
+      "user_view": "You updated the project <Project/>."
+    },
+    "project_assigned_bots_updated": {
+      "default": "<Recorder/> updated the assigned bots of the project.",
+      "user_view": "You updated the assigned bots of the project <Project/>."
+    },
+    "project_assigned_users_updated": {
+      "default": "<Recorder/> updated the assigned users of the project.",
+      "user_view": "You updated the assigned users of the project <Project/>."
+    },
+    "project_invited_user_accepted": {
+      "default": "<Recorder/> accepted the project invitation.",
+      "user_view": "You accepted the project invitation."
+    },
+    "project_column_created": {
+      "default": "<Recorder/> created a column <Column/>.",
+      "user_view": "You created a column <Column/> in the project <Project/>."
+    },
+    "project_column_name_changed": {
+      "default": "<Recorder/> changed the name of the column <Column/>.",
+      "user_view": "You changed the name of the column <Column/> in the project <Project/>."
+    },
+    "project_label_created": {
+      "default": "<Recorder/> created a label <Label/>.",
+      "user_view": "You created a label <Label/> in the project <Project/>."
+    },
+    "project_label_updated": {
+      "default": "<Recorder/> updated the label <Label/>.",
+      "user_view": "You updated the label <Label/> in the project <Project/>."
+    },
+    "project_label_deleted": {
+      "default": "<Recorder/> deleted the label <Label/>.",
+      "user_view": "You deleted the label <Label/> in the project <Project/>."
+    },
+    "card": {
+      "card_created": {
+        "default": "<Recorder/> created a card <Card/> in the column <Column/>.",
+        "user_view": "You created a card <Card/> in the column <Column/> of the project <Project/>."
+      },
+      "card_updated": {
+        "default": "<Recorder/> updated the card <Card/>.",
+        "user_view": "You updated the card <Card/> in the project <Project/>."
+      },
+      "card_moved": {
+        "default": "<Recorder/> moved the card <Card/> from the column <FromColumn/> to the column <Column/>.",
+        "user_view": "You moved the card <Card/> from the column <FromColumn/> to the column <Column/> in the project <Project/>."
+      },
+      "card_assigned_users_updated": {
+        "default": "<Recorder/> updated the assigned users of the card <Card/>.",
+        "user_view": "You updated the assigned users of the card <Card/> in the project <Project/>."
+      },
+      "card_labels_updated": {
+        "default": "<Recorder/> updated the labels of the card <Card/>.",
+        "user_view": "You updated the labels of the card <Card/> in the project <Project/>."
+      },
+      "card_attachment_uploaded": {
+        "default": "<Recorder/> uploaded an attachment <Attachment/> to the card <Card/>.",
+        "user_view": "You uploaded an attachment <Attachment/> to the card <Card/> in the project <Project/>."
+      },
+      "card_attachment_name_changed": {
+        "default": "<Recorder/> changed the name of the attachment <Attachment/> in the card <Card/>.",
+        "user_view": "You changed the name of the attachment <Attachment/> in the card <Card/> of the project <Project/>."
+      },
+      "card_attachment_deleted": {
+        "default": "<Recorder/> deleted the attachment <Attachment/> from the card <Card/>.",
+        "user_view": "You deleted the attachment <Attachment/> from the card <Card/> in the project <Project/>."
+      },
+      "card_comment_added": {
+        "default": "<Recorder/> added a comment to the card <Card/>.",
+        "user_view": "You added a comment to the card <Card/> in the project <Project/>."
+      },
+      "card_comment_updated": {
+        "default": "<Recorder/> updated the comment of the card <Card/>.",
+        "user_view": "You updated the comment of the card <Card/> in the project <Project/>."
+      },
+      "card_comment_deleted": {
+        "default": "<Recorder/> deleted the comment of the card <Card/>.",
+        "user_view": "You deleted the comment of the card <Card/> in the project <Project/>."
+      },
+      "card_comment_reacted": {
+        "default": "<Recorder/> reacted to the comment of the card <Card/>.",
+        "user_view": "You reacted to the comment of the card <Card/> in the project <Project/>."
+      },
+      "card_comment_unreacted": {
+        "default": "<Recorder/> unreacted to the comment of the card <Card/>.",
+        "user_view": "You unreacted to the comment of the card <Card/> in the project <Project/>."
+      },
+      "card_relationships_updated": {
+        "default": "<Recorder/> updated the relationships of the card <Card/>.",
+        "user_view": "You updated the relationships of the card <Card/> in the project <Project/>."
+      },
+      "card_checklist_created": {
+        "default": "<Recorder/> created a checklist <Checklist/> in the card <Card/>.",
+        "user_view": "You created a checklist <Checklist/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checklist_title_changed": {
+        "default": "<Recorder/> changed the title of the checklist <Checklist/> in the card <Card/>.",
+        "user_view": "You changed the title of the checklist <Checklist/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checklist_checked": {
+        "default": "<Recorder/> checked the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You checked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checklist_unchecked": {
+        "default": "<Recorder/> unchecked the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You unchecked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checklist_deleted": {
+        "default": "<Recorder/> deleted the checklist <Checklist/> from the card <Card/>.",
+        "user_view": "You deleted the checklist <Checklist/> from the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_created": {
+        "default": "<Recorder/> created a checklist item <Checkitem/> in the checklist <Checklist/> of the card <Card/>.",
+        "user_view": "You created a checklist item <Checkitem/> in the checklist <Checklist/> of the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_title_changed": {
+        "default": "<Recorder/> changed the title of the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You changed the title of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_timer_started": {
+        "default": "<Recorder/> started the timer of the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You started the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_timer_paused": {
+        "default": "<Recorder/> paused the timer of the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You paused the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_timer_stopped": {
+        "default": "<Recorder/> stopped the timer of the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You stopped the timer of the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_checked": {
+        "default": "<Recorder/> checked the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You checked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_unchecked": {
+        "default": "<Recorder/> unchecked the checklist item <Checkitem/> in the card <Card/>.",
+        "user_view": "You unchecked the checklist item <Checkitem/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_cardified": {
+        "default": "<Recorder/> cardified the checklist item <Checkitem/> as <CardifiedCard/> in the card <Card/>.",
+        "user_view": "You cardified the checklist item <Checkitem/> as <CardifiedCard/> in the card <Card/> of the project <Project/>."
+      },
+      "card_checkitem_deleted": {
+        "default": "<Recorder/> deleted the checklist item <Checkitem/> from the card <Card/>.",
+        "user_view": "You deleted the checklist item <Checkitem/> from the card <Card/> of the project <Project/>."
+      }
+    },
+    "project_wiki": {
+      "wiki_created": {
+        "default": "<Recorder/> created a wiki <Wiki/>.",
+        "user_view": "You created a wiki <Wiki/> in the project <Project/>."
+      },
+      "wiki_updated": {
+        "default": "<Recorder/> updated the wiki <Wiki/>.",
+        "user_view": "You updated the wiki <Wiki/> in the project <Project/>."
+      },
+      "wiki_publicity_changed": {
+        "default": "<Recorder/> changed the publicity of the wiki <Wiki/>.",
+        "user_view": "You changed the publicity of the wiki <Wiki/> in the project <Project/>."
+      },
+      "wiki_assignees_updated": {
+        "default": "<Recorder/> updated the assignees of the wiki <Wiki/>.",
+        "user_view": "You updated the assignees of the wiki <Wiki/> in the project <Project/>."
+      },
+      "wiki_deleted": {
+        "default": "<Recorder/> deleted the wiki <Wiki/>.",
+        "user_view": "You deleted the wiki <Wiki/> in the project <Project/>."
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 from fastapi import status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -16,10 +17,10 @@ async def create_checklist(
     project_uid: str,
     card_uid: str,
     form: CardCheckRelatedForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.create(user, project_uid, card_uid, form.title)
+    result = await service.checklist.create(user_or_bot, project_uid, card_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -34,10 +35,10 @@ async def create_checkitem(
     card_uid: str,
     checklist_uid: str,
     form: CardCheckRelatedForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checkitem.create(user, project_uid, card_uid, checklist_uid, form.title)
+    result = await service.checkitem.create(user_or_bot, project_uid, card_uid, checklist_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -52,10 +53,10 @@ async def notify_checklist(
     card_uid: str,
     checklist_uid: str,
     form: CardChecklistNotifyForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.notify(user, project_uid, card_uid, checklist_uid, form.member_uids)
+    result = await service.checklist.notify(user_or_bot, project_uid, card_uid, checklist_uid, form.member_uids)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -70,10 +71,10 @@ async def change_checklist_title(
     card_uid: str,
     checklist_uid: str,
     form: CardCheckRelatedForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.change_title(user, project_uid, card_uid, checklist_uid, form.title)
+    result = await service.checklist.change_title(user_or_bot, project_uid, card_uid, checklist_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -88,10 +89,10 @@ async def change_checklist_order(
     card_uid: str,
     checklist_uid: str,
     form: ChangeOrderForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.change_order(user, project_uid, card_uid, checklist_uid, form.order)
+    result = await service.checklist.change_order(user_or_bot, project_uid, card_uid, checklist_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -105,10 +106,10 @@ async def toggle_checklist_checked(
     project_uid: str,
     card_uid: str,
     checklist_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.toggle_checked(user, project_uid, card_uid, checklist_uid)
+    result = await service.checklist.toggle_checked(user_or_bot, project_uid, card_uid, checklist_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -122,10 +123,10 @@ async def delete_checklist(
     project_uid: str,
     card_uid: str,
     checklist_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.delete(user, project_uid, card_uid, checklist_uid)
+    result = await service.checklist.delete(user_or_bot, project_uid, card_uid, checklist_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

@@ -48,7 +48,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, children }: I
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
     const replyRef = useRef<(targetUser: User.TModel) => void>(() => {});
-    const currentUserRoleActions = card.useField("current_user_role_actions");
+    const currentUserRoleActions = card.useField("current_auth_role_actions");
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const sharedClassNames = {
         popoverContent: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",

@@ -17,7 +17,7 @@ import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyled
 import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
 import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
-import BoardSettingsPage from "@/pages/BoardPage/BoardSettings";
+import BoardSettingsPage from "@/pages/BoardPage/BoardSettingsPage";
 import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";

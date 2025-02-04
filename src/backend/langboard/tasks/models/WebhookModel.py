@@ -4,4 +4,4 @@ from pydantic import BaseModel
 
 class WebhookModel(BaseModel):
     event: str
-    event_data: dict[str, Any]
+    data: dict[str, Any]

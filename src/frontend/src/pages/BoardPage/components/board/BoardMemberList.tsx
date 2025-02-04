@@ -5,7 +5,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { AuthUser, BotModel, Project, User, UserGroup } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardMemberListProps {
@@ -24,14 +24,16 @@ const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoard
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const allItems = useMemo(() => [...members, ...bots, ...invitedMembers], [members, bots, invitedMembers]);
     const [isValidating, setIsValidating] = useState(false);
+    const isValidatingRef = useRef(isValidating);
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
 
     const save = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidating) {
+        if (isValidatingRef.current) {
             return;
         }
 
         setIsValidating(true);
+        isValidatingRef.current = true;
 
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
@@ -66,6 +68,7 @@ const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoard
             finally: () => {
                 endCallback();
                 setIsValidating(false);
+                isValidatingRef.current = false;
             },
         });
     };

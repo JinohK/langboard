@@ -1,14 +1,16 @@
-from typing import Any, Callable, TypeVar
+from enum import Enum
+from typing import Any, Callable, TypeVar, cast
 from pydantic import BaseModel, SecretStr
 from pydantic_core import PydanticUndefined as Undefined
 from sqlalchemy import JSON, DateTime
-from sqlalchemy.types import TEXT, BigInteger, TypeDecorator
+from sqlalchemy.types import TEXT, VARCHAR, BigInteger, TypeDecorator
 from sqlmodel import Field
 from ..utils.DateTime import now
 from .SnowflakeID import SnowflakeID
 
 
 TModelColumn = TypeVar("TModelColumn", bound=BaseModel)
+TEnum = TypeVar("TEnum", bound=Enum)
 
 
 class SnowflakeIDType(TypeDecorator):
@@ -49,11 +51,11 @@ def SnowflakeIDField(
     )
 
 
-def ModelColumnType(_model_type: type[TModelColumn]):
-    class _ModelColumnType(TypeDecorator[_model_type]):
+def ModelColumnType(model_type: type[TModelColumn]):
+    class _ModelColumnType(TypeDecorator[model_type]):
         impl = JSON
         cache_ok = True
-        _model_type_class = _model_type
+        _model_type_class = model_type
 
         def process_bind_param(self, value: TModelColumn | None, dialect) -> str | None:
             if value is None:
@@ -65,9 +67,9 @@ def ModelColumnType(_model_type: type[TModelColumn]):
                 return None
 
             if isinstance(value, dict):
-                return _model_type(**value)
+                return model_type(**value)
             elif isinstance(value, str):
-                return _model_type.model_validate_json(value)
+                return model_type.model_validate_json(value)
             else:
                 return value
 
@@ -99,8 +101,34 @@ class CSVType(TypeDecorator):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value: list[str], dialect) -> str:
-        return ",".join(value)
+    def process_bind_param(self, value: list[str] | None, dialect) -> str | None:
+        if value is None:
+            return None
+        return ",".join([chunk for chunk in value if chunk])
 
-    def process_result_value(self, value: str, dialect) -> list[str]:
-        return value.split(",")
+    def process_result_value(self, value: str, dialect) -> list[str] | None:
+        if value is None:
+            return None
+        chunks = value.split(",")
+        return [chunk for chunk in chunks if chunk]
+
+
+def EnumLikeType(enum_type: type[TEnum]):
+    class _EnumLikeType(TypeDecorator[enum_type]):
+        impl = VARCHAR
+        cache_ok = True
+        _enum_type_class = enum_type
+
+        def process_bind_param(self, value: TEnum | None, dialect) -> str | None:
+            if value is None:
+                return None
+            return value.value
+
+        def process_result_value(self, value: str | None, dialect) -> TEnum | None:
+            if value in enum_type.__members__:
+                return enum_type[cast(str, value)]
+            elif value in enum_type._value2member_map_:
+                return enum_type(value)
+            return None
+
+    return _EnumLikeType

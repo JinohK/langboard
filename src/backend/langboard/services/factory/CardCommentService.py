@@ -4,7 +4,7 @@ from ...core.db import DbSession, EditorContentModel, SqlBuilder, User
 from ...core.service import BaseService
 from ...models import Card, CardComment, CardCommentReaction, Project
 from ...publishers import CardCommentPublisher
-from ...tasks import CardCommentActivityTask
+from ...tasks.activities import CardCommentActivityTask
 from .NotificationService import NotificationService
 from .ReactionService import ReactionService
 from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot

@@ -4,7 +4,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { Project } from "@/core/models";
 
 export interface IBoardUserRolesUpdatedRawResponse {
-    member_uid: string;
+    user_uid: string;
     roles: Project.TRoleActions[];
 }
 
@@ -25,7 +25,7 @@ const useBoardUserRolesUpdatedHandlers = ({ callback, projectUID }: IUseBoardUse
                 const model = Project.Model.getModel(projectUID);
                 if (model && model.member_roles) {
                     const memberRoles = { ...model.member_roles };
-                    memberRoles[data.member_uid] = data.roles;
+                    memberRoles[data.user_uid] = data.roles;
                     model.member_roles = memberRoles;
                 }
 

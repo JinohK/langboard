@@ -65,16 +65,16 @@ const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
     return (
         <Flex items="center">
             {!isEditing ? (
-                <Box cursor="text" w="full" textSize="sm" onClick={() => changeMode("edit")}>
-                    {uname}
+                <Box cursor="text" w="full" textSize="base" onClick={() => changeMode("edit")}>
+                    @{uname}
                 </Box>
             ) : (
                 <>
-                    <Box textSize="sm">{BotModel.Model.BOT_UNAME_PREFIX}</Box>
+                    <Box textSize="base">@{BotModel.Model.BOT_UNAME_PREFIX}</Box>
                     <Input
                         ref={valueRef}
                         className={cn(
-                            "ml-0 h-5 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-sm scrollbar-hide",
+                            "ml-0 h-6 rounded-none border-x-0 border-t-0 bg-transparent p-0 text-base scrollbar-hide",
                             "focus-visible:border-b-primary focus-visible:ring-0"
                         )}
                         defaultValue={uname.slice(BotModel.Model.BOT_UNAME_PREFIX.length)}

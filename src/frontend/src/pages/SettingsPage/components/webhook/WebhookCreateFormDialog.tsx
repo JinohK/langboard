@@ -9,6 +9,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import { isValidURL } from "@/core/utils/StringUtils";
 
 export interface IWebhookCreateFormDialogProps {
     opened: bool;
@@ -41,7 +42,7 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
             focusableInput = nameInputRef.current;
         }
 
-        if (!urlValue.startsWith("http://") && !urlValue.startsWith("https://")) {
+        if (!isValidURL(urlValue)) {
             newErrors.url = t("settings.errors.invalid.webhook_url");
             if (!focusableInput) {
                 focusableInput = urlInputRef.current;

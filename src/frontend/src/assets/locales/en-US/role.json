@@ -1,0 +1,9 @@
+{
+  "project": {
+    "read": "Read",
+    "update": "Update",
+    "card_write": "Card Write",
+    "card_update": "Card Update",
+    "card_delete": "Card Delete"
+  }
+}

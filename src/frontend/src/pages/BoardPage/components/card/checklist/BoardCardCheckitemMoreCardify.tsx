@@ -1,5 +1,6 @@
 import { Button, DropdownMenu, Flex, Popover, Select, SubmitButton, Toast } from "@/components/base";
 import useCardifyCardCheckitem from "@/controllers/api/card/checkitem/useCardifyCardCheckitem";
+import { ProjectColumn } from "@/core/models";
 import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { useState } from "react";
@@ -11,7 +12,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCardCheckitem();
-    const [allColumns] = useState(card.project_all_columns.filter((column) => !column.is_archive));
+    const allColumns = ProjectColumn.Model.useModels((model) => model.project_uid === projectUID && !model.is_archive);
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
@@ -50,7 +51,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
         }
 
         if (!opened) {
-            setSelectedColumnUID(!card.archived_at ? card.column_uid : card.project_all_columns[0]?.uid);
+            setSelectedColumnUID(!card.archived_at ? card.column_uid : allColumns[0]?.uid);
         }
 
         setIsOpened(opened);
@@ -72,7 +73,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Flex direction="col" gap="2">
                     {allColumns.length > 0 && (
-                        <Select.Root value={selectedColumnUID} onValueChange={(value) => setSelectedColumnUID(value)} disabled={isValidating}>
+                        <Select.Root value={selectedColumnUID} onValueChange={setSelectedColumnUID} disabled={isValidating}>
                             <Select.Trigger>
                                 <Select.Value placeholder={t("card.Select Column")} />
                             </Select.Trigger>

@@ -7,7 +7,7 @@ from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
 from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CheckitemPublisher
-from ...tasks import CardCheckitemActivityTask
+from ...tasks.activities import CardCheckitemActivityTask
 from .Types import TCardParam, TCheckitemParam, TChecklistParam, TProjectParam, TUserOrBot
 
 

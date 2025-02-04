@@ -1,0 +1,40 @@
+{
+  "Sign up": "Sign up",
+  "Already have an account?": "Already have an account?",
+  "Confirm password": "Confirm password",
+  "complete": {
+    "One More Step to Sign Up": "One More Step to Sign Up",
+    "We have sent you an email to verify your email address.": "We have sent you an email to verify your email address.",
+    "Please check your inbox and click on the link to complete your sign up.": "Please check your inbox and click on the link to complete your sign up.",
+    "If you don't see the email, check junk, spam, social, or other folders.": "If you don't see the email, check junk, spam, social, or other folders.",
+    "Haven't received the email?": "Haven't received the email?",
+    "Email has been resent.": "Email has been resent.",
+    "Resend": "Resend"
+  },
+  "activate": {
+    "Welcome to {app}!": "Welcome to {{app}}!",
+    "Your account is now active and ready to go!": "Your account is now active and ready to go!",
+    "Dive in and discover all the amazing features we have in store for you.": "Dive in and discover all the amazing features we have in store for you.",
+    "Simply sign in with your email and password to get started.": "Simply sign in with your email and password to get started."
+  },
+  "errors": {
+    "missing": {
+      "email": "Enter an email address.",
+      "firstname": "Enter your first name.",
+      "lastname": "Enter your last name.",
+      "password": "Enter a password.",
+      "password-confirm": "Enter a password confirmation.",
+      "industry": "Select an industry.",
+      "industry-other": "Enter an industry.",
+      "purpose": "Select a purpose.",
+      "purpose-other": "Enter a purpose."
+    },
+    "invalid": {
+      "email": "Enter a valid email address.",
+      "email-exists": "Email already exists. Try another one.",
+      "password": "Passwords do not match.",
+      "avatar": "Only image files are allowed."
+    },
+    "Account already activated. Please sign in.": "Account already activated. Please sign in."
+  }
+}

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any
 from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField, User
 
 
 class NotificationType(Enum):
@@ -20,7 +20,7 @@ class UserNotification(BaseSqlModel, table=True):
     notifier_type: str = Field(nullable=False)
     notifier_id: SnowflakeID = SnowflakeIDField(nullable=False, index=True)
     receiver_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
-    notification_type: NotificationType = Field(nullable=False)
+    notification_type: NotificationType = Field(nullable=False, sa_type=EnumLikeType(NotificationType))
     message_vars: dict[str, Any] = Field(default={}, sa_type=JSON)
     record_list: list[tuple[str, SnowflakeID, str]] = Field(default=[], sa_type=JSON)
     read_at: datetime | None = DateTimeField(default=None, nullable=True)

@@ -3,7 +3,7 @@ from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
 from ...publishers import CardRelationshipPublisher
-from ...tasks import CardRelationshipActivityTask
+from ...tasks.activities import CardRelationshipActivityTask
 from .Types import TCardParam, TProjectParam, TUserOrBot
 
 
@@ -31,7 +31,7 @@ class CardRelationshipService(BaseService):
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType)
                 .join(
                     GlobalCardRelationshipType,
-                    CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
+                    CardRelationship.column("relationship_type_id") == GlobalCardRelationshipType.column("id"),
                 )
                 .join(
                     Card,
@@ -50,16 +50,7 @@ class CardRelationshipService(BaseService):
         if not as_api:
             return list(raw_relationships)
 
-        relationships = []
-        for relationship, relationship_type in raw_relationships:
-            relationships.append(
-                {
-                    "uid": relationship.get_uid(),
-                    "relationship_type_uid": relationship_type.get_uid(),
-                    "parent_card_uid": relationship.card_id_parent.to_short_code(),
-                    "child_card_uid": relationship.card_id_child.to_short_code(),
-                }
-            )
+        relationships = [relationship.api_response() for relationship, _ in raw_relationships]
         return relationships
 
     async def get_by_card_with_type(
@@ -75,7 +66,7 @@ class CardRelationshipService(BaseService):
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType, Card)
                 .join(
                     GlobalCardRelationshipType,
-                    CardRelationship.column("relation_type_id") == GlobalCardRelationshipType.column("id"),
+                    CardRelationship.column("relationship_type_id") == GlobalCardRelationshipType.column("id"),
                 )
                 .join(
                     Card,
@@ -134,7 +125,7 @@ class CardRelationshipService(BaseService):
                     continue
 
                 new_relationship = CardRelationship(
-                    relation_type_id=relationship_type.id,
+                    relationship_type_id=relationship_type.id,
                     card_id_parent=related_card.id if is_parent else card.id,
                     card_id_child=card.id if is_parent else related_card.id,
                 )

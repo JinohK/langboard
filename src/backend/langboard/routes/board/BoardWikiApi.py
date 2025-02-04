@@ -1,4 +1,5 @@
 from fastapi import File, UploadFile, status
+from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -22,13 +23,13 @@ from .scopes import (
 @AuthFilter.add
 async def get_project_wikis(
     project_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    wikis = await service.project_wiki.get_board_list(user, project_uid)
+    wikis = await service.project_wiki.get_board_list(user_or_bot, project_uid)
     project_members = await service.project.get_assigned_users(project, as_api=True)
     project_bots = await service.project.get_assigned_bots(project, as_api=True)
     return JsonResponse(
@@ -43,10 +44,10 @@ async def get_project_wikis(
 async def create_wiki(
     project_uid: str,
     form: WikiForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.create(user, project_uid, form.title)
+    result = await service.project_wiki.create(user_or_bot, project_uid, form.title)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_wiki = result
@@ -61,7 +62,7 @@ async def change_wiki_details(
     project_uid: str,
     wiki_uid: str,
     form: ChangeWikiDetailsForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
     form_dict = {}
@@ -71,7 +72,7 @@ async def change_wiki_details(
             continue
         form_dict[key] = value
 
-    result = await service.project_wiki.update(user, project_uid, wiki_uid, form_dict)
+    result = await service.project_wiki.update(user_or_bot, project_uid, wiki_uid, form_dict)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -96,10 +97,10 @@ async def change_wiki_public(
     project_uid: str,
     wiki_uid: str,
     form: ChangeWikiPublicForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.change_public(user, project_uid, wiki_uid, form.is_public)
+    result = await service.project_wiki.change_public(user_or_bot, project_uid, wiki_uid, form.is_public)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -113,10 +114,13 @@ async def update_wiki_assignees(
     project_uid: str,
     wiki_uid: str,
     form: AssigneesForm,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.update_assignees(user, project_uid, wiki_uid, form.assignees)
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_wiki.update_assignees(user_or_bot, project_uid, wiki_uid, form.assignees)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -146,9 +150,12 @@ async def upload_wiki_attachment(
     project_uid: str,
     wiki_uid: str,
     attachment: UploadFile = File(),
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     if not attachment:
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -156,12 +163,12 @@ async def upload_wiki_attachment(
     if not file_model:
         return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    result = await service.project_wiki.upload_attachment(user, project_uid, wiki_uid, file_model)
+    result = await service.project_wiki.upload_attachment(user_or_bot, project_uid, wiki_uid, file_model)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
-        content={**result.api_response(), "user": user.api_response()},
+        content={**result.api_response(), "user": user_or_bot.api_response()},
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -172,10 +179,10 @@ async def upload_wiki_attachment(
 async def delete_wiki(
     project_uid: str,
     wiki_uid: str,
-    user: User = Auth.scope("api"),
+    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.delete(user, project_uid, wiki_uid)
+    result = await service.project_wiki.delete(user_or_bot, project_uid, wiki_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

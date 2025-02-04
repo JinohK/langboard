@@ -5,7 +5,7 @@ from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import ChecklistPublisher
-from ...tasks import CardChecklistActivityTask
+from ...tasks.activities import CardChecklistActivityTask
 from .CheckitemService import CheckitemService
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
