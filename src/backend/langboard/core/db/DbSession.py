@@ -58,7 +58,8 @@ class DbSession:
         db = DbSession()
         try:
             for session in set(db._sessions.values()):
-                await session.exec(text("PRAGMA journal_mode=WAL;"))  # type: ignore
+                if MAIN_DATABASE_URL.startswith("sqlite"):
+                    await session.exec(text("PRAGMA journal_mode=WAL;"))  # type: ignore
                 await session.commit()
             yield db
         finally:

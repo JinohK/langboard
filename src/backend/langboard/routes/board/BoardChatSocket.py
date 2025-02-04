@@ -45,7 +45,9 @@ async def project_chat(
     if not project:
         return
 
-    stream_or_str = await BotRunner.run(InternalBotType.ProjectChat, {"message": message})
+    stream_or_str = await BotRunner.run(
+        InternalBotType.ProjectChat, {"message": message, "user_uid": user.get_uid(), "project_uid": topic_id}
+    )
     if not stream_or_str:
         return SocketResponse(
             event="board:chat:available",

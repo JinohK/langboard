@@ -24,11 +24,11 @@ class LangflowStreamResponse:
             "POST", self.__stream_url, json=self.__body, headers=self.__headers, timeout=None
         ) as stream_response:
             content_type = stream_response.headers.get("content-type")
-            if content_type != "text/event-stream":
+            if not content_type.count("text/event-stream"):
                 return
 
             for chunk in stream_response.iter_lines():
-                if not chunk.replace(" ", "").startswith('{"event":"token"}'):
+                if not chunk.replace(" ", "").startswith('{"event":"token"'):
                     continue
 
                 try:

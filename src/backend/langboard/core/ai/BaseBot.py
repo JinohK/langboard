@@ -17,13 +17,14 @@ from .InternalBotType import InternalBotType
 class LangflowRequestModel(BaseModel):
     flow_id: str
     message: str
+    session_id: str | None = None
     tweaks: dict[str, dict[str, Any]] | None = None
 
 
 class _LangflowAPIRequestModel:
     def __init__(self, settings: dict[AppSettingType, str], request_model: LangflowRequestModel, use_stream: bool):
         self.url = f"{settings[AppSettingType.LangflowUrl]}/api/v1/run/{request_model.flow_id}?stream={use_stream}"
-        self.session_id = generate_random_string(32)
+        self.session_id = request_model.session_id if request_model.session_id else generate_random_string(32)
         self.headers = {"Content-Type": "application/json", "x-api-key": settings[AppSettingType.LangflowApiKey]}
         req_data: dict[str, Any] = {"input_value": request_model.message, "session": self.session_id}
         if request_model.tweaks:

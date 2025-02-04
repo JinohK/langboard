@@ -10,6 +10,8 @@ class ProjectDataModel(BaseModel):
 
 
 class ProjectChatDataModel(BaseModel):
+    project_uid: str
+    user_uid: str
     message: str
 
 
