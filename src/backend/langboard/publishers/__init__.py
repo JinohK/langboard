@@ -1,4 +1,5 @@
 from .AppSettingPublisher import AppSettingPublisher
+from .BotPublisher import BotPublisher
 from .CardAttachmentPublisher import CardAttachmentPublisher
 from .CardCommentPublisher import CardCommentPublisher
 from .CardPublisher import CardPublisher
@@ -16,6 +17,7 @@ from .UserPublisher import UserPublisher
 
 __all__ = [
     "AppSettingPublisher",
+    "BotPublisher",
     "CardAttachmentPublisher",
     "CardCommentPublisher",
     "CardPublisher",

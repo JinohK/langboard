@@ -43,6 +43,11 @@ class UpdateBotForm(BaseFormModel):
 
 
 @form_model
+class PredefineBotTriggerConditionForm(BaseFormModel):
+    conditions: list[BotTriggerCondition]
+
+
+@form_model
 class ToggleBotTriggerConditionForm(BaseFormModel):
     condition: BotTriggerCondition
 

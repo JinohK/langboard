@@ -54,7 +54,7 @@ class SnowflakeID(int):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: Any):
+    def validate(cls, value: Any, _, **kwargs):
         if value is None:
             return cls()
         if isinstance(value, SnowflakeID):

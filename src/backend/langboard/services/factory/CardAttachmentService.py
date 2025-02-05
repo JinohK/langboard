@@ -5,6 +5,7 @@ from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
 from ...publishers import CardAttachmentPublisher
 from ...tasks.activities import CardAttachmentActivityTask
+from ...tasks.bot import CardAttachmentBotTask
 from .Types import TAttachmentParam, TCardParam, TProjectParam
 
 
@@ -59,8 +60,8 @@ class CardAttachmentService(BaseService):
             await db.commit()
 
         CardAttachmentPublisher.uploaded(user, card, card_attachment)
-
         CardAttachmentActivityTask.card_attachment_uploaded(user, project, card, card_attachment)
+        CardAttachmentBotTask.card_attachment_uploaded(user, project, card, card_attachment)
 
         return card_attachment
 
@@ -104,8 +105,8 @@ class CardAttachmentService(BaseService):
             await db.commit()
 
         CardAttachmentPublisher.name_changed(card, card_attachment)
-
         CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
+        CardAttachmentBotTask.card_attachment_name_changed(user, project, card, card_attachment)
 
         return True
 
@@ -133,8 +134,8 @@ class CardAttachmentService(BaseService):
             await db.commit()
 
         CardAttachmentPublisher.deleted(card, card_attachment)
-
         CardAttachmentActivityTask.card_attachment_deleted(user, project, card, card_attachment)
+        CardAttachmentBotTask.card_attachment_deleted(user, project, card, card_attachment)
 
         return True
 

@@ -6,7 +6,7 @@ import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import BoardFilterLabel from "@/pages/BoardPage/components/board/BoardFilterLabel";
+import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -117,7 +117,7 @@ function BoardFilter() {
                             <Flex direction="col" pt="1">
                                 {filteredLabels.slice(0, 2).map((label) => (
                                     <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
-                                        <BoardFilterLabel label={label} />
+                                        <BoardLabelListItem label={label} />
                                     </BoardFilterItem>
                                 ))}
                                 {filteredLabels.length > 2 && (
@@ -128,7 +128,7 @@ function BoardFilter() {
                                         createFilterItems={() =>
                                             filteredLabels.slice(2).map((label) => (
                                                 <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
-                                                    <BoardFilterLabel label={label} />
+                                                    <BoardLabelListItem label={label} />
                                                 </BoardFilterItem>
                                             ))
                                         }

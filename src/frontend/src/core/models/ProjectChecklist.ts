@@ -1,5 +1,3 @@
-import useCardChecklistCheckedChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistCheckedChangedHandlers";
-import useCardChecklistTitleChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistTitleChangedHandlers";
 import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
 import useCardCheckitemDeletedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemDeletedHandlers";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
@@ -32,19 +30,11 @@ class ProjectChecklist extends BaseModel<IStore> {
     constructor(model: Record<string, unknown>) {
         super(model);
 
-        this.subscribeSocketEvents(
-            [
-                useCardCheckitemCreatedHandlers,
-                useCardCheckitemDeletedHandlers,
-                useCardChecklistTitleChangedHandlers,
-                useCardChecklistCheckedChangedHandlers,
-            ],
-            {
-                cardUID: this.card_uid,
-                checklistUID: this.uid,
-                checklist: this,
-            }
-        );
+        this.subscribeSocketEvents([useCardCheckitemCreatedHandlers, useCardCheckitemDeletedHandlers], {
+            cardUID: this.card_uid,
+            checklistUID: this.uid,
+            checklist: this,
+        });
 
         ProjectCheckitem.Model.subscribe(
             "CREATION",

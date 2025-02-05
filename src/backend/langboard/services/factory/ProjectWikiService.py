@@ -5,7 +5,8 @@ from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import Project, ProjectWiki, ProjectWikiAssignedBot, ProjectWikiAssignedUser, ProjectWikiAttachment
 from ...publishers import ProjectWikiPublisher
-from ...tasks.activities import ProjectWikiTask
+from ...tasks.activities import ProjectWikiActivityTask
+from ...tasks.bot import ProjectWikiBotTask
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
 from .Types import TProjectParam, TUserOrBot, TWikiParam
@@ -154,8 +155,8 @@ class ProjectWikiService(BaseService):
         api_wiki = wiki.api_response()
         api_wiki["assigned_members"] = []
         ProjectWikiPublisher.created(project, wiki)
-
-        ProjectWikiTask.project_wiki_created(user_or_bot, project, wiki)
+        ProjectWikiActivityTask.project_wiki_created(user_or_bot, project, wiki)
+        ProjectWikiBotTask.project_wiki_created(user_or_bot, project, wiki)
 
         return wiki, api_wiki
 
@@ -199,7 +200,8 @@ class ProjectWikiService(BaseService):
         if "content" in model:
             await notification_service.notify_mentioned_at_wiki(user_or_bot, project, wiki)
 
-        ProjectWikiTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
+        ProjectWikiActivityTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
+        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, wiki)
 
         return model
 
@@ -245,8 +247,8 @@ class ProjectWikiService(BaseService):
             await db.commit()
 
         ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
-
-        ProjectWikiTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
+        ProjectWikiActivityTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
+        ProjectWikiBotTask.project_wiki_publicity_changed(user_or_bot, project, wiki)
 
         return wiki, project
 
@@ -309,8 +311,7 @@ class ProjectWikiService(BaseService):
                 await db.commit()
 
         ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
-
-        ProjectWikiTask.project_wiki_assignees_updated(
+        ProjectWikiActivityTask.project_wiki_assignees_updated(
             user,
             project,
             wiki,
@@ -382,8 +383,8 @@ class ProjectWikiService(BaseService):
             await db.commit()
 
         ProjectWikiPublisher.deleted(project, wiki)
-
-        ProjectWikiTask.project_wiki_deleted(user_or_bot, project, wiki)
+        ProjectWikiActivityTask.project_wiki_deleted(user_or_bot, project, wiki)
+        ProjectWikiBotTask.project_wiki_deleted(user_or_bot, project, wiki)
 
         return None
 

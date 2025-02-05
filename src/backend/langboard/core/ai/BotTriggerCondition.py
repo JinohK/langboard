@@ -3,7 +3,6 @@ from enum import Enum
 
 class BotTriggerCondition(Enum):
     # Project
-    ProjectCreated = "project_created"
     ProjectUpdated = "project_updated"
     ProjectDeleted = "project_deleted"
 

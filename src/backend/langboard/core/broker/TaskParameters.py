@@ -7,6 +7,7 @@ from typing import (
     _UnionGenericAlias,  # type: ignore
 )
 from pydantic import BaseModel
+from pydantic_core import from_json
 
 
 class TaskParameters:
@@ -60,13 +61,12 @@ class TaskParameters:
 
         arg_type, value = self.__get_param_value(param_name)
         if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            return arg_type, annotation.model_validate_json(value)
+            return arg_type, annotation.model_validate(from_json(value))
         elif isinstance(annotation, UnionType) or isinstance(annotation, _UnionGenericAlias):
             for sub_annotation in annotation.__args__:  # type: ignore
                 try:
                     if isinstance(sub_annotation, type) and issubclass(sub_annotation, BaseModel):
-                        model = arg_type, sub_annotation.model_validate_json(value)
-                        return model
+                        return arg_type, sub_annotation.model_validate(from_json(value))
                 except Exception:
                     continue
 

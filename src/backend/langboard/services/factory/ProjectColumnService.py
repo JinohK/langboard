@@ -5,6 +5,7 @@ from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn
 from ...publishers import ProjectColumnPublisher
 from ...tasks.activities import ProjectColumnActivityTask
+from ...tasks.bot import ProjectColumnBotTask
 from .Types import TColumnParam, TProjectParam, TUserOrBot
 
 
@@ -98,8 +99,8 @@ class ProjectColumnService(BaseService):
             await db.commit()
 
         ProjectColumnPublisher.created(project, column)
-
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
+        ProjectColumnBotTask.project_column_created(user_or_bot, project, column)
 
         return column
 
@@ -118,13 +119,13 @@ class ProjectColumnService(BaseService):
             await db.commit()
 
         ProjectColumnPublisher.name_changed(project, column, name)
-
         ProjectColumnActivityTask.project_column_name_changed(
             user_or_bot,
             project,
             old_name,
             column if isinstance(column, ProjectColumn) else project,
         )
+        ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, column)
 
         return True
 
@@ -196,8 +197,8 @@ class ProjectColumnService(BaseService):
             await db.commit()
 
         ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
-
         ProjectColumnActivityTask.project_column_deleted(user_or_bot, project, column)
+        ProjectColumnBotTask.project_column_deleted(user_or_bot, project, column)
 
         return True
 

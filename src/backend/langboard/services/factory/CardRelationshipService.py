@@ -4,6 +4,7 @@ from ...core.service import BaseService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
 from ...publishers import CardRelationshipPublisher
 from ...tasks.activities import CardRelationshipActivityTask
+from ...tasks.bot import CardBotTask
 from .Types import TCardParam, TProjectParam, TUserOrBot
 
 
@@ -138,10 +139,10 @@ class CardRelationshipService(BaseService):
         new_relationships = await self.get_all_by_card(card, as_api=True)
 
         CardRelationshipPublisher.updated(project, card, new_relationships)
-
         CardRelationshipActivityTask.card_relationship_updated(
             user_or_bot, project, card, list(original_relationship_ids), list(new_relationships_dict.keys()), is_parent
         )
+        CardBotTask.card_relationship_updated(user_or_bot, project, card)
 
         return True
 

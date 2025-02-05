@@ -4,25 +4,29 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectChecklist } from "@/core/models";
 
 export interface ICardChecklistTitleChangedRawResponse {
+    uid: string;
     title: string;
 }
 
 export interface IUseCardChecklistTitleChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+    projectUID: string;
     cardUID: string;
-    checklist: ProjectChecklist.TModel;
 }
 
-const useCardChecklistTitleChangedHandlers = ({ callback, cardUID, checklist }: IUseCardChecklistTitleChangedHandlersProps) => {
+const useCardChecklistTitleChangedHandlers = ({ callback, projectUID, cardUID }: IUseCardChecklistTitleChangedHandlersProps) => {
     return useSocketHandler<{}, ICardChecklistTitleChangedRawResponse>({
-        topic: ESocketTopic.BoardCard,
-        topicId: cardUID,
-        eventKey: `board-card-checklist-checked-changed-${checklist.uid}`,
+        topic: ESocketTopic.Board,
+        topicId: projectUID,
+        eventKey: `board-card-checklist-checked-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.TITLE_CHANGED,
-            params: { uid: checklist.uid },
+            params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
-                checklist.title = data.title;
+                const model = ProjectChecklist.Model.getModel(data.uid);
+                if (model) {
+                    model.title = data.title;
+                }
                 return {};
             },
         },

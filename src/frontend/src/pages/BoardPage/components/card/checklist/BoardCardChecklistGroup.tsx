@@ -27,14 +27,14 @@ export function SkeletonBoardCardChecklistGroup() {
 
 function BoardCardChecklistGroup(): JSX.Element {
     const [t] = useTranslation();
-    const { card, socket } = useBoardCard();
+    const { projectUID, card, socket } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
     const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
     const { mutate: changeOrderMutate } = useChangeCardChecklistOrder();
     const { columns: checklists, reorder: reorderCheckitems } = useReorderColumn({
         type: "ProjectChecklist",
         eventNameParams: { uid: card.uid },
-        topicId: card.uid,
+        topicId: projectUID,
         columns: flatChecklists,
         socket,
     });

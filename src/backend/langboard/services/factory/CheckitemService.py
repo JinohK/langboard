@@ -8,6 +8,7 @@ from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project,
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CheckitemPublisher
 from ...tasks.activities import CardCheckitemActivityTask
+from ...tasks.bot import CardBotTask, CardCheckitemBotTask
 from .Types import TCardParam, TCheckitemParam, TChecklistParam, TProjectParam, TUserOrBot
 
 
@@ -118,8 +119,8 @@ class CheckitemService(BaseService):
             await db.commit()
 
         CheckitemPublisher.created(card, checklist, checkitem)
-
         CardCheckitemActivityTask.card_checkitem_created(user_or_bot, project, card, checkitem)
+        CardCheckitemBotTask.card_checkitem_created(user_or_bot, project, card, checkitem)
 
         return checkitem
 
@@ -154,8 +155,8 @@ class CheckitemService(BaseService):
             await db.commit()
 
         CheckitemPublisher.title_changed(project, card, checkitem, cardified_card)
-
         CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
+        CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, checkitem)
 
         return True
 
@@ -283,10 +284,13 @@ class CheckitemService(BaseService):
 
         if status == CheckitemStatus.Started:
             CardCheckitemActivityTask.card_checkitem_timer_started(user_or_bot, project, card, checkitem)
+            CardCheckitemBotTask.card_checkitem_timer_started(user_or_bot, project, card, checkitem)
         elif status == CheckitemStatus.Paused:
             CardCheckitemActivityTask.card_checkitem_timer_paused(user_or_bot, project, card, checkitem)
+            CardCheckitemBotTask.card_checkitem_timer_paused(user_or_bot, project, card, checkitem)
         elif status == CheckitemStatus.Stopped:
             CardCheckitemActivityTask.card_checkitem_timer_stopped(user_or_bot, project, card, checkitem)
+            CardCheckitemBotTask.card_checkitem_timer_stopped(user_or_bot, project, card, checkitem)
 
         return True
 
@@ -315,8 +319,10 @@ class CheckitemService(BaseService):
 
         if checkitem.is_checked:
             CardCheckitemActivityTask.card_checkitem_checked(user_or_bot, project, card, checkitem)
+            CardCheckitemBotTask.card_checkitem_checked(user_or_bot, project, card, checkitem)
         else:
             CardCheckitemActivityTask.card_checkitem_unchecked(user_or_bot, project, card, checkitem)
+            CardCheckitemBotTask.card_checkitem_unchecked(user_or_bot, project, card, checkitem)
 
         return True
 
@@ -364,8 +370,9 @@ class CheckitemService(BaseService):
         card_service = self._get_service_by_name("card")
         api_card = await card_service.convert_board_list_api_response(new_card)
         CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
-
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
+        CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
+        CardBotTask.card_created(user_or_bot, project, new_card)
 
         return True
 
@@ -389,8 +396,8 @@ class CheckitemService(BaseService):
             await db.commit()
 
         CheckitemPublisher.deleted(project, card, checkitem)
-
         CardCheckitemActivityTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)
+        CardCheckitemBotTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)
 
         return True
 

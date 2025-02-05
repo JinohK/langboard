@@ -8,7 +8,8 @@ from ...core.storage import FileModel
 from ...core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
 from ...core.utils.String import generate_random_string
 from ...models import ProjectAssignedBot
-from ...publishers import AppSettingPublisher
+from ...publishers import BotPublisher
+from ...tasks.bot import BotDefaultTask
 from .Types import TBotParam
 
 
@@ -64,8 +65,8 @@ class BotService(BaseService):
             db.insert(bot)
             await db.commit()
 
-        model = {"bot": bot.api_response()}
-        AppSettingPublisher.bot_created(model)
+        BotPublisher.bot_created(bot)
+        BotDefaultTask.bot_created(bot)
 
         return bot
 
@@ -116,7 +117,7 @@ class BotService(BaseService):
             else:
                 model[key] = self._convert_to_python(getattr(bot, key))
 
-        AppSettingPublisher.bot_updated(bot.get_uid(), model)
+        BotPublisher.bot_updated(bot.get_uid(), model)
 
         model = {**model}
         for key in unpublishable_keys:
@@ -124,6 +125,27 @@ class BotService(BaseService):
                 model[key] = self._convert_to_python(getattr(bot, key))
 
         return bot, model
+
+    async def predefine_conditions(self, bot: TBotParam, conditions: list[BotTriggerCondition]):
+        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        if not bot:
+            return False
+
+        async with DbSession.use() as db:
+            await db.exec(
+                SqlBuilder.delete.table(BotTrigger).where(
+                    (BotTrigger.column("bot_id") == bot.id)
+                    & (BotTrigger.column("condition").in_([condition.value for condition in conditions]))
+                )
+            )
+
+        for condition in conditions:
+            trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
+            async with DbSession.use() as db:
+                db.insert(trigger)
+                await db.commit()
+
+        return True
 
     async def toggle_condition(self, bot: TBotParam, condition: BotTriggerCondition):
         bot = cast(Bot, await self._get_by_param(Bot, bot))
@@ -198,7 +220,7 @@ class BotService(BaseService):
             await db.delete(bot)
             await db.commit()
 
-        AppSettingPublisher.bot_deleted(bot.get_uid())
+        BotPublisher.bot_deleted(bot.get_uid())
 
         return True
 

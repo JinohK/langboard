@@ -11,6 +11,7 @@ from ...models.Checkitem import CheckitemStatus
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectPublisher
 from ...tasks.activities import ProjectActivityTask
+from ...tasks.bot import ProjectBotTask
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
@@ -300,8 +301,8 @@ class ProjectService(BaseService):
             model[key] = self._convert_to_python(getattr(project, key))
 
         ProjectPublisher.updated(project, model)
-
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
+        ProjectBotTask.project_updated(user_or_bot, project)
 
         return model
 
@@ -350,7 +351,6 @@ class ProjectService(BaseService):
                 await role_service.project.grant_default(bot_id=bot.id, project_id=project.id)
 
         ProjectPublisher.assigned_bots_updated(project, bots)
-
         ProjectActivityTask.project_assigned_bots_updated(user, project, old_assigned_bot_ids, [bot.id for bot in bots])
 
         return list(bots)
@@ -394,7 +394,6 @@ class ProjectService(BaseService):
         }
 
         ProjectPublisher.assigned_users_updated(project, model)
-
         ProjectActivityTask.project_assigned_users_updated(
             user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
         )
@@ -476,7 +475,7 @@ class ProjectService(BaseService):
             await db.commit()
 
         ProjectPublisher.deleted(project)
-
         ProjectActivityTask.project_deleted(user, project)
+        ProjectBotTask.project_deleted(user, project)
 
         return True

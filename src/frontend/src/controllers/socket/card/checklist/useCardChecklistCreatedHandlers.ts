@@ -8,16 +8,18 @@ export interface ICardChecklistCreatedRawResponse {
 }
 
 export interface IUseCardChecklistCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+    projectUID: string;
     cardUID: string;
 }
 
-const useCardChecklistCreatedHandlers = ({ callback, cardUID }: IUseCardChecklistCreatedHandlersProps) => {
+const useCardChecklistCreatedHandlers = ({ callback, projectUID, cardUID }: IUseCardChecklistCreatedHandlersProps) => {
     return useSocketHandler<{}, ICardChecklistCreatedRawResponse>({
-        topic: ESocketTopic.BoardCard,
-        topicId: cardUID,
+        topic: ESocketTopic.Board,
+        topicId: projectUID,
         eventKey: `board-card-checklist-created-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.CREATED,
+            params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
                 ProjectChecklist.Model.fromObject(data.checklist, true);

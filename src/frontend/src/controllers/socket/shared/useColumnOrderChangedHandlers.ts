@@ -34,7 +34,7 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
         case "ProjectChecklist":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.ORDER_CHANGED;
             targetModel = ProjectChecklist.Model;
-            topic = ESocketTopic.BoardCard;
+            topic = ESocketTopic.Board;
             break;
         case "ProjectWiki":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;

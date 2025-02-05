@@ -188,7 +188,7 @@ export const defaultSerializeMdNodesOptions: SerializeMdOptions["nodes"] = {
                     if (node.checked) {
                         todoChecker = " [x]";
                     } else {
-                        todoChecker = " []";
+                        todoChecker = " [ ]";
                     }
                 }
 

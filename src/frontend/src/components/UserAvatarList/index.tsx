@@ -1,5 +1,6 @@
 import { Box, Button, Flex, HoverCard, ScrollArea, Separator, Skeleton } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
+import { LabelBadge } from "@/components/LabelBadge";
 import UserAvatar, { TUserAvatarProps } from "@/components/UserAvatar";
 import { User } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -32,7 +33,7 @@ export const SkeletonUserAvatarList = ({ count, size, spacing = "none", classNam
     );
 };
 
-export interface IUserAvatarListProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IUserAvatarListProps extends Omit<React.ComponentProps<typeof Flex>, "size"> {
     users: User.TModel[];
     maxVisible: number;
     size?: TUserAvatarProps["avatarSize"];
@@ -40,7 +41,7 @@ export interface IUserAvatarListProps extends React.HTMLAttributes<HTMLDivElemen
     listAlign?: TUserAvatarProps["listAlign"];
 }
 
-const UserAvatarList = memo(
+export const UserAvatarList = memo(
     forwardRef<HTMLDivElement, IUserAvatarListProps>(
         ({ maxVisible, className, users, size = "default", spacing = "2", listAlign, ...props }: IUserAvatarListProps, ref) => {
             const moreUsersCount = users.length - maxVisible;
@@ -67,33 +68,80 @@ const UserAvatarList = memo(
     )
 );
 
+export interface IUserAvatarBadgeListProps extends Omit<IUserAvatarListProps, "size" | "spacing"> {}
+
+export const UserAvatarBadgeList = memo(
+    forwardRef<HTMLDivElement, IUserAvatarBadgeListProps>(({ maxVisible, className, users, listAlign, ...props }, ref) => {
+        const moreUsersCount = users.length - maxVisible;
+
+        return (
+            <Flex items="center" gap="1.5" position="relative" className={className} ref={ref} {...props}>
+                {users.slice(0, maxVisible).map((user) => (
+                    <UserAvatar.Root
+                        key={`user-avatar-${user.username}-${createShortUUID()}`}
+                        user={user}
+                        withName
+                        noAvatar
+                        labelClassName={cn(
+                            "relative rounded-xl border text-xs px-2",
+                            "after:absolute after:left-0 after:top-0 after:z-0 after:opacity-70",
+                            "after:bg-[var(--avatar-bg)] after:text-[var(--avatar-text-color)]",
+                            "after:rounded-xl after:size-full"
+                        )}
+                        nameClassName="relative z-10"
+                    >
+                        <UserAvatar.List>
+                            <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
+                        </UserAvatar.List>
+                    </UserAvatar.Root>
+                ))}
+                {moreUsersCount > 0 && <UserAvatarMoreList users={users} maxVisible={maxVisible} size="sm" listAlign={listAlign} isBadge />}
+            </Flex>
+        );
+    })
+);
+
 interface IUserAvatarMoreList {
     users: User.TModel[];
     maxVisible: number;
     size?: TUserAvatarProps["avatarSize"];
     listAlign?: TUserAvatarProps["listAlign"];
+    isBadge?: bool;
 }
 
-const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign }: IUserAvatarMoreList) => {
+const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign, isBadge }: IUserAvatarMoreList) => {
     const [isOpened, setIsOpened] = useState(false);
     const moreUsersCount = users.length - maxVisible;
+    const moreUsersCountText = moreUsersCount > 99 ? "99" : moreUsersCount;
 
     return (
         <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
             <HoverCard.Trigger asChild>
-                <Button
-                    variant="secondary"
-                    className={cn(AvatarVariants({ size }), "z-10 m-0 select-none border-none p-0")}
-                    onClick={() => setIsOpened(!isOpened)}
-                >
-                    +{moreUsersCount > 99 ? "99" : moreUsersCount}
-                </Button>
+                {isBadge ? (
+                    <Box cursor="pointer" onClick={() => setIsOpened(!isOpened)}>
+                        <LabelBadge
+                            name={`+${moreUsersCountText}`}
+                            color="hsl(var(--secondary))"
+                            textColor="hsl(var(--secondary-foreground))"
+                            noTooltip
+                        />
+                    </Box>
+                ) : (
+                    <Button
+                        variant="secondary"
+                        className={cn(AvatarVariants({ size }), "z-10 m-0 select-none border-none p-0")}
+                        onClick={() => setIsOpened(!isOpened)}
+                    >
+                        +{moreUsersCountText}
+                    </Button>
+                )}
             </HoverCard.Trigger>
             <HoverCard.Content className="z-50 w-auto p-0" align="end">
                 <ScrollArea.Root>
                     <Box maxH="52" minW="40" py="1">
-                        {users.slice(maxVisible).map((user) => (
+                        {users.slice(maxVisible).map((user, i) => (
                             <Fragment key={`user-avatar-${user.username}-${createShortUUID()}`}>
+                                {i !== 0 && <Separator className="my-1 h-px bg-muted" />}
                                 <UserAvatar.Root
                                     user={user}
                                     avatarSize="xs"
@@ -105,7 +153,6 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
                                         <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
                                     </UserAvatar.List>
                                 </UserAvatar.Root>
-                                <Separator className="my-1 h-px bg-muted" />
                             </Fragment>
                         ))}
                     </Box>
@@ -114,5 +161,3 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
         </HoverCard.Root>
     );
 });
-
-export default UserAvatarList;

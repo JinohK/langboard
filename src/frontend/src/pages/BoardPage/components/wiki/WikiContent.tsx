@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
-import UserAvatarList from "@/components/UserAvatarList";
+import { UserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import { API_ROUTES, SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";

@@ -13,6 +13,8 @@ import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/use
 import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
 import useCardLabelsUpdatedHandlers from "@/controllers/socket/card/useCardLabelsUpdatedHandlers";
 import useCardChecklistCreatedHandlers from "@/controllers/socket/card/checklist/useCardChecklistCreatedHandlers";
+import useCardChecklistTitleChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistTitleChangedHandlers";
+import useCardChecklistCheckedChangedHandlers from "@/controllers/socket/card/checklist/useCardChecklistCheckedChangedHandlers";
 import useCardChecklistDeletedHandlers from "@/controllers/socket/card/checklist/useCardChecklistDeletedHandlers";
 import useCardCommentReactedHandlers from "@/controllers/socket/card/comment/useCardCommentReactedHandlers";
 import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentUploadedHandlers";
@@ -80,6 +82,8 @@ class ProjectCard extends BaseModel<IStore> {
                 useCardAssignedUsersUpdatedHandlers,
                 useCardLabelsUpdatedHandlers,
                 useCardChecklistCreatedHandlers,
+                useCardChecklistTitleChangedHandlers,
+                useCardChecklistCheckedChangedHandlers,
                 useCardChecklistDeletedHandlers,
                 useCardAttachmentUploadedHandlers,
                 useCardAttachmentDeletedHandlers,

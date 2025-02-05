@@ -6,6 +6,7 @@ from ...models import Card, Checkitem, Checklist, Project
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import ChecklistPublisher
 from ...tasks.activities import CardChecklistActivityTask
+from ...tasks.bot import CardChecklistBotTask
 from .CheckitemService import CheckitemService
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
@@ -82,8 +83,8 @@ class ChecklistService(BaseService):
             await db.commit()
 
         ChecklistPublisher.created(card, checklist)
-
         CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
+        CardChecklistBotTask.card_checklist_created(user_or_bot, project, card, checklist)
 
         return checklist
 
@@ -105,8 +106,8 @@ class ChecklistService(BaseService):
             await db.commit()
 
         ChecklistPublisher.title_changed(card, checklist)
-
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
+        CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, checklist)
 
         return True
 
@@ -151,8 +152,10 @@ class ChecklistService(BaseService):
 
         if checklist.is_checked:
             CardChecklistActivityTask.card_checklist_checked(user_or_bot, project, card, checklist)
+            CardChecklistBotTask.card_checklist_checked(user_or_bot, project, card, checklist)
         else:
             CardChecklistActivityTask.card_checklist_unchecked(user_or_bot, project, card, checklist)
+            CardChecklistBotTask.card_checklist_unchecked(user_or_bot, project, card, checklist)
 
         return True
 
@@ -201,8 +204,8 @@ class ChecklistService(BaseService):
             await db.commit()
 
         ChecklistPublisher.deleted(card, checklist)
-
         CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)
+        CardChecklistBotTask.card_checklist_deleted(user_or_bot, project, card, checklist)
 
         return True
 

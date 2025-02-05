@@ -2,11 +2,11 @@ import { Box, Flex, Tooltip } from "@/components/base";
 import { ProjectLabel } from "@/core/models";
 import { memo } from "react";
 
-export interface IBoardFilterLabelProps {
+export interface IBoardLabelListItemProps {
     label: ProjectLabel.TModel;
 }
 
-const BoardFilterLabel = memo(({ label }: IBoardFilterLabelProps) => {
+const BoardLabelListItem = memo(({ label }: IBoardLabelListItemProps) => {
     const name = label.useField("name");
     const color = label.useField("color");
     const description = label.useField("description");
@@ -33,4 +33,4 @@ const BoardFilterLabel = memo(({ label }: IBoardFilterLabelProps) => {
     );
 });
 
-export default BoardFilterLabel;
+export default BoardLabelListItem;

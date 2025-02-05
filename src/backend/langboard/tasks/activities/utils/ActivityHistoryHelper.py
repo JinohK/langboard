@@ -24,9 +24,7 @@ class ActivityHistoryHelper:
     @staticmethod
     def create_user_or_bot_history(user_or_bot: User | Bot):
         avatar_path = None
-        if isinstance(user_or_bot.avatar, dict):
-            avatar_path = user_or_bot.avatar.get("path")
-        elif user_or_bot.avatar:
+        if user_or_bot.avatar:
             avatar_path = user_or_bot.avatar.path
         if isinstance(user_or_bot, User):
             if user_or_bot.deleted_at:

@@ -13,6 +13,7 @@ from .Form import (
     CreateSettingForm,
     DeleteSelectedGlobalRelationshipTypesForm,
     DeleteSelectedSettingsForm,
+    PredefineBotTriggerConditionForm,
     ToggleBotTriggerConditionForm,
     UpdateBotForm,
     UpdateGlobalRelationshipTypeForm,
@@ -216,6 +217,23 @@ async def generate_new_bot_api_token(
         },
         status_code=status.HTTP_200_OK,
     )
+
+
+@AppRouter.api.put("/settings/bot/predefine-trigger-condition")
+@AuthFilter.add
+async def predefine_bot_trigger_condition(
+    form: PredefineBotTriggerConditionForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, Bot):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    bot = await service.bot.predefine_conditions(user_or_bot, form.conditions)
+    if not bot:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.put("/settings/bot/{bot_uid}/trigger-condition")

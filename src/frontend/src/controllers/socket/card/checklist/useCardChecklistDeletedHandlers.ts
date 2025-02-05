@@ -8,16 +8,18 @@ export interface ICardChecklistDeletedRawResponse {
 }
 
 export interface IUseCardChecklistDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+    projectUID: string;
     cardUID: string;
 }
 
-const useCardChecklistDeletedHandlers = ({ callback, cardUID }: IUseCardChecklistDeletedHandlersProps) => {
+const useCardChecklistDeletedHandlers = ({ callback, projectUID, cardUID }: IUseCardChecklistDeletedHandlersProps) => {
     return useSocketHandler<{}, ICardChecklistDeletedRawResponse>({
-        topic: ESocketTopic.BoardCard,
-        topicId: cardUID,
+        topic: ESocketTopic.Board,
+        topicId: projectUID,
         eventKey: `board-card-checklist-created-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.DELETED,
+            params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
                 ProjectChecklist.Model.deleteModel(data.uid);

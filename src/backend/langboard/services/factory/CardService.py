@@ -22,6 +22,7 @@ from ...models import (
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CardPublisher
 from ...tasks.activities import CardActivityTask
+from ...tasks.bot import CardBotTask
 from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
 from .CheckitemService import CheckitemService
@@ -158,7 +159,7 @@ class CardService(BaseService):
             result = await db.exec(
                 SqlBuilder.select.tables(User, CardAssignedUser)
                 .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
-                .where(CardAssignedUser.column("id") == card.id)
+                .where(CardAssignedUser.column("card_id") == card.id)
             )
         raw_users = result.all()
         if not as_api:
@@ -214,9 +215,10 @@ class CardService(BaseService):
 
         api_card = await self.convert_board_list_api_response(card)
         model = {"card": api_card}
-        CardPublisher.created(project, column, model)
 
+        CardPublisher.created(project, column, model)
         CardActivityTask.card_created(user_or_bot, project, card)
+        CardBotTask.card_created(user_or_bot, project, card)
 
         return card, api_card
 
@@ -270,6 +272,7 @@ class CardService(BaseService):
             await notification_service.notify_mentioned_at_card(user_or_bot, project, card)
 
         CardActivityTask.card_updated(user_or_bot, project, old_card_record, card)
+        CardBotTask.card_updated(user_or_bot, project, card)
 
         return model
 
@@ -335,6 +338,7 @@ class CardService(BaseService):
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
+            CardBotTask.card_moved(user_or_bot, project, card)
 
         return True
 
@@ -431,7 +435,6 @@ class CardService(BaseService):
         labels = await project_label_service.get_all_by_card(card, as_api=False)
 
         CardPublisher.labels_updated(project, card, labels)
-
         CardActivityTask.card_labels_updated(
             user_or_bot,
             project,
@@ -439,6 +442,7 @@ class CardService(BaseService):
             [label.id for label in original_labels],
             [label.id for label in labels],
         )
+        CardBotTask.card_labels_updated(user_or_bot, project, card)
 
         return True
 
@@ -500,8 +504,8 @@ class CardService(BaseService):
             await db.commit()
 
         CardPublisher.deleted(project, card)
-
         CardActivityTask.card_deleted(user_or_bot, project, card)
+        CardBotTask.card_deleted(user_or_bot, project, card)
 
         return True
 

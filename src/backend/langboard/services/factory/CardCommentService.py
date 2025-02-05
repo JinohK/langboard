@@ -5,6 +5,7 @@ from ...core.service import BaseService
 from ...models import Card, CardComment, CardCommentReaction, Project
 from ...publishers import CardCommentPublisher
 from ...tasks.activities import CardCommentActivityTask
+from ...tasks.bot import CardCommentBotTask
 from .NotificationService import NotificationService
 from .ReactionService import ReactionService
 from .Types import TCardParam, TCommentParam, TProjectParam, TUserOrBot
@@ -88,6 +89,7 @@ class CardCommentService(BaseService):
         await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_added(user_or_bot, project, card, comment)
+        CardCommentBotTask.card_comment_added(user_or_bot, project, card, comment)
 
         return comment
 
@@ -119,6 +121,7 @@ class CardCommentService(BaseService):
         await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
+        CardCommentBotTask.card_comment_updated(user_or_bot, project, card, comment)
 
         return comment
 
@@ -139,8 +142,8 @@ class CardCommentService(BaseService):
             await db.commit()
 
         CardCommentPublisher.deleted(project, card, comment)
-
         CardCommentActivityTask.card_comment_deleted(user_or_bot, project, card, comment)
+        CardCommentBotTask.card_comment_deleted(user_or_bot, project, card, comment)
 
         return comment
 
@@ -168,8 +171,10 @@ class CardCommentService(BaseService):
 
         if is_reacted:
             CardCommentActivityTask.card_comment_reacted(user_or_bot, project, card, comment, reaction)
+            CardCommentBotTask.card_comment_reacted(user_or_bot, project, card, comment, reaction)
         else:
             CardCommentActivityTask.card_comment_unreacted(user_or_bot, project, card, comment, reaction)
+            CardCommentBotTask.card_comment_unreacted(user_or_bot, project, card, comment, reaction)
 
         return is_reacted
 

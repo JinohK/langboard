@@ -242,11 +242,11 @@ export const SOCKET_SERVER_EVENTS = {
                 REACTED: "board:card:comment:reacted:{uid}",
             },
             CHECKLIST: {
-                CREATED: "board:card:checklist:created",
+                CREATED: "board:card:checklist:created:{uid}",
                 TITLE_CHANGED: "board:card:checklist:title:changed:{uid}",
                 ORDER_CHANGED: "board:card:checklist:order:changed:{uid}",
                 CHECKED_CHANGED: "board:card:checklist:checked:changed:{uid}",
-                DELETED: "board:card:checklist:deleted",
+                DELETED: "board:card:checklist:deleted:{uid}",
             },
             CHECKITEM: {
                 CREATED: "board:card:checkitem:created:{uid}",

@@ -1,6 +1,6 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Button, ButtonProps, DropdownMenu, Flex, IconComponent, Popover, SubmitButton } from "@/components/base";
-import UserAvatarList, { IUserAvatarListProps } from "@/components/UserAvatarList";
+import { UserAvatarList, IUserAvatarListProps } from "@/components/UserAvatarList";
 import MultiSelect, { TMultiSelectProps } from "@/components/MultiSelect";
 import { TIconProps } from "@/components/base/IconComponent";
 import { BotModel, User, UserGroup } from "@/core/models";

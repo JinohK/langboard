@@ -4,25 +4,29 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectChecklist } from "@/core/models";
 
 export interface ICardChecklistCheckedChangedRawResponse {
+    uid: string;
     is_checked: bool;
 }
 
 export interface IUseCardChecklistCheckedChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+    projectUID: string;
     cardUID: string;
-    checklist: ProjectChecklist.TModel;
 }
 
-const useCardChecklistCheckedChangedHandlers = ({ callback, cardUID, checklist }: IUseCardChecklistCheckedChangedHandlersProps) => {
+const useCardChecklistCheckedChangedHandlers = ({ callback, projectUID, cardUID }: IUseCardChecklistCheckedChangedHandlersProps) => {
     return useSocketHandler<{}, ICardChecklistCheckedChangedRawResponse>({
-        topic: ESocketTopic.BoardCard,
-        topicId: cardUID,
-        eventKey: `board-card-checklist-checked-changed-${checklist.uid}`,
+        topic: ESocketTopic.Board,
+        topicId: projectUID,
+        eventKey: `board-card-checklist-checked-changed-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.CHECKED_CHANGED,
-            params: { uid: checklist.uid },
+            params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
-                checklist.is_checked = data.is_checked;
+                const model = ProjectChecklist.Model.getModel(data.uid);
+                if (model) {
+                    model.is_checked = data.is_checked;
+                }
                 return {};
             },
         },

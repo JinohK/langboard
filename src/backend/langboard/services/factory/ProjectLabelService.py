@@ -5,6 +5,7 @@ from ...core.service import BaseService
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from ...publishers import ProjectLabelPublisher
 from ...tasks.activities import ProjectLabelActivityTask
+from ...tasks.bot import ProjectLabelBotTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
 
@@ -116,8 +117,8 @@ class ProjectLabelService(BaseService):
             return None
 
         ProjectLabelPublisher.created(project, label)
-
         ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
+        ProjectLabelBotTask.project_label_created(user_or_bot, project, label)
 
         return label, label.api_response()
 
@@ -159,8 +160,8 @@ class ProjectLabelService(BaseService):
             model[key] = self._convert_to_python(getattr(label, key))
 
         ProjectLabelPublisher.updated(project, label, model)
-
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
+        ProjectLabelBotTask.project_label_updated(user_or_bot, project, label)
 
         return model
 
@@ -207,8 +208,8 @@ class ProjectLabelService(BaseService):
             await db.commit()
 
         ProjectLabelPublisher.deleted(project, label)
-
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
+        ProjectLabelBotTask.project_label_deleted(user_or_bot, project, label)
 
         return True
 

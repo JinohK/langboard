@@ -1,6 +1,6 @@
-import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Skeleton } from "@/components/base";
+import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Separator, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
-import UserAvatarList, { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { UserAvatarList, SkeletonUserAvatarList, UserAvatarBadgeList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import { BotModel, Project, ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
@@ -9,7 +9,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Fragment, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
@@ -17,7 +17,7 @@ import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/Boar
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
-import UserAvatar from "@/components/UserAvatar";
+import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
@@ -148,7 +148,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 <HoverCard.Content
                     side="right"
                     align="end"
-                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
+                    className="w-[theme(screens.xs)] max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
                     {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                     hidden={isHoverCardHidden}
                 >
@@ -368,44 +368,44 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
     const labels = card.useForeignField<ProjectLabel.TModel>("labels");
     const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
+    const [isOpened, setIsOpened] = useState(false);
 
     return (
         <Flex direction="col" gap="1.5">
             {!!labels.length && (
                 <Flex items="center" gap="1.5">
-                    {labels.slice(0, 2).map((label) => (
+                    {labels.slice(0, 5).map((label) => (
                         <LabelModelBadge key={`board-card-preview-label-${label.uid}`} model={label} />
                     ))}
-                    {labels.length > 2 && (
-                        <LabelBadge name={`+${labels.length - 2}`} color="hsl(var(--secondary))" textColor="hsl(var(--secondary-foreground))" />
+                    {labels.length > 5 && (
+                        <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
+                            <HoverCard.Trigger asChild>
+                                <Box cursor="pointer" onClick={() => setIsOpened(!isOpened)}>
+                                    <LabelBadge
+                                        name={`+${labels.length - 5}`}
+                                        color="hsl(var(--secondary))"
+                                        textColor="hsl(var(--secondary-foreground))"
+                                        noTooltip
+                                    />
+                                </Box>
+                            </HoverCard.Trigger>
+                            <HoverCard.Content className="z-50 w-auto p-0" align="end">
+                                <ScrollArea.Root>
+                                    <Box maxH="52" minW="40" py="1">
+                                        {labels.slice(5).map((label, i) => (
+                                            <Fragment key={`board-card-preview-label-${label.uid}`}>
+                                                {i !== 0 && <Separator className="my-1 h-px bg-muted" />}
+                                                <BoardLabelListItem label={label} />
+                                            </Fragment>
+                                        ))}
+                                    </Box>
+                                </ScrollArea.Root>
+                            </HoverCard.Content>
+                        </HoverCard.Root>
                     )}
                 </Flex>
             )}
-            {!!cardMembers.length && (
-                <Flex items="center" gap="1.5">
-                    {cardMembers.slice(0, 2).map((member) => (
-                        <UserAvatar.Root
-                            user={member}
-                            withName
-                            noAvatar
-                            labelClassName={cn(
-                                "relative rounded-xl border text-xs px-2",
-                                "after:absolute after:left-0 after:top-0 after:z-0 after:opacity-70",
-                                "after:bg-[var(--avatar-bg)] after:text-[var(--avatar-text-color)]",
-                                "after:rounded-xl after:size-full"
-                            )}
-                            nameClassName="relative z-10"
-                        >
-                            <UserAvatar.List>
-                                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                            </UserAvatar.List>
-                        </UserAvatar.Root>
-                    ))}
-                    {cardMembers.length > 2 && (
-                        <LabelBadge name={`+${cardMembers.length - 2}`} color="hsl(var(--secondary))" textColor="hsl(var(--secondary-foreground))" />
-                    )}
-                </Flex>
-            )}
+            {!!cardMembers.length && <UserAvatarBadgeList users={cardMembers} maxVisible={3} listAlign="start" />}
             {!!description?.content.trim().length && (
                 <ScrollArea.Root>
                     <Box p="4" className="max-h-24 break-all [&_img]:max-w-full">

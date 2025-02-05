@@ -9,7 +9,7 @@ import { format } from "@/core/utils/StringUtils";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { BotModel, User } from "@/core/models";
 import { API_ROUTES } from "@/controllers/constants";
-import UserAvatarList from "@/components/UserAvatarList";
+import { UserAvatarList } from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";

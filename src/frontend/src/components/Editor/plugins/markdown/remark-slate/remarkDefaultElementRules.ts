@@ -4,6 +4,7 @@ import type { MdastNode, RemarkElementRules } from "@/components/Editor/plugins/
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { remarkTransformElementChildren } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformElementChildren";
 import { remarkTransformNode } from "@/components/Editor/plugins/markdown/remark-slate/remarkTransformNode";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 // FIXME: underline, not yet supported by remark-slate
 export const remarkDefaultElementRules: RemarkElementRules = {
@@ -92,10 +93,12 @@ export const remarkDefaultElementRules: RemarkElementRules = {
 
                         const [paragraph, ...subLists] = listItem.children;
 
+                        const itemListStyleType = TypeUtils.isBool(listItem.checked) ? "todo" : listStyleType;
+
                         listItems.push({
                             children: remarkTransformElementChildren(paragraph || "", options),
                             indent,
-                            listStyleType,
+                            listStyleType: itemListStyleType,
                             type: options.editor.getType({ key: "p" }),
                             listStart: listStyleType === "decimal" ? decimalStarts[indent] : undefined,
                         });

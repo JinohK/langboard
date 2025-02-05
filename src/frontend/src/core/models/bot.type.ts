@@ -1,6 +1,5 @@
 export enum EBotTriggerCondition {
     // Project
-    ProjectCreated = "project_created",
     ProjectUpdated = "project_updated",
     ProjectDeleted = "project_deleted",
 
@@ -60,7 +59,7 @@ export enum EBotTriggerCondition {
 }
 
 export const CATEGORIZED_BOT_TRIGGER_CONDITIONS = {
-    project: [EBotTriggerCondition.ProjectCreated, EBotTriggerCondition.ProjectUpdated, EBotTriggerCondition.ProjectDeleted],
+    project: [EBotTriggerCondition.ProjectUpdated, EBotTriggerCondition.ProjectDeleted],
     project_column: [
         EBotTriggerCondition.ProjectColumnCreated,
         EBotTriggerCondition.ProjectColumnNameChanged,

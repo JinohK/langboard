@@ -2,7 +2,6 @@
   "project": {
     "Category": "Project",
     "conditions": {
-      "project_created": "Created",
       "project_updated": "Updated",
       "project_deleted": "Deleted"
     }
