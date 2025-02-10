@@ -9,6 +9,7 @@ services:
       - "${NGINX_FRONTEND_EXPOSE_PORT}:8000"
       - "${NGINX_SOCKET_EXPOSE_PORT}:8010"
       - "${NGINX_API_EXPOSE_PORT}:8020"
+      - "${NGINX_API_EXPOSE_PORT}:8030"
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
