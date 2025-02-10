@@ -1,9 +1,11 @@
 import { Box, Textarea, Toast } from "@/components/base";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
+import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +15,7 @@ export interface IWikiTitleProps {
 }
 
 const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
-    const { projectUID } = useBoardWiki();
+    const { navigate, projectUID } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title");
     const title = wiki.useField("title");
@@ -34,6 +36,12 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                 error: (error) => {
                     let message = "";
                     const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                            message = t("wiki.errors.Can't access this wiki.");
+                            setTimeout(() => {
+                                navigate(ROUTES.BOARD.WIKI(projectUID));
+                            }, 0);
+                        },
                         nonApiError: () => {
                             message = t("errors.Unknown error");
                         },

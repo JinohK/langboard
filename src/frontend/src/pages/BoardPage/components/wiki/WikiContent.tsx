@@ -3,11 +3,12 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import { API_ROUTES, SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
+import useToggleEditingByClick from "@/core/hooks/useToggleEditingByClick";
 import { ProjectWiki, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
@@ -67,6 +68,12 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                 error: (error) => {
                     let message = "";
                     const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                            message = t("wiki.errors.Can't access this wiki.");
+                            setTimeout(() => {
+                                navigate(ROUTES.BOARD.WIKI(projectUID));
+                            }, 0);
+                        },
                         nonApiError: () => {
                             message = t("errors.Unknown error");
                         },
@@ -91,7 +98,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const { stopEditing } = useStopEditingClickOutside("[data-wiki-content]", () => changeMode("view"), isEditing);
+    const { startEditing, stopEditing } = useToggleEditingByClick("[data-wiki-content]", changeMode, isEditing);
 
     editorsRef.current[wiki.uid] = (editing: bool) => {
         setIsEditing(editing);
@@ -137,26 +144,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
         <Box className="max-h-[calc(100vh_-_theme(spacing.36))] overflow-y-auto">
             <WikiPrivateOption wiki={wiki} changeTab={changeTab} />
             <WikiTitle wiki={wiki} />
-            <Box
-                onPointerDown={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (isEditing || !target.closest("[data-wiki-content]")) {
-                        return;
-                    }
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    changeMode("edit");
-                    setTimeout(() => {
-                        if (editorComponentRef.current) {
-                            editorComponentRef.current.focus();
-                        }
-                    }, 50);
-                }}
-                position="relative"
-                data-wiki-content
-            >
+            <Box onPointerDown={startEditing} position="relative" data-wiki-content>
                 <PlateEditor
                     value={content}
                     currentUser={currentUser}

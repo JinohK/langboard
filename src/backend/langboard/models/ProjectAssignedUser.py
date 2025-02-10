@@ -12,6 +12,10 @@ class ProjectAssignedUser(BaseSqlModel, table=True):
     starred: bool = Field(default=False, nullable=False)
     last_viewed_at: datetime = DateTimeField(default=now, nullable=False)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

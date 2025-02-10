@@ -2,18 +2,25 @@ from fastapi import File, UploadFile, status
 from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.storage import Storage, StorageName
 from ...services import Service
 from .scopes import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
 
 
-@AppRouter.api.post("/auth/signup/exist/email")
+@AppRouter.api.post(
+    "/auth/signup/exist/email", tags=["Auth.SignUp"], responses=OpenApiSchema().suc({"exists": "bool"}).get()
+)
 async def exist_email(form: CheckEmailForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     return JsonResponse(content={"exists": user is not None})
 
 
-@AppRouter.api.post("/auth/signup")
+@AppRouter.api.post(
+    "/auth/signup",
+    tags=["Auth.SignUp"],
+    responses=OpenApiSchema().err(409, "User exists.").err(503, "Email service is unavailable.").get(),
+)
 async def signup(
     form: SignUpForm = SignUpForm.scope(), avatar: UploadFile | None = File(None), service: Service = Service.scope()
 ) -> JsonResponse:
@@ -36,7 +43,17 @@ async def signup(
     return JsonResponse(content={"url": token_url})
 
 
-@AppRouter.api.post("/auth/signup/resend")
+@AppRouter.api.post(
+    "/auth/signup/resend",
+    tags=["Auth.SignUp"],
+    responses=(
+        OpenApiSchema()
+        .err(404, "User not found.")
+        .err(409, "User is already actviated.")
+        .err(503, "Email service is unavailable.")
+        .get()
+    ),
+)
 async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     if not user:
@@ -59,7 +76,11 @@ async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) 
     return JsonResponse(content={"url": token_url})
 
 
-@AppRouter.api.post("/auth/signup/activate")
+@AppRouter.api.post(
+    "/auth/signup/activate",
+    tags=["Auth.SignUp"],
+    responses=OpenApiSchema().err(404, "User not found.").err(409, "User is already actviated.").get(),
+)
 async def activate(form: ActivateUserForm, service: Service = Service.scope()) -> JsonResponse:
     user, cache_key, _ = await service.user.validate_token_from_url("signup", form.signup_token)
     if not user or not cache_key:

@@ -11,6 +11,16 @@ class Project(SoftDeleteModel, table=True):
     ai_description: str | None = Field(default=None, sa_type=TEXT)
     project_type: str = Field(default="Other", nullable=False)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "title": "string",
+            "project_type": "string",
+            "updated_at": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

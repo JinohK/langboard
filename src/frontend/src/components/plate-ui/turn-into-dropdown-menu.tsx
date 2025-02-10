@@ -96,7 +96,14 @@ export function TurnIntoDropdownMenu(props: DropdownMenuProps) {
                 </ToolbarButton>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content className="ignore-click-outside/toolbar max-h-[min(70vh,300px)] min-w-0 overflow-auto" align="start">
+            <DropdownMenu.Content
+                className="ignore-click-outside/toolbar max-h-[min(70vh,300px)] min-w-0 overflow-auto"
+                onCloseAutoFocus={(e) => {
+                    e.preventDefault();
+                    editor.tf.focus();
+                }}
+                align="start"
+            >
                 <DropdownMenu.RadioGroup
                     value={value}
                     onValueChange={(type) => {

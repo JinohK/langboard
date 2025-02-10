@@ -22,6 +22,19 @@ class AppSetting(BaseSqlModel, table=True):
     last_used_at: datetime | None = DateTimeField(default=None, nullable=True)
     total_used_count: int = Field(default=0, nullable=False)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "setting_type": f"Literal[{', '.join([setting_type.value for setting_type in AppSettingType])}]",
+            "setting_name": "string",
+            "setting_value": "string",
+            "created_at": "string",
+            "last_used_at": "string?",
+            "total_used_count": "integer",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

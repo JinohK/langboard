@@ -93,7 +93,8 @@ export const remarkDefaultElementRules: RemarkElementRules = {
 
                         const [paragraph, ...subLists] = listItem.children;
 
-                        const itemListStyleType = TypeUtils.isBool(listItem.checked) ? "todo" : listStyleType;
+                        const isCheckbox = TypeUtils.isBool(listItem.checked);
+                        const itemListStyleType = isCheckbox ? "todo" : listStyleType;
 
                         listItems.push({
                             children: remarkTransformElementChildren(paragraph || "", options),
@@ -101,6 +102,7 @@ export const remarkDefaultElementRules: RemarkElementRules = {
                             listStyleType: itemListStyleType,
                             type: options.editor.getType({ key: "p" }),
                             listStart: listStyleType === "decimal" ? decimalStarts[indent] : undefined,
+                            checked: isCheckbox ? listItem.checked : undefined,
                         });
 
                         if (listStyleType === "decimal") {

@@ -25,6 +25,17 @@ class UserNotification(BaseSqlModel, table=True):
     record_list: list[tuple[str, SnowflakeID, str]] = Field(default=[], sa_type=JSON)
     read_at: datetime | None = DateTimeField(default=None, nullable=True)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "type": f"Literal[{','.join([t.value for t in NotificationType])}]",
+            "message_vars": "object",
+            "read_at": "string",
+            "created_at": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

@@ -24,6 +24,19 @@ class User(SoftDeleteModel, table=True):
     preferred_lang: str = Field(default="en-US", nullable=False)
     activated_at: datetime | None = DateTimeField(default=None, nullable=True)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "type": f"Literal[{User.USER_TYPE}, {User.UNKNOWN_USER_TYPE}, {User.BOT_TYPE}, {User.GROUP_EMAIL_TYPE}]",
+            "uid": "string",
+            "firstname": "string",
+            "lastname": "string",
+            "email": "string",
+            "username": "string",
+            "avatar": "string?",
+            **(schema or {}),
+        }
+
     def check_password(self, password: str) -> bool:
         return checkpw(password.encode(), self.password.get_secret_value().encode())
 

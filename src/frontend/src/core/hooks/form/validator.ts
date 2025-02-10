@@ -3,33 +3,33 @@ import { IBaseValidationSchema, TValidationSchema } from "@/core/hooks/form/type
 import TypeUtils from "@/core/utils/TypeUtils";
 
 class Validator {
-    public required(schemaValue: TValidationSchema["required"], value: string | File[] | FileList): bool {
-        return !schemaValue || !!value.length;
+    public required(schemaValue: TValidationSchema["required"], value?: string | File[] | FileList): bool {
+        return !schemaValue || !!value?.length;
     }
 
-    public min(schemaValue: TValidationSchema["min"], value: string | File[] | FileList): bool {
-        return !schemaValue || value.length >= schemaValue;
+    public min(schemaValue: TValidationSchema["min"], value?: string | File[] | FileList): bool {
+        return !schemaValue || (value?.length ?? 0) >= schemaValue;
     }
 
-    public max(schemaValue: TValidationSchema["max"], value: string | File[] | FileList): bool {
-        return !schemaValue || value.length <= schemaValue;
+    public max(schemaValue: TValidationSchema["max"], value?: string | File[] | FileList): bool {
+        return !schemaValue || (value?.length ?? schemaValue + 1) <= schemaValue;
     }
 
-    public range(schemaValue: TValidationSchema["range"], value: string | File[] | FileList): bool {
-        return !schemaValue || (value.length >= schemaValue[0] && value.length <= schemaValue[1]);
+    public range(schemaValue: TValidationSchema["range"], value?: string | File[] | FileList): bool {
+        return !schemaValue || ((value?.length ?? 0) >= schemaValue[0] && (value?.length ?? schemaValue[1] + 1) <= schemaValue[1]);
     }
 
-    public pattern(schemaValue: TValidationSchema["pattern"], value: string | File[] | FileList): bool {
+    public pattern(schemaValue: TValidationSchema["pattern"], value?: string | File[] | FileList): bool {
         return !schemaValue || (TypeUtils.isString(value) && schemaValue.test(value));
     }
 
-    public email(schemaValue: TValidationSchema["email"], value: string | File[] | FileList): bool {
+    public email(schemaValue: TValidationSchema["email"], value?: string | File[] | FileList): bool {
         return !schemaValue || (TypeUtils.isString(value) && EMAIL_REGEX.test(value));
     }
 
     public sameWith(
         schemaValue: TValidationSchema["sameWith"],
-        value: string | File[] | FileList,
+        value: string | File[] | FileList | undefined,
         form: HTMLFormElement | Record<string, string | File | DataTransfer>
     ): bool {
         if (!schemaValue) {
@@ -44,12 +44,12 @@ class Validator {
         }
     }
 
-    public mimeType(schemaValue: TValidationSchema["mimeType"], value: string | File[] | FileList): bool {
+    public mimeType(schemaValue: TValidationSchema["mimeType"], value?: string | File[] | FileList): bool {
         if (!schemaValue) {
             return true;
         }
 
-        if (TypeUtils.isString(value)) {
+        if (TypeUtils.isString(value) || !value) {
             return false;
         }
 
@@ -81,8 +81,8 @@ class Validator {
         return true;
     }
 
-    public custom(schemaValue: TValidationSchema["custom"], value: string | File[] | FileList): bool {
-        return !schemaValue || schemaValue.validate(value);
+    public custom(schemaValue: TValidationSchema["custom"], value?: string | File[] | FileList): bool {
+        return !schemaValue || !value || schemaValue.validate(value);
     }
 }
 

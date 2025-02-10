@@ -14,6 +14,10 @@ class BaseReactionModel(BaseSqlModel):
     @abstractmethod
     def get_target_column_name() -> str: ...
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

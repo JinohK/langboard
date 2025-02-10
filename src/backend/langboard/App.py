@@ -47,7 +47,8 @@ class App:
         self._init_api_middlewares()
         self._init_api_routes()
 
-        Auth.get_openai_schema(self.api)
+        AppRouter.set_openapi_schema(self.api)
+        Auth.set_openapi_schema(self.api)
 
     def run(self):
         self._start_server()

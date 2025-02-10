@@ -8,6 +8,10 @@ class ProjectAssignedBot(BaseSqlModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

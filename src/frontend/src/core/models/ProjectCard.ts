@@ -29,7 +29,7 @@ export interface Interface extends IBaseModel {
     project_uid: string;
     column_uid: string;
     title: string;
-    description?: IEditorContent;
+    description: IEditorContent;
     order: number;
     created_at: Date;
     archived_at?: Date;
@@ -178,7 +178,7 @@ class ProjectCard extends BaseModel<IStore> {
     public get description() {
         return this.getValue("description");
     }
-    public set description(value: IEditorContent | undefined) {
+    public set description(value: IEditorContent) {
         this.update({ description: value });
     }
 

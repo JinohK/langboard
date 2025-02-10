@@ -7,16 +7,29 @@ from .Project import Project
 class ProjectWiki(SoftDeleteModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     title: str = Field(nullable=False)
-    content: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
+    content: EditorContentModel = Field(default=EditorContentModel(), sa_type=ModelColumnType(EditorContentModel))
     order: int = Field(default=0, nullable=False)
     is_public: bool = Field(default=True, nullable=False)
+
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "project_uid": "string",
+            "title": "string",
+            "content?": EditorContentModel.api_schema(),
+            "order": "integer",
+            "forbidden": "bool",
+            "is_public": "bool",
+            **(schema or {}),
+        }
 
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
             "project_uid": self.project_id.to_short_code(),
             "title": self.title,
-            "content": self.content.model_dump() if self.content else None,
+            "content": self.content.model_dump(),
             "order": self.order,
             "forbidden": False,
             "is_public": self.is_public,

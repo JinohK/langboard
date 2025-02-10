@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
@@ -12,7 +13,11 @@ from ..board.scopes import project_role_finder
 from .NotificationSettingForm import NotificationSettingForm, NotificationSettingTypeForm
 
 
-@AppRouter.api.put("/notification/setting/all")
+@AppRouter.api.put(
+    "/notification/setting/all",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_notification_subscription(
     form: NotificationSettingForm,
@@ -31,7 +36,11 @@ async def toggle_all_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/type")
+@AppRouter.api.put(
+    "/notification/setting/type",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_type_notification_subscription(
     form: NotificationSettingTypeForm,
@@ -53,7 +62,11 @@ async def toggle_all_type_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/project")
+@AppRouter.api.put(
+    "/notification/setting/project",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_project_notification_subscription(
     form: NotificationSettingForm,
@@ -72,7 +85,11 @@ async def toggle_all_project_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/column")
+@AppRouter.api.put(
+    "/notification/setting/column",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_column_notification_subscription(
     form: NotificationSettingForm,
@@ -91,7 +108,11 @@ async def toggle_all_column_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/card")
+@AppRouter.api.put(
+    "/notification/setting/card",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_card_notification_subscription(
     form: NotificationSettingForm,
@@ -110,7 +131,11 @@ async def toggle_all_card_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/wiki")
+@AppRouter.api.put(
+    "/notification/setting/wiki",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @AuthFilter.add
 async def toggle_all_wiki_notification_subscription(
     form: NotificationSettingForm,
@@ -129,7 +154,11 @@ async def toggle_all_wiki_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/project/{project_uid}")
+@AppRouter.api.put(
+    "/notification/setting/project/{project_uid}",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def toggle_project_notification_subscription(
@@ -150,7 +179,11 @@ async def toggle_project_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/project/{project_uid}/column/{column_uid}")
+@AppRouter.api.put(
+    "/notification/setting/project/{project_uid}/column/{column_uid}",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def toggle_column_notification_subscription(
@@ -172,7 +205,11 @@ async def toggle_column_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/project/{project_uid}/card/{card_uid}")
+@AppRouter.api.put(
+    "/notification/setting/project/{project_uid}/card/{card_uid}",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def toggle_card_notification_subscription(
@@ -194,7 +231,11 @@ async def toggle_card_notification_subscription(
     )
 
 
-@AppRouter.api.put("/notification/setting/project/{project_uid}/wiki/{wiki_uid}")
+@AppRouter.api.put(
+    "/notification/setting/project/{project_uid}/wiki/{wiki_uid}",
+    tags=["Notification"],
+    responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def toggle_wiki_notification_subscription(

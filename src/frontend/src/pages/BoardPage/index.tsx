@@ -51,12 +51,12 @@ const BoardProxy = memo((): JSX.Element => {
     const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
     const { on: onIsBoardChatAvailable, send: sendIsBoardChatAvailable } = useIsBoardChatAvailableHandlers({
         projectUID,
-        callback: (data) => {
-            if (data.available) {
+        callback: (result) => {
+            if (result.available) {
                 setResizableSidebar(() => ({
                     children: (
                         <Suspense>
-                            <BoardChatProvider projectUID={projectUID} bot={data.bot}>
+                            <BoardChatProvider projectUID={projectUID} bot={result.bot}>
                                 <ChatSidebar />
                             </BoardChatProvider>
                         </Suspense>
@@ -73,9 +73,9 @@ const BoardProxy = memo((): JSX.Element => {
     });
     const { on: onBoardAssignedUsersUpdated } = useBoardAssignedUsersUpdatedHandlers({
         projectUID,
-        callback: (data) => {
+        callback: (result) => {
             const currentUser = aboutMe()!;
-            if (!data.assigned_member_uids.includes(currentUser.uid) && !currentUser.is_admin) {
+            if (!result.assigned_member_uids.includes(currentUser.uid) && !currentUser.is_admin) {
                 Toast.Add.error(t("errors.Forbidden"));
             }
         },

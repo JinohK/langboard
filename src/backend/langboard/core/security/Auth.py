@@ -235,21 +235,21 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
     @staticmethod
-    async def validate_bot(queries_headers: Headers) -> Bot | Literal[403]:
+    async def validate_bot(queries_headers: Headers) -> Bot | Literal[401]:
         ip = queries_headers.get(Auth.IP_HEADER, queries_headers.get(Auth.IP_HEADER.lower(), None))
         api_token = queries_headers.get(Auth.API_TOKEN_HEADER, queries_headers.get(Auth.API_TOKEN_HEADER.lower(), None))
         if not ip or not api_token:
-            return status.HTTP_403_FORBIDDEN
+            return status.HTTP_401_UNAUTHORIZED
 
         if "," in ip:
             ip = ip.split(",")[0]
 
         if not is_valid_ipv4_address_or_range(ip):
-            return status.HTTP_403_FORBIDDEN
+            return status.HTTP_401_UNAUTHORIZED
 
         bot = await Auth.get_bot_by_api_token(api_token)
         if not bot:
-            return status.HTTP_403_FORBIDDEN
+            return status.HTTP_401_UNAUTHORIZED
 
         for ip_range in bot.ip_whitelist:
             if ip_range.endswith(".0/24"):
@@ -259,19 +259,19 @@ class Auth:
                 if ip == ip_range:
                     return bot
 
-        return status.HTTP_403_FORBIDDEN
+        return status.HTTP_401_UNAUTHORIZED
 
     @staticmethod
-    def get_openai_schema(app: FastAPI) -> dict[str, Any]:
+    def set_openapi_schema(app: FastAPI):
         if app.openapi_schema:
-            return app.openapi_schema
-
-        version = require(PROJECT_NAME)[0].version
-        openapi_schema = get_openapi(
-            title=PROJECT_NAME.capitalize(),
-            version=version,
-            routes=app.routes,
-        )
+            openapi_schema = app.openapi_schema
+        else:
+            version = require(PROJECT_NAME)[0].version
+            openapi_schema = get_openapi(
+                title=PROJECT_NAME.capitalize(),
+                version=version,
+                routes=app.routes,
+            )
 
         if "components" not in openapi_schema:
             openapi_schema["components"] = {}
@@ -304,8 +304,6 @@ class Auth:
                     path_method["security"] = [{"BearerAuth": []}]
 
         app.openapi_schema = openapi_schema
-
-        return openapi_schema
 
     @staticmethod
     def _create_access_token(user_id: int) -> str:

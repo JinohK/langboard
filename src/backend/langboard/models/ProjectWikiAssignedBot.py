@@ -12,6 +12,10 @@ class ProjectWikiAssignedBot(BaseSqlModel, table=True):
     project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False, index=True)
     bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

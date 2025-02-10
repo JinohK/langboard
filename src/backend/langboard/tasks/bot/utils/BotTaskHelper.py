@@ -46,9 +46,6 @@ class BotTaskHelper:
         if not isinstance(bots, list):
             bots = [bots]
 
-        if not bots:
-            return
-
         event = event if isinstance(event, str) else event.value
         await run_webhook(event, data)
 

@@ -23,7 +23,30 @@ class Bot(SoftDeleteModel, table=True):
     app_api_token: str = Field(nullable=False)
     ip_whitelist: list[str] = Field(default=[], sa_type=CSVType)
 
-    def api_response(self, is_setting_response: bool = False) -> dict[str, Any]:
+    @staticmethod
+    def api_schema(is_setting: bool = False, other_schema: dict | None = None) -> dict[str, Any]:
+        schema = {
+            "uid": "string",
+            "name": "string",
+            "bot_uname": "string",
+            "avatar": "string?",
+            "as_user": User.api_schema(),
+            **(other_schema or {}),
+        }
+        if is_setting:
+            schema.update(
+                {
+                    "api_url": "string",
+                    "api_auth_type": f"Literal[{', '.join([auth_type.value for auth_type in BotAPIAuthType])}]",
+                    "api_key": "string",
+                    "app_api_token": "string",
+                    "ip_whitelist": "List[string]",
+                }
+            )
+
+        return schema
+
+    def api_response(self, is_setting: bool = False) -> dict[str, Any]:
         if self.deleted_at is not None:
             return self.create_unknown_bot_api_response()
 
@@ -34,7 +57,7 @@ class Bot(SoftDeleteModel, table=True):
             "avatar": self.avatar.path if self.avatar else None,
             "as_user": self.as_user_api_response(),
         }
-        if is_setting_response:
+        if is_setting:
             response["api_url"] = self.api_url
             response["api_auth_type"] = self.api_auth_type.value
             response["api_key"] = self.api_key

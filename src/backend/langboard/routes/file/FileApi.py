@@ -4,7 +4,7 @@ from ...core.routing import AppRouter, JsonResponse
 from ...core.storage import Storage
 
 
-@AppRouter.api.get("/file/{storage_type}/{storage_name}/{filename}")
+@AppRouter.api.get("/file/{storage_type}/{storage_name}/{filename}", tags=["General"])
 def get_file(storage_type: str = Path(), storage_name: str = Path(), filename: str = Path()) -> Response:
     media_type, _ = guess_type(filename)
     if media_type is None:

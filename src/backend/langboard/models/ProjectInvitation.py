@@ -25,6 +25,10 @@ class ProjectInvitation(BaseSqlModel, table=True):
             return None
         return invitation_token, invitation_id
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

@@ -12,6 +12,7 @@ services:
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
+      - DOCS_HOST=${PROJECT_NAME}_docs:3000
     volumes:
       - ./server/conf.template:/etc/nginx/templates/default.conf.template
       - ./server/nginx.conf:/etc/nginx/nginx.conf
@@ -86,6 +87,22 @@ services:
       - ../poetry.lock:/app/poetry.lock
       - ../README.md:/app/README.md
       - ../alembic.ini:/app/alembic.ini
+    depends_on:
+      - db
+    networks:
+      - dev_net
+    restart: always
+
+  docs:
+    init: true
+    container_name: ${PROJECT_NAME}_docs
+    build:
+      context: ../docs
+    working_dir: /app
+    command: ${PROJECT_NAME} run -w
+    volumes:
+      - ../docs:/app
+      - ../.env:/.env
     depends_on:
       - db
     networks:

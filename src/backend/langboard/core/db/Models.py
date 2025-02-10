@@ -176,6 +176,10 @@ class BaseSqlModel(ABC, SQLModel):
             serialized[key] = value
         return serialized
 
+    @staticmethod
+    @abstractmethod
+    def api_schema(*args, **kwargs) -> dict[str, Any]: ...
+
     @abstractmethod
     def api_response(self) -> dict[str, Any]: ...
 
@@ -218,3 +222,7 @@ class SoftDeleteModel(BaseSqlModel):
 
 class EditorContentModel(BaseModel):
     content: str = Field(default="")
+
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {"content": "string"}

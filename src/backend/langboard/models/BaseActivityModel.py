@@ -10,6 +10,15 @@ class BaseActivityModel(BaseSqlModel):
     bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
     activity_history: dict[str, Any] = Field(default={}, sa_type=JSON)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "activity_history": "object",
+            "created_at": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         response = {
             "uid": self.get_uid(),

@@ -19,7 +19,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 
 export type DeserializeMdOptions = {
     /** Whether to add _memo property to elements */
-    memoize?: boolean;
+    memoize?: bool;
     /** Options for the token parser */
     parser?: ParseMarkdownBlocksOptions;
     /** A function that allows you to modify the markdown processor. */

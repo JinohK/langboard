@@ -3,14 +3,37 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import (
+    Card,
+    CardRelationship,
+    ChatHistory,
+    Checklist,
+    GlobalCardRelationshipType,
+    Project,
+    ProjectColumn,
+    ProjectLabel,
+    ProjectRole,
+)
+from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ChatHistoryPagination, InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
 
 
-@AppRouter.api.post("/board/{project_uid}/available")
+@AppRouter.api.post(
+    "/board/{project_uid}/available",
+    tags=["Board"],
+    responses=(
+        OpenApiSchema()
+        .suc({"title": "string"})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def is_project_available(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
@@ -20,7 +43,34 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
     return JsonResponse(content={"title": project.title}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/board/{project_uid}")
+@AppRouter.api.get(
+    "/board/{project_uid}",
+    tags=["Board"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "project": (
+                    Project,
+                    {
+                        "schema": {
+                            "owner": User,
+                            "members": [User],
+                            "bots": [Bot],
+                            "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
+                            "labels": [ProjectLabel],
+                            "invited_members": [User],
+                        }
+                    },
+                )
+            }
+        )
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project(
@@ -35,7 +85,11 @@ async def get_project(
     return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/board/{project_uid}/chat")
+@AppRouter.api.get(
+    "/board/{project_uid}/chat",
+    tags=["Board"],
+    responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().role().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project_chat(
@@ -52,7 +106,11 @@ async def get_project_chat(
     return JsonResponse(content={"histories": histories}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/board/{project_uid}/chat/clear")
+@AppRouter.api.delete(
+    "/board/{project_uid}/chat/clear",
+    tags=["Board"],
+    responses=OpenApiSchema().auth().role().no_bot().get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def clear_project_chat(
@@ -66,7 +124,37 @@ async def clear_project_chat(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/board/{project_uid}/cards")
+@AppRouter.api.get(
+    "/board/{project_uid}/cards",
+    tags=["Board"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "cards": [
+                    (
+                        Card,
+                        {
+                            "schema": {
+                                "count_comment": "integer",
+                                "members": [User],
+                                "relationships": [CardRelationship],
+                                "labels": [ProjectLabel],
+                                "checklists": [Checklist],
+                            }
+                        },
+                    )
+                ],
+                "global_relationships": [GlobalCardRelationshipType],
+                "columns": [ProjectColumn],
+            }
+        )
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project_cards(
@@ -85,7 +173,11 @@ async def get_project_cards(
     )
 
 
-@AppRouter.api.put("/board/{project_uid}/assigned-users")
+@AppRouter.api.put(
+    "/board/{project_uid}/assigned-users",
+    tags=["Board"],
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def update_project_member(
@@ -109,9 +201,21 @@ async def update_project_member(
     return JsonResponse(content={"urls": result}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/project/invite/details/{token}")
+@AppRouter.api.post(
+    "/project/invite/details/{token}",
+    tags=["Board"],
+    responses=(
+        OpenApiSchema()
+        .suc({"project": {"title": "string"}})
+        .auth()
+        .role()
+        .no_bot()
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @AuthFilter.add
-async def get_project_title(
+async def get_invited_project_title(
     token: str,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
@@ -126,7 +230,11 @@ async def get_project_title(
     return JsonResponse(content={"project": {"title": project.title}}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/project/invite/accept")
+@AppRouter.api.post(
+    "/project/invite/accept",
+    tags=["Board"],
+    responses=OpenApiSchema().auth().role().no_bot().err(406, "Invitation not found.").get(),
+)
 @AuthFilter.add
 async def accept_project_invitation(
     form: ProjectInvitationForm,
@@ -143,7 +251,11 @@ async def accept_project_invitation(
     return JsonResponse(content={"project_uid": result}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/project/invite/decline")
+@AppRouter.api.post(
+    "/project/invite/decline",
+    tags=["Board"],
+    responses=OpenApiSchema().auth().role().no_bot().err(406, "Invitation not found.").get(),
+)
 @AuthFilter.add
 async def decline_project_invitation(
     form: ProjectInvitationForm,

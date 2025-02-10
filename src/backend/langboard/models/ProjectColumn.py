@@ -11,6 +11,17 @@ class ProjectColumn(SoftDeleteModel, table=True):
     order: int = Field(default=1, nullable=False)
     is_archive: bool = Field(default=False, nullable=False)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "project_uid": "string",
+            "name": "string",
+            "order": "integer",
+            "is_archive": "bool",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

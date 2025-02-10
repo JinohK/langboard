@@ -9,6 +9,8 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { ROUTES } from "@/core/routing/constants";
 
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.TModel;
@@ -29,7 +31,7 @@ export function SkeletonWikiPrivateOption() {
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
-    const { projectUID, projectBots, projectMembers, currentUser } = useBoardWiki();
+    const { projectUID, projectBots, projectMembers, currentUser, navigate } = useBoardWiki();
     const isPublic = wiki.useField("is_public");
     const forbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);
@@ -71,6 +73,12 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             error: (error) => {
                 let message = "";
                 const { handle } = setupApiErrorHandler({
+                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                        message = t("wiki.errors.Can't access this wiki.");
+                        setTimeout(() => {
+                            navigate(ROUTES.BOARD.WIKI(projectUID));
+                        }, 0);
+                    },
                     nonApiError: () => {
                         message = t("errors.Unknown error");
                     },
@@ -111,6 +119,12 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             error: (error) => {
                 let message = "";
                 const { handle } = setupApiErrorHandler({
+                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                        message = t("wiki.errors.Can't access this wiki.");
+                        setTimeout(() => {
+                            navigate(ROUTES.BOARD.WIKI(projectUID));
+                        }, 0);
+                    },
                     nonApiError: () => {
                         message = t("errors.Unknown error");
                     },

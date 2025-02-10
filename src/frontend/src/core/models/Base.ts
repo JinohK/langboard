@@ -76,18 +76,18 @@ export type TBaseModelClass<TModel extends IBaseModel> = {
     FOREIGN_MODELS: Partial<Record<keyof TModel, string>>;
     convertModel(model: any): any;
     createFakeMethodsMap<TMethodMap>(model: TModel): TMethodMap;
-    fromObject<TParent extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TParent,
+    fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+        this: TDerived,
         model: Partial<TModel> & { uid: string },
         shouldNotify?: bool,
         createdModels?: BaseModel<TModel>[]
-    ): InstanceType<TParent>;
-    subscribe<TParent extends TBaseModelClass<any>>(
-        this: TParent,
+    ): InstanceType<TDerived>;
+    subscribe<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
         type: "CREATION",
         key: string,
-        notifier: (models: InstanceType<TParent>[]) => void,
-        filter: (model: InstanceType<TParent>) => bool
+        notifier: (models: InstanceType<TDerived>[]) => void,
+        filter: (model: InstanceType<TDerived>) => bool
     ): () => void;
     subscribe(type: "DELETION", key: string, notifier: (uids: string[]) => void): () => void;
     unsubscribe(type: keyof IModelNotifiersMap, key: string): void;
@@ -146,20 +146,20 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         ) as any;
     }
 
-    public static fromObject<TParent extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TParent,
+    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+        this: TDerived,
         model: Partial<TModel> & { uid: string },
         shouldNotify: true,
         createdModels?: never
-    ): InstanceType<TParent>;
-    public static fromObject<TParent extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TParent,
+    ): InstanceType<TDerived>;
+    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+        this: TDerived,
         model: Partial<TModel> & { uid: string },
         shouldNotify?: false,
         createdModels?: BaseModel<TModel>[]
-    ): InstanceType<TParent>;
-    public static fromObject<TParent extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TParent,
+    ): InstanceType<TDerived>;
+    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+        this: TDerived,
         model: Partial<TModel> & { uid: string },
         shouldNotify: bool = false,
         createdModels?: BaseModel<TModel>[]
@@ -189,11 +189,11 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return targetModelMap[model.uid];
     }
 
-    public static fromObjectArray<TParent extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TParent,
+    public static fromObjectArray<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+        this: TDerived,
         models: (Partial<TModel> & { uid: string })[],
         shouldNotify: bool = false
-    ): InstanceType<TParent>[] {
+    ): InstanceType<TDerived>[] {
         if (!shouldNotify) {
             return models.map((model) => this.fromObject(model, false));
         }
@@ -207,9 +207,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return resultModels;
     }
 
-    public static addModel<TParent extends TBaseModelClass<any>>(this: TParent, model: InstanceType<TParent>, shouldNotify: true): void;
-    public static addModel<TParent extends TBaseModelClass<any>>(this: TParent, model: InstanceType<TParent>, shouldNotify?: false): void;
-    public static addModel<TParent extends TBaseModelClass<any>>(this: TParent, model: InstanceType<TParent>, shouldNotify: bool = false) {
+    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify: true): void;
+    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify?: false): void;
+    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify: bool = false) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
             BaseModel.#MODELS[modelName] = {};
@@ -228,9 +228,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         BaseModel.#notify("CREATION", modelName, targetModelMap[model.uid]);
     }
 
-    public static addModels<TParent extends TBaseModelClass<any>>(this: TParent, models: InstanceType<TParent>[], shouldNotify: true): void;
-    public static addModels<TParent extends TBaseModelClass<any>>(this: TParent, models: InstanceType<TParent>[], shouldNotify?: false): void;
-    public static addModels<TParent extends TBaseModelClass<any>>(this: TParent, models: InstanceType<TParent>[], shouldNotify: bool = false) {
+    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify: true): void;
+    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify?: false): void;
+    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify: bool = false) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
             BaseModel.#MODELS[modelName] = {};
@@ -263,20 +263,20 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return {} as TMethodMap;
     }
 
-    public static subscribe<TParent extends TBaseModelClass<any>>(
-        this: TParent,
+    public static subscribe<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
         type: "CREATION",
         key: string,
-        notifier: (models: InstanceType<TParent>[]) => void,
-        filter: (model: InstanceType<TParent>) => bool
+        notifier: (models: InstanceType<TDerived>[]) => void,
+        filter: (model: InstanceType<TDerived>) => bool
     ): () => void;
     public static subscribe(type: "DELETION", key: string, notifier: (uids: string[]) => void): () => void;
-    public static subscribe<TParent extends TBaseModelClass<any>>(
-        this: TParent,
+    public static subscribe<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
         type: keyof IModelNotifiersMap,
         key: string,
-        notifier: (models: InstanceType<TParent>[]) => void,
-        filter?: (model: InstanceType<TParent>) => bool
+        notifier: (models: InstanceType<TDerived>[]) => void,
+        filter?: (model: InstanceType<TDerived>) => bool
     ) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#NOTIFIERS[type][modelName]) {
@@ -303,15 +303,15 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         delete BaseModel.#NOTIFIERS[type][modelName][key];
     }
 
-    public static getModel<TParent extends TBaseModelClass<any>>(this: TParent, uid: string): InstanceType<TParent> | undefined;
-    public static getModel<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        filter: (model: InstanceType<TParent>) => bool
-    ): InstanceType<TParent> | undefined;
-    public static getModel<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        uidOrFilter: string | ((model: InstanceType<TParent>) => bool)
-    ): InstanceType<TParent> | undefined {
+    public static getModel<TDerived extends TBaseModelClass<any>>(this: TDerived, uid: string): InstanceType<TDerived> | undefined;
+    public static getModel<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        filter: (model: InstanceType<TDerived>) => bool
+    ): InstanceType<TDerived> | undefined;
+    public static getModel<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        uidOrFilter: string | ((model: InstanceType<TDerived>) => bool)
+    ): InstanceType<TDerived> | undefined {
         if (TypeUtils.isString(uidOrFilter)) {
             return BaseModel.#MODELS[this.MODEL_NAME]?.[uidOrFilter] as any;
         }
@@ -325,16 +325,16 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return undefined;
     }
 
-    public static getModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): InstanceType<TParent>[];
-    public static getModels<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        filter: (model: InstanceType<TParent>) => bool
-    ): InstanceType<TParent>[];
-    public static getModels<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        uidsOrFilter: string[] | ((model: InstanceType<TParent>) => bool)
-    ): InstanceType<TParent>[] {
-        const models: InstanceType<TParent>[] = [];
+    public static getModels<TDerived extends TBaseModelClass<any>>(this: TDerived, uids: string[]): InstanceType<TDerived>[];
+    public static getModels<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        filter: (model: InstanceType<TDerived>) => bool
+    ): InstanceType<TDerived>[];
+    public static getModels<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        uidsOrFilter: string[] | ((model: InstanceType<TDerived>) => bool)
+    ): InstanceType<TDerived>[] {
+        const models: InstanceType<TDerived>[] = [];
         if (TypeUtils.isFunction(uidsOrFilter)) {
             return Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(uidsOrFilter as any);
         }
@@ -348,12 +348,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return models;
     }
 
-    public static useModels<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        filter: (model: InstanceType<TParent>) => bool,
+    public static useModels<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        filter: (model: InstanceType<TDerived>) => bool,
         dependencies?: React.DependencyList
-    ): InstanceType<TParent>[] {
-        const [models, setModels] = useState<InstanceType<TParent>[]>(
+    ): InstanceType<TDerived>[] {
+        const [models, setModels] = useState<InstanceType<TDerived>[]>(
             Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(filter as any) as any
         );
 
@@ -394,9 +394,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return models;
     }
 
-    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, uid: string): void;
-    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, filter: (model: InstanceType<TParent>) => bool): void;
-    public static deleteModel<TParent extends TBaseModelClass<any>>(this: TParent, uidOrFilter: string | ((model: InstanceType<TParent>) => bool)) {
+    public static deleteModel<TDerived extends TBaseModelClass<any>>(this: TDerived, uid: string): void;
+    public static deleteModel<TDerived extends TBaseModelClass<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
+    public static deleteModel<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        uidOrFilter: string | ((model: InstanceType<TDerived>) => bool)
+    ) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
             return;
@@ -419,11 +422,11 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
     }
 
-    public static deleteModels<TParent extends TBaseModelClass<any>>(this: TParent, uids: string[]): void;
-    public static deleteModels<TParent extends TBaseModelClass<any>>(this: TParent, filter: (model: InstanceType<TParent>) => bool): void;
-    public static deleteModels<TParent extends TBaseModelClass<any>>(
-        this: TParent,
-        uidsOrFilter: string[] | ((model: InstanceType<TParent>) => bool)
+    public static deleteModels<TDerived extends TBaseModelClass<any>>(this: TDerived, uids: string[]): void;
+    public static deleteModels<TDerived extends TBaseModelClass<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
+    public static deleteModels<TDerived extends TBaseModelClass<any>>(
+        this: TDerived,
+        uidsOrFilter: string[] | ((model: InstanceType<TDerived>) => bool)
     ) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
@@ -514,7 +517,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         this.update({ uid: value } as any);
     }
 
-    public asFake<TParent extends TBaseModelInstance<any>>(this: TParent): TParent {
+    public asFake<TDerived extends TBaseModelInstance<any>>(this: TDerived): TDerived {
         const constructor = this.#getConstructor();
         const model = {
             ...this.#mStore.getState(),

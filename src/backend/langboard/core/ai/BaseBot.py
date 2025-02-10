@@ -37,7 +37,7 @@ class BotMetadata(type):
     __bots__: dict[InternalBotType, type["BaseBot"]] = {}
 
     def __new__(cls, name, bases, attrs):
-        new_cls: type[BaseBot] = super().__new__(cls, name, bases, attrs)
+        new_cls: type[BaseBot] = super().__new__(cls, name, bases, attrs)  # type: ignore
         bot_type = new_cls.bot_type()  # type: ignore
         if bot_type:
             if bot_type in cls.__bots__:

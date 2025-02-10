@@ -3,15 +3,35 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth, Role
 from ...core.storage import Storage, StorageName
-from ...models import ProjectRole
+from ...models import CardAttachment, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ChangeAttachmentNameForm, ChangeOrderForm, project_role_finder
 
 
-@AppRouter.api.post("/board/{project_uid}/card/{card_uid}/attachment")
+@AppRouter.api.post(
+    "/board/{project_uid}/card/{card_uid}/attachment",
+    tags=["Board.Card.Attachment"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                **CardAttachment.api_schema(),
+                "user": User,
+            },
+            201,
+        )
+        .auth()
+        .role()
+        .no_bot()
+        .err(404, "Project or card not found.")
+        .err(500, "Upload failed.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def upload_card_attachment(
@@ -41,7 +61,11 @@ async def upload_card_attachment(
     )
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/order")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/order",
+    tags=["Board.Card.Attachment"],
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project or card not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_attachment_order(
@@ -62,7 +86,18 @@ async def change_attachment_order(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/name")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}/name",
+    tags=["Board.Card.Attachment"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .role()
+        .err(403, "Bot cannot access this endpoint or no permission to update this attachment.")
+        .err(404, "Project, card, or attachment not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def change_card_attachment_name(
@@ -96,7 +131,18 @@ async def change_card_attachment_name(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}")
+@AppRouter.api.delete(
+    "/board/{project_uid}/card/{card_uid}/attachment/{attachment_uid}",
+    tags=["Board.Card.Attachment"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .role()
+        .err(403, "Bot cannot access this endpoint or no permission to delete this attachment.")
+        .err(404, "Project, card, or attachment not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def delete_card_attachment(

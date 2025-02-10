@@ -26,7 +26,7 @@ function PreferenceLanguage() {
             error: (error) => {
                 let message = "";
                 const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
+                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                         message = t("myAccount.errors.Invalid language.");
                     },
                     nonApiError: () => {

@@ -11,6 +11,16 @@ class CardRelationship(BaseSqlModel, table=True):
     card_id_parent: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
     card_id_child: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "relationship_type_uid": "string",
+            "parent_card_uid": "string",
+            "child_card_uid": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

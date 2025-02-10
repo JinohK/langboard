@@ -26,6 +26,18 @@ class ProjectLabel(BaseSqlModel, table=True):
     description: str = Field(nullable=False)
     order: int = Field(default=0, nullable=False)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "project_uid": "string",
+            "name": "string",
+            "description": "string",
+            "order": "integer",
+            "color": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

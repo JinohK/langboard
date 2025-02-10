@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
@@ -10,7 +11,11 @@ from ...services import Service
 from .scopes import ChangeColumnOrderForm, ColumnForm, project_role_finder
 
 
-@AppRouter.api.post("/board/{project_uid}/column")
+@AppRouter.api.post(
+    "/board/{project_uid}/column",
+    tags=["Board.Column"],
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def create_column(
@@ -26,7 +31,11 @@ async def create_column(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/column/{column_uid}/name")
+@AppRouter.api.put(
+    "/board/{project_uid}/column/{column_uid}/name",
+    tags=["Board.Column"],
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or column not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def update_column_name(
@@ -43,7 +52,11 @@ async def update_column_name(
     return JsonResponse(content={"name": form.name}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/column/{column_uid}/order")
+@AppRouter.api.put(
+    "/board/{project_uid}/column/{column_uid}/order",
+    tags=["Board.Column"],
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project or column not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def update_column_order(
@@ -63,7 +76,11 @@ async def update_column_order(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/board/{project_uid}/column/{column_uid}")
+@AppRouter.api.delete(
+    "/board/{project_uid}/column/{column_uid}",
+    tags=["Board.Column"],
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or column not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def delete_column(

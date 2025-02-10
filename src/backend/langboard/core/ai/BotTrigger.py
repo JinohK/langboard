@@ -10,6 +10,10 @@ class BotTrigger(BaseSqlModel, table=True):
     condition: BotTriggerCondition = Field(nullable=False, sa_type=EnumLikeType(BotTriggerCondition))
     is_predefined: bool = Field(default=False, nullable=False)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

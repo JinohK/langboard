@@ -1,11 +1,12 @@
 from fastapi import File, UploadFile, status
 from ...core.ai import Bot
-from ...core.db import User
+from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
-from ...models import ProjectRole
+from ...models import ProjectRole, ProjectWiki, ProjectWikiAttachment
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
@@ -18,7 +19,34 @@ from .scopes import (
 )
 
 
-@AppRouter.api.get("/board/{project_uid}/wikis")
+@AppRouter.api.get(
+    "/board/{project_uid}/wikis",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "wikis": [
+                    (
+                        ProjectWiki,
+                        {
+                            "schema": {
+                                "assigned_bots": [Bot],
+                                "assigned_members": [User],
+                            }
+                        },
+                    )
+                ],
+                "project_bots": [Bot],
+                "project_members": [User],
+            }
+        )
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project_wikis(
@@ -38,7 +66,30 @@ async def get_project_wikis(
     )
 
 
-@AppRouter.api.post("/board/{project_uid}/wiki")
+@AppRouter.api.post(
+    "/board/{project_uid}/wiki",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "wiki": (
+                    ProjectWiki,
+                    {
+                        "schema": {
+                            "assigned_bots": [Bot],
+                            "assigned_members": [User],
+                        }
+                    },
+                )
+            }
+        )
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def create_wiki(
@@ -55,7 +106,24 @@ async def create_wiki(
     return JsonResponse(content={"wiki": api_wiki}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/details")
+@AppRouter.api.put(
+    "/board/{project_uid}/wiki/{wiki_uid}/details",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "title?": "string",
+                "content?": EditorContentModel.api_schema(),
+            }
+        )
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this wiki.")
+        .err(404, "Project or wiki not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def change_wiki_details(
@@ -65,6 +133,13 @@ async def change_wiki_details(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
+    if not project_wiki:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     form_dict = {}
     for key in form.model_fields:
         value = getattr(form, key)
@@ -90,7 +165,18 @@ async def change_wiki_details(
     return JsonResponse(content=result, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/public")
+@AppRouter.api.put(
+    "/board/{project_uid}/wiki/{wiki_uid}/public",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this wiki.")
+        .err(404, "Project or wiki not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def change_wiki_public(
@@ -100,14 +186,32 @@ async def change_wiki_public(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.change_public(user_or_bot, project_uid, wiki_uid, form.is_public)
+    project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
+    if not project_wiki:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_wiki.change_public(user_or_bot, project_uid, project_wiki, form.is_public)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/assignees")
+@AppRouter.api.put(
+    "/board/{project_uid}/wiki/{wiki_uid}/assignees",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .role()
+        .err(403, "Bot cannot access this endpoint or no permission to update this wiki.")
+        .err(404, "Project or wiki not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def update_wiki_assignees(
@@ -120,14 +224,25 @@ async def update_wiki_assignees(
     if not isinstance(user_or_bot, User):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.project_wiki.update_assignees(user_or_bot, project_uid, wiki_uid, form.assignees)
+    project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
+    if not project_wiki:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_wiki.update_assignees(user_or_bot, project_uid, project_wiki, form.assignees)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/wiki/{wiki_uid}/order")
+@AppRouter.api.put(
+    "/board/{project_uid}/wiki/{wiki_uid}/order",
+    tags=["Board.Wiki"],
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or wiki not found.").get(),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def change_wiki_order(
@@ -143,7 +258,26 @@ async def change_wiki_order(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/board/{project_uid}/wiki/{wiki_uid}/attachment")
+@AppRouter.api.post(
+    "/board/{project_uid}/wiki/{wiki_uid}/attachment",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                **ProjectWikiAttachment.api_schema(),
+                "user": User,
+            },
+            201,
+        )
+        .auth()
+        .role()
+        .no_bot()
+        .err(404, "Project or wiki not found.")
+        .err(500, "Upload failed.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def upload_wiki_attachment(
@@ -173,7 +307,18 @@ async def upload_wiki_attachment(
     )
 
 
-@AppRouter.api.delete("/board/{project_uid}/wiki/{wiki_uid}")
+@AppRouter.api.delete(
+    "/board/{project_uid}/wiki/{wiki_uid}",
+    tags=["Board.Wiki"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this wiki.")
+        .err(404, "Project or wiki not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def delete_wiki(
@@ -182,7 +327,14 @@ async def delete_wiki(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.delete(user_or_bot, project_uid, wiki_uid)
+    project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
+    if not project_wiki:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project_wiki.delete(user_or_bot, project_uid, project_wiki)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

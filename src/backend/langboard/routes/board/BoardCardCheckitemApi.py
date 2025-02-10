@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
@@ -16,7 +17,13 @@ from .scopes import (
 )
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checkitem not found.").get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_title(
@@ -34,7 +41,13 @@ async def change_checkitem_title(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checkitem not found.").get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_order(
@@ -54,7 +67,18 @@ async def change_checkitem_order(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/status")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this checkitem.")
+        .err(404, "Project, card, or checkitem not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def change_checkitem_status(
@@ -79,7 +103,18 @@ async def change_checkitem_status(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify")
+@AppRouter.api.post(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this checkitem.")
+        .err(404, "Project, card, or checkitem not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def cardify_checkitem(
@@ -107,7 +142,18 @@ async def cardify_checkitem(
     )
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/toggle-checked")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/toggle-checked",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this checkitem.")
+        .err(404, "Project, card, or checkitem not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def toggle_checkitem_checked(
@@ -131,7 +177,18 @@ async def toggle_checkitem_checked(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}")
+@AppRouter.api.delete(
+    "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}",
+    tags=["Board.Card.Checkitem"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to delete this checkitem.")
+        .err(404, "Project, card, or checkitem not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
 async def delete_checkitem(

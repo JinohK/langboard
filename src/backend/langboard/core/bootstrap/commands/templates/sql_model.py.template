@@ -6,6 +6,10 @@ from ..core.db import DateTimeField, EnumLikeType, ModelColumnType, SecretStr, S
 class {class_name}({base_class}, table=True):
     
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {empty_dict}
+
     def api_response(self) -> dict[str, Any]:
         return {empty_dict}
 

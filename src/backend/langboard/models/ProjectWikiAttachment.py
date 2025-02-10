@@ -12,6 +12,17 @@ class ProjectWikiAttachment(SoftDeleteModel, table=True):
     file: FileModel = Field(sa_type=ModelColumnType(FileModel))
     order: int = Field(default=0)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "name": "string",
+            "url": "string",
+            "order": "integer",
+            "created_at": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

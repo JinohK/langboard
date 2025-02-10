@@ -13,7 +13,7 @@ export type ParseMarkdownBlocksOptions = {
      *
      * @default true
      */
-    trim?: boolean;
+    trim?: bool;
 };
 
 export const parseMarkdownBlocks = (content: string, { exclude = ["space"], trim = true }: ParseMarkdownBlocksOptions = {}): Token[] => {

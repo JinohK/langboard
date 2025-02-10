@@ -9,6 +9,14 @@ class UserEmail(SoftDeleteModel, table=True):
     email: str = Field(nullable=False)
     verified_at: datetime | None = DateTimeField(default=None, nullable=True)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "email": "string",
+            "verified_at": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "email": self.email,

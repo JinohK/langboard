@@ -26,6 +26,10 @@ class UserNotificationUnsubscription(BaseSqlModel, table=True):
     specific_table: str | None = Field(nullable=True)
     specific_id: SnowflakeID | None = SnowflakeIDField(nullable=True)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

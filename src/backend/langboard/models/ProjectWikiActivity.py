@@ -20,6 +20,19 @@ class ProjectWikiActivity(BaseActivityModel, table=True):
     project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), index=True)
     activity_type: ProjectWikiActivityType = Field(nullable=False, sa_type=EnumLikeType(ProjectWikiActivityType))
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return BaseActivityModel.api_schema(
+            {
+                "activity_type": f"Literal[{', '.join([activity_type.value for activity_type in ProjectWikiActivityType])}]",
+                "filterable_type": "Literal[project]",
+                "filterable_uid": "string",
+                "sub_filterable_type": "Literal[project_wiki]",
+                "sub_filterable_uid": "string",
+                **(schema or {}),
+            }
+        )
+
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value

@@ -12,7 +12,7 @@ from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...locales.LangEnum import LangEnum
-from ...models import Project, ProjectAssignedUser, UserEmail, UserProfile
+from ...models import UserEmail, UserProfile
 from ...publishers import UserPublisher
 from ...tasks.activities import UserActivityTask
 
@@ -83,33 +83,6 @@ class UserService(BaseService):
         raw_subemails = await self._get_all_by(UserEmail, "user_id", user.id)
         subemails = [subemail.api_response() for subemail in raw_subemails]
         return subemails
-
-    async def get_starred_projects(self, user: User) -> list[dict[str, str]]:
-        if not user or user.is_new():
-            return []
-
-        async with DbSession.use() as db:
-            result = await db.exec(
-                SqlBuilder.select.table(Project)
-                .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
-                .where(ProjectAssignedUser.column("user_id") == user.id)
-                .where(ProjectAssignedUser.column("starred") == True)  # noqa
-                .order_by(
-                    ProjectAssignedUser.column("last_viewed_at").desc(),
-                    Project.column("updated_at").desc(),
-                    Project.column("id").desc(),
-                )
-                .group_by(
-                    Project.column("id"),
-                    ProjectAssignedUser.column("id"),
-                    Project.column("updated_at"),
-                    ProjectAssignedUser.column("last_viewed_at"),
-                )
-            )
-        raw_projects = result.all()
-        projects = [project.api_response() for project in raw_projects]
-
-        return projects
 
     async def create_token_url(
         self, user: User, cache_key: str, token_query_name: QUERY_NAMES, extra_token_data: dict | None = None

@@ -3,12 +3,17 @@ from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
 from ...core.routing import AppRouter, JsonResponse
 from ...core.routing.Exception import InvalidError, InvalidException
+from ...core.schema import OpenApiSchema
 from ...core.utils.String import make_fullname
 from ...services import Service
 from .scopes import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
 
 
-@AppRouter.api.post("/auth/recovery/send")
+@AppRouter.api.post(
+    "/auth/recovery/send",
+    tags=["Auth.Recovery"],
+    responses=(OpenApiSchema().err(404, "User not found.").err(503, "Email service is unavailable.").get()),
+)
 async def send_link(form: SendResetLinkForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_token(form.email_token, form.sign_token)
     if not user:
@@ -35,7 +40,9 @@ async def send_link(form: SendResetLinkForm, service: Service = Service.scope())
     return JsonResponse(content={"url": token_url})
 
 
-@AppRouter.api.post("/auth/recovery/validate")
+@AppRouter.api.post(
+    "/auth/recovery/validate", tags=["Auth.Recovery"], responses=OpenApiSchema().err(404, "User not found.").get()
+)
 async def validate_recovery_token(form: ValidateTokenForm, service: Service = Service.scope()) -> JsonResponse:
     user, _, _ = await service.user.validate_token_from_url("recovery", form.recovery_token)
     if not user:
@@ -44,7 +51,9 @@ async def validate_recovery_token(form: ValidateTokenForm, service: Service = Se
     return JsonResponse(content={"email": user.email})
 
 
-@AppRouter.api.post("/auth/recovery/reset")
+@AppRouter.api.post(
+    "/auth/recovery/reset", tags=["Auth.Recovery"], responses=OpenApiSchema().err(404, "User not found.").get()
+)
 async def change_password(form: ResetPasswordForm, service: Service = Service.scope()) -> JsonResponse:
     user, cache_key, _ = await service.user.validate_token_from_url("recovery", form.recovery_token)
     if not user or not cache_key:

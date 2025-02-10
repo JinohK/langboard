@@ -1,8 +1,11 @@
 from enum import Enum
 from typing import Any, cast, overload
-from fastapi import APIRouter
+from fastapi import APIRouter, FastAPI
+from pkg_resources import require
 from socketify import App as SocketifyApp
 from socketify import OpCode
+from ...Constants import PROJECT_NAME
+from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketManager import SocketManager
@@ -74,3 +77,40 @@ class AppRouter:
         return self.__socketify_app.publish(
             topic=socket_topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
         )
+
+    def set_openapi_schema(self, app: FastAPI):
+        if app.openapi_schema:
+            openapi_schema = app.openapi_schema
+        else:
+            version = require(PROJECT_NAME)[0].version
+            openapi_schema = get_openapi(
+                title=PROJECT_NAME.capitalize(),
+                version=version,
+                routes=app.routes,
+            )
+
+        if "components" not in openapi_schema:
+            openapi_schema["components"] = {}
+
+        if "schemas" not in openapi_schema["components"]:
+            openapi_schema["components"]["schemas"] = {}
+
+        openapi_schema["components"]["schemas"]["ValidationError"] = {
+            "title": "ValidationError",
+            "type": "object",
+            "properties": {
+                "<error type>": {
+                    "title": "Error Type",
+                    "type": "object",
+                    "properties": {
+                        "Literal[body, query, path, header]": {
+                            "title": "Location",
+                            "type": "array",
+                            "items": {"anyOf": [{"type": "string", "example": "<field name>"}]},
+                        }
+                    },
+                }
+            },
+        }
+
+        app.openapi_schema = openapi_schema

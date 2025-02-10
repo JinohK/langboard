@@ -3,7 +3,15 @@ from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
 from ...core.storage import FileModel
-from ...models import Project, ProjectWiki, ProjectWikiAssignedBot, ProjectWikiAssignedUser, ProjectWikiAttachment
+from ...models import (
+    Project,
+    ProjectAssignedBot,
+    ProjectAssignedUser,
+    ProjectWiki,
+    ProjectWikiAssignedBot,
+    ProjectWikiAssignedUser,
+    ProjectWikiAttachment,
+)
 from ...publishers import ProjectWikiPublisher
 from ...tasks.activities import ProjectWikiActivityTask
 from ...tasks.bot import ProjectWikiBotTask
@@ -114,20 +122,30 @@ class ProjectWikiService(BaseService):
         users = [user.api_response() for user, _ in raw_users]
         return users
 
-    async def is_assigned(self, user: User, project_wiki: TWikiParam) -> bool:
+    async def is_assigned(self, user_or_bot: TUserOrBot, project_wiki: TWikiParam) -> bool:
         project_wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, project_wiki))
         if not project_wiki:
             return False
 
-        if project_wiki.is_public or user.is_admin:
+        if project_wiki.is_public:
             return True
+
+        if isinstance(user_or_bot, Bot):
+            model_table = ProjectWikiAssignedBot
+            column_name = "bot_id"
+        else:
+            if user_or_bot.is_admin:
+                return True
+
+            model_table = ProjectWikiAssignedUser
+            column_name = "user_id"
 
         async with DbSession.use() as db:
             result = await db.exec(
-                SqlBuilder.select.table(ProjectWikiAssignedUser)
+                SqlBuilder.select.table(model_table)
                 .where(
-                    (ProjectWikiAssignedUser.column("project_wiki_id") == project_wiki.id)
-                    & (ProjectWikiAssignedUser.column("user_id") == user.id)
+                    (model_table.column("project_wiki_id") == project_wiki.id)
+                    & (model_table.column(column_name) == user_or_bot.id)
                 )
                 .limit(1)
             )
@@ -153,6 +171,7 @@ class ProjectWikiService(BaseService):
             await db.commit()
 
         api_wiki = wiki.api_response()
+        api_wiki["assigned_bots"] = []
         api_wiki["assigned_members"] = []
         ProjectWikiPublisher.created(project, wiki)
         ProjectWikiActivityTask.project_wiki_created(user_or_bot, project, wiki)
@@ -229,14 +248,34 @@ class ProjectWikiService(BaseService):
                     )
                 )
                 await db.commit()
-        elif isinstance(user_or_bot, User):
-            assigned_user = ProjectWikiAssignedUser(
-                project_wiki_id=wiki.id,
-                user_id=user_or_bot.id,
-            )
+        else:
+            if isinstance(user_or_bot, Bot):
+                projet_assigned_table = ProjectAssignedBot
+                model_table = ProjectWikiAssignedBot
+                column_name = "bot_id"
+            else:
+                projet_assigned_table = ProjectAssignedUser
+                model_table = ProjectWikiAssignedUser
+                column_name = "user_id"
 
             async with DbSession.use() as db:
-                db.insert(assigned_user)
+                result = await db.exec(
+                    SqlBuilder.select.table(projet_assigned_table).where(
+                        (projet_assigned_table.column("project_id") == project.id)
+                        & (projet_assigned_table.column(column_name) == user_or_bot.id)
+                    )
+                )
+            project_assigned = result.first()
+            if not project_assigned:
+                return None
+
+            model_params: dict[str, Any] = {
+                "project_assigned_id": project_assigned.id,
+                "project_wiki_id": wiki.id,
+            }
+            model_params[column_name] = user_or_bot.id
+            async with DbSession.use() as db:
+                db.insert(model_table(**model_params))
                 await db.commit()
 
         was_public = wiki.is_public

@@ -10,6 +10,16 @@ class UserProfile(BaseSqlModel, table=True):
     affiliation: str | None = Field(default=None, nullable=True)
     position: str | None = Field(default=None, nullable=True)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "industry": "string",
+            "purpose": "string",
+            "affiliation": "string",
+            "position": "string",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "industry": self.industry,

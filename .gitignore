@@ -192,6 +192,12 @@ dist-ssr
 
 *.tsbuildinfo
 
+# Dpcusaurus generated files
+.docusaurus
+.cache-loader
+/docs/openapi.json
+
+# Custom
 local
 
 docker/volumes

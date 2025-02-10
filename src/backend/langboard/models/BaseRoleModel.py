@@ -22,6 +22,10 @@ class BaseRoleModel(BaseSqlModel):
     @abstractmethod
     def get_default_actions() -> list[Enum]: ...
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def is_all_granted(self) -> bool:
         if ALL_GRANTED in self.actions:
             return True

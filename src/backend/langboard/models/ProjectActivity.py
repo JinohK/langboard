@@ -73,6 +73,19 @@ class ProjectActivity(BaseActivityModel, table=True):
     card_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
     activity_type: ProjectActivityType = Field(nullable=False, sa_type=EnumLikeType(ProjectActivityType))
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return BaseActivityModel.api_schema(
+            {
+                "activity_type": f"Literal[{', '.join([activity_type.value for activity_type in ProjectActivityType])}]",
+                "filterable_type": "Literal[project]",
+                "filterable_uid": "string",
+                "sub_filterable_type": "Literal[card]?",
+                "sub_filterable_uid": "string?",
+                **(schema or {}),
+            }
+        )
+
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value

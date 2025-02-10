@@ -20,17 +20,17 @@ class BotService(BaseService):
         return "bot"
 
     @overload
-    async def get_list(self, as_api: Literal[False], is_setting_response: bool = False) -> list[Bot]: ...
+    async def get_list(self, as_api: Literal[False], is_setting: bool = False) -> list[Bot]: ...
     @overload
-    async def get_list(self, as_api: Literal[True], is_setting_response: bool = False) -> list[dict[str, Any]]: ...
-    async def get_list(self, as_api: bool, is_setting_response: bool = False) -> list[Bot] | list[dict[str, Any]]:
+    async def get_list(self, as_api: Literal[True], is_setting: bool = False) -> list[dict[str, Any]]: ...
+    async def get_list(self, as_api: bool, is_setting: bool = False) -> list[Bot] | list[dict[str, Any]]:
         bots = await self._get_all(Bot)
         if not as_api:
             return list(bots)
         api_bots = []
         for bot in bots:
-            api_bot = bot.api_response(is_setting_response)
-            if is_setting_response:
+            api_bot = bot.api_response(is_setting)
+            if is_setting:
                 conditions = await self._get_all_by(BotTrigger, "bot_id", bot.id)
                 api_bot["conditions"] = {
                     condition.condition.value: {"is_predefined": condition.is_predefined} for condition in conditions

@@ -5,14 +5,22 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
-from ...models.UserNotificationUnsubscription import NotificationScope
+from ...models import UserEmail, UserGroup, UserNotification, UserProfile
+from ...models.UserNotification import NotificationType
+from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
 
 
-@AppRouter.api.post("/auth/email", response_model=AuthEmailResponse)
+@AppRouter.api.post(
+    "/auth/email",
+    response_model=AuthEmailResponse,
+    tags=["Auth"],
+    responses=OpenApiSchema(use_success=False).err(406, "Subemail is not verified.").err(404, "User not found.").get(),
+)
 async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) -> JsonResponse | AuthEmailResponse:
     if form.is_token:
         user, subemail = await service.user.get_by_token(form.token, form.sign_token)
@@ -29,7 +37,18 @@ async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) ->
     return AuthEmailResponse(token=token, email=user.email)
 
 
-@AppRouter.api.post("/auth/signin", response_model=SignInResponse)
+@AppRouter.api.post(
+    "/auth/signin",
+    response_model=SignInResponse,
+    tags=["Auth"],
+    responses=(
+        OpenApiSchema(use_success=False)
+        .err(404, "User not found or passwords don't match.")
+        .err(406, "Subemail is not verified.")
+        .err(423, "User is not activated.")
+        .get()
+    ),
+)
 async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonResponse | SignInResponse:
     user, subemail = await service.user.get_by_token(form.email_token, form.sign_token)
 
@@ -50,7 +69,14 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
     return SignInResponse(access_token=access_token, refresh_token=refresh_token)
 
 
-@AppRouter.api.post("/auth/refresh", response_model=RefreshResponse)
+@AppRouter.api.post(
+    "/auth/refresh",
+    response_model=RefreshResponse,
+    tags=["Auth"],
+    responses=(
+        OpenApiSchema(use_success=False).err(422, "Refresh token is expired.").err(401, "Token is invalid.").get()
+    ),
+)
 async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | RefreshResponse:
     try:
         new_access_token = Auth.refresh(refresh_token)
@@ -66,7 +92,45 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
     return RefreshResponse(access_token=new_access_token)
 
 
-@AppRouter.api.get("/auth/me")
+@AppRouter.api.get(
+    "/auth/me",
+    tags=["Auth"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "user": (
+                    User,
+                    {
+                        "schema": {
+                            **UserProfile.api_schema(),
+                            "preferred_lang": "string",
+                            "user_groups": [UserGroup],
+                            "subemails": [UserEmail],
+                            "is_admin?": "bool",
+                            "notification_unsubs": {
+                                NotificationScope.All.value: {
+                                    NotificationType: {
+                                        NotificationChannel: "bool",
+                                    }
+                                },
+                                NotificationScope.Specific.value: {
+                                    NotificationType: {
+                                        NotificationChannel: ["<specific uid>"],
+                                    }
+                                },
+                            },
+                        }
+                    },
+                ),
+                "notifications": [UserNotification],
+            }
+        )
+        .auth()
+        .no_bot()
+        .get()
+    ),
+)
 @AuthFilter.add
 async def about_me(user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
     if not isinstance(user_or_bot, User):

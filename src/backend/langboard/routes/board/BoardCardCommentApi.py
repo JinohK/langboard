@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import CardComment, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
@@ -10,7 +11,11 @@ from ...services import Service
 from .scopes import ToggleCardCommentReactionForm, project_role_finder
 
 
-@AppRouter.api.post("/board/{project_uid}/card/{card_uid}/comment")
+@AppRouter.api.post(
+    "/board/{project_uid}/card/{card_uid}/comment",
+    tags=["Board.Card.Comment"],
+    responses=(OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get()),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def add_card_comment(
@@ -27,7 +32,18 @@ async def add_card_comment(
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
 
-@AppRouter.api.put("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}")
+@AppRouter.api.put(
+    "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
+    tags=["Board.Card.Comment"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to update this comment.")
+        .err(404, "Project, card, or comment not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def update_card_comment(
@@ -50,7 +66,18 @@ async def update_card_comment(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}")
+@AppRouter.api.delete(
+    "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
+    tags=["Board.Card.Comment"],
+    responses=(
+        OpenApiSchema()
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(403, "No permission to delete this comment.")
+        .err(404, "Project, card, or comment not found.")
+        .get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def delete_card_comment(
@@ -72,7 +99,13 @@ async def delete_card_comment(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react")
+@AppRouter.api.post(
+    "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react",
+    tags=["Board.Card.Comment"],
+    responses=(
+        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or comment not found.").get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def react_card_comment(

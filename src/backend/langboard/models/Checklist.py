@@ -10,6 +10,17 @@ class Checklist(SoftDeleteModel, table=True):
     order: int = Field(default=0, nullable=False)
     is_checked: bool = Field(default=False, nullable=False)
 
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "card_uid": "string",
+            "title": "string",
+            "order": "integer",
+            "is_checked": "bool",
+            **(schema or {}),
+        }
+
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

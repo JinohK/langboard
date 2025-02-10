@@ -6,8 +6,10 @@ from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.routing.Exception import InvalidError, InvalidException
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
+from ...models import UserGroup
 from ...services import Service
 from .AccountForm import (
     AddNewEmailForm,
@@ -21,7 +23,7 @@ from .AccountForm import (
 )
 
 
-@AppRouter.api.put("/account/profile")
+@AppRouter.api.put("/account/profile", tags=["Account"], responses=OpenApiSchema().auth().no_bot().get())
 @AuthFilter.add
 async def update_profile(
     form: UpdateProfileForm = UpdateProfileForm.scope(),
@@ -42,7 +44,19 @@ async def update_profile(
     return JsonResponse(content={})
 
 
-@AppRouter.api.post("/account/email")
+@AppRouter.api.post(
+    "/account/email",
+    tags=["Account"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .no_bot()
+        .err(404, "User subemail not found or subemail's user and current user don't match.")
+        .err(304, "User subemail is already verified.")
+        .err(503, "Failed to send email.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def add_new_email(
     form: AddNewEmailForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -79,7 +93,17 @@ async def add_new_email(
     return JsonResponse(content={"url": token_url})
 
 
-@AppRouter.api.post("/account/email/verify")
+@AppRouter.api.post(
+    "/account/email/verify",
+    tags=["Account"],
+    responses=OpenApiSchema()
+    .auth()
+    .no_bot()
+    .err(404, "User subemail not found or subemail's user and current user don't match.")
+    .err(409, "Subemail not found.")
+    .err(304, "User subemail is already verified.")
+    .get(),
+)
 @AuthFilter.add
 async def activate(
     form: VerifyNewEmailForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -109,7 +133,19 @@ async def activate(
     return JsonResponse(content={})
 
 
-@AppRouter.api.put("/account/email")
+@AppRouter.api.put(
+    "/account/email",
+    tags=["Account"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .no_bot()
+        .err(404, "User subemail not found or subemail's user and current user don't match.")
+        .err(423, "Subemail is not verified.")
+        .err(304, "User subemail is already primary.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def change_primary_email(
     form: EmailForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -131,7 +167,18 @@ async def change_primary_email(
     return JsonResponse(content={})
 
 
-@AppRouter.api.delete("/account/email")
+@AppRouter.api.delete(
+    "/account/email",
+    tags=["Account"],
+    responses=(
+        OpenApiSchema()
+        .auth()
+        .no_bot()
+        .err(404, "User subemail not found or subemail's user and current user don't match.")
+        .err(406, "Primary email cannot be deleted.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def delete_email(
     form: EmailForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -150,7 +197,7 @@ async def delete_email(
     return JsonResponse(content={})
 
 
-@AppRouter.api.put("/account/password")
+@AppRouter.api.put("/account/password", tags=["Account"], responses=OpenApiSchema().auth().no_bot().get())
 @AuthFilter.add
 async def change_password(
     form: ChangePasswordForm,
@@ -169,7 +216,11 @@ async def change_password(
     return JsonResponse(content={})
 
 
-@AppRouter.api.post("/account/group")
+@AppRouter.api.post(
+    "/account/group",
+    tags=["Account"],
+    responses=(OpenApiSchema().suc({"user_group": (UserGroup, {"schema": {"users": [User]}})}).auth().no_bot().get()),
+)
 @AuthFilter.add
 async def create_user_group(
     form: CreateUserGroupForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -183,7 +234,11 @@ async def create_user_group(
     return JsonResponse(content={"user_group": api_group})
 
 
-@AppRouter.api.put("/account/group/{group_uid}/name")
+@AppRouter.api.put(
+    "/account/group/{group_uid}/name",
+    tags=["Account"],
+    responses=OpenApiSchema().auth().no_bot().err(404, "User group not found.").get(),
+)
 @AuthFilter.add
 async def change_user_group_name(
     group_uid: str,
@@ -201,7 +256,11 @@ async def change_user_group_name(
     return JsonResponse(content={})
 
 
-@AppRouter.api.put("/account/group/{group_uid}/emails")
+@AppRouter.api.put(
+    "/account/group/{group_uid}/emails",
+    tags=["Account"],
+    responses=OpenApiSchema().suc({"users": [User]}).auth().no_bot().err(404, "User group not found.").get(),
+)
 @AuthFilter.add
 async def update_user_group_assigned_emails(
     group_uid: str,
@@ -221,7 +280,11 @@ async def update_user_group_assigned_emails(
     return JsonResponse(content={"users": group_users})
 
 
-@AppRouter.api.delete("/account/group/{group_uid}")
+@AppRouter.api.delete(
+    "/account/group/{group_uid}",
+    tags=["Account"],
+    responses=OpenApiSchema().auth().no_bot().err(404, "User group not found.").get(),
+)
 @AuthFilter.add
 async def delete_user_group(
     group_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -236,7 +299,11 @@ async def delete_user_group(
     return JsonResponse(content={})
 
 
-@AppRouter.api.put("/account/preferred-language")
+@AppRouter.api.put(
+    "/account/preferred-language",
+    tags=["Account"],
+    responses=OpenApiSchema().auth().no_bot().err(404, "Language code is invalid.").get(),
+)
 @AuthFilter.add
 async def update_preferred_language(
     form: UpdatePreferredLangForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -246,6 +313,6 @@ async def update_preferred_language(
 
     result = await service.user.update_preferred_lang(user_or_bot, form.lang)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={})

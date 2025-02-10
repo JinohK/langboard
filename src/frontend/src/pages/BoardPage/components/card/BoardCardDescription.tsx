@@ -4,7 +4,7 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
+import useToggleEditingByClick from "@/core/hooks/useToggleEditingByClick";
 import { BotModel, Project, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -69,12 +69,12 @@ const BoardCardDescription = memo((): JSX.Element => {
                 },
             });
         },
-        originalValue: description ?? { content: "" },
+        originalValue: description,
     });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const { stopEditing } = useStopEditingClickOutside("[data-card-description]", () => changeMode("view"), isEditing);
+    const { startEditing, stopEditing } = useToggleEditingByClick("[data-card-description]", changeMode, isEditing);
 
     editorsRef.current[editorName] = (editing: bool) => {
         if (hasRoleAction(Project.ERoleAction.CardUpdate)) {
@@ -83,7 +83,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     };
 
     useEffect(() => {
-        setValue(description ?? { content: "" });
+        setValue(description);
         forceUpdate();
     }, [description]);
 
@@ -100,25 +100,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     }, [isEditing]);
 
     return (
-        <Box
-            onClick={(e) => {
-                const target = e.target as HTMLElement;
-                if (isEditing || !target.closest("[data-card-description]")) {
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                changeMode("edit");
-                setTimeout(() => {
-                    if (editorComponentRef.current) {
-                        editorComponentRef.current.focus();
-                    }
-                }, 50);
-            }}
-            data-card-description
-        >
+        <Box onPointerDown={startEditing} data-card-description>
             <PlateEditor
                 value={valueRef.current}
                 mentionables={mentionables}

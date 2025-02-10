@@ -8,6 +8,10 @@ class CheckitemTimerRecord(BaseSqlModel, table=True):
     checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False, index=True)
     status: CheckitemStatus = Field(nullable=False)
 
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {}
+
     def api_response(self) -> dict[str, Any]:
         return {}
 

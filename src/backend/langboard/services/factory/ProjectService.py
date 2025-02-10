@@ -138,6 +138,33 @@ class ProjectService(BaseService):
 
         return projects
 
+    async def get_starred_projects(self, user: User) -> list[dict[str, str]]:
+        if not user or user.is_new():
+            return []
+
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(Project)
+                .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
+                .where(ProjectAssignedUser.column("user_id") == user.id)
+                .where(ProjectAssignedUser.column("starred") == True)  # noqa
+                .order_by(
+                    ProjectAssignedUser.column("last_viewed_at").desc(),
+                    Project.column("updated_at").desc(),
+                    Project.column("id").desc(),
+                )
+                .group_by(
+                    Project.column("id"),
+                    ProjectAssignedUser.column("id"),
+                    Project.column("updated_at"),
+                    ProjectAssignedUser.column("last_viewed_at"),
+                )
+            )
+        raw_projects = result.all()
+        projects = [project.api_response() for project in raw_projects]
+
+        return projects
+
     async def get_details(
         self, user_or_bot: TUserOrBot, project: TProjectParam, with_roles: bool
     ) -> tuple[Project, dict[str, Any]] | None:
@@ -193,7 +220,7 @@ class ProjectService(BaseService):
             result = await db.exec(
                 SqlBuilder.select.column(user_a.id)
                 .join(user_b, cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id)
-                .where((user_a.user_id == 1) & (user_b.user_id == 2))
+                .where((user_a.user_id == user.id) & (user_b.user_id == target_user.id))
             )
 
         return bool(result.first())
@@ -202,7 +229,7 @@ class ProjectService(BaseService):
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.columns(ProjectAssignedUser.starred, Project.id)
-                .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.project_id)
+                .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
                 .where(
                     (Project.column("id") == SnowflakeID.from_short_code(uid))
                     & (ProjectAssignedUser.column("user_id") == user.id)
@@ -241,10 +268,7 @@ class ProjectService(BaseService):
 
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
-    ) -> Project | None:
-        if not title:
-            return None
-
+    ) -> Project:
         project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
         async with DbSession.use() as db:
             db.insert(project)

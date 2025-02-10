@@ -11,11 +11,27 @@ class Card(SoftDeleteModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
     project_column_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectColumn.expr("id"), nullable=False, index=True)
     title: str = Field(nullable=False)
-    description: EditorContentModel | None = Field(default=None, sa_type=ModelColumnType(EditorContentModel))
+    description: EditorContentModel = Field(default=EditorContentModel(), sa_type=ModelColumnType(EditorContentModel))
     ai_description: str | None = Field(default=None, sa_type=TEXT)
     deadline_at: datetime | None = DateTimeField(default=None, nullable=True)
     order: int = Field(default=0, nullable=False)
     archived_at: datetime | None = DateTimeField(default=None, nullable=True)
+
+    @staticmethod
+    def api_schema(schema: dict | None = None) -> dict[str, Any]:
+        return {
+            "uid": "string",
+            "project_uid": "string",
+            "column_uid": "string",
+            "title": "string",
+            "description": EditorContentModel.api_schema(),
+            "ai_description": "string",
+            "order": "integer",
+            "deadline_at": "string?",
+            "created_at": "string",
+            "archived_at": "string?",
+            **(schema or {}),
+        }
 
     def api_response(self) -> dict[str, Any]:
         return {
@@ -23,7 +39,7 @@ class Card(SoftDeleteModel, table=True):
             "project_uid": self.project_id.to_short_code(),
             "column_uid": self.project_column_id.to_short_code(),
             "title": self.title,
-            "description": self.description.model_dump() if self.description else None,
+            "description": self.description.model_dump(),
             "ai_description": self.ai_description,
             "order": self.order,
             "deadline_at": self.deadline_at if self.deadline_at else None,

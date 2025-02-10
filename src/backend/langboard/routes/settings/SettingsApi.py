@@ -3,9 +3,11 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...core.setting import AppSettingType
+from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import Storage, StorageName
+from ...models import GlobalCardRelationshipType
 from ...services import Service
 from .Form import (
     CreateBotForm,
@@ -21,7 +23,7 @@ from .Form import (
 )
 
 
-@AppRouter.api.post("/settings/available")
+@AppRouter.api.post("/settings/available", tags=["AppSettings"], responses=OpenApiSchema().auth().only_admin().get())
 @AuthFilter.add
 async def is_settings_available(user_or_bot: User | Bot = Auth.scope("api")) -> JsonResponse:
     if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
@@ -29,7 +31,23 @@ async def is_settings_available(user_or_bot: User | Bot = Auth.scope("api")) -> 
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.get("/settings/all")
+@AppRouter.api.get(
+    "/settings/all",
+    tags=["AppSettings"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "settings": [AppSetting],
+                "bots": [Bot],
+                "global_relationships": [GlobalCardRelationshipType],
+            }
+        )
+        .auth()
+        .only_admin()
+        .get()
+    ),
+)
 @AuthFilter.add
 async def get_all_settings(
     user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -40,7 +58,7 @@ async def get_all_settings(
     await service.app_setting.init_langflow()
 
     settings = await service.app_setting.get_all(as_api=True)
-    bots = await service.bot.get_list(as_api=True, is_setting_response=True)
+    bots = await service.bot.get_list(as_api=True, is_setting=True)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
 
     return JsonResponse(
@@ -49,7 +67,11 @@ async def get_all_settings(
     )
 
 
-@AppRouter.api.post("/settings/app")
+@AppRouter.api.post(
+    "/settings/app",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().suc({"setting": AppSetting, "revealed_value": "string"}).auth().only_admin().get(),
+)
 @AuthFilter.add
 async def create_setting(
     form: CreateSettingForm,
@@ -70,7 +92,11 @@ async def create_setting(
     )
 
 
-@AppRouter.api.put("/settings/app/{setting_uid}")
+@AppRouter.api.put(
+    "/settings/app/{setting_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Setting not found.").get(),
+)
 @AuthFilter.add
 async def update_setting(
     setting_uid: str,
@@ -91,7 +117,11 @@ async def update_setting(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/settings/app/{setting_uid}")
+@AppRouter.api.delete(
+    "/settings/app/{setting_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Setting not found.").get(),
+)
 @AuthFilter.add
 async def delete_setting(
     setting_uid: str,
@@ -108,7 +138,11 @@ async def delete_setting(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/settings/app")
+@AppRouter.api.delete(
+    "/settings/app",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Settings not found.").get(),
+)
 @AuthFilter.add
 async def delete_selected_settings(
     form: DeleteSelectedSettingsForm,
@@ -125,7 +159,18 @@ async def delete_selected_settings(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/settings/bot")
+@AppRouter.api.post(
+    "/settings/bot",
+    tags=["AppSettings"],
+    responses=(
+        OpenApiSchema()
+        .suc({"bot": (Bot, {"is_setting": True}), "revealed_app_api_token": "string"})
+        .auth()
+        .only_admin()
+        .err(409, "Bot uname already exists.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def create_bot(
     form: CreateBotForm = CreateBotForm.scope(),
@@ -148,12 +193,33 @@ async def create_bot(
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
     return JsonResponse(
-        content={"bot": bot.api_response(is_setting_response=True), "revealed_app_api_token": bot.app_api_token},
+        content={"bot": bot.api_response(is_setting=True), "revealed_app_api_token": bot.app_api_token},
         status_code=status.HTTP_200_OK,
     )
 
 
-@AppRouter.api.put("/settings/bot/{bot_uid}")
+@AppRouter.api.put(
+    "/settings/bot/{bot_uid}",
+    tags=["AppSettings"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "name?": "string",
+                "bot_uname?": "string",
+                "avatar?": "string",
+                "api_url?": "string",
+                "api_key?": "string",
+                "deleted_avatar?": "bool",
+            }
+        )
+        .auth()
+        .only_admin()
+        .err(404, "Bot not found.")
+        .err(409, "Bot uname already exists.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def update_bot(
     bot_uid: str,
@@ -196,7 +262,18 @@ async def update_bot(
     return JsonResponse(content=model, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/settings/bot/{bot_uid}/new-api-token")
+@AppRouter.api.put(
+    "/settings/bot/{bot_uid}/new-api-token",
+    tags=["AppSettings"],
+    responses=(
+        OpenApiSchema()
+        .suc({"secret_app_api_token": "string", "revealed_app_api_token": "string"})
+        .auth()
+        .only_admin()
+        .err(404, "Bot not found.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def generate_new_bot_api_token(
     bot_uid: str,
@@ -212,14 +289,18 @@ async def generate_new_bot_api_token(
 
     return JsonResponse(
         content={
-            "secret_app_api_token": bot.api_response(is_setting_response=True)["app_api_token"],
+            "secret_app_api_token": bot.api_response(is_setting=True)["app_api_token"],
             "revealed_app_api_token": bot.app_api_token,
         },
         status_code=status.HTTP_200_OK,
     )
 
 
-@AppRouter.api.put("/settings/bot/predefine-trigger-condition")
+@AppRouter.api.put(
+    "/settings/bot/predefine-trigger-condition",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+)
 @AuthFilter.add
 async def predefine_bot_trigger_condition(
     form: PredefineBotTriggerConditionForm,
@@ -236,7 +317,11 @@ async def predefine_bot_trigger_condition(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.put("/settings/bot/{bot_uid}/trigger-condition")
+@AppRouter.api.put(
+    "/settings/bot/{bot_uid}/trigger-condition",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+)
 @AuthFilter.add
 async def toggle_bot_trigger_condition(
     bot_uid: str,
@@ -254,7 +339,11 @@ async def toggle_bot_trigger_condition(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/settings/bot/{bot_uid}")
+@AppRouter.api.delete(
+    "/settings/bot/{bot_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+)
 @AuthFilter.add
 async def delete_bot(
     bot_uid: str,
@@ -271,7 +360,11 @@ async def delete_bot(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.post("/settings/global-relationship")
+@AppRouter.api.post(
+    "/settings/global-relationship",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().suc({"global_relationship": GlobalCardRelationshipType}).auth().only_admin().get(),
+)
 @AuthFilter.add
 async def create_global_relationship(
     form: CreateGlobalRelationshipTypeForm,
@@ -284,8 +377,6 @@ async def create_global_relationship(
     global_relationship = await service.app_setting.create_global_relationship(
         form.parent_name, form.child_name, form.description
     )
-    if not global_relationship:
-        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
     return JsonResponse(
         content={"global_relationship": global_relationship.api_response()},
@@ -293,7 +384,24 @@ async def create_global_relationship(
     )
 
 
-@AppRouter.api.put("/settings/global-relationship/{global_relationship_uid}")
+@AppRouter.api.put(
+    "/settings/global-relationship/{global_relationship_uid}",
+    tags=["AppSettings"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "parent_name?": "string",
+                "child_name?": "string",
+                "description?": "string",
+            }
+        )
+        .auth()
+        .only_admin()
+        .err(404, "Global relationship not found.")
+        .get()
+    ),
+)
 @AuthFilter.add
 async def update_global_relationship(
     global_relationship_uid: str,
@@ -311,8 +419,6 @@ async def update_global_relationship(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     if isinstance(result, bool):
-        if not result:
-            return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
         return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
     _, model = result
@@ -320,7 +426,11 @@ async def update_global_relationship(
     return JsonResponse(content={**model}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/settings/global-relationship/{global_relationship_uid}")
+@AppRouter.api.delete(
+    "/settings/global-relationship/{global_relationship_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Global relationship not found.").get(),
+)
 @AuthFilter.add
 async def delete_global_relationship(
     global_relationship_uid: str,
@@ -337,7 +447,11 @@ async def delete_global_relationship(
     return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
-@AppRouter.api.delete("/settings/global-relationship")
+@AppRouter.api.delete(
+    "/settings/global-relationship",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().only_admin().err(404, "Global relationships not found.").get(),
+)
 @AuthFilter.add
 async def delete_selected_global_relationship(
     form: DeleteSelectedGlobalRelationshipTypesForm,

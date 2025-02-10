@@ -131,7 +131,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
 
     let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
-    if (!isOverlay && !isDragging && (description?.content.trim().length || cardMembers.length || labels.length || checklists.length)) {
+    if (!isOverlay && !isDragging && (description.content.trim().length || cardMembers.length || labels.length || checklists.length)) {
         cardInner = (
             <HoverCard.Root
                 open={isHoverCardOpened}
@@ -148,7 +148,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                 <HoverCard.Content
                     side="right"
                     align="end"
-                    className="w-[theme(screens.xs)] max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
+                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
                     {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                     hidden={isHoverCardHidden}
                 >
@@ -374,15 +374,15 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
         <Flex direction="col" gap="1.5">
             {!!labels.length && (
                 <Flex items="center" gap="1.5">
-                    {labels.slice(0, 5).map((label) => (
+                    {labels.slice(0, 2).map((label) => (
                         <LabelModelBadge key={`board-card-preview-label-${label.uid}`} model={label} />
                     ))}
-                    {labels.length > 5 && (
+                    {labels.length > 2 && (
                         <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
                             <HoverCard.Trigger asChild>
                                 <Box cursor="pointer" onClick={() => setIsOpened(!isOpened)}>
                                     <LabelBadge
-                                        name={`+${labels.length - 5}`}
+                                        name={`+${labels.length - 2}`}
                                         color="hsl(var(--secondary))"
                                         textColor="hsl(var(--secondary-foreground))"
                                         noTooltip
@@ -392,7 +392,7 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
                             <HoverCard.Content className="z-50 w-auto p-0" align="end">
                                 <ScrollArea.Root>
                                     <Box maxH="52" minW="40" py="1">
-                                        {labels.slice(5).map((label, i) => (
+                                        {labels.slice(2).map((label, i) => (
                                             <Fragment key={`board-card-preview-label-${label.uid}`}>
                                                 {i !== 0 && <Separator className="my-1 h-px bg-muted" />}
                                                 <BoardLabelListItem label={label} />
@@ -405,10 +405,10 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
                     )}
                 </Flex>
             )}
-            {!!cardMembers.length && <UserAvatarBadgeList users={cardMembers} maxVisible={3} listAlign="start" />}
-            {!!description?.content.trim().length && (
+            {!!cardMembers.length && <UserAvatarBadgeList users={cardMembers} maxVisible={2} listAlign="start" />}
+            {!!description.content.trim().length && (
                 <ScrollArea.Root>
-                    <Box p="4" className="max-h-24 break-all [&_img]:max-w-full">
+                    <Box p="4" className="max-h-48 break-all [&_img]:max-w-full">
                         <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly />
                     </Box>
                 </ScrollArea.Root>

@@ -12,7 +12,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useStopEditingClickOutside from "@/core/hooks/useStopEditingClickOutside";
+import useToggleEditingByClick from "@/core/hooks/useToggleEditingByClick";
 
 export function SkeletonBoardCommentForm() {
     return (
@@ -50,7 +50,11 @@ const BoardCommentForm = memo((): JSX.Element => {
     const { mutate: addCommentMutate } = useAddCardComment();
     const editorName = `${card.uid}-comment`;
     const isClickedRef = useRef(false);
-    const { stopEditing } = useStopEditingClickOutside("[data-card-comment-form]", () => setCurrentEditor(""));
+    const { stopEditing } = useToggleEditingByClick("[data-card-comment-form]", (mode) => {
+        if (mode === "view") {
+            setCurrentEditor("");
+        }
+    });
     const onDrawerHandlePointerStart = useCallback(
         (type: "mouse" | "touch") => {
             if (isValidating) {

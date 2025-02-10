@@ -3,15 +3,45 @@ from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import ProjectActivity, ProjectRole, ProjectWikiActivity, UserActivity
+from ...models.BaseActivityModel import BaseActivityModel
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from ..board.scopes import project_role_finder
 from .ActivityForm import ActivityPagination
 
 
-@AppRouter.api.get("/activity/user")
+@AppRouter.api.get(
+    "/activity/user",
+    tags=["Activity"],
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "activities": [
+                    (
+                        UserActivity,
+                        {
+                            "schema": {
+                                "refer?": BaseActivityModel,
+                                "references?": {
+                                    "refer_type": "project",
+                                    "<refer table>": "object",
+                                },
+                            }
+                        },
+                    )
+                ],
+                "count_new_records": "integer",
+            }
+        )
+        .auth()
+        .no_bot()
+        .get()
+    ),
+)
 @AuthFilter.add
 async def get_user_activities(
     pagination: ActivityPagination = Depends(),
@@ -37,7 +67,13 @@ async def get_user_activities(
     )
 
 
-@AppRouter.api.get("/activity/project/{project_uid}")
+@AppRouter.api.get(
+    "/activity/project/{project_uid}",
+    tags=["Activity"],
+    responses=(
+        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().no_bot().get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_project_activities(
@@ -63,7 +99,13 @@ async def get_project_activities(
     )
 
 
-@AppRouter.api.get("/activity/project/{project_uid}/card/{card_uid}")
+@AppRouter.api.get(
+    "/activity/project/{project_uid}/card/{card_uid}",
+    tags=["Activity"],
+    responses=(
+        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().no_bot().get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_card_activities(
@@ -96,7 +138,13 @@ async def get_card_activities(
     )
 
 
-@AppRouter.api.get("/activity/project/{project_uid}/wiki/{wiki_uid}")
+@AppRouter.api.get(
+    "/activity/project/{project_uid}/wiki/{wiki_uid}",
+    tags=["Activity"],
+    responses=(
+        OpenApiSchema().suc({"activities": [ProjectWikiActivity], "count_new_records": "integer"}).auth().no_bot().get()
+    ),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
 async def get_wiki_activities(
