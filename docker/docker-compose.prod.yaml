@@ -104,7 +104,7 @@ services:
       - ../docs:/app
       - ../.env:/.env
     depends_on:
-      - db
+      - backend
     networks:
       - dev_net
     restart: always
