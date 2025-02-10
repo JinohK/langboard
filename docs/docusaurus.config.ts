@@ -98,7 +98,7 @@ const createConfig = async () => {
 						label: 'API',
 					},
 					{
-						href: 'https://github.com/facebook/docusaurus',
+						href: 'https://github.com/yamonco/langboard',
                         className: "header-github-link",
                         title: "GitHub",
 						position: 'right',
@@ -123,7 +123,7 @@ const createConfig = async () => {
 						items: [
 							{
 								label: 'GitHub',
-								href: 'https://github.com/facebook/docusaurus',
+								href: 'https://github.com/yamonco/langboard',
 							},
 						],
 					},
