@@ -99,11 +99,22 @@ services:
     container_name: ${PROJECT_NAME}_docs
     build:
       context: ../docs
-    working_dir: /app
-    command: yarn run start
+      target: dev
+    working_dir: /opt/docusaurus
+    environment:
+        - NODE_ENV=development
     volumes:
-      - ../docs:/app
-      - ../.env:/.env
+      - ../docs/src:/opt/docusaurus/src
+      - ../docs/docs:/opt/docusaurus/docs
+      - ../docs/static:/opt/docusaurus/static
+      - ../docs/docusaurus.config.ts:/opt/docusaurus/docusaurus.config.ts
+      - ../docs/sidebars.ts:/opt/docusaurus/sidebars.ts
+      - ../docs/tsconfig.json:/opt/docusaurus/tsconfig.json
+      - ../docs/package.json:/opt/docusaurus/package.json
+      - ../docs/yarn.lock:/opt/docusaurus/yarn.lock
+      - ../.env:/opt/.env
+    ports:
+      - 3000
     depends_on:
       - backend
     networks:
@@ -118,10 +129,11 @@ services:
     environment:
       - REQUIREPASS=${REDIS_PASSWORD}
       - CLIENTPORT=6379
+      - REDIS_LOG_DIR=/${REDIS_LOG_DIR}
       - REDIS_LOG_FILE=/${REDIS_LOG_FILE}
     volumes:
       - ./volumes/cache:/data
-      - ./volumes/logs/redis/redis.log:/${REDIS_LOG_FILE}
+      - ./volumes/logs/redis:/${REDIS_LOG_DIR}
       - ./cache/redis.conf:/usr/local/bin/redis.conf
     ports:
       - ${REDIS_PORT}:6379
