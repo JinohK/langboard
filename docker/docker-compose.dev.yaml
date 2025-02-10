@@ -100,7 +100,7 @@ services:
     build:
       context: ../docs
     working_dir: /app
-    command: ${PROJECT_NAME} run -w
+    command: yarn run start
     volumes:
       - ../docs:/app
       - ../.env:/.env
