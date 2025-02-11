@@ -43,7 +43,7 @@ export const measureTextAreaHeight = (textarea: HTMLTextAreaElement): number => 
     return height;
 };
 
-export const setElementStyles = (elements: HTMLElement | HTMLElement[], styles: Record<string, string>): void => {
+export const setElementStyles = (elements: HTMLElement | HTMLElement[], styles: Record<string, string>) => {
     if (!TypeUtils.isArray(elements)) {
         elements = [elements];
     }
@@ -55,15 +55,20 @@ export const setElementStyles = (elements: HTMLElement | HTMLElement[], styles: 
     });
 };
 
-export const selectAllText = (element: HTMLInputElement | HTMLTextAreaElement): void => {
+export const selectAllText = (element: HTMLInputElement | HTMLTextAreaElement) => {
     element.selectionStart = 0;
     element.selectionEnd = element.value.length;
 };
 
-export const copyToClipboard = (text: string): void => {
+export const copyToClipboard = async (text: string) => {
     if (!navigator?.clipboard) {
         document.execCommand("copy");
-    } else {
-        navigator.clipboard.writeText(text);
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch {
+        document.execCommand("copy");
     }
 };

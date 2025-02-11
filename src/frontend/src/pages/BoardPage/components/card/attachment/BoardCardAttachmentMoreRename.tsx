@@ -21,6 +21,7 @@ function BoardCardAttachmentMoreRename({
     const [isOpened, setIsOpened] = useState(false);
     const { mutateAsync: changeCardAttachmentNameMutateAsync } = useChangeCardAttachmentName();
     const nameInputId = `board-card-attachment-name-input-${attachment.uid}`;
+    const name = attachment.useField("name");
 
     const changeAttachmentName = () => {
         if (isValidating) {
@@ -30,9 +31,9 @@ function BoardCardAttachmentMoreRename({
         setIsValidating(true);
 
         const nameInput = document.getElementById(nameInputId) as HTMLInputElement;
-        const name = nameInput.value.trim();
+        const nameValue = nameInput.value.trim();
 
-        if (!name) {
+        if (!nameValue) {
             Toast.Add.error(t("card.errors.File name cannot be empty."));
             setIsValidating(false);
             nameInput.focus();
@@ -43,7 +44,7 @@ function BoardCardAttachmentMoreRename({
             project_uid: projectUID,
             card_uid: card.uid,
             attachment_uid: attachment.uid,
-            attachment_name: name,
+            attachment_name: nameValue,
         });
 
         Toast.Add.promise(promise, {
@@ -77,7 +78,7 @@ function BoardCardAttachmentMoreRename({
                 <Floating.LabelInput
                     label={t("card.File name")}
                     id={nameInputId}
-                    defaultValue={attachment.name}
+                    defaultValue={name}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             changeAttachmentName();

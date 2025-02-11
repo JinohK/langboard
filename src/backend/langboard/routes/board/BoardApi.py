@@ -197,8 +197,7 @@ async def update_project_member(
     if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    # TODO: Email, Remove urls after implementing email sending
-    return JsonResponse(content={"urls": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
 
 
 @AppRouter.api.post(

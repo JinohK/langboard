@@ -70,6 +70,7 @@ class Broker:
             new_args, new_kwargs = self.__unpack_task_parameters(func, *args, **kwargs)
             return async_run(func(*new_args, **new_kwargs))
 
+        task.__module__ = func.__module__
         task.__name__ = func.__name__
 
         return self.__run_async_task(cast(Any, self.celery.task(task)))

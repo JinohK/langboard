@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Box, Button, Dialog, Floating, Form, IconComponent, Input, Select, SubmitButton, Toast } from "@/components/base";
+import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
 import { useEffect, useRef, useState } from "react";
 import { usePageLoader } from "@/core/providers/PageLoaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
@@ -11,7 +11,7 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import AvatarUploader from "@/components/AvatarUploader";
 import { BotModel } from "@/core/models";
 import { isValidURL } from "@/core/utils/StringUtils";
-import { copyToClipboard, selectAllText } from "@/core/utils/ComponentUtils";
+import CopyInput from "@/components/CopyInput";
 
 export interface IBotCreateFormDialogProps {
     opened: bool;
@@ -24,7 +24,6 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
     const { navigate } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);
     const [revealedToken, setRevealedToken] = useState<string>();
-    const [isCopied, setIsCopied] = useState(false);
     const dataTransferRef = useRef(new DataTransfer());
     const inputsRef = useRef({
         name: null as HTMLInputElement | null,
@@ -126,16 +125,6 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         setOpened(opened);
     };
 
-    const copyToken = (e: React.MouseEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
-        if (!revealedToken) {
-            return;
-        }
-
-        selectAllText(e.currentTarget);
-        copyToClipboard(revealedToken);
-        setIsCopied(true);
-    };
-
     return (
         <Dialog.Root open={opened} onOpenChange={changeOpenedState}>
             <Dialog.Content className="sm:max-w-md" aria-describedby="">
@@ -235,18 +224,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                         </Box>
                     </Form.Root>
                 )}
-                {revealedToken && (
-                    <Box position="relative" mt="4">
-                        <Input
-                            value={revealedToken}
-                            onFocus={copyToken}
-                            onClick={copyToken}
-                            readOnly
-                            className={isCopied ? "pr-9 focus-visible:ring-green-700" : ""}
-                        />
-                        {isCopied && <IconComponent icon="check" size="5" className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500" />}
-                    </Box>
-                )}
+                {revealedToken && <CopyInput value={revealedToken} className="mt-4" />}
                 <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                     <Dialog.Close asChild>
                         <Button type="button" variant={!revealedToken ? "destructive" : "outline"} disabled={isValidating}>

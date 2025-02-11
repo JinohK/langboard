@@ -1,6 +1,17 @@
 from json import loads as json_loads
-from typing import overload
-from ...Constants import BASE_DIR, PROJECT_NAME
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from pydantic import SecretStr
+from ...Constants import (
+    BASE_DIR,
+    MAIL_FROM,
+    MAIL_PASSWORD,
+    MAIL_PORT,
+    MAIL_SERVER,
+    MAIL_SSL_TLS,
+    MAIL_STARTTLS,
+    MAIL_USERNAME,
+    PROJECT_NAME,
+)
 from ...core.service import BaseService
 from ...locales.EmailTemplateNames import TEmailTemplateNames
 
@@ -11,22 +22,34 @@ class EmailService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "email"
 
-    @overload
     async def send_template(
         self, lang: str, to: str, template_name: TEmailTemplateNames, formats: dict[str, str]
-    ) -> bool: ...
-    @overload
-    async def send_template(
-        self, lang: str, to: list[str], template_name: TEmailTemplateNames, formats: dict[str, str]
-    ) -> bool: ...
-    async def send_template(
-        self, lang: str, to: str | list[str], template_name: TEmailTemplateNames, formats: dict[str, str]
     ) -> bool:
         subject, template = self.__get_template(lang, template_name)
         subject = self.__create_subject(subject)
         body = template.format_map(formats)  # noqa
 
-        # TODO: Email, implement email sending
+        if not hasattr(self, "__config"):
+            self.__config = ConnectionConfig(
+                MAIL_FROM=MAIL_FROM,
+                MAIL_USERNAME=MAIL_USERNAME,
+                MAIL_PASSWORD=SecretStr(MAIL_PASSWORD),
+                MAIL_PORT=int(MAIL_PORT),
+                MAIL_SERVER=MAIL_SERVER,
+                MAIL_STARTTLS=MAIL_STARTTLS,
+                MAIL_SSL_TLS=MAIL_SSL_TLS,
+                TIMEOUT=5,
+            )
+
+        message = MessageSchema(
+            subject=subject,
+            recipients=[to],
+            body=body,
+            subtype=MessageType.html,
+        )
+
+        fm = FastMail(self.__config)
+        await fm.send_message(message)
 
         return True
 

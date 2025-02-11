@@ -16,7 +16,6 @@ const useToggleEditingByClick = (boxAttr: string, changeMode: (mode: "edit" | "v
                 target.closest("audio") ||
                 target.closest("img")
             ) {
-                console.log(target);
                 return;
             }
 

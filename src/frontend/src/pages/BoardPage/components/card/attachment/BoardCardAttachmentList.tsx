@@ -1,4 +1,5 @@
 import { Button, Collapsible, Flex, Toast } from "@/components/base";
+import ImagePreviewModal from "@/components/ImagePreviewModal";
 import useChangeCardAttachmentOrder from "@/controllers/api/card/attachment/useChangeCardAttachmentOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
@@ -9,7 +10,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardAttachment, { SkeletonBoardCardAttachment } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -72,21 +73,36 @@ function BoardCardAttachmentList(): JSX.Element {
         transformContainerId: () => "",
     });
     const [isOpened, setIsOpened] = useState(false);
+    const [isPreviewOpened, setIsPreviewOpened] = useState(false);
+    const initialPreviewIndex = useRef(0);
+
+    const openPreview = (index: number) => {
+        initialPreviewIndex.current = index;
+        setIsPreviewOpened(true);
+    };
 
     return (
         <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
             <SortableContext items={attachmentsUIDs} strategy={verticalListSortingStrategy}>
                 <Flex direction="col" gap="2">
-                    {attachments.slice(0, 5).map((attachment) => (
-                        <BoardCardAttachment key={`board-card-${card.uid}-attachment-${attachment.uid}`} attachment={attachment} />
+                    {attachments.slice(0, 5).map((attachment, i) => (
+                        <BoardCardAttachment
+                            key={`board-card-${card.uid}-attachment-${attachment.uid}`}
+                            attachment={attachment}
+                            openPreview={() => openPreview(i)}
+                        />
                     ))}
                 </Flex>
                 {attachments.length > 5 && (
                     <Collapsible.Root open={isOpened} onOpenChange={setIsOpened}>
                         <Collapsible.Content asChild>
                             <Flex direction="col" gap="2" mt="2">
-                                {attachments.slice(5).map((attachment) => (
-                                    <BoardCardAttachment key={`board-card-${card.uid}-attachment-${attachment.uid}`} attachment={attachment} />
+                                {attachments.slice(5).map((attachment, i) => (
+                                    <BoardCardAttachment
+                                        key={`board-card-${card.uid}-attachment-${attachment.uid}`}
+                                        attachment={attachment}
+                                        openPreview={() => openPreview(i)}
+                                    />
                                 ))}
                             </Flex>
                         </Collapsible.Content>
@@ -105,7 +121,20 @@ function BoardCardAttachmentList(): JSX.Element {
 
             {!TypeUtils.isUndefined(window) &&
                 createPortal(
-                    <DragOverlay>{activeAttachment && <BoardCardAttachment attachment={activeAttachment} isOverlay />}</DragOverlay>,
+                    <DragOverlay>
+                        {activeAttachment && <BoardCardAttachment attachment={activeAttachment} openPreview={() => {}} isOverlay />}
+                    </DragOverlay>,
+                    document.body
+                )}
+
+            {!TypeUtils.isUndefined(window) &&
+                isPreviewOpened &&
+                createPortal(
+                    <ImagePreviewModal
+                        files={attachments.map((attachment) => ({ name: attachment.name, url: attachment.url }))}
+                        initialIndex={initialPreviewIndex.current}
+                        onClose={() => setIsPreviewOpened(false)}
+                    />,
                     document.body
                 )}
         </DndContext>

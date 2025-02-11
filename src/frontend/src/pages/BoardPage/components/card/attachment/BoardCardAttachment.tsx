@@ -14,6 +14,7 @@ import { tv } from "tailwind-variants";
 
 export interface IBoardCardAttachmentProps {
     attachment: ProjectCardAttachment.TModel;
+    openPreview: () => void;
     isOverlay?: bool;
 }
 
@@ -39,7 +40,7 @@ export function SkeletonBoardCardAttachment() {
     );
 }
 
-function BoardCardAttachment({ attachment, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
+function BoardCardAttachment({ attachment, openPreview, isOverlay }: IBoardCardAttachmentProps): JSX.Element {
     const { currentUser, hasRoleAction } = useBoardCard();
     const [t, i18n] = useTranslation();
     const name = attachment.useField("name");
@@ -108,11 +109,13 @@ function BoardCardAttachment({ attachment, isOverlay }: IBoardCardAttachmentProp
                 <Flex
                     items="center"
                     justify="center"
+                    cursor="default"
                     inline
                     w={{ initial: "12", sm: "16" }}
                     h={{ initial: "8", sm: "12" }}
                     rounded="sm"
                     className="bg-muted"
+                    onClick={openPreview}
                 >
                     {mimeType.startsWith("image/") ? (
                         <CachedImage src={url} alt={mimeType} h="full" className="min-w-full" />

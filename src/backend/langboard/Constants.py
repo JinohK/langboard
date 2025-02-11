@@ -84,6 +84,15 @@ S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
 S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
 S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
 
+# SMTP
+MAIL_FROM = _get_env("MAIL_FROM")
+MAIL_USERNAME = _get_env("MAIL_USERNAME")
+MAIL_PASSWORD = _get_env("MAIL_PASSWORD")
+MAIL_SERVER = _get_env("MAIL_SERVER")
+MAIL_PORT = _get_env("MAIL_PORT")
+MAIL_STARTTLS = _get_env("MAIL_STARTTLS") == "true"
+MAIL_SSL_TLS = _get_env("MAIL_SSL_TLS") == "true"
+
 
 # Frontend query names
 class QUERY_NAMES(Enum):

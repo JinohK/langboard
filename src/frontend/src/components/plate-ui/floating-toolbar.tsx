@@ -2,7 +2,14 @@
 
 import { cn, withRef } from "@udecode/cn";
 import { useComposedRef, useEditorId, useEditorRef, useEventEditorSelectors } from "@udecode/plate/react";
-import { type FloatingToolbarState, flip, offset, useFloatingToolbar, useFloatingToolbarState } from "@udecode/plate-floating";
+import {
+    type FloatingToolbarState,
+    flip,
+    getDOMSelectionBoundingClientRect,
+    offset,
+    useFloatingToolbar,
+    useFloatingToolbarState,
+} from "@udecode/plate-floating";
 import { Toolbar } from "@/components/plate-ui/toolbar";
 
 export const FloatingToolbar = withRef<
@@ -31,6 +38,7 @@ export const FloatingToolbar = withRef<
                 }),
             ],
             placement: "top",
+            getBoundingClientRect: getDOMSelectionBoundingClientRect,
             ...state?.floatingOptions,
         },
     });
@@ -46,8 +54,8 @@ export const FloatingToolbar = withRef<
             <Toolbar
                 ref={ref}
                 className={cn(
-                    "absolute z-50 overflow-x-auto whitespace-nowrap rounded-md border bg-popover p-1 opacity-100 shadow-md print:hidden",
-                    "max-w-[80%]"
+                    "absolute z-50 overflow-x-auto whitespace-nowrap rounded-md border bg-popover p-1 opacity-100 shadow-md scrollbar-hide",
+                    "max-w-[80vw] print:hidden"
                 )}
                 {...rootProps}
                 {...props}

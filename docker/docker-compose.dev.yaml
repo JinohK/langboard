@@ -34,6 +34,7 @@ services:
       - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
       - SOCKET_URL=${SOCKET_URL}
       - API_URL=${API_URL}
+      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
     working_dir: /app
     command: yarn build -w
     volumes:
@@ -80,6 +81,12 @@ services:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
       - FRONTEND_PORT=${NGINX_FRONTEND_EXPOSE_PORT}
       - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_TLS=${MAIL_TLS}
+      - MAIL_SSL=${MAIL_SSL}
     working_dir: /app
     command: ${PROJECT_NAME} run -w
     volumes:

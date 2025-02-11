@@ -36,8 +36,7 @@ async def send_link(form: SendResetLinkForm, service: Service = Service.scope())
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    # TODO: Email, Remove url after email feature is implemented
-    return JsonResponse(content={"url": token_url})
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post(

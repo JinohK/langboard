@@ -2,6 +2,7 @@ import { Button, DropdownMenu, IconComponent } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import BoardCardAttachmentMoreDelete from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMoreDelete";
+import BoardCardAttachmentMoreDownload from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMoreDownload";
 import BoardCardAttachmentMoreRename from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMoreRename";
 import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
 import { useState } from "react";
@@ -52,6 +53,7 @@ function BoardCardAttachmentMore({ attachment, isValidating, setIsValidating }: 
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 <DropdownMenu.Group>
+                    <BoardCardAttachmentMoreDownload attachment={attachment} setIsMoreMenuOpened={setIsOpened} />
                     <BoardCardAttachmentMoreRename
                         attachment={attachment}
                         isValidating={isValidating}

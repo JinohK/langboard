@@ -34,7 +34,6 @@ const BoardCardPage = memo(() => {
                         viewportId={viewportId}
                         overlayClassName={selectCardViewType ? "hidden" : ""}
                         disableOverlayClick={!!selectCardViewType}
-                        data-card-dialog-content
                     >
                         {cardUID && <BoardCard projectUID={projectUID} cardUID={cardUID} currentUser={aboutMe()!} viewportId={viewportId} />}
                     </Dialog.Content>

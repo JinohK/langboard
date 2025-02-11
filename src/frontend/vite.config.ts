@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => {
             "process.env.PROJECT_NAME": JSON.stringify(process.env.PROJECT_NAME),
             "process.env.SOCKET_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.SOCKET_URL),
             "process.env.API_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.API_URL),
+            "process.env.PUBLIC_FRONTEND_URL": JSON.stringify(process.env.PUBLIC_FRONTEND_URL),
         },
         build: {
             watch: watchOptions,

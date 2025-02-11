@@ -1,11 +1,11 @@
-import { Box, Button, Dialog, Flex, Floating, IconComponent, Input, Toast } from "@/components/base";
+import { Button, Dialog, Flex, Floating, IconComponent, Toast } from "@/components/base";
+import CopyInput from "@/components/CopyInput";
 import useGenerateNewBotApiToken from "@/controllers/api/settings/bots/useGenerateNewBotApiToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { copyToClipboard, selectAllText } from "@/core/utils/ComponentUtils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -21,7 +21,6 @@ const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
     const [isValidating, setIsValidating] = useState(false);
     const [opened, setOpened] = useState(false);
     const [revealedToken, setRevealedToken] = useState<string>();
-    const [isCopied, setIsCopied] = useState(false);
 
     const generate = () => {
         if (isValidating) {
@@ -72,16 +71,6 @@ const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
         setOpened(opened);
     };
 
-    const copyToken = (e: React.MouseEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
-        if (!revealedToken) {
-            return;
-        }
-
-        selectAllText(e.currentTarget);
-        copyToClipboard(revealedToken);
-        setIsCopied(true);
-    };
-
     return (
         <>
             <Flex items="center" justify="between" gap="2">
@@ -101,16 +90,7 @@ const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
                     <Dialog.Header>
                         <Dialog.Title>{t("settings.Generated new token")}</Dialog.Title>
                     </Dialog.Header>
-                    <Box position="relative" mt="4">
-                        <Input
-                            value={revealedToken}
-                            onFocus={copyToken}
-                            onClick={copyToken}
-                            readOnly
-                            className={isCopied ? "pr-9 focus-visible:ring-green-700" : ""}
-                        />
-                        {isCopied && <IconComponent icon="check" size="5" className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500" />}
-                    </Box>
+                    <CopyInput value={revealedToken} className="mt-4" />
                     <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                         <Dialog.Close asChild>
                             <Button type="button" variant={!revealedToken ? "destructive" : "outline"} disabled={isValidating}>
