@@ -84,8 +84,8 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_SERVER=${MAIL_SERVER}
       - MAIL_PORT=${MAIL_PORT}
-      - MAIL_TLS=${MAIL_TLS}
-      - MAIL_SSL=${MAIL_SSL}
+      - MAIL_STARTTLS=${MAIL_STARTTLS}
+      - MAIL_SSL_TLS=${MAIL_SSL_TLS}
     working_dir: /app
     command: ${PROJECT_NAME} run -w
     volumes:
