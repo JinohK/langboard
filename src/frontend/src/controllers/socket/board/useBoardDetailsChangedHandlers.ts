@@ -3,19 +3,19 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project } from "@/core/models";
 
-export interface IBoardDetailsChangedRawResponse {
+export interface IBoardDetailsChangedResponse {
     title?: string;
     description?: string;
     ai_description?: string;
     project_type?: string;
 }
 
-export interface IUseBoardDetailsChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardDetailsChangedHandlersProps extends IBaseUseSocketHandlersProps<IBoardDetailsChangedResponse> {
     projectUID: string;
 }
 
 const useBoardDetailsChangedHandlers = ({ callback, projectUID }: IUseBoardDetailsChangedHandlersProps) => {
-    return useSocketHandler<{}, IBoardDetailsChangedRawResponse>({
+    return useSocketHandler<IBoardDetailsChangedResponse, IBoardDetailsChangedResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-details-changed-${projectUID}`,
@@ -30,7 +30,7 @@ const useBoardDetailsChangedHandlers = ({ callback, projectUID }: IUseBoardDetai
                         project[key] = value!;
                     });
                 }
-                return {};
+                return data;
             },
         },
     });

@@ -226,3 +226,11 @@ class EditorContentModel(BaseModel):
     @staticmethod
     def api_schema() -> dict[str, Any]:
         return {"content": "string"}
+
+
+class ChatContentModel(BaseModel):
+    content: str = Field(default="")
+
+    @staticmethod
+    def api_schema() -> dict[str, Any]:
+        return {"content": "string"}

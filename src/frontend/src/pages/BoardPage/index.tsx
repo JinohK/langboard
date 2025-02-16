@@ -22,8 +22,10 @@ import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardDetailsChangedHandlers";
 
-const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
+const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
         case "wiki":
             return "wiki";
@@ -35,6 +37,7 @@ const getCurrentPage = (pageRoute: string): "board" | "wiki" | "settings" => {
 };
 
 const BoardProxy = memo((): JSX.Element => {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const socket = useSocket();
     const navigateRef = useRef(usePageNavigate());
@@ -44,6 +47,15 @@ const BoardProxy = memo((): JSX.Element => {
     const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
     const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
     const { selectCardViewType } = useBoardRelationshipController();
+    const [projectTitle, setProjectTitle] = useState("");
+    const setProjectTitleRef = useRef<(title: string) => void>(setProjectTitle);
+    setProjectTitleRef.current = (title: string) => {
+        if (pageRoute !== "card") {
+            setPageAliasRef.current(title);
+        }
+
+        setProjectTitle(() => title);
+    };
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
@@ -88,6 +100,15 @@ const BoardProxy = memo((): JSX.Element => {
             navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
         },
     });
+    const { on: onProjectDetailsChanged } = useBoardDetailsChangedHandlers({
+        projectUID,
+        callback: (res) => {
+            const title = res.title;
+            if (title) {
+                setProjectTitleRef.current(title);
+            }
+        },
+    });
 
     useEffect(() => {
         if (!error) {
@@ -110,13 +131,17 @@ const BoardProxy = memo((): JSX.Element => {
 
     useEffect(() => {
         if (!data || isFetching) {
+            setPageAliasRef.current();
             return;
         }
+
+        setProjectTitleRef.current(data.title);
 
         socket.subscribe(ESocketTopic.Board, [projectUID], () => {
             onIsBoardChatAvailable();
             onBoardAssignedUsersUpdated();
             onProjectDeleted();
+            onProjectDetailsChanged();
             sendIsBoardChatAvailable({});
         });
 
@@ -178,7 +203,7 @@ const BoardProxy = memo((): JSX.Element => {
     return (
         <DashboardStyledLayout
             headerNavs={headerNavs}
-            headerTitle={data?.title}
+            headerTitle={projectTitle}
             resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType } : undefined}
             noPadding
         >

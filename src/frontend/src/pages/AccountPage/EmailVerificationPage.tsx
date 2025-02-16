@@ -9,8 +9,10 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function EmailVerificationPage() {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { updatedUser } = useAuth();
     const location = useLocation();
@@ -18,6 +20,7 @@ function EmailVerificationPage() {
     const { mutate } = useVerifyNewEmail();
 
     useEffect(() => {
+        setPageAliasRef.current("Email Verification");
         const searchParams = new URLSearchParams(location.search);
         const token = searchParams.get(QUERY_NAMES.SUB_EMAIL_VERIFY_TOKEN);
 

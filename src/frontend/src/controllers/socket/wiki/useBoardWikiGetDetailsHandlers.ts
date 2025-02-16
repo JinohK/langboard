@@ -21,7 +21,7 @@ const useBoardWikiGetDetailsHandlers = ({ callback, wiki }: IUseBoardWikiGetDeta
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {
-                ProjectWiki.Model.fromObject({ ...data.wiki }, true);
+                ProjectWiki.Model.fromObject(data.wiki, true);
                 return {};
             },
         },

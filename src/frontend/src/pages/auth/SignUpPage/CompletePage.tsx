@@ -7,11 +7,11 @@ import useResendSignUpLink from "@/controllers/api/auth/useResendSignUpLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function CompletePage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const location = useLocation();
@@ -19,6 +19,7 @@ function CompletePage(): JSX.Element {
     const [isResending, setIsResending] = useState(false);
 
     useEffect(() => {
+        setPageAliasRef.current("Sign Up");
         if (!location.state?.email) {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
             return;

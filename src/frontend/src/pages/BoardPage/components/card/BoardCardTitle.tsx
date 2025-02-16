@@ -4,6 +4,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { cn, setElementStyles } from "@/core/utils/ComponentUtils";
 import BoardCardNotificationSettings from "@/pages/BoardPage/components/card/BoardCardNotificationSettings";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +19,7 @@ export function SkeletonBoardCardTitle() {
 }
 
 function BoardCardTitle(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title");
@@ -74,6 +76,7 @@ function BoardCardTitle(): JSX.Element {
     };
 
     useEffect(() => {
+        setPageAliasRef.current(title);
         setTimeout(() => {
             if (!titleSpanRef.current) {
                 return;

@@ -2,7 +2,7 @@ import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popo
 import UserAvatar from "@/components/UserAvatar";
 import { ProjectLabel } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -16,7 +16,7 @@ export function SkeletonBoardFilter() {
 }
 
 function BoardFilter() {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const { project, cards, filters, filterCard, filterMember, filterLabel, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
     const labels = project.useForeignField<ProjectLabel.TModel>("labels");

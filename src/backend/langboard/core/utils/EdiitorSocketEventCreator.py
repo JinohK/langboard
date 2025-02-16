@@ -11,6 +11,26 @@ class EdiitorSocketEventCreator:
         self.event_prefix = event_prefix
 
     async def chat(self, ws: WebSocket, form: EditorChatDataModel):
+        AppRouter.socket.run_in_thread(self._chat, args=(ws, form))
+
+    async def copilot(self, ws: WebSocket, form: EditorCopilotDataModel, key: str):
+        AppRouter.socket.run_in_thread(self._copilot, args=(ws, form, key))
+
+    async def abort_copilot(self, ws: WebSocket, key: str):
+        await BotRunner.abort(InternalBotType.EditorCopilot, key)
+        ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
+
+    def register(self, *decorators: Callable):
+        def _on(method: Callable) -> Callable:
+            for decorator in decorators:
+                method = decorator(method)
+            return method
+
+        AppRouter.socket.on(f"{self.event_prefix}:editor:chat:send")(_on(self.chat))
+        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:send")(_on(self.copilot))
+        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:abort")(_on(self.abort_copilot))
+
+    async def _chat(self, ws: WebSocket, form: EditorChatDataModel):
         stream_or_str = await BotRunner.run(self.chat_bot_type, form.model_dump())
         ws_stream = ws.stream(f"{self.event_prefix}:editor:chat:stream")
         ws_stream.start()
@@ -28,7 +48,7 @@ class EdiitorSocketEventCreator:
                 message = f"{message}{chunk}"
         ws_stream.end(data={"message": message})
 
-    async def copilot(self, ws: WebSocket, form: EditorCopilotDataModel, key: str):
+    async def _copilot(self, ws: WebSocket, form: EditorCopilotDataModel, key: str):
         stream_or_str = await BotRunner.run_abortable(self.copilot_type, form.model_dump(), key)
         if not stream_or_str:
             ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "0"})
@@ -43,17 +63,3 @@ class EdiitorSocketEventCreator:
                     continue
                 chunks.append(chunk)
             ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "".join(chunks)})
-
-    async def abort_copilot(self, ws: WebSocket, key: str):
-        await BotRunner.abort(InternalBotType.EditorCopilot, key)
-        ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
-
-    def register(self, *decorators: Callable):
-        def _on(method: Callable) -> Callable:
-            for decorator in decorators:
-                method = decorator(method)
-            return method
-
-        AppRouter.socket.on(f"{self.event_prefix}:editor:chat:send")(_on(self.chat))
-        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:send")(_on(self.copilot))
-        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:abort")(_on(self.abort_copilot))

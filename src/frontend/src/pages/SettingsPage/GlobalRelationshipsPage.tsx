@@ -3,16 +3,22 @@ import useDeleteSelectedGlobalRelationships from "@/controllers/api/settings/rel
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import GlobalRelationshipList from "@/pages/SettingsPage/components/relationships/GlobalRelationshipList";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function GlobalRelationshipsPage() {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate, isValidating, setIsValidating } = useAppSetting();
     const [selectedGlobalRelationships, setSelectedGlobalRelationships] = useState<string[]>([]);
     const { mutate: deleteSelectedGlobalRelationshipsMutate } = useDeleteSelectedGlobalRelationships();
+
+    useEffect(() => {
+        setPageAliasRef.current("Global relationships");
+    }, []);
 
     const openCreateDialog = () => {
         navigate.current(ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP);

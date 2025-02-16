@@ -1,7 +1,7 @@
 import { Flex } from "@/components/base";
 import NotificationSetting from "@/components/NotificationSetting";
 import { AuthUser } from "@/core/models";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
 import { memo, useEffect } from "react";
 
@@ -11,7 +11,7 @@ export interface IBoardSettingsUserListProps {
 }
 
 const BoardSettingsUserList = memo(({ currentUser, projectUID }: IBoardSettingsUserListProps) => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
 
     useEffect(() => {
         setIsLoadingRef.current(false);

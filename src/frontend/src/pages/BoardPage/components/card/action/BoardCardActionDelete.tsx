@@ -5,7 +5,7 @@ import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useRef, useState } from "react";
@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 export interface IBoardCardActionDeleteProps extends ISharedBoardCardActionProps {}
 
 const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteProps) => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const { projectUID, card } = useBoardCard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);

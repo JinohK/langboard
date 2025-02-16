@@ -10,7 +10,7 @@ import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface IPasswordformProps {
@@ -22,7 +22,7 @@ export interface IPasswordformProps {
 }
 
 function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPasswordformProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();

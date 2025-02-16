@@ -98,7 +98,7 @@ async def create_wiki(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_wiki.create(user_or_bot, project_uid, form.title)
+    result = await service.project_wiki.create(user_or_bot, project_uid, form.title, form.content)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_wiki = result

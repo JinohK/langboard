@@ -1,11 +1,18 @@
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useAuth } from "@/core/providers/AuthProvider";
+import { ROUTES } from "@/core/routing/constants";
 import { useEffect } from "react";
 
 function HomePage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const navigate = usePageNavigate();
+    const { isAuthenticated } = useAuth();
 
     useEffect(() => {
-        setIsLoadingRef.current(false);
+        if (isAuthenticated()) {
+            navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
+        } else {
+            navigate(ROUTES.SIGN_IN.EMAIL);
+        }
     }, []);
 
     return <></>;

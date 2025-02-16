@@ -1,15 +1,15 @@
 import { Dialog } from "@/components/base";
 import { useEffect, useRef } from "react";
 import { ActivityModel } from "@/core/models";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import ActivityList from "@/components/ActivityList";
-import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
 import { useAuth } from "@/core/providers/AuthProvider";
+import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function BoardActivityDialog(): JSX.Element | null {
-    const { setIsLoadingRef } = usePageLoader();
-    const navigateRef = useRef(useNavigate());
+    const { setIsLoadingRef } = usePageHeader();
+    const navigateRef = useRef(usePageNavigate());
     const [projectUID] = location.pathname.split("/").slice(2);
     const activities = ActivityModel.Model.useModels((model) => model.filterable_type === "project" && model.filterable_uid === projectUID);
     const { aboutMe } = useAuth();

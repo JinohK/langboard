@@ -7,7 +7,7 @@ import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 export interface ISendResetLinkFormProps {
@@ -17,7 +17,7 @@ export interface ISendResetLinkFormProps {
 }
 
 function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLinkFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const location = useLocation();

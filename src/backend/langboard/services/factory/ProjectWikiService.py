@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
 from ...core.storage import FileModel
 from ...models import (
@@ -152,7 +152,7 @@ class ProjectWikiService(BaseService):
         return bool(result.first())
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, title: str
+        self, user_or_bot: TUserOrBot, project: TProjectParam, title: str, content: EditorContentModel | None = None
     ) -> tuple[ProjectWiki, dict[str, Any]] | None:
         params = await self.__get_records_by_params(project)
         if not params:
@@ -164,6 +164,7 @@ class ProjectWikiService(BaseService):
         wiki = ProjectWiki(
             project_id=project.id,
             title=title,
+            content=content or EditorContentModel(),
             order=max_order + 1,
         )
         async with DbSession.use() as db:

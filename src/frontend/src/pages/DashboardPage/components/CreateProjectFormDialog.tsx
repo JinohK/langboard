@@ -7,7 +7,7 @@ import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useRef } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -15,7 +15,7 @@ export interface ICreateProjectFormDialogProps {
 }
 
 function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const { mutate } = useCreateProject();

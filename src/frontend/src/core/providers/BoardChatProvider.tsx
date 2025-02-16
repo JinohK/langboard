@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Toast } from "@/components/base";
 import useBoardChatStreamHandlers from "@/controllers/socket/board/useBoardChatStreamHandlers";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
+import { IChatContent } from "@/core/models/Base";
 
 export interface IBoardChatContext {
     projectUID: string;
@@ -41,10 +42,10 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const scrollToBottomRef = useRef<() => void>(() => {});
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
         data.ai_message.projectUID = projectUID;
-        ChatMessageModel.Model.fromObject(data.ai_message, true);
+        ChatMessageModel.Model.fromObject({ ...data.ai_message, isPending: true }, true);
         scrollToBottomRef.current();
     }, []);
-    const bufferCallback = useCallback((data: { uid: string; message: string }) => {
+    const bufferCallback = useCallback((data: { uid: string; message: IChatContent }) => {
         const chatMessage = ChatMessageModel.Model.getModel(data.uid);
         if (!chatMessage) {
             return;
@@ -59,9 +60,13 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
         }
 
         if (data.status !== "success") {
-            if (data.status === "failed" || !chatMessage?.message.length) {
+            if (data.status === "failed") {
                 ChatMessageModel.Model.deleteModel(data.uid);
             }
+        }
+
+        if (chatMessage && chatMessage.isPending) {
+            chatMessage.isPending = undefined;
         }
 
         setIsSending(false);

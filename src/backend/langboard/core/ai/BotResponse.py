@@ -20,9 +20,7 @@ class LangflowStreamResponse:
         self.__body = body
 
     async def __aiter__(self) -> AsyncGenerator[str, Any]:
-        with stream(
-            "POST", self.__stream_url, json=self.__body, headers=self.__headers, timeout=None
-        ) as stream_response:
+        with stream("POST", self.__stream_url, json=self.__body, headers=self.__headers, timeout=60) as stream_response:
             content_type = stream_response.headers.get("content-type")
             if not content_type.count("text/event-stream"):
                 return

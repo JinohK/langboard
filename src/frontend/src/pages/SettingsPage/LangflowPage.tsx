@@ -7,12 +7,14 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { isValidURL } from "@/core/utils/StringUtils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function LangflowPage() {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate, isValidating, setIsValidating } = useAppSetting();
     const langflowUrl = AppSettingModel.Model.getModel((model) => model.setting_type === ESettingType.LangflowUrl)!;
@@ -25,6 +27,10 @@ function LangflowPage() {
 
     const { mutateAsync: updateUrlSettingMutateAsync } = useUpdateSetting(langflowUrl);
     const { mutateAsync: updateApiKeySettingMutateAsync } = useUpdateSetting(langflowApiKey);
+
+    useEffect(() => {
+        setPageAliasRef.current("Langflow");
+    }, []);
 
     const save = () => {
         if (isValidating || !urlInputRef.current || !apiKeyInputRef.current) {

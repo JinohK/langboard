@@ -7,10 +7,10 @@ import { ROUTES } from "@/core/routing/constants";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const { t } = useTranslation();
     const dataTransferRef = useRef(new DataTransfer());
     const avatarUrlRef = useRef<string>((values as unknown as Record<string, string>).avatarUrl ?? null);

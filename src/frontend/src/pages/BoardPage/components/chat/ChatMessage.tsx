@@ -10,12 +10,13 @@ function ChatMessage({ chatMessage }: IChatMessageProps): JSX.Element {
     const icon = chatMessage.useField("icon");
     const message = chatMessage.useField("message");
     const isReceived = chatMessage.useField("isReceived");
+    const isPending = chatMessage.useField("isPending");
     const variant = isReceived ? "received" : "sent";
 
     return (
         <ChatBubble key={`chat-bubble-${chatMessage.uid}`} variant={variant}>
             {isReceived && <ChatBubbleAvatar fallback={<IconComponent icon={icon ?? "bot"} className="size-[60%]" />} />}
-            {!message.length ? <ChatBubbleMessage isLoading /> : <ChatBubbleMessage variant={variant}>{message}</ChatBubbleMessage>}
+            {isPending ? <ChatBubbleMessage isLoading /> : <ChatBubbleMessage variant={variant} message={message} />}
         </ChatBubble>
     );
 }

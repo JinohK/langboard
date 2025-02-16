@@ -34,6 +34,10 @@ export interface IEditorContent {
     content: string;
 }
 
+export interface IChatContent {
+    content: string;
+}
+
 export interface IBaseModel {
     uid: string;
 }
@@ -170,6 +174,8 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
 
         const targetModelMap = BaseModel.#MODELS[modelName];
+
+        model = { ...model };
 
         if (!targetModelMap[model.uid]) {
             model = this.convertModel(model);

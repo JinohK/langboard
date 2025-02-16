@@ -238,7 +238,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                             {commentingUsersElement}
                         </Box>
                         <Drawer.Handle
-                            className="flex h-2 w-full cursor-grab justify-center bg-transparent py-3 text-center"
+                            className="flex h-2 !w-full cursor-grab justify-center !bg-transparent py-3 text-center"
                             onMouseDown={() => onDrawerHandlePointerStart("mouse")}
                             onTouchStart={() => onDrawerHandlePointerStart("touch")}
                         >

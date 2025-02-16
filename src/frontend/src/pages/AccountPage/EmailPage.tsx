@@ -3,6 +3,8 @@ import AddSubEmailForm, { SkeletonAddSubEmailForm } from "@/pages/AccountPage/co
 import EmailList, { SkeletonEmails } from "@/pages/AccountPage/components/email/EmailList";
 import PrimaryEmailForm, { SkeletonPrimaryEmailForm } from "@/pages/AccountPage/components/email/PrimaryEmailForm";
 import { Flex } from "@/components/base";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useEffect } from "react";
 
 export function SkeletonEmailPage(): JSX.Element {
     const [t] = useTranslation();
@@ -20,7 +22,12 @@ export function SkeletonEmailPage(): JSX.Element {
 }
 
 function EmailPage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
+
+    useEffect(() => {
+        setPageAliasRef.current("Emails");
+    }, []);
 
     return (
         <>

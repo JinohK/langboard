@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import AccountUserGroupList, { SkeletonAccountUserGroupList } from "@/pages/AccountPage/components/group/AccountUserGroupList";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useEffect } from "react";
 
 export function SkeletonGroupsPage(): JSX.Element {
     const [t] = useTranslation();
@@ -13,7 +15,12 @@ export function SkeletonGroupsPage(): JSX.Element {
 }
 
 function GroupsPage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
+
+    useEffect(() => {
+        setPageAliasRef.current("Groups");
+    }, []);
 
     return (
         <>

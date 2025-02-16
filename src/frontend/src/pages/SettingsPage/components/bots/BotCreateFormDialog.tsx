@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
 import { useEffect, useRef, useState } from "react";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -19,7 +19,7 @@ export interface IBotCreateFormDialogProps {
 }
 
 function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);

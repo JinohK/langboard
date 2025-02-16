@@ -1,12 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketStreamHandler, { IBaseUseSocketStreamHandlersProps } from "@/core/helpers/SocketStreamHandler";
-import { ChatMessageModel } from "@/core/models";
-
-export interface IBoardChatStreamRawResponse {
-    user_message: ChatMessageModel.Interface;
-    ai_message: ChatMessageModel.Interface;
-}
 
 export interface IUseBoardChatStreamHandlersProps extends IBaseUseSocketStreamHandlersProps {
     projectUID: string;

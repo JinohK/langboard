@@ -74,7 +74,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         }
 
         if (subFilterableType && references && !references[subFilterableType]) {
-            activityReferences[subFilterableType] = activity.sub_filterable_uid!;
+            activityReferences[subFilterableType] = { uid: activity.sub_filterable_uid! };
         }
 
         return (

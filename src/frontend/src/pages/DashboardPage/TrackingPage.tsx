@@ -5,11 +5,11 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetTrackingList from "@/controllers/api/dashboard/useGetTrackingList";
 import { useTranslation } from "react-i18next";
 import TrackingRow from "@/pages/DashboardPage/components/TrackingRow";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ProjectCheckitem } from "@/core/models";
 
 function TrackingPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { mutateAsync, checkitemUIDs, isLastPage } = useGetTrackingList();
     const checkitems = ProjectCheckitem.Model.useModels((model) => checkitemUIDs.includes(model.uid), [checkitemUIDs]);
@@ -30,6 +30,7 @@ function TrackingPage(): JSX.Element {
     }, [isLastPage, mutateAsync]);
 
     useEffect(() => {
+        setPageAliasRef.current("Dashboard");
         setIsLoadingRef.current(false);
     }, [mutateAsync, checkitems]);
 

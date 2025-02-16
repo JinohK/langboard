@@ -8,11 +8,11 @@ import useActivateUser from "@/controllers/api/auth/useActivateUser";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function ActivatePage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const location = useLocation();
@@ -21,6 +21,7 @@ function ActivatePage(): JSX.Element {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
+        setPageAliasRef.current("Activate Account");
         if (!isLoaded) {
             setIsLoaded(true);
             return;

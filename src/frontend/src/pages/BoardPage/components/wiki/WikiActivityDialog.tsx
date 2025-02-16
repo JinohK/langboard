@@ -1,14 +1,14 @@
 import { Dialog } from "@/components/base";
 import { useEffect, useRef } from "react";
 import { ActivityModel } from "@/core/models";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import ActivityList from "@/components/ActivityList";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
 import { useAuth } from "@/core/providers/AuthProvider";
 
 function WikiActivityDialog(): JSX.Element | null {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const navigateRef = useRef(useNavigate());
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
     const activities = ActivityModel.Model.useModels(

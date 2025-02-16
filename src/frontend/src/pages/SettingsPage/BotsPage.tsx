@@ -1,6 +1,7 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BotDetails from "@/pages/SettingsPage/components/bots/BotDetails";
 import BotList from "@/pages/SettingsPage/components/bots/BotList";
@@ -9,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 function BotsPage() {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate, isValidating } = useAppSetting();
     const { botUID } = useParams();
@@ -16,6 +18,7 @@ function BotsPage() {
 
     useEffect(() => {
         if (!botUID) {
+            setPageAliasRef.current("Bots");
             setBot(null);
             return;
         }
@@ -27,6 +30,7 @@ function BotsPage() {
             return;
         }
 
+        setPageAliasRef.current(`${bot.name} Details`);
         setBot(bot);
     }, [botUID]);
 

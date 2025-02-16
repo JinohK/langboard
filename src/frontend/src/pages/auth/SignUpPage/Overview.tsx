@@ -7,11 +7,11 @@ import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];
     const [t] = useTranslation();
     const navigate = usePageNavigate();

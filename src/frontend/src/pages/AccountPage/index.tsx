@@ -5,7 +5,7 @@ import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { RedirectToSignIn } from "@/core/helpers/AuthHelper";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider";
 import EmailPage, { SkeletonEmailPage } from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function AccountPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const { isAuthenticated, aboutMe, updated } = useAuth();
     const navigate = usePageNavigate();

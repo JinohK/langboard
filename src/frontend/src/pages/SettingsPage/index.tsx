@@ -9,7 +9,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { AppSettingProvider } from "@/core/providers/AppSettingProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
 import BotsPage from "@/pages/SettingsPage/BotsPage";
@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SettingsProxy(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const { aboutMe } = useAuth();
     const navigateRef = useRef(usePageNavigate());

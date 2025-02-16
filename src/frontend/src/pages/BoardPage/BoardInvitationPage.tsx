@@ -7,14 +7,14 @@ import useGetProjetInvitation from "@/controllers/api/board/useGetProjectInvitat
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
 function BoardInvitationPage() {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();
@@ -31,6 +31,8 @@ function BoardInvitationPage() {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
             return;
         }
+
+        setPageAliasRef.current("Project Invitation");
 
         getProjectInvitationMutate(
             { token },

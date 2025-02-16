@@ -5,14 +5,14 @@ import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
 import { BrowserRouter } from "react-router-dom";
-import { PageLoaderProvider } from "@/core/providers/PageLoaderProvider";
+import { PageHeaderProvider } from "@/core/providers/PageHeaderProvider";
 import { GlobalSocketHandlersSubscriber } from "@/core/providers/GlobalSocketHandlersSubscriber";
 
 function App() {
     const queryClient = new QueryClient();
     return (
         <QueryClientProvider client={queryClient}>
-            <PageLoaderProvider>
+            <PageHeaderProvider>
                 <AuthProvider>
                     <SocketProvider>
                         <GlobalSocketHandlersSubscriber>
@@ -23,7 +23,7 @@ function App() {
                         </GlobalSocketHandlersSubscriber>
                     </SocketProvider>
                 </AuthProvider>
-            </PageLoaderProvider>
+            </PageHeaderProvider>
         </QueryClientProvider>
     );
 }

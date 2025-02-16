@@ -1,7 +1,7 @@
 import { Button, Flex, Separator } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 function ErrorPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { isAuthenticated } = useAuth();
     const code = window.location.pathname.split("/").pop();
@@ -26,6 +26,7 @@ function ErrorPage(): JSX.Element {
 
     useEffect(() => {
         setIsLoadingRef.current(false);
+        setPageAliasRef.current(message);
     }, []);
 
     const handleBack = () => {
@@ -41,7 +42,7 @@ function ErrorPage(): JSX.Element {
             <h1 className="max-xs:text-2xl flex items-center gap-3 text-4xl font-bold text-gray-600">
                 {errorCode.toString()}
                 <Separator className="mt-1 h-8 w-0.5" orientation="vertical" />
-                {message}
+                {message.toUpperCase()}
             </h1>
             <Button onClick={handleBack}>{t(isAuthenticated() ? "common.Go to Dashboard" : "common.Go to Sign In")}</Button>
         </Flex>

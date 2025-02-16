@@ -1,16 +1,17 @@
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IChatContent, registerModel } from "@/core/models/Base";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends IBaseModel {
     icon?: string;
     sender_uid?: string;
     receiver_uid?: string;
-    message: string;
+    message: IChatContent;
     updated_at: Date;
 
     // variable set from the client side
     projectUID: string;
     isReceived: bool;
+    isPending?: bool;
 }
 
 class ChatMessageModel extends BaseModel<Interface> {
@@ -63,7 +64,7 @@ class ChatMessageModel extends BaseModel<Interface> {
     public get message() {
         return this.getValue("message");
     }
-    public set message(value: string) {
+    public set message(value: IChatContent) {
         this.update({ message: value });
     }
 
@@ -79,6 +80,13 @@ class ChatMessageModel extends BaseModel<Interface> {
     }
     public set isReceived(value: bool) {
         this.update({ isReceived: value });
+    }
+
+    public get isPending() {
+        return this.getValue("isPending");
+    }
+    public set isPending(value: bool | undefined) {
+        this.update({ isPending: value });
     }
 }
 

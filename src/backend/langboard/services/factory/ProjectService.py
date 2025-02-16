@@ -86,8 +86,8 @@ class ProjectService(BaseService):
             return []
         query = (
             SqlBuilder.select.tables(User, ProjectAssignedUser)
-            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.user_id)
-            .where(ProjectAssignedUser.project_id == project.id)
+            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
+            .where(ProjectAssignedUser.column("project_id") == project.id)
         )
 
         if where_user_ids_in is not None:
@@ -200,13 +200,14 @@ class ProjectService(BaseService):
         if not project:
             return False
 
+        target_table = ProjectAssignedBot if isinstance(user_or_bot, Bot) else ProjectAssignedUser
         target_column = "bot_id" if isinstance(user_or_bot, Bot) else "user_id"
         async with DbSession.use() as db:
             result = await db.exec(
-                SqlBuilder.select.table(ProjectAssignedUser)
+                SqlBuilder.select.table(target_table)
                 .where(
-                    (ProjectAssignedUser.column("project_id") == project.id)
-                    & (ProjectAssignedUser.column(target_column) == user_or_bot.id)
+                    (target_table.column("project_id") == project.id)
+                    & (target_table.column(target_column) == user_or_bot.id)
                 )
                 .limit(1)
             )

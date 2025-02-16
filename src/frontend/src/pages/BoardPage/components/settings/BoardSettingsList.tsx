@@ -1,6 +1,6 @@
 import { Flex } from "@/components/base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
@@ -15,7 +15,7 @@ export function SkeletonSettingsList() {
 }
 
 const BoardSettingsList = memo(() => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const { project, currentUser } = useBoardSettings();
 
     useEffect(() => {

@@ -5,11 +5,11 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetDashboardCards from "@/controllers/api/dashboard/useGetDashboardCards";
 import { useTranslation } from "react-i18next";
 import CardRow from "@/pages/DashboardPage/components/CardRow";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ProjectCard } from "@/core/models";
 
 function CardsPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { mutateAsync, cardUIDs, isLastPage } = useGetDashboardCards();
     const cards = ProjectCard.Model.useModels((model) => cardUIDs.includes(model.uid), [cardUIDs]);
@@ -30,6 +30,7 @@ function CardsPage(): JSX.Element {
     }, [isLastPage, mutateAsync]);
 
     useEffect(() => {
+        setPageAliasRef.current("Dashboard");
         setIsLoadingRef.current(false);
     }, [mutateAsync, cards]);
 

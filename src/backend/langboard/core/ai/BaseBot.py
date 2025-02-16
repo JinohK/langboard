@@ -7,16 +7,15 @@ from requests import Session as HTTPSession
 from ..db import DbSession, SqlBuilder
 from ..setting import AppSetting, AppSettingType
 from ..utils.String import generate_random_string
-from .BotResponse import (
-    LangflowStreamResponse,
-    get_langflow_output_message,
-)
+from .BotResponse import LangflowStreamResponse, get_langflow_output_message
 from .InternalBotType import InternalBotType
 
 
 class LangflowRequestModel(BaseModel):
     flow_id: str
     message: str
+    input_type: str | None = None
+    output_type: str | None = None
     session_id: str | None = None
     tweaks: dict[str, dict[str, Any]] | None = None
 
@@ -26,7 +25,15 @@ class _LangflowAPIRequestModel:
         self.url = f"{settings[AppSettingType.LangflowUrl]}/api/v1/run/{request_model.flow_id}?stream={use_stream}"
         self.session_id = request_model.session_id if request_model.session_id else generate_random_string(32)
         self.headers = {"Content-Type": "application/json", "x-api-key": settings[AppSettingType.LangflowApiKey]}
-        req_data: dict[str, Any] = {"input_value": request_model.message, "session": self.session_id}
+        req_data: dict[str, Any] = {
+            "input_value": request_model.message,
+            "session": self.session_id,
+            "session_id": self.session_id,
+        }
+        if request_model.input_type:
+            req_data["input_type"] = request_model.input_type
+        if request_model.output_type:
+            req_data["output_type"] = request_model.output_type
         if request_model.tweaks:
             req_data["tweaks"] = request_model.tweaks
         self.req_data = req_data

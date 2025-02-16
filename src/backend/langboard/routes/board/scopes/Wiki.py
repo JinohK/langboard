@@ -5,6 +5,7 @@ from ....core.routing import BaseFormModel, form_model
 @form_model
 class WikiForm(BaseFormModel):
     title: str
+    content: EditorContentModel | None = None
 
 
 @form_model

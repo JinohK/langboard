@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
@@ -9,9 +9,11 @@ import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { Flex } from "@/components/base";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function SignInPage(): JSX.Element {
-    const navigate = usePageNavigate();
+    const { setPageAliasRef } = usePageHeader();
+    const navigateRef = useRef(usePageNavigate());
     const location = useLocation();
     const [email, setEmail] = useState("");
     const [form, setForm] = useState<JSX.Element>();
@@ -20,6 +22,7 @@ function SignInPage(): JSX.Element {
     const { wrapper: wrapperClassName, width: widthClassName } = createTwoSidedSizeClassNames("sm");
 
     useEffect(() => {
+        setPageAliasRef.current("Sign In");
         const searchParams = new URLSearchParams(location.search);
         const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN);
         const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
@@ -29,7 +32,7 @@ function SignInPage(): JSX.Element {
 
             searchParams.set(QUERY_NAMES.SIGN_IN_TOKEN, token);
 
-            navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
+            navigateRef.current(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
                 replace: true,
             });
 
@@ -38,7 +41,7 @@ function SignInPage(): JSX.Element {
 
         if (signTokenParam && emailTokenParam) {
             if (location.pathname !== ROUTES.SIGN_IN.PASSWORD) {
-                navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { replace: true });
+                navigateRef.current(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { replace: true });
                 return;
             }
 
@@ -56,7 +59,7 @@ function SignInPage(): JSX.Element {
                     },
                     onError: () => {
                         searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
-                        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
+                        navigateRef.current(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
                     },
                 }
             );

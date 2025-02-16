@@ -3,7 +3,7 @@ import { ISidebarNavItem, TSidebarNavItemsProps } from "@/components/Sidebar/typ
 import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element => {
     return (
@@ -34,7 +34,7 @@ interface ISidebarNavItemProps {
 }
 
 const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
 
     return (
         <a
@@ -62,7 +62,7 @@ const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ i
 });
 
 const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
 
     return (
         <a

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import ChatContentModel, DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
 from ...models import ChatHistory
@@ -50,7 +50,7 @@ class ChatHistoryService(BaseService):
     async def create(
         self,
         history_type: str,
-        message: str,
+        message: ChatContentModel,
         filterable: SnowflakeID | str | None = None,
         sender: TUserParam | None = None,
         receiver: TUserParam | None = None,

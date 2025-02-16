@@ -1,6 +1,6 @@
 import { Flex } from "@/components/base";
 import { BotModel } from "@/core/models";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import BotApiAuthType from "@/pages/SettingsPage/components/bots/BotApiAuthType";
 import BotApiKey from "@/pages/SettingsPage/components/bots/BotApiKey";
 import BotApiURL from "@/pages/SettingsPage/components/bots/BotApiURL";
@@ -17,7 +17,7 @@ export interface IBotDetailsProps {
 }
 
 const BotDetails = memo(({ bot }: IBotDetailsProps) => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
 
     useEffect(() => {
         setIsLoadingRef.current(false);

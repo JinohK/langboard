@@ -2,9 +2,16 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/base";
 import PreferenceLanguage from "@/pages/AccountPage/components/preference/PreferenceLanguage";
 import PreferenceNotification from "@/pages/AccountPage/components/preference/PreferenceNotification";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useEffect } from "react";
 
 function PreferencesPage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
+
+    useEffect(() => {
+        setPageAliasRef.current("Preferences");
+    }, []);
 
     return (
         <>

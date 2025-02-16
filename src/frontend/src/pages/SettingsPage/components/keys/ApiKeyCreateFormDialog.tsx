@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
 import { useEffect, useRef, useState } from "react";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
@@ -16,7 +16,7 @@ export interface IApiKeyCreateFormDialogProps {
 }
 
 function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);

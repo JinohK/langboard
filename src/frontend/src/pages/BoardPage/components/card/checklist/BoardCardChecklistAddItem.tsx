@@ -1,14 +1,31 @@
 import { Button, IconComponent, Toast } from "@/components/base";
 import useCreateCardCheckitem from "@/controllers/api/card/checkitem/useCreateCardCheckitem";
+import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistAddItem(): JSX.Element {
-    const { projectUID, card } = useBoardCard();
+    const { socket, projectUID, card } = useBoardCard();
     const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const [t] = useTranslation();
     const { mutateAsync: createCheckitemMutateAsync } = useCreateCardCheckitem();
+    const isAddedRef = useRef(false);
+    const handlers = useCardCheckitemCreatedHandlers({
+        cardUID: card.uid,
+        checklistUID: checklist.uid,
+        callback: () => {
+            if (!isAddedRef.current) {
+                return;
+            }
+
+            isAddedRef.current = false;
+            checklist.isOpenedInBoardCard = true;
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers });
 
     const createCheckitem = () => {
         if (isValidating) {
@@ -16,6 +33,8 @@ function BoardCardChecklistAddItem(): JSX.Element {
         }
 
         setIsValidating(true);
+
+        isAddedRef.current = true;
 
         const promise = createCheckitemMutateAsync({
             project_uid: projectUID,

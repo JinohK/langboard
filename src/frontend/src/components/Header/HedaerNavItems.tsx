@@ -2,7 +2,7 @@ import { IHeaderNavItem, THeaderNavItemsProps } from "@/components/Header/types"
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { makeReactKey } from "@/core/utils/StringUtils";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useRef, useState } from "react";
 
 interface IDropdownMenuNavProps {
@@ -111,7 +111,7 @@ function DropdownMenuNav({ item, setIsOpen, activatedClass, deactivatedClass, sh
 }
 
 function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (
@@ -136,7 +136,7 @@ function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, s
 }
 
 function NavLinkItem({ item, activatedClass, deactivatedClass, shardClass, setDropdownMenuOpenedRef }: IHeaderNavItemProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (

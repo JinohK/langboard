@@ -3,6 +3,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Avatar, Button, ButtonProps } from "@/components/base";
 import MessageLoading from "@/components/Chat/MessageLoading";
 import { cn } from "@/core/utils/ComponentUtils";
+import Markdown from "@/components/Markdown";
+import { IChatContent } from "@/core/models/Base";
+import { useTranslation } from "react-i18next";
 
 // ChatBubble
 const chatBubbleVariant = cva("flex gap-2 max-w-[85%] items-end relative group", {
@@ -70,26 +73,33 @@ const chatBubbleMessageVariants = cva("px-3 py-2", {
     },
 });
 
-interface ChatBubbleMessageProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chatBubbleMessageVariants> {
+interface ChatBubbleMessageProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children">, VariantProps<typeof chatBubbleMessageVariants> {
+    message?: IChatContent;
     isLoading?: bool;
 }
 
 const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProps>(
-    ({ className, variant, layout, isLoading = false, children, ...props }, ref) => (
-        <div
-            className={cn(chatBubbleMessageVariants({ variant, layout, className }), "max-w-full whitespace-pre-wrap break-words")}
-            ref={ref}
-            {...props}
-        >
-            {isLoading ? (
-                <div className="flex items-center space-x-2">
-                    <MessageLoading />
-                </div>
-            ) : (
-                children
-            )}
-        </div>
-    )
+    ({ message, className, variant, layout, isLoading = false, ...props }, ref) => {
+        const [t] = useTranslation();
+
+        return (
+            <div
+                className={cn(chatBubbleMessageVariants({ variant, layout, className }), "max-w-full whitespace-pre-wrap break-words")}
+                ref={ref}
+                {...props}
+            >
+                {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                        <MessageLoading />
+                    </div>
+                ) : message ? (
+                    <Markdown message={message} />
+                ) : (
+                    t("common.No message")
+                )}
+            </div>
+        );
+    }
 );
 ChatBubbleMessage.displayName = "ChatBubbleMessage";
 

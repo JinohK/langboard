@@ -8,7 +8,7 @@ import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
@@ -56,7 +56,7 @@ const PAGE_SIZE = 20;
 
 const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
     const { selectCardViewType } = useBoardRelationshipController();
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const { project, filters, socket, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [updated, forceUpdate] = updater;

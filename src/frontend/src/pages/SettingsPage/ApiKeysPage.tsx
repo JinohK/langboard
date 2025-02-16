@@ -3,16 +3,22 @@ import useDeleteSelectedSettings from "@/controllers/api/settings/useDeleteSelec
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import ApiKeyList from "@/pages/SettingsPage/components/keys/ApiKeyList";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function ApiKeysPage() {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate, isValidating, setIsValidating } = useAppSetting();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const { mutate: deleteSelectedSettingsMutate } = useDeleteSelectedSettings();
+
+    useEffect(() => {
+        setPageAliasRef.current("API keys");
+    }, []);
 
     const openCreateDialog = () => {
         navigate.current(ROUTES.SETTINGS.CREATE_API_KEY);

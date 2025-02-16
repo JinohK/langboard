@@ -10,8 +10,10 @@ import OptionalForm from "@/pages/auth/SignUpPage/OptionalForm";
 import Overview from "@/pages/auth/SignUpPage/Overview";
 import RequiredForm from "@/pages/auth/SignUpPage/RequiredForm";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function SignUpPage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();
@@ -37,6 +39,7 @@ function SignUpPage(): JSX.Element {
     };
 
     useEffect(() => {
+        setPageAliasRef.current("Sign Up");
         const searchParams = new URLSearchParams(location.search);
 
         switch (location.pathname) {

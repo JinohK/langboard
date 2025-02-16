@@ -1,3 +1,6 @@
+from asyncio import run
+from inspect import iscoroutinefunction
+from threading import Thread
 from typing import Any, Callable, Coroutine, cast
 from ..db import User
 from .SocketDefaultEvent import SocketDefaultEvent
@@ -87,3 +90,12 @@ class SocketManager:
         if topic not in self.__validators:
             return None
         return self.__validators[topic]
+
+    def run_in_thread(self, func: Callable, *args, **kwargs):
+        def start(args: tuple, kwargs: dict):
+            if iscoroutinefunction(func):
+                run(func(*args, **kwargs))
+            else:
+                func(*args, **kwargs)
+
+        Thread(target=start, args=(args, kwargs)).start()

@@ -49,10 +49,6 @@ class ProjectChecklist extends BaseModel<IStore> {
         });
     }
 
-    public static convertModel(model: IStore): IStore {
-        return model;
-    }
-
     public get card_uid() {
         return this.getValue("card_uid");
     }

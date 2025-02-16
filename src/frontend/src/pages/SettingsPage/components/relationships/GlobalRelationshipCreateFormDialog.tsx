@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
 import { useEffect, useRef, useState } from "react";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateGlobalRelationship from "@/controllers/api/settings/relationships/useCreateGlobalRelationship";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -15,7 +15,7 @@ export interface IGlobalRelationshipCreateFormDialogProps {
 }
 
 function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelationshipCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigate } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);

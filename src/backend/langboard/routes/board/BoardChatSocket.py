@@ -1,10 +1,11 @@
 from time import sleep
 from ...core.ai import BotRunner, InternalBotType
 from ...core.caching import Cache
-from ...core.db import User
+from ...core.db import ChatContentModel, User
 from ...core.filter import RoleFilter
 from ...core.routing import AppRouter, IWebSocketStream, SocketResponse, SocketTopic, WebSocket
 from ...core.security import Auth
+from ...core.utils.String import concat
 from ...models import ChatHistory, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
@@ -41,6 +42,10 @@ async def is_chat_available(topic: str, topic_id: str):
 async def project_chat(
     ws: WebSocket, topic_id: str, message: str, user: User = Auth.scope("socket"), service: Service = Service.scope()
 ):
+    AppRouter.socket.run_in_thread(run_chat, args=(ws, topic_id, message, user, service))
+
+
+async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, service: Service):
     project = await service.project.get_by_uid(topic_id)
     if not project:
         return
@@ -56,7 +61,9 @@ async def project_chat(
             data={"available": False},
         )
 
-    user_message = await service.chat_history.create("project", message, filterable=topic_id, sender=user.id)
+    user_message = await service.chat_history.create(
+        "project", ChatContentModel(content=message), filterable=topic_id, sender=user.id
+    )
 
     ws.send(
         SocketResponse(
@@ -72,7 +79,7 @@ async def project_chat(
     if await stop_chat_if_cancelled(ws, topic_id, service):
         return
 
-    ai_message = await service.chat_history.create("project", "", filterable=topic_id, receiver=user.id)
+    ai_message = await service.chat_history.create("project", ChatContentModel(), filterable=topic_id, receiver=user.id)
     ws_stream = ws.stream_with_topic(SocketTopic.Board, topic_id, "board:chat:stream")
     ai_message_uid = ai_message.get_uid()
     ws_stream.start(data={"ai_message": ai_message.api_response()})
@@ -83,20 +90,17 @@ async def project_chat(
         return
 
     if isinstance(stream_or_str, str):
-        ai_message.message = stream_or_str
-        ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message})
+        ai_message.message = ChatContentModel(content=stream_or_str)
+        ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message.model_dump()})
     else:
         is_received = False
         async for chunk in stream_or_str:
             if await stop_chat_if_cancelled(ws, topic_id, service, ai_message, ws_stream):
                 return
 
-            if not chunk:
-                continue
-
             is_received = True
-            ai_message.message = f"{ai_message.message}{chunk}"
-            ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message})
+            ai_message.message.content = concat(ai_message.message.content, chunk)
+            ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message.model_dump()})
 
         if not is_received:
             is_cancelled = await stop_chat_if_cancelled(ws, topic_id, service, ai_message, ws_stream)

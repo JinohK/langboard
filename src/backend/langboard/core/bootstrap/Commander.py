@@ -68,7 +68,7 @@ class Commander:
         self.__add_groups(command_parser, _CLICommandOption)
 
         args = argv[1:]
-        if not args:
+        if not args or args[0] == "-h" or args[0] == "--help":
             command_parser.print_help()
             exit(1)
 

@@ -7,7 +7,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { TProjectTab } from "@/pages/DashboardPage/constants";
 
 interface IProjectPageProps {
@@ -17,7 +17,7 @@ interface IProjectPageProps {
 }
 
 const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const { navigate, currentUser } = useDashboard();
     const [t] = useTranslation();
     const { data, isFetching, error } = useGetProjects();
@@ -42,6 +42,7 @@ const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater
     }, [error]);
 
     useEffect(() => {
+        setPageAliasRef.current("Dashboard");
         if (!data || isFetching || !currentUser) {
             return;
         }

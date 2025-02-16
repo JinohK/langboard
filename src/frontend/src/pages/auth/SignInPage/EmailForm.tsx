@@ -7,7 +7,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useEffect } from "react";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
 
@@ -18,7 +18,7 @@ export interface IEmailFormProps {
 }
 
 function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const navigate = usePageNavigate();
     const { mutate } = useAuthEmail();

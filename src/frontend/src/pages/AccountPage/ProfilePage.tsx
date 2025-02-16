@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import AvatarUploader from "@/components/AvatarUploader";
 import FormErrorMessage from "@/components/FormErrorMessage";
@@ -8,8 +8,10 @@ import useForm from "@/core/hooks/form/useForm";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function ProfilePage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const { currentUser, updatedUser } = useAccountSetting();
     const [t] = useTranslation();
     const { mutate } = useUpdateProfile();
@@ -53,6 +55,10 @@ function ProfilePage(): JSX.Element {
         },
         useDefaultBadRequestHandler: true,
     });
+
+    useEffect(() => {
+        setPageAliasRef.current("Profile");
+    }, []);
 
     return (
         <>

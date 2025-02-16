@@ -11,10 +11,10 @@ import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { usePageLoader } from "@/core/providers/PageLoaderProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function AccountRecoveryPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageLoader();
+    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
     const navigate = usePageNavigate();
@@ -29,6 +29,7 @@ function AccountRecoveryPage(): JSX.Element {
     };
 
     useEffect(() => {
+        setPageAliasRef.current("Account Recovery");
         const searchParams = new URLSearchParams(location.search);
         const signTokenParam = searchParams.get(QUERY_NAMES.SIGN_IN_TOKEN);
         const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);

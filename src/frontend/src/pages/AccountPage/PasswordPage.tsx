@@ -4,8 +4,11 @@ import { Box, Flex, Form, SubmitButton, Toast } from "@/components/base";
 import useChangePassword from "@/controllers/api/account/useChangePassword";
 import useForm from "@/core/hooks/form/useForm";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useEffect } from "react";
 
 function PasswordPage(): JSX.Element {
+    const { setPageAliasRef } = usePageHeader();
     const { updatedUser } = useAccountSetting();
     const [t] = useTranslation();
     const { mutate } = useChangePassword();
@@ -24,6 +27,10 @@ function PasswordPage(): JSX.Element {
         },
         useDefaultBadRequestHandler: true,
     });
+
+    useEffect(() => {
+        setPageAliasRef.current("Change Password");
+    }, []);
 
     return (
         <>
