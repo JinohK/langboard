@@ -11,6 +11,7 @@ export interface IUpdateBotForm {
     api_auth_type?: BotModel.EAPIAuthType;
     api_key?: string;
     ip_whitelist?: string[];
+    prompt?: string;
     avatar?: File;
     delete_avatar?: bool;
 }

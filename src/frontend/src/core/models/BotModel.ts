@@ -22,6 +22,7 @@ export interface Interface extends IBaseModel {
     api_key: string;
     app_api_token: string;
     ip_whitelist: string[];
+    prompt: string;
     conditions: Partial<Record<EBotTriggerCondition, { is_predefined: bool }>>;
 }
 
@@ -115,6 +116,13 @@ class BotModel extends BaseModel<Interface> {
     }
     public set ip_whitelist(value: string[]) {
         this.update({ ip_whitelist: value });
+    }
+
+    public get prompt() {
+        return this.getValue("prompt");
+    }
+    public set prompt(value: string) {
+        this.update({ prompt: value });
     }
 
     public get conditions() {

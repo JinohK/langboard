@@ -6,6 +6,14 @@ from ...models import Card, CardAttachment, Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
+def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "attachment": CardAttachment.api_schema(),
+        **(other_schema or {}),
+    }
+
+
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentUploaded, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentUploaded)
@@ -17,6 +25,7 @@ async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, ca
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentNameChanged, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_name_changed(
     user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment
@@ -30,6 +39,7 @@ async def card_attachment_name_changed(
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentDeleted, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_deleted(user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentDeleted)

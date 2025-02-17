@@ -1,3 +1,4 @@
+from json import dumps as json_dumps
 from typing import Any
 from httpx import post
 from ....core.ai import Bot, BotAPIAuthType, BotTrigger, BotTriggerCondition
@@ -63,19 +64,27 @@ class BotTaskHelper:
         response = {
             "event": event,
             "data": data,
-            "bot": BotTaskDataHelper.create_user_or_bot(bot),
+            "bot": {
+                **BotTaskDataHelper.create_user_or_bot(bot),
+                "app_api_token": bot.app_api_token,
+                "prompt": bot.prompt,
+            },
             "labels_for_project": [label.api_response() for label in labels] if labels else None,
         }
-        response["bot"]["app_api_token"] = bot.app_api_token
 
+        json_data = {}
         if bot.api_auth_type == BotAPIAuthType.Basic:
             headers["Authorization"] = f"Basic {bot.api_key}"
+            json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Bearer:
             headers["Authorization"] = f"Bearer {bot.api_key}"
+            json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Langflow:
             headers["x-api-key"] = bot.api_key
+            json_data = {"input_value": json_dumps(response)}
         elif bot.api_auth_type == BotAPIAuthType.OpenAI:
             headers["Authorization"] = f"Bearer {bot.api_key}"
+            json_data = response
         else:
             logger.error("Unknown API Auth Type: %s", bot.api_auth_type)
             return
@@ -84,7 +93,7 @@ class BotTaskHelper:
             res = post(
                 bot.api_url,
                 headers=headers,
-                json=data,
+                json=json_data,
             )
 
             if res.status_code != 200:

@@ -186,8 +186,20 @@ async def create_bot(
     if file_model:
         uploaded_avatar = file_model
 
+    if form.ip_whitelist is not None:
+        ip_whitelist = form.ip_whitelist.strip().replace(" ", "").split(",")
+    else:
+        ip_whitelist = []
+
     bot = await service.bot.create(
-        form.bot_name, form.bot_uname, form.api_url, form.api_auth_type, form.api_key, uploaded_avatar
+        form.bot_name,
+        form.bot_uname,
+        form.api_url,
+        form.api_auth_type,
+        form.api_key,
+        ip_whitelist,
+        form.prompt,
+        uploaded_avatar,
     )
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)

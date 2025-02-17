@@ -1,15 +1,13 @@
 import emojis, { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import Lottie, { PartialLottieComponentProps } from "lottie-react";
-import { forwardRef, memo } from "react";
+import { memo } from "react";
 
-export interface IAnimatedEmojiProps extends Omit<PartialLottieComponentProps, "loop"> {
+export interface IAnimatedEmojiProps extends Omit<PartialLottieComponentProps, "loop" | "animationData" | "autoplay"> {
     emoji: TEmoji;
 }
 
-const AnimatedEmoji = memo(
-    forwardRef<HTMLDivElement, IAnimatedEmojiProps>(({ emoji, ...props }, ref) => {
-        return <Lottie animationData={emojis[emoji]} loop={true} autoplay={false} {...props} ref={ref} />;
-    })
-);
+const AnimatedEmoji = memo(({ emoji, ...props }: IAnimatedEmojiProps) => {
+    return <Lottie {...props} animationData={emojis[emoji]} loop={true} autoplay={false} />;
+});
 
 export default AnimatedEmoji;

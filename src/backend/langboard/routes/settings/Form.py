@@ -29,6 +29,8 @@ class CreateBotForm(BaseFormModel):
     api_url: str
     api_auth_type: BotAPIAuthType
     api_key: str
+    ip_whitelist: str | None = None
+    prompt: str | None = None
 
 
 @form_model
@@ -39,6 +41,7 @@ class UpdateBotForm(BaseFormModel):
     api_auth_type: BotAPIAuthType | None = None
     api_key: str | None = None
     ip_whitelist: str | None = None
+    prompt: str | None = None
     delete_avatar: bool = False
 
 

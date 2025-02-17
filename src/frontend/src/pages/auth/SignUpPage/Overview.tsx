@@ -61,7 +61,6 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
             avatar: { mimeType: "image/*" },
             affiliation: {},
             position: {},
-            lang: { required: true },
         },
         failCallback,
         mutate,

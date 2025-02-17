@@ -5,6 +5,7 @@ from ...models import Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
+@BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectUpdated)
 @Broker.wrap_async_task_decorator
 async def project_updated(user_or_bot: User | Bot, project: Project):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectUpdated)
@@ -13,6 +14,7 @@ async def project_updated(user_or_bot: User | Bot, project: Project):
     )
 
 
+@BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectDeleted)
 @Broker.wrap_async_task_decorator
 async def project_deleted(user: User, project: Project):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectDeleted)

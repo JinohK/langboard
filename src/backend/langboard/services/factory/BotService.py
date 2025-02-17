@@ -45,6 +45,8 @@ class BotService(BaseService):
         api_url: str,
         api_auth_type: BotAPIAuthType,
         api_key: str,
+        ip_whitelist: list[str],
+        prompt: str | None = None,
         avatar: FileModel | None = None,
     ) -> Bot | None:
         existing_bot = await self._get_by(Bot, "bot_uname", bot_uname)
@@ -59,6 +61,8 @@ class BotService(BaseService):
             api_auth_type=api_auth_type,
             api_key=api_key,
             app_api_token=await self.generate_api_key(),
+            ip_whitelist=ip_whitelist,
+            prompt=prompt or "",
         )
 
         async with DbSession.use() as db:
@@ -74,8 +78,8 @@ class BotService(BaseService):
         bot = cast(Bot, await self._get_by_param(Bot, bot))
         if not bot:
             return None
-        mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_key"]
-        unpublishable_keys = ["api_url", "api_key"]
+        mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_key", "prompt"]
+        unpublishable_keys = ["api_url", "api_key", "prompt"]
 
         old_bot_record = {}
 

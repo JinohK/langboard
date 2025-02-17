@@ -45,11 +45,11 @@ class Validator {
     }
 
     public mimeType(schemaValue: TValidationSchema["mimeType"], value?: string | File[] | FileList): bool {
-        if (!schemaValue) {
+        if (!schemaValue || !value) {
             return true;
         }
 
-        if (TypeUtils.isString(value) || !value) {
+        if (TypeUtils.isString(value)) {
             return false;
         }
 

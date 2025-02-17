@@ -1,10 +1,12 @@
 from asyncio import run as async_run
+from json import dumps as json_dumps
+from json import loads as json_loads
 from typing import Any, Callable, Concatenate, Coroutine, Generic, ParamSpec, Protocol, TypeVar, cast
 from celery import Celery
 from celery.app.task import Task
 from celery.apps.worker import Worker
 from celery.signals import celeryd_after_setup, setup_logging
-from ...Constants import CACHE_TYPE, CACHE_URL, PROJECT_NAME
+from ...Constants import CACHE_TYPE, CACHE_URL, DATA_DIR, PROJECT_NAME
 from ..logger import Logger
 from ..utils.decorators import class_instance
 from .TaskParameters import TaskParameters
@@ -17,6 +19,9 @@ _TReturn = TypeVar("_TReturn", covariant=True)
 class _Task(Protocol, Generic[_TParams, _TReturn]):
     def __call__(self, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn: ...  # type: ignore
 
+
+_schema_dir = DATA_DIR / "schemas"
+_schema_dir.mkdir(exist_ok=True)
 
 logger = Logger.use("Broker")
 
@@ -34,6 +39,8 @@ def _(sender: str, instance: Worker, **kwargs) -> None:
 
 @class_instance()
 class Broker:
+    _schemas = {}
+
     def __init__(self):
         if CACHE_TYPE == "in-memory":
             self.broker_url = "memory://"
@@ -103,6 +110,33 @@ class Broker:
             self.celery.worker_main(argv)
         except Exception:
             self.celery.close()
+
+    def schema(self, group: str, schema: dict):
+        schema_file = _schema_dir / f"{group}.json"
+        if group not in self._schemas:
+            if schema_file.exists():
+                schema_json = json_loads(schema_file.read_text())
+            else:
+                schema_json = {}
+            self._schemas[group] = schema_json
+        else:
+            schema_json = self._schemas[group]
+
+        with open(_schema_dir / f"{group}.json", "w") as f:
+            schema_json.update(schema)
+            f.write(json_dumps(schema_json))
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    def get_schema(self, group: str):
+        schema_file = _schema_dir / f"{group}.json"
+        if schema_file.exists():
+            return json_loads(schema_file.read_text())
+        else:
+            return {}
 
     def __run_async_task(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
         def inner(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:

@@ -5,6 +5,7 @@ from ...models import Card, Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardCreated)
 @Broker.wrap_async_task_decorator
 async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCreated)
@@ -13,6 +14,7 @@ async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardUpdated)
 @Broker.wrap_async_task_decorator
 async def card_updated(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardUpdated)
@@ -21,6 +23,7 @@ async def card_updated(user_or_bot: User | Bot, project: Project, card: Card):
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardMoved)
 @Broker.wrap_async_task_decorator
 async def card_moved(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardMoved)
@@ -29,6 +32,7 @@ async def card_moved(user_or_bot: User | Bot, project: Project, card: Card):
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardLabelsUpdated)
 @Broker.wrap_async_task_decorator
 async def card_labels_updated(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardLabelsUpdated)
@@ -37,6 +41,7 @@ async def card_labels_updated(user_or_bot: User | Bot, project: Project, card: C
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardRelationshipsUpdated)
 @Broker.wrap_async_task_decorator
 async def card_relationship_updated(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardRelationshipsUpdated)
@@ -48,6 +53,7 @@ async def card_relationship_updated(user_or_bot: User | Bot, project: Project, c
     )
 
 
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardDeleted)
 @Broker.wrap_async_task_decorator
 async def card_deleted(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardDeleted)

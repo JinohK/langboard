@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Any, ClassVar
+from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel, User
 from ..storage import FileModel
@@ -22,6 +23,7 @@ class Bot(SoftDeleteModel, table=True):
     api_key: str = Field(nullable=False)
     app_api_token: str = Field(nullable=False)
     ip_whitelist: list[str] = Field(default=[], sa_type=CSVType)
+    prompt: str = Field(default="", sa_type=TEXT)
 
     @staticmethod
     def api_schema(is_setting: bool = False, other_schema: dict | None = None) -> dict[str, Any]:
@@ -41,6 +43,7 @@ class Bot(SoftDeleteModel, table=True):
                     "api_key": "string",
                     "app_api_token": "string",
                     "ip_whitelist": "List[string]",
+                    "prompt": "string",
                 }
             )
 
@@ -64,6 +67,7 @@ class Bot(SoftDeleteModel, table=True):
             hide_rest_value = "*" * (len(self.app_api_token) - 8)
             response["app_api_token"] = f"{self.app_api_token[:8]}{hide_rest_value}"
             response["ip_whitelist"] = self.ip_whitelist
+            response["prompt"] = self.prompt
 
         return response
 

@@ -25,21 +25,12 @@ class EmailService(BaseService):
     async def send_template(
         self, lang: str, to: str, template_name: TEmailTemplateNames, formats: dict[str, str]
     ) -> bool:
+        if not self.__create_config():
+            return False
+
         subject, template = self.__get_template(lang, template_name)
         subject = self.__create_subject(subject)
         body = template.format_map(formats)  # noqa
-
-        if not hasattr(self, "__config"):
-            self.__config = ConnectionConfig(
-                MAIL_FROM=MAIL_FROM,
-                MAIL_USERNAME=MAIL_USERNAME,
-                MAIL_PASSWORD=SecretStr(MAIL_PASSWORD),
-                MAIL_PORT=int(MAIL_PORT),
-                MAIL_SERVER=MAIL_SERVER,
-                MAIL_STARTTLS=MAIL_STARTTLS,
-                MAIL_SSL_TLS=MAIL_SSL_TLS,
-                TIMEOUT=5,
-            )
 
         message = MessageSchema(
             subject=subject,
@@ -52,6 +43,25 @@ class EmailService(BaseService):
         await fm.send_message(message)
 
         return True
+
+    def __create_config(self) -> bool:
+        if hasattr(self, "__config"):
+            return True
+
+        try:
+            self.__config = ConnectionConfig(
+                MAIL_FROM=MAIL_FROM,
+                MAIL_USERNAME=MAIL_USERNAME,
+                MAIL_PASSWORD=SecretStr(MAIL_PASSWORD),
+                MAIL_PORT=int(MAIL_PORT),
+                MAIL_SERVER=MAIL_SERVER,
+                MAIL_STARTTLS=MAIL_STARTTLS,
+                MAIL_SSL_TLS=MAIL_SSL_TLS,
+                TIMEOUT=5,
+            )
+            return True
+        except Exception:
+            return False
 
     def __get_template(self, lang: str, template_name: TEmailTemplateNames) -> tuple[str, str]:
         locale_path = BASE_DIR / "locales" / lang

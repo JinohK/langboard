@@ -9,6 +9,8 @@ export interface ICreateBotForm {
     api_url: string;
     api_auth_type: BotModel.EAPIAuthType;
     api_key: string;
+    ipWhitelist: string[];
+    prompt: string;
     avatar?: File;
 }
 
@@ -29,7 +31,7 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm, ICreateBotRespo
             if (key === "avatar") {
                 formData.append(key, value as unknown as File, (value as unknown as File).name);
             } else {
-                formData.append(key, value);
+                formData.append(key, value.toString());
             }
         });
 

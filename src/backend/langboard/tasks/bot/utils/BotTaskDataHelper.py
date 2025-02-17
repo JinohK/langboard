@@ -1,5 +1,6 @@
 from typing import Any
-from ....core.ai import Bot
+from ....core.ai import Bot, BotTriggerCondition
+from ....core.broker import Broker
 from ....core.db import DbSession, SqlBuilder, User
 from ....core.utils.decorators import staticclass
 from ....models import Card, Project, ProjectWiki, ProjectWikiAssignedBot
@@ -44,3 +45,34 @@ class BotTaskDataHelper:
             **BotTaskDataHelper.create_project(user_or_bot, project),
             "project_wiki": wiki.convert_to_private_api_response(),
         }
+
+    @staticmethod
+    def schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
+        return Broker.schema("bot", {condition if isinstance(condition, str) else condition.value: schema or {}})
+
+    @staticmethod
+    def project_schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
+        return BotTaskDataHelper.schema(
+            condition,
+            {
+                "project": Project.api_schema(),
+                "executor": BotTaskDataHelper.create_user_or_bot_schema(),
+                **(schema or {}),
+            },
+        )
+
+    @staticmethod
+    def card_schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
+        return BotTaskDataHelper.schema(
+            condition,
+            {
+                "project": Project.api_schema(),
+                "card": Card.api_schema(),
+                "executor": BotTaskDataHelper.create_user_or_bot_schema(),
+                **(schema or {}),
+            },
+        )
+
+    @staticmethod
+    def create_user_or_bot_schema():
+        return {"oneOf": {"User": User.api_schema(), "Bot": Bot.api_schema()}}

@@ -8,6 +8,7 @@ import BotAppApiToken from "@/pages/SettingsPage/components/bots/BotAppApiToken"
 import BotAvatar from "@/pages/SettingsPage/components/bots/BotAvatar";
 import BotIpWhitelist from "@/pages/SettingsPage/components/bots/BotIpWhitelist";
 import BotName from "@/pages/SettingsPage/components/bots/BotName";
+import BotPrompt from "@/pages/SettingsPage/components/bots/BotPrompt";
 import BotTriggerConditionList from "@/pages/SettingsPage/components/bots/BotTriggerConditionList";
 import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
 import { memo, useEffect } from "react";
@@ -39,6 +40,7 @@ const BotDetails = memo(({ bot }: IBotDetailsProps) => {
                     <BotApiKey bot={bot} />
                     <BotAppApiToken bot={bot} />
                     <BotIpWhitelist bot={bot} />
+                    <BotPrompt bot={bot} />
                 </Flex>
             </Flex>
             <Flex justify="center" mt="3">

@@ -10,8 +10,9 @@ import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import AvatarUploader from "@/components/AvatarUploader";
 import { BotModel } from "@/core/models";
-import { isValidURL } from "@/core/utils/StringUtils";
+import { isValidIpv4OrRnage, isValidURL } from "@/core/utils/StringUtils";
 import CopyInput from "@/components/CopyInput";
+import MultiSelect from "@/components/MultiSelect";
 
 export interface IBotCreateFormDialogProps {
     opened: bool;
@@ -30,10 +31,12 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         uname: null as HTMLInputElement | null,
         apiURL: null as HTMLInputElement | null,
         apiKey: null as HTMLInputElement | null,
+        prompt: null as HTMLTextAreaElement | null,
     });
     const [selectedAPIAuthType, setSelectedAPIAuthType] = useState<BotModel.EAPIAuthType>(BotModel.EAPIAuthType.Basic);
     const { mutate } = useCreateBot();
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const ipWhitelistRef = useRef<string[]>([]);
     const save = () => {
         if (isValidating || !inputsRef.current.name || !inputsRef.current.uname || !inputsRef.current.apiURL || !inputsRef.current.apiKey) {
             return;
@@ -43,7 +46,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
 
         const values = {} as Record<keyof typeof inputsRef.current, string>;
         const newErrors = {} as Record<keyof typeof inputsRef.current, string>;
-        let focusableInput = null as HTMLInputElement | null;
+        let focusableInput = null as HTMLInputElement | HTMLTextAreaElement | null;
         Object.entries(inputsRef.current).forEach(([key, input]) => {
             const value = input!.value.trim();
             if (!value) {
@@ -76,6 +79,8 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 api_url: values.apiURL,
                 api_auth_type: selectedAPIAuthType,
                 api_key: values.apiKey,
+                ipWhitelist: ipWhitelistRef.current,
+                prompt: values.prompt,
             },
             {
                 onSuccess: (data) => {
@@ -221,6 +226,45 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 }}
                             />
                             {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
+                        </Box>
+                        <Box mt="4">
+                            <MultiSelect
+                                selections={[]}
+                                placeholder={t("settings.Add a new IP address or range (e.g. 192.0.0.1 or 192.0.0.0/24)...")}
+                                selectedValue={[]}
+                                onValueChange={(values) => {
+                                    ipWhitelistRef.current = values;
+                                }}
+                                inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
+                                canCreateNew
+                                validateCreatedNewValue={isValidIpv4OrRnage}
+                                createNewCommandItemLabel={(value) => {
+                                    const newIPs: string[] = [];
+
+                                    if (value.includes("/24")) {
+                                        newIPs.push(value, value.replace("/24", ""));
+                                    } else {
+                                        newIPs.push(value, `${value}/24`);
+                                    }
+
+                                    return newIPs.map((ip) => ({
+                                        label: ip,
+                                        value: ip,
+                                    }));
+                                }}
+                                isNewCommandItemMultiple
+                                disabled={isValidating}
+                            />
+                        </Box>
+                        <Box mt="4">
+                            <Floating.LabelTextarea
+                                label={t("settings.Bot prompt")}
+                                disabled={isValidating}
+                                ref={(el) => {
+                                    inputsRef.current.prompt = el;
+                                }}
+                            />
+                            {errors.prompt && <FormErrorMessage error={errors.prompt} notInForm />}
                         </Box>
                     </Form.Root>
                 )}
