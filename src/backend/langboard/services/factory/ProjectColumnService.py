@@ -119,13 +119,8 @@ class ProjectColumnService(BaseService):
             await db.commit()
 
         ProjectColumnPublisher.name_changed(project, column, name)
-        ProjectColumnActivityTask.project_column_name_changed(
-            user_or_bot,
-            project,
-            old_name,
-            column if isinstance(column, ProjectColumn) else project,
-        )
-        ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, column)
+        ProjectColumnActivityTask.project_column_name_changed(user_or_bot, project, old_name, column)
+        ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, old_name, column)
 
         return True
 

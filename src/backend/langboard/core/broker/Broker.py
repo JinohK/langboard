@@ -115,7 +115,10 @@ class Broker:
         schema_file = _schema_dir / f"{group}.json"
         if group not in self._schemas:
             if schema_file.exists():
-                schema_json = json_loads(schema_file.read_text())
+                try:
+                    schema_json = json_loads(schema_file.read_text())
+                except Exception:
+                    schema_json = {}
             else:
                 schema_json = {}
             self._schemas[group] = schema_json

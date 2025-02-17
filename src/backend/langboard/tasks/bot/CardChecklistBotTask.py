@@ -20,19 +20,25 @@ async def card_checklist_created(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistCreated,
-        create_checklist_data(user_or_bot, project, card, checklist),
+        _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
 
-@BotTaskDataHelper.card_schema(BotTriggerCondition.CardChecklistTitleChanged, _create_schema())
+@BotTaskDataHelper.card_schema(
+    BotTriggerCondition.CardChecklistTitleChanged, _create_schema(BotTaskDataHelper.changes_schema(("title", "string")))
+)
 @Broker.wrap_async_task_decorator
-async def card_checklist_title_changed(user_or_bot: User | Bot, project: Project, card: Card, checklist: Checklist):
+async def card_checklist_title_changed(
+    user_or_bot: User | Bot, project: Project, card: Card, old_title: str, checklist: Checklist
+):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardChecklistTitleChanged)
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistTitleChanged,
-        create_checklist_data(user_or_bot, project, card, checklist),
+        _create_data(
+            user_or_bot, project, card, checklist, BotTaskDataHelper.create_changes({"title": old_title}, checklist)
+        ),
         project,
     )
 
@@ -44,7 +50,7 @@ async def card_checklist_checked(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistChecked,
-        create_checklist_data(user_or_bot, project, card, checklist),
+        _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -56,7 +62,7 @@ async def card_checklist_unchecked(user_or_bot: User | Bot, project: Project, ca
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistUnchecked,
-        create_checklist_data(user_or_bot, project, card, checklist),
+        _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -68,15 +74,20 @@ async def card_checklist_deleted(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistDeleted,
-        create_checklist_data(user_or_bot, project, card, checklist),
+        _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
 
-def create_checklist_data(
-    user_or_bot: User | Bot, project: Project, card: Card, checklist: Checklist
+def _create_data(
+    user_or_bot: User | Bot,
+    project: Project,
+    card: Card,
+    checklist: Checklist,
+    other_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         **BotTaskDataHelper.create_card(user_or_bot, project, card),
         "checklist": checklist.api_response(),
+        **(other_data or {}),
     }

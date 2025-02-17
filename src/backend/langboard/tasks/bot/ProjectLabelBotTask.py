@@ -22,12 +22,22 @@ async def project_label_created(user_or_bot: User | Bot, project: Project, label
     )
 
 
-@BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectLabelUpdated, _create_schema())
+@BotTaskDataHelper.project_schema(
+    BotTriggerCondition.ProjectLabelUpdated,
+    _create_schema(
+        BotTaskDataHelper.changes_schema(("name", "string?"), ("color", "string?"), ("description", "string?"))
+    ),
+)
 @Broker.wrap_async_task_decorator
-async def project_label_updated(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
+async def project_label_updated(
+    user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], label: ProjectLabel
+):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectLabelUpdated)
     await BotTaskHelper.run(
-        bots, BotTriggerCondition.ProjectLabelUpdated, create_label_data(user_or_bot, project, label), project
+        bots,
+        BotTriggerCondition.ProjectLabelUpdated,
+        create_label_data(user_or_bot, project, label, BotTaskDataHelper.create_changes(old_dict, label)),
+        project,
     )
 
 
@@ -40,8 +50,11 @@ async def project_label_deleted(user_or_bot: User | Bot, project: Project, label
     )
 
 
-def create_label_data(user_or_bot: User | Bot, project: Project, label: ProjectLabel) -> dict[str, Any]:
+def create_label_data(
+    user_or_bot: User | Bot, project: Project, label: ProjectLabel, other_data: dict[str, Any] | None = None
+) -> dict[str, Any]:
     return {
         **BotTaskDataHelper.create_project(user_or_bot, project),
         "project_label": label.api_response(),
+        **(other_data or {}),
     }

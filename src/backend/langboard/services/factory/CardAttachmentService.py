@@ -106,7 +106,7 @@ class CardAttachmentService(BaseService):
 
         CardAttachmentPublisher.name_changed(card, card_attachment)
         CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
-        CardAttachmentBotTask.card_attachment_name_changed(user, project, card, card_attachment)
+        CardAttachmentBotTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
 
         return True
 

@@ -161,7 +161,7 @@ class ProjectLabelService(BaseService):
 
         ProjectLabelPublisher.updated(project, label, model)
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
-        ProjectLabelBotTask.project_label_updated(user_or_bot, project, label)
+        ProjectLabelBotTask.project_label_updated(user_or_bot, project, old_label_record, label)
 
         return model
 

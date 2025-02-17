@@ -1,7 +1,7 @@
 from typing import Any
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
-from ...core.db import User
+from ...core.db import EditorContentModel, User
 from ...models import Project, ProjectWiki
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -19,10 +19,20 @@ async def project_wiki_created(user_or_bot: User | Bot, project: Project, wiki: 
     await _run_wiki_task(BotTriggerCondition.WikiCreated, user_or_bot, project, wiki)
 
 
-@BotTaskDataHelper.project_schema(BotTriggerCondition.WikiUpdated, _create_schema())
+@BotTaskDataHelper.project_schema(
+    BotTriggerCondition.WikiUpdated,
+    _create_schema(
+        BotTaskDataHelper.changes_schema(
+            ("title", "string?"),
+            ("content", EditorContentModel.api_schema()),
+        )
+    ),
+)
 @Broker.wrap_async_task_decorator
-async def project_wiki_updated(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
-    await _run_wiki_task(BotTriggerCondition.WikiUpdated, user_or_bot, project, wiki)
+async def project_wiki_updated(user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], wiki: ProjectWiki):
+    await _run_wiki_task(
+        BotTriggerCondition.WikiUpdated, user_or_bot, project, wiki, BotTaskDataHelper.create_changes(old_dict, wiki)
+    )
 
 
 @BotTaskDataHelper.project_schema(BotTriggerCondition.WikiPublicityChanged, _create_schema())
@@ -37,19 +47,28 @@ async def project_wiki_deleted(user_or_bot: User | Bot, project: Project, wiki: 
     await _run_wiki_task(BotTriggerCondition.WikiDeleted, user_or_bot, project, wiki)
 
 
-async def _run_wiki_task(condition: BotTriggerCondition, user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
+async def _run_wiki_task(
+    condition: BotTriggerCondition,
+    user_or_bot: User | Bot,
+    project: Project,
+    wiki: ProjectWiki,
+    other_data: dict[str, Any] | None = None,
+):
     bots = await BotTaskHelper.get_project_assigned_bots(project, condition)
     if wiki.is_public:
-        await BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki), project)
+        await BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki, other_data), project)
         return
     for bot in bots:
-        data = await BotTaskDataHelper.create_private_wiki(bot, user_or_bot, project, wiki)
+        data = await BotTaskDataHelper.create_private_wiki(bot, user_or_bot, project, wiki, other_data)
         if data is not None:
             await BotTaskHelper.run(bot, condition, data, project)
 
 
-def create_wiki_data(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki) -> dict[str, Any]:
+def create_wiki_data(
+    user_or_bot: User | Bot, project: Project, wiki: ProjectWiki, other_data: dict[str, Any] | None = None
+) -> dict[str, Any]:
     return {
         **BotTaskDataHelper.create_project(user_or_bot, project),
         "project_wiki": wiki.api_response(),
+        **(other_data or {}),
     }

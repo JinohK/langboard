@@ -1,7 +1,7 @@
 from typing import Any
 from ....core.ai import Bot, BotTriggerCondition
 from ....core.broker import Broker
-from ....core.db import DbSession, SqlBuilder, User
+from ....core.db import BaseSqlModel, DbSession, SqlBuilder, User
 from ....core.utils.decorators import staticclass
 from ....models import Card, Project, ProjectWiki, ProjectWikiAssignedBot
 
@@ -21,6 +21,13 @@ class BotTaskDataHelper:
         }
 
     @staticmethod
+    def create_changes(old_dict: dict[str, Any], model: BaseSqlModel):
+        return {
+            **{f"old_{key}": old_dict[key] for key in old_dict},
+            **{f"new_{key}": getattr(model, key) for key in old_dict},
+        }
+
+    @staticmethod
     def create_user_or_bot(user_or_bot: User | Bot) -> dict[str, Any]:
         response = user_or_bot.api_response()
         if isinstance(user_or_bot, Bot):
@@ -29,7 +36,11 @@ class BotTaskDataHelper:
 
     @staticmethod
     async def create_private_wiki(
-        runner_bot: Bot, user_or_bot: User | Bot, project: Project, wiki: ProjectWiki
+        runner_bot: Bot,
+        user_or_bot: User | Bot,
+        project: Project,
+        wiki: ProjectWiki,
+        other_data: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         async with DbSession.use() as db:
             result = await db.exec(
@@ -44,6 +55,7 @@ class BotTaskDataHelper:
         return {
             **BotTaskDataHelper.create_project(user_or_bot, project),
             "project_wiki": wiki.convert_to_private_api_response(),
+            **(other_data or {}),
         }
 
     @staticmethod
@@ -72,6 +84,14 @@ class BotTaskDataHelper:
                 **(schema or {}),
             },
         )
+
+    @staticmethod
+    def changes_schema(*fields: tuple[str, str | dict]):
+        changes = {}
+        for field, type_ in fields:
+            changes[f"old_{field}"] = type_
+            changes[f"new_{field}"] = type_
+        return {"changes": changes}
 
     @staticmethod
     def create_user_or_bot_schema():

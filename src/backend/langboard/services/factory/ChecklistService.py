@@ -107,7 +107,7 @@ class ChecklistService(BaseService):
 
         ChecklistPublisher.title_changed(card, checklist)
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
-        CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, checklist)
+        CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
 
         return True
 

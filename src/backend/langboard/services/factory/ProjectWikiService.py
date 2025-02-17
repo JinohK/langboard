@@ -221,7 +221,7 @@ class ProjectWikiService(BaseService):
             await notification_service.notify_mentioned_at_wiki(user_or_bot, project, wiki)
 
         ProjectWikiActivityTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
-        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, wiki)
+        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
 
         return model
 

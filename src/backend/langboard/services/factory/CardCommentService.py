@@ -121,7 +121,7 @@ class CardCommentService(BaseService):
         await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
-        CardCommentBotTask.card_comment_updated(user_or_bot, project, card, comment)
+        CardCommentBotTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
 
         return comment
 

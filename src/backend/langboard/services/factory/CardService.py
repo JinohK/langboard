@@ -272,7 +272,7 @@ class CardService(BaseService):
             await notification_service.notify_mentioned_at_card(user_or_bot, project, card)
 
         CardActivityTask.card_updated(user_or_bot, project, old_card_record, card)
-        CardBotTask.card_updated(user_or_bot, project, card)
+        CardBotTask.card_updated(user_or_bot, project, old_card_record, card)
 
         return model
 
@@ -338,7 +338,7 @@ class CardService(BaseService):
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
-            CardBotTask.card_moved(user_or_bot, project, card)
+            CardBotTask.card_moved(user_or_bot, project, card, original_column)
 
         return True
 

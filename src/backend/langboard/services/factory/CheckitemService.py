@@ -156,7 +156,7 @@ class CheckitemService(BaseService):
 
         CheckitemPublisher.title_changed(project, card, checkitem, cardified_card)
         CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
-        CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, checkitem)
+        CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
 
         return True
 
@@ -371,7 +371,7 @@ class CheckitemService(BaseService):
         api_card = await card_service.convert_board_list_api_response(new_card)
         CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
-        CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
+        CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem, new_card)
         CardBotTask.card_created(user_or_bot, project, new_card)
 
         return True

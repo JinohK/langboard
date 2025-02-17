@@ -327,7 +327,7 @@ class ProjectService(BaseService):
 
         ProjectPublisher.updated(project, model)
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
-        ProjectBotTask.project_updated(user_or_bot, project)
+        ProjectBotTask.project_updated(user_or_bot, old_project_record, project)
 
         return model
 
