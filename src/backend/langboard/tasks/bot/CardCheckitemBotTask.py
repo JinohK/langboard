@@ -20,7 +20,7 @@ async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemCreated,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -36,7 +36,7 @@ async def card_checkitem_title_changed(
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTitleChanged,
-        _create_data(
+        await _create_data(
             user_or_bot, project, card, checkitem, BotTaskDataHelper.create_changes({"title": old_title}, checkitem)
         ),
         project,
@@ -50,7 +50,7 @@ async def card_checkitem_timer_started(user_or_bot: User | Bot, project: Project
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerStarted,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -62,7 +62,7 @@ async def card_checkitem_timer_paused(user_or_bot: User | Bot, project: Project,
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerPaused,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -74,7 +74,7 @@ async def card_checkitem_timer_stopped(user_or_bot: User | Bot, project: Project
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerStopped,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -86,7 +86,7 @@ async def card_checkitem_checked(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemChecked,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -98,7 +98,7 @@ async def card_checkitem_unchecked(user_or_bot: User | Bot, project: Project, ca
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemUnchecked,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -114,7 +114,7 @@ async def card_checkitem_cardified(
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemCardified,
-        _create_data(
+        await _create_data(
             user_or_bot,
             project,
             card,
@@ -132,12 +132,12 @@ async def card_checkitem_deleted(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemDeleted,
-        _create_data(user_or_bot, project, card, checkitem),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
 
-def _create_data(
+async def _create_data(
     user_or_bot: User | Bot,
     project: Project,
     card: Card,
@@ -145,7 +145,7 @@ def _create_data(
     other_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
-        **BotTaskDataHelper.create_card(user_or_bot, project, card),
+        **await BotTaskDataHelper.create_card(user_or_bot, project, card),
         "checkitem": checkitem.api_response(),
         **(other_data or {}),
     }

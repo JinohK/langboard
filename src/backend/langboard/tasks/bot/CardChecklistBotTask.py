@@ -20,7 +20,7 @@ async def card_checklist_created(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistCreated,
-        _create_data(user_or_bot, project, card, checklist),
+        await _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -36,7 +36,7 @@ async def card_checklist_title_changed(
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistTitleChanged,
-        _create_data(
+        await _create_data(
             user_or_bot, project, card, checklist, BotTaskDataHelper.create_changes({"title": old_title}, checklist)
         ),
         project,
@@ -50,7 +50,7 @@ async def card_checklist_checked(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistChecked,
-        _create_data(user_or_bot, project, card, checklist),
+        await _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -62,7 +62,7 @@ async def card_checklist_unchecked(user_or_bot: User | Bot, project: Project, ca
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistUnchecked,
-        _create_data(user_or_bot, project, card, checklist),
+        await _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -74,12 +74,12 @@ async def card_checklist_deleted(user_or_bot: User | Bot, project: Project, card
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistDeleted,
-        _create_data(user_or_bot, project, card, checklist),
+        await _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
 
-def _create_data(
+async def _create_data(
     user_or_bot: User | Bot,
     project: Project,
     card: Card,
@@ -87,7 +87,7 @@ def _create_data(
     other_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
-        **BotTaskDataHelper.create_card(user_or_bot, project, card),
+        **await BotTaskDataHelper.create_card(user_or_bot, project, card),
         "checklist": checklist.api_response(),
         **(other_data or {}),
     }

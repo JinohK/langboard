@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, cast
 from ....core.ai import Bot, BotTriggerCondition
 from ....core.broker import Broker
 from ....core.db import BaseSqlModel, DbSession, SqlBuilder, User
 from ....core.utils.decorators import staticclass
-from ....models import Card, Project, ProjectWiki, ProjectWikiAssignedBot
+from ....models import Card, Project, ProjectColumn, ProjectWiki, ProjectWikiAssignedBot
 
 
 @staticclass
@@ -13,9 +13,15 @@ class BotTaskDataHelper:
         return {"project": project.api_response(), "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot)}
 
     @staticmethod
-    def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
+    async def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
+        async with DbSession.use() as db:
+            column = await db.exec(
+                SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
+            )
+        column = cast(ProjectColumn, column.first())
         return {
             "project": project.api_response(),
+            "project_column": column.api_response(),
             "card": card.api_response(),
             "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot),
         }

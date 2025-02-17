@@ -20,7 +20,7 @@ async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, ca
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentUploaded,
-        _create_data(user_or_bot, project, card, attachment),
+        await _create_data(user_or_bot, project, card, attachment),
         project,
     )
 
@@ -36,7 +36,7 @@ async def card_attachment_name_changed(
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentNameChanged,
-        _create_data(
+        await _create_data(
             user_or_bot, project, card, attachment, BotTaskDataHelper.create_changes({"name": old_name}, attachment)
         ),
         project,
@@ -50,12 +50,12 @@ async def card_attachment_deleted(user_or_bot: User | Bot, project: Project, car
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentDeleted,
-        _create_data(user_or_bot, project, card, attachment),
+        await _create_data(user_or_bot, project, card, attachment),
         project,
     )
 
 
-def _create_data(
+async def _create_data(
     user_or_bot: User | Bot,
     project: Project,
     card: Card,
@@ -63,7 +63,7 @@ def _create_data(
     other_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
-        **BotTaskDataHelper.create_card(user_or_bot, project, card),
+        **await BotTaskDataHelper.create_card(user_or_bot, project, card),
         "attachment": attachment.api_response(),
         **(other_data or {}),
     }
