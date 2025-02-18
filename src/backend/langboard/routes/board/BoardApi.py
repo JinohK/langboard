@@ -26,6 +26,7 @@ from .scopes import ChatHistoryPagination, InviteProjectMemberForm, ProjectInvit
 @AppRouter.api.post(
     "/board/{project_uid}/available",
     tags=["Board"],
+    description="Check if the project is available.",
     responses=(
         OpenApiSchema()
         .suc({"title": "string"})
@@ -48,6 +49,7 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 @AppRouter.api.get(
     "/board/{project_uid}",
     tags=["Board"],
+    description="Get project details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -130,6 +132,7 @@ async def clear_project_chat(
 @AppRouter.api.get(
     "/board/{project_uid}/cards",
     tags=["Board"],
+    description="Get project cards.",
     responses=(
         OpenApiSchema()
         .suc(

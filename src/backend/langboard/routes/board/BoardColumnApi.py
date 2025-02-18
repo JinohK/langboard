@@ -15,11 +15,12 @@ from .scopes import ChangeColumnOrderForm, ColumnForm, project_role_finder
 @AppRouter.api.post(
     "/board/{project_uid}/column",
     tags=["Board.Column"],
+    description="Create a project column.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def create_column(
+async def create_project_column(
     project_uid: str,
     form: ColumnForm,
     user_or_bot: User | Bot = Auth.scope("api"),
@@ -36,11 +37,12 @@ async def create_column(
 @AppRouter.api.put(
     "/board/{project_uid}/column/{column_uid}/name",
     tags=["Board.Column"],
+    description="Change project column name.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or column not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def update_column_name(
+async def update_project_column_name(
     project_uid: str,
     column_uid: str,
     form: ColumnForm,
@@ -57,11 +59,12 @@ async def update_column_name(
 @AppRouter.api.put(
     "/board/{project_uid}/column/{column_uid}/order",
     tags=["Board.Column"],
+    description="Change project column order.",
     responses=OpenApiSchema().auth().role().no_bot().err(404, "Project or column not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def update_column_order(
+async def update_project_column_order(
     project_uid: str,
     column_uid: str,
     form: ChangeColumnOrderForm,
@@ -82,11 +85,12 @@ async def update_column_order(
 @AppRouter.api.delete(
     "/board/{project_uid}/column/{column_uid}",
     tags=["Board.Column"],
+    description="Delete a project column.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or column not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def delete_column(
+async def delete_project_column(
     project_uid: str,
     column_uid: str,
     user_or_bot: User | Bot = Auth.scope("api"),

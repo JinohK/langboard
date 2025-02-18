@@ -300,6 +300,7 @@ async def generate_new_bot_api_token(
 @AppRouter.api.put(
     "/settings/bot/predefine-trigger-condition",
     tags=["AppSettings"],
+    description="Predefine bot trigger conditions.",
     responses=OpenApiSchema().only_bot().err(404, "Bot not found.").get(),
 )
 @AuthFilter.add

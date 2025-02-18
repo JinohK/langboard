@@ -24,6 +24,7 @@ from .scopes import (
 @AppRouter.api.get(
     "/board/{project_uid}/details",
     tags=["Board.Settings"],
+    description="Get project details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -72,6 +73,7 @@ async def get_project_details(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/details",
     tags=["Board.Settings"],
+    description="Change project details.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
@@ -93,6 +95,7 @@ async def change_project_details(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/assigned-bots",
     tags=["Board.Settings"],
+    description="Update assigned bots for a project.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
@@ -117,6 +120,7 @@ async def update_project_assigned_bots(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/bot/{bot_uid}",
     tags=["Board.Settings"],
+    description="Update roles for a bot assigned to a project.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
@@ -142,6 +146,7 @@ async def update_project_bot_roles(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/user/{user_uid}",
     tags=["Board.Settings"],
+    description="Update roles for a user assigned to a project.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
@@ -167,6 +172,7 @@ async def update_project_user_roles(
 @AppRouter.api.post(
     "/board/{project_uid}/settings/label",
     tags=["Board.Settings"],
+    description="Create a project label.",
     responses=(
         OpenApiSchema()
         .suc({"label": ProjectLabel})
@@ -178,7 +184,7 @@ async def update_project_user_roles(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def create_label_details(
+async def create_project_label(
     project_uid: str,
     form: CreateProjectLabelForm,
     user_or_bot: User | Bot = Auth.scope("api"),
@@ -196,6 +202,7 @@ async def create_label_details(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/label/{label_uid}/details",
     tags=["Board.Settings"],
+    description="Change project label details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -213,7 +220,7 @@ async def create_label_details(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def change_label_details(
+async def change_project_label_details(
     project_uid: str,
     label_uid: str,
     form: UpdateProjectLabelDetailsForm,
@@ -242,11 +249,12 @@ async def change_label_details(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/label/{label_uid}/order",
     tags=["Board.Settings"],
+    description="Change project label order.",
     responses=OpenApiSchema().auth().role().no_bot().err(404, "Project or label not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def change_label_order(
+async def change_project_label_order(
     project_uid: str,
     label_uid: str,
     form: ChangeColumnOrderForm,
@@ -267,6 +275,7 @@ async def change_label_order(
 @AppRouter.api.delete(
     "/board/{project_uid}/settings/label/{label_uid}",
     tags=["Board.Settings"],
+    description="Delete a project label.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or label not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)

@@ -1,3 +1,4 @@
+from re import findall as re_findall
 from typing import Any, cast
 from fastapi import status
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
@@ -24,8 +25,11 @@ async def get_api_names():
     .suc(
         {
             "schema": {
-                "content_type": "Literal[application/json, multipart/form-data]",
+                "path": "string",
+                "path_params": "array[string]",
                 "method": "string",
+                "content_type": "Literal[application/json, multipart/form-data]",
+                "description": "string",
                 "form?": "object",
                 "query?": "object",
                 "file_field?": "string",
@@ -35,6 +39,7 @@ async def get_api_names():
     .get(),
 )
 async def get_api_schema(route_name: str):
+    PATH_PARAM_PATTERN = r"\{([^}]+)\}"
     for route in AppRouter.api.routes:
         route = cast(AppExceptionHandlingRoute, route)
         name = route.endpoint.__name__
@@ -43,6 +48,9 @@ async def get_api_schema(route_name: str):
 
         schema: dict[str, Any] = {**route.endpoint._schema}
         schema["method"] = list(route.methods)[0]
+        schema["path"] = route.path
+        schema["path_params"] = re_findall(PATH_PARAM_PATTERN, route.path)
+        schema["description"] = route.description
 
         if "query" in schema:
             if schema["query"]:

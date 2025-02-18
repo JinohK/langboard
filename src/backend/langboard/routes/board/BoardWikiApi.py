@@ -23,6 +23,7 @@ from .scopes import (
 @AppRouter.api.get(
     "/board/{project_uid}/wikis",
     tags=["Board.Wiki"],
+    description="Get project wikis.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -68,6 +69,7 @@ async def get_project_wikis(
 @AppRouter.api.post(
     "/board/{project_uid}/wiki",
     tags=["Board.Wiki"],
+    description="Create a project wiki.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -91,7 +93,7 @@ async def get_project_wikis(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def create_wiki(
+async def create_project_wiki(
     project_uid: str,
     form: WikiForm,
     user_or_bot: User | Bot = Auth.scope("api"),
@@ -109,6 +111,7 @@ async def create_wiki(
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/details",
     tags=["Board.Wiki"],
+    description="Change project wiki details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -126,7 +129,7 @@ async def create_wiki(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def change_wiki_details(
+async def change_project_wiki_details(
     project_uid: str,
     wiki_uid: str,
     form: ChangeWikiDetailsForm,
@@ -169,6 +172,7 @@ async def change_wiki_details(
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/public",
     tags=["Board.Wiki"],
+    description="Change project wiki public status.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -180,7 +184,7 @@ async def change_wiki_details(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def change_wiki_public(
+async def change_project_wiki_public(
     project_uid: str,
     wiki_uid: str,
     form: ChangeWikiPublicForm,
@@ -205,6 +209,7 @@ async def change_wiki_public(
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/assignees",
     tags=["Board.Wiki"],
+    description="Update project wiki assignees.",
     responses=(
         OpenApiSchema()
         .auth()
@@ -216,7 +221,7 @@ async def change_wiki_public(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def update_wiki_assignees(
+async def update_project_wiki_assignees(
     project_uid: str,
     wiki_uid: str,
     form: AssigneesForm,
@@ -244,11 +249,12 @@ async def update_wiki_assignees(
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/order",
     tags=["Board.Wiki"],
+    description="Change project wiki order.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or wiki not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def change_wiki_order(
+async def change_project_wiki_order(
     project_uid: str,
     wiki_uid: str,
     form: ChangeOrderForm,
@@ -314,6 +320,7 @@ async def upload_wiki_attachment(
 @AppRouter.api.delete(
     "/board/{project_uid}/wiki/{wiki_uid}",
     tags=["Board.Wiki"],
+    description="Delete project wiki.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -325,7 +332,7 @@ async def upload_wiki_attachment(
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def delete_wiki(
+async def delete_project_wiki(
     project_uid: str,
     wiki_uid: str,
     user_or_bot: User | Bot = Auth.scope("api"),

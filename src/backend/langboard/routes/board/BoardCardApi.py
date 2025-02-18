@@ -36,6 +36,7 @@ from .scopes import (
 @AppRouter.api.get(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
+    description="Get card details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -118,6 +119,7 @@ async def get_card_detail(
 @AppRouter.api.get(
     "/board/{project_uid}/card/{card_uid}/comments",
     tags=["Board.Card"],
+    description="Get card comments.",
     responses=OpenApiSchema()
     .suc(
         {
@@ -144,6 +146,7 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
 @AppRouter.api.post(
     "/board/{project_uid}/card",
     tags=["Board.Card"],
+    description="Create a card.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -190,6 +193,7 @@ async def create_card(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/details",
     tags=["Board.Card"],
+    description="Change card details.",
     responses=(
         OpenApiSchema()
         .suc(
@@ -250,6 +254,7 @@ async def change_card_details(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/assigned-users",
     tags=["Board.Card"],
+    description="Assign users to a card.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
@@ -272,11 +277,12 @@ async def update_card_assigned_users(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/order",
     tags=["Board.Card"],
+    description="Change card order or move to another project column.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
-async def change_card_order(
+async def change_card_order_or_move_column(
     project_uid: str,
     card_uid: str,
     form: ChangeOrderForm,
@@ -294,6 +300,7 @@ async def change_card_order(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/labels",
     tags=["Board.Card"],
+    description="Update assigned labels to a card.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
@@ -316,6 +323,7 @@ async def update_card_labels(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/relationships",
     tags=["Board.Card"],
+    description="Update card relationships.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
@@ -340,6 +348,7 @@ async def update_card_relationships(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/archive",
     tags=["Board.Card"],
+    description="Archive a card.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, column, or card not found.").get()
     ),
@@ -366,6 +375,7 @@ async def archive_card(
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
+    description="Delete a card.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], project_role_finder)

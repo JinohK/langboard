@@ -21,6 +21,7 @@ from .scopes import (
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title",
     tags=["Board.Card.Checkitem"],
+    description="Change checkitem title.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checkitem not found.").get()
     ),
@@ -46,13 +47,14 @@ async def change_checkitem_title(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
     tags=["Board.Card.Checkitem"],
+    description="Change checkitem order or move to another checklist.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checkitem not found.").get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
-async def change_checkitem_order(
+async def change_checkitem_order_or_move_checklist(
     project_uid: str,
     card_uid: str,
     checkitem_uid: str,
@@ -73,6 +75,7 @@ async def change_checkitem_order(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
     tags=["Board.Card.Checkitem"],
+    description="Change checkitem status.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -110,6 +113,7 @@ async def change_checkitem_status(
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify",
     tags=["Board.Card.Checkitem"],
+    description="Cardify checkitem.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -147,6 +151,7 @@ async def cardify_checkitem(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/toggle-checked",
     tags=["Board.Card.Checkitem"],
+    description="Toggle checkitem checked.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -183,6 +188,7 @@ async def toggle_checkitem_checked(
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}",
     tags=["Board.Card.Checkitem"],
+    description="Delete checkitem.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)

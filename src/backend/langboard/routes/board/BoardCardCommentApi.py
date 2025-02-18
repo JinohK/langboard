@@ -15,6 +15,7 @@ from .scopes import ToggleCardCommentReactionForm, project_role_finder
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/comment",
     tags=["Board.Card.Comment"],
+    description="Add a comment to a card.",
     responses=(OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get()),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
@@ -37,6 +38,7 @@ async def add_card_comment(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
+    description="Update a comment.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -72,6 +74,7 @@ async def update_card_comment(
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
+    description="Delete a comment.",
     responses=(
         OpenApiSchema()
         .auth(with_bot=True)
@@ -106,13 +109,14 @@ async def delete_card_comment(
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react",
     tags=["Board.Card.Comment"],
+    description="Toggle reaction on a comment.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or comment not found.").get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def react_card_comment(
+async def toggle_reaction_card_comment(
     project_uid: str,
     card_uid: str,
     comment_uid: str,

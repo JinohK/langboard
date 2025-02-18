@@ -15,6 +15,7 @@ from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeOrderFo
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist",
     tags=["Board.Card.Checklist"],
+    description="Create a checklist.",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
@@ -37,6 +38,7 @@ async def create_checklist(
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/checkitem",
     tags=["Board.Card.Checklist"],
+    description="Create a checkitem.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
@@ -62,6 +64,7 @@ async def create_checkitem(
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/notify",
     tags=["Board.Card.Checklist"],
+    description="Notify members of the checklist.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
@@ -87,6 +90,7 @@ async def notify_checklist(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/title",
     tags=["Board.Card.Checklist"],
+    description="Change checklist title.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
@@ -112,6 +116,7 @@ async def change_checklist_title(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/order",
     tags=["Board.Card.Checklist"],
+    description="Change checklist order.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
@@ -137,6 +142,7 @@ async def change_checklist_order(
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/toggle-checked",
     tags=["Board.Card.Checklist"],
+    description="Toggle checklist checked.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
@@ -161,6 +167,7 @@ async def toggle_checklist_checked(
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}",
     tags=["Board.Card.Checklist"],
+    description="Delete a checklist.",
     responses=(
         OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
     ),
