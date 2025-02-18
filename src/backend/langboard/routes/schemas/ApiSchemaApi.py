@@ -5,17 +5,19 @@ from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 
 
-@AppRouter.api.get("/schema/api", tags=["Schema"], responses=OpenApiSchema().suc({"names": ["string"]}).get())
-async def get_api_names():
-    names: list[str] = []
+@AppRouter.api.get(
+    "/schema/api", tags=["Schema"], responses=OpenApiSchema().suc({"apis": {"<name>": "<description>"}}).get()
+)
+async def get_api_list():
+    apis: dict[str, str] = {}
     for route in AppRouter.api.routes:
         route = cast(AppExceptionHandlingRoute, route)
         if not hasattr(route.endpoint, "_schema"):
             continue
         route_name = route.endpoint.__name__
-        names.append(route_name)
+        apis[route_name] = route.description
 
-    return JsonResponse(content={"names": names})
+    return JsonResponse(content={"apis": apis})
 
 
 @AppRouter.api.get(
