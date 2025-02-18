@@ -58,12 +58,12 @@ class CardCommentPublisher:
     def reacted(
         user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str, is_reacted: bool
     ):
-        author_key = "user" if isinstance(user_or_bot, User) else "bot"
+        author_key = "user_uid" if isinstance(user_or_bot, User) else "bot_uid"
         model = {
             "comment_uid": comment.get_uid(),
             "reaction": reaction,
             "is_reacted": is_reacted,
-            author_key: user_or_bot.api_response(),
+            author_key: user_or_bot.get_uid(),
         }
 
         publish_model = SocketPublishModel(

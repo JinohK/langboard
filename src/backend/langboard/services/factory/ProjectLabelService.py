@@ -42,7 +42,7 @@ class ProjectLabelService(BaseService):
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
-                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
+                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") != None))  # noqa
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )

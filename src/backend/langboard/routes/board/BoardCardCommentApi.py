@@ -120,7 +120,7 @@ async def react_card_comment(
     if not card_comment:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     result = await service.card_comment.toggle_reaction(user_or_bot, project_uid, card_uid, card_comment, form.reaction)
-    if not result:
+    if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"is_reacted": result}, status_code=status.HTTP_200_OK)

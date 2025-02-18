@@ -109,7 +109,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
     });
 
     useEffect(() => {
-        setWikis(flatWikis);
+        setWikis(() => flatWikis);
     }, [flatWikis]);
 
     return (

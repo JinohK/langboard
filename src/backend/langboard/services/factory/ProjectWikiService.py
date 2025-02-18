@@ -412,10 +412,10 @@ class ProjectWikiService(BaseService):
 
         return wiki_attachment
 
-    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam) -> None:
+    async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam) -> bool:
         params = await self.__get_records_by_params(project, wiki)
         if not params:
-            return None
+            return False
         project, wiki = params
 
         async with DbSession.use() as db:
@@ -426,7 +426,7 @@ class ProjectWikiService(BaseService):
         ProjectWikiActivityTask.project_wiki_deleted(user_or_bot, project, wiki)
         ProjectWikiBotTask.project_wiki_deleted(user_or_bot, project, wiki)
 
-        return None
+        return True
 
     @overload
     async def __get_records_by_params(self, project: TProjectParam) -> tuple[Project, None] | None: ...

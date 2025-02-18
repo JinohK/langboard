@@ -137,8 +137,8 @@ export const BoardWikiProvider = ({
             return true;
         }
 
-        const wiki = wikis.find((wiki) => wiki.uid === uid);
-        if (!wiki || wiki.forbidden) {
+        const wiki = ProjectWiki.Model.getModel(uid);
+        if (!wiki || wiki.project_uid !== projectUID || wiki.forbidden) {
             if (shouldNavigate) {
                 Toast.Add.error(t("wiki.errors.Can't access this wiki."));
                 setCurrentEditor("");

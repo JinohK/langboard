@@ -33,14 +33,10 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
                 }
 
                 const reaction = data.reaction;
-                const reactions = comment.reactions || {};
-                let targetReactions = reactions[reaction];
+                const reactions = { ...comment.reactions };
+                let targetReactions = [...(reactions[reaction] ?? [])];
+                const targetUID = data.user_uid || data.bot_uid;
                 if (data.is_reacted) {
-                    if (!targetReactions) {
-                        reactions[reaction] = [];
-                        targetReactions = reactions[reaction];
-                    }
-
                     if (data.user_uid) {
                         if (!targetReactions.includes(data.user_uid)) {
                             targetReactions.push(data.user_uid);
@@ -51,12 +47,9 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
                         }
                     }
                 } else {
-                    if (targetReactions) {
-                        const targetUID = data.user_uid || data.bot_uid;
-                        targetReactions = targetReactions.filter((uid) => uid !== targetUID);
-                        reactions[reaction] = targetReactions;
-                    }
+                    targetReactions = targetReactions.filter((uid) => uid !== targetUID);
                 }
+                reactions[reaction] = targetReactions;
                 comment.reactions = reactions;
                 return {};
             },
