@@ -7,8 +7,8 @@ from .Project import (
     ChatHistoryPagination,
     InviteProjectMemberForm,
     ProjectInvitationForm,
-    UpdateMemberRolesForm,
     UpdateProjectDetailsForm,
+    UpdateRolesForm,
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
 from .RoleFinder import project_role_finder
@@ -30,7 +30,7 @@ __all__ = [
     "ChangeCardDetailsForm",
     "InviteProjectMemberForm",
     "UpdateProjectDetailsForm",
-    "UpdateMemberRolesForm",
+    "UpdateRolesForm",
     "CreateProjectLabelForm",
     "UpdateProjectLabelDetailsForm",
     "ProjectInvitationForm",

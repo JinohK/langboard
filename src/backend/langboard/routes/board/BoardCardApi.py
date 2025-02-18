@@ -32,6 +32,7 @@ from .scopes import (
 )
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
@@ -109,11 +110,11 @@ async def get_card_detail(
             "global_relationships": global_relationships,
             "project_columns": project_columns,
             "project_labels": project_labels,
-        },
-        status_code=status.HTTP_200_OK,
+        }
     )
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/card/{card_uid}/comments",
     tags=["Board.Card"],
@@ -136,9 +137,10 @@ async def get_card_detail(
 @AuthFilter.add
 async def get_card_comments(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     comments = await service.card_comment.get_board_list(card_uid)
-    return JsonResponse(content={"comments": comments}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"comments": comments})
 
 
+@AppRouter.schema(form=CreateCardForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card",
     tags=["Board.Card"],
@@ -181,9 +183,10 @@ async def create_card(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_card = result
 
-    return JsonResponse(content={"card": api_card}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"card": api_card})
 
 
+@AppRouter.schema(form=ChangeCardDetailsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/details",
     tags=["Board.Card"],
@@ -238,11 +241,12 @@ async def change_card_details(
             if value is None and key != "deadline_at":
                 continue
             response[key] = service.card._convert_to_python(value)
-        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+        return JsonResponse(content=response)
 
-    return JsonResponse(content=result, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=result)
 
 
+@AppRouter.schema(form=AssignUsersForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/assigned-users",
     tags=["Board.Card"],
@@ -261,9 +265,10 @@ async def update_card_assigned_users(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ChangeOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/order",
     tags=["Board.Card"],
@@ -282,9 +287,10 @@ async def change_card_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=UpdateCardLabelsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/labels",
     tags=["Board.Card"],
@@ -303,9 +309,10 @@ async def update_card_labels(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=UpdateCardRelationshipsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/relationships",
     tags=["Board.Card"],
@@ -326,9 +333,10 @@ async def update_card_relationships(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/archive",
     tags=["Board.Card"],
@@ -351,9 +359,10 @@ async def archive_card(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
@@ -368,4 +377,4 @@ async def delete_card(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

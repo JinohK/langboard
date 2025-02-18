@@ -18,10 +18,7 @@ from .scopes import ChangeAttachmentNameForm, ChangeOrderForm, project_role_find
     responses=(
         OpenApiSchema()
         .suc(
-            {
-                **CardAttachment.api_schema(),
-                "user": User,
-            },
+            {**CardAttachment.api_schema(), "user": User},
             201,
         )
         .auth()
@@ -83,7 +80,7 @@ async def change_attachment_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.put(
@@ -128,7 +125,7 @@ async def change_card_attachment_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -170,4 +167,4 @@ async def delete_card_attachment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

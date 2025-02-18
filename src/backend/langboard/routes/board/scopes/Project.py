@@ -27,5 +27,5 @@ class UpdateProjectDetailsForm(BaseFormModel):
 
 
 @form_model
-class UpdateMemberRolesForm(BaseFormModel):
+class UpdateRolesForm(BaseFormModel):
     roles: list[ProjectRoleAction]

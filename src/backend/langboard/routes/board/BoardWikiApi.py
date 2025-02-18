@@ -19,6 +19,7 @@ from .scopes import (
 )
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/wikis",
     tags=["Board.Wiki"],
@@ -60,12 +61,10 @@ async def get_project_wikis(
     wikis = await service.project_wiki.get_board_list(user_or_bot, project_uid)
     project_members = await service.project.get_assigned_users(project, as_api=True)
     project_bots = await service.project.get_assigned_bots(project, as_api=True)
-    return JsonResponse(
-        content={"wikis": wikis, "project_members": project_members, "project_bots": project_bots},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"wikis": wikis, "project_members": project_members, "project_bots": project_bots})
 
 
+@AppRouter.schema(form=WikiForm)
 @AppRouter.api.post(
     "/board/{project_uid}/wiki",
     tags=["Board.Wiki"],
@@ -103,9 +102,10 @@ async def create_wiki(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_wiki = result
 
-    return JsonResponse(content={"wiki": api_wiki}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"wiki": api_wiki})
 
 
+@AppRouter.schema(form=ChangeWikiDetailsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/details",
     tags=["Board.Wiki"],
@@ -160,11 +160,12 @@ async def change_wiki_details(
             if value is None:
                 continue
             response[key] = service.project_wiki._convert_to_python(value)
-        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+        return JsonResponse(content=response)
 
-    return JsonResponse(content=result, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=result)
 
 
+@AppRouter.schema(form=ChangeWikiPublicForm)
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/public",
     tags=["Board.Wiki"],
@@ -197,9 +198,10 @@ async def change_wiki_public(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=AssigneesForm)
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/assignees",
     tags=["Board.Wiki"],
@@ -235,9 +237,10 @@ async def update_wiki_assignees(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ChangeOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/order",
     tags=["Board.Wiki"],
@@ -255,7 +258,7 @@ async def change_wiki_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post(
@@ -307,6 +310,7 @@ async def upload_wiki_attachment(
     )
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/wiki/{wiki_uid}",
     tags=["Board.Wiki"],
@@ -338,4 +342,4 @@ async def delete_wiki(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

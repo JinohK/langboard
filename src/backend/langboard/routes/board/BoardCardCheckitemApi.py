@@ -17,6 +17,7 @@ from .scopes import (
 )
 
 
+@AppRouter.schema(form=CardCheckRelatedForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/title",
     tags=["Board.Card.Checkitem"],
@@ -38,9 +39,10 @@ async def change_checkitem_title(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ChangeOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
     tags=["Board.Card.Checkitem"],
@@ -64,9 +66,10 @@ async def change_checkitem_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ChangeCardCheckitemStatusForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
     tags=["Board.Card.Checkitem"],
@@ -100,9 +103,10 @@ async def change_checkitem_status(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=CardifyCheckitemForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/cardify",
     tags=["Board.Card.Checkitem"],
@@ -136,12 +140,10 @@ async def cardify_checkitem(
     if not cardified_card:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(
-        content={},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/toggle-checked",
     tags=["Board.Card.Checkitem"],
@@ -174,9 +176,10 @@ async def toggle_checkitem_checked(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}",
     tags=["Board.Card.Checkitem"],
@@ -209,4 +212,4 @@ async def delete_checkitem(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

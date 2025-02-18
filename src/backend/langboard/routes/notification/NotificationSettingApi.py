@@ -31,8 +31,7 @@ async def toggle_all_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -51,14 +50,13 @@ async def toggle_all_type_notification_subscription(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     if form.notification_type not in NotificationType and form.notification_type not in NotificationType._member_names_:
-        return JsonResponse(content={"notification_types": []}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"notification_types": []})
 
     notification_types = await service.user_notification_setting.toggle_type(
         user_or_bot, form.channel, form.notification_type, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -80,8 +78,7 @@ async def toggle_all_project_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -103,8 +100,7 @@ async def toggle_all_column_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -126,8 +122,7 @@ async def toggle_all_card_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -149,8 +144,7 @@ async def toggle_all_wiki_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -174,8 +168,7 @@ async def toggle_project_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed, project_uid
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -200,8 +193,7 @@ async def toggle_column_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed, project_uid, column_uid
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -226,8 +218,7 @@ async def toggle_card_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed, project_uid, card_uid
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )
 
 
@@ -252,6 +243,5 @@ async def toggle_wiki_notification_subscription(
         user_or_bot, form.channel, form.is_unsubscribed, project_uid, wiki_uid
     )
     return JsonResponse(
-        content={"notification_types": [notification_type.value for notification_type in notification_types]},
-        status_code=status.HTTP_200_OK,
+        content={"notification_types": [notification_type.value for notification_type in notification_types]}
     )

@@ -11,6 +11,7 @@ from ...services import Service
 from .scopes import ChangeColumnOrderForm, ColumnForm, project_role_finder
 
 
+@AppRouter.schema(form=ColumnForm)
 @AppRouter.api.post(
     "/board/{project_uid}/column",
     tags=["Board.Column"],
@@ -28,9 +29,10 @@ async def create_column(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ColumnForm)
 @AppRouter.api.put(
     "/board/{project_uid}/column/{column_uid}/name",
     tags=["Board.Column"],
@@ -49,7 +51,7 @@ async def update_column_name(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"name": form.name}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"name": form.name})
 
 
 @AppRouter.api.put(
@@ -73,9 +75,10 @@ async def update_column_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/column/{column_uid}",
     tags=["Board.Column"],
@@ -93,4 +96,4 @@ async def delete_column(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

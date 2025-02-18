@@ -71,6 +71,17 @@ class OpenApiSchema:
         }
         return self
 
+    def only_bot(self) -> Self:
+        self.__schema[status.HTTP_401_UNAUTHORIZED] = {
+            "description": "Bot api token is invalid.",
+            "content": self.__empty_schema(),
+        }
+        self.__schema[status.HTTP_403_FORBIDDEN] = {
+            "description": "Only bot can access this endpoint.",
+            "content": self.__empty_schema(),
+        }
+        return self
+
     def only_admin(self) -> Self:
         self.__schema[status.HTTP_403_FORBIDDEN] = {
             "description": "Only admin can access this endpoint.",

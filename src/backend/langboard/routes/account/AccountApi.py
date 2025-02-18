@@ -104,7 +104,7 @@ async def add_new_email(
     .get(),
 )
 @AuthFilter.add
-async def activate(
+async def verify_subemail(
     form: VerifyNewEmailForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
     if not isinstance(user_or_bot, User):

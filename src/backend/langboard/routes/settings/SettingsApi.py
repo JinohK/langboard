@@ -28,7 +28,7 @@ from .Form import (
 async def is_settings_available(user_or_bot: User | Bot = Auth.scope("api")) -> JsonResponse:
     if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.get(
@@ -61,10 +61,7 @@ async def get_all_settings(
     bots = await service.bot.get_list(as_api=True, is_setting=True)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
 
-    return JsonResponse(
-        content={"settings": settings, "bots": bots, "global_relationships": global_relationships},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"settings": settings, "bots": bots, "global_relationships": global_relationships})
 
 
 @AppRouter.api.post(
@@ -87,9 +84,7 @@ async def create_setting(
     setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
     revealed_value = setting.get_value()
 
-    return JsonResponse(
-        content={"setting": setting.api_response(), "revealed_value": revealed_value}, status_code=status.HTTP_200_OK
-    )
+    return JsonResponse(content={"setting": setting.api_response(), "revealed_value": revealed_value})
 
 
 @AppRouter.api.put(
@@ -111,10 +106,7 @@ async def update_setting(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if result is True:
-        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
-
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -135,7 +127,7 @@ async def delete_setting(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -156,7 +148,7 @@ async def delete_selected_settings(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post(
@@ -204,10 +196,7 @@ async def create_bot(
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
 
-    return JsonResponse(
-        content={"bot": bot.api_response(is_setting=True), "revealed_app_api_token": bot.app_api_token},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"bot": bot.api_response(is_setting=True), "revealed_app_api_token": bot.app_api_token})
 
 
 @AppRouter.api.put(
@@ -267,11 +256,11 @@ async def update_bot(
     if isinstance(result, bool):
         if not result:
             return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
-        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={})
 
     _, model = result
 
-    return JsonResponse(content=model, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=model)
 
 
 @AppRouter.api.put(
@@ -303,15 +292,15 @@ async def generate_new_bot_api_token(
         content={
             "secret_app_api_token": bot.api_response(is_setting=True)["app_api_token"],
             "revealed_app_api_token": bot.app_api_token,
-        },
-        status_code=status.HTTP_200_OK,
+        }
     )
 
 
+@AppRouter.schema(form=PredefineBotTriggerConditionForm)
 @AppRouter.api.put(
     "/settings/bot/predefine-trigger-condition",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+    responses=OpenApiSchema().only_bot().err(404, "Bot not found.").get(),
 )
 @AuthFilter.add
 async def predefine_bot_trigger_condition(
@@ -326,7 +315,7 @@ async def predefine_bot_trigger_condition(
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.put(
@@ -348,7 +337,7 @@ async def toggle_bot_trigger_condition(
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -369,7 +358,7 @@ async def delete_bot(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post(
@@ -390,10 +379,7 @@ async def create_global_relationship(
         form.parent_name, form.child_name, form.description
     )
 
-    return JsonResponse(
-        content={"global_relationship": global_relationship.api_response()},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"global_relationship": global_relationship.api_response()})
 
 
 @AppRouter.api.put(
@@ -431,11 +417,11 @@ async def update_global_relationship(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     if isinstance(result, bool):
-        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={})
 
     _, model = result
 
-    return JsonResponse(content={**model}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={**model})
 
 
 @AppRouter.api.delete(
@@ -456,7 +442,7 @@ async def delete_global_relationship(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -477,4 +463,4 @@ async def delete_selected_global_relationship(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

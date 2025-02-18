@@ -11,6 +11,7 @@ from ...services import Service
 from .scopes import ToggleCardCommentReactionForm, project_role_finder
 
 
+@AppRouter.schema(form=EditorContentModel)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/comment",
     tags=["Board.Card.Comment"],
@@ -32,6 +33,7 @@ async def add_card_comment(
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
 
+@AppRouter.schema(form=EditorContentModel)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
@@ -63,9 +65,10 @@ async def update_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
@@ -96,9 +99,10 @@ async def delete_card_comment(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ToggleCardCommentReactionForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react",
     tags=["Board.Card.Comment"],
@@ -123,7 +127,7 @@ async def react_card_comment(
     if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"is_reacted": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"is_reacted": result})
 
 
 def _is_owner(user_or_bot: User | Bot, card_comment: CardComment):

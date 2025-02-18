@@ -1,4 +1,5 @@
 import { Toast } from "@/components/base";
+import ComingSoon from "@/components/ComingSoon";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -11,7 +12,6 @@ import { AppSettingProvider } from "@/core/providers/AppSettingProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
-import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
 import BotsPage from "@/pages/SettingsPage/BotsPage";
 import GlobalRelationshipsPage from "@/pages/SettingsPage/GlobalRelationshipsPage";
 import LangflowPage from "@/pages/SettingsPage/LangflowPage";
@@ -124,7 +124,7 @@ function SettingsProxy(): JSX.Element {
     let skeletonContent;
     switch (pathname) {
         case ROUTES.SETTINGS.API_KEYS:
-            pageContent = <ApiKeysPage />;
+            pageContent = <ComingSoon />;
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.BOTS:

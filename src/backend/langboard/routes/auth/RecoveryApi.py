@@ -14,7 +14,7 @@ from .scopes import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
     tags=["Auth.Recovery"],
     responses=(OpenApiSchema().err(404, "User not found.").err(503, "Email service is unavailable.").get()),
 )
-async def send_link(form: SendResetLinkForm, service: Service = Service.scope()) -> JsonResponse:
+async def send_recovery_link(form: SendResetLinkForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_token(form.email_token, form.sign_token)
     if not user:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

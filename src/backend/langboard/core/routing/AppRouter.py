@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Any, cast, overload
+from typing import Any, Callable, TypeVar, cast, overload
 from fastapi import APIRouter, FastAPI
 from pkg_resources import require
+from pydantic import BaseModel
 from socketify import App as SocketifyApp
 from socketify import OpCode
 from ...Constants import PROJECT_NAME
@@ -11,6 +12,9 @@ from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketManager import SocketManager
 from .SocketResponse import SocketResponse
 from .SocketTopic import SocketTopic
+
+
+_TRoute = TypeVar("_TRoute", bound=Callable[..., Any])
 
 
 @class_instance()
@@ -34,6 +38,19 @@ class AppRouter:
     def set_socketify_app(self, app: SocketifyApp):
         if not self.__socketify_app:
             self.__socketify_app = app
+
+    def schema(
+        self,
+        *,
+        query: type[BaseModel] | None = None,
+        form: type[BaseModel] | None = None,
+        file_field: str | None = None,
+    ):
+        def wrapper(func: _TRoute) -> _TRoute:
+            setattr(func, "_schema", {"query": query, "form": form, "file_field": file_field})
+            return func
+
+        return wrapper
 
     @overload
     async def publish(

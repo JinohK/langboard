@@ -235,9 +235,9 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
     @staticmethod
-    async def validate_bot(queries_headers: Headers) -> Bot | Literal[401]:
-        ip = queries_headers.get(Auth.IP_HEADER, queries_headers.get(Auth.IP_HEADER.lower(), None))
-        api_token = queries_headers.get(Auth.API_TOKEN_HEADER, queries_headers.get(Auth.API_TOKEN_HEADER.lower(), None))
+    async def validate_bot(headers: Headers) -> Bot | Literal[401]:
+        ip = headers.get(Auth.IP_HEADER, headers.get(Auth.IP_HEADER.lower(), None))
+        api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
         if not ip or not api_token:
             return status.HTTP_401_UNAUTHORIZED
 

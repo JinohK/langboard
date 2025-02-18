@@ -13,13 +13,14 @@ from .scopes import (
     AssignBotsForm,
     ChangeColumnOrderForm,
     CreateProjectLabelForm,
-    UpdateMemberRolesForm,
     UpdateProjectDetailsForm,
     UpdateProjectLabelDetailsForm,
+    UpdateRolesForm,
     project_role_finder,
 )
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/details",
     tags=["Board.Settings"],
@@ -64,9 +65,10 @@ async def get_project_details(
     response["ai_description"] = project.ai_description
     bots = await service.bot.get_list(as_api=True)
 
-    return JsonResponse(content={"project": response, "bots": bots}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"project": response, "bots": bots})
 
 
+@AppRouter.schema(form=UpdateProjectDetailsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/details",
     tags=["Board.Settings"],
@@ -84,12 +86,10 @@ async def change_project_details(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    if result is True:
-        return JsonResponse(content={}, status_code=status.HTTP_200_OK)
-
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=AssignBotsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/assigned-bots",
     tags=["Board.Settings"],
@@ -110,9 +110,10 @@ async def update_project_assigned_bots(
     if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=UpdateRolesForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/bot/{bot_uid}",
     tags=["Board.Settings"],
@@ -123,7 +124,7 @@ async def update_project_assigned_bots(
 async def update_project_bot_roles(
     project_uid: str,
     bot_uid: str,
-    form: UpdateMemberRolesForm,
+    form: UpdateRolesForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
@@ -134,9 +135,10 @@ async def update_project_bot_roles(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=UpdateRolesForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/user/{user_uid}",
     tags=["Board.Settings"],
@@ -147,7 +149,7 @@ async def update_project_bot_roles(
 async def update_project_user_roles(
     project_uid: str,
     user_uid: str,
-    form: UpdateMemberRolesForm,
+    form: UpdateRolesForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
@@ -158,9 +160,10 @@ async def update_project_user_roles(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=CreateProjectLabelForm)
 @AppRouter.api.post(
     "/board/{project_uid}/settings/label",
     tags=["Board.Settings"],
@@ -186,9 +189,10 @@ async def create_label_details(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_label = result
 
-    return JsonResponse(content={"label": api_label}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"label": api_label})
 
 
+@AppRouter.schema(form=UpdateProjectLabelDetailsForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/label/{label_uid}/details",
     tags=["Board.Settings"],
@@ -229,11 +233,12 @@ async def change_label_details(
             if value is None:
                 continue
             response[key] = service.card._convert_to_python(value)
-        return JsonResponse(content=response, status_code=status.HTTP_200_OK)
+        return JsonResponse(content=response)
 
-    return JsonResponse(content=result, status_code=status.HTTP_200_OK)
+    return JsonResponse(content=result)
 
 
+@AppRouter.schema(form=ChangeColumnOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/label/{label_uid}/order",
     tags=["Board.Settings"],
@@ -255,9 +260,10 @@ async def change_label_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/settings/label/{label_uid}",
     tags=["Board.Settings"],
@@ -272,7 +278,7 @@ async def delete_label(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.delete(
@@ -306,4 +312,4 @@ async def delete_project(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

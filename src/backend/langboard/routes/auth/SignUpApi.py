@@ -11,7 +11,7 @@ from .scopes import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
 @AppRouter.api.post(
     "/auth/signup/exist/email", tags=["Auth.SignUp"], responses=OpenApiSchema().suc({"exists": "bool"}).get()
 )
-async def exist_email(form: CheckEmailForm, service: Service = Service.scope()) -> JsonResponse:
+async def exists_email(form: CheckEmailForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     return JsonResponse(content={"exists": user is not None})
 
@@ -53,7 +53,7 @@ async def signup(
         .get()
     ),
 )
-async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) -> JsonResponse:
+async def resend_signup_link(form: ResendLinkForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     if not user:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -79,7 +79,7 @@ async def resend_link(form: ResendLinkForm, service: Service = Service.scope()) 
     tags=["Auth.SignUp"],
     responses=OpenApiSchema().err(404, "User not found.").err(409, "User is already actviated.").get(),
 )
-async def activate(form: ActivateUserForm, service: Service = Service.scope()) -> JsonResponse:
+async def activate_account(form: ActivateUserForm, service: Service = Service.scope()) -> JsonResponse:
     user, cache_key, _ = await service.user.validate_token_from_url("signup", form.signup_token)
     if not user or not cache_key:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

@@ -11,6 +11,7 @@ from ...services import Service
 from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeOrderForm, project_role_finder
 
 
+@AppRouter.schema(form=CardCheckRelatedForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist",
     tags=["Board.Card.Checklist"],
@@ -32,6 +33,7 @@ async def create_checklist(
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
 
+@AppRouter.schema(form=CardCheckRelatedForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/checkitem",
     tags=["Board.Card.Checklist"],
@@ -56,6 +58,7 @@ async def create_checkitem(
     return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
 
 
+@AppRouter.schema(form=CardChecklistNotifyForm)
 @AppRouter.api.post(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/notify",
     tags=["Board.Card.Checklist"],
@@ -77,9 +80,10 @@ async def notify_checklist(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=CardCheckRelatedForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/title",
     tags=["Board.Card.Checklist"],
@@ -101,9 +105,10 @@ async def change_checklist_title(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema(form=ChangeOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/order",
     tags=["Board.Card.Checklist"],
@@ -125,9 +130,10 @@ async def change_checklist_order(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/toggle-checked",
     tags=["Board.Card.Checklist"],
@@ -148,9 +154,10 @@ async def toggle_checklist_checked(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}",
     tags=["Board.Card.Checklist"],
@@ -171,4 +178,4 @@ async def delete_checklist(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

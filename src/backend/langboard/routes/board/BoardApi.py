@@ -22,6 +22,7 @@ from ...services import Service
 from .scopes import ChatHistoryPagination, InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
 
 
+@AppRouter.schema()
 @AppRouter.api.post(
     "/board/{project_uid}/available",
     tags=["Board"],
@@ -40,9 +41,10 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    return JsonResponse(content={"title": project.title}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"title": project.title})
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}",
     tags=["Board"],
@@ -82,7 +84,7 @@ async def get_project(
     project, response = result
     if isinstance(user_or_bot, User):
         await service.project.set_last_view(user_or_bot, project)
-    return JsonResponse(content={"project": response}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"project": response})
 
 
 @AppRouter.api.get(
@@ -103,7 +105,7 @@ async def get_project_chat(
 
     histories = await service.chat_history.get_list(user_or_bot, "project", query.refer_time, query, project_uid)
 
-    return JsonResponse(content={"histories": histories}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"histories": histories})
 
 
 @AppRouter.api.delete(
@@ -121,9 +123,10 @@ async def clear_project_chat(
 
     await service.chat_history.clear(user_or_bot, "project", project_uid)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/cards",
     tags=["Board"],
@@ -167,10 +170,7 @@ async def get_project_cards(
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
     columns = await service.project_column.get_list(project)
     cards = await service.card.get_board_list(project_uid)
-    return JsonResponse(
-        content={"cards": cards, "global_relationships": global_relationships, "columns": columns},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"cards": cards, "global_relationships": global_relationships, "columns": columns})
 
 
 @AppRouter.api.put(
@@ -197,7 +197,7 @@ async def update_project_member(
     if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.post(
@@ -226,7 +226,7 @@ async def get_invited_project_title(
     if not project:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={"project": {"title": project.title}}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"project": {"title": project.title}})
 
 
 @AppRouter.api.post(
@@ -247,7 +247,7 @@ async def accept_project_invitation(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
-    return JsonResponse(content={"project_uid": result}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"project_uid": result})
 
 
 @AppRouter.api.post(
@@ -268,4 +268,4 @@ async def decline_project_invitation(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})

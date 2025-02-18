@@ -35,7 +35,7 @@ async def get_starred_projects(
 
     projects = await service.project.get_starred_projects(user_or_bot)
 
-    return JsonResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"projects": projects})
 
 
 @AppRouter.api.get(
@@ -74,7 +74,7 @@ async def get_projects(
 
     projects = await service.project.get_dashboard_list(user_or_bot)
 
-    return JsonResponse(content={"projects": projects}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"projects": projects})
 
 
 @AppRouter.api.post(
@@ -116,7 +116,7 @@ async def toggle_star_project(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={})
 
 
 @AppRouter.api.get(
@@ -146,7 +146,7 @@ async def get_card_list(
 
     cards, projects = await service.card.get_dashboard_list(user_or_bot, pagination, pagination.refer_time)
 
-    return JsonResponse(content={"cards": cards, "projects": projects}, status_code=status.HTTP_200_OK)
+    return JsonResponse(content={"cards": cards, "projects": projects})
 
 
 @AppRouter.api.get(
@@ -188,6 +188,4 @@ async def track_checkitems(
 
     checkitems, cards, projects = await service.checkitem.track_list(user_or_bot, pagination, pagination.refer_time)
 
-    return JsonResponse(
-        content={"checkitems": checkitems, "cards": cards, "projects": projects}, status_code=status.HTTP_200_OK
-    )
+    return JsonResponse(content={"checkitems": checkitems, "cards": cards, "projects": projects})

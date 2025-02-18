@@ -26,10 +26,7 @@ from .ActivityForm import ActivityPagination
                         {
                             "schema": {
                                 "refer?": BaseActivityModel,
-                                "references?": {
-                                    "refer_type": "project",
-                                    "<refer table>": "object",
-                                },
+                                "references?": {"refer_type": "project", "<refer table>": "object"},
                             }
                         },
                     )
@@ -55,16 +52,13 @@ async def get_user_activities(
         result = await service.activity.get_list_by_user(
             user_or_bot, pagination, pagination.refer_time, only_count=True
         )
-        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"count_new_records": result or 0})
 
     result = await service.activity.get_list_by_user(user_or_bot, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"activities": []})
     activities, count_new_records, _ = result
-    return JsonResponse(
-        content={"activities": activities, "count_new_records": count_new_records},
-        status_code=status.HTTP_200_OK,
-    )
+    return JsonResponse(content={"activities": activities, "count_new_records": count_new_records})
 
 
 @AppRouter.api.get(
@@ -83,19 +77,18 @@ async def get_project_activities(
         result = await service.activity.get_list_by_project(
             project_uid, pagination, pagination.refer_time, only_count=True
         )
-        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"count_new_records": result or 0})
 
     result = await service.activity.get_list_by_project(project_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"activities": []})
     activities, count_new_records, project = result
     return JsonResponse(
         content={
             "activities": activities,
             "count_new_records": count_new_records,
             "references": {"project": {"uid": project.get_uid()}},
-        },
-        status_code=status.HTTP_200_OK,
+        }
     )
 
 
@@ -115,11 +108,11 @@ async def get_card_activities(
         result = await service.activity.get_list_by_card(
             project_uid, card_uid, pagination, pagination.refer_time, only_count=True
         )
-        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"count_new_records": result or 0})
 
     result = await service.activity.get_list_by_card(project_uid, card_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"activities": []})
     activities, count_new_records, project, card = result
     return JsonResponse(
         content={
@@ -133,8 +126,7 @@ async def get_card_activities(
                     "uid": card.get_uid(),
                 },
             },
-        },
-        status_code=status.HTTP_200_OK,
+        }
     )
 
 
@@ -154,11 +146,11 @@ async def get_wiki_activities(
         result = await service.activity.get_list_by_wiki(
             project_uid, wiki_uid, pagination, pagination.refer_time, only_count=True
         )
-        return JsonResponse(content={"count_new_records": result or 0}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"count_new_records": result or 0})
 
     result = await service.activity.get_list_by_wiki(project_uid, wiki_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []}, status_code=status.HTTP_200_OK)
+        return JsonResponse(content={"activities": []})
     activities, count_new_records, project, project_wiki = result
     return JsonResponse(
         content={
@@ -172,6 +164,5 @@ async def get_wiki_activities(
                     "uid": project_wiki.get_uid(),
                 },
             },
-        },
-        status_code=status.HTTP_200_OK,
+        }
     )
