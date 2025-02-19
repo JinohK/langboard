@@ -82,12 +82,13 @@ async def get_api_schema(api_name: str):
     )
     .get(),
 )
-async def get_api_schema_list(api_names: list[str] = Query(...)):
+async def get_api_schema_list(api_names: str = Query(...)):
     schemas = {}
+    api_name_list = api_names.split(",")
     for route in AppRouter.api.routes:
         route = cast(AppExceptionHandlingRoute, route)
         name = route.endpoint.__name__
-        if not hasattr(route.endpoint, "_schema") or name not in api_names:
+        if not hasattr(route.endpoint, "_schema") or name not in api_name_list:
             continue
 
         schema = _get_schema(route)
@@ -145,6 +146,8 @@ def _get_schema(route: AppExceptionHandlingRoute):
                 "\n".join(request_source_model),
             ]
         )
+
+    return schema
 
 
 def _parse_model(schema: Any):
