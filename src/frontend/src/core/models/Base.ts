@@ -30,6 +30,10 @@ import type { Model as UserNotificationModel } from "@/core/models/UserNotificat
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
 
+export const ROLE_ALL_GRANTED = "*";
+
+export type TRoleAllGranted = typeof ROLE_ALL_GRANTED;
+
 export interface IEditorContent {
     content: string;
 }

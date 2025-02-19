@@ -4,6 +4,7 @@ import useUpdateProjectBotRoles from "@/controllers/api/board/settings/useUpdate
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel, Project } from "@/core/models";
+import { ROLE_ALL_GRANTED } from "@/core/models/Base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,9 +35,11 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
         setIsValidating(true);
         isValidatingRef.current = true;
 
+        const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
+
         const promise = mutateAsync({
             project_uid: project.uid,
-            roles: roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role],
+            roles: newRoles.includes(role) ? newRoles.filter((r) => r !== role) : [...newRoles, role],
         });
 
         Toast.Add.promise(promise, {
@@ -89,7 +92,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
                             className={!disabled ? "cursor-pointer" : "cursor-not-allowed"}
                         >
                             <Checkbox
-                                checked={roles.includes(Project.ERoleAction[key])}
+                                checked={roles.includes(Project.ERoleAction[key]) || roles.includes(ROLE_ALL_GRANTED)}
                                 disabled={disabled}
                                 className="mr-1"
                                 onClick={() => updateRole(Project.ERoleAction[key])}

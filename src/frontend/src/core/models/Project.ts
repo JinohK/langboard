@@ -2,7 +2,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
-import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
+import { IBaseModel, BaseModel, registerModel, TRoleAllGranted } from "@/core/models/Base";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
@@ -40,7 +40,7 @@ export enum ERoleAction {
     CardUpdate = "card_update",
     CardDelete = "card_delete",
 }
-export type TRoleActions = ERoleAction | keyof typeof ERoleAction;
+export type TRoleActions = ERoleAction | keyof typeof ERoleAction | TRoleAllGranted;
 
 export const TYPES = ["SI", "SW", "Other"];
 

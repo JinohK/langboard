@@ -1,7 +1,8 @@
+import { ROLE_ALL_GRANTED } from "@/core/models/Base";
+
 const useRoleActionFilter = <T extends string>(userActions: (T | "*")[]) => {
-    const ALL_GRANTED = "*";
     const hasRoleAction = (...roles: T[]) => {
-        if (userActions.includes(ALL_GRANTED)) {
+        if (userActions.includes(ROLE_ALL_GRANTED)) {
             return true;
         }
 
