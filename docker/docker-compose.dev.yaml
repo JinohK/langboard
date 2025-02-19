@@ -95,6 +95,7 @@ services:
       - ../poetry.lock:/app/poetry.lock
       - ../README.md:/app/README.md
       - ../alembic.ini:/app/alembic.ini
+      - ../local:/app/local
     depends_on:
       - db
     networks:

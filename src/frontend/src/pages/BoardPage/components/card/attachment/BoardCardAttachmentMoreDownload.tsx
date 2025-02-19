@@ -1,4 +1,5 @@
-import { DropdownMenu } from "@/components/base";
+import { DropdownMenu, Toast } from "@/components/base";
+import useDownloadFile from "@/core/hooks/useDownloadFile";
 import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
 import { useTranslation } from "react-i18next";
 
@@ -6,16 +7,18 @@ export interface IBoardCardAttachmentMoreDownloadProps extends Pick<IBaseBoardCa
 
 function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IBoardCardAttachmentMoreDownloadProps): JSX.Element {
     const [t] = useTranslation();
+    const name = attachment.useField("name");
     const url = attachment.useField("url");
-
-    const download = () => {
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.download = attachment.name;
-        link.click();
-        setIsMoreMenuOpened(false);
-    };
+    const { download, isDownloading } = useDownloadFile({
+        url: url,
+        filename: name,
+        onError: () => {
+            Toast.Add.error(t("errors.Download failed."));
+        },
+        onFinally: () => {
+            setIsMoreMenuOpened(false);
+        },
+    });
 
     return (
         <DropdownMenu.Item
@@ -24,6 +27,7 @@ function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IB
                 e.stopPropagation();
                 download();
             }}
+            disabled={isDownloading}
         >
             {t("card.Download")}
         </DropdownMenu.Item>

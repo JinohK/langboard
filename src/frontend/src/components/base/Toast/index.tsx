@@ -55,7 +55,6 @@ const Area = ({ ...props }: AreaProps) => {
                     icon: "mt-0.5",
                 },
             }}
-            cn={cn}
             {...props}
         />
     );
