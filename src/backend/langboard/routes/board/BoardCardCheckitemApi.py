@@ -71,16 +71,15 @@ async def change_checkitem_order_or_move_checklist(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=ChangeCardCheckitemStatusForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/status",
     tags=["Board.Card.Checkitem"],
     description="Change checkitem status.",
     responses=(
         OpenApiSchema()
-        .auth(with_bot=True)
-        .role(with_bot=True)
-        .err(403, "No permission to update this checkitem.")
+        .auth()
+        .role()
+        .err(403, "No permission to update this checkitem or bot cannot access this endpoint.")
         .err(404, "Project, card, or checkitem not found.")
         .get()
     ),
@@ -95,6 +94,9 @@ async def change_checkitem_status(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
     checkitem = await service.checkitem.get_by_uid(checkitem_uid)
     if not checkitem:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

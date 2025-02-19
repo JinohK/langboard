@@ -10,9 +10,7 @@ class CardCheckRelatedForm(BaseFormModel):
 
 @form_model
 class ChangeCardCheckitemStatusForm(BaseFormModel):
-    status: CheckitemStatus = Field(
-        ..., title=f"Status of the checkitem: {', '.join(CheckitemStatus._value2member_map_)}"
-    )
+    status: CheckitemStatus
 
 
 @form_model
