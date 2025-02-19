@@ -91,9 +91,6 @@ async def create_project(
     if not isinstance(user_or_bot, User):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    if not form.title:
-        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
-
     project = await service.project.create(user_or_bot, form.title, form.description, form.project_type)
     return JsonResponse(content={"project_uid": project.get_uid()}, status_code=status.HTTP_201_CREATED)
 

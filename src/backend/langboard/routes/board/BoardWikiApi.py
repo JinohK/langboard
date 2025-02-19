@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
+from ...core.routing.Exception import MissingException
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
@@ -300,7 +301,7 @@ async def upload_wiki_attachment(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     if not attachment:
-        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+        raise MissingException("body", "attachment")
 
     file_model = Storage.upload(attachment, StorageName.Wiki)
     if not file_model:
