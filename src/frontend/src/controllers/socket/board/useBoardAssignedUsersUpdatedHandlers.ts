@@ -10,7 +10,7 @@ export interface IBoardAssignedUsersUpdatedRawResponse {
 }
 
 export interface IBoardAssignedUsersUpdatedResponse {
-    assigned_member_uids: string[];
+    assigned_user_uids: string[];
 }
 
 export interface IUseBoardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<IBoardAssignedUsersUpdatedResponse> {
@@ -53,7 +53,7 @@ const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoar
                     User.Model.deleteModel(data.invitation_uid);
                 }
                 return {
-                    assigned_member_uids: data.assigned_members.map((member) => member.uid),
+                    assigned_user_uids: data.assigned_members.map((user) => user.uid),
                 };
             },
         },

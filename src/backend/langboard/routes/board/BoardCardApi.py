@@ -24,7 +24,7 @@ from ...services import Service
 from .scopes import (
     AssignUsersForm,
     ChangeCardDetailsForm,
-    ChangeOrderForm,
+    ChangeChildOrderForm,
     CreateCardForm,
     UpdateCardLabelsForm,
     UpdateCardRelationshipsForm,
@@ -273,7 +273,7 @@ async def update_card_assigned_users(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=ChangeOrderForm)
+@AppRouter.schema(form=ChangeChildOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/order",
     tags=["Board.Card"],
@@ -285,7 +285,7 @@ async def update_card_assigned_users(
 async def change_card_order_or_move_column(
     project_uid: str,
     card_uid: str,
-    form: ChangeOrderForm,
+    form: ChangeChildOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

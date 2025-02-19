@@ -27,7 +27,7 @@ function BoardCardChecklistNotify() {
             project_uid: projectUID,
             card_uid: card.uid,
             checklist_uid: checklist.uid,
-            member_uids: selectedItems.map((item) => item.uid),
+            user_uids: selectedItems.map((item) => item.uid),
         });
 
         Toast.Add.promise(promise, {

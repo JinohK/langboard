@@ -12,7 +12,7 @@ from .scopes import (
     CardCheckRelatedForm,
     CardifyCheckitemForm,
     ChangeCardCheckitemStatusForm,
-    ChangeOrderForm,
+    ChangeChildOrderForm,
     project_role_finder,
 )
 
@@ -43,7 +43,7 @@ async def change_checkitem_title(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=ChangeOrderForm)
+@AppRouter.schema(form=ChangeChildOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checkitem/{checkitem_uid}/order",
     tags=["Board.Card.Checkitem"],
@@ -58,7 +58,7 @@ async def change_checkitem_order_or_move_checklist(
     project_uid: str,
     card_uid: str,
     checkitem_uid: str,
-    form: ChangeOrderForm,
+    form: ChangeChildOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

@@ -11,7 +11,7 @@ from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
     AssigneesForm,
-    ChangeOrderForm,
+    ChangeChildOrderForm,
     ChangeWikiDetailsForm,
     ChangeWikiPublicForm,
     WikiForm,
@@ -245,7 +245,7 @@ async def update_project_wiki_assignees(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=ChangeOrderForm)
+@AppRouter.schema(form=ChangeChildOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/wiki/{wiki_uid}/order",
     tags=["Board.Wiki"],
@@ -257,7 +257,7 @@ async def update_project_wiki_assignees(
 async def change_project_wiki_order(
     project_uid: str,
     wiki_uid: str,
-    form: ChangeOrderForm,
+    form: ChangeChildOrderForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.project_wiki.change_order(project_uid, wiki_uid, form.order)

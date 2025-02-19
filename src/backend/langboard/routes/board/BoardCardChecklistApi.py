@@ -8,7 +8,7 @@ from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeOrderForm, project_role_finder
+from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrderForm, project_role_finder
 
 
 @AppRouter.schema(form=CardCheckRelatedForm)
@@ -79,7 +79,7 @@ async def notify_checklist(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.checklist.notify(user_or_bot, project_uid, card_uid, checklist_uid, form.member_uids)
+    result = await service.checklist.notify(user_or_bot, project_uid, card_uid, checklist_uid, form.user_uids)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -112,7 +112,7 @@ async def change_checklist_title(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=ChangeOrderForm)
+@AppRouter.schema(form=ChangeRootOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/order",
     tags=["Board.Card.Checklist"],
@@ -127,7 +127,7 @@ async def change_checklist_order(
     project_uid: str,
     card_uid: str,
     checklist_uid: str,
-    form: ChangeOrderForm,
+    form: ChangeRootOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

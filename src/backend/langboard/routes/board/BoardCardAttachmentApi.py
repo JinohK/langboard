@@ -9,7 +9,7 @@ from ...core.storage import Storage, StorageName
 from ...models import CardAttachment, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import ChangeAttachmentNameForm, ChangeOrderForm, project_role_finder
+from .scopes import ChangeAttachmentNameForm, ChangeChildOrderForm, project_role_finder
 
 
 @AppRouter.api.post(
@@ -69,7 +69,7 @@ async def change_attachment_order(
     project_uid: str,
     card_uid: str,
     attachment_uid: str,
-    form: ChangeOrderForm,
+    form: ChangeChildOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

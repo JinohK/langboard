@@ -8,7 +8,7 @@ from ...core.security import Auth
 from ...models import ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import ChangeColumnOrderForm, ColumnForm, project_role_finder
+from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
 
 
 @AppRouter.schema(form=ColumnForm)
@@ -67,7 +67,7 @@ async def update_project_column_name(
 async def update_project_column_order(
     project_uid: str,
     column_uid: str,
-    form: ChangeColumnOrderForm,
+    form: ChangeRootOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

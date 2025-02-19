@@ -1,27 +1,28 @@
+from pydantic import Field
 from ....core.routing import BaseFormModel, form_model
 
 
 @form_model
 class AssignBotsForm(BaseFormModel):
-    assigned_bots: list[str]
+    assigned_bots: list[str] = Field(..., title="List of bot UIDs")
 
 
 @form_model
 class AssignUsersForm(BaseFormModel):
-    assigned_users: list[str]
+    assigned_users: list[str] = Field(..., title="List of user UIDs")
 
 
 @form_model
 class AssigneesForm(BaseFormModel):
-    assignees: list[str]
+    assignees: list[str] = Field(..., title="List of user and bot UIDs")
 
 
 @form_model
-class ChangeColumnOrderForm(BaseFormModel):
-    order: int
+class ChangeRootOrderForm(BaseFormModel):
+    order: int = Field(..., title="New order")
 
 
 @form_model
-class ChangeOrderForm(BaseFormModel):
-    order: int
-    parent_uid: str = ""
+class ChangeChildOrderForm(BaseFormModel):
+    order: int = Field(..., title="New order")
+    parent_uid: str = Field(default="", title="If moving to another parent, the UID of the parent")

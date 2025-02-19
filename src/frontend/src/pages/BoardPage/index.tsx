@@ -87,7 +87,7 @@ const BoardProxy = memo((): JSX.Element => {
         projectUID,
         callback: (result) => {
             const currentUser = aboutMe()!;
-            if (!result.assigned_member_uids.includes(currentUser.uid) && !currentUser.is_admin) {
+            if (!result.assigned_user_uids.includes(currentUser.uid) && !currentUser.is_admin) {
                 Toast.Add.error(t("errors.Forbidden"));
             }
         },

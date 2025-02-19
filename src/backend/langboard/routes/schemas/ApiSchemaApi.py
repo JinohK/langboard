@@ -1,5 +1,7 @@
+from json import dumps as json_dumps
 from re import findall as re_findall
-from typing import Any, cast
+from typing import Any, Literal, cast
+from datamodel_code_generator.parser.jsonschema import JsonSchemaParser
 from fastapi import status
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
@@ -35,6 +37,7 @@ async def get_api_list():
                 "form?": "object",
                 "query?": "object",
                 "file_field?": "string",
+                "request_schema_source?": "string",
             }
         }
     )
@@ -54,15 +57,29 @@ async def get_api_schema(route_name: str):
         schema["path_params"] = re_findall(PATH_PARAM_PATTERN, route.path)
         schema["description"] = route.description
 
+        request_source_imports = ["from pydantic import BaseModel, Field"]
+        request_source_others = {}
+        request_source_model = ["class RequestForm(BaseModel):"]
+        for path_param in schema["path_params"]:
+            request_source_model.append(f"    {path_param}: str = Field(..., title='Path parameter: {path_param}')")
+
         if "query" in schema:
             if schema["query"]:
                 schema["query"] = schema["query"].model_json_schema()
+                imports, request_fields, other_classes = _parse_model(schema["query"])
+                request_source_imports.extend([imp for imp in imports if imp not in request_source_imports])
+                request_source_model.extend(request_fields)
+                request_source_others.update(other_classes)
             else:
                 schema.pop("query")
 
         if "form" in schema:
             if schema["form"]:
                 schema["form"] = schema["form"].model_json_schema()
+                imports, request_fields, other_classes = _parse_model(schema["form"])
+                request_source_imports.extend([imp for imp in imports if imp not in request_source_imports])
+                request_source_model.extend(request_fields)
+                request_source_others.update(other_classes)
             else:
                 schema.pop("form")
 
@@ -74,5 +91,53 @@ async def get_api_schema(route_name: str):
                 schema.pop("file_field")
         schema["content_type"] = content_type
 
+        if len(request_source_model) > 1:
+            schema["request_schema_source"] = "\n".join(
+                [
+                    "\n".join(request_source_imports),
+                    "\n".join(request_source_others.values()),
+                    "\n".join(request_source_model),
+                ]
+            )
+
         return JsonResponse(content={"schema": schema})
     return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+
+def _parse_model(schema: Any):
+    parser = JsonSchemaParser(json_dumps(schema), use_subclass_enum=True)
+    source: str = parser.parse()
+    imports: list[str] = []
+    other_classes: dict[str, str] = {}
+    request_fields: list[str] = []
+
+    started_type: Literal["other", "request"] | None = None
+    other_chunks: list[str] = []
+    for line in source.splitlines():
+        if line.startswith("from"):
+            if "pydantic" not in line and "__future__" not in line:
+                imports.append(line)
+            continue
+
+        if not line:
+            if started_type == "other":
+                other_classes[other_chunks[0].split("(")[0].split(" ")[-1]] = "\n".join(other_chunks)
+                other_chunks = []
+            started_type = None
+            continue
+
+        if line.startswith("class"):
+            started_type = "request" if "BaseModel" in line else "other"
+            if started_type == "other":
+                other_chunks = [line]
+            continue
+
+        if not started_type:
+            continue
+
+        if started_type == "request":
+            request_fields.append(line)
+        else:
+            other_chunks.append(line)
+
+    return imports, request_fields, other_classes

@@ -1,19 +1,20 @@
+from pydantic import Field
 from ....core.db import EditorContentModel
 from ....core.routing import BaseFormModel, form_model
 
 
 @form_model
 class WikiForm(BaseFormModel):
-    title: str
-    content: EditorContentModel | None = None
+    title: str = Field(..., description="Wiki title")
+    content: EditorContentModel | None = Field(None, description="Wiki content")
 
 
 @form_model
 class ChangeWikiDetailsForm(BaseFormModel):
-    title: str | None = None
-    content: EditorContentModel | None = None
+    title: str | None = Field(None, description="Wiki title")
+    content: EditorContentModel | None = Field(None, description="Wiki content")
 
 
 @form_model
 class ChangeWikiPublicForm(BaseFormModel):
-    is_public: bool
+    is_public: bool = Field(..., description="Wiki public status")

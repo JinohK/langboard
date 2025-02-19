@@ -11,7 +11,7 @@ from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
     AssignBotsForm,
-    ChangeColumnOrderForm,
+    ChangeRootOrderForm,
     CreateProjectLabelForm,
     UpdateProjectDetailsForm,
     UpdateProjectLabelDetailsForm,
@@ -116,12 +116,10 @@ async def update_project_assigned_bots(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=UpdateRolesForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/bot/{bot_uid}",
     tags=["Board.Settings"],
-    description="Update roles for a bot assigned to a project.",
-    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
@@ -142,12 +140,10 @@ async def update_project_bot_roles(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=UpdateRolesForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/user/{user_uid}",
     tags=["Board.Settings"],
-    description="Update roles for a user assigned to a project.",
-    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
@@ -245,7 +241,7 @@ async def change_project_label_details(
     return JsonResponse(content=result)
 
 
-@AppRouter.schema(form=ChangeColumnOrderForm)
+@AppRouter.schema(form=ChangeRootOrderForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/label/{label_uid}/order",
     tags=["Board.Settings"],
@@ -257,7 +253,7 @@ async def change_project_label_details(
 async def change_project_label_order(
     project_uid: str,
     label_uid: str,
-    form: ChangeColumnOrderForm,
+    form: ChangeRootOrderForm,
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:

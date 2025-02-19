@@ -1,4 +1,5 @@
 from typing import Any
+from pydantic import Field
 from ...core.ai import BotAPIAuthType, BotTriggerCondition
 from ...core.routing import BaseFormModel, form_model
 from ...core.setting import AppSettingType
@@ -47,7 +48,7 @@ class UpdateBotForm(BaseFormModel):
 
 @form_model
 class PredefineBotTriggerConditionForm(BaseFormModel):
-    conditions: list[BotTriggerCondition]
+    conditions: list[BotTriggerCondition] = Field(..., description="List of bot trigger conditions")
 
 
 @form_model

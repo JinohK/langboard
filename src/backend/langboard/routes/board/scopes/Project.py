@@ -1,4 +1,5 @@
 from datetime import datetime
+from pydantic import Field
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
 from ....core.utils.DateTime import now
@@ -21,9 +22,9 @@ class ChatHistoryPagination(Pagination):
 
 @form_model
 class UpdateProjectDetailsForm(BaseFormModel):
-    title: str
-    description: str | None = None
-    project_type: str = "Other"
+    title: str = Field(..., description="Project title")
+    description: str | None = Field(None, description="Project description")
+    project_type: str = Field("Other", description="Project type")
 
 
 @form_model

@@ -221,7 +221,7 @@ class SoftDeleteModel(BaseSqlModel):
 
 
 class EditorContentModel(BaseModel):
-    content: str = Field(default="")
+    content: str = Field(default="", description="The content of the editor in markdown format.")
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

@@ -7,7 +7,7 @@ export interface INotifyCardChecklistForm {
     project_uid: string;
     card_uid: string;
     checklist_uid: string;
-    member_uids: string[];
+    user_uids: string[];
 }
 
 const useNotifyCardChecklist = (options?: TMutationOptions<INotifyCardChecklistForm>) => {
@@ -20,7 +20,7 @@ const useNotifyCardChecklist = (options?: TMutationOptions<INotifyCardChecklistF
             checklist_uid: params.checklist_uid,
         });
         const res = await api.post(url, {
-            member_uids: params.member_uids,
+            user_uids: params.user_uids,
         });
 
         return res.data;

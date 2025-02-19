@@ -5,6 +5,19 @@ from ..core.ai import Bot
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 
 
+REACTION_TYPES = [
+    "check-mark",
+    "confusing",
+    "eyes",
+    "heart",
+    "laughing",
+    "party-popper",
+    "rocket",
+    "thumbs-down",
+    "thumbs-up",
+]
+
+
 class BaseReactionModel(BaseSqlModel):
     user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
     bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
