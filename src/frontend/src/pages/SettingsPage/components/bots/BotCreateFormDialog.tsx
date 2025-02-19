@@ -50,6 +50,10 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         Object.entries(inputsRef.current).forEach(([key, input]) => {
             const value = input!.value.trim();
             if (!value) {
+                if (key === "prompt") {
+                    return;
+                }
+
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.missing.bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;
@@ -79,7 +83,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 api_url: values.apiURL,
                 api_auth_type: selectedAPIAuthType,
                 api_key: values.apiKey,
-                ipWhitelist: ipWhitelistRef.current,
+                ip_whitelist: ipWhitelistRef.current,
                 prompt: values.prompt,
             },
             {

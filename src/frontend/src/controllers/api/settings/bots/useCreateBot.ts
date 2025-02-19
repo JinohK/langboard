@@ -9,7 +9,7 @@ export interface ICreateBotForm {
     api_url: string;
     api_auth_type: BotModel.EAPIAuthType;
     api_key: string;
-    ipWhitelist: string[];
+    ip_whitelist: string[];
     prompt: string;
     avatar?: File;
 }
