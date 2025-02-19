@@ -14,7 +14,8 @@ const useToggleEditingByClick = (boxAttr: string, changeMode: (mode: "edit" | "v
                 target.closest("video") ||
                 target.closest("embed") ||
                 target.closest("audio") ||
-                target.closest("img")
+                target.closest("img") ||
+                target.closest(".slate-file")
             ) {
                 return;
             }

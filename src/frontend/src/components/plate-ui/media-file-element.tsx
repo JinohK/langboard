@@ -19,7 +19,12 @@ export const MediaFileElement = withHOC(
         const { name, unsafeUrl } = useMediaState();
 
         const onDownload = () => {
-            window.open(unsafeUrl);
+            const anchor = document.createElement("a");
+            anchor.href = unsafeUrl;
+            anchor.download = name ?? unsafeUrl.split("/").pop()!;
+            anchor.target = "_blank";
+            anchor.click();
+            anchor.remove();
         };
 
         return (

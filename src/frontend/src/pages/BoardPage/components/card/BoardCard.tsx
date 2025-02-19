@@ -130,11 +130,11 @@ export function SkeletonBoardCard(): JSX.Element {
                     <BoardCardSection title="card.Description" className="relative min-h-56">
                         <SkeletonBoardCardDescription />
                     </BoardCardSection>
-                    <BoardCardSection title="card.Attached files">
-                        <SkeletonBoardCardAttachmentList />
-                    </BoardCardSection>
                     <BoardCardSection title="card.Checklists">
                         <SkeletonBoardCardChecklistGroup />
+                    </BoardCardSection>
+                    <BoardCardSection title="card.Attached files">
+                        <SkeletonBoardCardAttachmentList />
                     </BoardCardSection>
                     <BoardCardSection title="card.Comments">
                         <SkeletonBoardCommentList />
@@ -195,14 +195,14 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                     <BoardCardSection title="card.Description" className="relative min-h-56">
                         <BoardCardDescription key={`board-card-description-${card.uid}`} />
                     </BoardCardSection>
-                    {attachments.length > 0 && (
-                        <BoardCardSection title="card.Attached files">
-                            <BoardCardAttachmentList key={`board-card-attachment-list-${card.uid}`} />
-                        </BoardCardSection>
-                    )}
                     {checklists.length > 0 && (
                         <BoardCardSection title="card.Checklists">
                             <BoardCardChecklistGroup key={`board-card-checklist-${card.uid}`} />
+                        </BoardCardSection>
+                    )}
+                    {attachments.length > 0 && (
+                        <BoardCardSection title="card.Attached files">
+                            <BoardCardAttachmentList key={`board-card-attachment-list-${card.uid}`} />
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">
