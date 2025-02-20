@@ -69,7 +69,7 @@ class BotTaskHelper:
                 "app_api_token": bot.app_api_token,
                 "prompt": bot.prompt,
             },
-            "labels_for_project": [label.api_response() for label in labels] if labels else None,
+            "bot_labels_for_project": [label.api_response() for label in labels] if labels else None,
         }
 
         json_data = {}

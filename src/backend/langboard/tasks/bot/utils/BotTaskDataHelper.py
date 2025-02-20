@@ -102,3 +102,14 @@ class BotTaskDataHelper:
     @staticmethod
     def create_user_or_bot_schema():
         return {"oneOf": {"User": User.api_schema(), "Bot": Bot.api_schema()}}
+
+    @staticmethod
+    async def get_updated_assigned_bots(old_bot_ids: list[int], new_bot_ids: list[int]):
+        first_time_assigned: list[int] = []
+        for bot_id in new_bot_ids:
+            if bot_id not in old_bot_ids:
+                first_time_assigned.append(bot_id)
+
+        async with DbSession.use() as db:
+            result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(first_time_assigned)))
+        return list(result.all())

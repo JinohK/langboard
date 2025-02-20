@@ -1,6 +1,4 @@
-from datetime import datetime
 from typing import Any
-from pydantic import BaseModel
 from ....core.ai import Bot
 from ....core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ....core.utils.decorators import staticclass
@@ -17,6 +15,7 @@ from ....models import (
     ProjectLabel,
     ProjectWiki,
 )
+from ...utils.TaskDataUtils import TaskDataUtils
 
 
 @staticclass
@@ -139,8 +138,5 @@ class ActivityHistoryHelper:
                 ],
                 **new_data.model_dump(),
             }
-        elif isinstance(data, BaseModel):
-            return data.model_dump()
-        elif isinstance(data, datetime):
-            return data.isoformat()
-        return data
+
+        return TaskDataUtils.convert_to_python(data)

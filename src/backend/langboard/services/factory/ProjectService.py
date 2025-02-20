@@ -11,7 +11,7 @@ from ...models.Checkitem import CheckitemStatus
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectPublisher
 from ...tasks.activities import ProjectActivityTask
-from ...tasks.bot import ProjectBotTask
+from ...tasks.bot import BotDefaultTask, ProjectBotTask
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
@@ -375,8 +375,11 @@ class ProjectService(BaseService):
                     await db.commit()
                 await role_service.project.grant_default(bot_id=bot.id, project_id=project.id)
 
+        new_bot_ids: list[int] = [bot.id for bot in bots]
+
         ProjectPublisher.assigned_bots_updated(project, bots)
-        ProjectActivityTask.project_assigned_bots_updated(user, project, old_assigned_bot_ids, [bot.id for bot in bots])
+        ProjectActivityTask.project_assigned_bots_updated(user, project, old_assigned_bot_ids, new_bot_ids)
+        BotDefaultTask.bot_project_assigned(user, project, old_assigned_bot_ids, new_bot_ids)
 
         return list(bots)
 
