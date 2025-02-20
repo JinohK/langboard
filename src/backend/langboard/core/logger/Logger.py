@@ -1,7 +1,8 @@
 from logging import ERROR, NOTSET, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
 from logging import Logger as LoggingLogger
 from rich.logging import RichHandler
-from ...Constants import ENVIRONMENT, FILE_LOGGING_LEVEL, LOGGING_DIR, PROJECT_NAME, TERMINAL_LOGGING_LEVEL
+from sentry_sdk import init as sentry_init
+from ...Constants import ENVIRONMENT, FILE_LOGGING_LEVEL, LOGGING_DIR, PROJECT_NAME, SENTRY_DSN, TERMINAL_LOGGING_LEVEL
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .LogFileHandler import LogFileHandler
 
@@ -58,6 +59,12 @@ class Logger:
         getLogger("httpcore.connection").setLevel(ERROR)
         getLogger("httpcore.http11").setLevel(ERROR)
         getLogger("watchdog.observers.inotify_buffer").setLevel(ERROR)
+
+        if SENTRY_DSN:
+            sentry_init(
+                dsn=SENTRY_DSN,
+                environment=ENVIRONMENT if ENVIRONMENT == "production" else "development",
+            )
 
     def use(self, name: str) -> LoggingLogger:
         """Returns a logger with the given name."""

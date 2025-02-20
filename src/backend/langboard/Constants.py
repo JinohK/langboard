@@ -33,11 +33,6 @@ ENVIRONMENT = _get_env("ENVIRONMENT", "local")
 PROJECT_NAME = _get_env("PROJECT_NAME")
 PROJECT_VERSION = metadata.version(PROJECT_NAME)
 
-# Logging
-TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
-FILE_LOGGING_LEVEL = _get_env("FILE_LOGGING_LEVEL", "AUTO").upper()
-LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
-
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
 MAIN_DATABASE_ROLE: set[_TDatabaseRole] = cast(
@@ -61,6 +56,14 @@ for role in set([*MAIN_DATABASE_ROLE, *SUB_DATABASE_ROLE]):
 
 if _added_roles != _AVAILABLE_DATABASE_ROLES:
     raise ValueError(f"Database roles must include all of {_AVAILABLE_DATABASE_ROLES}")
+
+# Logging
+TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
+FILE_LOGGING_LEVEL = _get_env("FILE_LOGGING_LEVEL", "AUTO").upper()
+LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
+
+# Sentry
+SENTRY_DSN = _get_env("SENTRY_DSN")
 
 # Cache
 CACHE_TYPE: Literal["in-memory", "redis"] = cast(Any, _get_env("CACHE_TYPE", "in-memory"))
