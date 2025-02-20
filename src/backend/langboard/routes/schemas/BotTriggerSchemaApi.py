@@ -3,7 +3,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from pkg_resources import require
 from ...Constants import PROJECT_NAME
-from ...core.ai import Bot
+from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
 from ...core.routing import AppRouter, JsonResponse
 from ...models import ProjectLabel
@@ -14,7 +14,7 @@ async def bot_docs():
     return get_swagger_ui_html(openapi_url="/schema/bot.json", title=PROJECT_NAME.capitalize())
 
 
-@AppRouter.api.get("/schema/bot.json", response_class=JsonResponse)
+@AppRouter.api.get("/schema/bot.json")
 async def bot_openapi():
     version = require(PROJECT_NAME)[0].version
     schemas = Broker.get_schema("bot")
@@ -59,6 +59,11 @@ async def bot_openapi():
             },
         }
     )
+
+
+@AppRouter.api.get("/schema/bot/trigger-conditions")
+async def get_bot_trigger_conditions():
+    return JsonResponse(content={"conditions": [condition.value for condition in BotTriggerCondition]})
 
 
 def _make_object_property(schema_name: str, schema: dict[str, Any]):
