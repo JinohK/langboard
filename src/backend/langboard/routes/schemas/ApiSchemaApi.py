@@ -151,6 +151,8 @@ def _get_schema(route: AppExceptionHandlingRoute):
 
 
 def _parse_model(schema: Any):
+    BASE_MODEL_CLASS_PATTERN = r"class (\w+)\(BaseModel\):"
+
     parser = JsonSchemaParser(json_dumps(schema), use_subclass_enum=True)
     source: str = parser.parse()
     imports: list[str] = []
@@ -159,6 +161,10 @@ def _parse_model(schema: Any):
 
     started_type: Literal["other", "request"] | None = None
     other_chunks: list[str] = []
+    base_model_occurrence = 0
+    total_base_model_occurrence = len(re_findall(BASE_MODEL_CLASS_PATTERN, source))
+    is_more_than_one_base_model = total_base_model_occurrence > 1
+
     for line in source.splitlines():
         if line.startswith("from"):
             if "pydantic" not in line and "__future__" not in line:
@@ -174,6 +180,11 @@ def _parse_model(schema: Any):
 
         if line.startswith("class"):
             started_type = "request" if "BaseModel" in line else "other"
+            if started_type == "request":
+                if is_more_than_one_base_model and base_model_occurrence < total_base_model_occurrence - 1:
+                    base_model_occurrence += 1
+                    started_type = "other"
+
             if started_type == "other":
                 other_chunks = [line]
             continue
