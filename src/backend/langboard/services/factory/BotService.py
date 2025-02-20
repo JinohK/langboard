@@ -139,9 +139,11 @@ class BotService(BaseService):
             await db.exec(
                 SqlBuilder.delete.table(BotTrigger).where(
                     (BotTrigger.column("bot_id") == bot.id)
-                    & (BotTrigger.column("condition").in_([condition.value for condition in conditions]))
+                    & (BotTrigger.column("condition").in_(conditions))
+                    & (BotTrigger.column("is_predefined") == True)  # noqa
                 )
             )
+            await db.commit()
 
         for condition in conditions:
             trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)

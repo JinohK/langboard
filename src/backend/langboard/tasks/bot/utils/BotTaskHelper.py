@@ -81,7 +81,12 @@ class BotTaskHelper:
             json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Langflow:
             headers["x-api-key"] = bot.api_key
-            json_data = {"input_value": json_dumps(response)}
+            json_data = {
+                "input_value": json_dumps(response, default=str),
+                "input_type": "chat",
+                "output_type": "chat",
+                "tweaks": {},
+            }
         elif bot.api_auth_type == BotAPIAuthType.OpenAI:
             headers["Authorization"] = f"Bearer {bot.api_key}"
             json_data = response
@@ -94,9 +99,12 @@ class BotTaskHelper:
                 bot.api_url,
                 headers=headers,
                 json=json_data,
+                timeout=60,
             )
 
             if res.status_code != 200:
-                logger.error("Failed to request bot: %s(@%s) %s", bot.name, bot.bot_uname, res.text)
+                logger.error(
+                    "Failed to request bot: %s(@%s) %s: %s", bot.name, bot.bot_uname, str(res.status_code), res.text
+                )
         except Exception:
             logger.error("Failed to request bot: %s(@%s)", bot.name, bot.bot_uname)
