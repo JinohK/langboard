@@ -1,9 +1,10 @@
 import { IHeaderNavItem, THeaderNavItemsProps } from "@/components/Header/types";
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { makeReactKey } from "@/core/utils/StringUtils";
+import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useRef, useState } from "react";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 interface IDropdownMenuNavProps {
     setDropdownMenuOpenedRef?: React.RefObject<React.Dispatch<React.SetStateAction<bool>>>;
@@ -21,7 +22,7 @@ function HedaerNavItems({
     return (
         <>
             {navs.map((item) => {
-                const key = makeReactKey(item.name);
+                const key = TypeUtils.isString(item.name) ? makeReactKey(item.name) : createShortUUID();
                 let Comp;
                 if (isMobile) {
                     Comp = item.subNavs ? AccordionNav : AccordionNavItem;
@@ -50,7 +51,7 @@ interface IHeaderNavItemProps extends Omit<THeaderNavItemsProps, "isMobile" | "n
 }
 
 function AccordionNav({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
-    const key = makeReactKey(item.name);
+    const key = TypeUtils.isString(item.name) ? makeReactKey(item.name) : createShortUUID();
     const subProps = {
         isMobile: true as false,
         navs: item.subNavs!,

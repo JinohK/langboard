@@ -18,7 +18,7 @@ const useCardCheckitemTitleChangedHandlers = ({ callback, cardUID, checkitem }: 
         topicId: cardUID,
         eventKey: `board-card-checkitem-title-changed-${checkitem.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CHECKED_CHANGED,
+            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.TITLE_CHANGED,
             params: { uid: checkitem.uid },
             callback,
             responseConverter: (data) => {
