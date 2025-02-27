@@ -13,13 +13,13 @@ function Redirect(): JSX.Element {
         const values = Object.values(QUERY_NAMES);
         let isRedirected = false;
         for (let i = 0; i < values.length; ++i) {
-            const value = values[i];
-            if (value === QUERY_NAMES.REDIRECT) {
+            const param = values[i];
+            if (param === QUERY_NAMES.REDIRECT) {
                 continue;
             }
 
-            const param = params.get(value);
-            if (!param) {
+            const paramValue = params.get(param);
+            if (!paramValue) {
                 continue;
             }
 
@@ -40,7 +40,7 @@ function Redirect(): JSX.Element {
                     to.pathname = ROUTES.BOARD.INVITATION;
                     break;
                 case QUERY_NAMES.BOARD:
-                    to.pathname = ROUTES.BOARD.MAIN(param);
+                    to.pathname = ROUTES.BOARD.MAIN(paramValue);
                     delete to.search;
                     break;
                 case QUERY_NAMES.BOARD_CARD: {
