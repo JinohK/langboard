@@ -1,5 +1,5 @@
 from argparse import SUPPRESS
-from sys import argv
+from sys import argv, exit
 from typing import Any, Never
 from pydantic import BaseModel, Field
 from rich import print as rprint

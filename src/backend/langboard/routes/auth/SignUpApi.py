@@ -35,7 +35,9 @@ async def signup(
 
     token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN)
 
-    result = await service.email.send_template(user.preferred_lang, user.email, "signup", {"url": token_url})
+    result = await service.email.send_template(
+        user.preferred_lang, user.email, "signup", {"recipient": user.firstname, "url": token_url}
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -67,7 +69,9 @@ async def resend_signup_link(form: ResendLinkForm, service: Service = Service.sc
 
     token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN)
 
-    result = await service.email.send_template(user.preferred_lang, user.email, "signup", {"url": token_url})
+    result = await service.email.send_template(
+        user.preferred_lang, user.email, "signup", {"recipient": user.firstname, "url": token_url}
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 

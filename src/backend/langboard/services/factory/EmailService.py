@@ -11,6 +11,7 @@ from ...Constants import (
     MAIL_STARTTLS,
     MAIL_USERNAME,
     PROJECT_NAME,
+    PUBLIC_FRONTEND_URL,
 )
 from ...core.service import BaseService
 from ...locales.EmailTemplateNames import TEmailTemplateNames
@@ -28,19 +29,28 @@ class EmailService(BaseService):
         if not self.__create_config():
             return False
 
-        subject, template = self.__get_template(lang, template_name)
-        subject = self.__create_subject(subject)
-        body = template.format_map(formats)  # noqa
+        subject, template = self.__get_template(
+            lang,
+            template_name,
+            {
+                **formats,
+                "app_name": PROJECT_NAME.capitalize(),
+                "logo_url": f"{PUBLIC_FRONTEND_URL}/images/logo.png",
+            },
+        )
 
         message = MessageSchema(
             subject=subject,
             recipients=[to],
-            body=body,
+            body=template,
             subtype=MessageType.html,
         )
 
         fm = FastMail(self.__config)
-        await fm.send_message(message)
+        try:
+            await fm.send_message(message)
+        except Exception:
+            return False
 
         return True
 
@@ -63,15 +73,19 @@ class EmailService(BaseService):
         except Exception:
             return False
 
-    def __get_template(self, lang: str, template_name: TEmailTemplateNames) -> tuple[str, str]:
+    def __get_template(self, lang: str, template_name: TEmailTemplateNames, formats: dict[str, str]) -> tuple[str, str]:
         locale_path = BASE_DIR / "locales" / lang
         template_path = locale_path / f"{template_name}_email.html"
         lang_path = locale_path / "lang.json"
 
-        template = template_path.read_text()
         locale = json_loads(lang_path.read_text())
+        subject: str = locale["subjects"][template_name]
+        subject = self.__create_subject(subject.format_map(formats))
 
-        return locale["subjects"][template_name], template
+        template = template_path.read_text()
+        template = template.format_map(formats)
+
+        return subject, template
 
     def __create_subject(self, subject: str) -> str:
         return f"[{PROJECT_NAME.capitalize()}] {subject}"

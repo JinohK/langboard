@@ -84,7 +84,7 @@ async def add_new_email(
         user_or_bot, cache_key, QUERY_NAMES.SUB_EMAIL_VERIFY_TOKEN, {"email": form.new_email}
     )
     result = await service.email.send_template(
-        user_or_bot.preferred_lang, form.new_email, "subemail", {"url": token_url}
+        user_or_bot.preferred_lang, form.new_email, "subemail", {"recipient": user_or_bot.firstname, "url": token_url}
     )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)

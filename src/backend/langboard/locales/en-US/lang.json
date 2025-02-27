@@ -3,12 +3,12 @@
     "recovery": "Reset your password",
     "signup": "Activate your account",
     "subemail": "Verify your new email",
-    "project_invitation": "You have been invited to a project",
-    "assigned_to_card": "You have been assigned to a card",
-    "mentioned_at_card": "You have been mentioned at a card",
-    "mentioned_at_comment": "You have been mentioned at a comment",
-    "mentioned_at_wiki": "You have been mentioned at a wiki",
-    "notified_from_checklist": "You have been notified from a checklist",
-    "reacted_to_comment": "Your comment has been reacted"
+    "project_invitation": "{sender} invited to a project",
+    "assigned_to_card": "{sender} assigned to a card",
+    "mentioned_at_card": "{sender} mentioned you in a card",
+    "mentioned_at_comment": "{sender} mentioned you in a comment",
+    "mentioned_at_wiki": "{sender} mentioned you you in a wiki",
+    "notified_from_checklist": "{sender} notified you from checklist",
+    "reacted_to_comment": "{sender} reacted to your comment"
   }
 }

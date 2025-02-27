@@ -49,6 +49,9 @@ class Bot(SoftDeleteModel, table=True):
 
         return schema
 
+    def get_fullname(self) -> str:
+        return f"{self.name}"
+
     def api_response(self, is_setting: bool = False) -> dict[str, Any]:
         if self.deleted_at is not None:
             return self.create_unknown_bot_api_response()

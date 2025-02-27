@@ -32,6 +32,7 @@ FRONTEND_REDIRECT_URL = f"{PUBLIC_FRONTEND_URL}/redirect"
 ENVIRONMENT = _get_env("ENVIRONMENT", "local")
 PROJECT_NAME = _get_env("PROJECT_NAME")
 PROJECT_VERSION = metadata.version(PROJECT_NAME)
+IS_BUNDLE = _get_env("IS_BUNDLE", "false") == "true"
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")

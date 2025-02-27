@@ -274,6 +274,10 @@ class NotificationService(BaseService):
             else None
         )
 
+        if email_formats:
+            email_formats["recipient"] = target_user.firstname
+            email_formats["sender"] = notifier.get_fullname()
+
         model = NotificationPublishModel(
             notifier=notifier,
             target_user=target_user,

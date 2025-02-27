@@ -171,7 +171,16 @@ class ProjectInvitationService(BaseService):
                 await notification_service.notify_project_invited(user, target_user, project, invitation)
 
             token_url = await self.__create_invitation_token_url(invitation)
-            await email_service.send_template(preferred_lang, email, "project_invitation", {"url": token_url})
+            await email_service.send_template(
+                preferred_lang,
+                email,
+                "project_invitation",
+                {
+                    "recipient": target_user.firstname if target_user else "there",
+                    "sender": user.get_fullname(),
+                    "url": token_url,
+                },
+            )
             urls[email] = token_url
 
         return True, urls

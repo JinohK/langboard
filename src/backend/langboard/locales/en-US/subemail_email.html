@@ -1,1 +1,59 @@
-{url}
+<div style="
+		max-width: 600px;
+		margin: 20px auto;
+		background-color: #ffffff;
+		padding: 20px;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	">
+    <div style="
+			display: flex;
+			align-items: center;
+			border-bottom: 2px solid #8054ff;
+			padding-bottom: 10px;
+		">
+        <img src="{logo_url}" alt="{app_name} Logo" style="width: 40px; height: 40px; margin-right: 10px" />
+        <h2 style="margin: 0; font-size: 20px; color: #333">{app_name}</h2>
+    </div>
+    <section style="padding: 10px 0; font-size: 16px; color: #333">
+        <p style="margin: 16px 0">
+            Hi,
+            <span style="color: #8054ff; text-decoration: none">{recipient}</span>
+        </p>
+        <p style="margin: 16px 0">
+            You've added a new email address to your account.
+        </p>
+        <p style="margin: 16px 0">
+            To use this email address, you need to verify it.
+        </p>
+        <p style="margin: 16px 0">
+            Click the button below to verify your email address.
+        </p>
+        <p style="margin: 16px 0; font-size: 12px; color: #999">
+            This link will expire in 24 hours.
+        </p>
+        <p style="margin: 12px 0; font-size: 12px; color: #999">
+            If the link expires, you should request a new one.
+        </p>
+    </section>
+    <div style="text-align: center">
+        <a href="{url}" style="
+				width: 100%;
+				display: inline-block;
+				background-color: #8054ff;
+				color: #ffffff;
+				text-decoration: none;
+				padding: 12px 24px;
+				border-radius: 5px;
+				font-size: 16px;
+				font-weight: bold;
+				box-sizing: border-box;
+			">Verify Email Address
+        </a>
+    </div>
+    <section style="padding: 10px 0; font-size: 16px; color: #333">
+        <p style="margin: 16px 0">
+            {app_name} Team
+        </p>
+    </section>
+</div>

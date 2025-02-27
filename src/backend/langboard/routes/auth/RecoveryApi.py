@@ -32,7 +32,9 @@ async def send_recovery_link(form: SendResetLinkForm, service: Service = Service
 
     token_url = await service.user.create_token_url(user, cache_key, QUERY_NAMES.RECOVERY_TOKEN)
 
-    result = await service.email.send_template(user.preferred_lang, user.email, "recovery", {"url": token_url})
+    result = await service.email.send_template(
+        user.preferred_lang, user.email, "recovery", {"recipient": user.firstname, "url": token_url}
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
