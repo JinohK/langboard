@@ -90,8 +90,9 @@ S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
 
 # SMTP
 MAIL_FROM = _get_env("MAIL_FROM")
-MAIL_USERNAME = _get_env("MAIL_USERNAME")
-MAIL_PASSWORD = _get_env("MAIL_PASSWORD")
+MAIL_FROM_NAME = _get_env("MAIL_FROM_NAME", f"{PROJECT_NAME.capitalize()} Team")
+MAIL_USERNAME = _get_env("MAIL_USERNAME", "")
+MAIL_PASSWORD = _get_env("MAIL_PASSWORD", "")
 MAIL_SERVER = _get_env("MAIL_SERVER")
 MAIL_PORT = _get_env("MAIL_PORT")
 MAIL_STARTTLS = _get_env("MAIL_STARTTLS") == "true"

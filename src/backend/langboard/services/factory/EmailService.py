@@ -4,6 +4,7 @@ from pydantic import SecretStr
 from ...Constants import (
     BASE_DIR,
     MAIL_FROM,
+    MAIL_FROM_NAME,
     MAIL_PASSWORD,
     MAIL_PORT,
     MAIL_SERVER,
@@ -49,7 +50,10 @@ class EmailService(BaseService):
         fm = FastMail(self.__config)
         try:
             await fm.send_message(message)
-        except Exception:
+        except Exception as e:
+            from ...core.logger import Logger
+
+            Logger.main.error(e)
             return False
 
         return True
@@ -61,12 +65,14 @@ class EmailService(BaseService):
         try:
             self.__config = ConnectionConfig(
                 MAIL_FROM=MAIL_FROM,
+                MAIL_FROM_NAME=MAIL_FROM_NAME,
                 MAIL_USERNAME=MAIL_USERNAME,
                 MAIL_PASSWORD=SecretStr(MAIL_PASSWORD),
                 MAIL_PORT=int(MAIL_PORT),
                 MAIL_SERVER=MAIL_SERVER,
                 MAIL_STARTTLS=MAIL_STARTTLS,
                 MAIL_SSL_TLS=MAIL_SSL_TLS,
+                USE_CREDENTIALS=bool(MAIL_USERNAME) and bool(MAIL_PASSWORD),
                 TIMEOUT=5,
             )
             return True

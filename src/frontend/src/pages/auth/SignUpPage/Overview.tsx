@@ -73,7 +73,10 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                 moveStep(values, ROUTES.SIGN_UP.REQUIRED, { email: t("signUp.errors.invalid.email-exists") });
             },
             [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email } });
+                setTimeout(() => {
+                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                }, 0);
             },
         },
         useDefaultBadRequestHandler: true,
