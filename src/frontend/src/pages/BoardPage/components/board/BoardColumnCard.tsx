@@ -1,4 +1,4 @@
-import { Box, Button, Card, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Separator, Skeleton } from "@/components/base";
+import { Box, Button, Card, Checkbox, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Separator, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { UserAvatarList, SkeletonUserAvatarList, UserAvatarBadgeList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
@@ -414,15 +414,30 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
                 </ScrollArea.Root>
             )}
             {!!checklists.length && (
-                <ul className="list-inside list-disc">
+                <Box>
                     {checklists.map((checklist) => (
-                        <li key={`board-card-preview-checklist-${checklist.uid}`} className="mb-1 text-sm leading-4">
-                            <span className="-ml-2">{checklist.title}</span>
-                        </li>
+                        <Flex key={`board-card-preview-checklist-${checklist.uid}`} items="center" gap="1.5">
+                            <BoardColumnCardPreviewChecklist checklist={checklist} />
+                        </Flex>
                     ))}
-                    {flatChecklists.length > 1 && <Box className="-mt-2">...</Box>}
-                </ul>
+                    {flatChecklists.length > 1 && (
+                        <Box mt="-2" ml="0.5">
+                            ...
+                        </Box>
+                    )}
+                </Box>
             )}
+        </Flex>
+    );
+});
+
+const BoardColumnCardPreviewChecklist = memo(({ checklist }: { checklist: ProjectChecklist.TModel }) => {
+    const isChecked = checklist.useField("is_checked");
+
+    return (
+        <Flex items="center" gap="1.5">
+            <Checkbox checked={isChecked} disabled />
+            <span className="text-sm">{checklist.title}</span>
         </Flex>
     );
 });
