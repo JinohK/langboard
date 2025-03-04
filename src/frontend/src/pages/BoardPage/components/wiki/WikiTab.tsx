@@ -1,8 +1,9 @@
-import { Box, Skeleton, Tabs, Tooltip } from "@/components/base";
+import { Box, Button, IconComponent, Skeleton, Tabs, Tooltip } from "@/components/base";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
+import { cn } from "@/core/utils/ComponentUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { memo } from "react";
@@ -26,7 +27,7 @@ export function SkeletonWikiTab() {
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
     const isInBin = wiki.useField("isInBin");
-    const { disabledReorder, wikiTabListId } = useBoardWiki();
+    const { modeType, wikiTabListId } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
         data: {
@@ -47,7 +48,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     };
 
     const variants = tv({
-        base: "cursor-pointer ring-primary",
+        base: cn("cursor-pointer ring-primary", modeType === "delete" && "pr-1"),
         variants: {
             dragging: {
                 over: "ring-2 opacity-30",
@@ -89,7 +90,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     }
 
     const scrollHorizontal = (event: React.PointerEvent<HTMLElement>) => {
-        if (!disabledReorder) {
+        if (modeType !== "view") {
             return;
         }
 
@@ -112,6 +113,11 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
                                 {forbidden ? t("wiki.Private") : title}
                             </span>
                         </Tooltip.Trigger>
+                        {modeType === "delete" && (
+                            <Button variant="destructiveGhost" size="icon-sm" title={t("common.Delete")} className="ml-2 size-6">
+                                <IconComponent icon="trash-2" size="3" />
+                            </Button>
+                        )}
                     </Tabs.Trigger>
                     <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
                 </Tooltip.Root>

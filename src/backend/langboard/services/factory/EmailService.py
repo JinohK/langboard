@@ -2,7 +2,6 @@ from json import loads as json_loads
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import SecretStr
 from ...Constants import (
-    BASE_DIR,
     MAIL_FROM,
     MAIL_FROM_NAME,
     MAIL_PASSWORD,
@@ -15,7 +14,8 @@ from ...Constants import (
     PUBLIC_FRONTEND_URL,
 )
 from ...core.service import BaseService
-from ...locales.EmailTemplateNames import TEmailTemplateNames
+from ...resources.locales.EmailTemplateNames import TEmailTemplateName
+from ...resources.Resource import get_resource_path
 
 
 class EmailService(BaseService):
@@ -25,7 +25,7 @@ class EmailService(BaseService):
         return "email"
 
     async def send_template(
-        self, lang: str, to: str, template_name: TEmailTemplateNames, formats: dict[str, str]
+        self, lang: str, to: str, template_name: TEmailTemplateName, formats: dict[str, str]
     ) -> bool:
         if not self.__create_config():
             return False
@@ -79,8 +79,8 @@ class EmailService(BaseService):
         except Exception:
             return False
 
-    def __get_template(self, lang: str, template_name: TEmailTemplateNames, formats: dict[str, str]) -> tuple[str, str]:
-        locale_path = BASE_DIR / "locales" / lang
+    def __get_template(self, lang: str, template_name: TEmailTemplateName, formats: dict[str, str]) -> tuple[str, str]:
+        locale_path = get_resource_path("locales", lang)
         template_path = locale_path / f"{template_name}_email.html"
         lang_path = locale_path / "lang.json"
 

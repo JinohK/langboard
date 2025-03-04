@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any, Callable, Sequence, TypeVar, cast, overload
-from pydantic import BaseModel
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ... import models
@@ -166,13 +164,6 @@ class BaseService(ABC):
                 model_class, "id", SnowflakeID.from_short_code(id_param), with_deleted=with_deleted
             )
         return None
-
-    def _convert_to_python(self, data: Any) -> Any:
-        if isinstance(data, BaseModel):
-            return data.model_dump()
-        elif isinstance(data, datetime):
-            return data.isoformat()
-        return data
 
     def _get_model_by_table_name(self, table_name: str) -> type[BaseSqlModel] | None:
         if table_name in self.__tables:

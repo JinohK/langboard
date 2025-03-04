@@ -8,6 +8,10 @@ class CreateModelCommandOptions(BaseCommandOptions):
 
 
 class CreateModelCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
     @property
     def option_class(self) -> type[CreateModelCommandOptions]:
         return CreateModelCommandOptions

@@ -5,6 +5,7 @@ from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
+from ...core.utils.Converter import convert_python_data
 from ...models import Project, ProjectLabel, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
@@ -235,7 +236,7 @@ async def change_project_label_details(
             value = getattr(form, key)
             if value is None:
                 continue
-            response[key] = service.card._convert_to_python(value)
+            response[key] = convert_python_data(value)
         return JsonResponse(content=response)
 
     return JsonResponse(content=result)

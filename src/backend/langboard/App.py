@@ -3,7 +3,7 @@ from typing import Optional, cast
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from socketify import ASGI, AppListenOptions, AppOptions
+from socketify import ASGI, AppListenOptions, AppOptions, asgi
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
@@ -30,6 +30,8 @@ class App:
         task_factory_maxitems: int = 100000,
         is_restarting: bool = False,
     ):
+        asgi.task_wrapper = self._intercept_task_wrapper
+
         self.api = FastAPI(debug=True)
         self.ws = SocketApp()
         self._logger = Logger.main
@@ -102,6 +104,16 @@ class App:
         ).listen(listen_options, listen_log)
 
         self._server.run(workers=self._workers)
+
+    async def _intercept_task_wrapper(self, task):
+        try:
+            return await task
+        except Exception as error:
+            try:
+                # just log in console the error to call attention
+                self._logger.exception("Uncaught Exception: %s" % str(error))
+            finally:
+                return None
 
 
 if __name__ == "__main__":

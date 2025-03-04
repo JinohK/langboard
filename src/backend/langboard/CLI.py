@@ -5,10 +5,9 @@ from os.path import dirname
 from pathlib import Path
 from signal import SIGINT
 from threading import Thread
-from typing import cast
 from sqlalchemy.orm import close_all_sessions
 from .App import App
-from .Constants import HOST, PORT
+from .Constants import HOST, IS_EXECUTABLE, PORT
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
@@ -24,8 +23,9 @@ def execute():
     modules = load_modules(f"core{sep}bootstrap{sep}commands", "Command", BaseCommand, log=False)
     for module in modules.values():
         for command in module:
-            if command.__name__.endswith("Command"):
-                commander.add_commands(command(run_app=_run_app))  # type: ignore
+            if not command.__name__.endswith("Command") or (IS_EXECUTABLE and command.is_only_in_dev()):  # type: ignore
+                continue
+            commander.add_commands(command(run_app=_run_app))  # type: ignore
 
     commander.run()
     return 0
@@ -47,11 +47,14 @@ def _watch(options: RunCommandOptions):
         _close_processes(processes, False)
 
     def callback(_):
-        if options.watch:
+        if not IS_EXECUTABLE and options.watch:
             _close_processes(processes, True)
             processes.extend(_run_workers(options, is_restarting=True))
 
-    start_watch(cast(str, Path(dirname(__file__))), callback, on_close)
+    if IS_EXECUTABLE:
+        start_watch(".", callback, on_close)
+    else:
+        start_watch(Path(dirname(__file__)), callback, on_close)
 
 
 def _run_workers(options: RunCommandOptions, is_restarting: bool = False):

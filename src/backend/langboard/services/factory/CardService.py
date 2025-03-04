@@ -5,6 +5,7 @@ from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
+from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
 from ...models import (
     Card,
@@ -240,7 +241,7 @@ class CardService(BaseService):
             new_value = form[key]
             if old_value == new_value or (key == "title" and not new_value):
                 continue
-            old_card_record[key] = self._convert_to_python(old_value)
+            old_card_record[key] = convert_python_data(old_value)
             setattr(card, key, new_value)
 
         if not old_card_record:
@@ -263,7 +264,7 @@ class CardService(BaseService):
         for key in form:
             if key not in mutable_keys or key not in old_card_record:
                 continue
-            model[key] = self._convert_to_python(getattr(card, key))
+            model[key] = convert_python_data(getattr(card, key))
 
         CardPublisher.updated(project, card, checkitem_cardified_from, model)
 

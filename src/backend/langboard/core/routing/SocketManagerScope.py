@@ -14,7 +14,6 @@ from typing import (
 from fastapi.params import Depends
 from pydantic import BaseModel
 from typing_extensions import _AnnotatedAlias
-from ...Constants import PROJECT_NAME
 from ..logger import Logger
 from .Exception import SocketManagerScopeException
 from .SocketRequest import SocketRequest
@@ -51,7 +50,7 @@ class SocketManagerScope:
         self._param_name = param_name
         self._parameter = parameter
         self._default = self._parameter.default if self._parameter.default != Parameter.empty else None
-        self._logger = Logger.use(f"{PROJECT_NAME}.socket")
+        self._logger = Logger.use("socket")
         self.annotation = self._parameter.annotation
         self._generators: list[tuple[bool, TGenerator]] = generators
 

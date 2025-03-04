@@ -29,6 +29,7 @@ logger = Logger.use("Broker")
 @setup_logging.connect
 def _(*args, **kwargs):
     logger.handlers.clear()
+    logger.handlers.extend(Logger.get_handlers())
     return logger
 
 

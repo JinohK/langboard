@@ -2,6 +2,7 @@ from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
+from ...core.utils.Converter import convert_python_data
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from ...publishers import ProjectLabelPublisher
 from ...tasks.activities import ProjectLabelActivityTask
@@ -143,7 +144,7 @@ class ProjectLabelService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_label_record[key] = self._convert_to_python(old_value)
+            old_label_record[key] = convert_python_data(old_value)
             setattr(label, key, new_value)
 
         if not old_label_record:
@@ -157,7 +158,7 @@ class ProjectLabelService(BaseService):
         for key in mutable_keys:
             if key not in form or key not in old_label_record:
                 continue
-            model[key] = self._convert_to_python(getattr(label, key))
+            model[key] = convert_python_data(getattr(label, key))
 
         ProjectLabelPublisher.updated(project, label, model)
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)

@@ -12,6 +12,8 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
 
+export type TBoardWikiMode = "reorder" | "delete" | "view";
+
 export interface IBoardWikiContext {
     navigate: NavigateFunction;
     projectUID: string;
@@ -24,8 +26,8 @@ export interface IBoardWikiContext {
     editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
     canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
-    disabledReorder: bool;
-    setDisabledReorder: React.Dispatch<React.SetStateAction<bool>>;
+    modeType: TBoardWikiMode;
+    setModeType: React.Dispatch<React.SetStateAction<TBoardWikiMode>>;
     wikiTabListId: string;
 }
 
@@ -50,8 +52,8 @@ const initialContext = {
     editorsRef: { current: {} },
     setCurrentEditor: () => {},
     canAccessWiki: () => false,
-    disabledReorder: true,
-    setDisabledReorder: () => {},
+    modeType: "view" as TBoardWikiMode,
+    setModeType: () => {},
     wikiTabListId: "",
 };
 
@@ -73,7 +75,7 @@ export const BoardWikiProvider = ({
     const [t] = useTranslation();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef("");
-    const [disabledReorder, setDisabledReorder] = useState<bool>(true);
+    const [modeType, setModeType] = useState<TBoardWikiMode>("view");
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
     const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({
         projectUID,
@@ -164,8 +166,8 @@ export const BoardWikiProvider = ({
                 editorsRef,
                 setCurrentEditor,
                 canAccessWiki,
-                disabledReorder,
-                setDisabledReorder,
+                modeType,
+                setModeType,
                 wikiTabListId,
             }}
         >

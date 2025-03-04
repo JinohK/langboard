@@ -1,8 +1,16 @@
-from logging import ERROR, NOTSET, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
+from logging import ERROR, INFO, NOTSET, Handler, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
 from logging import Logger as LoggingLogger
 from rich.logging import RichHandler
 from sentry_sdk import init as sentry_init
-from ...Constants import ENVIRONMENT, FILE_LOGGING_LEVEL, LOGGING_DIR, PROJECT_NAME, SENTRY_DSN, TERMINAL_LOGGING_LEVEL
+from ...Constants import (
+    ENVIRONMENT,
+    FILE_LOGGING_LEVEL,
+    IS_EXECUTABLE,
+    LOGGING_DIR,
+    PROJECT_NAME,
+    SENTRY_DSN,
+    TERMINAL_LOGGING_LEVEL,
+)
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .LogFileHandler import LogFileHandler
 
@@ -25,26 +33,11 @@ class Logger:
     main: LoggingLogger
 
     def __init__(self):
-        levels = getLevelNamesMapping()
-        terminal_level = (
-            levels[TERMINAL_LOGGING_LEVEL]
-            if TERMINAL_LOGGING_LEVEL in levels
-            else (levels["ERROR"] if ENVIRONMENT == "production" else levels["DEBUG"])
-        )
-        file_level = (
-            levels[FILE_LOGGING_LEVEL]
-            if FILE_LOGGING_LEVEL in levels
-            else (levels["ERROR"] if ENVIRONMENT == "production" else levels["WARNING"])
-        )
-
         basicConfig(
-            level=terminal_level,
-            format="%(asctime)s %(name)s: %(message)s",
+            level=self.terminal_level,
+            format="%(name)s: %(message)s",
             datefmt="[%Y-%m-%d %X]",
-            handlers=[
-                RichHandler(level=terminal_level, markup=True, rich_tracebacks=True, tracebacks_show_locals=True),
-                LogFileHandler(level=file_level, log_dir=LOGGING_DIR),
-            ],
+            handlers=self.get_handlers(),
         )
 
         self.main = getLogger(PROJECT_NAME)
@@ -66,8 +59,45 @@ class Logger:
                 environment=ENVIRONMENT if ENVIRONMENT == "production" else "development",
             )
 
+    @property
+    def terminal_level(self) -> int:
+        levels = getLevelNamesMapping()
+        return (
+            levels[TERMINAL_LOGGING_LEVEL]
+            if TERMINAL_LOGGING_LEVEL in levels
+            else (levels["INFO"] if ENVIRONMENT == "production" else levels["DEBUG"])
+        )
+
+    @property
+    def file_level(self) -> int:
+        levels = getLevelNamesMapping()
+        return (
+            levels[FILE_LOGGING_LEVEL]
+            if FILE_LOGGING_LEVEL in levels
+            else (levels["ERROR"] if ENVIRONMENT == "production" else levels["WARNING"])
+        )
+
     def use(self, name: str) -> LoggingLogger:
         """Returns a logger with the given name."""
         if name == "main":
             return self.main
         return getLogger(f"{PROJECT_NAME}.{name}")
+
+    def get_handlers(self) -> list[Handler]:
+        handlers = [
+            RichHandler(
+                level=self.terminal_level,
+                omit_repeated_times=False,
+                markup=True,
+                rich_tracebacks=True,
+                tracebacks_show_locals=True,
+            ),
+            LogFileHandler(level=self.file_level, log_dir=LOGGING_DIR),
+        ]
+
+        if IS_EXECUTABLE:
+            handlers.append(
+                LogFileHandler(level=INFO, log_dir=LOGGING_DIR / "executable", is_terminal=True),
+            )
+
+        return handlers

@@ -6,6 +6,7 @@ from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
+from ...core.utils.Converter import convert_python_data
 from ...models import (
     Card,
     CardAttachment,
@@ -244,7 +245,7 @@ async def change_card_details(
             value = getattr(form, key)
             if value is None and key != "deadline_at":
                 continue
-            response[key] = service.card._convert_to_python(value)
+            response[key] = convert_python_data(value)
         return JsonResponse(content=response)
 
     return JsonResponse(content=result)

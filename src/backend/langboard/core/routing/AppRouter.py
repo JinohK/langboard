@@ -1,11 +1,10 @@
 from enum import Enum
 from typing import Any, Callable, TypeVar, cast, overload
 from fastapi import APIRouter, FastAPI
-from pkg_resources import require
 from pydantic import BaseModel
 from socketify import App as SocketifyApp
 from socketify import OpCode
-from ...Constants import PROJECT_NAME
+from ...Constants import PROJECT_NAME, PROJECT_VERSION
 from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
@@ -99,10 +98,9 @@ class AppRouter:
         if app.openapi_schema:
             openapi_schema = app.openapi_schema
         else:
-            version = require(PROJECT_NAME)[0].version
             openapi_schema = get_openapi(
                 title=PROJECT_NAME.capitalize(),
-                version=version,
+                version=PROJECT_VERSION,
                 routes=app.routes,
             )
 

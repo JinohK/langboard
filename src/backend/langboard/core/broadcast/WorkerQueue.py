@@ -4,7 +4,7 @@ from multiprocessing import Queue
 from time import sleep
 from typing import Any, Callable, Coroutine, cast
 from ..utils.decorators import class_instance, thread_safe_singleton
-from .DispatcherModel import DispatcherModel
+from .DispatcherModel import load_model
 
 
 @class_instance()
@@ -23,21 +23,24 @@ class WorkerQueue:
                 continue
 
             try:
-                dispatcher_model_json: str = self.queue.get()
-                if not isinstance(dispatcher_model_json, str):
+                data_file_name: str = self.queue.get()
+                if not isinstance(data_file_name, str):
                     raise TypeError
             except Exception:
                 continue
 
-            if dispatcher_model_json == "EOF":
+            if data_file_name == "EOF":
                 self.queue.close()
                 break
 
             try:
-                model = DispatcherModel.model_validate_json(dispatcher_model_json)
+                model = load_model(data_file_name)
+                if not model:
+                    raise ValueError("")
+
                 consumer = self.__consumers.get(model.event, None)
                 if not consumer:
-                    raise NameError
+                    raise NameError("")
 
                 if iscoroutinefunction(consumer):
                     async_run(consumer(model.data))

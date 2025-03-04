@@ -15,6 +15,10 @@ class BaseCommand(ABC, Generic[_TOption]):
         self._args = args
         self._kwargs = kwargs
 
+    @staticmethod
+    @abstractmethod
+    def is_only_in_dev() -> bool: ...
+
     @property
     @abstractmethod
     def option_class(self) -> type[_TOption]: ...

@@ -7,6 +7,7 @@ from ...core.routing.Exception import MissingException
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.storage import Storage, StorageName
+from ...core.utils.Converter import convert_python_data
 from ...models import ProjectRole, ProjectWiki, ProjectWikiAttachment
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
@@ -163,7 +164,7 @@ async def change_project_wiki_details(
             value = getattr(form, key)
             if value is None:
                 continue
-            response[key] = service.project_wiki._convert_to_python(value)
+            response[key] = convert_python_data(value)
         return JsonResponse(content=response)
 
     return JsonResponse(content=result)

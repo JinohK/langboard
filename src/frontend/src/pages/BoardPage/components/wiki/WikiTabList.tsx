@@ -30,7 +30,7 @@ export function SkeletonWikiTabList() {
 }
 
 const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
-    const { projectUID, wikis: flatWikis, socket, disabledReorder } = useBoardWiki();
+    const { projectUID, wikis: flatWikis, socket, modeType } = useBoardWiki();
     const [t] = useTranslation();
     const { mutate: changeWikiOrderMutate } = useChangeWikiOrder();
     const moreDroppableZoneCallbacksRef = useRef<TMoreWikiTabDropzonCallbacks>({});
@@ -121,7 +121,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
             onDragOver={onDragOverOrMove}
             onDragCancel={onDragCancel}
         >
-            <SortableContext items={wikisUIDs} strategy={horizontalListSortingStrategy} disabled={disabledReorder}>
+            <SortableContext items={wikisUIDs} strategy={horizontalListSortingStrategy} disabled={modeType !== "reorder"}>
                 {wikis.map((wiki) => (
                     <WikiTab key={`board-wiki-${wiki.uid}-tab`} changeTab={changeTab} wiki={wiki} />
                 ))}

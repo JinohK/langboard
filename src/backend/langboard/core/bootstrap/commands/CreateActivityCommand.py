@@ -7,6 +7,10 @@ class CreateActivityCommandOptions(BaseCommandOptions):
 
 
 class CreateActivityCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
     @property
     def option_class(self) -> type[CreateActivityCommandOptions]:
         return CreateActivityCommandOptions

@@ -8,7 +8,6 @@ from ...core.service import BaseService, NotificationPublishModel, NotificationP
 from ...core.utils.DateTime import now
 from ...core.utils.EditorContentParser import change_date_element, find_mentioned
 from ...core.utils.String import concat
-from ...locales.EmailTemplateNames import TEmailTemplateNames
 from ...models import (
     Card,
     CardComment,
@@ -20,6 +19,7 @@ from ...models import (
     UserNotification,
 )
 from ...models.UserNotification import NotificationType
+from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
@@ -231,7 +231,7 @@ class NotificationService(BaseService):
         notification_type: NotificationType,
         scope_models: list[BaseSqlModel],
         record_with_key_names: list[tuple[_TModel, str]],
-        email_template_name: TEmailTemplateNames,
+        email_template_name: TEmailTemplateName,
         email_formats: dict[str, str],
     ):
         if not editor or not editor.content:
@@ -257,7 +257,7 @@ class NotificationService(BaseService):
         scope_models: list[BaseSqlModel] | None,
         record_with_key_names: list[tuple[_TModel, str]],
         message_vars: dict[str, Any] | None = None,
-        email_template_name: TEmailTemplateNames | None = None,
+        email_template_name: TEmailTemplateName | None = None,
         email_formats: dict[str, str] | None = None,
     ) -> UserNotification | None:
         target_user = cast(User, await self._get_by_param(User, target_user))

@@ -8,12 +8,13 @@ from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.security import Auth
 from ...core.service import BaseService
 from ...core.storage import FileModel
+from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...locales.LangEnum import LangEnum
 from ...models import UserEmail, UserProfile
 from ...publishers import UserPublisher
+from ...resources.locales.LangEnum import LangEnum
 from ...tasks.activities import UserActivityTask
 
 
@@ -165,7 +166,7 @@ class UserService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_user_record[key] = self._convert_to_python(old_value)
+            old_user_record[key] = convert_python_data(old_value)
             setattr(user, key, new_value)
 
         for key in profile_mutable_keys:
@@ -175,11 +176,11 @@ class UserService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_user_record[key] = self._convert_to_python(old_value)
+            old_user_record[key] = convert_python_data(old_value)
             setattr(profile, key, new_value)
 
         if "delete_avatar" in form and form["delete_avatar"]:
-            old_user_record["avatar"] = self._convert_to_python(user.avatar)
+            old_user_record["avatar"] = convert_python_data(user.avatar)
             user.avatar = None
 
         if not old_user_record:
@@ -198,7 +199,7 @@ class UserService(BaseService):
             if key == "avatar":
                 model[key] = user.avatar.path if user.avatar else None
             else:
-                model[key] = self._convert_to_python(getattr(user, key))
+                model[key] = convert_python_data(getattr(user, key))
 
         UserPublisher.updated(user, model)
 

@@ -1,8 +1,9 @@
 from enum import Enum
-from importlib import metadata
+from importlib.metadata import version
 from os import environ
 from os.path import dirname
 from pathlib import Path
+from sys import executable
 from typing import Any, Literal, cast
 
 
@@ -14,12 +15,14 @@ def _get_env(name: str, default: Any = None) -> Any | str:
     return default if is_default else environ[name]
 
 
+IS_EXECUTABLE = _get_env("IS_EXECUTABLE", "false") == "true"
+
 # Project
 PROJECT_NAME = _get_env("PROJECT_NAME")
 
 # Directory
-BASE_DIR = Path(dirname(__file__))
-DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local"
+BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
+DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
 
 # URL
 HOST = _get_env("BACKEND_HOST", "localhost")
@@ -31,8 +34,7 @@ FRONTEND_REDIRECT_URL = f"{PUBLIC_FRONTEND_URL}/redirect"
 # Environment
 ENVIRONMENT = _get_env("ENVIRONMENT", "local")
 PROJECT_NAME = _get_env("PROJECT_NAME")
-PROJECT_VERSION = metadata.version(PROJECT_NAME)
-IS_BUNDLE = _get_env("IS_BUNDLE", "false") == "true"
+PROJECT_VERSION = version(PROJECT_NAME)
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")

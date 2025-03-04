@@ -8,6 +8,10 @@ class CreateServiceCommandOptions(BaseCommandOptions):
 
 
 class CreateServiceCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
     @property
     def option_class(self) -> type[CreateServiceCommandOptions]:
         return CreateServiceCommandOptions

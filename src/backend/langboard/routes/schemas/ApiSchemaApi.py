@@ -1,10 +1,10 @@
 from json import dumps as json_dumps
 from re import findall as re_findall
 from typing import Any, Literal, cast
-from datamodel_code_generator.parser.jsonschema import JsonSchemaParser
 from fastapi import Query, status
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
+from ...core.utils.datamodel.parser.jsonschema import JsonSchemaParser
 
 
 PATH_PARAM_PATTERN = r"\{([^}]+)\}"

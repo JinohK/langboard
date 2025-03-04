@@ -4,6 +4,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from ...core.ai import Bot
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
+from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
@@ -309,7 +310,7 @@ class ProjectService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_project_record[key] = self._convert_to_python(old_value)
+            old_project_record[key] = convert_python_data(old_value)
             setattr(project, key, new_value)
 
         if not old_project_record:
@@ -323,7 +324,7 @@ class ProjectService(BaseService):
         for key in mutable_keys:
             if key not in form or key not in old_project_record:
                 continue
-            model[key] = self._convert_to_python(getattr(project, key))
+            model[key] = convert_python_data(getattr(project, key))
 
         ProjectPublisher.updated(project, model)
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)

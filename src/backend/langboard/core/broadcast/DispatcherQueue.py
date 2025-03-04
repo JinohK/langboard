@@ -1,7 +1,7 @@
 from multiprocessing import Queue
 from typing import Any, overload
 from ..utils.decorators import class_instance, thread_safe_singleton
-from .DispatcherModel import DispatcherModel
+from .DispatcherModel import DispatcherModel, record_model
 
 
 @class_instance()
@@ -23,17 +23,10 @@ class DispatcherQueue:
         if not self.__worker_queues:
             return
 
-        if isinstance(event, str):
-            if data is None:
-                data = {}
-            model = DispatcherModel(event=event, data=data)
-        else:
-            model = event
-
-        json_data = model.model_dump_json()
+        data_file_name = record_model(event, data)
         for worker_queue in self.__worker_queues:
             try:
-                worker_queue.put(json_data)
+                worker_queue.put(data_file_name)
             except Exception:
                 continue
 

@@ -7,6 +7,10 @@ class CreatePublisherCommandOptions(BaseCommandOptions):
 
 
 class CreatePublisherCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
     @property
     def option_class(self) -> type[CreatePublisherCommandOptions]:
         return CreatePublisherCommandOptions

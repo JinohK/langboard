@@ -38,8 +38,13 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
         setIsOpened(isOpened);
     };
 
+    const changeIsOpenedWithoutSave = (isOpened: bool) => {
+        setSelectedRelationshipUID(selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1]);
+        setIsOpened(isOpened);
+    };
+
     return (
-        <Dialog.Root open={isOpened} onOpenChange={changeIsOpened}>
+        <Dialog.Root open={isOpened} onOpenChange={changeIsOpenedWithoutSave}>
             <Dialog.Content aria-describedby="" withCloseButton={false} viewportId="select-relationship-dialog">
                 <Dialog.Title hidden />
                 <Dialog.Description hidden />
@@ -77,6 +82,14 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
                     </Flex>
                 </ScrollArea.Root>
                 <Flex items="center" justify="end" gap="1" mt="2">
+                    {!!selectedRelationshipUID && (
+                        <Button type="button" size="sm" variant="destructive" onClick={() => setSelectedRelationshipUID(undefined)}>
+                            {t("common.Clear")}
+                        </Button>
+                    )}
+                    <Button type="button" size="sm" variant="secondary" onClick={() => changeIsOpenedWithoutSave(false)}>
+                        {t("common.Cancel")}
+                    </Button>
                     <Button type="button" size="sm" onClick={() => changeIsOpened(false)}>
                         {t("common.Save")}
                     </Button>

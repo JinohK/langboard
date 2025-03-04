@@ -3,6 +3,7 @@ from ...core.ai import Bot
 from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
 from ...core.storage import FileModel
+from ...core.utils.Converter import convert_python_data
 from ...models import (
     Project,
     ProjectAssignedBot,
@@ -198,7 +199,7 @@ class ProjectWikiService(BaseService):
             new_value = form[key]
             if old_value == new_value or (key == "title" and not new_value):
                 continue
-            old_wiki_record[key] = self._convert_to_python(old_value)
+            old_wiki_record[key] = convert_python_data(old_value)
             setattr(wiki, key, new_value)
 
         if not old_wiki_record:
@@ -212,7 +213,7 @@ class ProjectWikiService(BaseService):
         for key in form:
             if key not in mutable_keys or key not in old_wiki_record:
                 continue
-            model[key] = self._convert_to_python(getattr(wiki, key))
+            model[key] = convert_python_data(getattr(wiki, key))
 
         ProjectWikiPublisher.updated(project, wiki, model)
 

@@ -28,7 +28,7 @@ const WikiList = memo(() => {
     const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const [wikiUID, setWikiUID] = useState(location.pathname.split("/")[4]);
-    const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, disabledReorder, setDisabledReorder, wikiTabListId } = useBoardWiki();
+    const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, modeType, setModeType, wikiTabListId } = useBoardWiki();
     const paramsLastCheckedRef = useRef("");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
 
@@ -77,11 +77,20 @@ const WikiList = memo(() => {
                 </Box>
                 <Flex h="full" pb="2" gap="1">
                     <Button
-                        variant={disabledReorder ? "ghost" : "default"}
+                        variant={modeType !== "delete" ? "ghost" : "default"}
+                        size="icon-sm"
+                        title={t("wiki.Toggle delete mode")}
+                        titleAlign="end"
+                        onClick={() => setModeType(modeType === "delete" ? "view" : "delete")}
+                    >
+                        <IconComponent icon="trash-2" size="4" />
+                    </Button>
+                    <Button
+                        variant={modeType !== "reorder" ? "ghost" : "default"}
                         size="icon-sm"
                         title={t("wiki.Toggle reorder mode")}
                         titleAlign="end"
-                        onClick={() => setDisabledReorder(() => !disabledReorder)}
+                        onClick={() => setModeType(modeType === "reorder" ? "view" : "reorder")}
                     >
                         <IconComponent icon="replace-all" size="4" />
                     </Button>

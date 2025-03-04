@@ -7,6 +7,10 @@ class CreateRoleCommandOptions(BaseCommandOptions):
 
 
 class CreateRoleCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
     @property
     def option_class(self) -> type[CreateRoleCommandOptions]:
         return CreateRoleCommandOptions

@@ -3,6 +3,7 @@ from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService
 from ...core.setting import AppSetting, AppSettingType
+from ...core.utils.Converter import convert_python_data
 from ...core.utils.String import generate_random_string
 from ...models import GlobalCardRelationshipType
 from ...publishers import AppSettingPublisher
@@ -168,7 +169,7 @@ class AppSettingService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_global_relationship_record[key] = self._convert_to_python(old_value)
+            old_global_relationship_record[key] = convert_python_data(old_value)
             setattr(global_relationship, key, new_value)
 
         if not old_global_relationship_record:
@@ -182,7 +183,7 @@ class AppSettingService(BaseService):
         for key in form:
             if key not in mutable_keys or key not in old_global_relationship_record:
                 continue
-            model[key] = self._convert_to_python(getattr(global_relationship, key))
+            model[key] = convert_python_data(getattr(global_relationship, key))
 
         AppSettingPublisher.global_relationship_updated(global_relationship.get_uid(), model)
 

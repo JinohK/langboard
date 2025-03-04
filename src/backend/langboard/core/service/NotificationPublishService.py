@@ -1,7 +1,7 @@
 from typing import Any
 from pydantic import BaseModel
-from ...locales.EmailTemplateNames import TEmailTemplateNames
 from ...models.UserNotification import NotificationType
+from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ..ai import Bot
 from ..broadcast import DispatcherModel, DispatcherQueue
 from ..db import User
@@ -19,7 +19,7 @@ class NotificationPublishModel(BaseModel):
     message_vars: dict[str, Any] = {}
 
     # email
-    email_template_name: TEmailTemplateNames | None
+    email_template_name: TEmailTemplateName | None
     email_formats: dict[str, str] | None
 
 

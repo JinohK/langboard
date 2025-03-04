@@ -22,14 +22,19 @@ const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardCol
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const columnName = column.useField("name");
+    const isArchiveColumn = column.useField("is_archive");
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName();
-    const canEdit = hasRoleAction(Project.ERoleAction.Update);
+    const canEdit = hasRoleAction(Project.ERoleAction.Update) && !isArchiveColumn;
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => canEdit && !isDragging && !selectCardViewType,
         valueType: "input",
         disableNewLine: true,
         isEditingState,
         save: (value, endCallback) => {
+            if (isArchiveColumn) {
+                return;
+            }
+
             setIsValidating(true);
 
             const promise = changeProjectColumnNameMutateAsync({
@@ -74,6 +79,7 @@ const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardCol
             changeMode={changeMode}
             columnName={columnName}
             disabled={isValidating}
+            isArchive={isArchiveColumn}
             inputRef={valueRef}
         />
     );
@@ -85,20 +91,21 @@ export interface IBoardColumnTitleInput {
     canEdit: bool;
     changeMode: (mode: "edit" | "view") => void;
     columnName: string;
+    isArchive: bool;
     disabled?: bool;
     inputRef: React.RefObject<HTMLInputElement>;
 }
 
 export const BoardColumnTitleInput = memo(
-    ({ isEditing, viewClassName, canEdit, changeMode, columnName, disabled, inputRef }: IBoardColumnTitleInput) => {
+    ({ isEditing, viewClassName, canEdit, changeMode, columnName, isArchive, disabled, inputRef }: IBoardColumnTitleInput) => {
         const [t] = useTranslation();
 
         return (
             <>
-                {!isEditing ? (
+                {!isEditing || isArchive ? (
                     <span
                         {...{ [DISABLE_DRAGGING_ATTR]: "" }}
-                        className={cn("h-7 truncate", viewClassName)}
+                        className={cn("h-7 truncate", isArchive && "text-secondary-foreground/70", viewClassName)}
                         onClick={(e) => {
                             if (!canEdit) {
                                 return;

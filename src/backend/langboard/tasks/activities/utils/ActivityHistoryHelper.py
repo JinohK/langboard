@@ -1,6 +1,7 @@
 from typing import Any
 from ....core.ai import Bot
 from ....core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
+from ....core.utils.Converter import convert_python_data
 from ....core.utils.decorators import staticclass
 from ....core.utils.EditorContentParser import find_mentioned
 from ....models import (
@@ -15,7 +16,6 @@ from ....models import (
     ProjectLabel,
     ProjectWiki,
 )
-from ...utils.TaskDataUtils import TaskDataUtils
 
 
 @staticclass
@@ -139,4 +139,4 @@ class ActivityHistoryHelper:
                 **new_data.model_dump(),
             }
 
-        return TaskDataUtils.convert_to_python(data)
+        return convert_python_data(data)

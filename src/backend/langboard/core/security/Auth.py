@@ -8,9 +8,15 @@ from fastapi.openapi.utils import get_openapi
 from jwt import ExpiredSignatureError, InvalidTokenError
 from jwt import decode as jwt_decode
 from jwt import encode as jwt_encode
-from pkg_resources import require
 from starlette.datastructures import Headers
-from ...Constants import JWT_ALGORITHM, JWT_AT_EXPIRATION, JWT_RT_EXPIRATION, JWT_SECRET_KEY, PROJECT_NAME
+from ...Constants import (
+    JWT_ALGORITHM,
+    JWT_AT_EXPIRATION,
+    JWT_RT_EXPIRATION,
+    JWT_SECRET_KEY,
+    PROJECT_NAME,
+    PROJECT_VERSION,
+)
 from ..ai import Bot
 from ..caching import Cache
 from ..db import DbSession, SnowflakeID, SqlBuilder, User
@@ -266,10 +272,9 @@ class Auth:
         if app.openapi_schema:
             openapi_schema = app.openapi_schema
         else:
-            version = require(PROJECT_NAME)[0].version
             openapi_schema = get_openapi(
                 title=PROJECT_NAME.capitalize(),
-                version=version,
+                version=PROJECT_VERSION,
                 routes=app.routes,
             )
 

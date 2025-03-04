@@ -1,7 +1,7 @@
 from typing import Literal
 
 
-TEmailTemplateNames = Literal[
+TEmailTemplateName = Literal[
     "recovery",
     "signup",
     "subemail",

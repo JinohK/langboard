@@ -5,6 +5,7 @@ from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService
 from ...core.setting import AppSetting
 from ...core.storage import FileModel
+from ...core.utils.Converter import convert_python_data
 from ...core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
 from ...core.utils.String import generate_random_string
 from ...models import ProjectAssignedBot
@@ -90,7 +91,7 @@ class BotService(BaseService):
             new_value = form[key]
             if old_value == new_value or new_value is None:
                 continue
-            old_bot_record[key] = self._convert_to_python(old_value)
+            old_bot_record[key] = convert_python_data(old_value)
             setattr(bot, key, new_value)
 
         if "bot_uname" in form:
@@ -99,7 +100,7 @@ class BotService(BaseService):
                 return False
 
         if "delete_avatar" in form and form["delete_avatar"]:
-            old_bot_record["avatar"] = self._convert_to_python(bot.avatar)
+            old_bot_record["avatar"] = convert_python_data(bot.avatar)
             bot.avatar = None
 
         if not old_bot_record:
@@ -119,14 +120,14 @@ class BotService(BaseService):
                 else:
                     model["deleted_avatar"] = True
             else:
-                model[key] = self._convert_to_python(getattr(bot, key))
+                model[key] = convert_python_data(getattr(bot, key))
 
         BotPublisher.bot_updated(bot.get_uid(), model)
 
         model = {**model}
         for key in unpublishable_keys:
             if key in old_bot_record:
-                model[key] = self._convert_to_python(getattr(bot, key))
+                model[key] = convert_python_data(getattr(bot, key))
 
         return bot, model
 

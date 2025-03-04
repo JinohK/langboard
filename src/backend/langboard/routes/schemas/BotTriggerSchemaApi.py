@@ -1,22 +1,20 @@
 from typing import Any
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
-from pkg_resources import require
-from ...Constants import PROJECT_NAME
+from ...Constants import PROJECT_NAME, PROJECT_VERSION
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
 from ...core.routing import AppRouter, JsonResponse
 from ...models import ProjectLabel
 
 
-@AppRouter.api.get("/schema/bot", response_class=HTMLResponse)
+@AppRouter.api.get("/schema/bot", tags=["Schema"], response_class=HTMLResponse)
 async def bot_docs():
     return get_swagger_ui_html(openapi_url="/schema/bot.json", title=PROJECT_NAME.capitalize())
 
 
-@AppRouter.api.get("/schema/bot.json")
+@AppRouter.api.get("/schema/bot.json", include_in_schema=False)
 async def bot_openapi():
-    version = require(PROJECT_NAME)[0].version
     schemas = Broker.get_schema("bot")
     bot_schema = {
         **Bot.api_schema(),
@@ -50,7 +48,7 @@ async def bot_openapi():
             "openapi": "3.1.0",
             "info": {
                 "title": PROJECT_NAME.capitalize(),
-                "version": version,
+                "version": PROJECT_VERSION,
             },
             "components": {"schemas": schemas},
             "shared": {
@@ -61,7 +59,7 @@ async def bot_openapi():
     )
 
 
-@AppRouter.api.get("/schema/bot/trigger-conditions")
+@AppRouter.api.get("/schema/bot/trigger-conditions", tags=["Schema"])
 async def get_bot_trigger_conditions():
     return JsonResponse(content={"conditions": [condition.value for condition in BotTriggerCondition]})
 

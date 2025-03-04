@@ -1,6 +1,7 @@
 from typing import cast
 from pydantic import Field
 from socketify import AppOptions
+from ....Constants import IS_EXECUTABLE
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from ..WebSocketOptions import WebSocketOptions
 
@@ -50,7 +51,8 @@ class RunCommandOptions(BaseCommandOptions):
         ),
     )
     task_factory_maxitems: int = Field(default=100000, description="Task factory max items")
-    watch: bool = Field(default=False, description="Watch for changes", short="w")  # type: ignore
+    if not IS_EXECUTABLE:
+        watch: bool = Field(default=False, description="Watch for changes", short="w")  # type: ignore
 
     def create_websocket_options(self) -> WebSocketOptions:
         return WebSocketOptions(
@@ -75,6 +77,10 @@ class RunCommandOptions(BaseCommandOptions):
 
 
 class RunCommand(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return False
+
     @property
     def option_class(self) -> type[RunCommandOptions]:
         return RunCommandOptions

@@ -3,7 +3,7 @@ from sys import argv, exit
 from typing import Any, Never
 from pydantic import BaseModel, Field
 from rich import print as rprint
-from ...Constants import PROJECT_NAME
+from ...Constants import PROJECT_NAME, PROJECT_VERSION
 from .BaseCommand import BaseCommand
 from .CLIHelpFormatter import CLIHelpFormatter
 from .CLIRichParser import CLIRichParser
@@ -155,9 +155,7 @@ class Commander:
 
     def __print_version(self):
         from platform import python_implementation, python_version, system
-        from pkg_resources import require
 
-        version = require(PROJECT_NAME)[0].version
         return rprint(
-            f"Running {PROJECT_NAME} {version} with {python_implementation()} {python_version()} on {system()}"
+            f"Running {PROJECT_NAME} {PROJECT_VERSION} with {python_implementation()} {python_version()} on {system()}"
         )
