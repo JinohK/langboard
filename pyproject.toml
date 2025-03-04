@@ -41,15 +41,6 @@ argcomplete = "^3.5.3"
 inflect = "^5.6.2"
 pyyaml = "^6.0.2"
 
-pyinstaller = {version = "^6.12.0", optional = true}
-cryptography = {version = "^44.0.2", optional = true}
-psutil = {version = "^7.0.0", optional = true}
-js = {version = "^1.0", optional = true}
-pystray = {version = "^0.19.5", optional = true}
-plyer = {version = "^2.1.0", optional = true}
-customtkinter = {version = "^5.2.2", optional = true}
-pyobjc = {version = "^11.0", optional = true}
-
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
@@ -58,39 +49,6 @@ pytest-asyncio = "^0.24.0"
 pytest-cov = "^6.0.0"
 ruff = "^0.7.4"
 boto3-stubs = {extras = ["s3"], version = "^1.35.76"}
-
-
-[tool.poetry.extras]
-win = [
-    "pyinstaller",
-    "cryptography",
-    "psutil",
-    "js",
-    "pystray",
-    "plyer",
-    "customtkinter",
-]
-
-macos = [
-    "pyinstaller",
-    "cryptography",
-    "psutil",
-    "js",
-    "pystray",
-    "plyer",
-    "customtkinter",
-    "pyobjc",
-]
-
-linux = [
-    "pyinstaller",
-    "cryptography",
-    "psutil",
-    "js",
-    "pystray",
-    "plyer",
-    "customtkinter",
-]
 
 
 [tool.pytest.ini_options]
