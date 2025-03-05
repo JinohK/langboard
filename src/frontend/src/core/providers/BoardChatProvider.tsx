@@ -51,7 +51,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
             return;
         }
 
-        if (data.message && chatMessage.isPending) {
+        if (data.message?.content && chatMessage.isPending) {
             chatMessage.isPending = undefined;
         }
 

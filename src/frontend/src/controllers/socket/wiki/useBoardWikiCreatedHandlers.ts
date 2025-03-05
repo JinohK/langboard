@@ -21,7 +21,7 @@ const useBoardWikiCreatedHandlers = ({ callback, projectUID }: IUseBoardWikiCrea
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                ProjectWiki.Model.fromObject(data.wiki);
+                ProjectWiki.Model.fromObject(data.wiki, true);
                 return {};
             },
         },

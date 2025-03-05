@@ -176,6 +176,7 @@ class ProjectInvitationService(BaseService):
                 email,
                 "project_invitation",
                 {
+                    "project_title": project.title,
                     "recipient": target_user.firstname if target_user else "there",
                     "sender": user.get_fullname(),
                     "url": token_url,
