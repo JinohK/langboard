@@ -42,7 +42,7 @@ async def is_chat_available(topic: str, topic_id: str):
 async def project_chat(
     ws: WebSocket, topic_id: str, message: str, user: User = Auth.scope("socket"), service: Service = Service.scope()
 ):
-    AppRouter.socket.run_in_thread(run_chat, args=(ws, topic_id, message, user, service))
+    AppRouter.socket.run_in_thread(run_chat, ws, topic_id, message, user, service)
 
 
 async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, service: Service):
@@ -93,14 +93,17 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, servi
         ai_message.message = ChatContentModel(content=stream_or_str)
         ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message.model_dump()})
     else:
+        new_content = ChatContentModel(content="")
         is_received = False
         async for chunk in stream_or_str:
             if await stop_chat_if_cancelled(ws, topic_id, service, ai_message, ws_stream):
                 return
 
             is_received = True
-            ai_message.message.content = concat(ai_message.message.content, chunk)
-            ws_stream.buffer(data={"uid": ai_message_uid, "message": ai_message.message.model_dump()})
+            new_content.content = concat(new_content.content, chunk)
+            ws_stream.buffer(data={"uid": ai_message_uid, "message": new_content.model_dump()})
+
+        ai_message.message = new_content
 
         if not is_received:
             is_cancelled = await stop_chat_if_cancelled(ws, topic_id, service, ai_message, ws_stream)

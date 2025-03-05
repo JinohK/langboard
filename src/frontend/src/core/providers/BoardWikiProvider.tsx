@@ -96,11 +96,11 @@ export const BoardWikiProvider = ({
     useSwitchSocketHandlers({ socket, handlers: [boardWikiCreatedHandlers, projectBotsUpdatedHandlers, projectUsersUpdatedHandlers] });
 
     useEffect(() => {
-        setWikis(flatWikis.sort((a, b) => a.order - b.order));
+        setWikis(() => flatWikis.sort((a, b) => a.order - b.order));
 
         const unsubscribes: (() => void)[] = [];
-        for (let i = 0; i < wikis.length; ++i) {
-            const wiki = wikis[i];
+        for (let i = 0; i < flatWikis.length; ++i) {
+            const wiki = flatWikis[i];
             const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser);
             unsubscribes.push(unsubscribe);
         }

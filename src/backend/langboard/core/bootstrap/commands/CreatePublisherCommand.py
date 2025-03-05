@@ -35,8 +35,8 @@ class CreatePublisherCommand(BaseCommand):
     def store_type(self) -> type[bool] | type[str]:
         return str
 
-    def execute(self, service_name: str, _: CreatePublisherCommandOptions) -> None:
-        name = make_name(service_name, "Publisher")
+    def execute(self, publisher_name: str, _: CreatePublisherCommandOptions) -> None:
+        name = make_name(publisher_name, "Publisher")
 
         formats = {
             "class_name": name,

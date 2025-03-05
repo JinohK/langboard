@@ -92,7 +92,7 @@ const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProp
                     <div className="flex items-center space-x-2">
                         <MessageLoading />
                     </div>
-                ) : message ? (
+                ) : message?.content ? (
                     <Markdown message={message} />
                 ) : (
                     t("common.No message")

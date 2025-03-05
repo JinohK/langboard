@@ -13,6 +13,20 @@ from .Loader import load_modules
 from .middlewares import AuthMiddleware, RoleMiddleware
 
 
+async def _intercept_task_wrapper(task):
+    try:
+        return await task
+    except Exception as error:
+        try:
+            # just log in console the error to call attention
+            Logger.main.exception("Uncaught Exception: %s" % str(error))
+        finally:
+            return None
+
+
+asgi.task_wrapper = _intercept_task_wrapper
+
+
 @singleton
 class App:
     api: FastAPI
@@ -30,8 +44,6 @@ class App:
         task_factory_maxitems: int = 100000,
         is_restarting: bool = False,
     ):
-        asgi.task_wrapper = self._intercept_task_wrapper
-
         self.api = FastAPI(debug=True)
         self.ws = SocketApp()
         self._logger = Logger.main
@@ -104,16 +116,6 @@ class App:
         ).listen(listen_options, listen_log)
 
         self._server.run(workers=self._workers)
-
-    async def _intercept_task_wrapper(self, task):
-        try:
-            return await task
-        except Exception as error:
-            try:
-                # just log in console the error to call attention
-                self._logger.exception("Uncaught Exception: %s" % str(error))
-            finally:
-                return None
 
 
 if __name__ == "__main__":

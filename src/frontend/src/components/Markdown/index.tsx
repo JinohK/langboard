@@ -27,6 +27,13 @@ function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
                 ul({ node, ...props }) {
                     return <ul className="max-w-full">{props.children}</ul>;
                 },
+                table({ node, ...props }) {
+                    return (
+                        <div className="prose prose-invert">
+                            <table>{props.children}</table>
+                        </div>
+                    );
+                },
                 code: ({ node, className, children, ...props }) => {
                     const match = /language-(\w+)/.exec(className || "");
                     return match ? (

@@ -51,6 +51,10 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
             return;
         }
 
+        if (data.message && chatMessage.isPending) {
+            chatMessage.isPending = undefined;
+        }
+
         chatMessage.message = data.message;
     }, []);
     const endCallback = useCallback((data: { uid: string; status: "success" | "failed" | "cancelled" }) => {

@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Sequence, TypeVar, cast, overload
+from typing import Any, Callable, Sequence, TypeVar, overload
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ... import models
-from ..ai import Bot
-from ..db import BaseSqlModel, DbSession, SnowflakeID, SoftDeleteModel, SqlBuilder, User
-from ..setting import AppSetting
+from ..db import BaseSqlModel, DbSession, SnowflakeID, SoftDeleteModel, SqlBuilder
+from ..utils.ModelUtils import get_model_by_table_name
 
 
 _TBaseModel = TypeVar("_TBaseModel", bound=BaseSqlModel)
@@ -22,7 +20,6 @@ class BaseService(ABC):
     def __init__(self, get_service: Callable, get_service_by_name: Callable):
         self._raw_get_service = get_service
         self._get_service_by_name = get_service_by_name
-        self.__tables: dict[str, type[BaseSqlModel]] = {}
 
     def _get_service(self, service: type[_TService]) -> _TService:
         """This method is from :class:`ServiceFactory`.
@@ -50,7 +47,7 @@ class BaseService(ABC):
     async def get_record_by_table_name_with_id(
         self, table_name: str, record_id: SnowflakeID | int
     ) -> BaseSqlModel | None:
-        table = self._get_model_by_table_name(table_name)
+        table = get_model_by_table_name(table_name)
         if not table:
             return None
 
@@ -163,26 +160,6 @@ class BaseService(ABC):
             return await self._get_by(
                 model_class, "id", SnowflakeID.from_short_code(id_param), with_deleted=with_deleted
             )
-        return None
-
-    def _get_model_by_table_name(self, table_name: str) -> type[BaseSqlModel] | None:
-        if table_name in self.__tables:
-            return self.__tables[table_name]
-
-        if table_name == User.__tablename__:
-            self.__tables[table_name] = User
-            return User
-        elif table_name == Bot.__tablename__:
-            self.__tables[table_name] = Bot
-            return Bot
-        elif table_name == AppSetting.__tablename__:
-            self.__tables[table_name] = AppSetting
-            return AppSetting
-        for model_name in models.__all__:
-            model = cast(type[BaseSqlModel], models.__dict__[model_name])
-            if model.__tablename__ == table_name:
-                self.__tables[table_name] = model
-                return model
         return None
 
     def _set_order_in_column(
