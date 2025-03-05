@@ -1,6 +1,6 @@
 from typing import cast
 from ... import models
-from ..ai import Bot, BotSchedule, BotTrigger
+from ..ai import Bot, BotTrigger
 from ..db import BaseSqlModel, User
 from ..setting import AppSetting
 
@@ -21,9 +21,6 @@ def get_model_by_table_name(table_name: str) -> type[BaseSqlModel] | None:
     elif table_name == BotTrigger.__tablename__:
         tables[table_name] = BotTrigger
         return BotTrigger
-    elif table_name == BotSchedule.__tablename__:
-        tables[table_name] = BotSchedule
-        return BotSchedule
     elif table_name == AppSetting.__tablename__:
         tables[table_name] = AppSetting
         return AppSetting
