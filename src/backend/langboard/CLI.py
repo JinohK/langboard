@@ -43,18 +43,17 @@ def _watch(options: RunCommandOptions):
 
     processes = _run_workers(options)
 
-    def on_close():
+    def on_close(*_):
         _close_processes(processes, False)
 
-    def callback(_):
+    def callback(*_):
         if not IS_EXECUTABLE and options.watch:
             _close_processes(processes, True)
             processes.extend(_run_workers(options, is_restarting=True))
 
-    if IS_EXECUTABLE:
-        start_watch(".", callback, on_close)
-    else:
-        start_watch(Path(dirname(__file__)), callback, on_close)
+    watch_path = "." if IS_EXECUTABLE else Path(dirname(__file__))
+
+    start_watch(watch_path, callback, on_close)
 
 
 def _run_workers(options: RunCommandOptions, is_restarting: bool = False):

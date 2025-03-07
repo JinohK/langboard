@@ -18,6 +18,7 @@ from ...Constants import (
     PROJECT_VERSION,
 )
 from ..ai import Bot
+from ..ai.BotOneTimeToken import BotOneTimeToken
 from ..caching import Cache
 from ..db import DbSession, SnowflakeID, SqlBuilder, User
 from ..filter import AuthFilter
@@ -266,6 +267,28 @@ class Auth:
                     return bot
 
         return status.HTTP_401_UNAUTHORIZED
+
+    @staticmethod
+    async def validate_user_by_chatbot(headers: Headers) -> User | Literal[401]:
+        api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
+        if not api_token:
+            return status.HTTP_401_UNAUTHORIZED
+
+        user_uid = await BotOneTimeToken.get_user_uid(api_token)
+        if not user_uid:
+            return status.HTTP_401_UNAUTHORIZED
+
+        try:
+            user_id = SnowflakeID.from_short_code(user_uid)
+            async with DbSession.use() as db:
+                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
+            user = result.first()
+            if not user:
+                return status.HTTP_401_UNAUTHORIZED
+        except Exception:
+            return status.HTTP_401_UNAUTHORIZED
+
+        return user
 
     @staticmethod
     def set_openapi_schema(app: FastAPI):

@@ -1,4 +1,3 @@
-from logging import INFO
 from typing import Optional, cast
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -104,7 +103,7 @@ class App:
                 msg = f"Listening on {config.domain} {'https' if self._ssl_options else 'http'}://localhost"
             else:
                 msg = f"Listening on {'https' if self._ssl_options else 'http'}://{config.host if config.host and len(config.host) > 1 else 'localhost' }:{config.port}"
-            self._logger._log(level=INFO, msg=msg, args=())
+            self._logger.info(msg)
 
         self._server = ASGI(
             self.api,

@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from json import dumps as json_dumps
 from typing import Any, Literal, overload
 from httpx import get, post
 from pydantic import BaseModel
@@ -7,6 +8,7 @@ from requests import Session as HTTPSession
 from ..db import DbSession, SqlBuilder
 from ..setting import AppSetting, AppSettingType
 from ..utils.String import generate_random_string
+from .BotOneTimeToken import BotOneTimeToken
 from .BotResponse import LangflowStreamResponse, get_langflow_output_message
 from .InternalBotType import InternalBotType
 
@@ -14,6 +16,8 @@ from .InternalBotType import InternalBotType
 class LangflowRequestModel(BaseModel):
     flow_id: str
     message: str
+    project_uid: str
+    user_uid: str
     input_type: str | None = None
     output_type: str | None = None
     session_id: str | None = None
@@ -25,8 +29,16 @@ class _LangflowAPIRequestModel:
         self.url = f"{settings[AppSettingType.LangflowUrl]}/api/v1/run/{request_model.flow_id}?stream={use_stream}"
         self.session_id = request_model.session_id if request_model.session_id else generate_random_string(32)
         self.headers = {"Content-Type": "application/json", "x-api-key": settings[AppSettingType.LangflowApiKey]}
+        self.one_time_token = BotOneTimeToken.create_token()
         req_data: dict[str, Any] = {
-            "input_value": request_model.message,
+            "input_value": json_dumps(
+                {
+                    "event": "chat",
+                    "message": request_model.message,
+                    "project_uid": request_model.project_uid,
+                    "one_time_token": self.one_time_token,
+                }
+            ),
             "session": self.session_id,
             "session_id": self.session_id,
         }
@@ -112,11 +124,14 @@ class BaseBot(metaclass=BotMetadata):
 
         api_request_model = _LangflowAPIRequestModel(settings, request_model, use_stream)
 
+        await BotOneTimeToken.set_token(api_request_model.one_time_token, request_model.user_uid)
+
         if use_stream:
             return LangflowStreamResponse(
                 api_request_model.url,
                 api_request_model.headers,
                 api_request_model.req_data,
+                api_request_model.one_time_token,
             )
 
         try:
@@ -127,12 +142,14 @@ class BaseBot(metaclass=BotMetadata):
             )
 
             if res.status_code != 200:
-                return None
+                raise Exception("")
 
             response = res.json()
             return get_langflow_output_message(response)
         except Exception:
-            return None
+            pass
+
+        await BotOneTimeToken.delete_token(api_request_model.one_time_token)
 
     @overload
     async def _run_langflow_abortable(self, task_id: str, request_model: LangflowRequestModel) -> str | None: ...
@@ -155,11 +172,14 @@ class BaseBot(metaclass=BotMetadata):
         session = HTTPSession()
         self.__abortable_tasks[task_id] = [session]
 
+        await BotOneTimeToken.set_token(api_request_model.one_time_token, request_model.user_uid)
+
         if use_stream:
             return LangflowStreamResponse(
                 api_request_model.url,
                 api_request_model.headers,
                 api_request_model.req_data,
+                api_request_model.one_time_token,
             )
 
         try:
@@ -172,12 +192,14 @@ class BaseBot(metaclass=BotMetadata):
             self.__abortable_tasks[task_id].append(res)
 
             if not res.connection.poolmanager.pools or res.status_code != 200:
-                return None
+                raise Exception("")
 
             response = res.json()
             return get_langflow_output_message(response)
         except Exception:
-            return None
+            pass
+
+        await BotOneTimeToken.delete_token(api_request_model.one_time_token)
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
         async with DbSession.use() as db:

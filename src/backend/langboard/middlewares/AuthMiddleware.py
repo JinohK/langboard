@@ -31,23 +31,22 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
         if should_filter:
             headers = Headers(scope=scope)
 
-            if headers.get("X-Api-Token", headers.get("x-api-token")):
-                validation_result = await Auth.validate_bot(headers)
+            validation_result = await self._validate(headers)
+            if isinstance(validation_result, int):
+                response = JsonResponse(content={}, status_code=validation_result)
+                await response(scope, receive, send)
+                return
 
-                if isinstance(validation_result, Bot):
-                    scope["auth"] = validation_result
-                else:
-                    response = JsonResponse(content={}, status_code=validation_result)
-                    await response(scope, receive, send)
-                    return
-            else:
-                validation_result = await Auth.validate(headers)
-
-                if isinstance(validation_result, User):
-                    scope["auth"] = validation_result
-                else:
-                    response = JsonResponse(content={}, status_code=validation_result)
-                    await response(scope, receive, send)
-                    return
+            scope["auth"] = validation_result
 
         await self.app(scope, receive, send)
+
+    async def _validate(self, headers: Headers) -> User | Bot | int:
+        if headers.get("X-Api-Token", headers.get("x-api-token")):
+            validation_result = await Auth.validate_user_by_chatbot(headers)
+            if isinstance(validation_result, User):
+                return validation_result
+
+            return await Auth.validate_bot(headers)
+
+        return await Auth.validate(headers)

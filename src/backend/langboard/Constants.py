@@ -17,9 +17,6 @@ def _get_env(name: str, default: Any = None) -> Any | str:
 
 IS_EXECUTABLE = _get_env("IS_EXECUTABLE", "false") == "true"
 
-# Project
-PROJECT_NAME = _get_env("PROJECT_NAME")
-
 # Directory
 BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
 DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local" if not IS_EXECUTABLE else BASE_DIR / "data"

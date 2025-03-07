@@ -51,6 +51,7 @@ const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
             },
             success: (data) => {
                 setTimeout(() => {
+                    bot.app_api_token = data.secret_app_api_token;
                     setRevealedToken(data.revealed_app_api_token);
                     setOpened(true);
                 }, 0);

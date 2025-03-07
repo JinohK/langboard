@@ -3,15 +3,12 @@ from pydantic import BaseModel
 from .InternalBotType import InternalBotType
 
 
-class ProjectDataModel(BaseModel):
-    title: str
-    description: str
-    project_type: str
-
-
-class ProjectChatDataModel(BaseModel):
+class BaseDataModel(BaseModel):
     project_uid: str
     user_uid: str
+
+
+class ProjectChatDataModel(BaseDataModel):
     message: str
 
 
@@ -20,12 +17,12 @@ class EditorChatDataMessageModel(BaseModel):
     content: str
 
 
-class EditorChatDataModel(BaseModel):
+class EditorChatDataModel(BaseDataModel):
     messages: list[EditorChatDataMessageModel]
     system: str
 
 
-class EditorCopilotDataModel(BaseModel):
+class EditorCopilotDataModel(BaseDataModel):
     prompt: str
     system: str
 

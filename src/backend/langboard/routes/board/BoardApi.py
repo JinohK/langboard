@@ -130,6 +130,33 @@ async def clear_project_chat(
 
 @AppRouter.schema()
 @AppRouter.api.get(
+    "/board/{project_uid}/columns",
+    tags=["Board"],
+    description="Get project columns.",
+    responses=(
+        OpenApiSchema()
+        .suc({"columns": [ProjectColumn]})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_columns(
+    project_uid: str,
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    columns = await service.project_column.get_list(project)
+    return JsonResponse(content={"columns": columns})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
     "/board/{project_uid}/cards",
     tags=["Board"],
     description="Get project cards.",
