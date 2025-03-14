@@ -11,8 +11,7 @@ _TException = TypeVar("_TException", bound=Exception)
 
 
 class EventBaseSocketException(ABC, Exception, Generic[_TException]):
-    def __init__(self, route: str, event: str, func: str, exception: _TException) -> None:
-        self._route = route
+    def __init__(self, event: str, func: str, exception: _TException) -> None:
         self._event = event
         self._func = func
         self._formatted_exception = format_exc()
@@ -33,7 +32,6 @@ class SocketStatusCodeException(Exception):
 class SocketEventException(EventBaseSocketException):
     def __str__(self) -> str:
         messages = [
-            f"Route: {self._route}",
             f"Event: {self._event}",
             f"Function: {self._func}",
             f"Exception:\n{self._formatted_exception}",
@@ -44,15 +42,14 @@ class SocketEventException(EventBaseSocketException):
 class SocketManagerScopeException(EventBaseSocketException[_TException], Generic[_TException]):
     raw_exception: _TException
 
-    def __init__(self, route: str, event: str, func: str, param: str, exception: _TException) -> None:
-        super().__init__(route, event, func, exception)
+    def __init__(self, event: str, func: str, param: str, exception: _TException) -> None:
+        super().__init__(event, func, exception)
         self._event = event
         self._func = func
         self._param = param
 
     def __str__(self) -> str:
         messages = [
-            f"Route: {self._route}",
             f"Event: {self._event}",
             f"Function: {self._func}",
             f"Parameter: {self._param}",
