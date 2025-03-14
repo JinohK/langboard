@@ -15,19 +15,19 @@ class EdiitorSocketEventCreator:
     async def chat(
         self,
         ws: WebSocket,
-        topic_id: str,
+        project_uid: str,
         messages: list[EditorChatDataMessageModel],
         system: str,
         user: User = Auth.scope("socket"),
     ):
         form = {"messages": messages, "system": system}
-        AppRouter.socket.run_in_thread(self._chat, ws, topic_id, form, user)
+        AppRouter.socket.run_in_thread(self._chat, ws, project_uid, form, user)
 
     async def copilot(
-        self, ws: WebSocket, topic_id: str, prompt: str, system: str, key: str, user: User = Auth.scope("socket")
+        self, ws: WebSocket, project_uid: str, prompt: str, system: str, key: str, user: User = Auth.scope("socket")
     ):
         form = {"prompt": prompt, "system": system}
-        AppRouter.socket.run_in_thread(self._copilot, ws, topic_id, form, key, user)
+        AppRouter.socket.run_in_thread(self._copilot, ws, project_uid, form, key, user)
 
     async def abort_copilot(self, ws: WebSocket, key: str):
         await BotRunner.abort(InternalBotType.EditorCopilot, key)
