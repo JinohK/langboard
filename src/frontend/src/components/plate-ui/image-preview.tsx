@@ -1,7 +1,8 @@
 "use client";
 
-import { cn, createPrimitiveComponent } from "@udecode/cn";
-import { PreviewImage, useImagePreview, useImagePreviewState, useScaleInput, useScaleInputState } from "@udecode/plate-media/react";
+import { cn } from "@udecode/cn";
+import { PreviewImage, useImagePreview, useImagePreviewValue, useScaleInput } from "@udecode/plate-media/react";
+import { useEditorRef } from "@udecode/plate/react";
 import { cva } from "class-variance-authority";
 import { ArrowLeft, ArrowRight, Download, Minus, Plus, X } from "lucide-react";
 
@@ -17,16 +18,13 @@ const toolButtonVariants = cva("rounded bg-[rgba(0,0,0,0.5)] px-1", {
     },
 });
 
-const ScaleInput = createPrimitiveComponent("input")({
-    propsHook: useScaleInput,
-    stateHook: useScaleInputState,
-});
-
 const SCROLL_SPEED = 4;
 
 export const ImagePreview = () => {
-    const state = useImagePreviewState({ scrollSpeed: SCROLL_SPEED });
-
+    const editor = useEditorRef();
+    const isOpen = useImagePreviewValue("isOpen", editor.id);
+    const scale = useImagePreviewValue("scale");
+    const isEditingScale = useImagePreviewValue("isEditingScale");
     const {
         closeProps,
         currentUrlIndex,
@@ -40,12 +38,14 @@ export const ImagePreview = () => {
         zoomInDisabled,
         zoomInProps,
         zoomOutDisabled,
-    } = useImagePreview(state);
-
-    const { isOpen, scale } = state;
+    } = useImagePreview({ scrollSpeed: SCROLL_SPEED });
 
     return (
-        <div className={cn("fixed left-0 top-0 z-50 h-screen w-screen", !isOpen && "hidden")} {...maskLayerProps}>
+        <div
+            className={cn("fixed left-0 top-0 z-50 h-screen w-screen select-none", !isOpen && "hidden")}
+            onContextMenu={(e) => e.stopPropagation()}
+            {...maskLayerProps}
+        >
             <div className="absolute inset-0 size-full bg-black opacity-30"></div>
             <div className="absolute inset-0 size-full bg-black opacity-30"></div>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -93,7 +93,7 @@ export const ImagePreview = () => {
                                 <Minus className="size-4" />
                             </button>
                             <div className="mx-px">
-                                {state.isEditingScale ? (
+                                {isEditingScale ? (
                                     <>
                                         <ScaleInput className="w-10 rounded px-1 text-slate-500 outline" /> <span>%</span>
                                     </>
@@ -126,3 +126,9 @@ export const ImagePreview = () => {
         </div>
     );
 };
+
+export function ScaleInput(props: React.ComponentProps<"input">) {
+    const { props: scaleInputProps, ref } = useScaleInput();
+
+    return <input {...scaleInputProps} {...props} ref={ref} />;
+}

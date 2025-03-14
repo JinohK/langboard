@@ -3,7 +3,6 @@
 import { memo } from "react";
 import { withProps } from "@udecode/cn";
 import { BaseParagraphPlugin, SlateLeaf } from "@udecode/plate";
-import { usePlateEditor } from "@udecode/plate/react";
 import { useAIChatEditor } from "@udecode/plate-ai/react";
 import { BaseBoldPlugin, BaseCodePlugin, BaseItalicPlugin, BaseStrikethroughPlugin, BaseUnderlinePlugin } from "@udecode/plate-basic-marks";
 import { BaseBlockquotePlugin } from "@udecode/plate-block-quote";
@@ -14,6 +13,7 @@ import { BaseIndentPlugin } from "@udecode/plate-indent";
 import { BaseIndentListPlugin } from "@udecode/plate-indent-list";
 import { BaseLinkPlugin } from "@udecode/plate-link";
 import { MarkdownPlugin } from "@udecode/plate-markdown";
+import { usePlateEditor } from "@udecode/plate/react";
 import { TodoLiStatic, TodoMarkerStatic } from "@/components/plate-ui/indent-todo-marker-static";
 import { BlockquoteElementStatic } from "./blockquote-element-static";
 import { CodeBlockElementStatic } from "./code-block-element-static";

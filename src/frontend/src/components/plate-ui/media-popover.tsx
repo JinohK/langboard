@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { type WithRequiredKey } from "@udecode/plate";
-import { useEditorSelector, useElement, useRemoveNodeButton } from "@udecode/plate/react";
-import { FloatingMedia as FloatingMediaPrimitive, floatingMediaActions, useFloatingMediaSelectors } from "@udecode/plate-media/react";
+import type { WithRequiredKey } from "@udecode/plate";
+import { FloatingMedia as FloatingMediaPrimitive, FloatingMediaStore, useFloatingMediaValue, useImagePreviewValue } from "@udecode/plate-media/react";
+import { useEditorRef, useEditorSelector, useElement, useReadOnly, useRemoveNodeButton, useSelected } from "@udecode/plate/react";
 import { Link, Trash2Icon } from "lucide-react";
-import { useReadOnly, useSelected } from "slate-react";
-import { CaptionButton } from "@/components/plate-ui/caption";
-import { Button, ButtonVariants, Popover, Separator } from "@/components/base";
-import { InputVariants } from "@/components/base/Input";
 import { useTranslation } from "react-i18next";
+import { Button, ButtonVariants, Popover, Separator } from "@/components/base";
+import { CaptionButton } from "@/components/plate-ui/caption";
+import { InputVariants } from "@/components/base/Input";
 
 export interface MediaPopoverProps {
     children: React.ReactNode;
@@ -18,16 +17,18 @@ export interface MediaPopoverProps {
 
 export function MediaPopover({ children, plugin }: MediaPopoverProps) {
     const [t] = useTranslation();
+    const editor = useEditorRef();
     const readOnly = useReadOnly();
     const selected = useSelected();
 
     const selectionCollapsed = useEditorSelector((editor) => !editor.api.isExpanded(), []);
-    const isOpen = !readOnly && selected && selectionCollapsed;
-    const isEditing = useFloatingMediaSelectors().isEditing();
+    const isImagePreviewOpen = useImagePreviewValue("isOpen", editor.id);
+    const isOpen = !readOnly && selected && selectionCollapsed && !isImagePreviewOpen;
+    const isEditing = useFloatingMediaValue("isEditing");
 
     useEffect(() => {
         if (!isOpen && isEditing) {
-            floatingMediaActions.isEditing(false);
+            FloatingMediaStore.set("isEditing", false);
         }
     }, [isOpen]);
 
@@ -61,13 +62,11 @@ export function MediaPopover({ children, plugin }: MediaPopoverProps) {
                             {t("editor.Edit link")}
                         </FloatingMediaPrimitive.EditButton>
 
-                        <CaptionButton variant="ghost" size="sm">
-                            {t("editor.Caption")}
-                        </CaptionButton>
+                        <CaptionButton variant="ghost">{t("editor.Caption")}</CaptionButton>
 
                         <Separator orientation="vertical" className="mx-1 h-6" />
 
-                        <Button size="icon-sm" variant="ghost" {...buttonProps}>
+                        <Button size="icon" variant="ghost" {...buttonProps}>
                             <Trash2Icon className="size-4" />
                         </Button>
                     </div>

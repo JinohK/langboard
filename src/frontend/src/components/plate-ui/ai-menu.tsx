@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
 import { type NodeEntry, isHotkey } from "@udecode/plate";
-import { useEditorPlugin, useHotkeys } from "@udecode/plate/react";
 import { AIChatPlugin, useEditorChat, useLastAssistantMessage } from "@udecode/plate-ai/react";
 import { BlockSelectionPlugin, useIsSelecting } from "@udecode/plate-selection/react";
+import { useEditorPlugin, useHotkeys, usePluginOption } from "@udecode/plate/react";
 import { Loader2Icon } from "lucide-react";
 import { IUseChat, useChat } from "@/components/Editor/useChat";
-import { AIChatEditor } from "@/components/plate-ui/ai-chat-editor";
-import { AIMenuItems } from "@/components/plate-ui/ai-menu-items";
+import { AIChatEditor } from "./ai-chat-editor";
+import { AIMenuItems } from "./ai-menu-items";
 import { Command, Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -17,9 +16,9 @@ export interface IAIMenuProps extends IUseChat {}
 
 export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
     const [t] = useTranslation();
-    const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
-    const open = useOption("open");
-    const mode = useOption("mode");
+    const { api, editor } = useEditorPlugin(AIChatPlugin);
+    const open = usePluginOption(AIChatPlugin, "open");
+    const mode = usePluginOption(AIChatPlugin, "mode");
     const isSelecting = useIsSelecting();
 
     const [value, setValue] = React.useState("");
@@ -31,7 +30,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
     const content = useLastAssistantMessage()?.content;
 
-    const setOpen = (open: bool) => {
+    const setOpen = (open: boolean) => {
         if (open) {
             api.aiChat.show();
         } else {
@@ -59,7 +58,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
             const [ancestor] = editor.api.block({ highest: true })!;
 
             if (!editor.api.isAt({ end: true }) && !editor.api.isEmpty(ancestor)) {
-                editor.getApi(BlockSelectionPlugin).blockSelection.addSelectedRow(ancestor.id as string);
+                editor.getApi(BlockSelectionPlugin).blockSelection.set(ancestor.id as string);
             }
 
             show(editor.api.toDOMNode(ancestor)!);
@@ -79,7 +78,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
     return (
         <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-            <Popover.Anchor virtualRef={{ current: anchorElement as any }} />
+            <Popover.Anchor virtualRef={{ current: anchorElement! }} />
 
             <Popover.Content
                 className="border-none bg-transparent p-0 shadow-none"
@@ -96,7 +95,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
                     }
                 }}
                 align="center"
-                avoidCollisions={false}
+                // avoidCollisions={false}
                 side="bottom"
             >
                 <Command.Root className="w-full rounded-lg border shadow-md" value={value} onValueChange={setValue}>
@@ -123,7 +122,6 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
                             }}
                             onValueChange={setInput}
                             placeholder={t("editor.Ask AI anything...")}
-                            withoutIcon
                             data-plate-focus
                             autoFocus
                         />

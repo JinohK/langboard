@@ -2,7 +2,7 @@
 "use client";
 
 import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
-import { useEditorReadOnly, useEditorRef, usePlateStore } from "@udecode/plate/react";
+import { useEditorRef, usePlateState } from "@udecode/plate/react";
 import { Eye, Pen } from "lucide-react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { DropdownMenu } from "@/components/base";
@@ -11,8 +11,7 @@ import { useTranslation } from "react-i18next";
 export function ModeDropdownMenu(props: DropdownMenuProps) {
     const [t] = useTranslation();
     const editor = useEditorRef();
-    const setReadOnly = usePlateStore().set.readOnly();
-    const readOnly = useEditorReadOnly();
+    const [readOnly, setReadOnly] = usePlateState("readOnly");
     const openState = DropdownMenu.useOpenState();
 
     let value = "editing";

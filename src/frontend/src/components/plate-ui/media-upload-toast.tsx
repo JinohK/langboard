@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useEditorRef } from "@udecode/plate/react";
+import { usePluginOption } from "@udecode/plate/react";
 import { PlaceholderPlugin, UploadErrorCode } from "@udecode/plate-media/react";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
 export const useUploadErrorToast = () => {
     const [t] = useTranslation();
-    const editor = useEditorRef();
 
-    const uploadError = editor.useOption(PlaceholderPlugin, "error");
+    const uploadError = usePluginOption(PlaceholderPlugin, "error");
 
     useEffect(() => {
         if (!uploadError) return;

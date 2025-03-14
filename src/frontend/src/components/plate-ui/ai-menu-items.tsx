@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import { type SlateEditor, NodeApi } from "@udecode/plate";
-import { type PlateEditor, useEditorPlugin } from "@udecode/plate/react";
+import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import { useIsSelecting } from "@udecode/plate-selection/react";
-import { Album, BadgeHelp, Check, CornerUpLeft, FeatherIcon, ListEnd, ListMinus, ListPlus, PenLine, Wand, X } from "lucide-react";
+import { type PlateEditor, useEditorRef, usePluginOption } from "@udecode/plate/react";
+import { Album, BadgeHelp, Check, CornerUpLeft, FeatherIcon, ListEnd, ListMinus, ListPlus, PenLine, SmileIcon, Wand, X } from "lucide-react";
 import { Command } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -51,6 +51,16 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
         onSelect: ({ editor }) => {
             editor.getTransforms(AIPlugin).ai.undo();
             editor.getApi(AIChatPlugin).aiChat.hide();
+        },
+    },
+    emojify: {
+        icon: <SmileIcon />,
+        label: "Emojify",
+        value: "emojify",
+        onSelect: ({ editor }) => {
+            void editor.getApi(AIChatPlugin).aiChat.submit({
+                prompt: "Emojify",
+            });
         },
     },
     explain: {
@@ -205,9 +215,9 @@ const menuStateItems: Record<
 
 export const AIMenuItems = ({ setValue }: { setValue: (value: string) => void }) => {
     const [t] = useTranslation();
-    const { editor, useOption } = useEditorPlugin(AIChatPlugin);
-    const { messages } = useOption("chat");
-    const aiEditor = useOption("aiEditor")!;
+    const editor = useEditorRef();
+    const { messages } = usePluginOption(AIChatPlugin, "chat");
+    const aiEditor = usePluginOption(AIChatPlugin, "aiEditor")!;
     const isSelecting = useIsSelecting();
 
     const menuState = useMemo(() => {
@@ -237,7 +247,7 @@ export const AIMenuItems = ({ setValue }: { setValue: (value: string) => void })
                     {group.items.map((menuItem) => (
                         <Command.Item
                             key={menuItem.value}
-                            className="cursor-pointer gap-1 [&_svg]:text-muted-foreground"
+                            className="[&_svg]:text-muted-foreground"
                             value={menuItem.value}
                             onSelect={() => {
                                 menuItem.onSelect?.({

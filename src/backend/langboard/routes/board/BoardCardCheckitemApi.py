@@ -104,7 +104,9 @@ async def change_checkitem_status(
     if checkitem.user_id and checkitem.user_id != user_or_bot.id:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.checkitem.change_status(user_or_bot, project_uid, card_uid, checkitem, form.status)
+    result = await service.checkitem.change_status(
+        user_or_bot, project_uid, card_uid, checkitem, form.status, from_api=True
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

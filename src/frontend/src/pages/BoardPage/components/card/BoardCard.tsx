@@ -117,7 +117,7 @@ export function SkeletonBoardCard(): JSX.Element {
                 </Flex>
                 <Skeleton position="absolute" right="0" size="6" rounded="sm" className="opacity-70" />
             </Flex>
-            <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
+            <Flex gap="3" direction={{ initial: "col-reverse", sm: "row" }}>
                 <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.40)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">
@@ -182,7 +182,7 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                 </Flex>
                 <Dialog.CloseButton className="absolute right-0" />
             </Dialog.Header>
-            <Flex gap="2" direction={{ initial: "col-reverse", sm: "row" }}>
+            <Flex gap="3" direction={{ initial: "col-reverse", sm: "row" }}>
                 <Flex direction="col" gap="4" className="sm:w-[calc(100%_-_theme(spacing.40)_-_theme(spacing.2))]">
                     <Flex direction={{ initial: "col", sm: "row" }} gap="4">
                         <BoardCardSection title="card.Members" className="sm:w-1/2" contentClassName="flex gap-1">

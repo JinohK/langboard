@@ -28,7 +28,7 @@ const BoardCardPage = memo(() => {
             {aboutMe() && (
                 <Dialog.Root open={!!cardUID} onOpenChange={close}>
                     <Dialog.Content
-                        className={cn("max-w-[100vw] p-4 pb-0 sm:max-w-screen-sm lg:max-w-screen-md", !!selectCardViewType && "hidden")}
+                        className={cn("max-w-[100vw] px-4 py-4 pb-0 sm:max-w-screen-sm sm:px-6 lg:max-w-screen-md", !!selectCardViewType && "hidden")}
                         aria-describedby=""
                         withCloseButton={false}
                         viewportId={viewportId}

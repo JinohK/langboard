@@ -230,6 +230,7 @@ class CheckitemService(BaseService):
         status: CheckitemStatus,
         current_time: datetime | None = None,
         should_publish: bool = True,
+        from_api: bool = False,
     ) -> bool | None:
         params = await self.__get_records_by_params(project, card, checkitem)
         if not params:
@@ -267,6 +268,9 @@ class CheckitemService(BaseService):
                         user_or_bot, project, card, started_checkitem, CheckitemStatus.Paused, current_time
                     )
             checkitem.is_checked = False
+
+        if status == CheckitemStatus.Stopped and from_api:
+            checkitem.is_checked = True
 
         checkitem.status = status
         timer_record = CheckitemTimerRecord(checkitem_id=checkitem.id, status=status, created_at=current_time)
