@@ -90,7 +90,7 @@ export const PROMPT_TEMPLATES = {
 
 export interface ICreateAIPlugins extends IUseChat {}
 
-export const createAIPlugins = ({ socket, eventKey, events }: ICreateAIPlugins) => {
+export const createAIPlugins = ({ socket, eventKey, events, commonEventData }: ICreateAIPlugins) => {
     return [
         cursorOverlayPlugin,
         MarkdownPlugin.configure({ options: { indentList: true } }),
@@ -112,7 +112,7 @@ export const createAIPlugins = ({ socket, eventKey, events }: ICreateAIPlugins) 
                           : PROMPT_TEMPLATES.systemDefault;
                 },
             },
-            render: { afterEditable: () => <AIMenu socket={socket} eventKey={eventKey} events={events} /> },
+            render: { afterEditable: () => <AIMenu socket={socket} eventKey={eventKey} events={events} commonEventData={commonEventData} /> },
         }),
     ] as const;
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthUser, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useCallback, useEffect, useState } from "react";
@@ -69,7 +70,6 @@ import { ISocketContext } from "@/core/providers/SocketProvider";
 interface IBaseUseCreateEditor {
     currentUser: AuthUser.TModel;
     mentionables: User.TModel[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plugins?: PlatePlugin<any>[];
     value?: IEditorContent;
     readOnly?: bool;
@@ -77,8 +77,8 @@ interface IBaseUseCreateEditor {
     baseSocketEvent?: string;
     chatEventKey?: string;
     copilotEventKey?: string;
+    commonSocketEventData?: Record<string, any>;
     uploadPath?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     uploadedCallback?: (respones: any) => void;
 }
 
@@ -89,6 +89,7 @@ export interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     baseSocketEvent?: never;
     chatEventKey?: never;
     copilotEventKey?: never;
+    commonSocketEventData?: never;
     uploadPath?: never;
     uploadedCallback?: never;
 }
@@ -100,6 +101,7 @@ export interface IUseEditor extends IBaseUseCreateEditor {
     baseSocketEvent: string;
     chatEventKey: string;
     copilotEventKey: string;
+    commonSocketEventData?: Record<string, any>;
     uploadPath: string;
 }
 
@@ -193,15 +195,20 @@ export const getPlateComponents = ({
 };
 
 export const useCreateEditor = (props: TUseCreateEditor) => {
-    const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, plugins: customPlugins } = props;
+    const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, commonSocketEventData, plugins: customPlugins } = props;
 
     const reloadPlugins = useCallback(() => {
         const pluginList = [...(readOnly ? viewPlugins : editorPlugins), ...(customPlugins ?? [])];
         if (!readOnly) {
             const { chatEvents, copilotEvents } = createEditorSocketEvents(baseSocketEvent!);
             pluginList.push(
-                ...createAIPlugins({ socket: socket!, eventKey: chatEventKey!, events: chatEvents }),
-                ...createCopilotPlugins({ socket: socket!, eventKey: copilotEventKey!, events: copilotEvents })
+                ...createAIPlugins({ socket: socket!, eventKey: chatEventKey!, events: chatEvents, commonEventData: commonSocketEventData }),
+                ...createCopilotPlugins({
+                    socket: socket!,
+                    eventKey: copilotEventKey!,
+                    events: copilotEvents,
+                    commonEventData: commonSocketEventData,
+                })
             );
         }
         return pluginList;

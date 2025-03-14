@@ -195,6 +195,9 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         baseSocketEvent="board:card"
                         chatEventKey={`card-comment-${card.uid}`}
                         copilotEventKey={`card-comment-${comment.uid}`}
+                        commonSocketEventData={{
+                            project_uid: projectUID,
+                        }}
                         uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                         setValue={setValue}
                         editorComponentRef={editorComponentRef}

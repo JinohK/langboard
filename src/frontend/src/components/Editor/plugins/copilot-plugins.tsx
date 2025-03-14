@@ -9,11 +9,9 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { generateToken } from "@/core/utils/StringUtils";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { ISocketContext } from "@/core/providers/SocketProvider";
+import { IUseChat } from "@/components/Editor/useChat";
 
-export interface ICreateCopilotPlugins {
-    socket: ISocketContext;
-    eventKey: string;
+export interface ICreateCopilotPlugins extends Omit<IUseChat, "events"> {
     events: {
         abort: string;
         send: string;
@@ -21,7 +19,7 @@ export interface ICreateCopilotPlugins {
     };
 }
 
-export const createCopilotPlugins = ({ socket, eventKey, events }: ICreateCopilotPlugins) => {
+export const createCopilotPlugins = ({ socket, eventKey, events, commonEventData }: ICreateCopilotPlugins) => {
     return [
         CopilotPlugin.configure(({ api: editorApi }) => ({
             options: {
@@ -77,6 +75,7 @@ export const createCopilotPlugins = ({ socket, eventKey, events }: ICreateCopilo
                                     eventName: events.send,
                                     data: {
                                         ...body,
+                                        ...(commonEventData ?? {}),
                                         key,
                                     },
                                 });

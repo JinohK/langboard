@@ -111,6 +111,9 @@ const BoardCardDescription = memo((): JSX.Element => {
                 baseSocketEvent="board:card"
                 chatEventKey={`card-description-${card.uid}`}
                 copilotEventKey={`card-description-${card.uid}`}
+                commonSocketEventData={{
+                    project_uid: projectUID,
+                }}
                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}

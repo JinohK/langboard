@@ -163,6 +163,9 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     baseSocketEvent="board:wiki"
                     chatEventKey={`wiki-content-${wiki.uid}`}
                     copilotEventKey={`wiki-content-${wiki.uid}`}
+                    commonSocketEventData={{
+                        project_uid: projectUID,
+                    }}
                     placeholder={!isEditing ? t("wiki.No content") : undefined}
                     uploadPath={format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: projectUID, wiki_uid: wiki.uid })}
                     setValue={setValue}

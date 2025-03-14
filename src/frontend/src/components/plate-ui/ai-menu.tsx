@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 export interface IAIMenuProps extends IUseChat {}
 
-export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
+export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuProps) {
     const [t] = useTranslation();
     const { api, editor } = useEditorPlugin(AIChatPlugin);
     const open = usePluginOption(AIChatPlugin, "open");
@@ -23,7 +23,7 @@ export function AIMenu({ socket, eventKey, events }: IAIMenuProps) {
 
     const [value, setValue] = React.useState("");
 
-    const chat = useChat({ socket, eventKey, events });
+    const chat = useChat({ socket, eventKey, events, commonEventData });
 
     const { input, isLoading, messages, setInput } = chat;
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);

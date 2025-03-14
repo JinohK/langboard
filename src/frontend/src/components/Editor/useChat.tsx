@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -13,9 +14,10 @@ export interface IUseChat {
         send: string;
         stream: string;
     };
+    commonEventData?: Record<string, any>;
 }
 
-export const useChat = ({ socket, eventKey, events }: IUseChat) => {
+export const useChat = ({ socket, eventKey, events, commonEventData }: IUseChat) => {
     return useBaseChat({
         id: "editor",
         fetch: async (_, init) => {
@@ -29,7 +31,10 @@ export const useChat = ({ socket, eventKey, events }: IUseChat) => {
                 socket.send({
                     topic: ESocketTopic.None,
                     eventName: events.send,
-                    data: body,
+                    data: {
+                        ...body,
+                        ...(commonEventData ?? {}),
+                    },
                 });
             });
 

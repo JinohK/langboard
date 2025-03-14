@@ -254,6 +254,9 @@ const BoardCommentForm = memo((): JSX.Element => {
                                 baseSocketEvent="board:card"
                                 chatEventKey={`card-new-comment-${card.uid}`}
                                 copilotEventKey={`card-new-comment-${card.uid}`}
+                                commonSocketEventData={{
+                                    project_uid: projectUID,
+                                }}
                                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                                 setValue={setValue}
                                 editorComponentRef={editorComponentRef}
