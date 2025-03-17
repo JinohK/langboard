@@ -2,7 +2,7 @@ from typing import Optional, cast
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from socketify import ASGI, AppListenOptions, AppOptions, asgi
+from socketify import ASGI, AppListenOptions, AppOptions
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
@@ -10,20 +10,6 @@ from .core.security import Auth
 from .core.utils.decorators import singleton
 from .Loader import load_modules
 from .middlewares import AuthMiddleware, RoleMiddleware
-
-
-async def _intercept_task_wrapper(task):
-    try:
-        return await task
-    except Exception as error:
-        try:
-            # just log in console the error to call attention
-            Logger.main.exception("Uncaught Exception: %s" % str(error))
-        finally:
-            return None
-
-
-asgi.task_wrapper = _intercept_task_wrapper
 
 
 @singleton
