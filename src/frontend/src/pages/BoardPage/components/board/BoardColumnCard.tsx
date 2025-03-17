@@ -118,6 +118,9 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
             ...attributes,
             ref: setNodeRef,
         };
+        if (props.style) {
+            props.style.touchAction = "none";
+        }
     } else {
         props = {
             className: cn(

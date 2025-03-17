@@ -1,17 +1,18 @@
 import { Toast } from "@/components/base";
 import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import useNotifyCardChecklist from "@/controllers/api/card/checklist/useNotifyCardChecklist";
-import { User, UserGroup } from "@/core/models";
+import { Project, User, UserGroup } from "@/core/models";
 import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistNotify() {
-    const { projectUID, card, currentUser, sharedClassNames } = useBoardCard();
+    const { projectUID, card, currentUser, sharedClassNames, hasRoleAction } = useBoardCard();
     const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist();
     const [t] = useTranslation();
+    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
 
@@ -80,6 +81,7 @@ function BoardCardChecklistNotify() {
             groups={groups}
             assignedFilter={() => false}
             initialSelectedItems={[]}
+            canEdit={canEdit}
         />
     );
 }

@@ -121,7 +121,7 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
 
 const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
-    const { project, columns: flatColumns, socket, hasRoleAction, currentUser } = useBoard();
+    const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const { columns, reorder: reorderColumns } = useReorderColumn({
         type: "ProjectColumn",
@@ -203,7 +203,7 @@ const BoardResult = memo(() => {
             )}
 
             <Flex justify="between" px="4" pt="4" wrap>
-                <BoardMemberList project={project} isSelectCardView={!!selectCardViewType} currentUser={currentUser} />
+                <BoardMemberList isSelectCardView={!!selectCardViewType} />
                 <Flex items="center" gap="1">
                     <BoardFilter />
                 </Flex>

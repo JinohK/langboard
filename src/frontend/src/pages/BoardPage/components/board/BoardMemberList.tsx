@@ -3,19 +3,20 @@ import { Toast } from "@/components/base";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { AuthUser, BotModel, Project, User, UserGroup } from "@/core/models";
+import { BotModel, Project, User, UserGroup } from "@/core/models";
+import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardMemberListProps {
-    project: Project.TModel;
     isSelectCardView: bool;
-    currentUser: AuthUser.TModel;
 }
 
-const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoardMemberListProps) => {
+const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const [t] = useTranslation();
+    const { project, currentUser, hasRoleAction } = useBoard();
+    const canEdit = hasRoleAction(Project.ERoleAction.Update);
     const owners = project.useForeignField<User.TModel>("owner");
     const owner = owners[0];
     const members = project.useForeignField<User.TModel>("members");
@@ -113,9 +114,10 @@ const BoardMemberList = memo(({ project, isSelectCardView, currentUser }: IBoard
                     return bots.includes(item);
                 }
             }}
-            initialSelectedItems={allItems.filter((item) => invitedMembers.includes(item as User.TModel))}
+            initialSelectedItems={allItems.filter((item) => members.includes(item as User.TModel) || invitedMembers.includes(item as User.TModel))}
             canAssignNonMembers
             createNewUserLabel={(item) => `${getMultiSelectItemLabel(item).trim()} (${t("project.invited")})`}
+            canEdit={canEdit}
         />
     );
 });

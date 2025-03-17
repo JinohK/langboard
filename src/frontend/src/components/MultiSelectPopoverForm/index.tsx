@@ -21,6 +21,7 @@ interface IMultiSelectAssigneesPopoverProps extends Omit<TMultiSelectAssigneesFo
     saveText?: string;
     assignedFilter: (item: TMultiSelectAssigneeItem) => bool;
     onSave: (selectedItems: TMultiSelectAssigneeItem[], endCallback: () => void) => void;
+    canEdit: bool;
 }
 
 export const getMultiSelectItemValue = (item: TMultiSelectAssigneeItem): string => {
@@ -61,6 +62,7 @@ export const MultiSelectAssigneesPopover = memo(
         assignedFilter,
         onSave,
         createNewUserLabel,
+        canEdit,
         ...props
     }: IMultiSelectAssigneesPopoverProps) => {
         const [t] = useTranslation();
@@ -84,33 +86,41 @@ export const MultiSelectAssigneesPopover = memo(
         return (
             <Flex items="center" gap="1">
                 {assignees.length > 0 && <UserAvatarList users={assignees.map(getMultiSelectItemAsUser)} {...userAvatarListProps} />}
-                <Popover.Root modal={true} open={isOpened} onOpenChange={changeIsOpenedState}>
-                    <Popover.Trigger asChild>
-                        <Button variant={popoverButtonVariant} {...popoverButtonProps}>
-                            <IconComponent icon={addIcon} size={addIconSize} />
-                        </Button>
-                    </Popover.Trigger>
-                    <Popover.Content {...popoverContentProps}>
-                        <MultiSelectAssigneesForm
-                            {...(props as IMultiSelectAssigneesFormWithNonMembersProps)}
-                            isValidating={isValidating}
-                            allItems={allItems}
-                            initialSelectedItems={initialSelectedItems}
-                            createNewUserLabel={createNewUserLabel}
-                            onValueChange={(items) => {
-                                selectedItemsRef.current = items;
-                            }}
-                        />
-                        <Flex items="center" justify="end" gap="1" mt="2">
-                            <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => changeIsOpenedState(false)}>
-                                {t("common.Cancel")}
+                {canEdit && (
+                    <Popover.Root modal={true} open={isOpened} onOpenChange={changeIsOpenedState}>
+                        <Popover.Trigger asChild>
+                            <Button variant={popoverButtonVariant} {...popoverButtonProps}>
+                                <IconComponent icon={addIcon} size={addIconSize} />
                             </Button>
-                            <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating}>
-                                {saveText ?? t("common.Save")}
-                            </SubmitButton>
-                        </Flex>
-                    </Popover.Content>
-                </Popover.Root>
+                        </Popover.Trigger>
+                        <Popover.Content {...popoverContentProps}>
+                            <MultiSelectAssigneesForm
+                                {...(props as IMultiSelectAssigneesFormWithNonMembersProps)}
+                                isValidating={isValidating}
+                                allItems={allItems}
+                                initialSelectedItems={initialSelectedItems}
+                                createNewUserLabel={createNewUserLabel}
+                                onValueChange={(items) => {
+                                    selectedItemsRef.current = items;
+                                }}
+                            />
+                            <Flex items="center" justify="end" gap="1" mt="2">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={isValidating}
+                                    onClick={() => changeIsOpenedState(false)}
+                                >
+                                    {t("common.Cancel")}
+                                </Button>
+                                <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating}>
+                                    {saveText ?? t("common.Save")}
+                                </SubmitButton>
+                            </Flex>
+                        </Popover.Content>
+                    </Popover.Root>
+                )}
             </Flex>
         );
     }

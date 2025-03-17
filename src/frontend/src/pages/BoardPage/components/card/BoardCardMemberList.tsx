@@ -3,15 +3,16 @@ import { Toast } from "@/components/base";
 import useUpdateCardAssignedUsers from "@/controllers/api/card/useUpdateCardAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { User, UserGroup } from "@/core/models";
+import { Project, User, UserGroup } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardCardMemberList = memo(() => {
-    const { projectUID, card, sharedClassNames, currentUser } = useBoardCard();
+    const { projectUID, card, sharedClassNames, currentUser, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
+    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const members = card.useForeignField<User.TModel>("members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
@@ -100,6 +101,7 @@ const BoardCardMemberList = memo(() => {
             groups={groups}
             assignedFilter={(item) => members.includes(item as User.TModel)}
             initialSelectedItems={members}
+            canEdit={canEdit}
         />
     );
 });

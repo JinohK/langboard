@@ -86,13 +86,13 @@ class ProjectInvitationService(BaseService):
         return project
 
     async def get_invitation_related_data(self, project: Project, emails: list[str]) -> InvitationRelatedResult:
-        invitation_result = InvitationRelatedResult()
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectInvitation).where(ProjectInvitation.column("project_id") == project.id)
             )
         invitations = result.all()
 
+        invitation_result = InvitationRelatedResult()
         user_service = self._get_service(UserService)
 
         for invitation in invitations:

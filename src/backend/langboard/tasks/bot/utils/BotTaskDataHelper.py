@@ -20,10 +20,9 @@ class BotTaskDataHelper:
             )
         column = cast(ProjectColumn, column.first())
         return {
-            "project": project.api_response(),
+            **BotTaskDataHelper.create_project(user_or_bot, project),
             "project_column": column.api_response(),
             "card": card.api_response(),
-            "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot),
         }
 
     @staticmethod

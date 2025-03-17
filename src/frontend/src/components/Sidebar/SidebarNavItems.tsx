@@ -16,9 +16,11 @@ const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.
                     <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} key={createShortUUID()}>
                         <Tooltip.Root>
                             <Tooltip.Trigger asChild>
-                                <Comp key={key} item={item} />
+                                <span>
+                                    <Comp key={key} item={item} />
+                                </span>
                             </Tooltip.Trigger>
-                            <Tooltip.Content side="right" className="hidden group-data-[collapsed=true]/sidebar:block">
+                            <Tooltip.Content side="right" className="group-data-[collapsed=true]/sidebar:block">
                                 {item.name}
                             </Tooltip.Content>
                         </Tooltip.Root>

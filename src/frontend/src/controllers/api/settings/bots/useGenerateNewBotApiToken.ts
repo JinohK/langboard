@@ -5,6 +5,7 @@ import { BotModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGenerateNewBotApiTokenResponse {
+    secret_app_api_token: string;
     revealed_app_api_token: string;
 }
 
@@ -15,9 +16,8 @@ const useGenerateNewBotApiToken = (bot: BotModel.TModel, options?: TMutationOpti
         const url = format(API_ROUTES.SETTINGS.BOTS.GENERATE_NEW_API_TOKEN, { bot_uid: bot.uid });
         const res = await api.put(url);
 
-        bot.app_api_token = res.data.secret_app_api_token;
-
         return {
+            secret_app_api_token: res.data.secret_app_api_token,
             revealed_app_api_token: res.data.revealed_app_api_token,
         };
     };
