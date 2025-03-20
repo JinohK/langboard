@@ -1,10 +1,11 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from urllib.parse import urlparse
-from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
+from sqlalchemy import String
+from sqlalchemy import cast as sql_cast
+from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService
-from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail, UserNotification
 from ...models.UserNotification import NotificationType
@@ -110,14 +111,28 @@ class ProjectInvitationService(BaseService):
                     invitation_result.emails_should_remove.pop(subemail.email)
 
             if user:
-                assigned_user = await self._get_by(ProjectAssignedUser, "user_id", user.id)
+                async with DbSession.use() as db:
+                    result = await db.exec(
+                        SqlBuilder.select.table(ProjectAssignedUser).where(
+                            (ProjectAssignedUser.column("user_id") == user.id)
+                            & (ProjectAssignedUser.column("project_id") == project.id)
+                        )
+                    )
+                assigned_user = result.first()
                 if assigned_user:
                     invitation_result.already_assigned_ids.append(assigned_user.id)
                     invitation_result.already_assigned_users.append(user)
                     invitation_result.already_assigned_user_emails.append(email)
                     continue
 
-            invitation = await self._get_by(ProjectInvitation, "email", email)
+            async with DbSession.use() as db:
+                result = await db.exec(
+                    SqlBuilder.select.table(ProjectInvitation).where(
+                        (ProjectInvitation.column("project_id") == project.id)
+                        & (ProjectInvitation.column("email") == email)
+                    )
+                )
+            invitation = result.first()
             if invitation:
                 invitation_result.already_sent_user_emails.append(email)
             else:
@@ -245,7 +260,7 @@ class ProjectInvitationService(BaseService):
         return True
 
     async def __create_invitation_token_url(self, invitation: ProjectInvitation) -> str:
-        encrypted_token = Encryptor.encrypt(invitation.create_encrypted_token(), COMMON_SECRET_KEY)
+        encrypted_token = invitation.create_encrypted_token()
 
         url_chunks = urlparse(FRONTEND_REDIRECT_URL)
         token_url = url_chunks._replace(
@@ -293,7 +308,7 @@ class ProjectInvitationService(BaseService):
                 SqlBuilder.select.table(UserNotification).where(
                     (UserNotification.column("receiver_id") == user.id)
                     & (UserNotification.column("notification_type") == NotificationType.ProjectInvited)
-                    & (UserNotification.column("record_list") == record_list)
+                    & (sql_cast(UserNotification.column("record_list"), String) == record_list)
                 )
             )
         notification = result.first()

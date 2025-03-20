@@ -22,6 +22,7 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
 import useBoardUIColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardUIColumnDeletedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 
 export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
@@ -118,6 +119,13 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
 
         listeners?.onKeyDown?.(e);
     }, []);
+    const cardCreatedHandlers = useBoardCardCreatedHandlers({
+        projectUID: project.uid,
+        columnUID: column.uid,
+        callback: () => {
+            forceUpdate();
+        },
+    });
     const columnDeletedHandlers = useBoardUIColumnDeletedHandlers({
         project,
         callback: () => {
@@ -128,7 +136,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             forceUpdate();
         },
     });
-    useSwitchSocketHandlers({ socket, handlers: [columnDeletedHandlers] });
+    useSwitchSocketHandlers({ socket, handlers: [cardCreatedHandlers, columnDeletedHandlers] });
 
     callbacksRef.current[columnId] = {
         onDragEnd: (originalCard, index) => {

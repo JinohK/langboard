@@ -91,7 +91,7 @@ export interface IBoardColumnTitleInput {
     canEdit: bool;
     changeMode: (mode: "edit" | "view") => void;
     columnName: string;
-    isArchive: bool;
+    isArchive?: bool;
     disabled?: bool;
     inputRef: React.RefObject<HTMLInputElement>;
 }

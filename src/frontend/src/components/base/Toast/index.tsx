@@ -55,6 +55,9 @@ const Area = ({ ...props }: AreaProps) => {
                     icon: "mt-0.5",
                 },
             }}
+            icons={{
+                loading: <IconComponent icon="loader-circle" size="4" strokeWidth="3" className="mt-0.5 animate-spin" />,
+            }}
             {...props}
         />
     );
@@ -86,10 +89,7 @@ function createToastData<ToastData>(data?: TExternalToast | TPromiseData<ToastDa
 
     if ((data as TPromiseData<ToastData>).loading) {
         (toastData as TConvertedPromiseData<ToastData>).loading = (
-            <div className="flex items-center gap-2">
-                <IconComponent icon="loader-circle" size="4" strokeWidth="3" className="mt-0.5 animate-spin" />
-                {(data as TPromiseData<ToastData>).loading}
-            </div>
+            <div className="flex items-center gap-2">{(data as TPromiseData<ToastData>).loading}</div>
         );
     }
 

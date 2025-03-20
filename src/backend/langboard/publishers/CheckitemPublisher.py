@@ -179,7 +179,7 @@ class CheckitemPublisher:
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
-                event=f"board:card:checkitem:created:{target_column.get_uid()}",
+                event=f"board:card:created:{target_column.get_uid()}",
                 data_keys="card",
             ),
             SocketPublishModel(
