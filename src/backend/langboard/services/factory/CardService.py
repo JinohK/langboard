@@ -124,7 +124,7 @@ class CardService(BaseService):
             )
             .where(Checkitem.column("created_at") <= refer_time)
             .order_by(Card.column("created_at").desc())
-            .group_by(Card.column("id"), Card.column("created_at"))
+            .group_by(Card.column("id"), Card.column("created_at"), Project.column("id"))
         )
         query = self.paginate(query, pagination.page, pagination.limit)
         async with DbSession.use() as db:
