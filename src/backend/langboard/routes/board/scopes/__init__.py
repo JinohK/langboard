@@ -12,7 +12,14 @@ from .Project import (
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
 from .RoleFinder import project_role_finder
-from .Shared import AssignBotsForm, AssigneesForm, AssignUsersForm, ChangeChildOrderForm, ChangeRootOrderForm
+from .Shared import (
+    AssignBotsForm,
+    AssigneesForm,
+    AssignUsersForm,
+    BotCronTimeForm,
+    ChangeChildOrderForm,
+    ChangeRootOrderForm,
+)
 from .Wiki import ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
@@ -24,6 +31,7 @@ __all__ = [
     "ChangeRootOrderForm",
     "ChangeChildOrderForm",
     "ColumnForm",
+    "BotCronTimeForm",
     "CreateCardForm",
     "UpdateCardLabelsForm",
     "UpdateCardRelationshipsForm",

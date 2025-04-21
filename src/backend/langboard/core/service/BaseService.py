@@ -99,7 +99,10 @@ class BaseService(ABC):
             return statement
         arg, value = kwargs.popitem()
         if arg in model_class.model_fields and value is not None:
-            statement = statement.where(model_class.column(arg) == value)
+            if isinstance(value, list):
+                statement = statement.where(model_class.column(arg).in_(value))
+            else:
+                statement = statement.where(model_class.column(arg) == value)
         return self._where_recursive(statement, model_class, **kwargs)
 
     async def _get_max_order(

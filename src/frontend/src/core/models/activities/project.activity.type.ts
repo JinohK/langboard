@@ -35,6 +35,12 @@ export interface IProjectAssignedBotsUpdatedActivity extends IBaseProjectActivit
 export interface IProjectAssignedUsersUpdatedActivity extends IBaseProjectActivity<IProjectActivityHistory & IUpdatedAssignedUsersInActivityHistory> {
     activity_type: EProjectActivityType.ProjectAssignedUsersUpdated;
 }
+export interface IProjectBotActivatedActivity extends IBaseProjectActivity<IProjectActivityHistory & Required<IChangesInActivityHistory>> {
+    activity_type: EProjectActivityType.ProjectBotActivated;
+}
+export interface IProjectBotDeactivatedActivity extends IBaseProjectActivity<IProjectActivityHistory & Required<IChangesInActivityHistory>> {
+    activity_type: EProjectActivityType.ProjectBotDeactivated;
+}
 export interface IProjectInvitedUserAcceptedActivity extends IBaseProjectActivity<IProjectActivityHistory & { user: IUserInActivityHistory }> {
     activity_type: EProjectActivityType.ProjectInvitedUserAccepted;
 }
@@ -47,5 +53,7 @@ export type TProjectActivityInterface =
     | IProjectUpdatedActivity
     | IProjectAssignedBotsUpdatedActivity
     | IProjectAssignedUsersUpdatedActivity
+    | IProjectBotActivatedActivity
+    | IProjectBotDeactivatedActivity
     | IProjectInvitedUserAcceptedActivity
     | IProjectDeletedActivity;

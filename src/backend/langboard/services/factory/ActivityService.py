@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
+from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
 from ...models import Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, UserActivity
 from ...models.BaseActivityModel import BaseActivityModel
-from .Types import TCardParam, TProjectParam, TUserParam, TWikiParam
+from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam
 
 
 _TActivityModel = TypeVar("_TActivityModel", bound=BaseActivityModel)
@@ -59,6 +60,74 @@ class ActivityService(BaseService):
             api_user_activties.append(api_user_activity)
 
         return api_user_activties, count_new_records, user
+
+    @overload
+    async def get_list_by_project_assignee(
+        self, project: TProjectParam, assignee: TUserParam | TBotParam, pagination: Pagination, refer_time: datetime
+    ) -> tuple[list[dict[str, Any]], int, User | Bot] | None: ...
+    @overload
+    async def get_list_by_project_assignee(
+        self,
+        project: TProjectParam,
+        assignee: TUserParam | TBotParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: Literal[True],
+    ) -> int | None: ...
+    async def get_list_by_project_assignee(
+        self,
+        project: TProjectParam,
+        assignee: TUserParam | TBotParam,
+        pagination: Pagination,
+        refer_time: datetime,
+        only_count: bool = False,
+    ) -> tuple[list[dict[str, Any]], int, User | Bot] | int | None:
+        project = cast(Project, await self._get_by_param(Project, project))
+        assignee = cast(User, await self._get_by_param(User, assignee))
+        if not assignee:
+            assignee = cast(Bot, await self._get_by_param(Bot, assignee))
+            if not assignee:
+                return None
+
+        if not project or not assignee:
+            return None
+
+        list_query = self.__refer_project(SqlBuilder.select.table(UserActivity), project)
+        outdated_query = self.__refer_project(SqlBuilder.select.count(UserActivity, UserActivity.column("id")), project)
+        where_clauses = {}
+
+        if isinstance(assignee, User):
+            where_clauses["user_id"] = assignee.id
+        else:
+            where_clauses["bot_id"] = assignee.id
+
+        if only_count:
+            return await self.__count_new_records(UserActivity, refer_time, outdated_query, **where_clauses)
+
+        activities, count_new_records = await self.__get_list(
+            UserActivity, pagination, refer_time, list_query, outdated_query, **where_clauses
+        )
+        api_activties = []
+        for activity in activities:
+            api_activity = activity.api_response()
+            if not activity.refer_activity_id or not activity.refer_activity_table:
+                continue
+
+            model = await self.get_record_by_table_name_with_id(
+                activity.refer_activity_table, activity.refer_activity_id
+            )
+            if not model:
+                continue
+
+            references = await self.__get_refer_record(cast(BaseActivityModel, model))
+            if not references:
+                continue
+
+            api_activity["refer"] = model.api_response()
+            api_activity["references"] = references
+            api_activties.append(api_activity)
+
+        return api_activties, count_new_records, assignee
 
     @overload
     async def get_list_by_project(
@@ -184,9 +253,12 @@ class ActivityService(BaseService):
         activity_class: type[_TActivityModel],
         pagination: Pagination,
         refer_time: datetime,
+        list_query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | None = None,
+        outdated_query: SelectOfScalar[int] | None = None,
         **where_clauses,
     ) -> tuple[list[_TActivityModel], int]:
-        list_query = SqlBuilder.select.table(activity_class)
+        if list_query is None:
+            list_query = SqlBuilder.select.table(activity_class)
         list_query = self.__make_query(list_query, activity_class, **where_clauses)
         list_query = list_query.where((activity_class.column("created_at") <= refer_time))
         list_query = self.paginate(list_query, pagination.page, pagination.limit)
@@ -194,14 +266,19 @@ class ActivityService(BaseService):
             result = await db.exec(list_query)
         result_list = result.all()
 
-        count_new_records = await self.__count_new_records(activity_class, refer_time, **where_clauses)
+        count_new_records = await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
 
         return list(result_list), count_new_records
 
     async def __count_new_records(
-        self, activity_class: type[_TActivityModel], refer_time: datetime, **where_clauses
+        self,
+        activity_class: type[_TActivityModel],
+        refer_time: datetime,
+        outdated_query: SelectOfScalar[int] | None = None,
+        **where_clauses,
     ) -> int:
-        outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
+        if outdated_query is None:
+            outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
         outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
         outdated_query = outdated_query.where((activity_class.column("created_at") > refer_time))
         async with DbSession.use() as db:
@@ -227,3 +304,31 @@ class ActivityService(BaseService):
         )
         query = self._where_recursive(query, activity_class, **where_clauses)
         return query
+
+    @overload
+    def __refer_project(self, query: Select[_TActivityModel], project: Project) -> Select[_TActivityModel]: ...
+    @overload
+    def __refer_project(
+        self, query: SelectOfScalar[_TActivityModel], project: Project
+    ) -> SelectOfScalar[_TActivityModel]: ...
+    @overload
+    def __refer_project(self, query: SelectOfScalar[int], project: Project) -> SelectOfScalar[int]: ...
+    def __refer_project(
+        self, query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int], project: Project
+    ) -> Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int]:
+        return (
+            query.outerjoin(
+                ProjectActivity,
+                (UserActivity.column("refer_activity_table") == ProjectActivity.__tablename__)
+                & (ProjectActivity.column("id") == UserActivity.column("refer_activity_id")),
+            )
+            .outerjoin(
+                ProjectWikiActivity,
+                (UserActivity.column("refer_activity_table") == ProjectWikiActivity.__tablename__)
+                & (ProjectWikiActivity.column("id") == UserActivity.column("refer_activity_id")),
+            )
+            .where(
+                (ProjectActivity.column("project_id") == project.id)
+                | (ProjectWikiActivity.column("project_id") == project.id)
+            )
+        )

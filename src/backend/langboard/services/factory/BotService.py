@@ -20,6 +20,9 @@ class BotService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "bot"
 
+    async def get_by_uid(self, uid: str) -> Bot | None:
+        return await self._get_by_param(Bot, uid)
+
     @overload
     async def get_list(self, as_api: Literal[False], is_setting: bool = False) -> list[Bot]: ...
     @overload

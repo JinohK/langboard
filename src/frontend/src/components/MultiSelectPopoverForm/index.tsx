@@ -9,6 +9,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UserAvatar from "@/components/UserAvatar";
 import { EMAIL_REGEX } from "@/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 
 export type TMultiSelectAssigneeItem = User.TModel | BotModel.TModel;
 
@@ -63,6 +64,7 @@ export const MultiSelectAssigneesPopover = memo(
         onSave,
         createNewUserLabel,
         canEdit,
+        projectUID,
         ...props
     }: IMultiSelectAssigneesPopoverProps) => {
         const [t] = useTranslation();
@@ -85,9 +87,11 @@ export const MultiSelectAssigneesPopover = memo(
 
         return (
             <Flex items="center" gap="1">
-                {assignees.length > 0 && <UserAvatarList users={assignees.map(getMultiSelectItemAsUser)} {...userAvatarListProps} />}
+                {assignees.length > 0 && (
+                    <UserAvatarList users={assignees.map(getMultiSelectItemAsUser)} projectUID={projectUID} {...userAvatarListProps} />
+                )}
                 {canEdit && (
-                    <Popover.Root modal={true} open={isOpened} onOpenChange={changeIsOpenedState}>
+                    <Popover.Root modal open={isOpened} onOpenChange={changeIsOpenedState}>
                         <Popover.Trigger asChild>
                             <Button variant={popoverButtonVariant} {...popoverButtonProps}>
                                 <IconComponent icon={addIcon} size={addIconSize} />
@@ -103,6 +107,7 @@ export const MultiSelectAssigneesPopover = memo(
                                 onValueChange={(items) => {
                                     selectedItemsRef.current = items;
                                 }}
+                                projectUID={projectUID}
                             />
                             <Flex items="center" justify="end" gap="1" mt="2">
                                 <Button
@@ -148,6 +153,7 @@ export interface IBaseMultiSelectAssigneesFormProps {
     createNewUserLabel?: (item: TMultiSelectAssigneeItem) => string;
     onValueChange: (items: TMultiSelectAssigneeItem[]) => void;
     setSelectedItemsRef?: React.RefObject<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>;
+    projectUID?: string;
 }
 
 interface IMultiSelectAssigneesFormWithNonMembersProps extends IBaseMultiSelectAssigneesFormProps {
@@ -173,6 +179,7 @@ export const MultiSelectAssigneesForm = memo(
         createNewUserLabel,
         onValueChange,
         setSelectedItemsRef,
+        projectUID,
     }: TMultiSelectAssigneesFormProps) => {
         const [t] = useTranslation();
         const [isOpened, setIsOpened] = useState(false);
@@ -280,7 +287,7 @@ export const MultiSelectAssigneesForm = memo(
 
                         return (
                             <UserAvatar.Root user={selectedItem} customTrigger={badge} key={createShortUUID()}>
-                                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
+                                <UserAvatarDefaultList user={selectedItem} projectUID={projectUID} />
                             </UserAvatar.Root>
                         );
                     }}

@@ -30,6 +30,12 @@ class ProjectWikiService(BaseService):
     async def get_by_uid(self, uid: str) -> ProjectWiki | None:
         return await self._get_by_param(ProjectWiki, uid)
 
+    async def get_all_by_project(self, project: TProjectParam) -> list[ProjectWiki]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+        return list(await self._get_all_by(ProjectWiki, "project_id", project.id))
+
     async def get_board_list(self, user_or_bot: TUserOrBot, project: TProjectParam) -> list[dict[str, Any]]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
@@ -219,7 +225,7 @@ class ProjectWikiService(BaseService):
 
         notification_service = self._get_service(NotificationService)
         if "content" in model:
-            await notification_service.notify_mentioned_at_wiki(user_or_bot, project, wiki)
+            await notification_service.notify_mentioned_in_wiki(user_or_bot, project, wiki)
 
         ProjectWikiActivityTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
         ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)

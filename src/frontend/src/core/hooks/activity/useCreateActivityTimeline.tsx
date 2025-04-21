@@ -147,6 +147,9 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         />
                     );
                     break;
+                case "bot":
+                    components.Bot = <UserOrBotComponent userOrBot={value} />;
+                    break;
             }
         });
 
@@ -222,9 +225,9 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         }
 
         return (
-            <Flex inline items="center" gap="1">
-                {avatar}
-                {nameComp}
+            <Flex inline items="center" gap="1" position="relative">
+                <Box position="absolute">{avatar}</Box>
+                <Box ml="9">{nameComp}</Box>
             </Flex>
         );
     };

@@ -22,6 +22,9 @@ interface IBaseMultiSelectProps {
     className?: string;
     badgeClassName?: string;
     inputClassName?: string;
+    listClassName?: string;
+    noBadge?: bool;
+    createValueText?: (value: string[]) => string;
     createBadgeWrapper?: (badge: JSX.Element, value: string) => JSX.Element | null;
     canCreateNew?: bool;
     validateCreatedNewValue?: (value: string) => bool;
@@ -31,7 +34,15 @@ interface IBaseMultiSelectProps {
     disabled?: bool;
 }
 
+interface IDisabledBadgeMultiSelectProps extends IBaseMultiSelectProps {
+    noBadge: true;
+    createValueText: (value: string[]) => string;
+    createBadgeWrapper?: never;
+}
+
 interface IAllowedCreateNewMultiSelectProps extends IBaseMultiSelectProps {
+    noBadge?: false;
+    createValueText?: never;
     canCreateNew: true;
     validateCreatedNewValue: (value: string) => bool;
     createNewCommandItemLabel?: ((values: string[]) => string) | ((value: string) => { label: string; value: string }[]);
@@ -57,6 +68,7 @@ interface IDefaultMultiSelectProps extends IBaseMultiSelectProps {
 }
 
 export type TMultiSelectProps =
+    | IDisabledBadgeMultiSelectProps
     | IAllowedCreateNewWithMultipleCommandItemMultiSelectProps
     | IAllowedCreateNewWithSingleCommandItemMultiSelectProps
     | IDefaultMultiSelectProps;
@@ -70,6 +82,9 @@ const MultiSelect = React.memo(
         className,
         badgeClassName,
         inputClassName,
+        listClassName,
+        noBadge,
+        createValueText,
         createBadgeWrapper,
         canCreateNew,
         validateCreatedNewValue,
@@ -150,7 +165,7 @@ const MultiSelect = React.memo(
                 const valuesCanBeAdded: string[] = [];
                 for (let i = 0; i < splittedValues.length; ++i) {
                     const trimmedValue = splittedValues[i].trim();
-                    if (!trimmedValue || !validateCreatedNewValue(trimmedValue) || selected.includes(trimmedValue)) {
+                    if (!trimmedValue || !validateCreatedNewValue?.(trimmedValue) || selected.includes(trimmedValue)) {
                         continue;
                     }
 
@@ -164,7 +179,7 @@ const MultiSelect = React.memo(
             [selected, inputValue, setSelectedWithFireEvent]
         );
         const parsedMultipleValues = React.useMemo(() => {
-            if (!canCreateNew) {
+            if (!canCreateNew || !validateCreatedNewValue) {
                 return [];
             }
 
@@ -185,6 +200,10 @@ const MultiSelect = React.memo(
             if (selectedValue) {
                 setSelected(selectedValue);
             }
+        }, [selectedValue]);
+
+        React.useEffect(() => {
+            setSelected(selectedValue ?? []);
         }, [selectedValue]);
 
         const boundary: (Element | null)[] = [];
@@ -235,9 +254,12 @@ const MultiSelect = React.memo(
             "--multiselect-transform-origin": [middlewareData.transformOrigin?.x, middlewareData.transformOrigin?.y].join(" "),
         };
 
-        const isDisabled = (!canCreateNew && !selectables.length) || !!disabled;
+        const isDisabled = !noBadge && ((!canCreateNew && !selectables.length) || !!disabled);
         const isCreatable =
-            !!canCreateNew && !!inputValue && inputValue.split(multipleSplitter).some((value) => validateCreatedNewValue(value.trim()));
+            !!canCreateNew &&
+            !!validateCreatedNewValue &&
+            !!inputValue &&
+            inputValue.split(multipleSplitter).some((value) => validateCreatedNewValue(value.trim()));
 
         return (
             <Command.Root onKeyDown={handleKeyDown} className={cn("overflow-visible bg-transparent", className)}>
@@ -247,62 +269,87 @@ const MultiSelect = React.memo(
                     textSize="sm"
                     border
                     rounded="md"
-                    className="group border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0"
+                    className={cn(
+                        "group border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
+                        noBadge && "cursor-pointer"
+                    )}
+                    onClick={() => {
+                        if (noBadge) {
+                            setOpen((prev) => !prev);
+                        }
+                    }}
                     ref={setWrapper}
                 >
                     <Flex wrap gap="1">
-                        {selected.map((selectedValue) => {
-                            let selection = selections.find((selection) => selection.value === selectedValue);
-                            if (!selection && canCreateNew) {
-                                selection = { label: selectedValue, value: selectedValue };
-                            }
+                        {noBadge ? (
+                            <Flex items="center" gap="2">
+                                {selected.length ? createValueText?.(selected) : placeholder}
+                                <IconComponent
+                                    icon="chevron-down"
+                                    size="4"
+                                    className={cn(
+                                        "text-muted-foreground opacity-75 transition-all",
+                                        open ? "rotate-180" : "rotate-0",
+                                        isDisabled ? "cursor-not-allowed" : "hover:text-foreground"
+                                    )}
+                                />
+                            </Flex>
+                        ) : (
+                            <>
+                                {selected.map((selectedValue) => {
+                                    let selection = selections.find((selection) => selection.value === selectedValue);
+                                    if (!selection && canCreateNew) {
+                                        selection = { label: selectedValue, value: selectedValue };
+                                    }
 
-                            if (!selection) {
-                                return null;
-                            }
+                                    if (!selection) {
+                                        return null;
+                                    }
 
-                            let badge: JSX.Element | null = (
-                                <Badge variant="secondary" className={cn("justify-between gap-1 pl-2 pr-1", badgeClassName)}>
-                                    {selection!.label}
-                                    <button
-                                        className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                handleUnselect(selectedValue);
-                                            }
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        disabled={disabled}
-                                        onClick={() => handleUnselect(selectedValue)}
-                                    >
-                                        <IconComponent
-                                            icon="x"
-                                            size="3"
-                                            className={cn(
-                                                "text-muted-foreground transition-all",
-                                                disabled ? "cursor-not-allowed" : "hover:text-foreground"
-                                            )}
-                                        />
-                                    </button>
-                                </Badge>
-                            );
+                                    let badge: JSX.Element | null = (
+                                        <Badge variant="secondary" className={cn("justify-between gap-1 pl-2 pr-1", badgeClassName)}>
+                                            {selection!.label}
+                                            <button
+                                                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        handleUnselect(selectedValue);
+                                                    }
+                                                }}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}
+                                                disabled={disabled}
+                                                onClick={() => handleUnselect(selectedValue)}
+                                            >
+                                                <IconComponent
+                                                    icon="x"
+                                                    size="3"
+                                                    className={cn(
+                                                        "text-muted-foreground transition-all",
+                                                        disabled ? "cursor-not-allowed" : "hover:text-foreground"
+                                                    )}
+                                                />
+                                            </button>
+                                        </Badge>
+                                    );
 
-                            if (createBadgeWrapper) {
-                                badge = createBadgeWrapper(badge, selectedValue);
-                                if (!badge) {
-                                    return null;
-                                }
-                            }
+                                    if (createBadgeWrapper) {
+                                        badge = createBadgeWrapper(badge, selectedValue);
+                                        if (!badge) {
+                                            return null;
+                                        }
+                                    }
 
-                            return (
-                                <span key={selection!.value} className="inline-flex">
-                                    {badge}
-                                </span>
-                            );
-                        })}
+                                    return (
+                                        <span key={selection!.value} className="inline-flex">
+                                            {badge}
+                                        </span>
+                                    );
+                                })}
+                            </>
+                        )}
                         <CommandPrimitive.Input
                             ref={inputRef}
                             value={inputValue}
@@ -311,11 +358,15 @@ const MultiSelect = React.memo(
                             onFocus={() => setOpen(true)}
                             placeholder={placeholder}
                             disabled={isDisabled}
-                            className={cn("ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground", inputClassName)}
+                            className={cn(
+                                "ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground",
+                                inputClassName,
+                                noBadge && "hidden"
+                            )}
                         />
                     </Flex>
                 </Box>
-                <Box position="relative" mt="2">
+                <Box position="relative" mt="2" className={listClassName}>
                     <Command.List
                         style={style}
                         className={cn(
@@ -328,10 +379,10 @@ const MultiSelect = React.memo(
                         )}
                         ref={refs.setFloating}
                     >
-                        {open && (selectables.length > 0 || isCreatable) ? (
+                        {open && ((!noBadge && selectables.length > 0) || (noBadge && selections.length) || isCreatable) ? (
                             <MultiSelectItemList
                                 isCreatable={isCreatable}
-                                selectables={selectables}
+                                selectables={noBadge ? selections : selectables}
                                 selected={selected}
                                 inputValue={inputValue}
                                 setInputValue={setInputValue}
@@ -341,6 +392,7 @@ const MultiSelect = React.memo(
                                 isNewCommandItemMultiple={isNewCommandItemMultiple as never}
                                 setSelectedWithFireEvent={setSelectedWithFireEvent}
                                 disabled={isDisabled}
+                                noBagde={noBadge}
                             />
                         ) : null}
                     </Command.List>
@@ -362,6 +414,7 @@ interface IBaseMultiSelectItemListProps {
     parsedMultipleValues: string[];
     isNewCommandItemMultiple?: bool;
     setSelectedWithFireEvent: (action: React.SetStateAction<string[]>) => void;
+    noBagde?: bool;
     disabled?: bool;
 }
 
@@ -389,6 +442,7 @@ const MultiSelectItemList = React.memo(
         parsedMultipleValues,
         isNewCommandItemMultiple,
         setSelectedWithFireEvent,
+        noBagde,
         disabled,
     }: TMultiSelectItemListProps) => {
         const newItems = React.useMemo(() => {
@@ -419,7 +473,7 @@ const MultiSelectItemList = React.memo(
                 .flat();
         }, [parsedMultipleValues]);
 
-        const onMouseDown = (e: React.MouseEvent) => {
+        const onPointerDown = (e: React.MouseEvent | React.TouchEvent) => {
             e.preventDefault();
             e.stopPropagation();
         };
@@ -427,18 +481,30 @@ const MultiSelectItemList = React.memo(
         const onSelect = React.useCallback(
             (values: string[]) => {
                 setInputValue("");
-                setSelectedWithFireEvent((prev) => [...prev, ...values.filter((value) => !selected.includes(value))]);
+                setSelectedWithFireEvent((prev) => {
+                    if (noBagde) {
+                        const newValues = prev.filter((value) => !values.includes(value));
+                        for (let i = 0; i < values.length; ++i) {
+                            const value = values[i];
+                            if (!prev.includes(value)) {
+                                newValues.push(value);
+                            }
+                        }
+                        return newValues;
+                    } else {
+                        return [...prev, ...values.filter((value) => !selected.includes(value))];
+                    }
+                });
             },
             [setSelectedWithFireEvent]
         );
 
         return (
             <Box w="full" className="outline-none animate-in">
-                <Command.Group className="h-full overflow-auto" forceMount>
+                <Command.Group className="h-full overflow-auto" forceMount onMouseDown={onPointerDown} onTouchStart={onPointerDown}>
                     {newItems.map((newItem) => (
                         <Command.Item
                             key={createShortUUID()}
-                            onMouseDown={onMouseDown}
                             onSelect={() => onSelect(TypeUtils.isArray(newItem.value) ? newItem.value : [newItem.value])}
                             disabled={disabled}
                             className="cursor-pointer"
@@ -447,6 +513,20 @@ const MultiSelectItemList = React.memo(
                         </Command.Item>
                     ))}
                     {selectables.map((selectable) => {
+                        if (noBagde) {
+                            return (
+                                <Command.Item
+                                    key={selectable.value}
+                                    onSelect={() => onSelect([selectable.value])}
+                                    disabled={disabled}
+                                    className="flex cursor-pointer items-center gap-2"
+                                >
+                                    {selected.includes(selectable.value) ? <IconComponent icon="check" size="4" /> : <Box size="4" />}
+                                    {selectable.label}
+                                </Command.Item>
+                            );
+                        }
+
                         if (inputValue.length > 0) {
                             if (!hasSearchedValue(selectable)) {
                                 return null;
@@ -456,7 +536,6 @@ const MultiSelectItemList = React.memo(
                         return (
                             <Command.Item
                                 key={selectable.value}
-                                onMouseDown={onMouseDown}
                                 onSelect={() => onSelect([selectable.value])}
                                 disabled={disabled}
                                 className="cursor-pointer"

@@ -92,6 +92,28 @@ class ProjectPublisher:
         SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
+    def bot_activation_toggled(project: Project, target_bot: Bot, is_disabled: bool):
+        project_uid = project.get_uid()
+        bot_uid = target_bot.get_uid()
+        model = {"bot_uid": bot_uid, "is_disabled": is_disabled}
+        publish_models = [
+            SocketPublishModel(
+                topic=SocketTopic.BoardSettings,
+                topic_id=project_uid,
+                event=f"board:settings:activation:bot:toggled:{project_uid}",
+                data_keys=list(model.keys()),
+            ),
+            SocketPublishModel(
+                topic=SocketTopic.ProjectBot,
+                topic_id=f"{bot_uid}-{project_uid}",
+                event=f"project:bot:activation:toggled:{bot_uid}",
+                data_keys="is_disabled",
+            ),
+        ]
+
+        SocketPublishService.put_dispather(model, publish_models)
+
+    @staticmethod
     def deleted(project: Project):
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []

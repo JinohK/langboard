@@ -38,5 +38,16 @@
   "No preview": "No preview",
   "Copied.": "Copied.",
   "No message": "No message",
-  "Coming soon": "Coming soon"
+  "Coming soon": "Coming soon",
+  "avatarActions": {
+    "Create & assign a card": "Create & assign a card",
+    "View cards": "View cards",
+    "View activities": "View activities",
+    "Set notifications": "Set notifications",
+    "Unassign from this project": "Unassign from this project",
+    "Enable from this project": "Enable from this project",
+    "Disable from this project": "Disable from this project",
+    "Select a column": "Select a column",
+    "Card title": "Card title"
+  }
 }

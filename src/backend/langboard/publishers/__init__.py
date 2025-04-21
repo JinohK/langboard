@@ -7,6 +7,7 @@ from .CardRelationshipPublisher import CardRelationshipPublisher
 from .CheckitemPublisher import CheckitemPublisher
 from .ChecklistPublisher import ChecklistPublisher
 from .NotificationPublisher import NotificationPublisher
+from .ProjectBotPublisher import ProjectBotPublisher
 from .ProjectColumnPublisher import ProjectColumnPublisher
 from .ProjectInvitationPublisher import ProjectInvitationPublisher
 from .ProjectLabelPublisher import ProjectLabelPublisher
@@ -25,6 +26,7 @@ __all__ = [
     "CheckitemPublisher",
     "ChecklistPublisher",
     "NotificationPublisher",
+    "ProjectBotPublisher",
     "ProjectColumnPublisher",
     "ProjectInvitationPublisher",
     "ProjectLabelPublisher",

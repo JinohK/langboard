@@ -2,6 +2,7 @@ import { AnimatedList, Box, Button, Card, Flex, IconComponent, Label, Loading, P
 import { createDataTextRegex } from "@/components/Editor/plugins/markdown";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import UserAvatar from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { QUERY_NAMES } from "@/constants";
 import useDeleteAllUserNotificationsHandlers from "@/controllers/socket/notification/useDeleteAllUserNotificationsHandlers";
 import useDeleteUserNotificationHandlers from "@/controllers/socket/notification/useDeleteUserNotificationHandlers";
@@ -219,9 +220,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                 labelClassName="inline-flex gap-1 cursor-pointer select-none"
                 nameClassName="text-base"
             >
-                <UserAvatar.List>
-                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                </UserAvatar.List>
+                <UserAvatarDefaultList user={user} projectUID={notification.records.project?.uid} />
             </UserAvatar.Root>
         );
     };

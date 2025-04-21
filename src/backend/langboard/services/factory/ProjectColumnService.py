@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
 from ...core.utils.DateTime import now
@@ -15,7 +15,16 @@ class ProjectColumnService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "project_column"
 
-    async def get_list(self, project: TProjectParam) -> list[dict[str, Any]]:
+    async def get_by_uid(self, uid: str) -> ProjectColumn | None:
+        return await self._get_by_param(ProjectColumn, uid)
+
+    @overload
+    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
+    @overload
+    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_all_by_project(
+        self, project: TProjectParam, as_api: bool
+    ) -> list[ProjectColumn] | list[dict[str, Any]]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
@@ -30,15 +39,14 @@ class ProjectColumnService(BaseService):
         columns = []
         has_archive_column = False
         for raw_column in raw_columns:
-            columns.append(raw_column.api_response())
+            columns.append(raw_column.api_response() if as_api else raw_column)
             if raw_column.is_archive:
                 has_archive_column = True
 
         if not has_archive_column:
             archive_column = await self.get_or_create_archive_if_not_exists(project)
-            columns.append(archive_column.api_response())
+            columns.append(archive_column.api_response() if as_api else archive_column)
 
-        columns = [raw_column.api_response() for raw_column in raw_columns]
         return columns
 
     async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:

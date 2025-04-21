@@ -8,9 +8,9 @@ from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, Sn
 
 class NotificationType(Enum):
     ProjectInvited = "project_invited"
-    MentionedAtCard = "mentioned_at_card"
-    MentionedAtComment = "mentioned_at_comment"
-    MentionedAtWiki = "mentioned_at_wiki"
+    MentionedAtCard = "mentioned_in_card"
+    MentionedAtComment = "mentioned_in_comment"
+    MentionedAtWiki = "mentioned_in_wiki"
     AssignedToCard = "assigned_to_card"
     ReactedToComment = "reacted_to_comment"
     NotifiedFromChecklist = "notified_from_checklist"

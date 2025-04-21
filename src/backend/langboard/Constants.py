@@ -97,6 +97,9 @@ MAIL_PORT = _get_env("MAIL_PORT")
 MAIL_STARTTLS = _get_env("MAIL_STARTTLS") == "true"
 MAIL_SSL_TLS = _get_env("MAIL_SSL_TLS") == "true"
 
+# Scheduler
+CRON_TAB_FILE = Path(_get_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
+
 
 # Frontend query names
 class QUERY_NAMES(Enum):

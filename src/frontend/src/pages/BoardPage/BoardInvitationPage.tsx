@@ -44,7 +44,7 @@ function BoardInvitationPage() {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("dashboard.errors.Project not found"));
+                            Toast.Add.error(t("dashboard.errors.Project not found."));
                             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
                         },
                     });

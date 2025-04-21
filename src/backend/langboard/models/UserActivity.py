@@ -30,5 +30,10 @@ class UserActivity(BaseActivityModel, table=True):
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value if self.activity_type else None
         base_api_response["filterable_type"] = "user"
-        base_api_response["filterable_uid"] = self.get_uid()
+        if self.user_id:
+            base_api_response["filterable_uid"] = self.user_id.to_short_code()
+        elif self.bot_id:
+            base_api_response["filterable_uid"] = self.bot_id.to_short_code()
+        else:
+            base_api_response["filterable_uid"] = self.get_uid()
         return base_api_response

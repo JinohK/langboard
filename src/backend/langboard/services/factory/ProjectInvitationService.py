@@ -157,7 +157,7 @@ class ProjectInvitationService(BaseService):
         user: User,
         project: TProjectParam,
         invitation_result: InvitationRelatedResult,
-    ) -> tuple[bool, dict[str, str]]:
+    ) -> bool:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return False
@@ -199,7 +199,7 @@ class ProjectInvitationService(BaseService):
             )
             urls[email] = token_url
 
-        return True, urls
+        return True
 
     async def accept(self, user: User, token: str) -> Literal[False] | str:
         invitation = await self.__get_invitation_by_token(user, token)

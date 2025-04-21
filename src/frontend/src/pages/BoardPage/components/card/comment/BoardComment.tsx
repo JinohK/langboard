@@ -1,6 +1,7 @@
 import { Box, Button, Flex, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatar from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import { API_ROUTES } from "@/controllers/constants";
@@ -167,7 +168,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     return (
         <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
             <Box>
-                <BoardCommentUserAvatar user={commentAuthor} />
+                <BoardCommentUserAvatar user={commentAuthor} projectUID={projectUID} />
             </Box>
             <Flex
                 direction="col"
@@ -201,6 +202,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                         setValue={setValue}
                         editorComponentRef={editorComponentRef}
+                        projectUID={projectUID}
                     />
                 </Flex>
                 <Flex items="center" gap="2">
@@ -271,12 +273,10 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     );
 });
 
-const BoardCommentUserAvatar = memo(({ user }: { user: User.TModel }): JSX.Element => {
+const BoardCommentUserAvatar = memo(({ user, projectUID }: { user: User.TModel; projectUID: string }): JSX.Element => {
     return (
         <UserAvatar.Root avatarSize="sm" user={user}>
-            <UserAvatar.List>
-                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-            </UserAvatar.List>
+            <UserAvatarDefaultList user={user} projectUID={projectUID} />
         </UserAvatar.Root>
     );
 });

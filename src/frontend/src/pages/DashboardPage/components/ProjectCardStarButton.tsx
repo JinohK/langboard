@@ -39,7 +39,7 @@ const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, update
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("dashboard.errors.Project not found"));
+                            Toast.Add.error(t("dashboard.errors.Project not found."));
                         },
                     });
 

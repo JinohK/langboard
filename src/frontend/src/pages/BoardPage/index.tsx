@@ -121,7 +121,7 @@ const BoardProxy = memo((): JSX.Element => {
                 navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("project.errors.Project not found"));
+                Toast.Add.error(t("project.errors.Project not found."));
                 navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });
@@ -144,9 +144,11 @@ const BoardProxy = memo((): JSX.Element => {
             onProjectDetailsChanged();
             sendIsBoardChatAvailable({});
         });
+        socket.subscribe(ESocketTopic.BoardSettings, [projectUID]);
 
         return () => {
             socket.unsubscribe(ESocketTopic.Board, [projectUID]);
+            socket.unsubscribe(ESocketTopic.BoardSettings, [projectUID]);
         };
     }, [isFetching]);
 

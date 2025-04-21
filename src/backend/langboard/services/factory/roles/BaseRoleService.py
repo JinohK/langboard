@@ -28,6 +28,23 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             result = await db.exec(query)
         return result.all()
 
+    async def get_role(self, **kwargs) -> _TRoleModel | None:
+        """Get a role by filtering with the given parameters.
+
+        If the given parameters are not in the model's fields or are `None`, they will be ignored.
+
+        If no parameters are given, all roles will be returned.
+        """
+        query = SqlBuilder.select.table(self._model_class)
+
+        for arg, value in kwargs.items():
+            if arg in self._model_class.model_fields and value is not None:
+                query = query.where(getattr(self._model_class, arg) == value)
+
+        async with DbSession.use() as db:
+            result = await db.exec(query.limit(1))
+        return result.first()
+
     async def grant(self, **kwargs) -> _TRoleModel:
         """Grant actions to the role.
 

@@ -195,6 +195,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                         (item) => assignedBots.includes(item as BotModel.TModel) || assignedMembers.includes(item as User.TModel)
                     )}
                     canEdit
+                    projectUID={projectUID}
                 />
             )}
         </Flex>

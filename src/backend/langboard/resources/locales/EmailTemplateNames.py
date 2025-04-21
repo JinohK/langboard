@@ -7,9 +7,9 @@ TEmailTemplateName = Literal[
     "subemail",
     "project_invitation",
     # Notification
-    "mentioned_at_card",
-    "mentioned_at_comment",
-    "mentioned_at_wiki",
+    "mentioned_in_card",
+    "mentioned_in_comment",
+    "mentioned_in_wiki",
     "assigned_to_card",
     "reacted_to_comment",
     "notified_from_checklist",

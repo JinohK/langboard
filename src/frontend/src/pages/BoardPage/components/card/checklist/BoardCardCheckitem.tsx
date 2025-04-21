@@ -175,6 +175,7 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
                                 {assignedUser && (
                                     <BoardCardCheckitemAssignedMember
                                         key={`board-card-checkitem-assigned-member-${checkitem.uid}`}
+                                        projectUID={projectUID}
                                         assignedUser={assignedUser}
                                     />
                                 )}

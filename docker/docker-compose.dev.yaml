@@ -63,6 +63,7 @@ services:
       - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
       - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
       - LOGGING_DIR=${LOGGING_DIR}
+      - CRON_TAB_FILE=${CRON_TAB_FILE}
       - SENTRY_DSN=${SENTRY_DSN}
       - MAIN_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:5432/${POSTGRES_DB}
       - MAIN_DATABASE_ROLE=${MAIN_DATABASE_ROLE}
@@ -97,8 +98,10 @@ services:
       - ../pyproject.toml:/app/pyproject.toml
       - ../poetry.lock:/app/poetry.lock
       - ../README.md:/app/README.md
+      - ../LICENSE:/app/LICENSE
       - ../alembic.ini:/app/alembic.ini
       - ../local:/app/local
+      - ./volumes/crontab:/etc/crontab
     depends_on:
       - db
     networks:
@@ -154,7 +157,7 @@ services:
 
   db:
     init: true
-    image: bitnami/postgresql:latest
+    image: bitnami/postgresql:17.4.0-debian-12-r4
     container_name: ${PROJECT_NAME}_db
     ports:
       - ${MASTER_POSTGRES_PORT}:5432
@@ -176,7 +179,7 @@ services:
 
   db-replica:
     init: true
-    image: bitnami/postgresql:latest
+    image: bitnami/postgresql:17.4.0-debian-12-r4
     container_name: ${PROJECT_NAME}_db_replica
     ports:
       - ${REPLICA_POSTGRES_PORT}:5432
@@ -198,7 +201,7 @@ services:
 
   db-backup:
     init: true
-    image: bitnami/postgresql:latest
+    image: bitnami/postgresql:17.4.0-debian-12-r4
     container_name: ${PROJECT_NAME}_db_backup
     environment:
       - POSTGRESQL_REPLICATION_MODE=slave

@@ -50,10 +50,7 @@ class EmailService(BaseService):
         fm = FastMail(self.__config)
         try:
             await fm.send_message(message)
-        except Exception as e:
-            from ...core.logger import Logger
-
-            Logger.main.error(e)
+        except Exception:
             return False
 
         return True

@@ -6,7 +6,7 @@ from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.utils.Converter import convert_python_data
-from ...models import Project, ProjectLabel, ProjectRole
+from ...models import Card, Project, ProjectColumn, ProjectLabel, ProjectRole
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
@@ -46,6 +46,8 @@ from .scopes import (
                     },
                 ),
                 "bots": [Bot],
+                "columns": [ProjectColumn],
+                "cards": [(Card, {"schema": {"column_name": "string"}})],
             }
         )
         .auth(with_bot=True)
@@ -59,15 +61,17 @@ from .scopes import (
 async def get_project_details(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user_or_bot, project_uid, with_roles=True)
+    result = await service.project.get_details(user_or_bot, project_uid, is_setting=True)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
     bots = await service.bot.get_list(as_api=True)
+    columns = await service.project_column.get_all_by_project(project, as_api=True)
+    cards = await service.card.get_all_by_project(project, as_api=True)
 
-    return JsonResponse(content={"project": response, "bots": bots})
+    return JsonResponse(content={"project": response, "bots": bots, "columns": columns, "cards": cards})
 
 
 @AppRouter.schema(form=UpdateProjectDetailsForm)
@@ -135,6 +139,29 @@ async def update_project_bot_roles(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.project.update_bot_roles(project_uid, bot_uid, form.roles)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={})
+
+
+@AppRouter.api.put(
+    "/board/{project_uid}/settings/bot/{bot_uid}/toggle-activation",
+    tags=["Board.Settings"],
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project not found.").get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def toggle_project_bot_activation(
+    project_uid: str,
+    bot_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.toggle_bot_activation(user_or_bot, project_uid, bot_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

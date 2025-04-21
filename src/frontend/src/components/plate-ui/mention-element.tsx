@@ -10,6 +10,7 @@ import { useMounted } from "@/core/hooks/useMounted";
 import { PlateElement } from "@/components/plate-ui/plate-element";
 import { AuthUser, User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 
 export const MentionElement = withRef<
     typeof PlateElement,
@@ -19,8 +20,9 @@ export const MentionElement = withRef<
         prefix?: string;
         renderLabel?: (mentionable: TMentionElement) => string;
         onClick?: (mentionNode: any) => void;
+        projectUID?: string;
     }
->(({ children, className, currentUser, mentionables, prefix, renderLabel, onClick, ...props }, ref) => {
+>(({ children, className, currentUser, mentionables, prefix, renderLabel, onClick, projectUID, ...props }, ref) => {
     const element = useElement<TMentionElement>();
     const selected = useSelected();
     const focused = useFocused();
@@ -61,9 +63,7 @@ export const MentionElement = withRef<
                         </>
                     }
                 >
-                    <UserAvatar.List>
-                        <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                    </UserAvatar.List>
+                    <UserAvatarDefaultList user={mentionedUser} projectUID={projectUID} />
                 </UserAvatar.Root>
             ) : (
                 // Others like Android https://github.com/ianstormtaylor/slate/pull/5360
@@ -79,9 +79,7 @@ export const MentionElement = withRef<
                         </>
                     }
                 >
-                    <UserAvatar.List>
-                        <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                    </UserAvatar.List>
+                    <UserAvatarDefaultList user={mentionedUser} projectUID={projectUID} />
                 </UserAvatar.Root>
             )}
         </PlateElement>

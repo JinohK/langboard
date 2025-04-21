@@ -58,7 +58,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
     };
 
     return (
-        <Popover.Root modal={true} open={isOpened} onOpenChange={changeOpenState}>
+        <Popover.Root modal open={isOpened} onOpenChange={changeOpenState}>
             <Popover.Trigger asChild>
                 <DropdownMenu.Item
                     onClick={(e) => {
@@ -75,7 +75,7 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
                     {allColumns.length > 0 && (
                         <Select.Root value={selectedColumnUID} onValueChange={setSelectedColumnUID} disabled={isValidating}>
                             <Select.Trigger>
-                                <Select.Value placeholder={t("card.Select Column")} />
+                                <Select.Value placeholder={t("card.Select column")} />
                             </Select.Trigger>
                             <Select.Content>
                                 {allColumns.map((column) => (

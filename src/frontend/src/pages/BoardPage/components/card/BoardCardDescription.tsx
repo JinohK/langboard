@@ -118,6 +118,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}
                 editorComponentRef={editorComponentRef}
+                projectUID={projectUID}
             />
         </Box>
     );

@@ -2,6 +2,7 @@ import { Box, Button, Flex, HoverCard, ScrollArea, Separator, Skeleton } from "@
 import { AvatarVariants } from "@/components/base/Avatar";
 import { LabelBadge } from "@/components/LabelBadge";
 import UserAvatar, { TUserAvatarProps } from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { User } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -39,11 +40,12 @@ export interface IUserAvatarListProps extends Omit<React.ComponentProps<typeof F
     size?: TUserAvatarProps["avatarSize"];
     spacing?: "1" | "2" | "3" | "4" | "5" | "none";
     listAlign?: TUserAvatarProps["listAlign"];
+    projectUID?: string;
 }
 
 export const UserAvatarList = memo(
     forwardRef<HTMLDivElement, IUserAvatarListProps>(
-        ({ maxVisible, className, users, size = "default", spacing = "2", listAlign, ...props }: IUserAvatarListProps, ref) => {
+        ({ maxVisible, className, users, size = "default", spacing = "2", listAlign, projectUID, ...props }: IUserAvatarListProps, ref) => {
             const moreUsersCount = users.length - maxVisible;
 
             return (
@@ -56,9 +58,7 @@ export const UserAvatarList = memo(
                             listAlign={listAlign}
                             className="hover:z-50"
                         >
-                            <UserAvatar.List>
-                                <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                            </UserAvatar.List>
+                            <UserAvatarDefaultList user={user} projectUID={projectUID} />
                         </UserAvatar.Root>
                     ))}
                     {moreUsersCount > 0 && <UserAvatarMoreList users={users} maxVisible={maxVisible} size={size} listAlign={listAlign} />}
@@ -71,7 +71,7 @@ export const UserAvatarList = memo(
 export interface IUserAvatarBadgeListProps extends Omit<IUserAvatarListProps, "size" | "spacing"> {}
 
 export const UserAvatarBadgeList = memo(
-    forwardRef<HTMLDivElement, IUserAvatarBadgeListProps>(({ maxVisible, className, users, listAlign, ...props }, ref) => {
+    forwardRef<HTMLDivElement, IUserAvatarBadgeListProps>(({ maxVisible, className, users, listAlign, projectUID, ...props }, ref) => {
         const moreUsersCount = users.length - maxVisible;
 
         return (
@@ -90,9 +90,7 @@ export const UserAvatarBadgeList = memo(
                         )}
                         nameClassName="relative z-10"
                     >
-                        <UserAvatar.List>
-                            <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                        </UserAvatar.List>
+                        <UserAvatarDefaultList user={user} projectUID={projectUID} />
                     </UserAvatar.Root>
                 ))}
                 {moreUsersCount > 0 && <UserAvatarMoreList users={users} maxVisible={maxVisible} size="sm" listAlign={listAlign} isBadge />}
@@ -107,9 +105,10 @@ interface IUserAvatarMoreList {
     size?: TUserAvatarProps["avatarSize"];
     listAlign?: TUserAvatarProps["listAlign"];
     isBadge?: bool;
+    projectUID?: string;
 }
 
-const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign, isBadge }: IUserAvatarMoreList) => {
+const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign, isBadge, projectUID }: IUserAvatarMoreList) => {
     const [isOpened, setIsOpened] = useState(false);
     const moreUsersCount = users.length - maxVisible;
     const moreUsersCountText = moreUsersCount > 99 ? "99" : moreUsersCount;
@@ -149,9 +148,7 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
                                     withName
                                     labelClassName="justify-start gap-2 px-3 py-1 hover:bg-accent/70 cursor-pointer"
                                 >
-                                    <UserAvatar.List>
-                                        <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                                    </UserAvatar.List>
+                                    <UserAvatarDefaultList user={user} projectUID={projectUID} />
                                 </UserAvatar.Root>
                             </Fragment>
                         ))}

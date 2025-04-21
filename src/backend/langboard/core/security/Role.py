@@ -28,7 +28,7 @@ class Role:
             for column_name in self._model_class.get_filterable_columns(self._model_class):  # type: ignore
                 query = query.where(self._model_class[column_name] == path_params[column_name])
         else:
-            query = role_finder(query, path_params)
+            query = role_finder(query, path_params, user_or_bot_id, is_bot)
 
         async with DbSession.use() as db:
             result = await db.exec(query.limit(1))

@@ -34,10 +34,10 @@ class ProjectService(BaseService):
             return [ALL_GRANTED]
         role_service = self._get_service(RoleService)
         if isinstance(user_or_bot, Bot):
-            roles = await role_service.project.get_roles(bot_id=user_or_bot.id, project_id=project.id)
+            role = await role_service.project.get_role(bot_id=user_or_bot.id, project_id=project.id)
         else:
-            roles = await role_service.project.get_roles(user_id=user_or_bot.id, project_id=project.id)
-        return roles[0].actions if roles else []
+            role = await role_service.project.get_role(user_id=user_or_bot.id, project_id=project.id)
+        return role.actions if role else []
 
     @overload
     async def get_assigned_bots(
@@ -124,10 +124,11 @@ class ProjectService(BaseService):
 
         projects = []
         for project, assigned_user in raw_projects:
-            columns = await column_service.get_list(project)
+            columns = await column_service.get_all_by_project(project, as_api=True)
             project_dict = project.api_response()
             project_dict["starred"] = assigned_user.starred
             project_dict["last_viewed_at"] = assigned_user.last_viewed_at
+            project_dict["current_auth_role_actions"] = await self.get_role_actions(user, project)
             project_dict["columns"] = [
                 {
                     **column,
@@ -162,12 +163,16 @@ class ProjectService(BaseService):
                 )
             )
         raw_projects = result.all()
-        projects = [project.api_response() for project in raw_projects]
+        projects = []
+        for project in raw_projects:
+            api_project = project.api_response()
+            api_project["current_auth_role_actions"] = await self.get_role_actions(user, project)
+            projects.append(api_project)
 
         return projects
 
     async def get_details(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, with_roles: bool
+        self, user_or_bot: TUserOrBot, project: TProjectParam, is_setting: bool
     ) -> tuple[Project, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
@@ -180,7 +185,7 @@ class ProjectService(BaseService):
         response["bots"] = await self.get_assigned_bots(project, as_api=True)
         response["current_auth_role_actions"] = await self.get_role_actions(user_or_bot, project)
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
-        if with_roles:
+        if is_setting:
             role_service = self._get_service(RoleService)
             roles = await role_service.project.get_roles(project_id=project.id)
             response["bot_roles"] = {}
@@ -196,7 +201,9 @@ class ProjectService(BaseService):
 
         return project, response
 
-    async def is_assigned(self, user_or_bot: TUserOrBot, project: TProjectParam) -> bool:
+    async def is_assigned(
+        self, user_or_bot: TUserOrBot, project: TProjectParam
+    ) -> tuple[bool, ProjectAssignedBot | ProjectAssignedUser | None]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return False
@@ -212,7 +219,8 @@ class ProjectService(BaseService):
                 )
                 .limit(1)
             )
-        return bool(result.first())
+        assigned_data = result.first()
+        return bool(assigned_data), assigned_data
 
     async def is_user_related_to_other_user(self, user: User, target_user: User) -> bool:
         user_a = aliased(ProjectAssignedUser)
@@ -333,13 +341,13 @@ class ProjectService(BaseService):
         return model
 
     async def update_assigned_bots(
-        self, user: User, project: TProjectParam, assign_bot_uids: list[str]
+        self, user: User, project: TProjectParam, assign_bots: list[str] | list[SnowflakeID]
     ) -> list[Bot] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return None
 
-        assigned_bot_ids = [SnowflakeID.from_short_code(uid) for uid in assign_bot_uids]
+        assigned_bot_ids = [SnowflakeID.from_short_code(uid) if isinstance(uid, str) else uid for uid in assign_bots]
         old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
         old_assigned_bot_ids: list[int] = [bot.id for bot, _ in old_assigned_bots]
 
@@ -365,7 +373,7 @@ class ProjectService(BaseService):
         role_service = self._get_service(RoleService)
 
         bots = []
-        if assign_bot_uids:
+        if assign_bots:
             bots = await self._get_all_by(Bot, "id", assigned_bot_ids)
             for bot in bots:
                 if bot.id in old_assigned_bot_ids:
@@ -384,12 +392,10 @@ class ProjectService(BaseService):
 
         return list(bots)
 
-    async def update_assigned_users(
-        self, user: User, project: TProjectParam, emails: list[str]
-    ) -> dict[str, str] | None:
+    async def update_assigned_users(self, user: User, project: TProjectParam, emails: list[str]) -> bool:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
-            return None
+            return False
 
         old_assigned_users = await self.get_assigned_users(project, as_api=False)
 
@@ -417,7 +423,7 @@ class ProjectService(BaseService):
             )
             await db.commit()
 
-        _, urls = await invitation_service.invite_emails(user, project, invitation_related_data)
+        result = await invitation_service.invite_emails(user, project, invitation_related_data)
 
         new_assigned_users = await self.get_assigned_users(project, as_api=False)
         model = {
@@ -430,12 +436,46 @@ class ProjectService(BaseService):
             user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
         )
 
-        return urls
+        return result
+
+    async def unassign_assignee(self, user: User, project: TProjectParam, target: TUserParam | TBotParam) -> bool:
+        project = cast(Project, await self._get_by_param(Project, project))
+        target_user = cast(User, await self._get_by_param(User, target))
+        if not target_user:
+            target_bot = cast(Bot, await self._get_by_param(Bot, target))
+            if not target_bot:
+                return False
+            target = target_bot
+        else:
+            target = target_user
+
+        if not project or not (await self.is_assigned(target, project))[0] or project.owner_id == target.id:
+            return False
+
+        if isinstance(target, Bot):
+            bots = await self.get_assigned_bots(project, as_api=False)
+            new_bot_ids = [bot.id for bot, _ in bots if bot.id != target.id]
+            await self.update_assigned_bots(user, project, new_bot_ids)
+            return True
+
+        users = await self.get_assigned_users(project, as_api=False)
+        invitation_service = self._get_service(ProjectInvitationService)
+        invitations = await invitation_service.get_invited_users(project, as_api=False)
+        new_user_emails = [
+            *[user.email for user, _ in users if user.id != target.id],
+            *[invitation.email for invitation, user in invitations if not user or user.id != target.id],
+        ]
+
+        return await self.update_assigned_users(user, project, new_user_emails)
 
     async def update_bot_roles(self, project: TProjectParam, target_bot: TBotParam, roles: list[ProjectRoleAction]):
         project = cast(Project, await self._get_by_param(Project, project))
         target_bot = cast(Bot, await self._get_by_param(Bot, target_bot))
-        if not project or not target_bot or not await self.is_assigned(target_bot, project):
+        if not project or not target_bot:
+            return False
+
+        is_assigned, assigned_bot = await self.is_assigned(target_bot, project)
+        if not is_assigned or not assigned_bot or cast(ProjectAssignedBot, assigned_bot).is_disabled:
             return False
 
         if ProjectRoleAction.Read not in roles:
@@ -457,7 +497,7 @@ class ProjectService(BaseService):
     async def update_user_roles(self, project: TProjectParam, target_user: TUserParam, roles: list[ProjectRoleAction]):
         project = cast(Project, await self._get_by_param(Project, project))
         target_user = cast(User, await self._get_by_param(User, target_user))
-        if not project or not target_user or not await self.is_assigned(target_user, project):
+        if not project or not target_user or not (await self.is_assigned(target_user, project))[0]:
             return False
 
         if project.owner_id == target_user.id:
@@ -476,6 +516,28 @@ class ProjectService(BaseService):
             await role_service.project.grant(actions=role_strs, user_id=target_user.id, project_id=project.id)
 
         ProjectPublisher.user_roles_updated(project, target_user, role_strs)
+
+        return True
+
+    async def toggle_bot_activation(self, user: User, project: TProjectParam, target_bot: TBotParam) -> bool:
+        project = cast(Project, await self._get_by_param(Project, project))
+        target_bot = cast(Bot, await self._get_by_param(Bot, target_bot))
+        if not project or not target_bot:
+            return False
+
+        is_assigned, assigned_bot = await self.is_assigned(target_bot, project)
+        if not is_assigned or not assigned_bot:
+            return False
+
+        assigned_bot = cast(ProjectAssignedBot, assigned_bot)
+
+        async with DbSession.use() as db:
+            assigned_bot.is_disabled = not assigned_bot.is_disabled
+            await db.update(assigned_bot)
+            await db.commit()
+
+        ProjectPublisher.bot_activation_toggled(project, target_bot, assigned_bot.is_disabled)
+        ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, assigned_bot.is_disabled)
 
         return True
 

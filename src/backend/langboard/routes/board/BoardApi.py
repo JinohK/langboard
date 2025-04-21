@@ -1,3 +1,4 @@
+from typing import cast
 from fastapi import Depends, status
 from ...core.ai import Bot
 from ...core.db import User
@@ -12,6 +13,7 @@ from ...models import (
     Checklist,
     GlobalCardRelationshipType,
     Project,
+    ProjectAssignedBot,
     ProjectColumn,
     ProjectLabel,
     ProjectRole,
@@ -80,7 +82,7 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 async def get_project(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.project.get_details(user_or_bot, project_uid, with_roles=False)
+    result = await service.project.get_details(user_or_bot, project_uid, is_setting=False)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, response = result
@@ -151,7 +153,7 @@ async def get_project_columns(
     project = await service.project.get_by_uid(project_uid)
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-    columns = await service.project_column.get_list(project)
+    columns = await service.project_column.get_all_by_project(project, as_api=True)
     return JsonResponse(content={"columns": columns})
 
 
@@ -198,7 +200,7 @@ async def get_project_cards(
     if project is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
-    columns = await service.project_column.get_list(project)
+    columns = await service.project_column.get_all_by_project(project, as_api=True)
     cards = await service.card.get_board_list(project_uid)
     return JsonResponse(content={"cards": cards, "global_relationships": global_relationships, "columns": columns})
 
@@ -228,6 +230,67 @@ async def update_project_member(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={})
+
+
+@AppRouter.api.delete(
+    "/board/{project_uid}/unassign/{assignee_uid}",
+    tags=["Board"],
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project, user or bot not found.").get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def unassign_project_assignee(
+    project_uid: str,
+    assignee_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    result = await service.project.unassign_assignee(user_or_bot, project_uid, assignee_uid)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={})
+
+
+@AppRouter.api.get(
+    "/board/{project_uid}/is-assigned/{assignee_uid}",
+    tags=["Board"],
+    responses=(
+        OpenApiSchema()
+        .suc({"result": "bool", "is_bot_disabled": "bool?"})
+        .auth()
+        .role()
+        .no_bot()
+        .err(404, "Project, user or bot not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def is_project_assignee(
+    project_uid: str,
+    assignee_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    target = await service.user.get_by_uid(assignee_uid)
+    if not target:
+        target = await service.bot.get_by_uid(assignee_uid)
+        if not target:
+            return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, assigned_data = await service.project.is_assigned(target, project_uid)
+    if isinstance(target, Bot):
+        return JsonResponse(
+            content={"result": result, "is_bot_disabled": cast(ProjectAssignedBot, assigned_data).is_disabled}
+        )
+    return JsonResponse(content={"result": result})
 
 
 @AppRouter.api.post(

@@ -12,7 +12,7 @@ export interface IMarkdownCodeBlockProps {
 }
 
 function MarkdownCodeBlock({ code, language }: IMarkdownCodeBlockProps) {
-    const [isCopied, setIsCopied] = useState<boolean>(false);
+    const [isCopied, setIsCopied] = useState<bool>(false);
 
     const copy = async () => {
         if (!navigator.clipboard || !navigator.clipboard.writeText) {

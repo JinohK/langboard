@@ -102,6 +102,7 @@ const BoardCardMemberList = memo(() => {
             assignedFilter={(item) => members.includes(item as User.TModel)}
             initialSelectedItems={members}
             canEdit={canEdit}
+            projectUID={projectUID}
         />
     );
 });

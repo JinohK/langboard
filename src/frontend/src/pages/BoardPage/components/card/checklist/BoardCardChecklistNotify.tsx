@@ -82,6 +82,7 @@ function BoardCardChecklistNotify() {
             assignedFilter={() => false}
             initialSelectedItems={[]}
             canEdit={canEdit}
+            projectUID={projectUID}
         />
     );
 }

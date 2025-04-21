@@ -1,7 +1,7 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import React, { forwardRef, memo, useState } from "react";
-import { Avatar, Box, Card, Flex, HoverCard, IconComponent, Separator } from "@/components/base";
+import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react";
+import { Avatar, Box, Card, Flex, IconComponent, Popover, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
@@ -9,6 +9,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 interface IBaseUserAvatarProps {
     user: User.TModel;
@@ -53,6 +54,12 @@ interface IUserAvatarPropsWithCustomTrigger extends IBaseUserAvatarProps {
 
 export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithoutName | IUserAvatarPropsWithCustomTrigger;
 
+export const getAvatarHoverCardAttrs = (user: User.TModel): Record<string, string> => {
+    return {
+        "data-avatar-user": user.uid,
+    };
+};
+
 const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const { user, children, listAlign, customTrigger } = props;
     const [isOpened, setIsOpened] = useState(false);
@@ -66,10 +73,62 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
     const isDeletedUser = user.isDeletedUser(userType);
     const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const changeOpenedByHover = useCallback(() => {
+        if (isOpened) {
+            return;
+        }
+
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsOpened(true);
+            if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
+                clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = null;
+            }
+        }, 500);
+    }, [isOpened]);
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
     };
+
+    useEffect(() => {
+        if (!isOpened) {
+            return;
+        }
+
+        let outTimeout: NodeJS.Timeout;
+        const mouseOutHandler = (e: MouseEvent) => {
+            const elementInScope = (e.target as Element)?.closest?.("[data-avatar-user]");
+            const attrValue = elementInScope?.getAttribute("data-avatar-user");
+            if (e.target !== document.documentElement && (!elementInScope || attrValue !== user.uid)) {
+                if (!outTimeout) {
+                    outTimeout = setTimeout(() => {
+                        setIsOpened(() => false);
+                        if (!TypeUtils.isNullOrUndefined(outTimeout)) {
+                            clearTimeout(outTimeout);
+                            outTimeout = undefined!;
+                        }
+                    }, 500);
+                }
+                return;
+            }
+
+            if (outTimeout) {
+                clearTimeout(outTimeout);
+                outTimeout = undefined!;
+            }
+        };
+
+        window.addEventListener("mouseover", mouseOutHandler);
+        return () => {
+            window.removeEventListener("mouseover", mouseOutHandler);
+            if (!TypeUtils.isNullOrUndefined(outTimeout)) {
+                clearTimeout(outTimeout);
+                outTimeout = undefined!;
+            }
+        };
+    }, [isOpened]);
 
     let trigger;
     if (customTrigger) {
@@ -83,11 +142,20 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     }
 
     return (
-        <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
-            <HoverCard.Trigger asChild>
+        <Popover.Root open={isOpened} onOpenChange={setIsOpened} {...getAvatarHoverCardAttrs(user)}>
+            <Popover.Trigger
+                onPointerEnter={changeOpenedByHover}
+                onPointerLeave={() => {
+                    if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
+                        clearTimeout(hoverTimeoutRef.current);
+                        hoverTimeoutRef.current = null;
+                    }
+                }}
+                asChild
+            >
                 <span>{trigger}</span>
-            </HoverCard.Trigger>
-            <HoverCard.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign}>
+            </Popover.Trigger>
+            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign} {...getAvatarHoverCardAttrs(user)}>
                 <Card.Root className="relative">
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
@@ -112,8 +180,8 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
                     </Card.Header>
                     <Card.Content className="px-0 pt-8">{!isPresentableUnknownUser && children}</Card.Content>
                 </Card.Root>
-            </HoverCard.Content>
-        </HoverCard.Root>
+            </Popover.Content>
+        </Popover.Root>
     );
 });
 
@@ -213,7 +281,7 @@ const Trigger = memo(
 
 const List = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (
-        <Box w="full" className={className} ref={ref} {...props}>
+        <Box w="full" mt="2" className={className} ref={ref} {...props}>
             {children}
         </Box>
     );
@@ -237,7 +305,7 @@ const ListItem = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeo
             position="relative"
             cursor="default"
             className={cn(
-                "select-none outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                "cursor-pointer select-none outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                 className
             )}
             ref={ref}

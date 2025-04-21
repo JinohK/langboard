@@ -17,14 +17,15 @@ const Trigger = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Trigg
         <SelectPrimitive.Trigger
             ref={ref}
             className={cn(
-                "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+                "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+                "[&[data-state=open]>svg.lucide-chevron-down]:rotate-180",
                 className
             )}
             {...props}
         >
             {children}
             <SelectPrimitive.Icon asChild>
-                <IconComponent icon="chevron-down" size="4" className="opacity-50" />
+                <IconComponent icon="chevron-down" size="4" className="opacity-50 transition-all" />
             </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
     )
@@ -51,9 +52,13 @@ const ScrollDownButton = React.forwardRef<
 ));
 ScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
 
-const Content = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Content>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>>(
-    ({ className, children, position = "popper", ...props }, ref) => (
-        <SelectPrimitive.Portal>
+export interface ISelectContentProps extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> {
+    container?: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Portal>["container"];
+}
+
+const Content = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Content>, ISelectContentProps>(
+    ({ className, children, container, position = "popper", ...props }, ref) => (
+        <SelectPrimitive.Portal container={container}>
             <SelectPrimitive.Content
                 ref={ref}
                 className={cn(

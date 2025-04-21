@@ -30,7 +30,7 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
 
     const content = useLastAssistantMessage()?.content;
 
-    const setOpen = (open: boolean) => {
+    const setOpen = (open: bool) => {
         if (open) {
             api.aiChat.show();
         } else {

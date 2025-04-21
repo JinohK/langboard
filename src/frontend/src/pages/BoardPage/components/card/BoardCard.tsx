@@ -61,7 +61,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
                 navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("project.errors.Project not found"));
+                Toast.Add.error(t("project.errors.Project not found."));
                 navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });

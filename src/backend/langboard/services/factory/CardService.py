@@ -145,6 +145,35 @@ class CardService(BaseService):
         return api_cards, list(api_projects.values())
 
     @overload
+    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[Card]: ...
+    @overload
+    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_all_by_project(self, project: TProjectParam, as_api: bool) -> list[Card] | list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(Card)
+                .where(Card.column("project_id") == project.id)
+                .order_by(Card.column("order").asc())
+                .group_by(Card.column("id"), Card.column("order"))
+            )
+        raw_cards = result.all()
+        if not as_api:
+            return list(raw_cards)
+
+        cards = []
+        for card in raw_cards:
+            api_card = card.api_response()
+            column = await self._get_by_param(ProjectColumn, card.project_column_id)
+            if not column:
+                continue
+            api_card["column_name"] = column.name
+            cards.append(api_card)
+        return cards
+
+    @overload
     async def get_assigned_users(
         self, card: TCardParam, as_api: Literal[False]
     ) -> list[tuple[User, CardAssignedUser]]: ...
@@ -191,7 +220,12 @@ class CardService(BaseService):
         return api_card
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, title: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        column: TColumnParam,
+        title: str,
+        assign_user_uids: list[str] | None = None,
     ) -> tuple[Card, dict[str, Any]] | None:
         project = cast(Project, await self._get_by_param(Project, project))
         column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
@@ -214,12 +248,31 @@ class CardService(BaseService):
             db.insert(card)
             await db.commit()
 
+        users: list[User] = []
+        if assign_user_uids:
+            project_service = self._get_service(ProjectService)
+            raw_users = await project_service.get_assigned_users(
+                project.id,
+                as_api=False,
+                where_user_ids_in=[SnowflakeID.from_short_code(uid) for uid in assign_user_uids],
+            )
+
+            for assign_user, _ in raw_users:
+                users.append(assign_user)
+                async with DbSession.use() as db:
+                    db.insert(CardAssignedUser(card_id=card.id, user_id=assign_user.id))
+                    await db.commit()
+
         api_card = await self.convert_board_list_api_response(card)
         model = {"card": api_card}
 
         CardPublisher.created(project, column, model)
         CardActivityTask.card_created(user_or_bot, project, card)
         CardBotTask.card_created(user_or_bot, project, card)
+
+        notification_service = self._get_service(NotificationService)
+        for user in users:
+            await notification_service.notify_assigned_to_card(user_or_bot, user, project, card)
 
         return card, api_card
 
@@ -270,7 +323,7 @@ class CardService(BaseService):
 
         if "description" in model and card.description:
             notification_service = self._get_service(NotificationService)
-            await notification_service.notify_mentioned_at_card(user_or_bot, project, card)
+            await notification_service.notify_mentioned_in_card(user_or_bot, project, card)
 
         CardActivityTask.card_updated(user_or_bot, project, old_card_record, card)
         CardBotTask.card_updated(user_or_bot, project, old_card_record, card)

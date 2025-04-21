@@ -26,15 +26,11 @@ async def declined_project_invitation(user: User, project: Project):
 
 
 async def record_project_activity(user_or_bot: User | Bot, activity: ProjectActivity):
-    if not isinstance(user_or_bot, User):
-        return
     helper = ActivityTaskHelper(UserActivity)
     await helper.record(user_or_bot, {}, **_refer_activity(activity))
 
 
 async def record_wiki_activity(user_or_bot: User | Bot, activity: ProjectWikiActivity):
-    if not isinstance(user_or_bot, User):
-        return
     helper = ActivityTaskHelper(UserActivity)
     await helper.record(user_or_bot, {}, **_refer_activity(activity))
 

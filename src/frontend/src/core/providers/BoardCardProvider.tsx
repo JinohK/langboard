@@ -10,7 +10,7 @@ export interface IBoardCardContext {
     projectUID: string;
     card: ProjectCard.TModel;
     currentUser: AuthUser.TModel;
-    hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
+    hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     socket: ISocketContext;
     editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
@@ -49,7 +49,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, children }: I
     const currentEditorRef = useRef<string>("");
     const replyRef = useRef<(targetUser: User.TModel) => void>(() => {});
     const currentUserRoleActions = card.useField("current_auth_role_actions");
-    const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
+    const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(currentUserRoleActions);
     const sharedClassNames = {
         popoverContent: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
     };

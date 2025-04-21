@@ -7,6 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { PlateEditor } from "@udecode/plate/react";
 import { IMentionableUser } from "@/components/plate-ui/mention-input-element";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 
 const onSelectItem = getMentionOnSelectItem();
 
@@ -14,10 +15,25 @@ export interface IMentionInputComboboxItem {
     search: string;
     user: IMentionableUser;
     editor: PlateEditor;
+    projectUID?: string;
 }
 
-export const MentionInputComboboxItem = ({ search, user, editor }: IMentionInputComboboxItem) => {
-    const userModel = User.Model.getModel(user.uid)!;
+export const MentionInputComboboxItem = ({ user, ...props }: IMentionInputComboboxItem) => {
+    const userModels = User.Model.useModels((model) => model.uid === user.uid);
+    const userModel = userModels[0];
+
+    if (!userModel) {
+        return null;
+    }
+
+    return <MentionInputComboboxUserItem key={createShortUUID()} user={user} userModel={userModel} {...props} />;
+};
+
+interface IMentionInputComboboxUserItem extends IMentionInputComboboxItem {
+    userModel: User.TModel;
+}
+
+const MentionInputComboboxUserItem = ({ search, user, userModel, editor, projectUID }: IMentionInputComboboxUserItem) => {
     const firstname = userModel.useField("firstname");
     const lastname = userModel.useField("lastname");
     const username = userModel.useField("username");
@@ -42,9 +58,7 @@ export const MentionInputComboboxItem = ({ search, user, editor }: IMentionInput
                     </div>
                 }
             >
-                <UserAvatar.List>
-                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                </UserAvatar.List>
+                <UserAvatarDefaultList user={userModel} projectUID={projectUID} />
             </UserAvatar.Root>
         </InlineComboboxItem>
     );

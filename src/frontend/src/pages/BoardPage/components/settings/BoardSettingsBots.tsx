@@ -74,6 +74,7 @@ const BoardSettingsBots = memo(() => {
                 newItemFilter={(item) => allBots.includes(item as BotModel.TModel)}
                 initialSelectedItems={projectBots}
                 onValueChange={saveOnValueChanged}
+                projectUID={project.uid}
             />
         </Box>
     );

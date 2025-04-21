@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "license": "Elastic License 2.0 (ELv2)",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -86,6 +87,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "cronstrue": "^2.58.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.5.0",
     "i18next": "^24.2.3",

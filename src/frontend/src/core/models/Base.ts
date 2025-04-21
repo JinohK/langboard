@@ -12,6 +12,7 @@ import type { Model as ActivityModel } from "@/core/models/ActivityModel";
 import type { Model as AppSettingModel } from "@/core/models/AppSettingModel";
 import type { Model as AuthUserModel } from "@/core/models/AuthUser";
 import type { Model as BotModel } from "@/core/models/BotModel";
+import type { Model as BotSchedule } from "@/core/models/BotSchedule";
 import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
 import type { Model as ProjectModel } from "@/core/models/Project";
@@ -57,6 +58,7 @@ interface IModelMap {
     AppSettingModel: typeof AppSettingModel;
     AuthUser: typeof AuthUserModel;
     BotModel: typeof BotModel;
+    BotSchedule: typeof BotSchedule;
     ChatMessageModel: typeof ChatMessageModel;
     GlobalRelationshipType: typeof GlobalRelationshipTypeModel;
     Project: typeof ProjectModel;

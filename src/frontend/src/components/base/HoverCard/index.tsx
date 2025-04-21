@@ -9,6 +9,8 @@ const Root = HoverCardPrimitive.Root;
 
 const Trigger = HoverCardPrimitive.Trigger;
 
+const Portal = HoverCardPrimitive.Portal;
+
 const Content = React.forwardRef<
     React.ComponentRef<typeof HoverCardPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content>
@@ -26,4 +28,4 @@ const Content = React.forwardRef<
 ));
 Content.displayName = HoverCardPrimitive.Content.displayName;
 
-export { Content, Root, Trigger };
+export { Content, Root, Trigger, Portal };

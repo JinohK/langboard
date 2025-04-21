@@ -1,7 +1,7 @@
 from json import dumps as json_dumps
 from typing import Any
 from httpx import post
-from ....core.ai import Bot, BotAPIAuthType, BotTrigger, BotTriggerCondition
+from ....core.ai import Bot, BotAPIAuthType, BotDefaultTrigger, BotTrigger, BotTriggerCondition
 from ....core.db import DbSession, SqlBuilder
 from ....core.logger import Logger
 from ....core.utils.decorators import staticclass
@@ -26,6 +26,7 @@ class BotTaskHelper:
                 .where(
                     (ProjectAssignedBot.column("project_id") == project_id)
                     & (BotTrigger.column("condition") == condition)
+                    & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
                 )
             )
         return list(result.all())
@@ -42,17 +43,30 @@ class BotTaskHelper:
 
     @staticmethod
     async def run(
-        bots: Bot | list[Bot], event: BotTriggerCondition | str, data: dict[str, Any], project: Project | None = None
+        bots: Bot | list[Bot],
+        event: BotTriggerCondition | BotDefaultTrigger,
+        data: dict[str, Any],
+        project: Project | None = None,
     ):
         if not isinstance(bots, list):
             bots = [bots]
 
-        event = event if isinstance(event, str) else event.value
-        await run_webhook(event, data)
+        await run_webhook(event.value, data)
 
         for bot in bots:
+            if project:
+                async with DbSession.use() as db:
+                    result = await db.exec(
+                        SqlBuilder.select.table(ProjectAssignedBot).where(
+                            (ProjectAssignedBot.column("bot_id") == bot.id)
+                            & (ProjectAssignedBot.column("project_id") == project.id)
+                            & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
+                        )
+                    )
+                if not result.first():
+                    continue
             labels = await BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
-            BotTaskHelper.__run(bot, event, data, labels)
+            BotTaskHelper.__run(bot, event.value, data, labels)
 
     @staticmethod
     def __run(bot: Bot, event: str, data: dict[str, Any], labels: list[ProjectLabel] | None):

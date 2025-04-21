@@ -86,7 +86,7 @@ class CardCommentService(BaseService):
         CardCommentPublisher.created(user_or_bot, project, card, comment)
 
         notification_service = self._get_service(NotificationService)
-        await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
+        await notification_service.notify_mentioned_in_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_added(user_or_bot, project, card, comment)
         CardCommentBotTask.card_comment_added(user_or_bot, project, card, comment)
@@ -118,7 +118,7 @@ class CardCommentService(BaseService):
         CardCommentPublisher.updated(project, card, comment)
 
         notification_service = self._get_service(NotificationService)
-        await notification_service.notify_mentioned_at_comment(user_or_bot, project, card, comment)
+        await notification_service.notify_mentioned_in_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
         CardCommentBotTask.card_comment_updated(user_or_bot, project, card, old_content, comment)

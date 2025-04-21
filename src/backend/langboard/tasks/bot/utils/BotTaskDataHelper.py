@@ -1,5 +1,5 @@
 from typing import Any, cast
-from ....core.ai import Bot, BotTriggerCondition
+from ....core.ai import Bot, BotDefaultTrigger, BotTriggerCondition
 from ....core.broker import Broker
 from ....core.db import BaseSqlModel, DbSession, SqlBuilder, User
 from ....core.utils.decorators import staticclass
@@ -64,11 +64,11 @@ class BotTaskDataHelper:
         }
 
     @staticmethod
-    def schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
-        return Broker.schema("bot", {condition if isinstance(condition, str) else condition.value: schema or {}})
+    def schema(condition: BotTriggerCondition | BotDefaultTrigger, schema: dict[str, Any] | None = None):
+        return Broker.schema("bot", {condition.value: schema or {}})
 
     @staticmethod
-    def project_schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
+    def project_schema(condition: BotTriggerCondition | BotDefaultTrigger, schema: dict[str, Any] | None = None):
         return BotTaskDataHelper.schema(
             condition,
             {
@@ -79,11 +79,12 @@ class BotTaskDataHelper:
         )
 
     @staticmethod
-    def card_schema(condition: BotTriggerCondition | str, schema: dict[str, Any] | None = None):
+    def card_schema(condition: BotTriggerCondition | BotDefaultTrigger, schema: dict[str, Any] | None = None):
         return BotTaskDataHelper.schema(
             condition,
             {
                 "project": Project.api_schema(),
+                "project_column": ProjectColumn.api_schema(),
                 "card": Card.api_schema(),
                 "executor": BotTaskDataHelper.create_user_or_bot_schema(),
                 **(schema or {}),

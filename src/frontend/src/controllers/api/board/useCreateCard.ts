@@ -7,6 +7,7 @@ export interface ICreateCardForm {
     project_uid: string;
     column_uid: string;
     title: string;
+    assign_users?: string[];
 }
 
 const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string }>) => {
@@ -19,6 +20,7 @@ const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string
         const res = await api.post(url, {
             column_uid: params.column_uid,
             title: params.title,
+            assign_users: params.assign_users,
         });
 
         return {

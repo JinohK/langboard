@@ -1,4 +1,4 @@
-import { createContext, memo, useContext, useEffect, useMemo, useReducer, useRef } from "react";
+import { createContext, memo, useContext, useEffect, useMemo, useRef } from "react";
 import { AuthUser, GlobalRelationshipType, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -8,14 +8,17 @@ import { ROUTES } from "@/core/routing/constants";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import useSearchFilters, { ISearchFilterMap } from "@/core/hooks/useSearchFilters";
 
-export interface IFilterMap {
+export interface IFilterMap extends ISearchFilterMap {
     keyword?: string[];
     members?: string[];
     labels?: string[];
     parents?: string[];
     children?: string[];
 }
+
+export const BOARD_FILTER_KEYS = ["keyword", "members", "labels", "parents", "children"] as (keyof IFilterMap)[];
 
 export interface IBoardContext {
     socket: ISocketContext;
@@ -68,14 +71,16 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
     const socket = useSocket();
     const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
-    const [navigated, forceUpdate] = useReducer((x) => x + 1, 0);
     const members = project.useForeignField<User.TModel>("members");
-    const filters = useMemo(() => {
-        const searchParams = new URLSearchParams(location.search);
-        const rawFilters = searchParams.get("filters");
-        const newFilters = transformStringFilters(rawFilters);
-        return newFilters;
-    }, [navigated, location, location.search]);
+    const {
+        filters,
+        toString: filtersToString,
+        unique: uniqueFilters,
+        forceUpdate: forceUpdateFilters,
+    } = useSearchFilters<IFilterMap>({
+        filterKeys: BOARD_FILTER_KEYS,
+        searchKey: "filters",
+    });
     const currentUserRoleActions = project.useField("current_auth_role_actions");
     const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(currentUserRoleActions);
     const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
@@ -107,32 +112,9 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
     }, [members]);
 
-    const transformFilters = (): string => {
-        return Object.entries(filters)
-            .map(([key, value]) => {
-                if (!value!.length) {
-                    return "";
-                }
-                return `${key}:${encodeURIComponent(encodeURIComponent(value!.join(",")))}`;
-            })
-            .join(",");
-    };
-
     const navigateWithFilters = (to?: To, options?: NavigateOptions) => {
-        if (filters.members) {
-            filters.members = filters.members.filter((member, index) => filters.members!.indexOf(member) === index);
-        }
-        if (filters.labels) {
-            filters.labels = filters.labels.filter((label, index) => filters.labels!.indexOf(label) === index);
-        }
-        if (filters.parents) {
-            filters.parents = filters.parents.filter((parent, index) => filters.parents!.indexOf(parent) === index);
-        }
-        if (filters.children) {
-            filters.children = filters.children.filter((child, index) => filters.children!.indexOf(child) === index);
-        }
-
-        const newFiltersString = transformFilters();
+        uniqueFilters();
+        const newFiltersString = filtersToString();
 
         if (TypeUtils.isString(to)) {
             to = { pathname: to };
@@ -150,7 +132,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         to = { ...to, search: params.toString() };
 
         navigate(to, options);
-        forceUpdate();
+        forceUpdateFilters();
     };
 
     const filterMember = (member: User.TModel) => {
@@ -280,25 +262,4 @@ export const useBoard = () => {
         throw new Error("useBoard must be used within a BoardProvider");
     }
     return context;
-};
-
-const transformStringFilters = (rawFilters: string | null): IFilterMap => {
-    const filterMap: IFilterMap = {};
-
-    if (rawFilters) {
-        rawFilters.split(",").map((rawFilter) => {
-            const [key, value] = rawFilter.split(":");
-            if (TypeUtils.isNull(value) || TypeUtils.isUndefined(value) || !value.length) {
-                return;
-            }
-
-            if (!["keyword", "members", "labels", "parents", "children"].includes(key)) {
-                return;
-            }
-
-            filterMap[key as keyof IFilterMap] = decodeURIComponent(decodeURIComponent(value)).split(",");
-        });
-    }
-
-    return filterMap;
 };

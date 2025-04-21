@@ -1,12 +1,16 @@
-import { Checkbox, Flex, Label, Toast } from "@/components/base";
+import { Button, Checkbox, Flex, Label, Toast } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
+import useToggleProjectBotActivation from "@/controllers/api/board/settings/useToggleProjectBotActivation";
 import useUpdateProjectBotRoles from "@/controllers/api/board/settings/useUpdateProjectBotRoles";
+import useBoardBotActivationToggledHandlers from "@/controllers/socket/board/settings/useBoardBotActivationToggledHandlers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel, Project } from "@/core/models";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { BotModel, Project, User } from "@/core/models";
 import { ROLE_ALL_GRANTED } from "@/core/models/Base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsBotRoleProps {
@@ -18,16 +22,76 @@ export interface IBoardSettingsBotRoleProps {
 
 const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValidatingRef }: IBoardSettingsBotRoleProps) => {
     const [t] = useTranslation();
-    const { project } = useBoardSettings();
+    const { socket, project } = useBoardSettings();
     const botRoles = project.useField("bot_roles");
     const roles = botRoles[bot.uid];
-    const { mutateAsync } = useUpdateProjectBotRoles(bot.uid);
+    const { mutateAsync: updateProjectBotRolesMutateAsync } = useUpdateProjectBotRoles(bot.uid);
+    const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation();
+    const botAsUser = bot.useForeignField<User.TModel>("as_user")[0];
+    const [isDisabled, setIsDisabled] = useState(false);
+    const updateRole = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (isValidatingRef.current || isDisabled) {
+                return;
+            }
 
-    if (!roles) {
-        return null;
-    }
+            const role: Project.ERoleAction = e.currentTarget.getAttribute("data-value") as Project.ERoleAction;
 
-    const updateRole = (role: Project.ERoleAction) => {
+            setIsValidating(true);
+            isValidatingRef.current = true;
+
+            const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
+
+            const promise = updateProjectBotRolesMutateAsync({
+                project_uid: project.uid,
+                roles: newRoles.includes(role) ? newRoles.filter((r) => r !== role) : [...newRoles, role],
+            });
+
+            Toast.Add.promise(promise, {
+                loading: t("common.Updating..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                            message = t("errors.Forbidden");
+                        },
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                            message = t("project.errors.Project not found.");
+                        },
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
+
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    return t("project.settings.successes.Bot roles updated successfully.");
+                },
+                finally: () => {
+                    setIsValidating(false);
+                    isValidatingRef.current = false;
+                },
+            });
+        },
+        [isDisabled]
+    );
+    const boardBotActivationToggledHandlers = useBoardBotActivationToggledHandlers({
+        projectUID: project.uid,
+        callback: (data) => {
+            if (data.bot_uid !== bot.uid) {
+                return;
+            }
+            setIsDisabled(() => data.is_disabled);
+        },
+    });
+    useSwitchSocketHandlers({ socket, handlers: [boardBotActivationToggledHandlers] });
+
+    const toggleActivation = () => {
         if (isValidatingRef.current) {
             return;
         }
@@ -35,15 +99,13 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
         setIsValidating(true);
         isValidatingRef.current = true;
 
-        const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
-
-        const promise = mutateAsync({
+        const promise = toggleProjectBotActivationMutateAsync({
             project_uid: project.uid,
-            roles: newRoles.includes(role) ? newRoles.filter((r) => r !== role) : [...newRoles, role],
+            bot_uid: bot.uid,
         });
 
         Toast.Add.promise(promise, {
-            loading: t("common.Updating..."),
+            loading: t("common.Changing..."),
             error: (error) => {
                 let message = "";
                 const { handle } = setupApiErrorHandler({
@@ -65,7 +127,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
                 return message;
             },
             success: () => {
-                return t("project.settings.successes.Bot roles updated successfully.");
+                return t(`project.settings.successes.Bot ${isDisabled ? "enabled" : "disabled"} successfully.`);
             },
             finally: () => {
                 setIsValidating(false);
@@ -74,16 +136,24 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
         });
     };
 
+    if (!roles) {
+        return null;
+    }
+
     return (
         <Flex items="center" justify="between" gap="3">
-            <UserAvatar.Root user={bot.as_user} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
-                <UserAvatar.List>
-                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                </UserAvatar.List>
-            </UserAvatar.Root>
+            <Flex items="center" gap="1">
+                <UserAvatar.Root user={botAsUser} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
+                    <UserAvatarDefaultList user={botAsUser} projectUID={project.uid} />
+                </UserAvatar.Root>
+                <Button size="sm" onClick={toggleActivation} disabled={isValidating}>
+                    {t(`project.settings.${isDisabled ? "Enable" : "Disable"}`)}
+                </Button>
+            </Flex>
+
             <Flex wrap gap="2">
                 {Object.keys(Project.ERoleAction).map((key) => {
-                    const disabled = key.toLowerCase() === Project.ERoleAction.Read || isValidating;
+                    const disabled = key.toLowerCase() === Project.ERoleAction.Read || isValidating || isDisabled;
                     return (
                         <Label
                             display="flex"
@@ -94,8 +164,9 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
                             <Checkbox
                                 checked={roles.includes(Project.ERoleAction[key]) || roles.includes(ROLE_ALL_GRANTED)}
                                 disabled={disabled}
+                                data-value={Project.ERoleAction[key]}
                                 className="mr-1"
-                                onClick={() => updateRole(Project.ERoleAction[key])}
+                                onClick={updateRole}
                             />
                             {t(`role.project.${Project.ERoleAction[key]}`)}
                         </Label>

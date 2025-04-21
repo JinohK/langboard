@@ -33,7 +33,7 @@ const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater
                 navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found"));
+                Toast.Add.error(t("dashboard.errors.Project not found."));
                 navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
             },
         });

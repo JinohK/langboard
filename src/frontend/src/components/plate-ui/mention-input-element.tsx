@@ -18,6 +18,7 @@ import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-co
 export interface IMentionInputElement {
     currentUser: AuthUser.TModel;
     mentionables: User.TModel[];
+    projectUID?: string;
 }
 
 export interface IMentionableUser extends User.TModel {
@@ -26,7 +27,7 @@ export interface IMentionableUser extends User.TModel {
 }
 
 export const MentionInputElement = withRef<typeof PlateElement, IMentionInputElement>(
-    ({ className, currentUser, mentionables: flatMentionables, ...props }, ref) => {
+    ({ className, currentUser, mentionables: flatMentionables, projectUID, ...props }, ref) => {
         const { children, editor, element } = props;
         const [t] = useTranslation();
         const [search, setSearch] = useState("");
@@ -64,7 +65,13 @@ export const MentionInputElement = withRef<typeof PlateElement, IMentionInputEle
 
                         <InlineComboboxGroup>
                             {mentionables.map((user) => (
-                                <MentionInputComboboxItem key={createShortUUID()} search={search} user={user} editor={editor} />
+                                <MentionInputComboboxItem
+                                    key={createShortUUID()}
+                                    search={search}
+                                    user={user}
+                                    editor={editor}
+                                    projectUID={projectUID}
+                                />
                             ))}
                         </InlineComboboxGroup>
                     </InlineComboboxContent>

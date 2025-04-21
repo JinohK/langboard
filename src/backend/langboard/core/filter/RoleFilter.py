@@ -15,6 +15,8 @@ class _RoleFinderFunc(Protocol, Generic[_TRoleModel]):
         self,
         query: SelectOfScalar[_TRoleModel],
         path_params: dict[str, Any],
+        user_or_bot_id: int,
+        is_bot: bool,
     ) -> SelectOfScalar[_TRoleModel]: ...
 
 

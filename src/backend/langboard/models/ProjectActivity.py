@@ -13,6 +13,8 @@ class ProjectActivityType(Enum):
     ProjectUpdated = "project_updated"
     ProjectAssignedBotsUpdated = "project_assigned_bots_updated"
     ProjectAssignedUsersUpdated = "project_assigned_users_updated"
+    ProjectBotActivated = "project_bot_activated"
+    ProjectBotDeactivated = "project_bot_deactivated"
     ProjectInvitedUserAccepted = "project_invited_user_accepted"
     ProjectDeleted = "project_deleted"
 

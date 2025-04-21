@@ -26,3 +26,10 @@ class ChangeRootOrderForm(BaseFormModel):
 class ChangeChildOrderForm(BaseFormModel):
     order: int = Field(..., title="New order")
     parent_uid: str = Field(default="", title="If moving to another parent, the UID of the parent")
+
+
+@form_model
+class BotCronTimeForm(BaseFormModel):
+    interval_str: str | None = Field(default=None, title="Cron interval string", description="Cron interval string")
+    target_table: str | None = Field(default=None, title="Target table name")
+    target_uid: str | None = Field(default=None, title="Target UID")

@@ -45,7 +45,7 @@ function BoardFilter() {
         Number((filters.keyword?.length ?? 0) > 0) +
         Object.keys(filters)
             .filter((v) => v !== "keyword")
-            .reduce((acc, filterName) => acc + filters[filterName as keyof IFilterMap]!.length, 0);
+            .reduce((acc: number, filterName) => acc + filters[filterName as keyof IFilterMap]!.length, 0);
 
     const clearFilters = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -253,7 +253,7 @@ const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) 
 
     return (
         <Label display="flex" cursor="pointer" items="center" gap="2" p="3" className="hover:bg-accent">
-            <Checkbox name={name} checked={checked} onCheckedChange={setFilterCards} />
+            <Checkbox name={name as string} checked={checked} onCheckedChange={setFilterCards} />
             {children}
         </Label>
     );

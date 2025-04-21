@@ -20,6 +20,9 @@ function BoardActivityDialog(): JSX.Element | null {
 
     const close = () => {
         navigateRef.current(ROUTES.BOARD.MAIN(projectUID));
+        setTimeout(() => {
+            setIsLoadingRef.current(false);
+        }, 0);
     };
 
     if (!aboutMe()) {

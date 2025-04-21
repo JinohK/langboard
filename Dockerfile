@@ -12,7 +12,7 @@ ENV PATH="$POETRY_HOME/bin:$VIRTUAL_ENV/bin:$PATH"
 RUN python -m venv $VIRTUAL_ENV
 
 RUN apt-get update && apt-get install -y
-RUN apt install libuv1-dev libssl-dev -y
+RUN apt install libuv1-dev libssl-dev cron -y
 
 RUN curl -sSL https://install.python-poetry.org | python3 - --git https://github.com/python-poetry/poetry.git@master
 RUN poetry --version

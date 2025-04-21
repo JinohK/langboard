@@ -13,34 +13,27 @@ from ..board.scopes import project_role_finder
 from .ActivityForm import ActivityPagination
 
 
-@AppRouter.api.get(
-    "/activity/user",
-    tags=["Activity"],
-    responses=(
-        OpenApiSchema()
-        .suc(
+USER_ACTIVITY_SCHEMA = {
+    "activities": [
+        (
+            UserActivity,
             {
-                "activities": [
-                    (
-                        UserActivity,
-                        {
-                            "schema": {
-                                "refer?": BaseActivityModel,
-                                "references?": {"refer_type": "project", "<refer table>": "object"},
-                            }
-                        },
-                    )
-                ],
-                "count_new_records": "integer",
-            }
+                "schema": {
+                    "refer?": BaseActivityModel,
+                    "references?": {"refer_type": "project", "<refer table>": "object"},
+                }
+            },
         )
-        .auth()
-        .no_bot()
-        .get()
-    ),
+    ],
+    "count_new_records": "integer",
+}
+
+
+@AppRouter.api.get(
+    "/activity/user", tags=["Activity"], responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().no_bot().get()
 )
 @AuthFilter.add
-async def get_user_activities(
+async def get_current_user_activities(
     pagination: ActivityPagination = Depends(),
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
@@ -55,6 +48,38 @@ async def get_user_activities(
         return JsonResponse(content={"count_new_records": result or 0})
 
     result = await service.activity.get_list_by_user(user_or_bot, pagination, pagination.refer_time)
+    if not result:
+        return JsonResponse(content={"activities": []})
+    activities, count_new_records, _ = result
+    return JsonResponse(content={"activities": activities, "count_new_records": count_new_records})
+
+
+@AppRouter.api.get(
+    "/activity/project/{project_uid}/assignee/{assignee_uid}",
+    tags=["Activity"],
+    responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().no_bot().get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_assignee_activities(
+    project_uid: str,
+    assignee_uid: str,
+    pagination: ActivityPagination = Depends(),
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    if not isinstance(user_or_bot, User):
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    if pagination.only_count:
+        result = await service.activity.get_list_by_project_assignee(
+            project_uid, assignee_uid, pagination, pagination.refer_time, only_count=True
+        )
+        return JsonResponse(content={"count_new_records": result or 0})
+
+    result = await service.activity.get_list_by_project_assignee(
+        project_uid, assignee_uid, pagination, pagination.refer_time
+    )
     if not result:
         return JsonResponse(content={"activities": []})
     activities, count_new_records, _ = result

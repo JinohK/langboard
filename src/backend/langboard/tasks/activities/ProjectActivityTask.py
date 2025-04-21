@@ -70,6 +70,24 @@ async def project_assigned_users_updated(
 
 
 @Broker.wrap_async_task_decorator
+async def project_bot_activation_toggled(user: User, project: Project, bot: Bot, is_disabled: bool):
+    helper = ActivityTaskHelper(ProjectActivity)
+    activity_history = {
+        **await helper.create_project_default_history(project),
+        "bot": ActivityHistoryHelper.create_user_or_bot_history(bot),
+        "changes": {
+            "before": {"is_disabled": not is_disabled},
+            "after": {"is_disabled": is_disabled},
+        },
+    }
+    activity_type = (
+        ProjectActivityType.ProjectBotDeactivated if is_disabled else ProjectActivityType.ProjectBotDeactivated
+    )
+    activity = await helper.record(user, activity_history, **_get_activity_params(activity_type, project))
+    await record_project_activity(user, activity)
+
+
+@Broker.wrap_async_task_decorator
 async def project_invited_user_accepted(user: User, project: Project):
     helper = ActivityTaskHelper(ProjectActivity)
     activity_history = await helper.create_project_default_history(project)

@@ -103,7 +103,7 @@ async def get_card_detail(
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
     card["current_auth_role_actions"] = await service.project.get_role_actions(user_or_bot, project)
 
-    project_columns = await service.project_column.get_list(project)
+    project_columns = await service.project_column.get_all_by_project(project, as_api=True)
     project_labels = await service.project_label.get_all(project, as_api=True)
 
     return JsonResponse(
@@ -182,7 +182,7 @@ async def create_card(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.card.create(user_or_bot, project_uid, form.column_uid, form.title)
+    result = await service.card.create(user_or_bot, project_uid, form.column_uid, form.title, form.assign_users)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_card = result

@@ -2,6 +2,7 @@ export * as ActivityModel from "@/core/models/ActivityModel";
 export * as AppSettingModel from "@/core/models/AppSettingModel";
 export * as AuthUser from "@/core/models/AuthUser";
 export * as BotModel from "@/core/models/BotModel";
+export * as BotSchedule from "@/core/models/BotSchedule";
 export * as InternalBotModel from "@/core/models/InternalBotModel";
 export * as ChatMessageModel from "@/core/models/ChatMessageModel";
 export * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";

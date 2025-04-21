@@ -71,7 +71,7 @@ function CopyButton({
     showLabel = false,
     value,
     ...props
-}: { value: (() => string) | string; showLabel?: boolean } & Omit<React.ComponentProps<typeof Button>, "value">) {
+}: { value: (() => string) | string; showLabel?: bool } & Omit<React.ComponentProps<typeof Button>, "value">) {
     const [hasCopied, setHasCopied] = React.useState(false);
 
     React.useEffect(() => {

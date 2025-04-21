@@ -1,5 +1,6 @@
 import { Checkbox, Flex, Label, Toast } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
+import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useUpdateProjectUserRoles from "@/controllers/api/board/settings/useUpdateProjectUserRoles";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -74,9 +75,7 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }:
     return (
         <Flex items="center" justify="between" gap="3">
             <UserAvatar.Root user={member} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
-                <UserAvatar.List>
-                    <UserAvatar.ListLabel>test</UserAvatar.ListLabel>
-                </UserAvatar.List>
+                <UserAvatarDefaultList user={member} projectUID={project.uid} />
             </UserAvatar.Root>
             <Flex wrap gap="2">
                 {Object.keys(Project.ERoleAction).map((key) => {

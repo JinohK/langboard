@@ -260,6 +260,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                                 uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                                 setValue={setValue}
                                 editorComponentRef={editorComponentRef}
+                                projectUID={projectUID}
                             />
                         </Box>
                         <Flex items="center" gap="2" justify="start" p="1">

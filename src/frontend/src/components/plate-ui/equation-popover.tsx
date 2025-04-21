@@ -22,9 +22,9 @@ const EquationPopoverContent = ({
     setOpen,
     ...props
 }: {
-    isInline: boolean;
-    open: boolean;
-    setOpen: (open: boolean) => void;
+    isInline: bool;
+    open: bool;
+    setOpen: (open: bool) => void;
 } & TextareaAutosizeProps) => {
     const [t] = useTranslation();
     const editor = useEditorRef();

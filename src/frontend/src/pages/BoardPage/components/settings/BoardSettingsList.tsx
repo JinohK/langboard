@@ -5,6 +5,7 @@ import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSetti
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
+import BoardSettingsCronBotList from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotList";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import BoardSettingsBotRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsBotRoleList";
 import BoardSettingsMemberRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsMemberRoleList";
@@ -35,6 +36,9 @@ const BoardSettingsList = memo(() => {
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Member roles">
                 <BoardSettingsMemberRoleList key={`board-settings-member-roles-${project.uid}`} />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Bot schedules">
+                <BoardSettingsCronBotList key={`board-settings-bot-schedules-${project.uid}`} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />

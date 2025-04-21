@@ -118,6 +118,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             canAssignNonMembers
             createNewUserLabel={(item) => `${getMultiSelectItemLabel(item).trim()} (${t("project.invited")})`}
             canEdit={canEdit}
+            projectUID={project.uid}
         />
     );
 });

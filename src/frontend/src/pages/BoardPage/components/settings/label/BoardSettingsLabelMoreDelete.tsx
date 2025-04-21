@@ -42,7 +42,7 @@ function BoardSettingsLabelMoreDelete({ setIsMoreMenuOpened }: IBoardSettingsLab
     };
 
     return (
-        <Popover.Root modal={true} open={isOpened} onOpenChange={setIsOpened}>
+        <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
                 <DropdownMenu.Item
                     onClick={(e) => {

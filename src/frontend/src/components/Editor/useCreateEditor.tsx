@@ -80,6 +80,7 @@ interface IBaseUseCreateEditor {
     commonSocketEventData?: Record<string, any>;
     uploadPath?: string;
     uploadedCallback?: (respones: any) => void;
+    projectUID?: string;
 }
 
 export interface IUseReadonlyEditor extends IBaseUseCreateEditor {
@@ -125,7 +126,8 @@ export const getPlateComponents = ({
     uploadPath,
     uploadedCallback,
     readOnly = false,
-}: Pick<TUseCreateEditor, "currentUser" | "mentionables" | "uploadPath" | "uploadedCallback" | "readOnly">) => {
+    projectUID,
+}: Pick<TUseCreateEditor, "currentUser" | "mentionables" | "uploadPath" | "uploadedCallback" | "readOnly" | "projectUID">) => {
     const viewComponents = {
         [AudioPlugin.key]: MediaAudioElement,
         [BlockquotePlugin.key]: BlockquoteElement,
@@ -163,6 +165,7 @@ export const getPlateComponents = ({
                     return mentionable.value;
                 }
             },
+            projectUID,
         }),
         [ParagraphPlugin.key]: ParagraphElement,
         [PlaceholderPlugin.key]: withProps(MediaPlaceholderElement, { uploadPath, uploadedCallback }),
@@ -187,7 +190,7 @@ export const getPlateComponents = ({
         ...viewComponents,
         [AIPlugin.key]: AILeaf,
         [EmojiInputPlugin.key]: EmojiInputElement,
-        [MentionInputPlugin.key]: withProps(MentionInputElement, { currentUser, mentionables }),
+        [MentionInputPlugin.key]: withProps(MentionInputElement, { currentUser, mentionables, projectUID }),
         [SlashInputPlugin.key]: SlashInputElement,
     };
 

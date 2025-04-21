@@ -88,7 +88,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
 
     public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
         const map = {
-            isPresentableUnknownUser: () => model.type === User.BOT_TYPE || model.type === User.GROUP_EMAIL_TYPE,
+            isPresentableUnknownUser: () => model.type === User.GROUP_EMAIL_TYPE,
             isValidUser: () => TypeUtils.isString(model.uid) && !map.isPresentableUnknownUser(),
             isDeletedUser: () => model.type === User.UNKNOWN_TYPE,
             isBot: () => model.type === User.BOT_TYPE,
@@ -142,7 +142,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         if (!type) {
             type = this.type;
         }
-        return type === User.BOT_TYPE || type === User.GROUP_EMAIL_TYPE;
+        return type === User.GROUP_EMAIL_TYPE;
     }
 
     public isValidUser() {

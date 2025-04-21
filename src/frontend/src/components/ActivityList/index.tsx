@@ -13,6 +13,7 @@ export interface IAActivityListProps extends Pick<IInfiniteScrollerProps, "as"> 
     activities: ActivityModel.TModel[];
     scrollAreaClassName?: string;
     infiniteScrollerClassName?: string;
+    style?: React.CSSProperties;
     isUserView?: bool;
 }
 
@@ -23,6 +24,7 @@ function ActivityList({
     activities: flatActivities,
     scrollAreaClassName,
     infiniteScrollerClassName,
+    style,
     isUserView = false,
 }: IAActivityListProps): JSX.Element {
     const [t] = useTranslation();
@@ -109,6 +111,7 @@ function ActivityList({
                     hasMore={!isLastPage}
                     threshold={140}
                     className={infiniteScrollerClassName}
+                    style={style}
                 >
                     {!activities.length && (
                         <Flex justify="center" items="center" h="full">
@@ -120,7 +123,7 @@ function ActivityList({
                             <ActivityTimeline activity={activity} references={activity.references} key={createShortUUID()} />
                         ))}
                     </Flex>
-                    <Box h="3" />
+                    {!!activities.length && <Box h="3" />}
                 </InfiniteScroller>
             </ScrollArea.Root>
             {countNewRecords > 0 && (

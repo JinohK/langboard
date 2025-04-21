@@ -51,6 +51,7 @@ export const API_ROUTES = {
         PROJECT: "/activity/project/{uid}",
         CARD: "/activity/project/{uid}/card/{card_uid}",
         PROJECT_WIKI: "/activity/project/{uid}/wiki/{wiki_uid}",
+        PROJECT_ASSIGNEE: "/activity/project/{uid}/assignee/{assignee_uid}",
     },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",
@@ -65,11 +66,13 @@ export const API_ROUTES = {
         DETAILS: "/board/{uid}/details",
         GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
+        IS_PROJECT_ASSIGNEE: "/board/{uid}/is-assigned/{assignee_uid}",
         CHAT_MESSAGES: "/board/{uid}/chat",
         CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
         GET_CARDS: "/board/{uid}/cards",
         GET_COLUMN_CARDS: "/board/{uid}/column/{column_uid}/cards",
         UPDATE_ASSIGNED_USERS: "/board/{uid}/assigned-users",
+        UNASSIGN_ASSIGNEE: "/board/{uid}/unassign/{assignee_uid}",
         ACCEPT_INVITATION: "/project/invite/accept",
         DECLINE_INVITATION: "/project/invite/decline",
         COLUMN: {
@@ -138,12 +141,19 @@ export const API_ROUTES = {
             UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
             UPDATE_BOT_ROLES: "/board/{uid}/settings/roles/bot/{bot_uid}",
             UPDATE_USER_ROLES: "/board/{uid}/settings/roles/user/{user_uid}",
+            TOGGLE_BOT_ACTIVATION: "/board/{uid}/settings/bot/{bot_uid}/toggle-activation",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
                 CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
                 CHANGE_ORDER: "/board/{uid}/settings/label/{label_uid}/order",
                 DELETE: "/board/{uid}/settings/label/{label_uid}",
+            },
+            BOT_SCHEDULE: {
+                GET_ALL: "/board/{uid}/settings/bot/{bot_uid}/schedules",
+                SCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/schedule",
+                RESCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/reschedule/{schedule_uid}",
+                UNSCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/unschedule/{schedule_uid}",
             },
         },
     },
@@ -271,6 +281,14 @@ export const SOCKET_SERVER_EVENTS = {
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",
             DELETED: "board:wiki:deleted:{uid}",
         },
+        SETTINGS: {
+            BOT_ACTIVATION_TOGGLED: "board:settings:activation:bot:toggled:{uid}",
+            BOT_CRON: {
+                SCHEDULED: "board:settings:bot:cron:scheduled:{uid}",
+                RESCHEDULED: "board:settings:bot:cron:rescheduled:{uid}",
+                DELETED: "board:settings:bot:cron:deleted:{uid}",
+            },
+        },
     },
     USER: {
         UPDATED: "user:updated",
@@ -290,6 +308,9 @@ export const SOCKET_SERVER_EVENTS = {
             DELETED: "settings:global-relationship:deleted:{uid}",
             SELECTIONS_DELETED: "settings:global-relationship:deleted",
         },
+    },
+    PROJECT_BOT: {
+        ACTIVATION_TOGGLED: "project:bot:activation:toggled:{uid}",
     },
 } as const;
 

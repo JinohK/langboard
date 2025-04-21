@@ -2,10 +2,12 @@ from typing import Any
 from sqlmodel.sql.expression import SelectOfScalar
 from ....core.db import SnowflakeID
 from ....core.routing import SocketTopic
-from ....models import Project, ProjectRole
+from ....models import Project, ProjectAssignedBot, ProjectRole
 
 
-def project_role_finder(query: SelectOfScalar[ProjectRole], path_params: dict[str, Any]) -> SelectOfScalar[ProjectRole]:
+def project_role_finder(
+    query: SelectOfScalar[ProjectRole], path_params: dict[str, Any], user_or_bot_id: int, is_bot: bool
+) -> SelectOfScalar[ProjectRole]:
     key_prefixes = [SocketTopic.Board.value, SocketTopic.BoardWiki.value]
     project_uid = path_params.get("project_uid", None)
     if not project_uid:
@@ -17,5 +19,11 @@ def project_role_finder(query: SelectOfScalar[ProjectRole], path_params: dict[st
     query = query.join(
         Project,
         (Project.column("id") == ProjectRole.column("project_id")) & (Project.column("deleted_at") == None),  # noqa
-    ).where(Project.column("id") == SnowflakeID.from_short_code(project_uid))
+    ).where(Project.column("id") == (SnowflakeID.from_short_code(project_uid) if project_uid else None))
+
+    if is_bot:
+        query = query.join(ProjectAssignedBot, Project.column("id") == ProjectAssignedBot.column("project_id")).where(
+            (ProjectAssignedBot.column("bot_id") == user_or_bot_id)
+            & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
+        )
     return query

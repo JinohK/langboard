@@ -5,13 +5,15 @@ import { ActivityModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type TActivityType = "user" | "project" | "card" | "project_wiki";
+type TActivityType = "user" | "project" | "card" | "project_wiki" | "project_assignee";
 
 interface IBaseGetActivitiesForm<TActivity extends TActivityType> {
     type: TActivity;
 }
 
-interface IGetUserActivitiesForm extends IBaseGetActivitiesForm<"user"> {}
+interface IGetUserActivitiesForm extends IBaseGetActivitiesForm<"user"> {
+    user_uid: string;
+}
 
 interface IGerProjectActivitiesForm extends IBaseGetActivitiesForm<"project"> {
     project_uid: string;
@@ -27,7 +29,17 @@ interface IGetProjectWikiActivitiesForm extends IBaseGetActivitiesForm<"project_
     wiki_uid: string;
 }
 
-export type TGetActivitiesForm = IGetUserActivitiesForm | IGerProjectActivitiesForm | IGetCardActivitiesForm | IGetProjectWikiActivitiesForm;
+interface IGetProjectAssigneeActivitiesForm extends IBaseGetActivitiesForm<"project_assignee"> {
+    project_uid: string;
+    assignee_uid: string;
+}
+
+export type TGetActivitiesForm =
+    | IGetUserActivitiesForm
+    | IGerProjectActivitiesForm
+    | IGetCardActivitiesForm
+    | IGetProjectWikiActivitiesForm
+    | IGetProjectAssigneeActivitiesForm;
 
 const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
@@ -43,7 +55,7 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
     switch (form.type) {
         case "user":
             url = API_ROUTES.ACTIVITIY.USER;
-            activityFilter = (model: ActivityModel.TModel) => model.filterable_type === "user";
+            activityFilter = (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.user_uid;
             break;
         case "project":
             url = format(API_ROUTES.ACTIVITIY.PROJECT, { uid: form.project_uid });
@@ -64,6 +76,10 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
                 model.filterable_uid === form.project_uid &&
                 model.sub_filterable_type === "project_wiki" &&
                 model.sub_filterable_uid === form.wiki_uid;
+            break;
+        case "project_assignee":
+            url = format(API_ROUTES.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
+            activityFilter = (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.assignee_uid;
             break;
     }
 

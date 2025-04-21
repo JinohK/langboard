@@ -170,6 +170,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     uploadPath={format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: projectUID, wiki_uid: wiki.uid })}
                     setValue={setValue}
                     editorComponentRef={editorComponentRef}
+                    projectUID={projectUID}
                 />
                 {editingUsers.length > 0 && (
                     <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">

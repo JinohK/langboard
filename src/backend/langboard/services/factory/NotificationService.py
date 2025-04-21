@@ -20,6 +20,7 @@ from ...models import (
 )
 from ...models.UserNotification import NotificationType
 from ...resources.locales.EmailTemplateNames import TEmailTemplateName
+from ...tasks.bot import BotDefaultTask
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
@@ -128,7 +129,7 @@ class NotificationService(BaseService):
             [(project, "project"), (project_invitation, "invitation")],
         )
 
-    async def notify_mentioned_at_card(self, notifier: TUserOrBot, project: Project, card: Card):
+    async def notify_mentioned_in_card(self, notifier: TUserOrBot, project: Project, card: Card):
         column = await self.__get_column_by_card(card)
         await self.__notify_mentioned(
             notifier,
@@ -136,11 +137,11 @@ class NotificationService(BaseService):
             NotificationType.MentionedAtCard,
             [project, column, card],
             [(project, "project"), (card, "card")],
-            "mentioned_at_card",
+            "mentioned_in_card",
             {"url": self.__create_redirect_url(project, card)},
         )
 
-    async def notify_mentioned_at_comment(
+    async def notify_mentioned_in_comment(
         self, notifier: TUserOrBot, project: Project, card: Card, comment: CardComment
     ):
         column = await self.__get_column_by_card(card)
@@ -150,18 +151,18 @@ class NotificationService(BaseService):
             NotificationType.MentionedAtComment,
             [project, column, card],
             [(project, "project"), (card, "card"), (comment, "comment")],
-            "mentioned_at_comment",
+            "mentioned_in_comment",
             {"url": self.__create_redirect_url(project, card)},
         )
 
-    async def notify_mentioned_at_wiki(self, notifier: TUserOrBot, project: Project, wiki: ProjectWiki):
+    async def notify_mentioned_in_wiki(self, notifier: TUserOrBot, project: Project, wiki: ProjectWiki):
         await self.__notify_mentioned(
             notifier,
             wiki.content,
             NotificationType.MentionedAtWiki,
             [project, wiki],
             [(project, "project"), (wiki, "wiki")],
-            "mentioned_at_wiki",
+            "mentioned_in_wiki",
             {"url": self.__create_redirect_url(project, wiki)},
         )
 
@@ -237,8 +238,18 @@ class NotificationService(BaseService):
         if not editor or not editor.content:
             return
         user_or_bot_uids, mentioned_lines = find_mentioned(editor)
+        mentioned_in = ""
+        other_models: list[BaseSqlModel] = []
+        if email_template_name == "mentioned_in_card":
+            mentioned_in = "card"
+        elif email_template_name == "mentioned_in_comment":
+            mentioned_in = "comment"
+            other_models = [record_with_key_names[-1][0]]
+        elif email_template_name == "mentioned_in_wiki":
+            mentioned_in = "project_wiki"
+
         for user_or_bot_uid in user_or_bot_uids:
-            await self.__notify(
+            result = await self.__notify(
                 notifier,
                 user_or_bot_uid,
                 notification_type,
@@ -248,6 +259,15 @@ class NotificationService(BaseService):
                 email_template_name,
                 email_formats,
             )
+
+            if result or not mentioned_in:
+                continue
+
+            target_bot = await self._get_by_param(Bot, user_or_bot_uid)
+            if not target_bot:
+                continue
+
+            BotDefaultTask.bot_mentioned(target_bot, mentioned_in, [*scope_models, *other_models])
 
     async def __notify(
         self,
@@ -259,10 +279,10 @@ class NotificationService(BaseService):
         message_vars: dict[str, Any] | None = None,
         email_template_name: TEmailTemplateName | None = None,
         email_formats: dict[str, str] | None = None,
-    ) -> UserNotification | None:
+    ) -> bool:
         target_user = cast(User, await self._get_by_param(User, target_user))
         if not target_user or target_user.id == notifier.id:
-            return None
+            return False
 
         raw_record_list = self.create_record_list(record_with_key_names)
         record_list = [(table_name, int(record_id), key_name) for table_name, record_id, key_name in raw_record_list]
@@ -291,6 +311,7 @@ class NotificationService(BaseService):
             email_formats=email_formats,
         )
         NotificationPublishService.put_dispather(model)
+        return True
 
     def __create_redirect_url(self, project: Project, card_or_wiki: ProjectWiki | Card | None = None):
         url_chunks = urlparse(FRONTEND_REDIRECT_URL)

@@ -88,7 +88,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                     let message = "";
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            message = t("project.errors.Project not found");
+                            message = t("project.errors.Project not found.");
                         },
                         nonApiError: () => {
                             message = t("errors.Unknown error");

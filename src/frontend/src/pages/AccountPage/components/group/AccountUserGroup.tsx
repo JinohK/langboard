@@ -87,7 +87,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                         placeholder: t("myAccount.Add an email..."),
                         className: "w-full",
                         inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-                        createNewCommandItemLabel: (values) => t("myAccount.Add '{emails}'", { emails: values }),
+                        createNewCommandItemLabel: (values: string[]) => t("myAccount.Add '{emails}'", { emails: values }),
                     }}
                     allItems={users}
                     groups={groups.filter((g) => g.uid !== group.uid)}

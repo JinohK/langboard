@@ -19,7 +19,7 @@ const useUpdateUserGroupAssignedEmails = (group: UserGroup.TModel, options?: TMu
             emails: params.emails,
         });
 
-        User.Model.deleteModels(group.users.filter((emailUser) => !emailUser.isValidUser()).map((emailUser) => emailUser.uid));
+        User.Model.deleteModels(group.users.filter((emailUser) => !emailUser.isValidUser() && !emailUser.isBot()).map((emailUser) => emailUser.uid));
         group.users = res.data.users;
 
         return res.data;

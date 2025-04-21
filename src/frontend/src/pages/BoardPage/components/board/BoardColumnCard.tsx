@@ -412,7 +412,7 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
             {!!description.content.trim().length && (
                 <ScrollArea.Root>
                     <Box p="4" className="max-h-48 break-all [&_img]:max-w-full">
-                        <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly />
+                        <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly projectUID={project.uid} />
                     </Box>
                 </ScrollArea.Root>
             )}
