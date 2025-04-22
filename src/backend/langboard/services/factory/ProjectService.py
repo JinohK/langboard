@@ -531,13 +531,15 @@ class ProjectService(BaseService):
 
         assigned_bot = cast(ProjectAssignedBot, assigned_bot)
 
+        is_disabled = not assigned_bot.is_disabled
+
         async with DbSession.use() as db:
-            assigned_bot.is_disabled = not assigned_bot.is_disabled
+            assigned_bot.is_disabled = is_disabled
             await db.update(assigned_bot)
             await db.commit()
 
-        ProjectPublisher.bot_activation_toggled(project, target_bot, assigned_bot.is_disabled)
-        ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, assigned_bot.is_disabled)
+        ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
+        ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, is_disabled)
 
         return True
 

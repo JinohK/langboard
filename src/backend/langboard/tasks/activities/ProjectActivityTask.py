@@ -81,7 +81,7 @@ async def project_bot_activation_toggled(user: User, project: Project, bot: Bot,
         },
     }
     activity_type = (
-        ProjectActivityType.ProjectBotDeactivated if is_disabled else ProjectActivityType.ProjectBotDeactivated
+        ProjectActivityType.ProjectBotDeactivated if is_disabled else ProjectActivityType.ProjectBotActivated
     )
     activity = await helper.record(user, activity_history, **_get_activity_params(activity_type, project))
     await record_project_activity(user, activity)

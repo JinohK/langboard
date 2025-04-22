@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Yamon <battlecruser@yamon.io>"]
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "LICENSE"
 packages = [{include = "langboard", from = "src/backend"}]
 include = ["src/backend/langboard/*", "src/backend/langboard/**/*"]
 

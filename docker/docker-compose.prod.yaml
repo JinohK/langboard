@@ -115,7 +115,7 @@ services:
       target: prod
     working_dir: /opt/docusaurus
     environment:
-        - NODE_ENV=production
+      - NODE_ENV=production
     volumes:
       - ../docs/src:/opt/docusaurus/src
       - ../docs/docs:/opt/docusaurus/docs

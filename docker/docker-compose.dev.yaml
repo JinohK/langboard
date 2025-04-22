@@ -116,7 +116,7 @@ services:
       target: dev
     working_dir: /opt/docusaurus
     environment:
-        - NODE_ENV=development
+      - NODE_ENV=development
     volumes:
       - ../docs/src:/opt/docusaurus/src
       - ../docs/docs:/opt/docusaurus/docs
