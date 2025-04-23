@@ -1,10 +1,8 @@
 from fastapi import status
 from ...core.ai import Bot, BotSchedule
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
 from ...core.service import BotCronScheduleService
 from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
@@ -13,27 +11,23 @@ from ...services import Service
 from .scopes import BotCronTimeForm, project_role_finder
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/settings/bot/{bot_uid}/schedules",
     tags=["Board.Settings.BotCron"],
+    description="Get all bot cron schedules.",
     responses=(
         OpenApiSchema()
         .suc({"schedules": [(BotSchedule, {"schema": {"target": "object"}})]})
-        .auth()
-        .role()
-        .no_bot()
+        .auth(with_bot=True)
+        .role(with_bot=True)
         .err(404, "Project or bot not found.")
         .get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def get_bot_schedules(
-    project_uid: str, bot_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+async def get_bot_schedules(project_uid: str, bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
     bot = await service.bot.get_by_uid(bot_uid)
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -51,23 +45,18 @@ async def get_bot_schedules(
     return JsonResponse(content={"schedules": schedules})
 
 
+@AppRouter.schema(form=BotCronTimeForm)
 @AppRouter.api.post(
     "/board/{project_uid}/settings/bot/{bot_uid}/schedule",
     tags=["Board.Settings.BotCron"],
-    responses=OpenApiSchema().auth().role().no_bot().err(404, "Bot or target table not found").get(),
+    description="Schedule a bot cron schedule.",
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Bot or target table not found").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def schedule_bot_schedule(
-    project_uid: str,
-    bot_uid: str,
-    form: BotCronTimeForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+async def schedule_bot_crons(
+    project_uid: str, bot_uid: str, form: BotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     if (
         not form.interval_str
         or not BotCronScheduleService.is_valid_interval_str(form.interval_str)
@@ -97,24 +86,20 @@ async def schedule_bot_schedule(
     return JsonResponse(content={})
 
 
+@AppRouter.schema(form=BotCronTimeForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/bot/{bot_uid}/reschedule/{schedule_uid}",
     tags=["Board.Settings.BotCron"],
-    responses=OpenApiSchema().auth().role().no_bot().err(404, "Bot not found").get(),
+    description="Reschedule a bot cron schedule.",
+    responses=(
+        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, bot, or schedule not found").get()
+    ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def reschedule_bot_schedule(
-    project_uid: str,
-    bot_uid: str,
-    schedule_uid: str,
-    form: BotCronTimeForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+async def reschedule_bot_crons(
+    project_uid: str, bot_uid: str, schedule_uid: str, form: BotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     result = await _get_project_with_bot(service, project_uid, bot_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -139,23 +124,18 @@ async def reschedule_bot_schedule(
     return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.delete(
     "/board/{project_uid}/settings/bot/{bot_uid}/unschedule/{schedule_uid}",
     tags=["Board.Settings.BotCron"],
-    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project or bot not found").get(),
+    description="Unschedule a bot cron schedule.",
+    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or bot not found").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def delete_bot_schedule(
-    project_uid: str,
-    bot_uid: str,
-    schedule_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+async def unschedule_bot_crons(
+    project_uid: str, bot_uid: str, schedule_uid: str, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     result = await _get_project_with_bot(service, project_uid, bot_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

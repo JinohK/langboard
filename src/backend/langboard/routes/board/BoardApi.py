@@ -91,6 +91,39 @@ async def get_project(
     return JsonResponse(content={"project": response})
 
 
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/board/{project_uid}/assignees",
+    tags=["Board"],
+    description="Get project assignees (Users and bots).",
+    responses=(
+        OpenApiSchema()
+        .suc({"users": [User], "bots": [Bot]})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_assignees(
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, _ = await service.project.is_assigned(user_or_bot, project)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    users = await service.project.get_assigned_users(project, as_api=True)
+    bots = await service.project.get_assigned_bots(project, as_api=True)
+
+    return JsonResponse(content={"users": users, "bots": bots})
+
+
 @AppRouter.api.get(
     "/board/{project_uid}/chat",
     tags=["Board"],
@@ -235,7 +268,7 @@ async def update_project_member(
 @AppRouter.api.delete(
     "/board/{project_uid}/unassign/{assignee_uid}",
     tags=["Board"],
-    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project, user or bot not found.").get(),
+    responses=OpenApiSchema().auth().role().no_bot().err(404, "Project, user, or bot not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
@@ -255,30 +288,23 @@ async def unassign_project_assignee(
     return JsonResponse(content={})
 
 
+@AppRouter.schema()
 @AppRouter.api.get(
     "/board/{project_uid}/is-assigned/{assignee_uid}",
     tags=["Board"],
+    description="Check if the user or bot is assigned to the project.",
     responses=(
         OpenApiSchema()
         .suc({"result": "bool", "is_bot_disabled": "bool?"})
-        .auth()
-        .role()
-        .no_bot()
-        .err(404, "Project, user or bot not found.")
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project, user, or bot not found.")
         .get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 @AuthFilter.add
-async def is_project_assignee(
-    project_uid: str,
-    assignee_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+async def is_project_assignee(project_uid: str, assignee_uid: str, service: Service = Service.scope()) -> JsonResponse:
     target = await service.user.get_by_uid(assignee_uid)
     if not target:
         target = await service.bot.get_by_uid(assignee_uid)
