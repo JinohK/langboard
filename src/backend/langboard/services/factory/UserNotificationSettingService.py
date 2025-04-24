@@ -242,9 +242,9 @@ class UserNotificationSettingService(BaseService):
             "channel": channel,
             "notification_types": [
                 NotificationType.AssignedToCard,
-                NotificationType.MentionedAtCard,
-                NotificationType.MentionedAtComment,
-                NotificationType.MentionedAtWiki,
+                NotificationType.MentionedInCard,
+                NotificationType.MentionedInComment,
+                NotificationType.MentionedInWiki,
                 NotificationType.NotifiedFromChecklist,
                 NotificationType.ReactedToComment,
             ],
@@ -289,8 +289,8 @@ class UserNotificationSettingService(BaseService):
             "channel": channel,
             "notification_types": [
                 NotificationType.AssignedToCard,
-                NotificationType.MentionedAtCard,
-                NotificationType.MentionedAtComment,
+                NotificationType.MentionedInCard,
+                NotificationType.MentionedInComment,
                 NotificationType.NotifiedFromChecklist,
                 NotificationType.ReactedToComment,
             ],
@@ -331,8 +331,8 @@ class UserNotificationSettingService(BaseService):
             "channel": channel,
             "notification_types": [
                 NotificationType.AssignedToCard,
-                NotificationType.MentionedAtCard,
-                NotificationType.MentionedAtComment,
+                NotificationType.MentionedInCard,
+                NotificationType.MentionedInComment,
                 NotificationType.NotifiedFromChecklist,
                 NotificationType.ReactedToComment,
             ],
@@ -371,7 +371,7 @@ class UserNotificationSettingService(BaseService):
         params = {
             "user": user,
             "channel": channel,
-            "notification_types": [NotificationType.MentionedAtWiki],
+            "notification_types": [NotificationType.MentionedInWiki],
         }
 
         if project and wiki:

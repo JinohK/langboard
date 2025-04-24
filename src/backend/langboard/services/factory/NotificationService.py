@@ -134,7 +134,7 @@ class NotificationService(BaseService):
         await self.__notify_mentioned(
             notifier,
             card.description,
-            NotificationType.MentionedAtCard,
+            NotificationType.MentionedInCard,
             [project, column, card],
             [(project, "project"), (card, "card")],
             "mentioned_in_card",
@@ -148,7 +148,7 @@ class NotificationService(BaseService):
         await self.__notify_mentioned(
             notifier,
             comment.content,
-            NotificationType.MentionedAtComment,
+            NotificationType.MentionedInComment,
             [project, column, card],
             [(project, "project"), (card, "card"), (comment, "comment")],
             "mentioned_in_comment",
@@ -159,7 +159,7 @@ class NotificationService(BaseService):
         await self.__notify_mentioned(
             notifier,
             wiki.content,
-            NotificationType.MentionedAtWiki,
+            NotificationType.MentionedInWiki,
             [project, wiki],
             [(project, "project"), (wiki, "wiki")],
             "mentioned_in_wiki",

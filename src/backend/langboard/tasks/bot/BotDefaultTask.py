@@ -62,7 +62,12 @@ async def bot_mentioned(bot: Bot, mentioned_in: Literal["card", "comment", "proj
 
 @BotTaskDataHelper.schema(
     BotDefaultTrigger.BotCronScheduled,
-    {"project": Project.api_schema(), "project_column": ProjectColumn.api_schema(), "card?": Card.api_schema()},
+    {
+        "project": Project.api_schema(),
+        "project_column": ProjectColumn.api_schema(),
+        "card?": Card.api_schema(),
+        "scope": "string",
+    },
 )
 @Broker.wrap_async_task_decorator
 async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
@@ -82,7 +87,11 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
         project = result.first()
         if not project:
             return
-        data = {"project_column": model.api_response(), "project": project.api_response()}
+        data = {
+            "project_column": model.api_response(),
+            "project": project.api_response(),
+            "scope": ProjectColumn.__tablename__,
+        }
     elif isinstance(model, Card):
         async with DbSession.use() as db:
             result = await db.exec(
@@ -97,6 +106,7 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
             "project_column": column.api_response(),
             "card": model.api_response(),
             "project": project.api_response(),
+            "scope": Card.__tablename__,
         }
     else:
         return

@@ -294,9 +294,9 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
 function HeaderUserNotificationItemContent({ notification, className }: { notification: UserNotification.TModel; className?: string }) {
     const content = useMemo(() => {
         switch (notification.type) {
-            case ENotificationType.MentionedAtCard:
-            case ENotificationType.MentionedAtComment:
-            case ENotificationType.MentionedAtWiki:
+            case ENotificationType.MentionedInCard:
+            case ENotificationType.MentionedInComment:
+            case ENotificationType.MentionedInWiki:
             case ENotificationType.ReactedToComment:
                 return <HeaderUserNotificationItemMentionedText content={notification.message_vars.line} />;
             default:
@@ -383,11 +383,11 @@ const getRoute = (notification: UserNotification.TModel) => {
     switch (notification.type) {
         case ENotificationType.ProjectInvited:
             return `${ROUTES.BOARD.INVITATION}?${QUERY_NAMES.PROJCT_INVITATION_TOKEN}=${notification.records.invitation.encrypted_token}`;
-        case ENotificationType.MentionedAtCard:
+        case ENotificationType.MentionedInCard:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
-        case ENotificationType.MentionedAtComment:
+        case ENotificationType.MentionedInComment:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
-        case ENotificationType.MentionedAtWiki:
+        case ENotificationType.MentionedInWiki:
             return ROUTES.BOARD.WIKI_PAGE(notification.records.project.uid, notification.records.wiki.uid);
         case ENotificationType.ReactedToComment:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);

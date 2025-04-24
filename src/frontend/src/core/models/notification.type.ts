@@ -1,8 +1,8 @@
 export enum ENotificationType {
     ProjectInvited = "project_invited",
-    MentionedAtCard = "mentioned_in_card",
-    MentionedAtComment = "mentioned_in_comment",
-    MentionedAtWiki = "mentioned_in_wiki",
+    MentionedInCard = "mentioned_in_card",
+    MentionedInComment = "mentioned_in_comment",
+    MentionedInWiki = "mentioned_in_wiki",
     AssignedToCard = "assigned_to_card",
     ReactedToComment = "reacted_to_comment",
     NotifiedFromChecklist = "notified_from_checklist",
@@ -33,39 +33,39 @@ export const DEEP_NOTIFICATION_TYPE_MAP = {
     project: {
         column: {
             card: [
-                ENotificationType.MentionedAtCard,
-                ENotificationType.MentionedAtComment,
+                ENotificationType.MentionedInCard,
+                ENotificationType.MentionedInComment,
                 ENotificationType.AssignedToCard,
                 ENotificationType.ReactedToComment,
                 ENotificationType.NotifiedFromChecklist,
             ],
         },
-        wiki: [ENotificationType.MentionedAtWiki],
+        wiki: [ENotificationType.MentionedInWiki],
     },
 };
 
 export const FLAT_NOTIFICATION_TYPE_MAP: Record<TNotificationSpecificType, TNotificationType[]> = {
     project: [
-        ENotificationType.MentionedAtCard,
-        ENotificationType.MentionedAtComment,
+        ENotificationType.MentionedInCard,
+        ENotificationType.MentionedInComment,
         ENotificationType.AssignedToCard,
         ENotificationType.ReactedToComment,
         ENotificationType.NotifiedFromChecklist,
-        ENotificationType.MentionedAtWiki,
+        ENotificationType.MentionedInWiki,
     ],
     column: [
-        ENotificationType.MentionedAtCard,
-        ENotificationType.MentionedAtComment,
+        ENotificationType.MentionedInCard,
+        ENotificationType.MentionedInComment,
         ENotificationType.AssignedToCard,
         ENotificationType.ReactedToComment,
         ENotificationType.NotifiedFromChecklist,
     ],
     card: [
-        ENotificationType.MentionedAtCard,
-        ENotificationType.MentionedAtComment,
+        ENotificationType.MentionedInCard,
+        ENotificationType.MentionedInComment,
         ENotificationType.AssignedToCard,
         ENotificationType.ReactedToComment,
         ENotificationType.NotifiedFromChecklist,
     ],
-    wiki: [ENotificationType.MentionedAtWiki],
+    wiki: [ENotificationType.MentionedInWiki],
 };
