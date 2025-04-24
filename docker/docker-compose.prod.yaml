@@ -101,6 +101,7 @@ services:
       - ../alembic.ini:/app/alembic.ini
       - ../local:/app/local
       - ./volumes/crontab:/etc/crontab
+      - ../scripts/run_bot_cron.sh:/app/scripts/run_bot_cron.sh:x
     depends_on:
       - db
     networks:

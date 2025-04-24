@@ -1,5 +1,8 @@
+from os import environ
+from subprocess import run as subprocess_run
 from typing import Any, Literal, cast, overload
-from crontab import CronItem, CronTab
+from crontab import CronItem, CronTab, OrderedVariableList
+from psutil import process_iter
 from ...Constants import CRON_TAB_FILE
 from ..ai import Bot, BotSchedule
 from ..db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder
@@ -56,6 +59,15 @@ class BotCronScheduleService:
         return schedules
 
     @staticmethod
+    def reload_cron():
+        for process in process_iter(["pid", "name"]):
+            if process.name() != "cron":
+                continue
+            process.kill()
+        subprocess_run(["crontab", str(CRON_TAB_FILE)])
+        subprocess_run(["cron"])
+
+    @staticmethod
     def is_valid_interval_str(interval_str: str) -> bool:
         try:
             job = CronItem()
@@ -89,7 +101,7 @@ class BotCronScheduleService:
             await db.commit()
 
         if has_changed:
-            cron.write()
+            BotCronScheduleService.__save_cron(cron)
 
         return bot_schedule
 
@@ -146,7 +158,7 @@ class BotCronScheduleService:
             cron.remove_all(comment=old_interval_str)
 
         if has_changed or has_result:
-            cron.write()
+            BotCronScheduleService.__save_cron(cron)
 
         return bot_schedule, model
 
@@ -170,8 +182,7 @@ class BotCronScheduleService:
 
         if not result.first():
             cron.remove_all(comment=interval_str)
-            cron.write()
-
+            BotCronScheduleService.__save_cron(cron)
         return bot_schedule
 
     @staticmethod
@@ -179,7 +190,12 @@ class BotCronScheduleService:
         if not CRON_TAB_FILE.exists():
             CRON_TAB_FILE.parent.mkdir(parents=True, exist_ok=True)
             CRON_TAB_FILE.touch()
-        return CronTab(user=None, tabfile=str(CRON_TAB_FILE))
+        cron = CronTab(user=False, tabfile=str(CRON_TAB_FILE))
+        if cron.env is None:
+            cron.env = OrderedVariableList()
+        cron.env.update(environ)
+
+        return cron
 
     @staticmethod
     async def __get_schedule(bot_schedule: BotSchedule | str):
@@ -204,6 +220,11 @@ class BotCronScheduleService:
         if has_job:
             return False
 
-        job = cron.new(command=f"langboard run:bot:task '{interval_str}'", comment=interval_str, user=None)
+        job = cron.new(command=f"/app/scripts/run_bot_cron.sh '{interval_str}'", comment=interval_str, user="/bin/bash")
         job.setall(interval_str)
         return True
+
+    @staticmethod
+    def __save_cron(cron: CronTab):
+        cron.write()
+        BotCronScheduleService.reload_cron()

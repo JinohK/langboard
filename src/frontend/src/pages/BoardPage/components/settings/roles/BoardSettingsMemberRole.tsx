@@ -7,70 +7,77 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, User } from "@/core/models";
 import { ROLE_ALL_GRANTED } from "@/core/models/Base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardSettingsBotRoleProps {
+export interface IBoardSettingsMemberRoleProps {
     member: User.TModel;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
+    isValidatingRef: React.RefObject<bool>;
 }
 
-const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }: IBoardSettingsBotRoleProps) => {
+const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating, isValidatingRef }: IBoardSettingsMemberRoleProps) => {
     const [t] = useTranslation();
     const { project } = useBoardSettings();
     const memberRoles = project.useField("member_roles");
     const roles = memberRoles[member.uid];
     const { mutateAsync } = useUpdateProjectUserRoles(member.uid);
+    const updateRole = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (isValidatingRef.current) {
+                return;
+            }
+
+            const role: Project.ERoleAction = e.currentTarget.getAttribute("data-value") as Project.ERoleAction;
+
+            setIsValidating(true);
+            isValidatingRef.current = true;
+
+            const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
+
+            const promise = mutateAsync({
+                project_uid: project.uid,
+                roles: newRoles.includes(role) ? newRoles.filter((r) => r !== role) : [...newRoles, role],
+            });
+
+            Toast.Add.promise(promise, {
+                loading: t("common.Updating..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                            message = t("errors.Forbidden");
+                        },
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
+                            message = t("project.errors.Project not found.");
+                        },
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
+
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    return t("project.settings.successes.Member roles updated successfully.");
+                },
+                finally: () => {
+                    setIsValidating(false);
+                    isValidatingRef.current = false;
+                },
+            });
+        },
+        [memberRoles]
+    );
 
     if (!roles) {
         return null;
     }
-
-    const updateRole = (role: Project.ERoleAction) => {
-        if (isValidating) {
-            return;
-        }
-
-        setIsValidating(true);
-
-        const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
-
-        const promise = mutateAsync({
-            project_uid: project.uid,
-            roles: newRoles.includes(role) ? newRoles.filter((r) => r !== role) : [...newRoles, role],
-        });
-
-        Toast.Add.promise(promise, {
-            loading: t("common.Updating..."),
-            error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                        message = t("errors.Forbidden");
-                    },
-                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("project.errors.Project not found.");
-                    },
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
-
-                handle(error);
-                return message;
-            },
-            success: () => {
-                return t("project.settings.successes.Member roles updated successfully.");
-            },
-            finally: () => {
-                setIsValidating(false);
-            },
-        });
-    };
 
     return (
         <Flex items="center" justify="between" gap="3">
@@ -90,8 +97,9 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }:
                             <Checkbox
                                 checked={roles.includes(Project.ERoleAction[key]) || roles.includes(ROLE_ALL_GRANTED)}
                                 disabled={disabled}
+                                data-value={Project.ERoleAction[key]}
                                 className="mr-1"
-                                onClick={() => updateRole(Project.ERoleAction[key])}
+                                onClick={updateRole}
                             />
                             {t(`role.project.${Project.ERoleAction[key]}`)}
                         </Label>

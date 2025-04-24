@@ -15,12 +15,12 @@ RUN python -m venv $VIRTUAL_ENV
 
 RUN apt-get update && apt-get install -y
 RUN apt update && apt install -y
-RUN apt install libuv1-dev libssl-dev cron -y
+RUN apt install libuv1-dev libssl-dev cron systemd -y
 
 RUN curl -sSL https://install.python-poetry.org | python3 - --git https://github.com/python-poetry/poetry.git@master
 RUN poetry --version
 
-RUN crontab ${CRON_TAB_FILE}
+RUN cron
 
 COPY ./src/backend ./src/backend
 COPY pyproject.toml poetry.lock README.md alembic.ini ./
