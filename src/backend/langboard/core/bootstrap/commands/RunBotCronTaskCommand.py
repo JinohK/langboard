@@ -1,3 +1,5 @@
+from asyncio import run
+from ....tasks.bot import BotDefaultTask
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 
 
@@ -35,5 +37,4 @@ class RunBotCronTaskCommand(BaseCommand):
         return str
 
     def execute(self, cron_time_str: str, _: RunBotCronTaskCommandOptions) -> None:
-        print(cron_time_str.count("/"))
-        pass
+        run(BotDefaultTask.run_scheduled_bot_cron(cron_time_str))

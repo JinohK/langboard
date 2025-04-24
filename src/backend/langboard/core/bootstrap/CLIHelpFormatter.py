@@ -234,3 +234,26 @@ class CLIHelpFormatter(HelpFormatter):
 
     def _is_fake_action(self, action: Action) -> bool:
         return action.metavar and "is_fake" in action.metavar and action.metavar["is_fake"]  # type: ignore
+
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            default = self._get_default_metavar_for_positional(action)
+            return ""
+
+        else:
+            parts = []
+
+            # if the Optional doesn't take a value, format is:
+            #    -s, --long
+            if action.nargs == 0:
+                parts.extend(action.option_strings)
+
+            # if the Optional takes a value, format is:
+            #    -s ARGS, --long ARGS
+            else:
+                default = self._get_default_metavar_for_optional(action)
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    parts.append("%s %s" % (option_string, args_string))
+
+            return ", ".join(parts)

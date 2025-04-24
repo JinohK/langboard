@@ -2,9 +2,11 @@ from typing import Literal
 from ...core.ai import Bot, BotDefaultTrigger, BotSchedule
 from ...core.broker import Broker
 from ...core.db import BaseSqlModel, DbSession, SqlBuilder, User
+from ...core.service import BotCronScheduleService
 from ...core.utils.ModelUtils import get_model_by_table_name
 from ...models import Card, CardComment, Project, ProjectColumn, ProjectWiki
 from .utils import BotTaskDataHelper, BotTaskHelper
+from .utils.BotTaskHelper import logger
 
 
 @BotTaskDataHelper.schema(BotDefaultTrigger.BotCreated)
@@ -115,6 +117,10 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
 
 
 async def run_scheduled_bot_cron(interval_str: str):
+    if not BotCronScheduleService.is_valid_interval_str(interval_str):
+        logger.error(f"Invalid interval string: {interval_str}")
+        return
+
     async with DbSession.use() as db:
         result = await db.exec(
             SqlBuilder.select.tables(BotSchedule, Bot)
