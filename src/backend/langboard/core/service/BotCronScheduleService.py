@@ -179,7 +179,7 @@ class BotCronScheduleService:
         if not CRON_TAB_FILE.exists():
             CRON_TAB_FILE.parent.mkdir(parents=True, exist_ok=True)
             CRON_TAB_FILE.touch()
-        return CronTab(user=False, tabfile=str(CRON_TAB_FILE))
+        return CronTab(user=None, tabfile=str(CRON_TAB_FILE))
 
     @staticmethod
     async def __get_schedule(bot_schedule: BotSchedule | str):
@@ -204,6 +204,6 @@ class BotCronScheduleService:
         if has_job:
             return False
 
-        job = cron.new(command=f"langboard run:bot:task '{interval_str}'", comment=interval_str, user="root")
+        job = cron.new(command=f"langboard run:bot:task '{interval_str}'", comment=interval_str, user=None)
         job.setall(interval_str)
         return True
