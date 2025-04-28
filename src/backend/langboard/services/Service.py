@@ -113,7 +113,3 @@ class Service(ServiceFactory):
     @property
     def bot(self):
         return self._create_or_get_service(factory.BotService)
-
-    @property
-    def bot_schedule(self):
-        return self._create_or_get_service(factory.BotScheduleService)
