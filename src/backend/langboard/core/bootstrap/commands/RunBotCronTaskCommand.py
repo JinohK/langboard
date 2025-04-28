@@ -1,5 +1,5 @@
 from asyncio import run
-from ....tasks.bot import BotDefaultTask
+from ....tasks.bot import BotScheduleTask
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 
 
@@ -22,7 +22,7 @@ class RunBotCronTaskCommand(BaseCommand):
 
     @property
     def positional_name(self) -> str:
-        return "cron time string"
+        return "cron interval string"
 
     @property
     def description(self) -> str:
@@ -37,4 +37,4 @@ class RunBotCronTaskCommand(BaseCommand):
         return str
 
     def execute(self, cron_time_str: str, _: RunBotCronTaskCommandOptions) -> None:
-        run(BotDefaultTask.run_scheduled_bot_cron(cron_time_str))
+        run(BotScheduleTask.run_scheduled_bots_cron(cron_time_str))

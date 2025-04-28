@@ -13,6 +13,9 @@ export interface IRescheduleProjectBotCronForm {
         type?: BotSchedule.TTargetTable;
         uid?: string;
     };
+    running_type?: BotSchedule.ERunningType;
+    start_at?: Date;
+    end_at?: Date;
 }
 
 const useRescheduleProjectBotCron = (options?: TMutationOptions<IRescheduleProjectBotCronForm>) => {
@@ -28,6 +31,9 @@ const useRescheduleProjectBotCron = (options?: TMutationOptions<IRescheduleProje
             interval_str: params.interval,
             target_table: params.scope?.type,
             target_uid: params.scope?.uid,
+            running_type: params.running_type,
+            start_at: params.start_at,
+            end_at: params.end_at,
         });
 
         return res.data;

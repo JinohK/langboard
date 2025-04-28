@@ -1,16 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotSchedule } from "@/core/models";
 
-export interface IBoardBotCronRescheduledRawResponse {
-    target_table?: BotSchedule.TTargetTable;
-    target_uid?: string;
-    filterable_table?: string;
-    filterable_uid?: string;
-    interval_str?: string;
-}
+export type TBoardBotCronRescheduledRawResponse = Partial<Omit<BotSchedule.Interface, "uid" | "bot_uid">>;
 
 export interface IUseBoardBotCronRescheduledHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
@@ -19,7 +12,7 @@ export interface IUseBoardBotCronRescheduledHandlersProps extends IBaseUseSocket
 }
 
 const useBoardBotCronRescheduledHandlers = ({ callback, projectUID, botUID, schedule }: IUseBoardBotCronRescheduledHandlersProps) => {
-    return useSocketHandler<{}, IBoardBotCronRescheduledRawResponse>({
+    return useSocketHandler<{}, TBoardBotCronRescheduledRawResponse>({
         topic: ESocketTopic.BoardSettings,
         topicId: projectUID,
         eventKey: `board-bot-cron-rescheduled-${projectUID}-${botUID}-${schedule.uid}`,
@@ -29,7 +22,7 @@ const useBoardBotCronRescheduledHandlers = ({ callback, projectUID, botUID, sche
             callback,
             responseConverter: (data) => {
                 Object.entries(data).forEach(([key, value]) => {
-                    schedule[key] = value as any;
+                    schedule[key] = value as never;
                 });
                 return {};
             },

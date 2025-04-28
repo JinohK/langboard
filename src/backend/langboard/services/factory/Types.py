@@ -1,4 +1,4 @@
-from ...core.ai import Bot
+from ...core.ai import Bot, BotSchedule
 from ...core.db import User
 from ...core.setting import AppSetting
 from ...models import (
@@ -33,3 +33,4 @@ TBotParam = Bot | int | str
 TSettingParam = AppSetting | int | str
 TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str
 TNotificationParam = UserNotification | int | str
+TBotScheduleParam = BotSchedule | int | str

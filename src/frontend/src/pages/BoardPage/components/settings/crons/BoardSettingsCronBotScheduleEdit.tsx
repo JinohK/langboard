@@ -4,7 +4,10 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import BoardSettingsCronBotScheduleInput, { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
+import BoardSettingsCronBotScheduleForm, {
+    IBotScheduleFormMap,
+    IBotScheduleTriggersMap,
+} from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,8 +29,7 @@ function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCr
         scopeType: targetTable,
         scopeUID: targetUID,
     });
-    const scopeTypeButtonRef = useRef<HTMLButtonElement>(null);
-    const scopeUIDButtonRef = useRef<HTMLButtonElement>(null);
+    const triggersMapRef = useRef<IBotScheduleTriggersMap>({});
     const [isOpened, setIsOpened] = useState(false);
 
     const createSchedule = () => {
@@ -36,6 +38,24 @@ function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCr
         }
 
         setIsValidating(true);
+
+        valuesMapRef.current.runningType = valuesMapRef.current.runningType ?? BotSchedule.ERunningType.Infinite;
+
+        if (BotSchedule.RUNNING_TYPES_WITH_START_AT.includes(valuesMapRef.current.runningType)) {
+            if (!valuesMapRef.current.startAt) {
+                Toast.Add.error(t("project.settings.errors.Cron start time is required."));
+                triggersMapRef.current.startAt?.focus();
+                return;
+            }
+        }
+
+        if (BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(valuesMapRef.current.runningType)) {
+            if (!valuesMapRef.current.endAt) {
+                Toast.Add.error(t("project.settings.errors.Cron end time is required."));
+                triggersMapRef.current.endAt?.focus();
+                return;
+            }
+        }
 
         const promise = rescheduleProjectBotCronMutateAsync({
             project_uid: project.uid,
@@ -46,6 +66,9 @@ function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCr
                 type: valuesMapRef.current.scopeType,
                 uid: valuesMapRef.current.scopeUID,
             },
+            running_type: valuesMapRef.current.runningType,
+            start_at: valuesMapRef.current.startAt,
+            end_at: valuesMapRef.current.endAt,
         });
 
         Toast.Add.promise(promise, {
@@ -93,13 +116,14 @@ function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCr
                 </Button>
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-                <BoardSettingsCronBotScheduleInput
-                    initialIntervalValue={intervalStr}
-                    initialScopeType={targetTable}
-                    initialScopeUID={targetUID}
+                <BoardSettingsCronBotScheduleForm
+                    initialValuesMap={{
+                        interval: intervalStr,
+                        scopeType: targetTable,
+                        scopeUID: targetUID,
+                    }}
                     valuesMapRef={valuesMapRef}
-                    scopeTypeButtonRef={scopeTypeButtonRef}
-                    scopeUIDButtonRef={scopeUIDButtonRef}
+                    triggersMapRef={triggersMapRef}
                     disabled={isValidating}
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">

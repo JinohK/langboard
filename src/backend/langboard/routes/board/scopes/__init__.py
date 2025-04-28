@@ -1,4 +1,5 @@
 from .Attachment import ChangeAttachmentNameForm
+from .Bot import BotCronTimeForm
 from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm, UpdateCardRelationshipsForm
 from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm
 from .Column import ColumnForm
@@ -12,14 +13,7 @@ from .Project import (
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
 from .RoleFinder import project_role_finder
-from .Shared import (
-    AssignBotsForm,
-    AssigneesForm,
-    AssignUsersForm,
-    BotCronTimeForm,
-    ChangeChildOrderForm,
-    ChangeRootOrderForm,
-)
+from .Shared import AssignBotsForm, AssigneesForm, AssignUsersForm, ChangeChildOrderForm, ChangeRootOrderForm
 from .Wiki import ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 

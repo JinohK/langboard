@@ -4,7 +4,7 @@ from .BotDataModel import create_bot_data_model
 from .BotDefaultTrigger import BotDefaultTrigger
 from .BotResponse import LangflowStreamResponse
 from .BotRunner import BotRunner
-from .BotSchedule import BotSchedule
+from .BotSchedule import BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from .BotTrigger import BotTrigger
 from .BotTriggerCondition import BotTriggerCondition
 from .InternalBotType import InternalBotType
@@ -19,6 +19,8 @@ __all__ = [
     "LangflowStreamResponse",
     "BotRunner",
     "BotSchedule",
+    "BotScheduleRunningType",
+    "BotScheduleStatus",
     "BotTrigger",
     "BotTriggerCondition",
     "BotDefaultTrigger",

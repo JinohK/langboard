@@ -15,7 +15,7 @@ function BoardSettingsCronBotScheduleListDialog({ bot }: IBOardSettingsCronBotSc
             <Dialog.Trigger asChild>
                 <Button size="sm">{t("project.settings.Show schedules")}</Button>
             </Dialog.Trigger>
-            <Dialog.Content className="p-2 pt-8 sm:max-w-screen-sm md:max-w-screen-md" aria-describedby="">
+            <Dialog.Content className="p-2 pt-8 sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg" aria-describedby="">
                 <Dialog.Title hidden />
                 <BoardSettingsCronBotScheduleList bot={bot} />
             </Dialog.Content>

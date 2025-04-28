@@ -2,8 +2,12 @@ import { Button, Flex, Popover, SubmitButton, Toast } from "@/components/base";
 import useScheduleProjectBotCron from "@/controllers/api/board/settings/useScheduleProjectBotCron";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import BoardSettingsCronBotScheduleInput, { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
+import BoardSettingsCronBotScheduleForm, {
+    IBotScheduleFormMap,
+    IBotScheduleTriggersMap,
+} from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,8 +21,7 @@ function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBot
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: scheduleProjectBotCronMutateAsync } = useScheduleProjectBotCron();
     const valuesMapRef = useRef<IBotScheduleFormMap>({});
-    const scopeTypeButtonRef = useRef<HTMLButtonElement>(null);
-    const scopeUIDButtonRef = useRef<HTMLButtonElement>(null);
+    const triggersMapRef = useRef<IBotScheduleTriggersMap>({});
     const [isOpened, setIsOpened] = useState(false);
 
     const createCron = () => {
@@ -26,14 +29,32 @@ function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBot
             return;
         }
 
+        valuesMapRef.current.runningType = valuesMapRef.current.runningType ?? BotSchedule.ERunningType.Infinite;
+
+        if (BotSchedule.RUNNING_TYPES_WITH_START_AT.includes(valuesMapRef.current.runningType)) {
+            if (!valuesMapRef.current.startAt) {
+                Toast.Add.error(t("project.settings.errors.Cron start time is required."));
+                triggersMapRef.current.startAt?.focus();
+                return;
+            }
+        }
+
+        if (BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(valuesMapRef.current.runningType)) {
+            if (!valuesMapRef.current.endAt) {
+                Toast.Add.error(t("project.settings.errors.Cron end time is required."));
+                triggersMapRef.current.endAt?.focus();
+                return;
+            }
+        }
+
         if (!valuesMapRef.current.scopeType) {
             Toast.Add.error(t("project.settings.errors.Cron scope type is required."));
-            scopeTypeButtonRef.current?.focus();
+            triggersMapRef.current.scopeType?.focus();
             return;
         }
         if (!valuesMapRef.current.scopeUID) {
             Toast.Add.error(t("project.settings.errors.Cron scope UID is required."));
-            scopeUIDButtonRef.current?.focus();
+            triggersMapRef.current.scopeUID?.focus();
             return;
         }
 
@@ -47,6 +68,9 @@ function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBot
                 type: valuesMapRef.current.scopeType,
                 uid: valuesMapRef.current.scopeUID,
             },
+            running_type: valuesMapRef.current.runningType,
+            start_at: valuesMapRef.current.startAt,
+            end_at: valuesMapRef.current.endAt,
         });
 
         Toast.Add.promise(promise, {
@@ -89,12 +113,7 @@ function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBot
                 </Button>
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-                <BoardSettingsCronBotScheduleInput
-                    valuesMapRef={valuesMapRef}
-                    scopeTypeButtonRef={scopeTypeButtonRef}
-                    scopeUIDButtonRef={scopeUIDButtonRef}
-                    disabled={isValidating}
-                />
+                <BoardSettingsCronBotScheduleForm valuesMapRef={valuesMapRef} triggersMapRef={triggersMapRef} disabled={isValidating} />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

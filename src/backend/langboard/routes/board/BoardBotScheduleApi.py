@@ -3,7 +3,7 @@ from ...core.ai import Bot, BotSchedule
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.service import BotCronScheduleService
+from ...core.service import BotScheduleService
 from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectBotPublisher
@@ -40,7 +40,7 @@ async def get_bot_schedules(project_uid: str, bot_uid: str, service: Service = S
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    schedules = await BotCronScheduleService.get_all_by_filterable(bot, project, as_api=True)
+    schedules = await BotScheduleService.get_all_by_filterable(bot, project, as_api=True)
 
     return JsonResponse(content={"schedules": schedules})
 
@@ -59,9 +59,14 @@ async def schedule_bot_crons(
 ) -> JsonResponse:
     if (
         not form.interval_str
-        or not BotCronScheduleService.is_valid_interval_str(form.interval_str)
+        or not BotScheduleService.is_valid_interval_str(form.interval_str)
         or not form.target_table
         or not form.target_uid
+    ):
+        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    if not BotScheduleService.get_default_status_with_dates(
+        running_type=form.running_type, start_at=form.start_at, end_at=form.end_at
     ):
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -77,7 +82,9 @@ async def schedule_bot_crons(
     if not target_model:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    bot_schedule = await BotCronScheduleService.schedule(bot, form.interval_str, target_model, project)
+    bot_schedule = await BotScheduleService.schedule(
+        bot, form.interval_str, target_model, project, form.running_type, form.start_at, form.end_at
+    )
     if not bot_schedule:
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -100,6 +107,11 @@ async def schedule_bot_crons(
 async def reschedule_bot_crons(
     project_uid: str, bot_uid: str, schedule_uid: str, form: BotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
+    if not BotScheduleService.get_default_status_with_dates(
+        running_type=form.running_type, start_at=form.start_at, end_at=form.end_at
+    ):
+        return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
+
     result = await _get_project_with_bot(service, project_uid, bot_uid)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -114,7 +126,9 @@ async def reschedule_bot_crons(
         target_model = None
         filterable_model = None
 
-    result = await BotCronScheduleService.reschedule(schedule_uid, form.interval_str, target_model, filterable_model)
+    result = await BotScheduleService.reschedule(
+        schedule_uid, form.interval_str, target_model, filterable_model, form.running_type, form.start_at, form.end_at
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
     bot_schedule, model = result
@@ -141,7 +155,7 @@ async def unschedule_bot_crons(
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, _ = result
 
-    bot_schedule = await BotCronScheduleService.unschedule(schedule_uid)
+    bot_schedule = await BotScheduleService.unschedule(schedule_uid)
     if not bot_schedule:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

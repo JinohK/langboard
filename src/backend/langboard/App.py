@@ -83,9 +83,9 @@ class App:
             listen_options = AppListenOptions(port=self._port, host=self._host)
 
         def listen_log(config):
-            from .core.service import BotCronScheduleService
+            from .core.service import BotScheduleService
 
-            BotCronScheduleService.reload_cron()
+            BotScheduleService.reload_cron()
 
             if self._is_restarting:
                 msg = "Server restarted successfully."
