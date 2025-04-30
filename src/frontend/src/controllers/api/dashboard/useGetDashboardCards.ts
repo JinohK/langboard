@@ -62,7 +62,7 @@ const useGetDashboardCards = (limit: number = 30, options?: TMutationOptions) =>
         ...options,
         retry: 0,
     });
-    return { ...result, isLastPage, cardUIDs };
+    return { ...result, isLastPage, cardUIDs, isFetchingRef };
 };
 
 export default useGetDashboardCards;

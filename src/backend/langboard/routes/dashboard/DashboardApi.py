@@ -183,6 +183,6 @@ async def track_checkitems(
     if not isinstance(user_or_bot, User):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    checkitems, cards, projects = await service.checkitem.track_list(user_or_bot, pagination, pagination.refer_time)
+    checkitems, cards, projects = await service.checkitem.get_track_list(user_or_bot, pagination, pagination.refer_time)
 
     return JsonResponse(content={"checkitems": checkitems, "cards": cards, "projects": projects})

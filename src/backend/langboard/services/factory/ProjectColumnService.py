@@ -123,7 +123,7 @@ class ProjectColumnService(BaseService):
         old_name = column.name
         column.name = name
         async with DbSession.use() as db:
-            await db.update(project)
+            await db.update(column)
             await db.commit()
 
         ProjectColumnPublisher.name_changed(project, column, name)

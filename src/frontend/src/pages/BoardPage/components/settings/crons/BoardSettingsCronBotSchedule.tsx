@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, Popover, Table } from "@/components/base";
+import { Box, Card, Flex } from "@/components/base";
 import { CronText } from "@/components/Cron";
 import { BotModel, BotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
+import { cn } from "@/core/utils/ComponentUtils";
 import BoardSettingsCronBotScheduleDelete from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleDelete";
 import BoardSettingsCronBotScheduleEdit from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleEdit";
 import { useMemo } from "react";
@@ -14,6 +15,10 @@ export interface IBoardSettingsCronBotScheduleProps {
 
 function BoardSettingsCronBotSchedule({ bot, schedule }: IBoardSettingsCronBotScheduleProps): JSX.Element {
     const [t] = useTranslation();
+    const runningType = schedule.useField("running_type");
+    const status = schedule.useField("status");
+    const startAt = schedule.useField("start_at");
+    const endAt = schedule.useField("end_at");
     const intervalStr = schedule.useField("interval_str");
     const targetTable = schedule.useField("target_table");
     const targetUID = schedule.useField("target_uid");
@@ -28,23 +33,66 @@ function BoardSettingsCronBotSchedule({ bot, schedule }: IBoardSettingsCronBotSc
     }, [targetTable, targetUID]);
 
     return (
-        <Table.Row>
-            <Table.Cell className="w-2/6 max-w-0 truncate text-center">{!!Scope && scope && <Scope scope={scope as any} />}</Table.Cell>
-            <Table.Cell className="w-3/6 max-w-0 truncate text-center">
-                <CronText value={intervalStr} className="justify-center" />
-            </Table.Cell>
-            <Table.Cell className="w-1/6 max-w-0 text-center">
-                <Popover.Root>
-                    <Popover.Trigger asChild>
-                        <Button size="sm">{t("project.settings.cronTable.Manage")}</Button>
-                    </Popover.Trigger>
-                    <Popover.Content className="flex w-auto flex-col p-0">
-                        <BoardSettingsCronBotScheduleEdit botUID={bot.uid} schedule={schedule} />
-                        <BoardSettingsCronBotScheduleDelete botUID={bot.uid} schedule={schedule} />
-                    </Popover.Content>
-                </Popover.Root>
-            </Table.Cell>
-        </Table.Row>
+        <Card.Root className="sm:grid sm:grid-rows-4">
+            <Card.Header className="pb-2">
+                {!!Scope && scope && (
+                    <Card.Title className="text-lg sm:text-2xl">
+                        <Scope scope={scope as any} />
+                    </Card.Title>
+                )}
+            </Card.Header>
+            <Card.Content className="text-left sm:row-span-2 sm:pb-0">
+                <Flex direction="col" gap="1.5">
+                    <BoardSettingsCronBotScheduleSection title={t("project.settings.cronHeaders.Interval")}>
+                        <CronText value={intervalStr} className="gap-y-0.5" />
+                    </BoardSettingsCronBotScheduleSection>
+                    <BoardSettingsCronBotScheduleSection title={t("project.settings.cronHeaders.Type")}>
+                        {t(`project.settings.cronRunningTypes.${runningType}`)}
+                    </BoardSettingsCronBotScheduleSection>
+                    <BoardSettingsCronBotScheduleSection title={t("project.settings.cronHeaders.Status")}>
+                        <Box
+                            className={cn(
+                                status === BotSchedule.EStatus.Pending && "text-yellow-500",
+                                status === BotSchedule.EStatus.Started && "text-green-500",
+                                status === BotSchedule.EStatus.Stopped && "text-red-500"
+                            )}
+                        >
+                            {t(`project.settings.cronStatus.${status}`)}
+                        </Box>
+                    </BoardSettingsCronBotScheduleSection>
+                    {BotSchedule.RUNNING_TYPES_WITH_START_AT.includes(runningType) && !!startAt && (
+                        <BoardSettingsCronBotScheduleSection
+                            title={t(`project.settings.cronHeaders.${runningType === BotSchedule.ERunningType.Onetime ? "Execute at" : "Start at"}`)}
+                        >
+                            {startAt.toLocaleString()}
+                        </BoardSettingsCronBotScheduleSection>
+                    )}
+                    {BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(runningType) && !!endAt && (
+                        <BoardSettingsCronBotScheduleSection title={t("project.settings.cronHeaders.End at")}>
+                            {endAt.toLocaleString()}
+                        </BoardSettingsCronBotScheduleSection>
+                    )}
+                </Flex>
+            </Card.Content>
+            <Card.Footer className="justify-end gap-2">
+                <BoardSettingsCronBotScheduleDelete botUID={bot.uid} schedule={schedule} className="" variant="secondary" />
+                <BoardSettingsCronBotScheduleEdit botUID={bot.uid} schedule={schedule} className="" variant="default" />
+            </Card.Footer>
+        </Card.Root>
+    );
+}
+
+interface IBoardSettingsCronBotScheduleSectionProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+function BoardSettingsCronBotScheduleSection({ title, children }: IBoardSettingsCronBotScheduleSectionProps): JSX.Element {
+    return (
+        <Flex items="start" gap="1.5">
+            <Box className="w-20 text-gray-500">{title}</Box>
+            <Box weight="semibold">{children}</Box>
+        </Flex>
     );
 }
 

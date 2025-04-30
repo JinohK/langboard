@@ -63,7 +63,7 @@ const useGetTrackingList = (limit: number = 30, options?: TMutationOptions) => {
         ...options,
         retry: 0,
     });
-    return { ...result, isLastPage, checkitemUIDs };
+    return { ...result, isLastPage, checkitemUIDs, isFetchingRef };
 };
 
 export default useGetTrackingList;

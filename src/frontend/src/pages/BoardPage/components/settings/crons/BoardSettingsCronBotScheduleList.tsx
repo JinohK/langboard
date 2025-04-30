@@ -1,65 +1,68 @@
-import { Box, ScrollArea, Table } from "@/components/base";
+import { Box, Flex, Loading, ScrollArea } from "@/components/base";
+import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetProjectBotSchedules from "@/controllers/api/board/settings/useGetProjectBotSchedules";
 import useBoardBotCronScheduledHandlers from "@/controllers/socket/board/settings/useBoardBotCronScheduledHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
+import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsCronBotSchedule from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotSchedule";
 import BoardSettingsCronBotScheduleAddButton from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleAddButton";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
 
 export interface IBOardSettingsCronBotScheduleListProps {
     bot: BotModel.TModel;
 }
 
 function BoardSettingsCronBotScheduleList({ bot }: IBOardSettingsCronBotScheduleListProps): JSX.Element {
-    const [t] = useTranslation();
     const { socket, project } = useBoardSettings();
-    const { mutate } = useGetProjectBotSchedules(project.uid);
+    const { mutateAsync, isLastPage, isFetchingRef } = useGetProjectBotSchedules(project.uid, bot.uid);
     const schedules = BotSchedule.Model.useModels(
         (model) => model.bot_uid === bot.uid && model.filterable_table === "project" && model.filterable_uid === project.uid
     );
+    const nextPage = useCallback(async () => {
+        if (isFetchingRef.current || isLastPage) {
+            return false;
+        }
+
+        return await new Promise<bool>((resolve) => {
+            setTimeout(async () => {
+                await mutateAsync({});
+                resolve(true);
+            }, 2500);
+        });
+    }, [isLastPage, mutateAsync]);
     const botCronScheduledHandlers = useBoardBotCronScheduledHandlers({
         projectUID: project.uid,
         botUID: bot.uid,
     });
     useSwitchSocketHandlers({ socket, handlers: [botCronScheduledHandlers] });
-
-    useEffect(() => {
-        mutate({ bot_uid: bot.uid }, {});
-    }, []);
+    const listId = `project-settings-bot-schedule-list-${bot.uid}`;
 
     return (
-        <Box className="max-h-[70vh]">
-            <Table.Root>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.Head className="w-2/6 text-center" title={t("project.settings.cronTable.Scope")}>
-                            {t("project.settings.cronTable.Scope")}
-                        </Table.Head>
-                        <Table.Head className="w-3/6 text-center" title={t("project.settings.cronTable.Interval")}>
-                            {t("project.settings.cronTable.Interval")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("project.settings.cronTable.Manage")}>
-                            {t("project.settings.cronTable.Manage")}
-                        </Table.Head>
-                    </Table.Row>
-                </Table.Header>
-            </Table.Root>
-            <ScrollArea.Root mutable={schedules}>
-                <Box className="max-h-[calc(70vh_-_theme(spacing.20)_-_theme(spacing.1))]">
-                    <Table.Root>
-                        <Table.Body>
-                            {schedules.map((schedule) => (
-                                <BoardSettingsCronBotSchedule key={schedule.uid} bot={bot} schedule={schedule} />
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
-                </Box>
+        <Flex direction="col" gap="2">
+            <ScrollArea.Root viewportId={listId} mutable={schedules}>
+                <InfiniteScroller
+                    scrollable={() => document.getElementById(listId)}
+                    loadMore={nextPage}
+                    hasMore={!isLastPage}
+                    threshold={18}
+                    loader={
+                        <Flex justify="center" mt="6" key={createShortUUID()}>
+                            <Loading size="3" variant="secondary" />
+                        </Flex>
+                    }
+                    className="max-h-[calc(70vh_-_theme(spacing.20)_-_theme(spacing.1))]"
+                >
+                    <Box display={{ initial: "flex", sm: "grid" }} direction="col" gap="2" className="sm:grid-cols-2">
+                        {schedules.map((schedule) => (
+                            <BoardSettingsCronBotSchedule key={schedule.uid} bot={bot} schedule={schedule} />
+                        ))}
+                    </Box>
+                </InfiniteScroller>
             </ScrollArea.Root>
             <BoardSettingsCronBotScheduleAddButton botUID={bot.uid} />
-        </Box>
+        </Flex>
     );
 }
 

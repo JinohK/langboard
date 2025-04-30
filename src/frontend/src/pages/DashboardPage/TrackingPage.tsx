@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { Flex, Loading, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
@@ -11,19 +11,16 @@ import { ProjectCheckitem } from "@/core/models";
 function TrackingPage(): JSX.Element {
     const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { mutateAsync, checkitemUIDs, isLastPage } = useGetTrackingList();
+    const { mutateAsync, checkitemUIDs, isLastPage, isFetchingRef } = useGetTrackingList();
     const checkitems = ProjectCheckitem.Model.useModels((model) => checkitemUIDs.includes(model.uid), [checkitemUIDs]);
-    const isFetchingRef = useRef(false);
     const nextPage = useCallback(async () => {
         if (isFetchingRef.current || isLastPage) {
             return false;
         }
 
-        isFetchingRef.current = true;
         return await new Promise<bool>((resolve) => {
             setTimeout(async () => {
                 await mutateAsync({});
-                isFetchingRef.current = false;
                 resolve(true);
             }, 2500);
         });

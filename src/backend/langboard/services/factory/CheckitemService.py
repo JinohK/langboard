@@ -61,7 +61,7 @@ class CheckitemService(BaseService):
             checkitems.append(api_checkitem)
         return checkitems
 
-    async def track_list(
+    async def get_track_list(
         self, user: User, pagination: Pagination, refer_time: datetime
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         query = (

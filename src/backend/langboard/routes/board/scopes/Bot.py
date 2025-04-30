@@ -2,7 +2,13 @@ from datetime import datetime
 from pydantic import Field
 from ....core.ai import BotScheduleRunningType
 from ....core.routing import BaseFormModel, form_model
+from ....core.schema import Pagination
+from ....core.utils.DateTime import now
 from ....models import Card, ProjectColumn
+
+
+class BotSchedulePagination(Pagination):
+    refer_time: datetime = now()
 
 
 @form_model

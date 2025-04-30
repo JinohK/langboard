@@ -1,4 +1,7 @@
-import { Box, Button, IconComponent, Skeleton, Tabs, Tooltip } from "@/components/base";
+import { Box, Button, IconComponent, Skeleton, Tabs, Toast, Tooltip } from "@/components/base";
+import useDeleteWiki from "@/controllers/api/wiki/useDeleteWiki";
+import EHttpStatus from "@/core/helpers/EHttpStatus";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { ProjectWiki } from "@/core/models";
@@ -6,7 +9,7 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 
@@ -27,7 +30,7 @@ export function SkeletonWikiTab() {
 const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     const [t] = useTranslation();
     const isInBin = wiki.useField("isInBin");
-    const { modeType, wikiTabListId } = useBoardWiki();
+    const { projectUID, modeType, wikiTabListId, setWikis } = useBoardWiki();
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: wiki.uid,
         data: {
@@ -40,7 +43,47 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
     });
     const forbidden = wiki.useField("forbidden");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
+    const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki();
     const title = wiki.useField("title");
+
+    const deleteWiki = useCallback(
+        (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const promise = deleteWikiMutateAsync({
+                project_uid: projectUID,
+                wiki_uid: wiki.uid,
+            });
+
+            Toast.Add.promise(promise, {
+                loading: t("common.Deleting..."),
+                error: (error) => {
+                    let message = "";
+                    const { handle } = setupApiErrorHandler({
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                            message = t("wiki.errors.Can't access this wiki.");
+                        },
+                        nonApiError: () => {
+                            message = t("errors.Unknown error");
+                        },
+                        wildcardError: () => {
+                            message = t("errors.Internal server error");
+                        },
+                    });
+
+                    handle(error);
+                    return message;
+                },
+                success: () => {
+                    setWikis((prev) => prev.filter((wikiItem) => wikiItem.uid !== wiki.uid));
+                    return t("wiki.successes.Wiki page deleted successfully.");
+                },
+                finally: () => {},
+            });
+        },
+        [setWikis]
+    );
 
     const style = {
         transition,
@@ -114,8 +157,17 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
                             </span>
                         </Tooltip.Trigger>
                         {modeType === "delete" && (
-                            <Button variant="destructiveGhost" size="icon-sm" title={t("common.Delete")} className="ml-2 size-6">
-                                <IconComponent icon="trash-2" size="3" />
+                            <Button
+                                asChild
+                                variant="destructiveGhost"
+                                size="icon-sm"
+                                title={t("common.Delete")}
+                                className="ml-2 size-6"
+                                onClick={deleteWiki}
+                            >
+                                <span>
+                                    <IconComponent icon="trash-2" size="3" />
+                                </span>
                             </Button>
                         )}
                     </Tabs.Trigger>

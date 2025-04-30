@@ -5,6 +5,7 @@ from typing import Any, Literal, cast, overload
 from crontab import CronItem, CronTab, OrderedVariableList
 from psutil import process_iter
 from ...Constants import CRON_TAB_FILE
+from ...core.schema import Pagination
 from ..ai import Bot, BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from ..db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder
 from ..utils.decorators import staticclass
@@ -16,25 +17,43 @@ class BotScheduleService:
     @staticmethod
     @overload
     async def get_all_by_filterable(
-        bot: Bot, filterable_model: BaseSqlModel, as_api: Literal[False]
+        bot: Bot,
+        filterable_model: BaseSqlModel,
+        as_api: Literal[False],
+        pagination: Pagination | None = None,
+        refer_time: datetime | None = None,
     ) -> list[BotSchedule]: ...
     @staticmethod
     @overload
     async def get_all_by_filterable(
-        bot: Bot, filterable_model: BaseSqlModel, as_api: Literal[True]
+        bot: Bot,
+        filterable_model: BaseSqlModel,
+        as_api: Literal[True],
+        pagination: Pagination | None = None,
+        refer_time: datetime | None = None,
     ) -> list[dict[str, Any]]: ...
     @staticmethod
     async def get_all_by_filterable(
-        bot: Bot, filterable_model: BaseSqlModel, as_api: bool
+        bot: Bot,
+        filterable_model: BaseSqlModel,
+        as_api: bool,
+        pagination: Pagination | None = None,
+        refer_time: datetime | None = None,
     ) -> list[BotSchedule] | list[dict[str, Any]]:
+        query = SqlBuilder.select.table(BotSchedule).where(
+            (BotSchedule.column("bot_id") == bot.id)
+            & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
+            & (BotSchedule.column("filterable_id") == filterable_model.id)
+        )
+
+        if refer_time is not None:
+            query = query.where(BotSchedule.column("created_at") <= refer_time)
+
+        if pagination:
+            query = query.limit(pagination.limit).offset((pagination.page - 1) * pagination.limit)
+
         async with DbSession.use() as db:
-            result = await db.exec(
-                SqlBuilder.select.table(BotSchedule).where(
-                    (BotSchedule.column("bot_id") == bot.id)
-                    & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
-                    & (BotSchedule.column("filterable_id") == filterable_model.id)
-                )
-            )
+            result = await db.exec(query)
 
         if not as_api:
             return list(result.all())
@@ -84,7 +103,7 @@ class BotScheduleService:
     def get_default_status_with_dates(
         running_type: BotScheduleRunningType | None, start_at: datetime | None, end_at: datetime | None
     ) -> tuple[BotScheduleStatus, datetime | None, datetime | None] | None:
-        if not running_type:
+        if not running_type or running_type == BotScheduleRunningType.Infinite:
             return BotScheduleStatus.Started, None, None
 
         if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0 and not start_at:
@@ -296,11 +315,12 @@ class BotScheduleService:
 
     @staticmethod
     def __create_job(cron: CronTab, interval_str: str, running_type: BotScheduleRunningType | None = None) -> bool:
+        comment = None
         if running_type:
             if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0:
                 interval_str = "* * * * *"
                 comment = "scheduled"
-        else:
+        if comment is None:
             comment = interval_str
 
         has_job = False

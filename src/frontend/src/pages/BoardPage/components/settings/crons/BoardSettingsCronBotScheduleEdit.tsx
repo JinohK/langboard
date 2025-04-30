@@ -14,16 +14,26 @@ import { useTranslation } from "react-i18next";
 export interface IBoardSettingsCronBotScheduleEditProps {
     botUID: string;
     schedule: BotSchedule.TModel;
+    variant?: React.ComponentProps<typeof Button>["variant"];
+    className?: string;
 }
 
-function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCronBotScheduleEditProps): JSX.Element {
+function BoardSettingsCronBotScheduleEdit({
+    botUID,
+    schedule,
+    variant = "outline",
+    className = "border-0 [&:first-child]:rounded-b-none [&:not(:first-child)]:rounded-t-none [&:not(:first-child)]:border-t",
+}: IBoardSettingsCronBotScheduleEditProps): JSX.Element {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: rescheduleProjectBotCronMutateAsync } = useRescheduleProjectBotCron();
+    const runningType = schedule.useField("running_type");
     const intervalStr = schedule.useField("interval_str");
     const targetTable = schedule.useField("target_table");
     const targetUID = schedule.useField("target_uid");
+    const startAt = schedule.useField("start_at");
+    const endAt = schedule.useField("end_at");
     const valuesMapRef = useRef<IBotScheduleFormMap>({
         interval: intervalStr,
         scopeType: targetTable,
@@ -106,21 +116,19 @@ function BoardSettingsCronBotScheduleEdit({ botUID, schedule }: IBoardSettingsCr
     return (
         <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isValidating}
-                    className="border-0 [&:first-child]:rounded-b-none [&:not(:first-child)]:rounded-t-none [&:not(:first-child)]:border-t"
-                >
+                <Button size="sm" variant={variant} disabled={isValidating} className={className}>
                     {t("project.settings.Reschedule")}
                 </Button>
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                 <BoardSettingsCronBotScheduleForm
                     initialValuesMap={{
+                        runningType: runningType,
                         interval: intervalStr,
                         scopeType: targetTable,
                         scopeUID: targetUID,
+                        startAt: startAt,
+                        endAt: endAt,
                     }}
                     valuesMapRef={valuesMapRef}
                     triggersMapRef={triggersMapRef}

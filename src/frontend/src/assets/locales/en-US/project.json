@@ -60,13 +60,22 @@
       "reserved": "Reserved",
       "onetime": "Onetime"
     },
+    "cronStatus": {
+      "pending": "Pending",
+      "started": "Running",
+      "stopped": "Stopped"
+    },
     "cronScopes": {
       "project_column": "Project column",
       "card": "Card"
     },
-    "cronTable": {
-      "Scope": "Scope",
+    "cronHeaders": {
       "Interval": "Interval",
+      "Type": "Type",
+      "Status": "Status",
+      "Start at": "Start at",
+      "End at": "End at",
+      "Execute at": "Execute at",
       "Manage": "Manage"
     },
     "Are you sure you want to unschedule this cron?": "Are you sure you want to unschedule this cron?",

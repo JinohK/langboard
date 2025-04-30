@@ -1,4 +1,4 @@
-from fastapi import status
+from fastapi import Depends, status
 from ...core.ai import Bot, BotSchedule
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -8,10 +8,10 @@ from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectBotPublisher
 from ...services import Service
-from .scopes import BotCronTimeForm, project_role_finder
+from .scopes import BotCronTimeForm, BotSchedulePagination, project_role_finder
 
 
-@AppRouter.schema()
+@AppRouter.schema(query=BotSchedulePagination)
 @AppRouter.api.get(
     "/board/{project_uid}/settings/bot/{bot_uid}/schedules",
     tags=["Board.Settings.BotCron"],
@@ -27,7 +27,9 @@ from .scopes import BotCronTimeForm, project_role_finder
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
-async def get_bot_schedules(project_uid: str, bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
+async def get_bot_schedules(
+    project_uid: str, bot_uid: str, pagination: BotSchedulePagination = Depends(), service: Service = Service.scope()
+) -> JsonResponse:
     bot = await service.bot.get_by_uid(bot_uid)
     if not bot:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
@@ -40,7 +42,9 @@ async def get_bot_schedules(project_uid: str, bot_uid: str, service: Service = S
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    schedules = await BotScheduleService.get_all_by_filterable(bot, project, as_api=True)
+    schedules = await BotScheduleService.get_all_by_filterable(
+        bot, project, as_api=True, pagination=pagination, refer_time=pagination.refer_time
+    )
 
     return JsonResponse(content={"schedules": schedules})
 
