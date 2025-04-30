@@ -8,7 +8,7 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import useToggleEditingByClick from "@/core/hooks/useToggleEditingByClick";
+import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { ProjectWiki, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
@@ -56,6 +56,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
         canEdit: () => true,
         customStartEditing: () => setCurrentEditor(wiki.uid),
         valueType: "editor",
+        canEmpty: true,
         save: (value) => {
             const promise = changeWikiDetailsMutateAsync({
                 project_uid: projectUID,
@@ -98,7 +99,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const { startEditing, stopEditing } = useToggleEditingByClick("[data-wiki-content]", changeMode, isEditing);
+    const { startEditing, stopEditing } = useToggleEditingByClickOutside("[data-wiki-content]", changeMode, isEditing);
 
     editorsRef.current[wiki.uid] = (editing: bool) => {
         setIsEditing(editing);

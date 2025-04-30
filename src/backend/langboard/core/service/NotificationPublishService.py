@@ -4,7 +4,7 @@ from ...models.UserNotification import NotificationType
 from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ..ai import Bot
 from ..broadcast import DispatcherModel, DispatcherQueue
-from ..db import User
+from ..db import DbSession, SqlBuilder, User
 from ..utils.decorators import staticclass
 
 
@@ -31,6 +31,16 @@ class NotificationPublishService:
         DispatcherQueue.put(dispatacher_model)
 
     @staticmethod
-    def parse(dispatcher_data: dict[str, Any]):
+    async def parse(dispatcher_data: dict[str, Any]):
         model = NotificationPublishModel(**dispatcher_data)
+        async with DbSession.use() as db:
+            result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == model.notifier.id))
+        notifier = result.first()
+        if not notifier:
+            async with DbSession.use() as db:
+                result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id") == model.notifier.id))
+            notifier = result.first()
+        if not notifier:
+            raise ValueError("Notifier not found")
+        model.notifier = notifier
         return model

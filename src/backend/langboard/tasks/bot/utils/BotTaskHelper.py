@@ -5,6 +5,7 @@ from ....core.ai import Bot, BotAPIAuthType, BotDefaultTrigger, BotTrigger, BotT
 from ....core.db import DbSession, SqlBuilder
 from ....core.logger import Logger
 from ....core.utils.decorators import staticclass
+from ....core.utils.EditorContentParser import DATA_TEXT_FORMAT_DESCRIPTIONS
 from ....models import Project, ProjectAssignedBot, ProjectLabel
 from ...WebhookTask import run_webhook
 from .BotTaskDataHelper import BotTaskDataHelper
@@ -78,12 +79,13 @@ class BotTaskHelper:
         response = {
             "event": event,
             "data": data,
-            "bot": {
+            "current_running_bot": {
                 **BotTaskDataHelper.create_user_or_bot(bot),
                 "app_api_token": bot.app_api_token,
                 "prompt": bot.prompt,
             },
             "bot_labels_for_project": [label.api_response() for label in labels] if labels else None,
+            "custom_markdown_formats": DATA_TEXT_FORMAT_DESCRIPTIONS,
         }
 
         json_data = {}
@@ -113,7 +115,7 @@ class BotTaskHelper:
                 bot.api_url,
                 headers=headers,
                 json=json_data,
-                timeout=60,
+                timeout=120,
             )
 
             if res.status_code != 200:

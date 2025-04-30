@@ -264,10 +264,14 @@ class NotificationService(BaseService):
                 continue
 
             target_bot = await self._get_by_param(Bot, user_or_bot_uid)
-            if not target_bot:
+            if not target_bot or target_bot.id == notifier.id:
                 continue
 
-            BotDefaultTask.bot_mentioned(target_bot, mentioned_in, [*scope_models, *other_models])
+            models = [*scope_models, *other_models]
+            dumped_models: list[tuple[str, dict]] = []
+            for model in models:
+                dumped_models.append((type(model).__tablename__, model.model_dump()))
+            BotDefaultTask.bot_mentioned(target_bot, mentioned_in, dumped_models)
 
     async def __notify(
         self,

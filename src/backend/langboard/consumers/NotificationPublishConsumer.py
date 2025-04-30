@@ -10,7 +10,7 @@ from ..services import Service
 @WorkerQueue.consume("notification_publish")
 async def notification_publish(data: dict):
     try:
-        model = NotificationPublishService.parse(data)
+        model = await NotificationPublishService.parse(data)
     except Exception:
         return
 

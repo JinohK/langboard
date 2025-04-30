@@ -4,7 +4,7 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import { API_ROUTES } from "@/controllers/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import useToggleEditingByClick from "@/core/hooks/useToggleEditingByClick";
+import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { BotModel, Project, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -38,6 +38,7 @@ const BoardCardDescription = memo((): JSX.Element => {
         canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
         customStartEditing: () => setCurrentEditor(editorName),
         valueType: "editor",
+        canEmpty: true,
         save: (value) => {
             const promise = changeCardDetailsMutateAsync({
                 project_uid: projectUID,
@@ -74,7 +75,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const { startEditing, stopEditing } = useToggleEditingByClick("[data-card-description]", changeMode, isEditing);
+    const { startEditing, stopEditing } = useToggleEditingByClickOutside("[data-card-description]", changeMode, isEditing);
 
     editorsRef.current[editorName] = (editing: bool) => {
         if (hasRoleAction(Project.ERoleAction.CardUpdate)) {

@@ -124,6 +124,70 @@ async def get_project_assignees(
     return JsonResponse(content={"users": users, "bots": bots})
 
 
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/board/{project_uid}/assigned-users",
+    tags=["Board"],
+    description="Get project assigned users.",
+    responses=(
+        OpenApiSchema()
+        .suc({"users": [User]})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_assigned_users(
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, _ = await service.project.is_assigned(user_or_bot, project)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    users = await service.project.get_assigned_users(project, as_api=True)
+
+    return JsonResponse(content={"users": users})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/board/{project_uid}/assigned-bots",
+    tags=["Board"],
+    description="Get project assigned bots.",
+    responses=(
+        OpenApiSchema()
+        .suc({"bots": [Bot]})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_assigned_bots(
+    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, _ = await service.project.is_assigned(user_or_bot, project)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    bots = await service.project.get_assigned_bots(project, as_api=True)
+
+    return JsonResponse(content={"bots": bots})
+
+
 @AppRouter.api.get(
     "/board/{project_uid}/chat",
     tags=["Board"],

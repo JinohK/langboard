@@ -268,7 +268,7 @@ async def update_card_assigned_users(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card.update_assigned_users(user_or_bot, project_uid, card_uid, form.assigned_users)
-    if not result:
+    if result is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={})

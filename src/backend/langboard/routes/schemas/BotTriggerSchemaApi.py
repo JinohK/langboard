@@ -34,7 +34,7 @@ async def bot_openapi():
             "properties": {
                 "event": {"type": "string", "title": "Event", "enum": [schema_name]},
                 "data": _make_object_property("data", schema),
-                "bot": {"$ref": "#/shared/Bot"},
+                "current_running_bot": {"$ref": "#/shared/Bot"},
                 "bot_labels_for_project": {
                     "type": "array",
                     "title": "Labels for Project",

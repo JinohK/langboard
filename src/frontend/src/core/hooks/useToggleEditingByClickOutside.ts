@@ -1,7 +1,7 @@
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useCallback, useRef } from "react";
 
-const useToggleEditingByClick = (boxAttr: string, changeMode: (mode: "edit" | "view") => void, isEditing?: bool) => {
+const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edit" | "view") => void, isEditing?: bool) => {
     const isDraggingRef = useRef(false);
     const draggingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const startEditing = useCallback(
@@ -72,4 +72,4 @@ const useToggleEditingByClick = (boxAttr: string, changeMode: (mode: "edit" | "v
     return { startEditing, stopEditing };
 };
 
-export default useToggleEditingByClick;
+export default useToggleEditingByClickOutside;

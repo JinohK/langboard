@@ -13,6 +13,14 @@ DATA_TEXT_WRAPPER_MAP: dict[TDataText, dict[str, str]] = {
     "video": {"start": "vd", "end": "dv"},
 }
 
+DATA_TEXT_FORMAT_DESCRIPTIONS: dict[str, str] = {
+    "audio": f"Audio url format: !([{DATA_TEXT_WRAPPER_MAP['audio']['start']}]:protocol:host])path([/{DATA_TEXT_WRAPPER_MAP['audio']['end']}])",
+    "date": f"Date format: !([{DATA_TEXT_WRAPPER_MAP['date']['start']}])yyyy-MM-dd([/{DATA_TEXT_WRAPPER_MAP['date']['end']}])",
+    "file": f"File url format: !([{DATA_TEXT_WRAPPER_MAP['file']['start']}]:protocol:host:path])filename([/{DATA_TEXT_WRAPPER_MAP['file']['end']}])",
+    "mention": f"User mention format: !([{DATA_TEXT_WRAPPER_MAP['mention']['start']}]:target_uid:target_username])([/{DATA_TEXT_WRAPPER_MAP['mention']['end']}])",
+    "video": f"Video url format: !([{DATA_TEXT_WRAPPER_MAP['video']['start']}]:protocol:host])path([/{DATA_TEXT_WRAPPER_MAP['video']['end']}])",
+}
+
 
 def create_editor_data_type_regex(data_type: TDataText, param_length: int, has_value: bool):
     wrapper = DATA_TEXT_WRAPPER_MAP[data_type]

@@ -6,7 +6,7 @@ import { Project, ProjectColumn } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 
@@ -99,6 +99,37 @@ export interface IBoardColumnTitleInput {
 export const BoardColumnTitleInput = memo(
     ({ isEditing, viewClassName, canEdit, changeMode, columnName, isArchive, disabled, inputRef }: IBoardColumnTitleInput) => {
         const [t] = useTranslation();
+        const handleStartEditing = useCallback(
+            (e: React.MouseEvent) => {
+                if (!canEdit) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+                changeMode("edit");
+            },
+            [canEdit, changeMode]
+        );
+        const handleInputClick = useCallback((e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, []);
+        const handleInputBlur = useCallback(() => {
+            changeMode("view");
+        }, [changeMode]);
+        const handleInputKeyDown = useCallback(
+            (e: React.KeyboardEvent) => {
+                if (e.key !== "Enter") {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+                changeMode("view");
+            },
+            [changeMode]
+        );
 
         return (
             <>
@@ -106,15 +137,7 @@ export const BoardColumnTitleInput = memo(
                     <span
                         {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                         className={cn("h-7 truncate", isArchive && "text-secondary-foreground/70", viewClassName)}
-                        onClick={(e) => {
-                            if (!canEdit) {
-                                return;
-                            }
-
-                            e.preventDefault();
-                            e.stopPropagation();
-                            changeMode("edit");
-                        }}
+                        onClick={handleStartEditing}
                     >
                         {columnName}
                     </span>
@@ -128,20 +151,9 @@ export const BoardColumnTitleInput = memo(
                         placeholder={t("board.Enter a title")}
                         disabled={disabled}
                         defaultValue={columnName}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                        onBlur={() => changeMode("view")}
-                        onKeyDown={(e) => {
-                            if (e.key !== "Enter") {
-                                return;
-                            }
-
-                            e.preventDefault();
-                            e.stopPropagation();
-                            changeMode("view");
-                        }}
+                        onClick={handleInputClick}
+                        onBlur={handleInputBlur}
+                        onKeyDown={handleInputKeyDown}
                     />
                 )}
             </>

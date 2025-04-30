@@ -2,6 +2,7 @@ from typing import Literal
 from ...core.ai import Bot, BotDefaultTrigger
 from ...core.broker import Broker
 from ...core.db import BaseSqlModel, User
+from ...core.utils.ModelUtils import get_model_by_table_name
 from ...models import Card, CardComment, Project, ProjectColumn, ProjectWiki
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -37,7 +38,21 @@ async def bot_project_assigned(user: User, project: Project, old_bot_ids: list[i
     },
 )
 @Broker.wrap_async_task_decorator
-async def bot_mentioned(bot: Bot, mentioned_in: Literal["card", "comment", "project_wiki"], models: list[BaseSqlModel]):
+async def bot_mentioned(
+    bot: Bot, mentioned_in: Literal["card", "comment", "project_wiki"], dumped_models: list[tuple[str, dict]]
+):
+    models: list[BaseSqlModel] = []
+    for dumped_model in dumped_models:
+        table_model, model_data = dumped_model
+        table = get_model_by_table_name(table_model)
+        if not table:
+            continue
+        try:
+            model = table.model_validate(model_data)
+            models.append(model)
+        except Exception:
+            continue
+
     data = {}
     project = None
     for model in models:
