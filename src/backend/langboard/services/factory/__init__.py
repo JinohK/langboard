@@ -9,6 +9,7 @@ from .ChatHistoryService import ChatHistoryService
 from .CheckitemService import CheckitemService
 from .ChecklistService import ChecklistService
 from .EmailService import EmailService
+from .MetadataService import MetadataService
 from .NotificationService import NotificationService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
@@ -34,6 +35,7 @@ __all__ = [
     "CheckitemService",
     "ChecklistService",
     "EmailService",
+    "MetadataService",
     "NotificationService",
     "ProjectColumnService",
     "ProjectInvitationService",

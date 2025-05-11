@@ -6,9 +6,8 @@ import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-export interface Interface extends Omit<IBaseModel, "uid"> {
+export interface Interface extends IBaseModel {
     type: "user" | "unknown" | "bot" | "group_email";
-    uid: string;
     firstname: string;
     lastname: string;
     email: string;

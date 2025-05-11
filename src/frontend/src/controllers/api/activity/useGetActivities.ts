@@ -81,6 +81,8 @@ const useGetActivities = (form: TGetActivitiesForm, limit: number = 20, options?
             url = format(API_ROUTES.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
             activityFilter = (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.assignee_uid;
             break;
+        default:
+            throw new Error("Invalid activity type");
     }
 
     const getActivities = useCallback(async () => {

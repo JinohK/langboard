@@ -3,6 +3,7 @@
 
 import emojiMartData from "@emoji-mart/data";
 import { CalloutPlugin } from "@udecode/plate-callout/react";
+import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
 import { ParagraphPlugin } from "@udecode/plate/react";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { DocxPlugin } from "@udecode/plate-docx";
@@ -68,7 +69,15 @@ export const editorPlugins = [
     ...viewPlugins,
 
     // Functionality
-    SlashPlugin,
+    SlashPlugin.extend({
+        options: {
+            triggerQuery(editor) {
+                return !editor.api.some({
+                    match: { type: editor.getType(CodeBlockPlugin) },
+                });
+            },
+        },
+    }),
     autoformatPlugin,
     cursorOverlayPlugin,
     ...blockMenuPlugins,

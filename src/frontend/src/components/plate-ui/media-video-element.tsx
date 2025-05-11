@@ -9,7 +9,7 @@ import { useEditorMounted, withHOC } from "@udecode/plate/react";
 import { useDraggable } from "@udecode/plate-dnd";
 import { parseTwitterUrl, parseVideoUrl } from "@udecode/plate-media";
 import { useMediaState } from "@udecode/plate-media/react";
-import { ResizableProvider, useResizableStore } from "@udecode/plate-resizable";
+import { ResizableProvider, useResizableValue } from "@udecode/plate-resizable";
 import { Caption, CaptionTextarea } from "@/components/plate-ui/caption";
 import { PlateElement } from "@/components/plate-ui/plate-element";
 import { Resizable, ResizeHandle, mediaResizeHandleVariants } from "@/components/plate-ui/resizable";
@@ -29,7 +29,7 @@ export const MediaVideoElement = withHOC(
         } = useMediaState({
             urlParsers: [parseTwitterUrl, parseVideoUrl],
         });
-        const width = useResizableStore().get.width();
+        const width = useResizableValue("width");
 
         const isEditorMounted = useEditorMounted();
 

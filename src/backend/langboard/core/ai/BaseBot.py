@@ -52,7 +52,7 @@ class _LangflowAPIRequestModel:
         self.use_stream = use_stream
 
 
-class BotMetadata(type):
+class BotMetaClass(type):
     __bots__: dict[InternalBotType, type["BaseBot"]] = {}
 
     def __new__(cls, name, bases, attrs):
@@ -65,7 +65,7 @@ class BotMetadata(type):
         return new_cls
 
 
-class BaseBot(metaclass=BotMetadata):
+class BaseBot(metaclass=BotMetaClass):
     @staticmethod
     @abstractmethod
     def bot_type() -> InternalBotType: ...

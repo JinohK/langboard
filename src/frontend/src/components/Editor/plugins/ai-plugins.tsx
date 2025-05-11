@@ -4,7 +4,7 @@
 import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import { MarkdownPlugin } from "@/components/Editor/plugins/markdown";
 import { AIMenu } from "@/components/plate-ui/ai-menu";
-import { cursorOverlayPlugin } from "./cursor-overlay-plugin";
+import { cursorOverlayPlugin } from "@/components/Editor/plugins/cursor-overlay-plugin";
 import { IUseChat } from "@/components/Editor/useChat";
 
 const systemCommon = `\

@@ -26,6 +26,8 @@ def get_template_path(file_name: str) -> Path:
 def format_template(file_name: str, formats: dict[str, str]) -> str:
     template_path = get_template_path(f"{file_name}.py")
     formats["empty_dict"] = "{}"
+    formats["sb"] = "{"
+    formats["eb"] = "}"
     return template_path.read_text().format_map(formats)
 
 

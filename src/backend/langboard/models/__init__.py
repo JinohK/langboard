@@ -4,6 +4,7 @@ from .CardAssignedUser import CardAssignedUser
 from .CardAttachment import CardAttachment
 from .CardComment import CardComment
 from .CardCommentReaction import CardCommentReaction
+from .CardMetadata import CardMetadata
 from .CardRelationship import CardRelationship
 from .ChatHistory import ChatHistory
 from .Checkitem import Checkitem
@@ -23,6 +24,7 @@ from .ProjectWikiActivity import ProjectWikiActivity
 from .ProjectWikiAssignedBot import ProjectWikiAssignedBot
 from .ProjectWikiAssignedUser import ProjectWikiAssignedUser
 from .ProjectWikiAttachment import ProjectWikiAttachment
+from .ProjectWikiMetadata import ProjectWikiMetadata
 from .UserActivity import UserActivity
 from .UserEmail import UserEmail
 from .UserGroup import UserGroup
@@ -39,6 +41,7 @@ __all__ = [
     "CardAttachment",
     "CardComment",
     "CardCommentReaction",
+    "CardMetadata",
     "CardRelationship",
     "ChatHistory",
     "Checkitem",
@@ -58,6 +61,7 @@ __all__ = [
     "ProjectWikiAssignedBot",
     "ProjectWikiAssignedUser",
     "ProjectWikiAttachment",
+    "ProjectWikiMetadata",
     "UserActivity",
     "UserEmail",
     "UserGroup",

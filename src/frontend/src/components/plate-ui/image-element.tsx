@@ -4,7 +4,7 @@ import { cn, withRef } from "@udecode/cn";
 import { withHOC } from "@udecode/plate/react";
 import { useDraggable } from "@udecode/plate-dnd";
 import { Image, ImagePlugin, useMediaState } from "@udecode/plate-media/react";
-import { ResizableProvider, useResizableStore } from "@udecode/plate-resizable";
+import { ResizableProvider, useResizableValue } from "@udecode/plate-resizable";
 import { Caption, CaptionTextarea } from "@/components/plate-ui/caption";
 import { MediaPopover } from "@/components/plate-ui/media-popover";
 import { PlateElement } from "@/components/plate-ui/plate-element";
@@ -17,7 +17,7 @@ export const ImageElement = withHOC(
         const [t] = useTranslation();
         const { align = "center", focused, readOnly, selected } = useMediaState();
 
-        const width = useResizableStore().get.width();
+        const width = useResizableValue("width");
 
         const { isDragging, handleRef } = useDraggable({
             element: props.element,

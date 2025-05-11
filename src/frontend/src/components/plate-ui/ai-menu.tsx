@@ -7,8 +7,8 @@ import { BlockSelectionPlugin, useIsSelecting } from "@udecode/plate-selection/r
 import { useEditorPlugin, useHotkeys, usePluginOption } from "@udecode/plate/react";
 import { Loader2Icon } from "lucide-react";
 import { IUseChat, useChat } from "@/components/Editor/useChat";
-import { AIChatEditor } from "./ai-chat-editor";
-import { AIMenuItems } from "./ai-menu-items";
+import { AIChatEditor } from "@/components/plate-ui/ai-chat-editor";
+import { AIMenuItems } from "@/components/plate-ui/ai-menu-items";
 import { Command, Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -25,7 +25,7 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
 
     const chat = useChat({ socket, eventKey, events, commonEventData });
 
-    const { input, isLoading, messages, setInput } = chat;
+    const { input, messages, setInput, status } = chat;
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
 
     const content = useLastAssistantMessage()?.content;
@@ -76,6 +76,16 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
         { enableOnContentEditable: true, enableOnFormTags: true }
     );
 
+    useHotkeys("esc", () => {
+        api.aiChat.stop();
+    });
+
+    const isLoading = status === "streaming" || status === "submitted";
+
+    if (isLoading && mode === "insert") {
+        return null;
+    }
+
     return (
         <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
             <Popover.Anchor virtualRef={{ current: anchorElement! }} />
@@ -88,11 +98,7 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
                 onEscapeKeyDown={(e) => {
                     e.preventDefault();
 
-                    if (isLoading) {
-                        api.aiChat.stop();
-                    } else {
-                        api.aiChat.hide();
-                    }
+                    api.aiChat.hide();
                 }}
                 align="center"
                 // avoidCollisions={false}

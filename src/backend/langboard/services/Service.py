@@ -113,3 +113,7 @@ class Service(ServiceFactory):
     @property
     def bot(self):
         return self._create_or_get_service(factory.BotService)
+
+    @property
+    def metadata(self):
+        return self._create_or_get_service(factory.MetadataService)

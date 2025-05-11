@@ -12,19 +12,19 @@ import { BaseHorizontalRulePlugin } from "@udecode/plate-horizontal-rule";
 import { BaseIndentPlugin } from "@udecode/plate-indent";
 import { BaseIndentListPlugin } from "@udecode/plate-indent-list";
 import { BaseLinkPlugin } from "@udecode/plate-link";
-import { MarkdownPlugin } from "@udecode/plate-markdown";
+import { MarkdownPlugin } from "@/components/Editor/plugins/markdown/MarkdownPlugin";
 import { usePlateEditor } from "@udecode/plate/react";
 import { TodoLiStatic, TodoMarkerStatic } from "@/components/plate-ui/indent-todo-marker-static";
-import { BlockquoteElementStatic } from "./blockquote-element-static";
-import { CodeBlockElementStatic } from "./code-block-element-static";
-import { CodeLeafStatic } from "./code-leaf-static";
-import { CodeLineElementStatic } from "./code-line-element-static";
-import { CodeSyntaxLeafStatic } from "./code-syntax-leaf-static";
-import { EditorStatic } from "./editor-static";
-import { HeadingElementStatic } from "./heading-element-static";
-import { HrElementStatic } from "./hr-element-static";
-import { LinkElementStatic } from "./link-element-static";
-import { ParagraphElementStatic } from "./paragraph-element-static";
+import { BlockquoteElementStatic } from "@/components/plate-ui/blockquote-element-static";
+import { CodeBlockElementStatic } from "@/components/plate-ui/code-block-element-static";
+import { CodeLeafStatic } from "@/components/plate-ui/code-leaf-static";
+import { CodeLineElementStatic } from "@/components/plate-ui/code-line-element-static";
+import { CodeSyntaxLeafStatic } from "@/components/plate-ui/code-syntax-leaf-static";
+import { EditorStatic } from "@/components/plate-ui/editor-static";
+import { HeadingElementStatic } from "@/components/plate-ui/heading-element-static";
+import { HrElementStatic } from "@/components/plate-ui/hr-element-static";
+import { LinkElementStatic } from "@/components/plate-ui/link-element-static";
+import { ParagraphElementStatic } from "@/components/plate-ui/paragraph-element-static";
 
 const components = {
     [BaseBlockquotePlugin.key]: BlockquoteElementStatic,

@@ -32,19 +32,19 @@ const insertList = (editor: PlateEditor, type: string) => {
 };
 
 const insertBlockMap: Record<string, (editor: PlateEditor, type: string) => void> = {
+    [INDENT_LIST_KEYS.todo]: insertList,
+    [ListStyleType.Decimal]: insertList,
+    [ListStyleType.Disc]: insertList,
     [AudioPlugin.key]: (editor) => insertAudioPlaceholder(editor, { select: true }),
     [CalloutPlugin.key]: (editor) => insertCallout(editor, { select: true }),
     [CodeBlockPlugin.key]: (editor) => insertCodeBlock(editor, { select: true }),
     [EquationPlugin.key]: (editor) => insertEquation(editor, { select: true }),
     [FilePlugin.key]: (editor) => insertFilePlaceholder(editor, { select: true }),
-    [INDENT_LIST_KEYS.todo]: insertList,
     [ImagePlugin.key]: (editor) =>
         insertMedia(editor, {
             select: true,
             type: ImagePlugin.key,
         }),
-    [ListStyleType.Decimal]: insertList,
-    [ListStyleType.Disc]: insertList,
     [MediaEmbedPlugin.key]: (editor) =>
         insertMedia(editor, {
             select: true,
