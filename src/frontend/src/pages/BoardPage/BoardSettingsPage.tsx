@@ -5,14 +5,14 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
-import useGetProjetDetails from "@/controllers/api/board/useGetProjectDetails";
+import useGetProjectDetails from "@/controllers/api/board/useGetProjectDetails";
 import BoardSettingsList from "@/pages/BoardPage/components/settings/BoardSettingsList";
 import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
 import BoardSettingsUserList from "@/pages/BoardPage/components/settings/BoardSettingsUserList";
 
 const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
-    const { data, error } = useGetProjetDetails({ uid: projectUID });
+    const { data, error } = useGetProjectDetails({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {

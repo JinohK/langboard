@@ -54,7 +54,7 @@ class MetadataService(BaseService):
         async with DbSession.use() as db:
             result = await db.exec(
                 SqlBuilder.select.table(model).where(
-                    (model.column(foreign_key) == foreign_model.id) & (model.column("key") == old_key or key)
+                    (model.column(foreign_key) == foreign_model.id) & (model.column("key") == (old_key or key))
                 )
             )
         metadata = result.first()

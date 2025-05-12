@@ -258,19 +258,19 @@ class ProjectWikiService(BaseService):
                 await db.commit()
         else:
             if isinstance(user_or_bot, Bot):
-                projet_assigned_table = ProjectAssignedBot
+                project_assigned_table = ProjectAssignedBot
                 model_table = ProjectWikiAssignedBot
                 column_name = "bot_id"
             else:
-                projet_assigned_table = ProjectAssignedUser
+                project_assigned_table = ProjectAssignedUser
                 model_table = ProjectWikiAssignedUser
                 column_name = "user_id"
 
             async with DbSession.use() as db:
                 result = await db.exec(
-                    SqlBuilder.select.table(projet_assigned_table).where(
-                        (projet_assigned_table.column("project_id") == project.id)
-                        & (projet_assigned_table.column(column_name) == user_or_bot.id)
+                    SqlBuilder.select.table(project_assigned_table).where(
+                        (project_assigned_table.column("project_id") == project.id)
+                        & (project_assigned_table.column(column_name) == user_or_bot.id)
                     )
                 )
             project_assigned = result.first()

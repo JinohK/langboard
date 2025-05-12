@@ -63,6 +63,7 @@ export const API_ROUTES = {
     },
     BOARD: {
         GET: "/board/{uid}",
+        CURRENT_AUTH_ROLES: "/board/{uid}/current-roles",
         DETAILS: "/board/{uid}/details",
         GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
@@ -156,6 +157,10 @@ export const API_ROUTES = {
                 UNSCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/unschedule/{schedule_uid}",
             },
         },
+    },
+    METADATA: {
+        CARD: "/metadata/project/{uid}/card/{card_uid}",
+        PROJECT_WIKI: "/metadata/project/{uid}/wiki/{wiki_uid}",
     },
     SETTINGS: {
         IS_AVAILABLE: "/settings/available",
@@ -289,6 +294,10 @@ export const SOCKET_SERVER_EVENTS = {
                 DELETED: "board:settings:bot:cron:deleted:{uid}",
             },
         },
+    },
+    METADATA: {
+        UPDATED: "metadata:updated:{uid}",
+        DELETED: "metadata:deleted:{uid}",
     },
     USER: {
         UPDATED: "user:updated",

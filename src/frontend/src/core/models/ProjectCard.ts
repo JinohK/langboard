@@ -24,6 +24,8 @@ import useCardProjectUsersUpdatedHandlers from "@/controllers/socket/card/useCar
 import useCardProjectBotsUpdatedHandlers from "@/controllers/socket/card/useCardProjectBotsUpdatedHandlers";
 import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColumnChangedHandlers";
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
+import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
+import useMetadataDeletedHandlers from "@/controllers/socket/metadata/useMetadataDeletedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -97,6 +99,12 @@ class ProjectCard extends BaseModel<IStore> {
                 card: this,
             }
         );
+
+        this.subscribeSocketEvents([useMetadataUpdatedHandlers, useMetadataDeletedHandlers], {
+            type: "card",
+            uid: this.uid,
+        });
+
         ProjectLabel.Model.subscribe("DELETION", this.uid, (uids) => {
             this.labels = this.labels.filter((label) => !uids.includes(label.uid));
         });

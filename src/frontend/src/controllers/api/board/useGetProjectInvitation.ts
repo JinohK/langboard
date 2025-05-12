@@ -13,7 +13,7 @@ export interface IGetProjectInvitationResponse {
     };
 }
 
-const useGetProjetInvitation = (options?: TMutationOptions<IGetProjectInvitationForm, IGetProjectInvitationResponse>) => {
+const useGetProjectInvitation = (options?: TMutationOptions<IGetProjectInvitationForm, IGetProjectInvitationResponse>) => {
     const { mutate } = useQueryMutation();
 
     const getProjectInvitation = async (form: IGetProjectInvitationForm) => {
@@ -30,4 +30,4 @@ const useGetProjetInvitation = (options?: TMutationOptions<IGetProjectInvitation
     return result;
 };
 
-export default useGetProjetInvitation;
+export default useGetProjectInvitation;

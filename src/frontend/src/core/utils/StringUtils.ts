@@ -239,3 +239,16 @@ export const isValidIpv4OrRnage = (str: string): bool => {
     const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}(\/24)?$/;
     return ipv4Pattern.test(str);
 };
+
+export const isJsonString = (str: string): bool => {
+    if (str.length > 0 && ((str[0] === "{" && str[str.length - 1] === "}") || (str[0] === "[" && str[str.length - 1] === "]"))) {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    return false;
+};

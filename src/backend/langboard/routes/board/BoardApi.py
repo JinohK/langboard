@@ -49,6 +49,28 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
 
 @AppRouter.schema()
 @AppRouter.api.get(
+    "/board/{project_uid}/current-roles",
+    tags=["Board"],
+    description="Get current roles of the user or bot in the project.",
+    responses=OpenApiSchema().suc({"roles": [ALL_GRANTED, ProjectRoleAction]}).auth().role().get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_project_current_roles(
+    project_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    roles = await service.project.get_role_actions(user_or_bot, project)
+    return JsonResponse(content={"roles": roles})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
     "/board/{project_uid}",
     tags=["Board"],
     description="Get project details.",

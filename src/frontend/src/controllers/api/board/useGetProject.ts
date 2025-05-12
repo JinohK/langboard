@@ -12,7 +12,7 @@ export interface IGetProjectResponse {
     project: Project.TModel;
 }
 
-const useGetProjet = (form: IGetProjectForm, options?: TQueryOptions<unknown, IGetProjectResponse>) => {
+const useGetProject = (form: IGetProjectForm, options?: TQueryOptions<unknown, IGetProjectResponse>) => {
     const { query } = useQueryMutation();
 
     const getProject = async () => {
@@ -36,4 +36,4 @@ const useGetProjet = (form: IGetProjectForm, options?: TQueryOptions<unknown, IG
     return result;
 };
 
-export default useGetProjet;
+export default useGetProject;

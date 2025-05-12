@@ -1,0 +1,37 @@
+import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
+
+export type TType = "card" | "project_wiki";
+
+export interface Interface extends IBaseModel {
+    type: TType;
+    metadata: Record<string, string>;
+}
+
+class MetadataModel extends BaseModel<Interface> {
+    static get MODEL_NAME() {
+        return "MetadataModel" as const;
+    }
+
+    constructor(model: Record<string, unknown>) {
+        super(model);
+    }
+
+    public get type() {
+        return this.getValue("type");
+    }
+    public set type(value: TType) {
+        this.update({ type: value });
+    }
+
+    public get metadata() {
+        return this.getValue("metadata");
+    }
+    public set metadata(value: Record<string, string>) {
+        this.update({ metadata: value });
+    }
+}
+
+registerModel(MetadataModel);
+
+export type TModel = MetadataModel;
+export const Model = MetadataModel;

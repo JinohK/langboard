@@ -14,6 +14,7 @@ import {
     ProjectLabel,
     ProjectWiki,
     User,
+    MetadataModel,
 } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 
@@ -37,6 +38,7 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
     ActivityModel.Model.deleteModels((model) => model.filterable_type === "project" && model.filterable_uid === projectUID);
     ChatMessageModel.Model.deleteModels((model) => model.projectUID === projectUID);
     ProjectWiki.Model.deleteModels((model) => {
+        MetadataModel.Model.deleteModels((metadataModel) => metadataModel.uid === model.uid);
         if (model.project_uid !== projectUID) {
             return false;
         }
@@ -90,6 +92,7 @@ export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
     ProjectChecklist.Model.deleteModels((checklist) => checklist.card_uid === cardUID);
     ProjectCheckitem.Model.deleteModels((checkitem) => checkitem.card_uid === cardUID);
     ProjectCard.Model.deleteModel(cardUID);
+    MetadataModel.Model.deleteModels((model) => model.uid === cardUID);
 
     ProjectCard.Model.getModels((model) => model.column_uid === card.column_uid).forEach((model) => {
         if (model.order > card.order) {

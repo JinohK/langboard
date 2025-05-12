@@ -3,7 +3,7 @@ import { FormOnlyLayout } from "@/components/Layout";
 import { QUERY_NAMES } from "@/constants";
 import useAcceptProjectInvitation from "@/controllers/api/board/useAcceptProjectInvitation";
 import useDeclineProjectInvitation from "@/controllers/api/board/useDeclineProjectInvitation";
-import useGetProjetInvitation from "@/controllers/api/board/useGetProjectInvitation";
+import useGetProjectInvitation from "@/controllers/api/board/useGetProjectInvitation";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import usePageNavigate from "@/core/hooks/usePageNavigate";
@@ -22,7 +22,7 @@ function BoardInvitationPage() {
     const token = searchParams.get(QUERY_NAMES.PROJCT_INVITATION_TOKEN);
     const [isValidating, setIsValidating] = useState(false);
     const [projectTitle, setProjectTitle] = useState("");
-    const { mutate: getProjectInvitationMutate } = useGetProjetInvitation();
+    const { mutate: getProjectInvitationMutate } = useGetProjectInvitation();
     const { mutate: acceptProjectInvitation } = useAcceptProjectInvitation();
     const { mutate: declineProjectInvitation } = useDeclineProjectInvitation();
 

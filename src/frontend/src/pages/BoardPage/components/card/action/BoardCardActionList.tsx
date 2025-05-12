@@ -10,12 +10,14 @@ import BoardCardActionRelationship from "@/pages/BoardPage/components/card/actio
 import BoardCardActionAddChecklist from "@/pages/BoardPage/components/card/action/checklist/BoardCardActionAddChecklist";
 import BoardCardActionArchive from "@/pages/BoardPage/components/card/action/BoardCardActionArchive";
 import BoardCardActionDelete from "@/pages/BoardPage/components/card/action/BoardCardActionDelete";
+import BoardCardActionMetadata from "@/pages/BoardPage/components/card/action/BoardCardActionMetadata";
 
 const sharedButtonClassName = "mb-2 w-full justify-start gap-2 rounded-none px-2 py-1 sm:h-7";
 
 export function SkeletonBoardCardActionList() {
     return (
         <>
+            <Skeleton className={sharedButtonClassName} />
             <Skeleton className={sharedButtonClassName} />
             <Skeleton className={sharedButtonClassName} />
             <Skeleton className={sharedButtonClassName} />
@@ -35,6 +37,7 @@ const BoardCardActionList = memo(() => {
             <BoardCardActionRelationship buttonClassName={sharedButtonClassName} />
             <BoardCardActionAttachFile buttonClassName={sharedButtonClassName} />
             <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />
+            <BoardCardActionMetadata buttonClassName={sharedButtonClassName} />
             <BoardCardActionActivity buttonClassName={sharedButtonClassName} />
             <BoardCardActionShare buttonClassName={sharedButtonClassName} />
             {!archivedAt && (hasRoleAction(Project.ERoleAction.CardUpdate) || currentUser.is_admin) ? (

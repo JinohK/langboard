@@ -186,9 +186,12 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     </Flex>
                 )}
             </Box>
-            <Flex items="center" justify="start" pt="2" mx="2" className="border-t">
+            <Flex items="center" justify="start" pt="2" mx="2" gap="2" className="border-t">
                 <Button variant="secondary" onClick={() => navigate(ROUTES.BOARD.WIKI_ACTIVITY(projectUID, wiki.uid))}>
                     {t("board.Activity")}
+                </Button>
+                <Button variant="secondary" onClick={() => navigate(ROUTES.BOARD.WIKI_METADATA(projectUID, wiki.uid))}>
+                    {t("metadata.Metadata")}
                 </Button>
             </Flex>
         </Box>

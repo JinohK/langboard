@@ -164,9 +164,7 @@ async def save_wiki_metadata(
     if metadata is None:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    topic = SocketTopic.BoardWiki if wiki.is_public else SocketTopic.BoardWikiPrivate
-    topic_id = project.get_uid() if wiki.is_public else wiki_uid
-    MetadataPublisher.updated_metadata(topic, topic_id, form.key, form.value, form.old_key)
+    MetadataPublisher.updated_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.key, form.value, form.old_key)
     return JsonResponse(content={})
 
 
@@ -204,7 +202,5 @@ async def delete_wiki_metadata(
 
     await service.metadata.delete(ProjectWikiMetadata, wiki, form.keys)
 
-    topic = SocketTopic.BoardWiki if wiki.is_public else SocketTopic.BoardWikiPrivate
-    topic_id = project.get_uid() if wiki.is_public else wiki_uid
-    MetadataPublisher.deleted_metadata(topic, topic_id, form.keys)
+    MetadataPublisher.deleted_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.keys)
     return JsonResponse(content={})

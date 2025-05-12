@@ -15,6 +15,7 @@ import type { Model as BotModel } from "@/core/models/BotModel";
 import type { Model as BotSchedule } from "@/core/models/BotSchedule";
 import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
+import type { Model as MetadataModel } from "@/core/models/MetadataModel";
 import type { Model as ProjectModel } from "@/core/models/Project";
 import type { Model as ProjectCardModel } from "@/core/models/ProjectCard";
 import type { Model as ProjectCardAttachmentModel } from "@/core/models/ProjectCardAttachment";
@@ -61,6 +62,7 @@ interface IModelMap {
     BotSchedule: typeof BotSchedule;
     ChatMessageModel: typeof ChatMessageModel;
     GlobalRelationshipType: typeof GlobalRelationshipTypeModel;
+    MetadataModel: typeof MetadataModel;
     Project: typeof ProjectModel;
     ProjectCard: typeof ProjectCardModel;
     ProjectCardAttachment: typeof ProjectCardAttachmentModel;

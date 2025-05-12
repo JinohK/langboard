@@ -9,6 +9,8 @@ import useBoardWikiAssigneesUpdatedHandlers from "@/controllers/socket/wiki/useB
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useBoardWikiGetDetailsHandlers from "@/controllers/socket/wiki/useBoardWikiGetDetailsHandlers";
+import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
+import useMetadataDeletedHandlers from "@/controllers/socket/metadata/useMetadataDeletedHandlers";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -75,9 +77,15 @@ class ProjectWiki extends BaseModel<Interface> {
             isPrivate: true,
         });
 
+        const unsubMetadata = this.subscribeSocketEvents([useMetadataUpdatedHandlers, useMetadataDeletedHandlers], {
+            type: "project_wiki",
+            uid: this.uid,
+        });
+
         return () => {
             this.#isSubscribedOnce = false;
             unsub();
+            unsubMetadata();
         };
     }
 

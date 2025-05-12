@@ -15,7 +15,7 @@ export interface IGetProjectDetailsResponse {
     cards: ProjectCard.TModel[];
 }
 
-const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptions<unknown, IGetProjectDetailsResponse>) => {
+const useGetProjectDetails = (form: IGetProjectDetailsForm, options?: TQueryOptions<unknown, IGetProjectDetailsResponse>) => {
     const { query } = useQueryMutation();
 
     const getProjectDetails = async () => {
@@ -39,4 +39,4 @@ const useGetProjetDetails = (form: IGetProjectDetailsForm, options?: TQueryOptio
     return result;
 };
 
-export default useGetProjetDetails;
+export default useGetProjectDetails;

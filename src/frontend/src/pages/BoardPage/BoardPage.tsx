@@ -6,11 +6,11 @@ import { ROUTES } from "@/core/routing/constants";
 import Board, { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
-import useGetProjet from "@/controllers/api/board/useGetProjet";
+import useGetProject from "@/controllers/api/board/useGetProject";
 
 const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps): JSX.Element => {
     const [t] = useTranslation();
-    const { data, error } = useGetProjet({ uid: projectUID });
+    const { data, error } = useGetProject({ uid: projectUID });
 
     useEffect(() => {
         if (!error) {

@@ -7,6 +7,7 @@ import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
 import { BoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import BoardActivityDialog from "@/pages/BoardPage/components/board/BoardActivityDialog";
 import WikiActivityDialog from "@/pages/BoardPage/components/wiki/WikiActivityDialog";
+import WikiMetadataDialog from "@/pages/BoardPage/components/wiki/WikiMetadataDialog";
 
 const BoardProxy = lazy(() => import("./index"));
 const BoardInvitationPage = lazy(() => import("./BoardInvitationPage"));
@@ -37,6 +38,7 @@ function BoardRoute() {
                 <Route path={ROUTES.BOARD.WIKI(":projectUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.WIKI_PAGE(":projectUID", ":wikiUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.WIKI_ACTIVITY(":projectUID", ":wikiUID")} element={<WikiActivityDialog />} />
+                <Route path={ROUTES.BOARD.WIKI_METADATA(":projectUID", ":wikiUID")} element={<WikiMetadataDialog />} />
                 <Route path={ROUTES.BOARD.ACTIVITY(":projectUID")} element={<BoardActivityDialog />} />
                 <Route path={ROUTES.BOARD.SETTINGS(":projectUID")} element={<></>} />
                 <Route path={ROUTES.BOARD.SETTINGS_PAGE(":projectUID", ":page")} element={<></>} />
