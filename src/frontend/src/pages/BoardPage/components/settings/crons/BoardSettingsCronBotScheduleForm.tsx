@@ -75,13 +75,13 @@ function BoardSettingsCronBotScheduleForm({
         const now = new Date();
 
         if (BotSchedule.RUNNING_TYPES_WITH_START_AT.includes(value)) {
-            valuesMapRef.current.startAt = new Date(now.setMinutes(now.getMinutes() + 30));
+            valuesMapRef.current.startAt = new Date(now.setMinutes(now.getMinutes()));
         } else {
             valuesMapRef.current.startAt = undefined;
         }
 
         if (BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(value)) {
-            valuesMapRef.current.endAt = new Date(now.setMinutes(now.getMinutes() + 31));
+            valuesMapRef.current.endAt = new Date(now.setMinutes(now.getMinutes() + 1));
         } else {
             valuesMapRef.current.endAt = undefined;
         }
@@ -129,7 +129,7 @@ function BoardSettingsCronBotScheduleForm({
             {BotSchedule.RUNNING_TYPES_WITH_START_AT.includes(runningType) && (
                 <DateTimePicker
                     value={startAt}
-                    min={new Date(new Date().setMinutes(new Date().getMinutes() + 30))}
+                    min={new Date(new Date().setMinutes(new Date().getMinutes()))}
                     onChange={(date) => {
                         date?.setSeconds(0);
                         setStartAt(date);

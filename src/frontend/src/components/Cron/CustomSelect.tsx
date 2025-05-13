@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useRef } from "react";
-import { formatValue } from "@/components/Cron/converter";
+import { formatValue, parsePartArray, partToString } from "@/components/Cron/converter";
 import { Clicks, CustomSelectProps } from "@/components/Cron/types";
 import { sort } from "@/components/Cron/utils";
 import { Select } from "@/components/base";
 import MultiSelect from "@/components/MultiSelect";
+import { useTranslation } from "react-i18next";
 
 function CustomSelect(props: CustomSelectProps) {
+    const [t] = useTranslation();
     const {
         placeholder,
         value,
@@ -28,11 +30,18 @@ function CustomSelect(props: CustomSelectProps) {
         }
     }, [value]);
 
-    const selectedLabel = useMemo(() => {
-        if (value && Array.isArray(value)) {
-            return value.map((value: number) => formatValue(value, unit, humanizeLabels, leadingZero, clockFormat));
+    const selectedLabels = useMemo(() => {
+        const labels = value?.map((value: number) => formatValue(value, unit, humanizeLabels, leadingZero, clockFormat)) ?? [];
+
+        if (!value || value[0] !== Number(labels[0])) {
+            return "";
         }
-        return [];
+
+        const parsedArray = parsePartArray(value, unit);
+        const cronValue = partToString(parsedArray, unit, humanizeLabels, leadingZero, clockFormat);
+        const testEveryValue = cronValue.match(/^\*\/([0-9]+),?/) || [];
+
+        return testEveryValue[1] ? `${t("cron.Every")} ${testEveryValue[1]}` : cronValue;
     }, [value, unit, humanizeLabels, leadingZero, clockFormat]);
 
     const options = useMemo(() => {
@@ -177,13 +186,13 @@ function CustomSelect(props: CustomSelectProps) {
         );
     } else {
         if (disabled) {
-            return <>{selectedLabel.length ? selectedLabel.join(",") : placeholder}</>;
+            return <>{selectedLabels.length ? selectedLabels : placeholder}</>;
         }
 
         return (
             <MultiSelect
                 noBadge
-                createValueText={() => selectedLabel.join(", ")}
+                createValueText={() => selectedLabels}
                 placeholder={placeholder}
                 selections={options}
                 selectedValue={stringValue}
