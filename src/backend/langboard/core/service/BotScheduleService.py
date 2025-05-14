@@ -207,6 +207,13 @@ class BotScheduleService:
                 has_changed = BotScheduleService.__create_job(
                     BotScheduleService.__get_cron(), bot_schedule.interval_str, running_type
                 )
+            else:
+                if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0 and start_at:
+                    bot_schedule.start_at = start_at
+                    model["start_at"] = start_at
+                if BotSchedule.RUNNING_TYPES_WITH_END_AT.count(running_type) > 0 and end_at:
+                    bot_schedule.end_at = end_at
+                    model["end_at"] = end_at
 
         if interval_str and BotScheduleService.is_valid_interval_str(interval_str):
             cron = BotScheduleService.__get_cron()

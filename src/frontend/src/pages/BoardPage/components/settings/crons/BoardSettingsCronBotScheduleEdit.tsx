@@ -35,9 +35,12 @@ function BoardSettingsCronBotScheduleEdit({
     const startAt = schedule.useField("start_at");
     const endAt = schedule.useField("end_at");
     const valuesMapRef = useRef<IBotScheduleFormMap>({
+        runningType: runningType,
         interval: intervalStr,
         scopeType: targetTable,
         scopeUID: targetUID,
+        startAt: startAt,
+        endAt: endAt,
     });
     const triggersMapRef = useRef<IBotScheduleTriggersMap>({});
     const [isOpened, setIsOpened] = useState(false);
@@ -82,7 +85,7 @@ function BoardSettingsCronBotScheduleEdit({
         });
 
         Toast.Add.promise(promise, {
-            loading: t("common.Rescheduling..."),
+            loading: t("project.settings.Rescheduling..."),
             error: (error: unknown) => {
                 let message = "";
                 const { handle } = setupApiErrorHandler({

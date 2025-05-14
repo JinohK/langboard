@@ -1,19 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Box, Card, Flex } from "@/components/base";
+import { Box, Button, Card, Flex } from "@/components/base";
 import { CronText } from "@/components/Cron";
 import { BotModel, BotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardSettingsCronBotScheduleDelete from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleDelete";
 import BoardSettingsCronBotScheduleEdit from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleEdit";
-import { useMemo } from "react";
+import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsCronBotScheduleProps {
     bot: BotModel.TModel;
     schedule: BotSchedule.TModel;
+    setCopiedForm: React.Dispatch<React.SetStateAction<IBotScheduleFormMap | undefined>>;
+    setIsAddMode: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-function BoardSettingsCronBotSchedule({ bot, schedule }: IBoardSettingsCronBotScheduleProps): JSX.Element {
+function BoardSettingsCronBotSchedule({ bot, schedule, setCopiedForm, setIsAddMode }: IBoardSettingsCronBotScheduleProps): JSX.Element {
     const [t] = useTranslation();
     const runningType = schedule.useField("running_type");
     const status = schedule.useField("status");
@@ -31,6 +34,18 @@ function BoardSettingsCronBotSchedule({ bot, schedule }: IBoardSettingsCronBotSc
             return [null, null];
         }
     }, [targetTable, targetUID]);
+    const copy = useCallback(() => {
+        setCopiedForm(() => ({
+            runningType: schedule.running_type,
+            interval: schedule.interval_str,
+            scopeType: schedule.target_table,
+            scopeUID: schedule.target_uid,
+            startAt: schedule.start_at,
+            endAt: schedule.end_at,
+        }));
+
+        setIsAddMode(true);
+    }, [setIsAddMode, setCopiedForm]);
 
     return (
         <Card.Root className="sm:grid sm:grid-rows-4">
@@ -76,6 +91,9 @@ function BoardSettingsCronBotSchedule({ bot, schedule }: IBoardSettingsCronBotSc
             </Card.Content>
             <Card.Footer className="justify-end gap-2">
                 <BoardSettingsCronBotScheduleDelete botUID={bot.uid} schedule={schedule} className="" variant="secondary" />
+                <Button variant="secondary" size="sm" onClick={copy}>
+                    {t("common.Copy")}
+                </Button>
                 <BoardSettingsCronBotScheduleEdit botUID={bot.uid} schedule={schedule} className="" variant="default" />
             </Card.Footer>
         </Card.Root>

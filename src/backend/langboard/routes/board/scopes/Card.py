@@ -1,4 +1,5 @@
 from pydantic import Field
+from ....core.db import EditorContentModel
 from ....core.routing import BaseFormModel, form_model
 
 
@@ -13,7 +14,7 @@ class CreateCardForm(BaseFormModel):
 class ChangeCardDetailsForm(BaseFormModel):
     title: str | None = Field(default=None, title="Title of the card")
     deadline_at: str | None = Field(default=None, title="Deadline of the card")
-    description: dict | None = Field(default=None, title="Description of the card")
+    description: EditorContentModel | None = Field(default=None, title="Description of the card")
 
 
 @form_model

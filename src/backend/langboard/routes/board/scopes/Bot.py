@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import Field
-from ....core.ai import BotScheduleRunningType
+from ....core.ai import BotSchedule, BotScheduleRunningType
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
 from ....core.utils.DateTime import now
@@ -26,8 +26,8 @@ class BotCronTimeForm(BaseFormModel):
     )
     target_uid: str | None = Field(default=None, title="Target UID (Required for init)")
     start_at: datetime | None = Field(
-        default=None, title=f"Start time (Required if running_type is not {BotScheduleRunningType.Infinite})"
+        default=None, title=f"Start time (Required if running_type is one of {BotSchedule.RUNNING_TYPES_WITH_START_AT})"
     )
     end_at: datetime | None = Field(
-        default=None, title=f"End time (Required if running_type is {BotScheduleRunningType.Duration})"
+        default=None, title=f"End time (Required if running_type is {BotSchedule.RUNNING_TYPES_WITH_END_AT})"
     )

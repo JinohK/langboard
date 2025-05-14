@@ -8,21 +8,28 @@ import BoardSettingsCronBotScheduleForm, {
     IBotScheduleFormMap,
     IBotScheduleTriggersMap,
 } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsCronBotScheduleAddButtonProps {
     botUID: string;
+    copiedForm: IBotScheduleFormMap | undefined;
+    isAddMode: bool;
+    setIsAddMode: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBotScheduleAddButtonProps): JSX.Element {
+function BoardSettingsCronBotScheduleAddButton({
+    botUID,
+    copiedForm,
+    isAddMode,
+    setIsAddMode,
+}: IBoardSettingsCronBotScheduleAddButtonProps): JSX.Element {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: scheduleProjectBotCronMutateAsync } = useScheduleProjectBotCron();
-    const valuesMapRef = useRef<IBotScheduleFormMap>({});
+    const valuesMapRef = useRef<IBotScheduleFormMap>(copiedForm ?? {});
     const triggersMapRef = useRef<IBotScheduleTriggersMap>({});
-    const [isOpened, setIsOpened] = useState(false);
 
     const createCron = () => {
         if (isValidating) {
@@ -100,22 +107,33 @@ function BoardSettingsCronBotScheduleAddButton({ botUID }: IBoardSettingsCronBot
             },
             finally: () => {
                 setIsValidating(false);
-                setIsOpened(false);
+                setIsAddMode(false);
             },
         });
     };
 
+    useEffect(() => {
+        if (isAddMode) {
+            valuesMapRef.current = copiedForm ?? {};
+        }
+    }, [isAddMode, copiedForm]);
+
     return (
-        <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
+        <Popover.Root modal open={isAddMode} onOpenChange={setIsAddMode}>
             <Popover.Trigger asChild>
                 <Button variant="outline" className="w-full border-2 border-dashed" disabled={isValidating}>
                     {t("project.settings.Schedule")}
                 </Button>
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-                <BoardSettingsCronBotScheduleForm valuesMapRef={valuesMapRef} triggersMapRef={triggersMapRef} disabled={isValidating} />
+                <BoardSettingsCronBotScheduleForm
+                    initialValuesMap={copiedForm}
+                    valuesMapRef={valuesMapRef}
+                    triggersMapRef={triggersMapRef}
+                    disabled={isValidating}
+                />
                 <Flex items="center" justify="end" gap="1" mt="2">
-                    <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
+                    <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsAddMode(false)}>
                         {t("common.Cancel")}
                     </Button>
                     <SubmitButton type="button" size="sm" onClick={createCron} isValidating={isValidating}>

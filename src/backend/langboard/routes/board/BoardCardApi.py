@@ -229,8 +229,6 @@ async def change_card_details(
                 value = datetime.fromisoformat(value)
             else:
                 value = None
-        elif key == "description":
-            value = EditorContentModel(**value)
         form_dict[key] = value
 
     result = await service.card.update(user_or_bot, project_uid, card_uid, form_dict)

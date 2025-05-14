@@ -8,7 +8,8 @@ import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsCronBotSchedule from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotSchedule";
 import BoardSettingsCronBotScheduleAddButton from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleAddButton";
-import { useCallback } from "react";
+import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
+import { useCallback, useEffect, useState } from "react";
 
 export interface IBOardSettingsCronBotScheduleListProps {
     bot: BotModel.TModel;
@@ -17,6 +18,7 @@ export interface IBOardSettingsCronBotScheduleListProps {
 function BoardSettingsCronBotScheduleList({ bot }: IBOardSettingsCronBotScheduleListProps): JSX.Element {
     const { socket, project } = useBoardSettings();
     const { mutateAsync, isLastPage, isFetchingRef } = useGetProjectBotSchedules(project.uid, bot.uid);
+    const [copiedForm, setCopiedForm] = useState<IBotScheduleFormMap | undefined>(undefined);
     const schedules = BotSchedule.Model.useModels(
         (model) => model.bot_uid === bot.uid && model.filterable_table === "project" && model.filterable_uid === project.uid
     );
@@ -38,6 +40,13 @@ function BoardSettingsCronBotScheduleList({ bot }: IBOardSettingsCronBotSchedule
     });
     useSwitchSocketHandlers({ socket, handlers: [botCronScheduledHandlers] });
     const listId = `project-settings-bot-schedule-list-${bot.uid}`;
+    const [isAddMode, setIsAddMode] = useState(false);
+
+    useEffect(() => {
+        if (!isAddMode) {
+            setCopiedForm(undefined);
+        }
+    }, [isAddMode, setCopiedForm]);
 
     return (
         <Flex direction="col" gap="2">
@@ -56,12 +65,18 @@ function BoardSettingsCronBotScheduleList({ bot }: IBOardSettingsCronBotSchedule
                 >
                     <Box display={{ initial: "flex", sm: "grid" }} direction="col" gap="2" className="sm:grid-cols-2">
                         {schedules.map((schedule) => (
-                            <BoardSettingsCronBotSchedule key={schedule.uid} bot={bot} schedule={schedule} />
+                            <BoardSettingsCronBotSchedule
+                                key={schedule.uid}
+                                bot={bot}
+                                schedule={schedule}
+                                setCopiedForm={setCopiedForm}
+                                setIsAddMode={setIsAddMode}
+                            />
                         ))}
                     </Box>
                 </InfiniteScroller>
             </ScrollArea.Root>
-            <BoardSettingsCronBotScheduleAddButton botUID={bot.uid} />
+            <BoardSettingsCronBotScheduleAddButton botUID={bot.uid} copiedForm={copiedForm} isAddMode={isAddMode} setIsAddMode={setIsAddMode} />
         </Flex>
     );
 }
