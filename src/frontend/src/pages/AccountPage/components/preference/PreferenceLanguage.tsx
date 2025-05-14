@@ -24,21 +24,16 @@ function PreferenceLanguage() {
         Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("myAccount.errors.Invalid language.");
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler(
+                    {
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("myAccount.errors.Invalid language."),
                     },
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                    messageRef
+                );
 
                 handle(error);
-                return message;
+                return messageRef.message;
             },
             success: () => {
                 return t("myAccount.successes.Preferred language updated successfully.");

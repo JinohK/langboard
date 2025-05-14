@@ -28,7 +28,7 @@ export interface IBoardContext {
     cardsMap: Record<string, ProjectCard.TModel>;
     currentUser: AuthUser.TModel;
     globalRelationshipTypes: GlobalRelationshipType.TModel[];
-    hasRoleAction: (...actions: Project.TRoleActions[]) => bool;
+    hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     filters: IFilterMap;
     navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
     filterMember: (member: User.TModel) => bool;
@@ -82,7 +82,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         searchKey: "filters",
     });
     const currentUserRoleActions = project.useField("current_auth_role_actions");
-    const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(currentUserRoleActions);
+    const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const columns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
     const cards = ProjectCard.Model.useModels((model) => model.project_uid === project.uid);
     const forbiddenMessageIdRef = useRef<string | number | null>(null);

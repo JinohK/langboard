@@ -14,19 +14,9 @@ const BoardCardActionMetadata = memo(({ buttonClassName }: IBoardCardActionMetad
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
-    const errorsMap = (messageRef: { message: string }) => ({
-        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-            messageRef.message = t("errors.Forbidden");
-        },
-        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-            messageRef.message = t("card.errors.Card not found.");
-        },
-        nonApiError: () => {
-            messageRef.message = t("errors.Unknown error");
-        },
-        wildcardError: () => {
-            messageRef.message = t("errors.Internal server error");
-        },
+    const errorsMap = () => ({
+        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Card not found."),
     });
 
     return (

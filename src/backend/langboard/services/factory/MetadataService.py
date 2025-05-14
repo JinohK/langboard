@@ -44,6 +44,34 @@ class MetadataService(BaseService):
             metadata[data.key] = data.value
         return metadata
 
+    @overload
+    async def get_by_key(
+        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: Literal[False]
+    ) -> _TMetadata | None: ...
+    @overload
+    async def get_by_key(
+        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: Literal[True]
+    ) -> dict[str, Any] | None: ...
+    async def get_by_key(
+        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: bool
+    ) -> _TMetadata | dict[str, Any] | None:
+        foreign_key = f"{foreign_model.__tablename__}_id"
+        if foreign_key not in model.model_fields:
+            return None
+
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(model).where(
+                    (model.column(foreign_key) == foreign_model.id) & (model.column("key") == key)
+                )
+            )
+        metadata = result.first()
+
+        if not as_api:
+            return metadata
+
+        return metadata.api_schema() if metadata else None
+
     async def save(
         self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, value: str, old_key: str | None = None
     ) -> _TMetadata | None:

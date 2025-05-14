@@ -327,7 +327,7 @@ async def upload_wiki_attachment(
         OpenApiSchema()
         .auth(with_bot=True)
         .role(with_bot=True)
-        .err(403, "No permission to update this wiki.")
+        .err(403, "No permission to delete this wiki.")
         .err(404, "Project or wiki not found.")
         .get()
     ),

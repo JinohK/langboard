@@ -5,10 +5,53 @@ from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import Checkitem, Checklist, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrderForm, project_role_finder
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/board/{project_uid}/card/{card_uid}/checklist",
+    tags=["Board.Card"],
+    description="Get card comments.",
+    responses=OpenApiSchema()
+    .suc(
+        {
+            "checklists": [
+                (
+                    Checklist,
+                    {
+                        "schema": {
+                            "checkitems": [
+                                (
+                                    Checkitem,
+                                    {
+                                        "schema": {
+                                            "card_uid": "string",
+                                            "timer_started_at?": "string",
+                                            "cardified_card?": "string",
+                                            "user?": User,
+                                        }
+                                    },
+                                ),
+                            ]
+                        }
+                    },
+                ),
+            ],
+        }
+    )
+    .auth(with_bot=True)
+    .role(with_bot=True)
+    .get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add
+async def get_card_checklists(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    checklists = await service.checklist.get_list(card_uid, as_api=True)
+    return JsonResponse(content={"checklists": checklists})
 
 
 @AppRouter.schema(form=CardCheckRelatedForm)

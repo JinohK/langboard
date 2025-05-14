@@ -8,6 +8,7 @@ import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
 import { cleanModels } from "@/core/models/Base";
 import { useTranslation } from "react-i18next";
+import { AxiosError, isAxiosError } from "axios";
 
 export interface IAuthContext {
     getAccessToken: () => string | null;
@@ -85,11 +86,21 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 userRef.current = null;
             }
 
-            const response = await api.get<{ user: AuthUser.Interface; notifications: UserNotification.Interface[] }>(API_ROUTES.AUTH.ABOUT_ME, {
-                headers: {
-                    Authorization: `Bearer ${getAccessToken()}`,
-                },
-            });
+            let response;
+            try {
+                response = await api.get<{ user: AuthUser.Interface; notifications: UserNotification.Interface[] }>(API_ROUTES.AUTH.ABOUT_ME, {
+                    headers: {
+                        Authorization: `Bearer ${getAccessToken()}`,
+                    },
+                });
+            } catch (error) {
+                if (isAxiosError(error) && error.code === AxiosError.ERR_NETWORK) {
+                    setTimeout(() => {
+                        update();
+                    }, 5000);
+                }
+                return;
+            }
 
             const user = AuthUser.Model.fromObject(response.data.user);
             UserNotification.Model.fromObjectArray(response.data.notifications);

@@ -60,7 +60,7 @@ const BoardProxy = memo((): JSX.Element => {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
-    const { data, isFetching, error } = useIsProjectAvailable({ uid: projectUID });
+    const { data, isFetching, error, refetch } = useIsProjectAvailable({ uid: projectUID });
     const { on: onIsBoardChatAvailable, send: sendIsBoardChatAvailable } = useIsBoardChatAvailableHandlers({
         projectUID,
         callback: (result) => {
@@ -123,6 +123,12 @@ const BoardProxy = memo((): JSX.Element => {
             [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                 Toast.Add.error(t("project.errors.Project not found."));
                 navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            },
+            networkError: () => {
+                Toast.Add.error(t("errors.Network error"));
+                setTimeout(() => {
+                    refetch();
+                }, 5000);
             },
         });
 

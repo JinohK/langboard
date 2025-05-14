@@ -13,19 +13,9 @@ const WikiMetadataDialog = memo(() => {
     const navigateRef = useRef(useNavigate());
     const [t] = useTranslation();
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
-    const errorsMap = (messageRef: { message: string }) => ({
-        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-            messageRef.message = t("errors.Forbidden");
-        },
-        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-            messageRef.message = t("card.errors.Wiki not found.");
-        },
-        nonApiError: () => {
-            messageRef.message = t("errors.Unknown error");
-        },
-        wildcardError: () => {
-            messageRef.message = t("errors.Internal server error");
-        },
+    const errorsMap = () => ({
+        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Wiki not found."),
     });
 
     useEffect(() => {

@@ -1,5 +1,9 @@
-from pydantic import Field
+from pydantic import BaseModel, Field
 from ...core.routing import BaseFormModel, form_model
+
+
+class MetadataGetModel(BaseModel):
+    key: str = Field(..., title="The key of the metadata (Optional)")
 
 
 @form_model

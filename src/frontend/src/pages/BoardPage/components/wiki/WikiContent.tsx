@@ -67,24 +67,21 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
-                    let message = "";
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            message = t("wiki.errors.Can't access this wiki.");
-                            setTimeout(() => {
-                                navigate(ROUTES.BOARD.WIKI(projectUID));
-                            }, 0);
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler(
+                        {
+                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                                setTimeout(() => {
+                                    navigate(ROUTES.BOARD.WIKI(projectUID));
+                                }, 0);
+                                return t("wiki.errors.Can't access this wiki.");
+                            },
                         },
-                        nonApiError: () => {
-                            message = t("errors.Unknown error");
-                        },
-                        wildcardError: () => {
-                            message = t("errors.Internal server error");
-                        },
-                    });
+                        messageRef
+                    );
 
                     handle(error);
-                    return message;
+                    return messageRef.message;
                 },
                 success: () => {
                     return t("wiki.successes.Content changed successfully.");

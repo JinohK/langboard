@@ -36,24 +36,17 @@ export const BoardCardChecklistProvider = ({
     const [t] = useTranslation();
 
     const sharedErrorHandler = (error: unknown) => {
-        let message = "";
-        const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                message = t("errors.Forbidden");
+        const messageRef = { message: "" };
+        const { handle } = setupApiErrorHandler(
+            {
+                [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+                [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Checklist not found."),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                message = t("card.errors.Checklist not found.");
-            },
-            nonApiError: () => {
-                message = t("errors.Unknown error");
-            },
-            wildcardError: () => {
-                message = t("errors.Internal server error");
-            },
-        });
+            messageRef
+        );
 
         handle(error);
-        return message;
+        return messageRef.message;
     };
 
     return (

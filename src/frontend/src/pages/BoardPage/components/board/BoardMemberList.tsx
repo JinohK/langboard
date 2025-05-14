@@ -44,24 +44,17 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
         Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                        message = t("errors.Forbidden");
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler(
+                    {
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
                     },
-                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("project.errors.Project not found.");
-                    },
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                    messageRef
+                );
 
                 handle(error);
-                return message;
+                return messageRef.message;
             },
             success: () => {
                 return t("project.successes.Assigned members updated and invited new users successfully.");
@@ -105,8 +98,8 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             isValidating={isValidating}
             allItems={allItems}
             groups={groups}
-            selectableFilter={(item) => item.uid !== owner.uid}
-            newItemFilter={(item) => invitedMembers.includes(item as User.TModel) || (item as User.TModel).email !== owner.email}
+            selectableFilter={(item) => item.uid !== owner.uid && !bots.includes(item as BotModel.TModel)}
+            newItemFilter={(item) => invitedMembers.includes(item as User.TModel)}
             assignedFilter={(item) => {
                 if (item instanceof User.Model) {
                     return members.includes(item);

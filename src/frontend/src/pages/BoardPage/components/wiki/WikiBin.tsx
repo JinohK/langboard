@@ -35,21 +35,16 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
             Toast.Add.promise(promise, {
                 loading: t("common.Deleting..."),
                 error: (error) => {
-                    let message = "";
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            message = t("wiki.errors.Can't access this wiki.");
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler(
+                        {
+                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("wiki.errors.Can't access this wiki."),
                         },
-                        nonApiError: () => {
-                            message = t("errors.Unknown error");
-                        },
-                        wildcardError: () => {
-                            message = t("errors.Internal server error");
-                        },
-                    });
+                        messageRef
+                    );
 
                     handle(error);
-                    return message;
+                    return messageRef.message;
                 },
                 success: () => {
                     setWikis((prev) => prev.filter((wiki) => wiki.uid !== originalWiki.uid));

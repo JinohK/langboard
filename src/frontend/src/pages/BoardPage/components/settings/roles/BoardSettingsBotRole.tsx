@@ -50,24 +50,17 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
             Toast.Add.promise(promise, {
                 loading: t("common.Updating..."),
                 error: (error) => {
-                    let message = "";
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            message = t("errors.Forbidden");
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler(
+                        {
+                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+                            [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
                         },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            message = t("project.errors.Project not found.");
-                        },
-                        nonApiError: () => {
-                            message = t("errors.Unknown error");
-                        },
-                        wildcardError: () => {
-                            message = t("errors.Internal server error");
-                        },
-                    });
+                        messageRef
+                    );
 
                     handle(error);
-                    return message;
+                    return messageRef.message;
                 },
                 success: () => {
                     return t("project.settings.successes.Bot roles updated successfully.");
@@ -107,24 +100,17 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
         Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
             error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                        message = t("errors.Forbidden");
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler(
+                    {
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
                     },
-                    [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                        message = t("project.errors.Project not found.");
-                    },
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                    messageRef
+                );
 
                 handle(error);
-                return message;
+                return messageRef.message;
             },
             success: () => {
                 return t(`project.settings.successes.Bot ${isDisabled ? "enabled" : "disabled"} successfully.`);

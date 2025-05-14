@@ -31,22 +31,19 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
             Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
-                    let message = "";
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler(
+                        {
+                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
+                                messageRef.message = t("errors.Forbidden");
+                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            },
                         },
-                        nonApiError: () => {
-                            message = t("errors.Unknown error");
-                        },
-                        wildcardError: () => {
-                            message = t("errors.Internal server error");
-                        },
-                    });
+                        messageRef
+                    );
 
                     handle(error);
-                    return message;
+                    return messageRef.message;
                 },
                 success: () => {
                     return t("settings.successes.API key name changed successfully.");

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 export interface IMetadataListProps {
     form: TMetadataForm;
-    errorsMap: (messageRef: { message: string }) => IApiErrorHandlerMap;
+    errorsMap: () => IApiErrorHandlerMap;
     canEdit: () => bool;
 }
 
@@ -24,7 +24,7 @@ function MetadataList({ form, errorsMap, canEdit }: IMetadataListProps) {
         }
 
         const messageRef = { message: "" };
-        const { handle } = setupApiErrorHandler(errorsMap(messageRef));
+        const { handle } = setupApiErrorHandler(errorsMap(), messageRef);
 
         handle(error);
         Toast.Add.error(messageRef.message);

@@ -43,18 +43,11 @@ const AllScopedSwitchList = memo(({ currentUser, type, triggerProps, iconProps, 
         Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
             error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
-                return message;
+                return messageRef.message;
             },
             success: () => {
                 return t("notification.settings.successes.Notification settings updated successfully.");

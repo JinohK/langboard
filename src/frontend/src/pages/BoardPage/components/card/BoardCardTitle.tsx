@@ -42,18 +42,11 @@ function BoardCardTitle(): JSX.Element {
             Toast.Add.promise(promise, {
                 loading: t("common.Changing..."),
                 error: (error) => {
-                    let message = "";
-                    const { handle } = setupApiErrorHandler({
-                        nonApiError: () => {
-                            message = t("errors.Unknown error");
-                        },
-                        wildcardError: () => {
-                            message = t("errors.Internal server error");
-                        },
-                    });
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler({}, messageRef);
 
                     handle(error);
-                    return message;
+                    return messageRef.message;
                 },
                 success: () => {
                     return t("card.successes.Title changed successfully.");

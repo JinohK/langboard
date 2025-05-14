@@ -122,7 +122,7 @@ async def change_checkitem_status(
         OpenApiSchema()
         .auth(with_bot=True)
         .role(with_bot=True)
-        .err(403, "No permission to update this checkitem.")
+        .err(403, "No permission to cardify this checkitem.")
         .err(404, "Project, card, or checkitem not found.")
         .get()
     ),

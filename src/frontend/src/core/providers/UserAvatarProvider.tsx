@@ -60,7 +60,7 @@ export const UserAvatarProvider = memo(({ navigate, projectUID, user, children }
             return [];
         }
     }, [project, project?.current_auth_role_actions]);
-    const { hasRoleAction } = useRoleActionFilter<Project.TRoleActions>(currentUserRoleActions);
+    const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const { mutateAsync: isProjectAssigneeMutateAsync } = useIsProjectAssignee();
     const [isAssignee, setIsAssignee] = useState(false);
     const [isBotDisabled, setIsBotDisabled] = useState<bool | undefined>(undefined);

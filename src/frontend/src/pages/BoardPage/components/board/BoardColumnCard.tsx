@@ -29,7 +29,7 @@ export interface IBoardColumnCardDragData extends ISortableDragData<ProjectCard.
     type: "Card";
 }
 
-export const SkeletonBoardColumnCard = memo(() => {
+export function SkeletonBoardColumnCard() {
     return (
         <Card.Root className="border-transparent shadow-transparent">
             <Card.Header className="relative block py-4">
@@ -45,7 +45,7 @@ export const SkeletonBoardColumnCard = memo(() => {
             </Card.Footer>
         </Card.Root>
     );
-});
+}
 
 const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
@@ -76,24 +76,24 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
 
             listeners?.[targetListener]?.(e);
         },
-        []
+        [listeners]
     );
-    const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-        if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
-            return;
-        }
+    const onKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLElement>) => {
+            if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                return;
+            }
 
-        listeners?.onKeyDown?.(e);
-    }, []);
-
-    useEffect(() => {
-        card.isOpenedInBoardColumn = false;
-    }, []);
-
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
+            listeners?.onKeyDown?.(e);
+        },
+        [listeners]
+    );
+    const style = useMemo(() => {
+        return {
+            transition,
+            transform: CSS.Translate.toString(transform),
+        };
+    }, [transition, transform]);
 
     const variants = tv({
         base: "cursor-pointer hover:ring-2 ring-primary",
@@ -104,33 +104,51 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
             },
         },
     });
-
-    let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (hasRoleAction(Project.ERoleAction.CardUpdate) && !selectCardViewType) {
-        props = {
-            style,
-            className: variants({
-                dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
-            }),
-            onMouseDown: onPointerStart("mouse"),
-            onTouchStart: onPointerStart("touch"),
-            onKeyDown,
-            ...attributes,
-            ref: setNodeRef,
-        };
-        if (props.style) {
-            props.style.touchAction = "none";
+    const props = useMemo<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>>(() => {
+        let newProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> = {};
+        if (hasRoleAction(Project.ERoleAction.CardUpdate) && !selectCardViewType) {
+            newProps = {
+                style: {
+                    ...(style ?? {}),
+                    touchAction: "none",
+                },
+                className: variants({
+                    dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
+                }),
+                onMouseDown: onPointerStart("mouse"),
+                onTouchStart: onPointerStart("touch"),
+                onKeyDown,
+                ...attributes,
+                ref: setNodeRef,
+            };
+        } else {
+            newProps = {
+                className: cn(
+                    !selectCardViewType || !isDisabledCard(card.uid) ? "cursor-pointer hover:ring-2 ring-primary" : "cursor-not-allowed",
+                    !!selectCardViewType && currentCardUIDRef.current === card.uid && "hidden",
+                    !!selectCardViewType && isSelectedCard(card.uid) && "ring-2",
+                    !!selectCardViewType && isDisabledCard(card.uid) && "opacity-30"
+                ),
+            };
         }
-    } else {
-        props = {
-            className: cn(
-                !selectCardViewType || !isDisabledCard(card.uid) ? "cursor-pointer hover:ring-2 ring-primary" : "cursor-not-allowed",
-                !!selectCardViewType && currentCardUIDRef.current === card.uid && "hidden",
-                !!selectCardViewType && isSelectedCard(card.uid) && "ring-2",
-                !!selectCardViewType && isDisabledCard(card.uid) && "opacity-30"
-            ),
-        };
-    }
+        return newProps;
+    }, [
+        style,
+        onPointerStart,
+        onKeyDown,
+        attributes,
+        setNodeRef,
+        hasRoleAction,
+        selectCardViewType,
+        isDisabledCard,
+        isSelectedCard,
+        isDragging,
+        isOverlay,
+    ]);
+
+    useEffect(() => {
+        card.isOpenedInBoardColumn = false;
+    }, []);
 
     let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
@@ -183,6 +201,43 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
         [selectCardViewType, selectedRelationshipUIDs]
+    );
+    const onCardPointerOut = useCallback(
+        (e: React.PointerEvent<HTMLDivElement>) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                setIsHoverCardHidden(false);
+            }
+        },
+        [setIsHoverCardHidden]
+    );
+    const onCollapsiablePointerEnter = useCallback(
+        (e: React.PointerEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                setIsHoverCardHidden(true);
+            }
+        },
+        [setIsHoverCardHidden]
+    );
+    const openCard = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+            if (isDragging || (e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
+                return;
+            }
+
+            if (selectCardViewType) {
+                if (isDisabledCard(card.uid)) {
+                    return;
+                }
+
+                setIsSelectRelationshipDialogOpened(true);
+                return;
+            }
+
+            navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
+        },
+        [isDragging, selectCardViewType, isDisabledCard, setIsSelectRelationshipDialogOpened]
     );
     const presentableRelationships = useMemo(() => {
         const relationships: [string, string][] = [];
@@ -244,29 +299,7 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
 
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
-        onPointerEnter: (e: React.PointerEvent) => {
-            const target = e.target as HTMLElement;
-            if (target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                setIsHoverCardHidden(true);
-            }
-        },
-    };
-
-    const openCard = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (isDragging || (e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
-            return;
-        }
-
-        if (selectCardViewType) {
-            if (isDisabledCard(card.uid)) {
-                return;
-            }
-
-            setIsSelectRelationshipDialogOpened(true);
-            return;
-        }
-
-        navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
+        onPointerEnter: onCollapsiablePointerEnter,
     };
 
     const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {
@@ -288,12 +321,7 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
             <Card.Root
                 id={`board-card-${card.uid}`}
                 className={cn("relative", !!selectCardViewType && isDisabledCard(card.uid) ? "cursor-not-allowed" : "cursor-pointer")}
-                onPointerOut={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (!target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                        setIsHoverCardHidden(false);
-                    }
-                }}
+                onPointerOut={onCardPointerOut}
                 onClick={openCard}
             >
                 <Collapsible.Root

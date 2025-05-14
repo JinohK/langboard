@@ -10,7 +10,6 @@ class BaseMetadataModel(BaseSqlModel):
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:
         return {
-            "uid": "string",
             "key": "string",
             "value": "string",
             **(schema or {}),
@@ -18,7 +17,6 @@ class BaseMetadataModel(BaseSqlModel):
 
     def api_response(self) -> dict[str, Any]:
         return {
-            "uid": self.get_uid(),
             "key": self.key,
             "value": self.value,
         }

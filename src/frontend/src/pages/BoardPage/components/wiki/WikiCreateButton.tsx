@@ -23,18 +23,11 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
         Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
             error: (error) => {
-                let message = "";
-                const { handle } = setupApiErrorHandler({
-                    nonApiError: () => {
-                        message = t("errors.Unknown error");
-                    },
-                    wildcardError: () => {
-                        message = t("errors.Internal server error");
-                    },
-                });
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
-                return message;
+                return messageRef.message;
             },
             success: (data) => {
                 setWikis((prev) => [...prev, data.wiki]);
