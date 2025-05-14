@@ -12,22 +12,41 @@ class BotSchedulePagination(Pagination):
 
 
 @form_model
-class BotCronTimeForm(BaseFormModel):
-    interval_str: str | None = Field(
-        default=None, title="Cron interval string (UNIX crontab format - * * * * *) (Required for init)"
+class CreateBotCronTimeForm(BaseFormModel):
+    interval_str: str = Field(..., title="Cron interval string (UNIX crontab format - * * * * *)")
+    running_type: BotScheduleRunningType | None = Field(
+        default=BotScheduleRunningType.Infinite,
+        title=f"Running type: {', '.join(BotScheduleRunningType.__members__.keys())} (Default: {BotScheduleRunningType.Infinite.name})",
     )
+    target_table: str = Field(..., title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})")
+    target_uid: str = Field(..., title="Target UID")
+    start_at: datetime | None = Field(
+        default=None,
+        title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
+    )
+    end_at: datetime | None = Field(
+        default=None,
+        title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
+    )
+
+
+@form_model
+class UpdateBotCronTimeForm(BaseFormModel):
+    interval_str: str | None = Field(default=None, title="Cron interval string (UNIX crontab format - * * * * *)")
     running_type: BotScheduleRunningType | None = Field(
         default=None,
-        title=f"Running type: {', '.join(BotScheduleRunningType.__members__.keys())} (Default: {BotScheduleRunningType.Infinite})",
+        title=f"Running type: {', '.join(BotScheduleRunningType.__members__.keys())}",
     )
     target_table: str | None = Field(
         default=None,
-        title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__}) (Required for init)",
+        title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})",
     )
-    target_uid: str | None = Field(default=None, title="Target UID (Required for init)")
+    target_uid: str | None = Field(default=None, title="Target UID")
     start_at: datetime | None = Field(
-        default=None, title=f"Start time (Required if running_type is one of {BotSchedule.RUNNING_TYPES_WITH_START_AT})"
+        default=None,
+        title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
     )
     end_at: datetime | None = Field(
-        default=None, title=f"End time (Required if running_type is {BotSchedule.RUNNING_TYPES_WITH_END_AT})"
+        default=None,
+        title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )

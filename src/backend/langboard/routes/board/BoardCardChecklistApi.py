@@ -59,7 +59,14 @@ async def get_card_checklists(card_uid: str, service: Service = Service.scope())
     "/board/{project_uid}/card/{card_uid}/checklist",
     tags=["Board.Card.Checklist"],
     description="Create a checklist.",
-    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
+    responses=(
+        OpenApiSchema()
+        .suc({"checklist": Checklist})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project or card not found.")
+        .get()
+    ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
 @AuthFilter.add
@@ -74,7 +81,15 @@ async def create_checklist(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
+    return JsonResponse(
+        content={
+            "checklist": {
+                **result.api_response(),
+                "checkitems": [],
+            }
+        },
+        status_code=status.HTTP_201_CREATED,
+    )
 
 
 @AppRouter.schema(form=CardCheckRelatedForm)

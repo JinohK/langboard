@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.ai import Bot
+from ...core.ai import Bot, BotSchedule
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService
@@ -537,6 +537,15 @@ class CardService(BaseService):
                 SqlBuilder.delete.table(CardRelationship).where(
                     (CardRelationship.column("card_id_parent") == card.id)
                     | (CardRelationship.column("card_id_child") == card.id)
+                )
+            )
+            await db.commit()
+
+        async with DbSession.use() as db:
+            await db.exec(
+                SqlBuilder.delete.table(BotSchedule).where(
+                    (BotSchedule.column("target_table") == Card.__tablename__)
+                    & (BotSchedule.column("target_id") == card.id)
                 )
             )
             await db.commit()

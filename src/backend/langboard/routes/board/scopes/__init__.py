@@ -1,5 +1,5 @@
 from .Attachment import ChangeAttachmentNameForm
-from .Bot import BotCronTimeForm, BotSchedulePagination
+from .Bot import BotSchedulePagination, CreateBotCronTimeForm, UpdateBotCronTimeForm
 from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm, UpdateCardRelationshipsForm
 from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm
 from .Column import ColumnForm
@@ -25,7 +25,8 @@ __all__ = [
     "ChangeRootOrderForm",
     "ChangeChildOrderForm",
     "ColumnForm",
-    "BotCronTimeForm",
+    "CreateBotCronTimeForm",
+    "UpdateBotCronTimeForm",
     "BotSchedulePagination",
     "CreateCardForm",
     "UpdateCardLabelsForm",

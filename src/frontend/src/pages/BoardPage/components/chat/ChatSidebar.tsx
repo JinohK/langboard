@@ -33,7 +33,7 @@ const ChatSidebar = memo((): JSX.Element => {
         setHeight(measureTextAreaHeight(chatInputRef.current) + 2);
     }, [setHeight]);
 
-    const sendChat = () => {
+    const sendChat = useCallback(() => {
         if (!chatInputRef.current) {
             return;
         }
@@ -53,6 +53,7 @@ const ChatSidebar = memo((): JSX.Element => {
         }
 
         chatInputRef.current.value = "";
+        updateHeight();
 
         let tried = 0;
         let triedTimeout: NodeJS.Timeout | undefined;
@@ -88,7 +89,7 @@ const ChatSidebar = memo((): JSX.Element => {
         if (!trySendChat()) {
             triedTimeout = setTimeout(trySendChatWrapper, 1000);
         }
-    };
+    }, [updateHeight]);
 
     const clearChat = () => {
         mutate(

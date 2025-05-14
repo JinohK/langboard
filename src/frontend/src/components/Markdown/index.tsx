@@ -28,6 +28,9 @@ function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
                     ul({ node, ...props }) {
                         return <ul className="max-w-full">{props.children}</ul>;
                     },
+                    a({ node, ...props }) {
+                        return <a className="underline-offset-4 hover:underline" {...props} />;
+                    },
                     table({ node, ...props }) {
                         return (
                             <div className="prose prose-invert">

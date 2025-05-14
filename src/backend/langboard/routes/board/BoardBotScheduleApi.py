@@ -8,7 +8,7 @@ from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectBotPublisher
 from ...services import Service
-from .scopes import BotCronTimeForm, BotSchedulePagination, project_role_finder
+from .scopes import BotSchedulePagination, CreateBotCronTimeForm, UpdateBotCronTimeForm, project_role_finder
 
 
 @AppRouter.schema(query=BotSchedulePagination)
@@ -49,7 +49,7 @@ async def get_bot_schedules(
     return JsonResponse(content={"schedules": schedules})
 
 
-@AppRouter.schema(form=BotCronTimeForm)
+@AppRouter.schema(form=CreateBotCronTimeForm)
 @AppRouter.api.post(
     "/board/{project_uid}/settings/bot/{bot_uid}/schedule",
     tags=["Board.Settings.BotCron"],
@@ -59,14 +59,9 @@ async def get_bot_schedules(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def schedule_bot_crons(
-    project_uid: str, bot_uid: str, form: BotCronTimeForm, service: Service = Service.scope()
+    project_uid: str, bot_uid: str, form: CreateBotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if (
-        not form.interval_str
-        or not BotScheduleService.is_valid_interval_str(form.interval_str)
-        or not form.target_table
-        or not form.target_uid
-    ):
+    if not BotScheduleService.is_valid_interval_str(form.interval_str):
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
     if not BotScheduleService.get_default_status_with_dates(
@@ -97,7 +92,7 @@ async def schedule_bot_crons(
     return JsonResponse(content={})
 
 
-@AppRouter.schema(form=BotCronTimeForm)
+@AppRouter.schema(form=UpdateBotCronTimeForm)
 @AppRouter.api.put(
     "/board/{project_uid}/settings/bot/{bot_uid}/reschedule/{schedule_uid}",
     tags=["Board.Settings.BotCron"],
@@ -109,7 +104,7 @@ async def schedule_bot_crons(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
 async def reschedule_bot_crons(
-    project_uid: str, bot_uid: str, schedule_uid: str, form: BotCronTimeForm, service: Service = Service.scope()
+    project_uid: str, bot_uid: str, schedule_uid: str, form: UpdateBotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
     if not BotScheduleService.get_default_status_with_dates(
         running_type=form.running_type, start_at=form.start_at, end_at=form.end_at
