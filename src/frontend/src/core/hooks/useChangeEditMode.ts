@@ -138,13 +138,13 @@ const useChangeEditMode = <
         [canEdit, customStartEditing, originalValue, save, canEmpty, disableNewLine]
     );
 
-    const updateHeight = () => {
+    const updateHeight = useCallback(() => {
         if (!TypeUtils.isElement(valueRef.current, "textarea")) {
             return;
         }
 
         setHeight(measureTextAreaHeight(valueRef.current));
-    };
+    }, [setHeight]);
 
     return {
         valueRef: valueRef as unknown as TRef,

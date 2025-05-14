@@ -71,9 +71,10 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                 <Textarea
                     ref={valueRef}
                     className={cn(
-                        "min-h-8 resize-none break-all rounded-none border-x-0 border-t-0 p-0 pb-px text-xl md:text-2xl",
+                        "min-h-8 break-all rounded-none border-x-0 border-t-0 p-0 pb-px text-xl md:text-2xl",
                         "scrollbar-hide focus-visible:border-b-primary focus-visible:ring-0"
                     )}
+                    resize="none"
                     style={{ height }}
                     defaultValue={title}
                     onClick={(e) => {

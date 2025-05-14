@@ -54,9 +54,10 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                 <Textarea
                     ref={valueRef}
                     className={cn(
-                        "min-h-6 resize-none break-all rounded-none border-x-0 border-t-0 p-0 text-base scrollbar-hide",
+                        "min-h-6 break-all rounded-none border-x-0 border-t-0 p-0 text-base scrollbar-hide",
                         "font-semibold leading-none tracking-tight focus-visible:border-b-primary focus-visible:ring-0"
                     )}
+                    resize="none"
                     style={{ height }}
                     defaultValue={groupName}
                     onClick={(e) => {

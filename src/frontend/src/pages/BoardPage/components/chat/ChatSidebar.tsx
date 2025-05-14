@@ -1,6 +1,6 @@
-import { memo, useRef } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, DropdownMenu, Flex, IconComponent, Input, Toast } from "@/components/base";
+import { Box, Button, DropdownMenu, Flex, IconComponent, Textarea, Toast } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -13,6 +13,8 @@ import usePageNavigate from "@/core/hooks/usePageNavigate";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
 import { ChatMessageModel } from "@/core/models";
+import TypeUtils from "@/core/utils/TypeUtils";
+import { measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID, isSending, setIsSending } = useBoardChat();
@@ -21,7 +23,15 @@ const ChatSidebar = memo((): JSX.Element => {
     const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
-    const chatInputRef = useRef<HTMLInputElement>(null);
+    const chatInputRef = useRef<HTMLTextAreaElement>(null);
+    const [height, setHeight] = useState(0);
+    const updateHeight = useCallback(() => {
+        if (!TypeUtils.isElement(chatInputRef.current, "textarea")) {
+            return;
+        }
+
+        setHeight(measureTextAreaHeight(chatInputRef.current) + 2);
+    }, [setHeight]);
 
     const sendChat = () => {
         if (!chatInputRef.current) {
@@ -125,21 +135,27 @@ const ChatSidebar = memo((): JSX.Element => {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </Box>
-            <Conversation />
-            <Flex items="center" h="12" w="full">
+            <Conversation chatInputHeight={height} />
+            <Flex items="start" minH="10" py="1" w="full" my="1">
                 <Box mx="1" className="w-[calc(100%_-_theme(spacing.10))]">
-                    <Input
-                        type="text"
+                    <Textarea
                         placeholder={t("project.Enter a message")}
-                        className="h-10 px-2 py-1"
+                        className="max-h-[20vh] min-h-10 px-2"
+                        resize="none"
                         disabled={isSending}
+                        style={{ height }}
                         onKeyDown={(e) => {
+                            if (e.shiftKey && e.key === "Enter") {
+                                return;
+                            }
+
                             if (e.key === "Enter") {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 sendChat();
                             }
                         }}
+                        onChange={updateHeight}
                         ref={chatInputRef}
                     />
                 </Box>
