@@ -1,14 +1,12 @@
 import { Dialog } from "@/components/base";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ActivityModel } from "@/core/models";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import ActivityList from "@/components/ActivityList";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
 import { useAuth } from "@/core/providers/AuthProvider";
 
 function WikiActivityDialog(): JSX.Element | null {
-    const { setIsLoadingRef } = usePageHeader();
     const navigateRef = useRef(useNavigate());
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
     const activities = ActivityModel.Model.useModels(
@@ -18,17 +16,13 @@ function WikiActivityDialog(): JSX.Element | null {
             model.sub_filterable_type === "project_wiki" &&
             model.sub_filterable_uid === wikiUID
     );
-    const { aboutMe } = useAuth();
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
+    const { currentUser } = useAuth();
 
     const close = () => {
         navigateRef.current(ROUTES.BOARD.WIKI_PAGE(projectUID, wikiUID));
     };
 
-    if (!wikiUID || !aboutMe()) {
+    if (!wikiUID || !currentUser) {
         return null;
     }
 
@@ -38,7 +32,7 @@ function WikiActivityDialog(): JSX.Element | null {
             <Dialog.Content className="p-0 pb-4 pt-8 sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md" aria-describedby="">
                 <ActivityList
                     form={{ type: "project_wiki", project_uid: projectUID, wiki_uid: wikiUID }}
-                    currentUser={aboutMe()!}
+                    currentUser={currentUser}
                     activities={activities}
                     infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                 />

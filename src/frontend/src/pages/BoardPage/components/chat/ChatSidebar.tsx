@@ -9,7 +9,7 @@ import { ROUTES } from "@/core/routing/constants";
 import Conversation from "@/pages/BoardPage/components/chat/Conversation";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
 import { ChatMessageModel } from "@/core/models";
@@ -19,7 +19,7 @@ import { measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID, isSending, setIsSending } = useBoardChat();
     const [t] = useTranslation();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const socket = useSocket();
     const { mutate } = useClearProjectChatMessages();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
@@ -89,7 +89,7 @@ const ChatSidebar = memo((): JSX.Element => {
         if (!trySendChat()) {
             triedTimeout = setTimeout(trySendChatWrapper, 1000);
         }
-    }, [updateHeight]);
+    }, [updateHeight, isSending, setIsSending]);
 
     const clearChat = () => {
         mutate(

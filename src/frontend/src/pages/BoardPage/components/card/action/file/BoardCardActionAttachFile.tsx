@@ -81,16 +81,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
     }
 
     return (
-        <Popover.Root
-            modal
-            open={isOpened}
-            onOpenChange={(opened) => {
-                if (isValidating) {
-                    return;
-                }
-                changeOpenedState(opened);
-            }}
-        >
+        <Popover.Root modal open={isOpened} onOpenChange={changeOpenedState}>
             <Popover.Trigger asChild>
                 <Button variant="secondary" className={buttonClassName}>
                     <IconComponent icon="file-up" size="4" />

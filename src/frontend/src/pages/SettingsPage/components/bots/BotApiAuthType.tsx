@@ -14,7 +14,7 @@ export interface IBotApiAuthTypeProps {
 
 const BotApiAuthType = memo(({ bot }: IBotApiAuthTypeProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const apiAuthType = bot.useField("api_auth_type");
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateBot(bot);
@@ -38,7 +38,7 @@ const BotApiAuthType = memo(({ bot }: IBotApiAuthTypeProps) => {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef
@@ -58,7 +58,7 @@ const BotApiAuthType = memo(({ bot }: IBotApiAuthTypeProps) => {
 
     return (
         <Box>
-            <Select.Root value={apiAuthType} onValueChange={(value) => changeAPIAuthType(value as BotModel.EAPIAuthType)} disabled={isValidating}>
+            <Select.Root value={apiAuthType} onValueChange={changeAPIAuthType} disabled={isValidating}>
                 <Select.Trigger>
                     <Select.Value placeholder={t("settings.Select an api auth type")} />
                 </Select.Trigger>

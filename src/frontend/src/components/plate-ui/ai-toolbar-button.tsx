@@ -1,25 +1,21 @@
 "use client";
 
-import { withRef } from "@udecode/cn";
 import { AIChatPlugin } from "@udecode/plate-ai/react";
 import { useEditorPlugin } from "@udecode/plate/react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 
-export const AIToolbarButton = withRef<typeof ToolbarButton>(({ children, ...rest }, ref) => {
+export function AIToolbarButton(props: React.ComponentProps<typeof ToolbarButton>) {
     const { api } = useEditorPlugin(AIChatPlugin);
 
     return (
         <ToolbarButton
-            ref={ref}
-            {...rest}
+            {...props}
             onClick={() => {
                 api.aiChat.show();
             }}
             onMouseDown={(e) => {
                 e.preventDefault();
             }}
-        >
-            {children}
-        </ToolbarButton>
+        />
     );
-});
+}

@@ -73,13 +73,9 @@ export const MultiSelectAssigneesPopover = memo(
         const assignees = useMemo(() => allItems.filter((item) => assignedFilter(item) ?? false), [allItems, assignedFilter]);
         const selectedItemsRef = useRef<TMultiSelectAssigneeItem[]>(initialSelectedItems);
 
-        const changeIsOpenedState = (newState: bool) => {
-            setIsOpened(newState);
-        };
-
-        const save = () => {
-            onSave(selectedItemsRef.current, () => changeIsOpenedState(false));
-        };
+        const save = useCallback(() => {
+            onSave(selectedItemsRef.current, () => setIsOpened(false));
+        }, [onSave, setIsOpened]);
 
         useEffect(() => {
             selectedItemsRef.current = initialSelectedItems;
@@ -91,7 +87,7 @@ export const MultiSelectAssigneesPopover = memo(
                     <UserAvatarList users={assignees.map(getMultiSelectItemAsUser)} projectUID={projectUID} {...userAvatarListProps} />
                 )}
                 {canEdit && (
-                    <Popover.Root modal open={isOpened} onOpenChange={changeIsOpenedState}>
+                    <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
                         <Popover.Trigger asChild>
                             <Button variant={popoverButtonVariant} {...popoverButtonProps}>
                                 <IconComponent icon={addIcon} size={addIconSize} />
@@ -110,13 +106,7 @@ export const MultiSelectAssigneesPopover = memo(
                                 projectUID={projectUID}
                             />
                             <Flex items="center" justify="end" gap="1" mt="2">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="sm"
-                                    disabled={isValidating}
-                                    onClick={() => changeIsOpenedState(false)}
-                                >
+                                <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                                     {t("common.Cancel")}
                                 </Button>
                                 <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating}>

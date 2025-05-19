@@ -95,12 +95,11 @@ class MetadataService(BaseService):
                 }
                 params[foreign_key] = foreign_model.id
                 metadata = model(**params)
-                db.insert(metadata)
+                await db.insert(metadata)
             else:
                 metadata.key = key
                 metadata.value = value
                 await db.update(metadata)
-            await db.commit()
 
         return metadata
 
@@ -118,6 +117,5 @@ class MetadataService(BaseService):
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key").in_(keys))
                 )
             )
-            await db.commit()
 
         return True

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Skeleton from "@/components/base/Skeleton";
+import { Progress } from "@/components/base";
 
 interface IBaseSuspenseComponentProps {
     children: React.ReactNode;
@@ -30,7 +31,11 @@ type TElementSuspenseComponentProps = IElementSuspenseComponentProps | IPageSusp
 
 function SuspenseComponent({ children, className, width, height, shouldWrapChildren, isPage }: TElementSuspenseComponentProps) {
     const wrappedChildren = shouldWrapChildren ? <div>{children}</div> : children;
-    const fallback = isPage ? <></> : <Skeleton style={{ width, height }} className={className} />;
+    const fallback = isPage ? (
+        <Progress indeterminate height="1" className="fixed top-0 z-[9999999]" />
+    ) : (
+        <Skeleton style={{ width, height }} className={className} />
+    );
 
     return <Suspense fallback={fallback}>{wrappedChildren}</Suspense>;
 }

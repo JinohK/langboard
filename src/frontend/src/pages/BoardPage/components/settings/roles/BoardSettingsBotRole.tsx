@@ -10,17 +10,16 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, Project, User } from "@/core/models";
 import { ROLE_ALL_GRANTED } from "@/core/models/Base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsBotRoleProps {
     bot: BotModel.TModel;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
-    isValidatingRef: React.RefObject<bool>;
 }
 
-const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValidatingRef }: IBoardSettingsBotRoleProps) => {
+const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoardSettingsBotRoleProps) => {
     const [t] = useTranslation();
     const { socket, project } = useBoardSettings();
     const botRoles = project.useField("bot_roles");
@@ -31,14 +30,13 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
     const [isDisabled, setIsDisabled] = useState(false);
     const updateRole = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
-            if (isValidatingRef.current || isDisabled) {
+            if (isValidating || isDisabled) {
                 return;
             }
 
             const role: Project.ERoleAction = e.currentTarget.getAttribute("data-value") as Project.ERoleAction;
 
             setIsValidating(true);
-            isValidatingRef.current = true;
 
             const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
 
@@ -67,30 +65,32 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
                 },
                 finally: () => {
                     setIsValidating(false);
-                    isValidatingRef.current = false;
                 },
             });
         },
         [isDisabled, botRoles]
     );
-    const boardBotActivationToggledHandlers = useBoardBotActivationToggledHandlers({
-        projectUID: project.uid,
-        callback: (data) => {
-            if (data.bot_uid !== bot.uid) {
-                return;
-            }
-            setIsDisabled(() => data.is_disabled);
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [boardBotActivationToggledHandlers] });
+    const boardBotActivationToggledHandlers = useMemo(
+        () =>
+            useBoardBotActivationToggledHandlers({
+                projectUID: project.uid,
+                callback: (data) => {
+                    if (data.bot_uid !== bot.uid) {
+                        return;
+                    }
+                    setIsDisabled(() => data.is_disabled);
+                },
+            }),
+        [setIsDisabled]
+    );
+    useSwitchSocketHandlers({ socket, handlers: [boardBotActivationToggledHandlers], dependencies: [boardBotActivationToggledHandlers] });
 
     const toggleActivation = () => {
-        if (isValidatingRef.current) {
+        if (isValidating) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = toggleProjectBotActivationMutateAsync({
             project_uid: project.uid,
@@ -117,7 +117,6 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating, isValid
             },
             finally: () => {
                 setIsValidating(false);
-                isValidatingRef.current = false;
             },
         });
     };

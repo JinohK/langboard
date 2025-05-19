@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 function LangflowPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const langflowUrl = AppSettingModel.Model.getModel((model) => model.setting_type === ESettingType.LangflowUrl)!;
     const langflowApiKey = AppSettingModel.Model.getModel((model) => model.setting_type === ESettingType.LangflowApiKey)!;
     const urlValue = langflowUrl.useField("setting_value");
@@ -24,7 +24,6 @@ function LangflowPage() {
     const urlInputRef = useRef<HTMLInputElement>(null);
     const apiKeyInputRef = useRef<HTMLInputElement>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
-
     const { mutateAsync: updateUrlSettingMutateAsync } = useUpdateSetting(langflowUrl);
     const { mutateAsync: updateApiKeySettingMutateAsync } = useUpdateSetting(langflowApiKey);
 
@@ -91,7 +90,7 @@ function LangflowPage() {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef

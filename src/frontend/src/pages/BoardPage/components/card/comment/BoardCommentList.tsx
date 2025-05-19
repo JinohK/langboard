@@ -4,7 +4,7 @@ import useGetCardComments from "@/controllers/api/card/comment/useGetCardComment
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -33,9 +33,9 @@ export function SkeletonBoardCommentList() {
 
 function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
     const { projectUID, card } = useBoardCard();
-    const { data: commentsData, error } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
+    const { data: commentsData, error, isFetching } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
     const [t] = useTranslation();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
 
     useEffect(() => {
         if (!error) {
@@ -56,7 +56,7 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
         handle(error);
     }, [error]);
 
-    return <>{!commentsData ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} />}</>;
+    return <>{!commentsData || isFetching ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} />}</>;
 }
 
 interface IBoardCommentListResultProps extends IBoardCommentListProps {}

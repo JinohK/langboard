@@ -20,6 +20,7 @@ const BoardColumnCardRelationship = memo(({ card, setFilters, attributes }: IBoa
         </>
     );
 });
+BoardColumnCardRelationship.displayName = "Board.ColumnCardRelationship";
 
 export interface IBoardColumnCardRelationshipButtonProps {
     type: ProjectCardRelationship.TRelationship;
@@ -57,5 +58,6 @@ const BoardColumnCardRelationshipButton = memo(({ type, card, setFilters, attrib
         </Button>
     );
 });
+BoardColumnCardRelationshipButton.displayName = "Board.ColumnCardRelationshipButton";
 
 export default BoardColumnCardRelationship;

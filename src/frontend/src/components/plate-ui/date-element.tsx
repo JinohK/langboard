@@ -1,23 +1,24 @@
 "use client";
 
-import { cn, withRef } from "@udecode/cn";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import type { TDateElement } from "@udecode/plate-date";
+import type { PlateElementProps } from "@udecode/plate/react";
+import { PlateElement, useReadOnly } from "@udecode/plate/react";
 import { Popover, Calendar } from "@/components/base";
 import { useTranslation } from "react-i18next";
-import { useReadOnly } from "@udecode/plate/react";
+import { cn } from "@udecode/cn";
 
-export const DateElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
+export function DateElement(props: PlateElementProps<TDateElement>) {
     const [t] = useTranslation();
     const { editor, element } = props;
 
     const readOnly = useReadOnly();
 
     const trigger = (
-        <span className={cn("w-fit rounded-md bg-muted px-1 text-muted-foreground", !readOnly && "cursor-pointer")} contentEditable={false} draggable>
+        <span className={cn("w-fit cursor-pointer rounded-sm bg-muted px-1 text-muted-foreground")} contentEditable={false} draggable>
             {element.date ? (
                 (() => {
                     const today = new Date();
-                    const elementDate = new Date(element.date as string);
+                    const elementDate = new Date(element.date);
                     const isToday =
                         elementDate.getDate() === today.getDate() &&
                         elementDate.getMonth() === today.getMonth() &&
@@ -47,10 +48,17 @@ export const DateElement = withRef<typeof PlateElement>(({ children, className, 
     }
 
     return (
-        <PlateElement ref={ref} className={cn("inline-block", className)} contentEditable={false} {...props}>
+        <PlateElement
+            {...props}
+            className="inline-block"
+            attributes={{
+                ...props.attributes,
+                contentEditable: false,
+            }}
+        >
             <Popover.Root>
                 <Popover.Trigger asChild>{trigger}</Popover.Trigger>
-                <Popover.Content className="w-auto">
+                <Popover.Content className="w-auto p-0">
                     <Calendar
                         value={new Date(element.date as string)}
                         onChange={(date) => {
@@ -59,11 +67,11 @@ export const DateElement = withRef<typeof PlateElement>(({ children, className, 
                             editor.tf.setNodes({ date: date.toDateString() }, { at: element });
                         }}
                         hideTime
-                        initialFocus
+                        autoFocus
                     />
                 </Popover.Content>
             </Popover.Root>
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

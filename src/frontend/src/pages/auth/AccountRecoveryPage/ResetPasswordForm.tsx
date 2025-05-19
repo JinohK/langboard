@@ -8,7 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;
@@ -18,7 +18,7 @@ export interface IResetPasswordFormProps {
 function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormProps): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const { mutate } = useRecoveryPassword();
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "accountRecovery.errors",

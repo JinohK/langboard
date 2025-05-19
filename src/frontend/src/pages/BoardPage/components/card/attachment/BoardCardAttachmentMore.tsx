@@ -28,17 +28,15 @@ function BoardCardAttachmentMore({ attachment, isValidating, setIsValidating }: 
         return messageRef.message;
     };
 
+    const changeOpenedState = (opened: bool) => {
+        if (isValidating) {
+            return;
+        }
+        setIsOpened(opened);
+    };
+
     return (
-        <DropdownMenu.Root
-            modal={false}
-            open={isOpened}
-            onOpenChange={(opened) => {
-                if (isValidating) {
-                    return;
-                }
-                setIsOpened(opened);
-            }}
-        >
+        <DropdownMenu.Root modal={false} open={isOpened} onOpenChange={changeOpenedState}>
             <DropdownMenu.Trigger asChild>
                 <Button type="button" variant="ghost" size="icon-sm" className="h-8 w-5 sm:size-8" title={t("common.More")}>
                     <IconComponent icon="ellipsis-vertical" size="4" />

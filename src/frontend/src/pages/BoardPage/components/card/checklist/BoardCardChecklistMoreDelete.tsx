@@ -39,18 +39,16 @@ function BoardCardChecklistMoreDelete({ setIsMoreMenuOpened }: { setIsMoreMenuOp
         });
     };
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpened(true);
+    };
+
     return (
         <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsOpened(true);
-                    }}
-                >
-                    {t("common.Delete")}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleClick}>{t("common.Delete")}</DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">

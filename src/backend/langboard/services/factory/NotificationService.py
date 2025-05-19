@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast, overload
 from urllib.parse import urlparse
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.ai import Bot
@@ -36,45 +36,121 @@ class NotificationService(BaseService):
         return "notification"
 
     async def get_list(self, user: User) -> list[dict[str, Any]]:
-        sql_query = SqlBuilder.select.table(UserNotification).where(
-            (UserNotification.column("receiver_id") == user.id)
-            & (
-                (UserNotification.column("read_at") == None)  # noqa
-                | (UserNotification.column("read_at") >= now() - timedelta(days=3))
-            )
-        )
-
-        sql_query = sql_query.order_by(
-            UserNotification.column("created_at").desc(), UserNotification.column("id").desc()
-        )
-        sql_query = sql_query.group_by(UserNotification.column("id"), UserNotification.column("created_at"))
         async with DbSession.use() as db:
-            result = await db.exec(sql_query)
+            result = await db.exec(
+                SqlBuilder.select.table(UserNotification)
+                .where(
+                    (UserNotification.column("receiver_id") == user.id)
+                    & (
+                        (UserNotification.column("read_at") == None)  # noqa
+                        | (UserNotification.column("read_at") >= now() - timedelta(days=3))
+                    )
+                )
+                .order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
+            )
         raw_notifications = result.all()
 
-        notifications = []
+        cached_dict = {}
+        table_id_dict: dict[str, tuple[str, set[int]]] = {}
         for notification in raw_notifications:
-            api_notification = await self.convert_to_api_response(notification)
-            notifications.append(api_notification)
+            for table_name, record_id, key_name in notification.record_list:
+                if table_name not in table_id_dict:
+                    table_id_dict[table_name] = key_name, set()
+                table_id_dict[table_name][1].add(record_id)
+
+        for table_name, (key_name, record_ids) in table_id_dict.items():
+            results = await self.get_records_by_table_name_with_ids(table_name, list(record_ids))
+            if not results:
+                continue
+            for record in results:
+                cache_key = f"{table_name}_{record.id}"
+                if cache_key in cached_dict:
+                    continue
+                cached_dict[cache_key] = record.notification_data()
+
+        notifications = []
+        notification_ids_should_delete = []
+        for notification in raw_notifications:
+            notification_records = {}
+            should_continue = True
+            for table_name, record_id, key_name in notification.record_list:
+                record = cached_dict.get(f"{table_name}_{record_id}")
+                if not record:
+                    should_continue = False
+                    break
+                notification_records[key_name] = record
+            if not should_continue:
+                notification_ids_should_delete.append(notification.id)
+                continue
+
+            notifier_cache_key = f"{notification.notifier_type}_{notification.notifier_id}"
+            if notifier_cache_key in cached_dict:
+                notifier_key, notifier = cached_dict[notifier_cache_key]
+            else:
+                notifier_key, notifier = await self.get_notifier(notification, as_api=True)
+                cached_dict[notifier_cache_key] = notifier_key, notifier
+
+            notifications.append(
+                {
+                    **notification.api_response(),
+                    notifier_key: notifier,
+                    "records": notification_records,
+                }
+            )
+
+        if notification_ids_should_delete:
+            async with DbSession.use() as db:
+                await db.exec(
+                    SqlBuilder.delete.table(UserNotification).where(
+                        UserNotification.column("id").in_(notification_ids_should_delete)
+                    )
+                )
+
         return notifications
 
     async def convert_to_api_response(self, notification: UserNotification) -> dict[str, Any]:
         api_notification = notification.api_response()
         records: dict[str, Any] = {}
+        table_id_dict: dict[str, tuple[str, list[int]]] = {}
         for table_name, record_id, key_name in notification.record_list:
-            record = await self.get_record_by_table_name_with_id(table_name, record_id)
-            if not record:
-                continue
+            if table_name not in table_id_dict:
+                table_id_dict[table_name] = key_name, []
+            table_id_dict[table_name][1].append(record_id)
 
-            records[key_name] = record.notification_data()
+        for table_name, (key_name, record_ids) in table_id_dict.items():
+            results = await self.get_records_by_table_name_with_ids(table_name, record_ids)
+            if not results:
+                continue
+            for record in results:
+                if key_name not in records:
+                    records[key_name] = {}
+                records[key_name] = record.notification_data()
+
         api_notification["records"] = records
+        notifier_key, notifier = await self.get_notifier(notification, as_api=True)
+        api_notification[notifier_key] = notifier
+        return api_notification
+
+    @overload
+    async def get_notifier(self, notification: UserNotification, as_api: Literal[False]) -> User | Bot: ...
+    @overload
+    async def get_notifier(
+        self, notification: UserNotification, as_api: Literal[True]
+    ) -> tuple[str, dict[str, Any]]: ...
+    async def get_notifier(
+        self, notification: UserNotification, as_api: bool
+    ) -> User | Bot | tuple[str, dict[str, Any]]:
         if notification.notifier_type == "user":
             notifier = cast(User, await self._get_by(User, "id", notification.notifier_id, with_deleted=True))
-            api_notification["notifier_user"] = notifier.api_response()
         else:
             notifier = cast(Bot, await self._get_by(Bot, "id", notification.notifier_id, with_deleted=True))
-            api_notification["notifier_bot"] = notifier.api_response()
-        return api_notification
+
+        if not as_api:
+            return notifier
+
+        if notification.notifier_type == "user":
+            return "notifier_user", notifier.api_response()
+        return "notifier_bot", notifier.api_response()
 
     async def read(self, user: User, notification: TNotificationParam) -> bool:
         notification = cast(UserNotification, await self._get_by_param(UserNotification, notification))
@@ -84,7 +160,6 @@ class NotificationService(BaseService):
         notification.read_at = now()
         async with DbSession.use() as db:
             await db.update(notification)
-            await db.commit()
 
         return True
 
@@ -98,7 +173,6 @@ class NotificationService(BaseService):
         )
         async with DbSession.use() as db:
             await db.exec(sql_query)
-            await db.commit()
 
     async def delete(self, user: User, notification: TNotificationParam) -> bool:
         notification = cast(UserNotification, await self._get_by_param(UserNotification, notification))
@@ -107,7 +181,6 @@ class NotificationService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(notification)
-            await db.commit()
 
         return True
 
@@ -115,7 +188,6 @@ class NotificationService(BaseService):
         sql_query = SqlBuilder.delete.table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
         async with DbSession.use() as db:
             await db.exec(sql_query)
-            await db.commit()
 
     # from here, notifiable types are added
     async def notify_project_invited(

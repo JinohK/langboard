@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { withRef } from "@udecode/cn";
+import * as React from "react";
 import { EmojiInlineIndexSearch, insertEmoji } from "@udecode/plate-emoji";
 import { useDebounce } from "@/core/hooks/useDebounce";
 import {
@@ -12,24 +11,26 @@ import {
     InlineComboboxInput,
     InlineComboboxItem,
 } from "@/components/plate-ui/inline-combobox";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import { PlateElement, PlateElementProps, usePluginOption } from "@udecode/plate/react";
 import { useTranslation } from "react-i18next";
+import { EmojiPlugin } from "@udecode/plate-emoji/react";
 
-export const EmojiInputElement = withRef<typeof PlateElement>(({ className, ...props }, ref) => {
+export function EmojiInputElement(props: PlateElementProps) {
     const [t] = useTranslation();
     const { children, editor, element } = props;
-    const [value, setValue] = useState("");
+    const data = usePluginOption(EmojiPlugin, "data")!;
+    const [value, setValue] = React.useState("");
     const debouncedValue = useDebounce(value, 100);
     const isPending = value !== debouncedValue;
 
-    const filteredEmojis = useMemo(() => {
+    const filteredEmojis = React.useMemo(() => {
         if (debouncedValue.trim().length === 0) return [];
 
-        return EmojiInlineIndexSearch.getInstance().search(debouncedValue.replace(/:$/, "")).get();
-    }, [debouncedValue]);
+        return EmojiInlineIndexSearch.getInstance(data).search(debouncedValue.replace(/:$/, "")).get();
+    }, [data, debouncedValue]);
 
     return (
-        <PlateElement ref={ref} as="span" data-slate-value={element.value} {...props}>
+        <PlateElement as="span" data-slate-value={element.value} {...props}>
             <InlineCombobox value={value} element={element} filter={false} setValue={setValue} trigger=":" hideWhenNoValue>
                 <InlineComboboxInput />
 
@@ -49,4 +50,4 @@ export const EmojiInputElement = withRef<typeof PlateElement>(({ className, ...p
             {children}
         </PlateElement>
     );
-});
+}

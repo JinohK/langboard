@@ -16,23 +16,21 @@ function ProjectCardColumn({ column, setColumns }: IProjectCardColumnProps) {
     });
 
     return (
-        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-            <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                    <Flex direction="col" gap="0.5" minW="5" className="text-center">
-                        <span className="text-sm font-semibold">{count}</span>
-                        <Box
-                            display="inline-block"
-                            h="0.5"
-                            w="full"
-                            rounded="full"
-                            style={{ background: new ColorGenerator(name).generateRandomColor() }}
-                        />
-                    </Flex>
-                </Tooltip.Trigger>
-                <Tooltip.Content side="bottom">{name}</Tooltip.Content>
-            </Tooltip.Root>
-        </Tooltip.Provider>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+                <Flex direction="col" gap="0.5" minW="5" className="text-center">
+                    <span className="text-sm font-semibold">{count}</span>
+                    <Box
+                        display="inline-block"
+                        h="0.5"
+                        w="full"
+                        rounded="full"
+                        style={{ background: new ColorGenerator(name).generateRandomColor() }}
+                    />
+                </Flex>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="bottom">{name}</Tooltip.Content>
+        </Tooltip.Root>
     );
 }
 

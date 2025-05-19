@@ -1,4 +1,3 @@
-from typing import Any
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
 from ...core.db import User
@@ -15,44 +14,21 @@ async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardUpdated,
-    BotTaskDataHelper.changes_schema(("title", "string?"), ("deadline_at", "string?"), ("description", "string?")),
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardUpdated)
 @Broker.wrap_async_task_decorator
-async def card_updated(user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], card: Card):
+async def card_updated(user_or_bot: User | Bot, project: Project, card: Card):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardUpdated)
     await BotTaskHelper.run(
-        bots,
-        BotTriggerCondition.CardUpdated,
-        {
-            **await BotTaskDataHelper.create_card(user_or_bot, project, card),
-            **BotTaskDataHelper.create_changes(old_dict, card),
-        },
-        project,
+        bots, BotTriggerCondition.CardUpdated, await BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardMoved, BotTaskDataHelper.changes_schema(("column_uid", "string"), ("column_name", "string"))
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardMoved)
 @Broker.wrap_async_task_decorator
 async def card_moved(user_or_bot: User | Bot, project: Project, card: Card, original_column: ProjectColumn):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardMoved)
-    event_data = await BotTaskDataHelper.create_card(user_or_bot, project, card)
     await BotTaskHelper.run(
-        bots,
-        BotTriggerCondition.CardMoved,
-        {
-            **event_data,
-            "changes": {
-                "old_column_uid": original_column.get_uid(),
-                "new_column_uid": card.project_column_id.to_short_code(),
-                "old_column_name": original_column.name,
-                "new_column_name": event_data["project_column"]["name"],
-            },
-        },
-        project,
+        bots, BotTriggerCondition.CardMoved, await BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )
 
 

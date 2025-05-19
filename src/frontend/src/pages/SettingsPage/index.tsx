@@ -7,10 +7,9 @@ import useGetAllSettings from "@/controllers/api/settings/useGetAllSettings";
 import useIsSettingsAvailable from "@/controllers/api/settings/useIsSettingsAvailable";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { AppSettingProvider } from "@/core/providers/AppSettingProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BotsPage from "@/pages/SettingsPage/BotsPage";
 import GlobalRelationshipsPage from "@/pages/SettingsPage/GlobalRelationshipsPage";
@@ -20,10 +19,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function SettingsProxy(): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const { aboutMe } = useAuth();
-    const navigateRef = useRef(usePageNavigate());
+    const { currentUser } = useAuth();
+    const navigateRef = useRef(useNavigate());
     const pathname = location.pathname.split("/").slice(0, 3).join("/");
     const { data, isFetching, error } = useIsSettingsAvailable();
     const { mutate: getAllSettingsMutate } = useGetAllSettings();
@@ -54,7 +52,6 @@ function SettingsProxy(): JSX.Element {
             {},
             {
                 onSuccess: () => {
-                    setIsLoadingRef.current(false);
                     setIsReady(() => true);
                 },
                 onError: (error) => {
@@ -79,7 +76,6 @@ function SettingsProxy(): JSX.Element {
             name: t("settings.API keys"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.API_KEYS);
-                setIsLoadingRef.current(false);
             },
         },
         [ROUTES.SETTINGS.BOTS]: {
@@ -87,7 +83,6 @@ function SettingsProxy(): JSX.Element {
             name: t("settings.Bots"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.BOTS);
-                setIsLoadingRef.current(false);
             },
         },
         [ROUTES.SETTINGS.LANGFLOW]: {
@@ -95,7 +90,6 @@ function SettingsProxy(): JSX.Element {
             name: t("settings.Langflow"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.LANGFLOW);
-                setIsLoadingRef.current(false);
             },
         },
         [ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS]: {
@@ -103,7 +97,6 @@ function SettingsProxy(): JSX.Element {
             name: t("settings.Global relationships"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS);
-                setIsLoadingRef.current(false);
             },
         },
         [ROUTES.SETTINGS.WEBHOOKS]: {
@@ -111,7 +104,6 @@ function SettingsProxy(): JSX.Element {
             name: t("settings.Webhooks"),
             onClick: () => {
                 navigateRef.current(ROUTES.SETTINGS.WEBHOOKS);
-                setIsLoadingRef.current(false);
             },
         },
     };
@@ -147,8 +139,8 @@ function SettingsProxy(): JSX.Element {
 
     return (
         <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={Object.values(sidebarNavs)}>
-            {isReady && aboutMe() ? (
-                <AppSettingProvider currentUser={aboutMe()!} navigate={navigateRef}>
+            {isReady && currentUser ? (
+                <AppSettingProvider currentUser={currentUser} navigateRef={navigateRef}>
                     {pageContent}
                 </AppSettingProvider>
             ) : (

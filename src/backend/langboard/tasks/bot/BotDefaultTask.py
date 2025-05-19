@@ -3,7 +3,7 @@ from ...core.ai import Bot, BotDefaultTrigger
 from ...core.broker import Broker
 from ...core.db import BaseSqlModel, User
 from ...core.utils.ModelUtils import get_model_by_table_name
-from ...models import Card, CardComment, Project, ProjectColumn, ProjectWiki
+from ...models import Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
@@ -30,11 +30,11 @@ async def bot_project_assigned(user: User, project: Project, old_bot_ids: list[i
     BotDefaultTrigger.BotMentioned,
     {
         "mentioned_in": "Literal[card, comment, project_wiki]",
-        "project": Project.api_schema(),
-        "project_column?": ProjectColumn.api_schema(),
-        "card?": Card.api_schema(),
-        "comment?": CardComment.api_schema(),
-        "project_wiki?": ProjectWiki.api_schema(),
+        "project_uid": "string",
+        "project_column_uid?": "string",
+        "card_uid?": "string",
+        "comment_uid?": "string",
+        "project_wiki_uid?": "string",
     },
 )
 @Broker.wrap_async_task_decorator
@@ -56,17 +56,9 @@ async def bot_mentioned(
     data = {}
     project = None
     for model in models:
-        if isinstance(model, Card):
-            data["card"] = model.api_response()
-        elif isinstance(model, CardComment):
-            data["comment"] = model.api_response()
-        elif isinstance(model, ProjectWiki):
-            data["project_wiki"] = model.api_response()
-        elif isinstance(model, ProjectColumn):
-            data["project_column"] = model.api_response()
-        elif isinstance(model, Project):
+        data[f"{model.__tablename__}_uid"] = model.get_uid()
+        if isinstance(model, Project):
             project = model
-            data["project"] = model.api_response()
 
     if not project:
         return

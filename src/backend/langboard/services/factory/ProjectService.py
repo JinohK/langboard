@@ -107,13 +107,8 @@ class ProjectService(BaseService):
         sql_query = (
             SqlBuilder.select.tables(Project, ProjectAssignedUser)
             .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
-            .outerjoin(ProjectRole, Project.column("id") == ProjectRole.column("project_id"))
             .where(ProjectAssignedUser.column("user_id") == user.id)
-        )
-
-        sql_query = sql_query.order_by(Project.column("updated_at").desc(), Project.column("id").desc())
-        sql_query = sql_query.group_by(
-            Project.column("id"), ProjectAssignedUser.column("id"), ProjectAssignedUser.column("updated_at")
+            .order_by(Project.column("updated_at").desc(), Project.column("id").desc())
         )
 
         async with DbSession.use() as db:
@@ -124,18 +119,11 @@ class ProjectService(BaseService):
 
         projects = []
         for project, assigned_user in raw_projects:
-            columns = await column_service.get_all_by_project(project, as_api=True)
             project_dict = project.api_response()
             project_dict["starred"] = assigned_user.starred
             project_dict["last_viewed_at"] = assigned_user.last_viewed_at
             project_dict["current_auth_role_actions"] = await self.get_role_actions(user, project)
-            project_dict["columns"] = [
-                {
-                    **column,
-                    "count": await column_service.count_cards(project.id, column["uid"]),
-                }
-                for column in columns
-            ]
+            project_dict["columns"] = await column_service.get_all_by_project(project, as_api=True, with_count=True)
             projects.append(project_dict)
 
         return projects
@@ -260,7 +248,6 @@ class ProjectService(BaseService):
                     & (ProjectAssignedUser.column("user_id") == user.id)
                 )
             )
-            await db.commit()
 
         return result > 0
 
@@ -274,15 +261,13 @@ class ProjectService(BaseService):
                     & (ProjectAssignedUser.column("user_id") == user.id)
                 )
             )
-            await db.commit()
 
     async def create(
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
     ) -> Project:
         project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
         async with DbSession.use() as db:
-            db.insert(project)
-            await db.commit()
+            await db.insert(project)
 
         column_service = self._get_service(ProjectColumnService)
         await column_service.get_or_create_archive_if_not_exists(project)
@@ -291,8 +276,7 @@ class ProjectService(BaseService):
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
         async with DbSession.use() as db:
-            db.insert(assigned_user)
-            await db.commit()
+            await db.insert(assigned_user)
 
         role_service = self._get_service(RoleService)
         await role_service.project.grant_all(user_id=user.id, project_id=project.id)
@@ -326,7 +310,6 @@ class ProjectService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(project)
-            await db.commit()
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -336,7 +319,7 @@ class ProjectService(BaseService):
 
         ProjectPublisher.updated(project, model)
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
-        ProjectBotTask.project_updated(user_or_bot, old_project_record, project)
+        ProjectBotTask.project_updated(user_or_bot, project)
 
         return model
 
@@ -359,7 +342,6 @@ class ProjectService(BaseService):
                     & (ProjectRole.column("bot_id") != None)  # noqa
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -368,7 +350,6 @@ class ProjectService(BaseService):
                     & (ProjectAssignedBot.column("bot_id").not_in(assigned_bot_ids))
                 )
             )
-            await db.commit()
 
         role_service = self._get_service(RoleService)
 
@@ -380,8 +361,8 @@ class ProjectService(BaseService):
                     continue
 
                 async with DbSession.use() as db:
-                    db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
-                    await db.commit()
+                    await db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
+
                 await role_service.project.grant_default(bot_id=bot.id, project_id=project.id)
 
         new_bot_ids: list[int] = [bot.id for bot in bots]
@@ -411,7 +392,6 @@ class ProjectService(BaseService):
                     & (ProjectRole.column("user_id") != None)  # noqa
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -421,7 +401,6 @@ class ProjectService(BaseService):
                     & (ProjectAssignedUser.column("user_id") != user.id)
                 )
             )
-            await db.commit()
 
         result = await invitation_service.invite_emails(user, project, invitation_related_data)
 
@@ -536,7 +515,6 @@ class ProjectService(BaseService):
         async with DbSession.use() as db:
             assigned_bot.is_disabled = is_disabled
             await db.update(assigned_bot)
-            await db.commit()
 
         ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
         ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, is_disabled)
@@ -568,7 +546,6 @@ class ProjectService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(project)
-            await db.commit()
 
         ProjectPublisher.deleted(project)
         ProjectActivityTask.project_deleted(user, project)

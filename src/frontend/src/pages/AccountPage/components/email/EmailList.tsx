@@ -63,6 +63,10 @@ function EmailList(): JSX.Element {
     };
 
     const handleResend = (email: string) => {
+        if (isValidating) {
+            return;
+        }
+
         setIsValidating(true);
 
         resendNewEmailLinkMutate(

@@ -87,15 +87,13 @@ class UserGroupService(BaseService):
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
         async with DbSession.use() as db:
-            db.insert(user_group)
-            await db.commit()
+            await db.insert(user_group)
 
         if emails:
             async with DbSession.use() as db:
                 for email in set(emails):
                     assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                    db.insert(assigned_email)
-                await db.commit()
+                    await db.insert(assigned_email)
 
         return user_group
 
@@ -108,7 +106,7 @@ class UserGroupService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(user_group)
-            await db.commit()
+
         return True
 
     async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> bool:
@@ -122,7 +120,6 @@ class UserGroupService(BaseService):
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
-            await db.commit()
 
         app_users = await self._get_all_by(User, "email", emails)
         app_user_subemails = await self._get_all_by(UserEmail, "email", emails)
@@ -144,8 +141,7 @@ class UserGroupService(BaseService):
         async with DbSession.use() as db:
             for email in all_emails:
                 assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                db.insert(assigned_email)
-            await db.commit()
+                await db.insert(assigned_email)
 
         return True
 
@@ -160,10 +156,8 @@ class UserGroupService(BaseService):
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.delete(user_group)
-            await db.commit()
 
         return True

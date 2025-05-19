@@ -168,7 +168,6 @@ class ProjectInvitationService(BaseService):
                 await self.__delete_notification(target_user, project, invitation)
             async with DbSession.use() as db:
                 await db.delete(invitation)
-                await db.commit()
 
         urls = {}
         email_service = self._get_service(EmailService)
@@ -176,8 +175,7 @@ class ProjectInvitationService(BaseService):
         for email in invitation_result.emails_should_invite:
             invitation = ProjectInvitation(project_id=project.id, email=email, token=generate_random_string(32))
             async with DbSession.use() as db:
-                db.insert(invitation)
-                await db.commit()
+                await db.insert(invitation)
 
             preferred_lang = user.preferred_lang
             target_user = invitation_result.users_by_email.get(email)
@@ -216,11 +214,9 @@ class ProjectInvitationService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(invitation)
-            await db.commit()
 
         async with DbSession.use() as db:
-            db.insert(assign_user)
-            await db.commit()
+            await db.insert(assign_user)
 
         role_service = self._get_service(RoleService)
 
@@ -253,7 +249,6 @@ class ProjectInvitationService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(invitation)
-            await db.commit()
 
         UserActivityTask.declined_project_invitation(user, project)
 
@@ -317,6 +312,5 @@ class ProjectInvitationService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(notification)
-            await db.commit()
 
         ProjectInvitationPublisher.notification_deleted(user, notification)

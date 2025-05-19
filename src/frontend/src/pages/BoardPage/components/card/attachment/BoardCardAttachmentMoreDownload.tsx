@@ -9,26 +9,32 @@ function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IB
     const [t] = useTranslation();
     const name = attachment.useField("name");
     const url = attachment.useField("url");
-    const { download, isDownloading } = useDownloadFile({
-        url: url,
-        filename: name,
-        onError: () => {
-            Toast.Add.error(t("errors.Download failed."));
+    const { download, isDownloading } = useDownloadFile(
+        {
+            url: url,
+            filename: name,
+            onError: () => {
+                Toast.Add.error(t("errors.Download failed."));
+            },
+            onFinally: () => {
+                setIsMoreMenuOpened(false);
+            },
         },
-        onFinally: () => {
-            setIsMoreMenuOpened(false);
-        },
-    });
+        [setIsMoreMenuOpened]
+    );
+
+    const handleDownload = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isDownloading) {
+            return;
+        }
+
+        download();
+    };
 
     return (
-        <DropdownMenu.Item
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                download();
-            }}
-            disabled={isDownloading}
-        >
+        <DropdownMenu.Item onClick={handleDownload} disabled={isDownloading}>
             {t("card.Download")}
         </DropdownMenu.Item>
     );

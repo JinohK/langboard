@@ -1,6 +1,7 @@
 "use client";
 
-import { cn, createPrimitiveElement, withRef, withVariants } from "@udecode/cn";
+import * as React from "react";
+import type { VariantProps } from "class-variance-authority";
 import {
     type ResizeHandle as ResizeHandlePrimitive,
     Resizable as ResizablePrimitive,
@@ -8,10 +9,11 @@ import {
     useResizeHandleState,
 } from "@udecode/plate-resizable";
 import { cva } from "class-variance-authority";
+import { cn } from "@udecode/cn";
 
 export const mediaResizeHandleVariants = cva(
     cn(
-        "top-0 flex w-6 select-none flex-col justify-center",
+        "top-0 flex w-6 flex-col justify-center select-none",
         "after:flex after:h-16 after:w-[3px] after:rounded-[6px] after:bg-ring after:opacity-0 after:content-['_'] group-hover:after:opacity-100"
     ),
     {
@@ -35,19 +37,19 @@ const resizeHandleVariants = cva(cn("absolute z-40"), {
     },
 });
 
-const ResizeHandleVariants = withVariants(createPrimitiveElement("div"), resizeHandleVariants, ["direction"]);
-
-export const ResizeHandle = withRef<typeof ResizeHandlePrimitive>(({ options, ...props }, ref) => {
+export function ResizeHandle({
+    className,
+    direction,
+    options,
+    ...props
+}: React.ComponentProps<typeof ResizeHandlePrimitive> & VariantProps<typeof resizeHandleVariants>) {
     const state = useResizeHandleState(options ?? {});
     const resizeHandle = useResizeHandle(state);
 
     if (state.readOnly) return null;
 
-    return (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <ResizeHandleVariants ref={ref} data-resizing={state.isResizing} direction={options?.direction} {...resizeHandle.props} {...(props as any)} />
-    );
-});
+    return <div className={cn(resizeHandleVariants({ direction }), className)} data-resizing={state.isResizing} {...resizeHandle.props} {...props} />;
+}
 
 const resizableVariants = cva("", {
     variants: {
@@ -59,4 +61,6 @@ const resizableVariants = cva("", {
     },
 });
 
-export const Resizable = withVariants(ResizablePrimitive, resizableVariants, ["align"]);
+export function Resizable({ align, className, ...props }: React.ComponentProps<typeof ResizablePrimitive> & VariantProps<typeof resizableVariants>) {
+    return <ResizablePrimitive {...props} className={cn(resizableVariants({ align }), className)} />;
+}

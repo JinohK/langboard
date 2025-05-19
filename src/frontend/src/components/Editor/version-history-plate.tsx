@@ -4,12 +4,13 @@ import React from "react";
 import { type Value } from "@udecode/plate";
 import { type PlateProps, createPlateEditor, Plate, PlateContent, usePlateEditor } from "@udecode/plate/react";
 import { computeDiff } from "@udecode/plate-diff";
-import { getPlateComponents, IUseReadonlyEditor } from "@/components/Editor/useCreateEditor";
+import { getPlateComponents } from "@/components/Editor/useCreateEditor";
 import { IEditorContent } from "@/core/models/Base";
 import { diffPlugins } from "@/components/Editor/plugins/diff-plugins";
 import { viewPlugins } from "@/components/Editor/plugins/editor-plugins";
-import { deserializeMd } from "@/components/Editor/plugins/markdown";
+import { MarkdownPlugin } from "@udecode/plate-markdown";
 import { cloneDeep } from "lodash";
+import { IEditorDataContext } from "@/core/providers/EditorDataProvider";
 
 function VersionHistory(props: Omit<PlateProps, "children">) {
     return (
@@ -53,7 +54,7 @@ function Diff({ components, current, previous }: DiffProps) {
     return <VersionHistory readOnly editor={editor} />;
 }
 
-export interface IVersionHistoryPlateProps extends Omit<IUseReadonlyEditor, "readOnly" | "value"> {
+export interface IVersionHistoryPlateProps extends Pick<IEditorDataContext, "mentionables" | "currentUser"> {
     oldValue?: IEditorContent;
     newValue?: IEditorContent;
 }
@@ -72,8 +73,8 @@ export default function VersionHistoryPlate({ oldValue, newValue, ...props }: IV
     return (
         <Diff
             components={components}
-            current={[...deserializeMd(revision, newValue?.content ?? "")]}
-            previous={[...deserializeMd(revision, oldValue?.content ?? "")]}
+            current={[...revision.getApi(MarkdownPlugin).markdown.deserialize(newValue?.content ?? "")]}
+            previous={[...revision.getApi(MarkdownPlugin).markdown.deserialize(oldValue?.content ?? "")]}
         />
     );
 }

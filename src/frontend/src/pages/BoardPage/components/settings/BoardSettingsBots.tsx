@@ -5,24 +5,22 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardSettingsBots = memo(() => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const { project, allBots } = useBoardSettings();
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
     const { mutateAsync } = useUpdateProjectAssignedBots();
 
     const saveOnValueChanged = (items: TMultiSelectAssigneeItem[]) => {
-        if (isValidatingRef.current) {
+        if (isValidating) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = mutateAsync({
             uid: project.uid,
@@ -49,7 +47,6 @@ const BoardSettingsBots = memo(() => {
             },
             finally: () => {
                 setIsValidating(false);
-                isValidatingRef.current = false;
             },
         });
     };

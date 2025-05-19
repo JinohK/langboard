@@ -14,10 +14,9 @@ export interface IBoardSettingsMemberRoleProps {
     member: User.TModel;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
-    isValidatingRef: React.RefObject<bool>;
 }
 
-const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating, isValidatingRef }: IBoardSettingsMemberRoleProps) => {
+const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }: IBoardSettingsMemberRoleProps) => {
     const [t] = useTranslation();
     const { project } = useBoardSettings();
     const memberRoles = project.useField("member_roles");
@@ -25,14 +24,13 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating, i
     const { mutateAsync } = useUpdateProjectUserRoles(member.uid);
     const updateRole = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
-            if (isValidatingRef.current) {
+            if (isValidating) {
                 return;
             }
 
             const role: Project.ERoleAction = e.currentTarget.getAttribute("data-value") as Project.ERoleAction;
 
             setIsValidating(true);
-            isValidatingRef.current = true;
 
             const newRoles = roles.includes(ROLE_ALL_GRANTED) ? Object.values(Project.ERoleAction) : [...roles];
 
@@ -61,11 +59,10 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating, i
                 },
                 finally: () => {
                     setIsValidating(false);
-                    isValidatingRef.current = false;
                 },
             });
         },
-        [memberRoles]
+        [isValidating, setIsValidating, memberRoles]
     );
 
     if (!roles) {

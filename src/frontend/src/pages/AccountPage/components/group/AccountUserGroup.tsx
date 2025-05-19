@@ -35,7 +35,6 @@ export interface IAccountUserGroupProps {
 const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const { currentUser } = useAccountSetting();
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const setSelectedItemsRef = useRef<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>(() => {});
@@ -43,12 +42,11 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
     const users = group.useForeignField<User.TModel>("users");
 
     const onValueChange = (values: TMultiSelectAssigneeItem[]) => {
-        if (values.length === users.length || isValidatingRef.current) {
+        if (values.length === users.length || isValidating) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         mutate(
             {
@@ -69,7 +67,6 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 },
                 onSettled: () => {
                     setIsValidating(false);
-                    isValidatingRef.current = false;
                 },
             }
         );

@@ -54,12 +54,10 @@ export const LabelBadge = memo(({ name, color, textColor, description, noTooltip
     }
 
     return (
-        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-            <Tooltip.Root>
-                <Tooltip.Trigger asChild>{badge}</Tooltip.Trigger>
-                <Tooltip.Content side="bottom">{currentDescription}</Tooltip.Content>
-            </Tooltip.Root>
-        </Tooltip.Provider>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>{badge}</Tooltip.Trigger>
+            <Tooltip.Content side="bottom">{currentDescription}</Tooltip.Content>
+        </Tooltip.Root>
     );
 });
 

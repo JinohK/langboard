@@ -1,14 +1,14 @@
 from typing import Any
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
-from ...core.db import EditorContentModel, User
+from ...core.db import User
 from ...models import Project, ProjectWiki
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "project_wiki": ProjectWiki.api_schema(),
+        "project_wiki_uid": "string",
         **(other_schema or {}),
     }
 
@@ -21,18 +21,11 @@ async def project_wiki_created(user_or_bot: User | Bot, project: Project, wiki: 
 
 @BotTaskDataHelper.project_schema(
     BotTriggerCondition.WikiUpdated,
-    _create_schema(
-        BotTaskDataHelper.changes_schema(
-            ("title", "string?"),
-            ("content", EditorContentModel.api_schema()),
-        )
-    ),
+    _create_schema(),
 )
 @Broker.wrap_async_task_decorator
-async def project_wiki_updated(user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], wiki: ProjectWiki):
-    await _run_wiki_task(
-        BotTriggerCondition.WikiUpdated, user_or_bot, project, wiki, BotTaskDataHelper.create_changes(old_dict, wiki)
-    )
+async def project_wiki_updated(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
+    await _run_wiki_task(BotTriggerCondition.WikiUpdated, user_or_bot, project, wiki)
 
 
 @BotTaskDataHelper.project_schema(BotTriggerCondition.WikiPublicityChanged, _create_schema())
@@ -69,6 +62,6 @@ def create_wiki_data(
 ) -> dict[str, Any]:
     return {
         **BotTaskDataHelper.create_project(user_or_bot, project),
-        "project_wiki": wiki.api_response(),
+        "project_wiki_uid": wiki.get_uid(),
         **(other_data or {}),
     }

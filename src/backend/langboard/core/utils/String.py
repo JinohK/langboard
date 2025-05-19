@@ -1,9 +1,10 @@
 from os import urandom
 from random import randint, shuffle
+from string import ascii_lowercase, ascii_uppercase, digits
 from .DateTime import now
 
 
-BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+BASE62_ALPHABET = f"{digits}{ascii_lowercase}{ascii_uppercase}"
 
 
 def concat(*strs: str) -> str:

@@ -1,53 +1,55 @@
 {
-    "Notifications": "Notifications",
-    "{count} notifications received": "{{count}} notifications received",
-    "Only show unread": "Only show unread",
-    "You have a new notification.": "You have a new notification.",
-    "Read all notifications": "Read all notifications",
-    "Delete all notifications": "Delete all notifications",
-    "Read notification": "Read notification",
-    "Delete notification": "Delete notification",
-    "No notifications received.": "No notifications received.",
-    "titles": {
-        "project_invited": "<Who/> <Span>invited you to a project.</Span>",
-        "mentioned_in_card": "<Who/> <Span>mentioned you at card.</Span>",
-        "mentioned_in_comment": "<Who/> <Span>mentioned you at comment.</Span>",
-        "mentioned_in_wiki": "<Who/> <Span>mentioned you at wiki.</Span>",
-        "assigned_to_card": "<Who/> <Span>assigned you to a card.</Span>",
-        "notified_from_checklist": "<Who/> <Span>notified you in a checklist.</Span>"
+  "Notifications": "Notifications",
+  "{count} notifications received": "{{count}} notifications received",
+  "Only show unread": "Only show unread",
+  "You have a new notification.": "You have a new notification.",
+  "Read all notifications": "Read all notifications",
+  "Delete all notifications": "Delete all notifications",
+  "Read notification": "Read notification",
+  "Delete notification": "Delete notification",
+  "No notifications received.": "No notifications received.",
+  "titles": {
+    "project_invited": "<Who/> <Span>invited you to a project.</Span>",
+    "mentioned_in_card": "<Who/> <Span>mentioned you at card.</Span>",
+    "mentioned_in_comment": "<Who/> <Span>mentioned you at comment.</Span>",
+    "mentioned_in_wiki": "<Who/> <Span>mentioned you at wiki.</Span>",
+    "assigned_to_card": "<Who/> <Span>assigned you to a card.</Span>",
+    "reacted_to_comment": "<Who/> <Span>reacted to your comment.</Span>",
+    "notified_from_checklist": "<Who/> <Span>notified you in a checklist.</Span>"
+  },
+  "subtitles": {
+    "project_invited": "{{records.project.title}}",
+    "mentioned_in_card": "{{records.card.title}} in {{records.project.title}}",
+    "mentioned_in_comment": "{{records.card.title}} in {{records.project.title}}",
+    "mentioned_in_wiki": "{{records.wiki.title}} in {{records.project.title}}",
+    "assigned_to_card": "{{records.card.title}} in {{records.project.title}}",
+    "reacted_to_comment": "{{records.card.title}} in {{records.project.title}}",
+    "notified_from_checklist": "{{records.card.title}} in {{records.project.title}}"
+  },
+  "settings": {
+    "Notification settings": "Notification settings",
+    "channels": {
+      "web": "Web",
+      "email": "Email",
+      "mobile": "Mobile",
+      "iot": "IoT"
     },
-    "subtitles": {
-        "project_invited": "{{records.project.title}}",
-        "mentioned_in_card": "{{records.card.title}} in {{records.project.title}}",
-        "mentioned_in_comment": "{{records.card.title}} in {{records.project.title}}",
-        "mentioned_in_wiki": "{{records.wiki.title}} in {{records.project.title}}",
-        "assigned_to_card": "{{records.card.title}} in {{records.project.title}}",
-        "notified_from_checklist": "{{records.card.title}} in {{records.project.title}}"
+    "typeKeyMap": {
+      "project": "Project",
+      "column": "Column",
+      "card": "Card",
+      "wiki": "Wiki"
     },
-    "settings": {
-        "Notification settings": "Notification settings",
-        "channels": {
-            "web": "Web",
-            "email": "Email",
-            "mobile": "Mobile",
-            "iot": "IoT"
-        },
-        "typeKeyMap": {
-            "project": "Project",
-            "column": "Column",
-            "card": "Card",
-            "wiki": "Wiki"
-        },
-        "types": {
-            "mentioned_in_card": "Mentioned at card",
-            "mentioned_in_comment": "Mentioned at comment",
-            "mentioned_in_wiki": "Mentioned at wiki",
-            "assigned_to_card": "Assigned to card",
-            "reacted_to_comment": "Reacted to comment",
-            "notified_from_checklist": "Notified from checklist"
-        },
-        "successes": {
-            "Notification settings updated successfully.": "Notification settings updated successfully."
-        }
+    "types": {
+      "mentioned_in_card": "Mentioned at card",
+      "mentioned_in_comment": "Mentioned at comment",
+      "mentioned_in_wiki": "Mentioned at wiki",
+      "assigned_to_card": "Assigned to card",
+      "reacted_to_comment": "Reacted to comment",
+      "notified_from_checklist": "Notified from checklist"
+    },
+    "successes": {
+      "Notification settings updated successfully.": "Notification settings updated successfully."
     }
+  }
 }

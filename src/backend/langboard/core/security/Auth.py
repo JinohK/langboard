@@ -218,7 +218,7 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
         if isinstance(queries_headers, Headers):
-            access_token_scheme, access_token = authorization.split(" ")
+            access_token_scheme, access_token = authorization.split(" ", maxsplit=1)
             if access_token_scheme.lower() != "bearer":
                 return status.HTTP_401_UNAUTHORIZED
         elif isinstance(authorization, list):
@@ -227,9 +227,9 @@ class Auth:
             access_token = authorization[0]
         else:
             if authorization.startswith("Bearer "):
-                access_token = authorization.split("Bearer ")[1]
+                access_token = authorization.split("Bearer ", maxsplit=1)[1]
             elif authorization.startswith("bearer "):
-                access_token = authorization.split("bearer ")[1]
+                access_token = authorization.split("bearer ", maxsplit=1)[1]
             else:
                 access_token = authorization
 
@@ -249,7 +249,7 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
         if "," in ip:
-            ip = ip.split(",")[0]
+            ip = ip.split(",", maxsplit=1)[0]
 
         if not is_valid_ipv4_address_or_range(ip):
             return status.HTTP_401_UNAUTHORIZED
@@ -322,7 +322,7 @@ class Auth:
                     route_path = route.path.split("/")
                     for i, part in enumerate(route_path):
                         if part.count(":") > 0:
-                            route_path[i] = part.split(":")[0] + "}"
+                            route_path[i] = part.split(":", maxsplit=1)[0] + "}"
                     route_path = "/".join(route_path)
                 else:
                     route_path = route.path

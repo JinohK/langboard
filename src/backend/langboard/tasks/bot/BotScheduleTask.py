@@ -13,9 +13,9 @@ from .utils.BotTaskHelper import logger
 @BotTaskDataHelper.schema(
     BotDefaultTrigger.BotCronScheduled,
     {
-        "project": Project.api_schema(),
-        "project_column": ProjectColumn.api_schema(),
-        "card?": Card.api_schema(),
+        "project_uid": "string",
+        "project_column_uid": "string",
+        "card_uid?": "string",
         "scope": "string",
     },
 )
@@ -36,8 +36,8 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
         if not project:
             return
         data = {
-            "project_column": model.api_response(),
-            "project": project.api_response(),
+            "project_column_uid": model.get_uid(),
+            "project_uid": project.get_uid(),
             "scope": ProjectColumn.__tablename__,
         }
     elif isinstance(model, Card):
@@ -51,9 +51,9 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
         if not column or not project:
             return
         data = {
-            "project_column": column.api_response(),
-            "card": model.api_response(),
-            "project": project.api_response(),
+            "project_column_uid": column.get_uid(),
+            "card_uid": model.get_uid(),
+            "project_uid": project.get_uid(),
             "scope": Card.__tablename__,
         }
     else:

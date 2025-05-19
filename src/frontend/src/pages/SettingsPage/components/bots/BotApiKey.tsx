@@ -14,7 +14,7 @@ export interface IBotApiKeyProps {
 
 const BotApiKey = memo(({ bot }: IBotApiKeyProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const apiKey = bot.useField("api_key");
     const { mutateAsync } = useUpdateBot(bot);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +43,7 @@ const BotApiKey = memo(({ bot }: IBotApiKeyProps) => {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef
@@ -61,6 +61,15 @@ const BotApiKey = memo(({ bot }: IBotApiKeyProps) => {
         });
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            change();
+            return;
+        }
+    };
+
     return (
         <Box>
             <Floating.LabelInput
@@ -68,14 +77,7 @@ const BotApiKey = memo(({ bot }: IBotApiKeyProps) => {
                 autoComplete="off"
                 defaultValue={apiKey}
                 onBlur={change}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        change();
-                        return;
-                    }
-                }}
+                onKeyDown={handleKeyDown}
                 ref={inputRef}
             />
         </Box>

@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import BoardCardMemberList from "@/pages/BoardPage/components/card/BoardCardMemberList";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
@@ -33,20 +33,17 @@ export interface IBoardCardProps {
 }
 
 const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoardCardProps): JSX.Element => {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const { on: onCardDeletedHandlers } = useCardDeletedHandlers({
         projectUID,
         cardUID,
         callback: () => {
             Toast.Add.error(t("card.errors.Card deleted."));
             navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
-            setTimeout(() => {
-                setIsLoadingRef.current(false);
-            }, 0);
         },
     });
 
@@ -75,7 +72,6 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
             return;
         }
 
-        setIsLoadingRef.current(false);
         socket.subscribe(ESocketTopic.BoardCard, [projectUID, cardUID], () => {
             onCardDeletedHandlers();
         });
@@ -87,7 +83,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
 
     return (
         <>
-            {!cardData ? (
+            {!cardData || isFetching ? (
                 <SkeletonBoardCard />
             ) : (
                 <BoardCardProvider projectUID={projectUID} card={cardData.card} currentUser={currentUser}>

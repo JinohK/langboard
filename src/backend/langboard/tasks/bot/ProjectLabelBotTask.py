@@ -8,7 +8,7 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "project_label": ProjectLabel.api_schema(),
+        "project_label_uid": "string",
         **(other_schema or {}),
     }
 
@@ -22,22 +22,12 @@ async def project_label_created(user_or_bot: User | Bot, project: Project, label
     )
 
 
-@BotTaskDataHelper.project_schema(
-    BotTriggerCondition.ProjectLabelUpdated,
-    _create_schema(
-        BotTaskDataHelper.changes_schema(("name", "string?"), ("color", "string?"), ("description", "string?"))
-    ),
-)
+@BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectLabelUpdated, _create_schema())
 @Broker.wrap_async_task_decorator
-async def project_label_updated(
-    user_or_bot: User | Bot, project: Project, old_dict: dict[str, Any], label: ProjectLabel
-):
+async def project_label_updated(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectLabelUpdated)
     await BotTaskHelper.run(
-        bots,
-        BotTriggerCondition.ProjectLabelUpdated,
-        create_label_data(user_or_bot, project, label, BotTaskDataHelper.create_changes(old_dict, label)),
-        project,
+        bots, BotTriggerCondition.ProjectLabelUpdated, create_label_data(user_or_bot, project, label), project
     )
 
 
@@ -55,6 +45,6 @@ def create_label_data(
 ) -> dict[str, Any]:
     return {
         **BotTaskDataHelper.create_project(user_or_bot, project),
-        "project_label": label.api_response(),
+        "project_label_uid": label.get_uid(),
         **(other_data or {}),
     }

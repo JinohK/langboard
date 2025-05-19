@@ -17,7 +17,7 @@ interface IProjectPageProps {
 }
 
 const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const { navigate, currentUser } = useDashboard();
     const [t] = useTranslation();
     const { data, isFetching, error } = useGetProjects();
@@ -46,13 +46,11 @@ const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater
         if (!data || isFetching || !currentUser) {
             return;
         }
-
-        setIsLoadingRef.current(false);
     }, [currentUser, isFetching]);
 
     return (
         <>
-            {!data ? (
+            {!data || isFetching ? (
                 <SkeletonProjecTabs />
             ) : (
                 <ProjectTabs currentTab={currentTab} updateStarredProjects={updateStarredProjects} scrollAreaUpdater={scrollAreaUpdater} />

@@ -161,8 +161,7 @@ class BotScheduleService:
         )
 
         async with DbSession.use() as db:
-            db.insert(bot_schedule)
-            await db.commit()
+            await db.insert(bot_schedule)
 
         if has_changed:
             BotScheduleService.__save_cron(cron)
@@ -208,6 +207,15 @@ class BotScheduleService:
                     BotScheduleService.__get_cron(), bot_schedule.interval_str, running_type
                 )
             else:
+                if bot_schedule.start_at != start_at or bot_schedule.end_at != end_at:
+                    result = BotScheduleService.get_default_status_with_dates(
+                        running_type=running_type, start_at=start_at, end_at=end_at
+                    )
+                    if result:
+                        status, _, _ = result
+                        bot_schedule.status = status
+                        model["status"] = status.value
+
                 if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0 and start_at:
                     bot_schedule.start_at = start_at
                     model["start_at"] = start_at
@@ -243,7 +251,6 @@ class BotScheduleService:
 
         async with DbSession.use() as db:
             await db.update(bot_schedule)
-            await db.commit()
 
         async with DbSession.use() as db:
             result = await db.exec(
@@ -270,7 +277,6 @@ class BotScheduleService:
         interval_str = bot_schedule.interval_str
         async with DbSession.use() as db:
             await db.delete(bot_schedule)
-            await db.commit()
 
         async with DbSession.use() as db:
             result = await db.exec(
@@ -291,7 +297,6 @@ class BotScheduleService:
         bot_schedule.status = status
         async with DbSession.use() as db:
             await db.update(bot_schedule)
-            await db.commit()
 
         return bot_schedule
 

@@ -8,7 +8,7 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
 
@@ -80,20 +80,32 @@ export const BoardWikiProvider = ({
     const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({
         projectUID,
     });
-    const projectBotsUpdatedHandlers = useBoardWikiProjectBotsUpdatedHandlers({
-        projectUID,
-        callback: (data) => {
-            setProjectBots(() => data.assigned_bots);
-        },
-    });
-    const projectUsersUpdatedHandlers = useBoardWikiProjectUsersUpdatedHandlers({
-        projectUID,
-        callback: (data) => {
-            setProjectMembers(() => data.assigned_members);
-        },
-    });
+    const projectBotsUpdatedHandlers = useMemo(
+        () =>
+            useBoardWikiProjectBotsUpdatedHandlers({
+                projectUID,
+                callback: (data) => {
+                    setProjectBots(() => data.assigned_bots);
+                },
+            }),
+        [setProjectBots]
+    );
+    const projectUsersUpdatedHandlers = useMemo(
+        () =>
+            useBoardWikiProjectUsersUpdatedHandlers({
+                projectUID,
+                callback: (data) => {
+                    setProjectMembers(() => data.assigned_members);
+                },
+            }),
+        [setProjectMembers]
+    );
 
-    useSwitchSocketHandlers({ socket, handlers: [boardWikiCreatedHandlers, projectBotsUpdatedHandlers, projectUsersUpdatedHandlers] });
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [boardWikiCreatedHandlers, projectBotsUpdatedHandlers, projectUsersUpdatedHandlers],
+        dependencies: [projectBotsUpdatedHandlers, projectUsersUpdatedHandlers],
+    });
 
     useEffect(() => {
         setWikis(() => flatWikis.sort((a, b) => a.order - b.order));

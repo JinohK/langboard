@@ -16,7 +16,7 @@ export interface IApiKeyNameProps {
 
 const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const name = apiKey.useField("setting_name");
     const { mutateAsync } = useUpdateSetting(apiKey);
 
@@ -36,7 +36,7 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                         },
                         messageRef

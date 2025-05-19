@@ -54,29 +54,29 @@ function BoardSettingsLabelMoreChangeDescription({ setIsMoreMenuOpened }: IBoard
         });
     };
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpened(true);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            changeLabelDescription();
+        }
+    };
+
     return (
         <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsOpened(true);
-                    }}
-                >
-                    {t("project.settings.Change description")}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleClick}>{t("project.settings.Change description")}</DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content align="end">
                 <Floating.LabelInput
                     label={t("project.settings.Description")}
                     id={descriptionInputId}
                     defaultValue={labelDescription}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            changeLabelDescription();
-                        }
-                    }}
+                    onKeyDown={handleKeyDown}
                 />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

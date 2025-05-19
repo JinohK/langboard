@@ -19,6 +19,7 @@ import {
     Heading1Icon,
     Heading2Icon,
     Heading3Icon,
+    LightbulbIcon,
     Link2Icon,
     ListIcon,
     ListOrderedIcon,
@@ -37,6 +38,7 @@ import { DropdownMenu } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
 import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { CalloutPlugin } from "@udecode/plate-callout/react";
 
 type Group = {
     group: string;
@@ -56,42 +58,42 @@ const groups: Group[] = [
         group: "editor.Basic blocks",
         items: [
             {
-                icon: <PilcrowIcon className="size-4" />,
+                icon: <PilcrowIcon size="4" />,
                 label: "editor.Paragraph",
                 value: ParagraphPlugin.key,
             },
             {
-                icon: <Heading1Icon className="size-4" />,
+                icon: <Heading1Icon size="4" />,
                 label: "editor.Heading 1",
                 value: HEADING_KEYS.h1,
             },
             {
-                icon: <Heading2Icon className="size-4" />,
+                icon: <Heading2Icon size="4" />,
                 label: "editor.Heading 2",
                 value: HEADING_KEYS.h2,
             },
             {
-                icon: <Heading3Icon className="size-4" />,
+                icon: <Heading3Icon size="4" />,
                 label: "editor.Heading 3",
                 value: HEADING_KEYS.h3,
             },
             {
-                icon: <TableIcon className="size-4" />,
+                icon: <TableIcon size="4" />,
                 label: "editor.Table",
                 value: TablePlugin.key,
             },
             {
-                icon: <FileCodeIcon className="size-4" />,
+                icon: <FileCodeIcon size="4" />,
                 label: "editor.Code",
                 value: CodeBlockPlugin.key,
             },
             {
-                icon: <QuoteIcon className="size-4" />,
+                icon: <QuoteIcon size="4" />,
                 label: "editor.Quote",
                 value: BlockquotePlugin.key,
             },
             {
-                icon: <MinusIcon className="size-4" />,
+                icon: <MinusIcon size="4" />,
                 label: "editor.Divider",
                 value: HorizontalRulePlugin.key,
             },
@@ -106,17 +108,17 @@ const groups: Group[] = [
         group: "editor.Lists",
         items: [
             {
-                icon: <ListIcon className="size-4" />,
+                icon: <ListIcon size="4" />,
                 label: "editor.Bulleted list",
                 value: ListStyleType.Disc,
             },
             {
-                icon: <ListOrderedIcon className="size-4" />,
+                icon: <ListOrderedIcon size="4" />,
                 label: "editor.Numbered list",
                 value: ListStyleType.Decimal,
             },
             {
-                icon: <SquareIcon className="size-4" />,
+                icon: <SquareIcon size="4" />,
                 label: "editor.To-do list",
                 value: INDENT_LIST_KEYS.todo,
             },
@@ -131,17 +133,22 @@ const groups: Group[] = [
         group: "editor.Advanced blocks",
         items: [
             {
-                icon: <TableOfContentsIcon className="size-4" />,
+                icon: <TableOfContentsIcon size="4" />,
                 label: "editor.Table of contents",
                 value: TocPlugin.key,
             },
             {
-                icon: <RadicalIcon className="size-4" />,
+                icon: <LightbulbIcon size="4" />,
+                label: "editor.Callout",
+                value: CalloutPlugin.key,
+            },
+            {
+                icon: <RadicalIcon size="4" />,
                 label: "editor.Equation",
                 value: EquationPlugin.key,
             },
             {
-                icon: <GitCompare className="size-4" />,
+                icon: <GitCompare size="4" />,
                 label: "editor.Plant UML",
                 value: PlantUmlPlugin.key,
             },
@@ -156,18 +163,18 @@ const groups: Group[] = [
         group: "editor.Inline",
         items: [
             {
-                icon: <Link2Icon className="size-4" />,
+                icon: <Link2Icon size="4" />,
                 label: "editor.Link",
                 value: LinkPlugin.key,
             },
             {
                 focusEditor: true,
-                icon: <CalendarIcon className="size-4" />,
+                icon: <CalendarIcon size="4" />,
                 label: "editor.Date",
                 value: DatePlugin.key,
             },
             {
-                icon: <RadicalIcon className="size-4" />,
+                icon: <RadicalIcon size="4" />,
                 label: "editor.Inline equation",
                 value: InlineEquationPlugin.key,
             },

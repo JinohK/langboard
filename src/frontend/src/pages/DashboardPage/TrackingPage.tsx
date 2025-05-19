@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Flex, Loading, Table } from "@/components/base";
+import { Box, Flex, Loading, Skeleton, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetTrackingList from "@/controllers/api/dashboard/useGetTrackingList";
@@ -8,8 +8,34 @@ import TrackingRow from "@/pages/DashboardPage/components/TrackingRow";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ProjectCheckitem } from "@/core/models";
 
+export function SkeletonTrackingPage(): JSX.Element {
+    return (
+        <>
+            {Array.from({ length: 4 }).map((_, index) => (
+                <Flex items="center" w="full" key={createShortUUID()} mt={index ? "2" : "0"}>
+                    <Box px="4" className="w-1/4">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/4">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/6">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/6">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/6">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                </Flex>
+            ))}
+        </>
+    );
+}
+
 function TrackingPage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { mutateAsync, checkitemUIDs, isLastPage, isFetchingRef } = useGetTrackingList();
     const checkitems = ProjectCheckitem.Model.useModels((model) => checkitemUIDs.includes(model.uid), [checkitemUIDs]);
@@ -28,7 +54,6 @@ function TrackingPage(): JSX.Element {
 
     useEffect(() => {
         setPageAliasRef.current("Dashboard");
-        setIsLoadingRef.current(false);
     }, [mutateAsync, checkitems]);
 
     return (

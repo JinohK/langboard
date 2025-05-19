@@ -19,6 +19,7 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
     const { api, editor } = useEditorPlugin(AIChatPlugin);
     const open = usePluginOption(AIChatPlugin, "open");
     const mode = usePluginOption(AIChatPlugin, "mode");
+    const streaming = usePluginOption(AIChatPlugin, "streaming");
     const isSelecting = useIsSelecting();
 
     const [value, setValue] = React.useState("");
@@ -30,7 +31,17 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
 
     const content = useLastAssistantMessage()?.content;
 
-    const setOpen = (open: bool) => {
+    React.useEffect(() => {
+        if (streaming) {
+            const anchor = api.aiChat.node({ anchor: true });
+            setTimeout(() => {
+                const anchorDom = editor.api.toDOMNode(anchor![0])!;
+                setAnchorElement(anchorDom);
+            }, 0);
+        }
+    }, [streaming]);
+
+    const setOpen = (open: boolean) => {
         if (open) {
             api.aiChat.show();
         } else {
@@ -78,6 +89,8 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
 
     useHotkeys("esc", () => {
         api.aiChat.stop();
+
+        chat.abort();
     });
 
     const isLoading = status === "streaming" || status === "submitted";
@@ -101,7 +114,6 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
                     api.aiChat.hide();
                 }}
                 align="center"
-                // avoidCollisions={false}
                 side="bottom"
             >
                 <Command.Root className="w-full rounded-lg border shadow-md" value={value} onValueChange={setValue}>

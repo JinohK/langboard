@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 from ..ai import BotRunner, InternalBotType
 from ..ai.BotDataModel import EditorChatDataMessageModel
 from ..db import User
@@ -12,16 +12,38 @@ class EdiitorSocketEventCreator:
         self.copilot_type = copilot_type
         self.event_prefix = event_prefix
 
+    def register(self, *decorators: Callable):
+        def _on(method: Any) -> Callable:
+            for decorator in decorators:
+                method = decorator(method)
+            return method
+
+        AppRouter.socket.on(f"{self.event_prefix}:editor:chat:send")(_on(self.chat))
+        AppRouter.socket.on(f"{self.event_prefix}:editor:chat:abort")(_on(self.abort_chat))
+        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:send")(_on(self.copilot))
+        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:abort")(_on(self.abort_copilot))
+
     async def chat(
         self,
         ws: WebSocket,
         project_uid: str,
-        messages: list[EditorChatDataMessageModel],
+        messages: list,
         system: str,
         user: User = Auth.scope("socket"),
     ):
-        form = {"messages": messages, "system": system}
+        message_models = []
+        for message in messages:
+            try:
+                message = EditorChatDataMessageModel.model_validate(message)
+            except Exception:
+                continue
+
+        form = {"messages": message_models, "system": system}
         AppRouter.socket.run_in_thread(self._chat, ws, project_uid, form, user)
+
+    async def abort_chat(self, ws: WebSocket, key: str):
+        await BotRunner.abort(InternalBotType.EditorChat, key)
+        ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
 
     async def copilot(
         self, ws: WebSocket, project_uid: str, prompt: str, system: str, key: str, user: User = Auth.scope("socket")
@@ -33,19 +55,9 @@ class EdiitorSocketEventCreator:
         await BotRunner.abort(InternalBotType.EditorCopilot, key)
         ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
 
-    def register(self, *decorators: Callable):
-        def _on(method: Callable) -> Callable:
-            for decorator in decorators:
-                method = decorator(method)
-            return method
-
-        AppRouter.socket.on(f"{self.event_prefix}:editor:chat:send")(_on(self.chat))
-        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:send")(_on(self.copilot))
-        AppRouter.socket.on(f"{self.event_prefix}:editor:copilot:abort")(_on(self.abort_copilot))
-
-    async def _chat(self, ws: WebSocket, project_uid: str, form: dict, user: User):
-        stream_or_str = await BotRunner.run(
-            self.chat_bot_type, {**form, "project_uid": project_uid, "user_uid": user.get_uid()}
+    async def _chat(self, ws: WebSocket, project_uid: str, form: dict, key: str, user: User):
+        stream_or_str = await BotRunner.run_abortable(
+            self.chat_bot_type, {**form, "project_uid": project_uid, "user_uid": user.get_uid()}, key
         )
         ws_stream = ws.stream(f"{self.event_prefix}:editor:chat:stream")
         ws_stream.start()

@@ -6,7 +6,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel, Project, User, UserGroup } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardMemberListProps {
@@ -25,16 +25,14 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const allItems = useMemo(() => [...members, ...bots, ...invitedMembers], [members, bots, invitedMembers]);
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
 
     const save = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidatingRef.current) {
+        if (isValidating) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
@@ -62,7 +60,6 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             finally: () => {
                 endCallback();
                 setIsValidating(false);
-                isValidatingRef.current = false;
             },
         });
     };
@@ -115,5 +112,6 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
         />
     );
 });
+BoardMemberList.displayName = "Board.MemberList";
 
 export default BoardMemberList;

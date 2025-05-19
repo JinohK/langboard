@@ -70,8 +70,7 @@ class BotService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(bot)
-            await db.commit()
+            await db.insert(bot)
 
         BotPublisher.bot_created(bot)
         BotDefaultTask.bot_created(bot)
@@ -111,7 +110,6 @@ class BotService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(bot)
-            await db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -147,13 +145,11 @@ class BotService(BaseService):
                     & (BotTrigger.column("is_predefined") == True)  # noqa
                 )
             )
-            await db.commit()
 
         for condition in conditions:
             trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
             async with DbSession.use() as db:
-                db.insert(trigger)
-                await db.commit()
+                await db.insert(trigger)
 
         return True
 
@@ -174,12 +170,10 @@ class BotService(BaseService):
                 return False
             async with DbSession.use() as db:
                 await db.delete(trigger)
-                await db.commit()
         else:
             trigger = BotTrigger(bot_id=bot.id, condition=condition)
             async with DbSession.use() as db:
-                db.insert(trigger)
-                await db.commit()
+                await db.insert(trigger)
 
         return True
 
@@ -199,7 +193,6 @@ class BotService(BaseService):
         bot.ip_whitelist = valid_ip_whitelist
         async with DbSession.use() as db:
             await db.update(bot)
-            await db.commit()
 
         return bot, {"ip_whitelist": valid_ip_whitelist}
 
@@ -211,7 +204,6 @@ class BotService(BaseService):
         bot.app_api_token = await self.generate_api_key()
         async with DbSession.use() as db:
             await db.update(bot)
-            await db.commit()
 
         return bot
 
@@ -224,11 +216,9 @@ class BotService(BaseService):
             await db.exec(
                 SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("bot_id") == bot.id)
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.delete(bot)
-            await db.commit()
 
         BotPublisher.bot_deleted(bot.get_uid())
 

@@ -20,7 +20,7 @@ const BoardCardDeadline = memo(() => {
     const [isSaving, setIsSaving] = useState(false);
     const editable = hasRoleAction(Project.ERoleAction.CardUpdate);
     const changeDeadline = (date: Date | undefined) => {
-        if (!editable) {
+        if (!editable || isSaving) {
             return;
         }
 
@@ -55,6 +55,11 @@ const BoardCardDeadline = memo(() => {
         );
     };
 
+    const handleChange = (date: Date | undefined) => {
+        date?.setSeconds(0);
+        changeDeadline(date);
+    };
+
     return (
         <>
             {!editable ? (
@@ -72,10 +77,7 @@ const BoardCardDeadline = memo(() => {
                     <DateTimePicker
                         value={deadline}
                         min={new Date(new Date().setMinutes(new Date().getMinutes() + 30))}
-                        onChange={(date) => {
-                            date?.setSeconds(0);
-                            changeDeadline(date);
-                        }}
+                        onChange={handleChange}
                         disabled={isSaving}
                         timePicker={{
                             hour: true,

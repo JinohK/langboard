@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
-import { useEffect, useRef, useState } from "react";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useRef, useState } from "react";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
@@ -16,9 +15,8 @@ export interface IApiKeyCreateFormDialogProps {
 }
 
 function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [revealedKey, setRevealedKey] = useState<string>();
@@ -52,7 +50,7 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     });
 
@@ -64,10 +62,6 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
             }
         );
     };
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {

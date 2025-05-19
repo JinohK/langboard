@@ -3,7 +3,6 @@ import { ISidebarNavItem, TSidebarNavItemsProps } from "@/components/Sidebar/typ
 import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element => {
     return (
@@ -13,18 +12,16 @@ const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.
                 const Comp = isFloating ? FloatingNavItem : SidebarNavItem;
 
                 return (
-                    <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} key={createShortUUID()}>
-                        <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                                <span>
-                                    <Comp key={key} item={item} />
-                                </span>
-                            </Tooltip.Trigger>
-                            <Tooltip.Content side="right" className="group-data-[collapsed=true]/sidebar:block">
-                                {item.name}
-                            </Tooltip.Content>
-                        </Tooltip.Root>
-                    </Tooltip.Provider>
+                    <Tooltip.Root key={createShortUUID()}>
+                        <Tooltip.Trigger asChild>
+                            <span>
+                                <Comp key={key} item={item} />
+                            </span>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content side="right" className="group-data-[collapsed=true]/sidebar:block">
+                            {item.name}
+                        </Tooltip.Content>
+                    </Tooltip.Root>
                 );
             })}
         </>
@@ -36,19 +33,10 @@ interface ISidebarNavItemProps {
 }
 
 const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
-    const { setIsLoadingRef } = usePageHeader();
-
     return (
         <a
             href={item.href}
-            onClick={() => {
-                item.onClick?.();
-                if (item.current) {
-                    setTimeout(() => {
-                        setIsLoadingRef.current(false);
-                    }, 0);
-                }
-            }}
+            onClick={item.onClick}
             aria-current={item.current ? "page" : undefined}
             className={ButtonVariants({
                 variant: "secondary",
@@ -64,20 +52,11 @@ const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ i
 });
 
 const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
-    const { setIsLoadingRef } = usePageHeader();
-
     return (
         <a
             {...props}
             href={item.href}
-            onClick={() => {
-                item.onClick?.();
-                if (item.current) {
-                    setTimeout(() => {
-                        setIsLoadingRef.current(false);
-                    }, 0);
-                }
-            }}
+            onClick={item.onClick}
             aria-current={item.current ? "page" : undefined}
             className={cn(
                 item.current ? "text-primary group-data-[collapsed=false]/sidebar:bg-muted" : "text-muted-foreground",

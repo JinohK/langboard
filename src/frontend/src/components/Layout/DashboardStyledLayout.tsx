@@ -11,7 +11,6 @@ interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;
     headerNavs?: IHeaderNavItem[];
     headerTitle?: React.ReactNode;
-    headerMobileSections?: React.ReactNode;
     sidebarNavs?: ISidebarNavItem[];
     resizableSidebar?: Omit<IResizableSidebarProps, "main">;
     noPadding?: bool;
@@ -21,13 +20,11 @@ interface IBaseDashboardStyledLayoutProps {
 interface IHeaderDashboardStyledLayoutProps extends IBaseDashboardStyledLayoutProps {
     headerNavs: IHeaderNavItem[];
     headerTitle?: React.ReactNode;
-    headerMobileSections?: React.ReactNode;
 }
 
 interface INoHeaderDashboardStyledLayoutProps extends IBaseDashboardStyledLayoutProps {
     headerNavs?: undefined;
     headerTitle?: undefined;
-    headerMobileSections?: undefined;
 }
 
 interface ISidebarDashboardStyledLayoutProps extends IBaseDashboardStyledLayoutProps {
@@ -48,7 +45,7 @@ export type TDashboardStyledLayoutProps =
     | IBaseDashboardStyledLayoutProps;
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
-    ({ children, headerNavs, headerTitle, headerMobileSections, sidebarNavs, resizableSidebar, noPadding, scrollAreaMutable, ...props }, ref) => {
+    ({ children, headerNavs, headerTitle, sidebarNavs, resizableSidebar, noPadding, scrollAreaMutable, ...props }, ref) => {
         const main = (
             <ScrollArea.Root viewportId="main" mutable={scrollAreaMutable} className="relative size-full overflow-y-auto">
                 <main className={cn("relative size-full overflow-y-auto", noPadding ? "" : "p-4 md:p-6 lg:p-8")}>{children}</main>
@@ -66,7 +63,7 @@ const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutP
 
         return (
             <Flex direction="col" w="full" minH="screen" ref={ref} {...props}>
-                {headerNavs && <Header navs={headerNavs} title={headerTitle} mobileSections={headerMobileSections} />}
+                {headerNavs && <Header navs={headerNavs} title={headerTitle} />}
                 <Box w="full" className="min-h-[calc(100vh_-_theme(spacing.16))] overflow-y-auto">
                     {sidebar}
                 </Box>

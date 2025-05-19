@@ -36,6 +36,10 @@ function PrimaryEmailForm(): JSX.Element {
             return;
         }
 
+        if (isValidating) {
+            return;
+        }
+
         setIsValidating(true);
 
         mutate(

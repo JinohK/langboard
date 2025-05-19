@@ -67,20 +67,19 @@ class ChatHistoryService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(chat_history)
-            await db.commit()
+            await db.insert(chat_history)
+
         return chat_history
 
     async def update(self, chat_history: ChatHistory) -> ChatHistory:
         async with DbSession.use() as db:
             await db.update(chat_history)
-            await db.commit()
+
         return chat_history
 
     async def delete(self, chat_history: ChatHistory):
         async with DbSession.use() as db:
             await db.delete(chat_history)
-            await db.commit()
 
     async def clear(
         self,
@@ -99,4 +98,3 @@ class ChatHistoryService(BaseService):
 
         async with DbSession.use() as db:
             await db.exec(sql_query)
-            await db.commit()

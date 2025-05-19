@@ -1,4 +1,4 @@
-import { Box, Input, Toast } from "@/components/base";
+import { Box, Flex, IconComponent, Input, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -16,7 +16,7 @@ export interface IBotNameProps {
 
 const BotName = memo(({ bot }: IBotNameProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const name = bot.useField("name");
     const { mutateAsync } = useUpdateBot(bot);
 
@@ -36,7 +36,7 @@ const BotName = memo(({ bot }: IBotNameProps) => {
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                         },
                         messageRef
@@ -59,9 +59,12 @@ const BotName = memo(({ bot }: IBotNameProps) => {
     return (
         <Box>
             {!isEditing ? (
-                <Box cursor="text" textSize="lg" weight="semibold" onClick={() => changeMode("edit")}>
-                    {name}
-                </Box>
+                <Flex items="center" cursor="pointer" textSize="lg" weight="semibold" onClick={() => changeMode("edit")}>
+                    <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
+                        {name}
+                    </Box>
+                    <IconComponent icon="pencil" size="4" className="ml-2" />
+                </Flex>
             ) : (
                 <Input
                     ref={valueRef}

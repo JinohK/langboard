@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { withRef } from "@udecode/cn";
-import { type PlateEditor, ParagraphPlugin } from "@udecode/plate/react";
+import type { TSlashInputElement } from "@udecode/plate-slash-command";
+import { type PlateEditor, ParagraphPlugin, PlateElement, PlateElementProps } from "@udecode/plate/react";
 import { AIChatPlugin } from "@udecode/plate-ai/react";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
@@ -20,6 +20,7 @@ import {
     Heading1Icon,
     Heading2Icon,
     Heading3Icon,
+    LightbulbIcon,
     ListIcon,
     ListOrdered,
     PilcrowIcon,
@@ -40,8 +41,8 @@ import {
     InlineComboboxInput,
     InlineComboboxItem,
 } from "@/components/plate-ui/inline-combobox";
-import { PlateElement } from "@/components/plate-ui/plate-element";
 import { useTranslation } from "react-i18next";
+import { CalloutPlugin } from "@udecode/plate-callout/react";
 
 type Group = {
     group: string;
@@ -137,6 +138,12 @@ const groups: Group[] = [
                 label: "editor.Blockquote",
                 value: BlockquotePlugin.key,
             },
+            {
+                icon: <LightbulbIcon />,
+                keywords: ["note"],
+                label: "editor.Callout",
+                value: CalloutPlugin.key,
+            },
         ].map((item) => ({
             ...item,
             onSelect: (editor, value) => {
@@ -194,12 +201,12 @@ const groups: Group[] = [
     },
 ];
 
-export const SlashInputElement = withRef<typeof PlateElement>(({ className, ...props }, ref) => {
+export function SlashInputElement(props: PlateElementProps<TSlashInputElement>) {
     const [t] = useTranslation();
-    const { children, editor, element } = props;
+    const { editor, element } = props;
 
     return (
-        <PlateElement ref={ref} as="span" className={className} data-slate-value={element.value} {...props}>
+        <PlateElement {...props} as="span" data-slate-value={element.value}>
             <InlineCombobox element={element} trigger="/">
                 <InlineComboboxInput />
 
@@ -229,7 +236,7 @@ export const SlashInputElement = withRef<typeof PlateElement>(({ className, ...p
                 </InlineComboboxContent>
             </InlineCombobox>
 
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

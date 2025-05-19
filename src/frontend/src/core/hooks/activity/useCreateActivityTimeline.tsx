@@ -2,7 +2,7 @@
 import { Avatar, Box, Flex, IconComponent, Skeleton, Tooltip } from "@/components/base";
 import VersionHistoryPlate from "@/components/Editor/version-history-plate";
 import UserAvatar from "@/components/UserAvatar";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ActivityModel, AuthUser, ProjectCard, User } from "@/core/models";
 import { IBotInActivityHistory, IChangesInActivityHistory, IUserInActivityHistory } from "@/core/models/activities/base.type";
@@ -32,7 +32,7 @@ interface IBaseActivityComponentProps {
 
 const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bool) => {
     const [t] = useTranslation();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
 
     const SkeletonActivity = memo(() => (
         <Flex direction="col" gap="1" p="2">
@@ -195,19 +195,17 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
 
         const avatar = (
-            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Avatar.Root size="sm" className={cn(UserAvatar.TriggerVariants({ hoverable: true }), "cursor-default")}>
-                            <Avatar.Image src={userOrBot.avatar} />
-                            <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                                {fallback}
-                            </Avatar.Fallback>
-                        </Avatar.Root>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>{names}</Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
+            <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                    <Avatar.Root size="sm" className={cn(UserAvatar.TriggerVariants({ hoverable: true }), "cursor-default")}>
+                        <Avatar.Image src={userOrBot.avatar} />
+                        <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
+                            {fallback}
+                        </Avatar.Fallback>
+                    </Avatar.Root>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{names}</Tooltip.Content>
+            </Tooltip.Root>
         );
 
         const nameComp = (

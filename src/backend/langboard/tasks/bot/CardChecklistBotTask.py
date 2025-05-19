@@ -8,7 +8,7 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "checklist": Checklist.api_schema(),
+        "checklist_uid": "string",
         **(other_schema or {}),
     }
 
@@ -25,20 +25,14 @@ async def card_checklist_created(user_or_bot: User | Bot, project: Project, card
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardChecklistTitleChanged, _create_schema(BotTaskDataHelper.changes_schema(("title", "string")))
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardChecklistTitleChanged, _create_schema())
 @Broker.wrap_async_task_decorator
-async def card_checklist_title_changed(
-    user_or_bot: User | Bot, project: Project, card: Card, old_title: str, checklist: Checklist
-):
+async def card_checklist_title_changed(user_or_bot: User | Bot, project: Project, card: Card, checklist: Checklist):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardChecklistTitleChanged)
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardChecklistTitleChanged,
-        await _create_data(
-            user_or_bot, project, card, checklist, BotTaskDataHelper.create_changes({"title": old_title}, checklist)
-        ),
+        await _create_data(user_or_bot, project, card, checklist),
         project,
     )
 
@@ -88,6 +82,6 @@ async def _create_data(
 ) -> dict[str, Any]:
     return {
         **await BotTaskDataHelper.create_card(user_or_bot, project, card),
-        "checklist": checklist.api_response(),
+        "checklist_uid": checklist.get_uid(),
         **(other_data or {}),
     }

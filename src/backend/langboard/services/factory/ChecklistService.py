@@ -67,6 +67,19 @@ class ChecklistService(BaseService):
 
         return [checklist.api_response() for checklist in raw_checklists]
 
+    async def get_list_only_by_project(self, project: TProjectParam) -> list[Checklist]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.table(Checklist)
+                .join(Card, Checklist.column("card_id") == Card.column("id"))
+                .where(Card.column("project_id") == project.id)
+            )
+        return list(result.all())
+
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, title: str
     ) -> Checklist | None:
@@ -79,8 +92,7 @@ class ChecklistService(BaseService):
 
         checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
         async with DbSession.use() as db:
-            db.insert(checklist)
-            await db.commit()
+            await db.insert(checklist)
 
         ChecklistPublisher.created(card, checklist)
         CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
@@ -103,11 +115,10 @@ class ChecklistService(BaseService):
         checklist.title = title
         async with DbSession.use() as db:
             await db.update(checklist)
-            await db.commit()
 
         ChecklistPublisher.title_changed(card, checklist)
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
-        CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
+        CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, checklist)
 
         return True
 
@@ -124,12 +135,10 @@ class ChecklistService(BaseService):
         update_query = self._set_order_in_column(update_query, Checklist, original_order, order)
         async with DbSession.use() as db:
             await db.exec(update_query)
-            await db.commit()
 
         async with DbSession.use() as db:
             checklist.order = order
             await db.update(checklist)
-            await db.commit()
 
         ChecklistPublisher.order_changed(card, checklist)
 
@@ -146,7 +155,6 @@ class ChecklistService(BaseService):
         checklist.is_checked = not checklist.is_checked
         async with DbSession.use() as db:
             await db.update(checklist)
-            await db.commit()
 
         ChecklistPublisher.checked_changed(card, checklist)
 
@@ -201,7 +209,6 @@ class ChecklistService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(checklist)
-            await db.commit()
 
         ChecklistPublisher.deleted(card, checklist)
         CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)

@@ -12,18 +12,19 @@ import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/useIsBoa
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
 import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
-import BoardWikiPage from "@/pages/BoardPage/BoardWikiPage";
-import BoardSettingsPage from "@/pages/BoardPage/BoardSettingsPage";
+import BoardWikiPage, { SkeletonBoardWikiPage } from "@/pages/BoardPage/BoardWikiPage";
+import BoardSettingsPage, { SkeletonBoardSettingsPage } from "@/pages/BoardPage/BoardSettingsPage";
 import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardDetailsChangedHandlers";
+import { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 
 const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -40,8 +41,8 @@ const BoardProxy = memo((): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigateRef = useRef(usePageNavigate());
-    const { aboutMe } = useAuth();
+    const navigateRef = useRef(useNavigate());
+    const { currentUser } = useAuth();
     const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
     const [isReady, setIsReady] = useState(false);
     const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
@@ -86,8 +87,7 @@ const BoardProxy = memo((): JSX.Element => {
     const { on: onBoardAssignedUsersUpdated } = useBoardAssignedUsersUpdatedHandlers({
         projectUID,
         callback: (result) => {
-            const currentUser = aboutMe()!;
-            if (!result.assigned_user_uids.includes(currentUser.uid) && !currentUser.is_admin) {
+            if (!currentUser || (!result.assigned_user_uids.includes(currentUser.uid) && !currentUser.is_admin)) {
                 Toast.Add.error(t("errors.Forbidden"));
             }
         },
@@ -195,16 +195,20 @@ const BoardProxy = memo((): JSX.Element => {
         },
     ];
 
-    let pageContent;
+    let PageComponent;
+    let SkeletonComponent;
     switch (currentPage) {
         case "wiki":
-            pageContent = <BoardWikiPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            PageComponent = BoardWikiPage;
+            SkeletonComponent = SkeletonBoardWikiPage;
             break;
         case "settings":
-            pageContent = <BoardSettingsPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            PageComponent = BoardSettingsPage;
+            SkeletonComponent = SkeletonBoardSettingsPage;
             break;
         default:
-            pageContent = <BoardPage navigate={navigateRef.current} projectUID={projectUID} currentUser={aboutMe()!} />;
+            PageComponent = BoardPage;
+            SkeletonComponent = SkeletonBoard;
             break;
     }
 
@@ -215,7 +219,11 @@ const BoardProxy = memo((): JSX.Element => {
             resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType } : undefined}
             noPadding
         >
-            {isReady ? pageContent : <></>}
+            {isReady && currentUser ? (
+                <PageComponent navigate={navigateRef.current} projectUID={projectUID} currentUser={currentUser} />
+            ) : (
+                <SkeletonComponent />
+            )}
         </DashboardStyledLayout>
     );
 });

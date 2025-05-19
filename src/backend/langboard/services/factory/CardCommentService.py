@@ -80,8 +80,7 @@ class CardCommentService(BaseService):
 
         comment = CardComment(**comment_params)
         async with DbSession.use() as db:
-            db.insert(comment)
-            await db.commit()
+            await db.insert(comment)
 
         CardCommentPublisher.created(user_or_bot, project, card, comment)
 
@@ -113,7 +112,6 @@ class CardCommentService(BaseService):
         comment.content = content
         async with DbSession.use() as db:
             await db.update(comment)
-            await db.commit()
 
         CardCommentPublisher.updated(project, card, comment)
 
@@ -121,7 +119,7 @@ class CardCommentService(BaseService):
         await notification_service.notify_mentioned_in_comment(user_or_bot, project, card, comment)
 
         CardCommentActivityTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
-        CardCommentBotTask.card_comment_updated(user_or_bot, project, card, old_content, comment)
+        CardCommentBotTask.card_comment_updated(user_or_bot, project, card, comment)
 
         return comment
 
@@ -139,7 +137,6 @@ class CardCommentService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(comment)
-            await db.commit()
 
         CardCommentPublisher.deleted(project, card, comment)
         CardCommentActivityTask.card_comment_deleted(user_or_bot, project, card, comment)

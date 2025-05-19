@@ -3,9 +3,8 @@ import useDeleteCard from "@/controllers/api/card/useDeleteCard";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useRef, useState } from "react";
@@ -14,12 +13,11 @@ import { useTranslation } from "react-i18next";
 export interface IBoardCardActionDeleteProps extends ISharedBoardCardActionProps {}
 
 const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteProps) => {
-    const { setIsLoadingRef } = usePageHeader();
     const { projectUID, card } = useBoardCard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const { mutateAsync } = useDeleteCard();
 
     const deleteCard = () => {
@@ -52,9 +50,6 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
             success: () => {
                 setTimeout(() => {
                     navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
-                    setTimeout(() => {
-                        setIsLoadingRef.current(false);
-                    }, 0);
                 }, 0);
                 return t("card.successes.Card deleted successfully.");
             },

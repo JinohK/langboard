@@ -2,49 +2,62 @@
 "use client";
 
 import type { TTableElement } from "@udecode/plate-table";
-import { cn, withRef } from "@udecode/cn";
-import { useEditorPlugin, useEditorSelector, useElement, useReadOnly, useRemoveNodeButton, useSelected, withHOC } from "@udecode/plate/react";
+import { cn } from "@udecode/cn";
+import {
+    PlateElement,
+    PlateElementProps,
+    useEditorPlugin,
+    useEditorSelector,
+    useElement,
+    usePluginOption,
+    useReadOnly,
+    useRemoveNodeButton,
+    useSelected,
+    withHOC,
+} from "@udecode/plate/react";
 import { TablePlugin, TableProvider, useTableElement, useTableMergeState } from "@udecode/plate-table/react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CombineIcon, SquareSplitHorizontalIcon, Trash2Icon, XIcon } from "lucide-react";
-import { PlateElement } from "@/components/plate-ui/plate-element";
 import { Toolbar, ToolbarButton, ToolbarGroup } from "@/components/plate-ui/toolbar";
 import { Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
+import { BlockSelectionPlugin } from "@udecode/plate-selection/react";
 
-export const TableElement = withHOC(
-    TableProvider,
-    withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
-        const readOnly = useReadOnly();
-        const selected = useSelected();
-        const { isSelectingCell, marginLeft, props: tableProps } = useTableElement();
+export const TableElement = withHOC(TableProvider, function TableElement({ children, ...props }: PlateElementProps<TTableElement>) {
+    const readOnly = useReadOnly();
+    const isSelectionAreaVisible = usePluginOption(BlockSelectionPlugin, "isSelectionAreaVisible");
+    const hasControls = !readOnly && !isSelectionAreaVisible;
+    const selected = useSelected();
+    const { isSelectingCell, marginLeft, props: tableProps } = useTableElement();
 
-        const content = (
-            <PlateElement className={cn(className, "overflow-x-auto py-5")} style={{ paddingLeft: marginLeft }} {...props}>
-                <div className="group/table relative w-fit">
-                    <table
-                        ref={ref}
-                        className={cn(
-                            "ml-px mr-0 table h-px w-[calc(100%-6px)] table-fixed border-collapse",
-                            "[&_tr:first-child_td]:bg-secondary/50 [&_tr:first-child_th]:bg-secondary/50",
-                            isSelectingCell && "selection:bg-transparent"
-                        )}
-                        {...tableProps}
-                    >
-                        <tbody className="min-w-full">{children}</tbody>
-                    </table>
-                </div>
-            </PlateElement>
-        );
+    const content = (
+        <PlateElement
+            {...props}
+            className={cn("overflow-x-auto py-5", hasControls && "-ml-2 *:data-[slot=block-selection]:left-2")}
+            style={{ paddingLeft: marginLeft }}
+        >
+            <div className="group/table relative w-fit">
+                <table
+                    className={cn(
+                        "ml-px mr-0 table h-px table-fixed border-collapse",
+                        "[&_tr:first-child_td]:bg-secondary/50 [&_tr:first-child_th]:bg-secondary/50",
+                        isSelectingCell && "selection:bg-transparent"
+                    )}
+                    {...tableProps}
+                >
+                    <tbody className="min-w-full">{children}</tbody>
+                </table>
+            </div>
+        </PlateElement>
+    );
 
-        if (readOnly || !selected) {
-            return content;
-        }
+    if (readOnly || !selected) {
+        return content;
+    }
 
-        return <TableFloatingToolbar>{content}</TableFloatingToolbar>;
-    })
-);
+    return <TableFloatingToolbar>{content}</TableFloatingToolbar>;
+});
 
-export const TableFloatingToolbar = withRef<typeof Popover.Content>(({ children, ...props }, ref) => {
+export function TableFloatingToolbar({ children, ...props }: React.ComponentProps<typeof Popover.Content>) {
     const [t] = useTranslation();
     const { tf } = useEditorPlugin(TablePlugin);
     const element = useElement<TTableElement>();
@@ -56,7 +69,7 @@ export const TableFloatingToolbar = withRef<typeof Popover.Content>(({ children,
     return (
         <Popover.Root open={canMerge || canSplit || collapsed} modal={false}>
             <Popover.Anchor asChild>{children}</Popover.Anchor>
-            <Popover.Content ref={ref} asChild onOpenAutoFocus={(e) => e.preventDefault()} {...props}>
+            <Popover.Content asChild onOpenAutoFocus={(e) => e.preventDefault()} contentEditable={false} {...props}>
                 <Toolbar
                     className="flex w-auto max-w-[80vw] flex-row overflow-x-auto rounded-md border bg-popover p-1 shadow-md scrollbar-hide print:hidden"
                     contentEditable={false}
@@ -151,4 +164,4 @@ export const TableFloatingToolbar = withRef<typeof Popover.Content>(({ children,
             </Popover.Content>
         </Popover.Root>
     );
-});
+}

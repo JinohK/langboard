@@ -79,7 +79,15 @@ function BoardCardCheckitemTimerManager() {
     const status = checkitem.useField("status");
     const { mutateAsync: changeCheckitemStatusMutateAsync } = useChangeCardCheckitemStatus();
 
-    const changeStatus = (newStatus: ProjectCheckitem.ECheckitemStatus) => {
+    const changeStatus = (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (isValidating) {
+            return;
+        }
+
+        setIsValidating(true);
+
+        const newStatus = e.currentTarget.getAttribute("data-value") as ProjectCheckitem.ECheckitemStatus;
+
         const promise = changeCheckitemStatusMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
@@ -120,7 +128,8 @@ function BoardCardCheckitemTimerManager() {
                 title={t("card.Start timer")}
                 className="rounded-r-none"
                 disabled={isValidating || status === ProjectCheckitem.ECheckitemStatus.Started}
-                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Started)}
+                data-value={ProjectCheckitem.ECheckitemStatus.Started}
+                onClick={changeStatus}
             >
                 <IconComponent icon="play" size="5" />
             </Button>
@@ -130,7 +139,8 @@ function BoardCardCheckitemTimerManager() {
                 title={t("card.Pause timer")}
                 className="rounded-none"
                 disabled={isValidating || status !== ProjectCheckitem.ECheckitemStatus.Started}
-                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Paused)}
+                data-value={ProjectCheckitem.ECheckitemStatus.Paused}
+                onClick={changeStatus}
             >
                 <IconComponent icon="pause" size="5" />
             </Button>
@@ -140,7 +150,8 @@ function BoardCardCheckitemTimerManager() {
                 title={t("card.Stop timer")}
                 className="rounded-l-none"
                 disabled={isValidating || status === ProjectCheckitem.ECheckitemStatus.Stopped}
-                onClick={() => changeStatus(ProjectCheckitem.ECheckitemStatus.Stopped)}
+                data-value={ProjectCheckitem.ECheckitemStatus.Stopped}
+                onClick={changeStatus}
             >
                 <IconComponent icon="circle-stop" size="5" />
             </Button>

@@ -36,6 +36,7 @@ class _LangflowAPIRequestModel:
                     "event": "chat",
                     "message": request_model.message,
                     "project_uid": request_model.project_uid,
+                    "current_user_uid": request_model.user_uid,
                     "one_time_token": self.one_time_token,
                 }
             ),

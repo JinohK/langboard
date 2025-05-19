@@ -4,7 +4,6 @@ import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
-import { API_ROUTES } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
@@ -12,7 +11,6 @@ import { BotModel, Project, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { format } from "@/core/utils/StringUtils";
 import BoardCommentReaction from "@/pages/BoardPage/components/card/comment/BoardCommentReaction";
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +36,7 @@ export interface IBoardCommentProps {
 }
 
 const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX.Element => {
-    const { projectUID, card, socket, currentUser, hasRoleAction, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [isEditing, setIsEditing] = useState(false);
     const [t] = useTranslation();
     const projectMembers = card.useForeignField<User.TModel>("project_members");
@@ -185,17 +183,14 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         mentionables={mentionables}
                         className={isEditing ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
                         readOnly={!isEditing}
-                        socket={socket}
-                        baseSocketEvent="board:card"
-                        chatEventKey={`card-comment-${card.uid}`}
-                        copilotEventKey={`card-comment-${comment.uid}`}
-                        commonSocketEventData={{
+                        editorType="card-comment"
+                        form={{
                             project_uid: projectUID,
+                            card_uid: card.uid,
+                            comment_uid: comment.uid,
                         }}
-                        uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                         setValue={setValue}
                         editorComponentRef={editorComponentRef}
-                        projectUID={projectUID}
                     />
                 </Flex>
                 <Flex items="center" gap="2">

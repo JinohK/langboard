@@ -59,6 +59,7 @@ const BoardColumnMore = memo(({ column, isEditingState }: IBoardColumnMoreProps)
         </Popover.Root>
     );
 });
+BoardColumnMore.displayName = "Board.ColumnMore";
 
 const BoardColumnMoreDelete = memo(({ column }: Omit<IBoardColumnMoreProps, "isEditingState">) => {
     const [t] = useTranslation();
@@ -141,5 +142,6 @@ const BoardColumnMoreDelete = memo(({ column }: Omit<IBoardColumnMoreProps, "isE
         </Popover.Root>
     );
 });
+BoardColumnMore.displayName = "Board.ColumnMoreDelete";
 
 export default BoardColumnMore;

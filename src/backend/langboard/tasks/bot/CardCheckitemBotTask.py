@@ -8,7 +8,7 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "checkitem": Checkitem.api_schema(),
+        "checkitem_uid": "string",
         **(other_schema or {}),
     }
 
@@ -25,20 +25,14 @@ async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardCheckitemTitleChanged, _create_schema(BotTaskDataHelper.changes_schema(("title", "string")))
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemTitleChanged, _create_schema())
 @Broker.wrap_async_task_decorator
-async def card_checkitem_title_changed(
-    user_or_bot: User | Bot, project: Project, card: Card, old_title: str, checkitem: Checkitem
-):
+async def card_checkitem_title_changed(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemTitleChanged)
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTitleChanged,
-        await _create_data(
-            user_or_bot, project, card, checkitem, BotTaskDataHelper.create_changes({"title": old_title}, checkitem)
-        ),
+        await _create_data(user_or_bot, project, card, checkitem),
         project,
     )
 
@@ -104,7 +98,7 @@ async def card_checkitem_unchecked(user_or_bot: User | Bot, project: Project, ca
 
 
 @BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardCheckitemCardified, _create_schema({"cardified_card": Card.api_schema()})
+    BotTriggerCondition.CardCheckitemCardified, _create_schema({"cardified_card_uid": "string"})
 )
 @Broker.wrap_async_task_decorator
 async def card_checkitem_cardified(
@@ -119,7 +113,7 @@ async def card_checkitem_cardified(
             project,
             card,
             checkitem,
-            {"cardified_card": new_card.api_response()},
+            {"cardified_card_uid": new_card.get_uid()},
         ),
         project,
     )
@@ -146,6 +140,6 @@ async def _create_data(
 ) -> dict[str, Any]:
     return {
         **await BotTaskDataHelper.create_card(user_or_bot, project, card),
-        "checkitem": checkitem.api_response(),
+        "checkitem_uid": checkitem.get_uid(),
         **(other_data or {}),
     }

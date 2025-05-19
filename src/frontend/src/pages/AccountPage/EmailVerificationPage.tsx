@@ -8,7 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function EmailVerificationPage() {
@@ -16,7 +16,7 @@ function EmailVerificationPage() {
     const [t] = useTranslation();
     const { updatedUser } = useAuth();
     const location = useLocation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const { mutate } = useVerifyNewEmail();
 
     useEffect(() => {

@@ -60,10 +60,10 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
 
         async with DbSession.use() as db:
             if role.is_new():
-                db.insert(role)
+                await db.insert(role)
             else:
                 await db.update(role)
-            await db.commit()
+
         return role
 
     async def grant_all(self, **kwargs) -> _TRoleModel:
@@ -80,10 +80,10 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
 
         async with DbSession.use() as db:
             if role.is_new():
-                db.insert(role)
+                await db.insert(role)
             else:
                 await db.update(role)
-            await db.commit()
+
         return role
 
     async def grant_default(self, **kwargs) -> _TRoleModel:
@@ -100,10 +100,10 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
 
         async with DbSession.use() as db:
             if role.is_new():
-                db.insert(role)
+                await db.insert(role)
             else:
                 await db.update(role)
-            await db.commit()
+
         return role
 
     async def withdraw(self, **kwargs) -> _TRoleModel | None:
@@ -121,7 +121,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
 
         async with DbSession.use() as db:
             await db.delete(role)
-            await db.commit()
+
         return role
 
     async def _get_or_create_role(self, **kwargs) -> _TRoleModel:

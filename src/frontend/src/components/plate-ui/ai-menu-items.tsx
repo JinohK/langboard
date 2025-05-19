@@ -199,6 +199,7 @@ const menuStateItems: Record<
         {
             items: [
                 aiChatItems.improveWriting,
+                aiChatItems.emojify,
                 aiChatItems.makeLonger,
                 aiChatItems.makeShorter,
                 aiChatItems.fixSpelling,
@@ -257,7 +258,7 @@ export const AIMenuItems = ({ setValue }: { setValue: (value: string) => void })
                             }}
                         >
                             {menuItem.icon}
-                            <span>{t(menuItem.label)}</span>
+                            <span className="ml-1">{t(menuItem.label)}</span>
                         </Command.Item>
                     ))}
                 </Command.Group>

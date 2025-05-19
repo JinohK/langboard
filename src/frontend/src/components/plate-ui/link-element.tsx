@@ -2,24 +2,24 @@
 "use client";
 
 import type { TLinkElement } from "@udecode/plate-link";
-import { cn, withRef } from "@udecode/cn";
-import { useElement } from "@udecode/plate/react";
+import type { PlateElementProps } from "@udecode/plate/react";
 import { useLink } from "@udecode/plate-link/react";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import { PlateElement } from "@udecode/plate/react";
 
-export const LinkElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
-    const element = useElement<TLinkElement>();
-    const { props: linkProps } = useLink({ element });
+export function LinkElement(props: PlateElementProps<TLinkElement>) {
+    const { props: linkProps } = useLink({ element: props.element });
 
     return (
         <PlateElement
-            ref={ref}
-            as="a"
-            className={cn("font-medium text-primary underline decoration-primary underline-offset-4", className)}
-            {...(linkProps as any)}
             {...props}
+            as="a"
+            className="font-medium text-primary underline decoration-primary underline-offset-4"
+            attributes={{
+                ...props.attributes,
+                ...(linkProps as any),
+            }}
         >
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

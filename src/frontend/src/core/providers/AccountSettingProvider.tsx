@@ -1,10 +1,10 @@
 import { AuthUser } from "@/core/models";
-import { useAuth } from "@/core/providers/AuthProvider";
+import { IAuthContext, useAuth } from "@/core/providers/AuthProvider";
 import { createContext, useContext, useState } from "react";
 
 export interface IAccountSettingContext {
     currentUser: AuthUser.TModel;
-    updatedUser: () => void;
+    updatedUser: IAuthContext["updatedUser"];
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }

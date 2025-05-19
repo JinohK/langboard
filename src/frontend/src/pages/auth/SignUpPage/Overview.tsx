@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, Box, Button, Card, Flex, SubmitButton, Toast } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
@@ -7,14 +7,12 @@ import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const { mutate } = useSignUp();
     const failCallback = useCallback((errors?: Record<string, string>) => {
         if (!errors) {
@@ -84,10 +82,6 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
             failCallback(errors);
         },
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const translate = (key: string, value: string) => {
         if (key === "industry") {

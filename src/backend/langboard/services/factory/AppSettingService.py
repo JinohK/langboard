@@ -74,8 +74,7 @@ class AppSettingService(BaseService):
         setting.set_value(setting_value)
 
         async with DbSession.use() as db:
-            db.insert(setting)
-            await db.commit()
+            await db.insert(setting)
 
         return setting
 
@@ -109,7 +108,6 @@ class AppSettingService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(setting)
-            await db.commit()
 
         return setting
 
@@ -120,7 +118,6 @@ class AppSettingService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(setting)
-            await db.commit()
         return True
 
     async def delete_selected(self, uids: list[str]) -> bool:
@@ -128,7 +125,6 @@ class AppSettingService(BaseService):
 
         async with DbSession.use() as db:
             await db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
-            await db.commit()
 
         return True
 
@@ -142,8 +138,7 @@ class AppSettingService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(global_relationship)
-            await db.commit()
+            await db.insert(global_relationship)
 
         model = {"global_relationships": global_relationship.api_response()}
         AppSettingPublisher.global_relationship_created(model)
@@ -177,7 +172,6 @@ class AppSettingService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(global_relationship)
-            await db.commit()
 
         model = {}
         for key in form:
@@ -198,7 +192,6 @@ class AppSettingService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(global_relationship)
-            await db.commit()
 
         AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
 
@@ -213,7 +206,6 @@ class AppSettingService(BaseService):
                     GlobalCardRelationshipType.column("id").in_(ids)
                 )
             )
-            await db.commit()
 
         AppSettingPublisher.selected_global_relationships_deleted(uids)
 

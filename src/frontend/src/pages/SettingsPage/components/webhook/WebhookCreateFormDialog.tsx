@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
-import { useEffect, useRef, useState } from "react";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useRef, useState } from "react";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
@@ -17,9 +16,8 @@ export interface IWebhookCreateFormDialogProps {
 }
 
 function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const urlInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +78,7 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     });
 
@@ -98,10 +96,6 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
             }
         );
     };
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {

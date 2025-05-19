@@ -25,5 +25,6 @@ const BoardColumnHeader = memo(({ isDragging, column, headerProps }: IBoardColum
         </Card.Header>
     );
 });
+BoardColumnHeader.displayName = "Board.ColumnHeader";
 
 export default BoardColumnHeader;

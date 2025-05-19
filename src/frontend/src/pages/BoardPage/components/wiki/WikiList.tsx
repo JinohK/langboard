@@ -1,7 +1,6 @@
 import { Box, Button, Flex, IconComponent, Skeleton, Tabs } from "@/components/base";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import WikiContent, { SkeletonWikiContent } from "@/pages/BoardPage/components/wiki/WikiContent";
 import WikiCreateButton from "@/pages/BoardPage/components/wiki/WikiCreateButton";
@@ -25,7 +24,6 @@ export function SkeletonWikiList() {
 }
 
 const WikiList = memo(() => {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const [wikiUID, setWikiUID] = useState(location.pathname.split("/")[4]);
     const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, modeType, setModeType, wikiTabListId } = useBoardWiki();
@@ -34,7 +32,6 @@ const WikiList = memo(() => {
 
     useEffect(() => {
         if (paramsLastCheckedRef.current === wikiUID) {
-            setIsLoadingRef.current(false);
             return;
         }
 
@@ -44,7 +41,6 @@ const WikiList = memo(() => {
         }
 
         paramsLastCheckedRef.current = wikiUID;
-        setIsLoadingRef.current(false);
     }, [wikiUID]);
 
     const changeTab = (uid: string) => {

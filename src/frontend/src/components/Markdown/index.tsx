@@ -29,7 +29,7 @@ function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
                         return <ul className="max-w-full">{props.children}</ul>;
                     },
                     a({ node, ...props }) {
-                        return <a className="underline-offset-4 hover:underline" {...props} />;
+                        return <a className="underline underline-offset-4" target="_blank" {...props} />;
                     },
                     table({ node, ...props }) {
                         return (

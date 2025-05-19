@@ -2,7 +2,6 @@ import { IHeaderNavItem, THeaderNavItemsProps } from "@/components/Header/types"
 import { Accordion, DropdownMenu, NavigationMenu } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useRef, useState } from "react";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -112,7 +111,6 @@ function DropdownMenuNav({ item, setIsOpen, activatedClass, deactivatedClass, sh
 }
 
 function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, shardClass }: IHeaderNavItemProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (
@@ -123,12 +121,6 @@ function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, s
             onClick={() => {
                 setIsOpen!(false);
                 item.onClick?.();
-
-                if (item.active) {
-                    setTimeout(() => {
-                        setIsLoadingRef.current(false);
-                    }, 0);
-                }
             }}
         >
             <h3 className="py-2 text-base">{item.name}</h3>
@@ -137,7 +129,6 @@ function AccordionNavItem({ item, setIsOpen, activatedClass, deactivatedClass, s
 }
 
 function NavLinkItem({ item, activatedClass, deactivatedClass, shardClass, setDropdownMenuOpenedRef }: IHeaderNavItemProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const ariaCurrent = item.active ? "page" : undefined;
 
     return (
@@ -150,11 +141,6 @@ function NavLinkItem({ item, activatedClass, deactivatedClass, shardClass, setDr
                 onClick={() => {
                     setDropdownMenuOpenedRef?.current(false);
                     item.onClick?.();
-                    if (item.active) {
-                        setTimeout(() => {
-                            setIsLoadingRef.current(false);
-                        }, 0);
-                    }
                 }}
             >
                 {item.name}

@@ -48,14 +48,12 @@ const Head = React.forwardRef<HTMLTableCellElement, ITableCellProps>(({ title, t
 
     return (
         <th {...headProps}>
-            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                <Tooltip.Root>
-                    <Tooltip.Trigger>{children}</Tooltip.Trigger>
-                    <Tooltip.Content align={titleAlign} side={titleSide}>
-                        {title}
-                    </Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
+            <Tooltip.Root>
+                <Tooltip.Trigger>{children}</Tooltip.Trigger>
+                <Tooltip.Content align={titleAlign} side={titleSide}>
+                    {title}
+                </Tooltip.Content>
+            </Tooltip.Root>
         </th>
     );
 });
@@ -74,14 +72,12 @@ const Cell = React.forwardRef<HTMLTableCellElement, ITableCellProps>(({ title, t
 
     return (
         <td {...cellProps}>
-            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                <Tooltip.Root>
-                    <Tooltip.Trigger>{children}</Tooltip.Trigger>
-                    <Tooltip.Content align={titleAlign} side={titleSide}>
-                        {title}
-                    </Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
+            <Tooltip.Root>
+                <Tooltip.Trigger>{children}</Tooltip.Trigger>
+                <Tooltip.Content align={titleAlign} side={titleSide}>
+                    {title}
+                </Tooltip.Content>
+            </Tooltip.Root>
         </td>
     );
 });

@@ -2,13 +2,12 @@ import { Button, Checkbox, DropdownMenu, Flex, IconComponent, Input, Label, Popo
 import UserAvatar from "@/components/UserAvatar";
 import { ProjectLabel } from "@/core/models";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { memo, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardFilter() {
@@ -16,14 +15,9 @@ export function SkeletonBoardFilter() {
 }
 
 function BoardFilter() {
-    const { setIsLoadingRef } = usePageHeader();
     const { project, cards, filters, filterCard, filterMember, filterLabel, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
     const labels = project.useForeignField<ProjectLabel.TModel>("labels");
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const setFilterKeyword = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (!filters.keyword) {
@@ -169,6 +163,7 @@ function BoardFilter() {
         </Popover.Root>
     );
 }
+BoardFilter.displayName = "Board.Filter";
 
 interface IBoardFilterExtendedProps {
     filterLangLabel: string;
@@ -177,7 +172,7 @@ interface IBoardFilterExtendedProps {
     createFilterItems: () => React.ReactNode;
 }
 
-const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterName, createFilterItems }: IBoardFilterExtendedProps) => {
+function BoardExtendedFilter({ filterLangLabel, uncountableItems, filterName, createFilterItems }: IBoardFilterExtendedProps) {
     const { project, filters, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
 
@@ -225,7 +220,8 @@ const BoardExtendedFilter = memo(({ filterLangLabel, uncountableItems, filterNam
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     );
-});
+}
+BoardExtendedFilter.displayName = "Board.ExtendedFilter";
 
 interface IBoardFilterItemProps {
     name: keyof IFilterMap;
@@ -233,7 +229,7 @@ interface IBoardFilterItemProps {
     children: React.ReactNode;
 }
 
-const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) => {
+function BoardFilterItem({ name, value, children }: IBoardFilterItemProps) {
     const { project, filters, navigateWithFilters } = useBoard();
     const checked = useMemo(() => !!filters[name] && filters[name].includes(value), [filters, filters[name]]);
 
@@ -257,6 +253,7 @@ const BoardFilterItem = memo(({ name, value, children }: IBoardFilterItemProps) 
             {children}
         </Label>
     );
-});
+}
+BoardFilterItem.displayName = "Board.FilterItem";
 
 export default BoardFilter;

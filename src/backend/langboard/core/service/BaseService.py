@@ -53,6 +53,15 @@ class BaseService(ABC):
 
         return await self._get_by_param(table, record_id)
 
+    async def get_records_by_table_name_with_ids(
+        self, table_name: str, record_ids: list[SnowflakeID | int]
+    ) -> Sequence[BaseSqlModel] | None:
+        table = get_model_by_table_name(table_name)
+        if not table:
+            return None
+
+        return await self._get_all_by(table, "id", record_ids)
+
     async def _get_by(
         self, model_class: type[_TBaseModel], column: str, value: Any, is_none: bool = False, with_deleted: bool = False
     ) -> _TBaseModel | None:
@@ -140,12 +149,11 @@ class BaseService(ABC):
                 result = await db.exec(query)
             rows = result.all()
             i = 0
-            async with DbSession.use() as db:
-                for row in rows:
-                    row.order = i
+            for row in rows:
+                row.order = i
+                async with DbSession.use() as db:
                     await db.update(row)
-                    i += 1
-                await db.commit()
+                i += 1
 
         return max_order
 

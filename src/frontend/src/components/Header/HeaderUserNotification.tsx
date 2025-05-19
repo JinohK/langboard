@@ -1,5 +1,4 @@
 import { AnimatedList, Box, Button, Card, Flex, IconComponent, Label, Loading, Popover, ScrollArea, Switch, Toast, Tooltip } from "@/components/base";
-import { createDataTextRegex } from "@/components/Editor/plugins/markdown";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
@@ -18,7 +17,7 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { memo, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useReducer, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { NavigateFunction } from "react-router-dom";
 
@@ -34,20 +33,23 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
     const unreadNotifications = UserNotification.Model.useModels((model) => !model.read_at, [updated]);
     const [isOnlyUnread, setIsOnlyUnread] = useState(true);
     const [isOpened, setIsOpened] = useState(false);
-    const isOpenedRef = useRef(isOpened);
     const { send: sendReadAllUserNotifications } = useReadAllUserNotificationsHandlers();
     const { send: sendDeleteAllUserNotifications } = useDeleteAllUserNotificationsHandlers();
-    const notifiedHandlers = useUserNotifiedHandlers({
-        currentUser,
-        callback: () => {
-            if (isOpenedRef.current) {
-                return;
-            }
+    const notifiedHandlers = useMemo(
+        () =>
+            useUserNotifiedHandlers({
+                currentUser,
+                callback: () => {
+                    if (isOpened) {
+                        return;
+                    }
 
-            Toast.Add.info(t("notification.You have a new notification."));
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers: [notifiedHandlers] });
+                    Toast.Add.info(t("notification.You have a new notification."));
+                },
+            }),
+        [isOpened]
+    );
+    useSwitchSocketHandlers({ socket, handlers: notifiedHandlers, dependencies: [notifiedHandlers] });
     const readAllNotifications = useCallback(() => {
         sendReadAllUserNotifications({});
         for (let i = 0; i < unreadNotifications.length; ++i) {
@@ -59,10 +61,6 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
         sendDeleteAllUserNotifications({});
         UserNotification.Model.deleteModels(() => true);
     }, []);
-
-    useEffect(() => {
-        isOpenedRef.current = isOpened;
-    }, [isOpened]);
 
     return (
         <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
@@ -318,14 +316,14 @@ function HeaderUserNotificationItemContent({ notification, className }: { notifi
 }
 
 function HeaderUserNotificationItemMentionedText({ content }: { content: string }) {
-    const mentionRegex = createDataTextRegex("mention", 2, false);
+    const mentionPattern = /<@([^\s]+)>/g;
     const [elements, title] = useMemo(() => {
         const newElements = [];
         let lastIndex = 0;
         let match: RegExpExecArray | null;
         let newTitle: string = "";
-        while ((match = mentionRegex.exec(content)) !== null) {
-            const [fullMatch, _, username] = match;
+        while ((match = mentionPattern.exec(content)) !== null) {
+            const [fullMatch, username] = match;
             const matchIndex = match.index;
 
             if (matchIndex > lastIndex) {
@@ -366,16 +364,14 @@ function HeaderUserNotificationItemMentionedText({ content }: { content: string 
     }, [content]);
 
     return (
-        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-            <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                    <Box as="span" className="truncate">
-                        {elements}
-                    </Box>
-                </Tooltip.Trigger>
-                <Tooltip.Content>{title}</Tooltip.Content>
-            </Tooltip.Root>
-        </Tooltip.Provider>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+                <Box as="span" className="truncate">
+                    {elements}
+                </Box>
+            </Tooltip.Trigger>
+            <Tooltip.Content>{title}</Tooltip.Content>
+        </Tooltip.Root>
     );
 }
 

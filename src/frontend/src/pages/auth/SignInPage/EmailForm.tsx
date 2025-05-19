@@ -7,9 +7,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import { useEffect } from "react";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -18,9 +16,8 @@ export interface IEmailFormProps {
 }
 
 function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const { mutate } = useAuthEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "signIn.errors",
@@ -56,10 +53,6 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     return (
         <>

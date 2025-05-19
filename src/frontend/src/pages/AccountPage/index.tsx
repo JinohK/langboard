@@ -5,38 +5,24 @@ import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { RedirectToSignIn } from "@/core/helpers/AuthHelper";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider";
 import EmailPage, { SkeletonEmailPage } from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import GroupsPage, { SkeletonGroupsPage } from "@/pages/AccountPage/GroupsPage";
 import PreferencesPage from "@/pages/AccountPage/PreferencesPage";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function AccountPage(): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const { isAuthenticated, aboutMe, updated } = useAuth();
-    const navigate = usePageNavigate();
+    const { isAuthenticated, currentUser } = useAuth();
+    const navigate = useNavigate();
     const location = useLocation();
-    const [currentUser, setCurrentUser] = useState(aboutMe());
 
     if (!isAuthenticated()) {
         return <RedirectToSignIn />;
     }
-
-    useEffect(() => {
-        setTimeout(() => {
-            setIsLoadingRef.current(false);
-        }, 0);
-    }, [location]);
-
-    useEffect(() => {
-        setCurrentUser(aboutMe());
-    }, [updated]);
 
     const headerNavs: Record<string, IHeaderNavItem> = {};
 

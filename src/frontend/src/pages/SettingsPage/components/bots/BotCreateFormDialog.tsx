@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
-import { useEffect, useRef, useState } from "react";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useRef, useState } from "react";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -20,9 +19,8 @@ export interface IBotCreateFormDialogProps {
 }
 
 function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const [isValidating, setIsValidating] = useState(false);
     const [revealedToken, setRevealedToken] = useState<string>();
     const dataTransferRef = useRef(new DataTransfer());
@@ -103,7 +101,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                         [EHttpStatus.HTTP_409_CONFLICT]: () => {
                             newErrors.uname = t("settings.errors.Bot unique name already exists.");
@@ -120,10 +118,6 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
             }
         );
     };
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {
@@ -202,7 +196,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                         <Box mt="4">
                             <Select.Root
                                 value={selectedAPIAuthType}
-                                onValueChange={(value) => setSelectedAPIAuthType(value as BotModel.EAPIAuthType)}
+                                onValueChange={setSelectedAPIAuthType as (value: string) => void}
                                 disabled={isValidating}
                             >
                                 <Select.Trigger>

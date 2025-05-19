@@ -33,8 +33,8 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
     const isParent = type === "parents";
 
     const saveRelationship = (newRelationships: [string, string][]) => {
-        setIsOpened(() => true);
-        setIsValidating(() => true);
+        setIsOpened(true);
+        setIsValidating(true);
 
         const promise = updateCardRelationshipsMutateAsync({
             project_uid: projectUID,

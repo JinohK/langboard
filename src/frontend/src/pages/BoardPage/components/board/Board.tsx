@@ -118,6 +118,7 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
         </>
     );
 });
+Board.displayName = "Board";
 
 const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
@@ -234,5 +235,6 @@ const BoardResult = memo(() => {
         </>
     );
 });
+BoardResult.displayName = "Board.Result";
 
 export default Board;

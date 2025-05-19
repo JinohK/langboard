@@ -1,8 +1,6 @@
 import { Dialog } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { useEffect } from "react";
 import { ActivityModel } from "@/core/models";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import ActivityList from "@/components/ActivityList";
 
 export interface IMyActivityDialogProps {
@@ -11,14 +9,8 @@ export interface IMyActivityDialogProps {
 }
 
 function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.Element | null {
-    const { setIsLoadingRef } = usePageHeader();
-    const { aboutMe } = useAuth();
-    const currentUser = aboutMe();
+    const { currentUser } = useAuth();
     const activities = ActivityModel.Model.useModels((model) => model.filterable_type === "user" && model.filterable_uid === currentUser?.uid);
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, [setOpened]);
 
     if (!currentUser) {
         return null;

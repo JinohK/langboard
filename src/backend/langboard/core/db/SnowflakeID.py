@@ -6,13 +6,16 @@ from ..utils.String import BASE62_ALPHABET
 
 class SnowflakeID(int):
     FIXED_SHORT_CODE_LENGTH = 11
+    EPOCH = 1704067200000  # 2024-01-01 00:00:00 UTC
     _lock = Lock()
     _sequence = 0
     _last_timestamp = -1
 
-    def __new__(cls, value: int | None = None, machine_id: int = 1, epoch: int = 1704067200000):
+    def __new__(cls, value: int | None = None):
         if value is not None:
             return super().__new__(cls, value)
+
+        machine_id = SnowflakeID.__get_machine_id()
 
         with cls._lock:
             current_timestamp = cls._current_millis()
@@ -26,7 +29,7 @@ class SnowflakeID(int):
 
             cls._last_timestamp = current_timestamp
 
-            snowflake_value = ((current_timestamp - epoch) << 22) | (machine_id << 10) | cls._sequence
+            snowflake_value = ((current_timestamp - SnowflakeID.EPOCH) << 22) | (machine_id << 10) | cls._sequence
 
         return super().__new__(cls, snowflake_value)
 
@@ -34,8 +37,8 @@ class SnowflakeID(int):
     def from_short_code(short_code: str) -> "SnowflakeID":
         if not short_code or len(short_code) != SnowflakeID.FIXED_SHORT_CODE_LENGTH:
             return SnowflakeID(0)
-        decoded_int = SnowflakeID.__base62_decode(short_code[::-1])
-        original_value = SnowflakeID.__reverse_hex(decoded_int)
+        decoded_int = SnowflakeID.__base62_decode(short_code)
+        original_value = SnowflakeID.__feistel_unshuffle(decoded_int)
         return SnowflakeID(original_value)
 
     @classmethod
@@ -70,36 +73,50 @@ class SnowflakeID(int):
         return f"SnowflakeID({int(self)})"
 
     def to_short_code(self) -> str:
-        reversed_value = SnowflakeID.__reverse_hex(self)
-        return SnowflakeID.__base62_encode(reversed_value)[::-1]
+        mixed_value = SnowflakeID.__feistel_shuffle(int(self))
+        return SnowflakeID.__base62_encode(mixed_value)
 
     @staticmethod
-    def __reverse_hex(value: int) -> int:
-        hex_str = f"{value:016x}"
-        reversed_hex_str = hex_str[::-1]
-        return int(reversed_hex_str, 16)
-
-    @staticmethod
-    def __base62_encode(num: int) -> str:
-        if num == 0:
-            return "0".rjust(11, "0")
-
-        encoded = []
-        base = len(BASE62_ALPHABET)
-        n = num
+    def __base62_encode(n: int) -> str:
+        s = []
         while n > 0:
-            n, r = divmod(n, base)
-            encoded.append(BASE62_ALPHABET[r])
-
-        encoded_str = "".join(reversed(encoded))
-        if len(encoded_str) > SnowflakeID.FIXED_SHORT_CODE_LENGTH:
-            raise ValueError(f"Encoded string length exceeds fixed length of {SnowflakeID.FIXED_SHORT_CODE_LENGTH}")
-        return encoded_str.rjust(SnowflakeID.FIXED_SHORT_CODE_LENGTH, "0")
+            n, r = divmod(n, 62)
+            s.append(BASE62_ALPHABET[r])
+        return "".join(reversed(s)).rjust(SnowflakeID.FIXED_SHORT_CODE_LENGTH, BASE62_ALPHABET[0])
 
     @staticmethod
-    def __base62_decode(encoded: str) -> int:
-        base = len(BASE62_ALPHABET)
-        decoded = 0
-        for char in encoded:
-            decoded = decoded * base + BASE62_ALPHABET.index(char)
-        return decoded
+    def __base62_decode(s: str) -> int:
+        n = 0
+        for c in s:
+            n = n * 62 + BASE62_ALPHABET.index(c)
+        return n
+
+    @staticmethod
+    def __feistel_shuffle(x: int, rounds: int = 4) -> int:
+        left = x >> 32
+        right = x & 0xFFFFFFFF
+        for i in range(rounds):
+            left, right = right, left ^ ((right * SnowflakeID.EPOCH + i) & 0xFFFFFFFF)
+        return (left << 32) | right
+
+    @staticmethod
+    def __feistel_unshuffle(x: int, rounds: int = 4) -> int:
+        left = x >> 32
+        right = x & 0xFFFFFFFF
+        for i in reversed(range(rounds)):
+            left, right = right ^ ((left * SnowflakeID.EPOCH + i) & 0xFFFFFFFF), left
+        return (left << 32) | right
+
+    @staticmethod
+    def __get_machine_id() -> int:
+        from hashlib import sha256
+        from socket import gethostname
+        from uuid import getnode
+
+        modulo = 2**10
+        mac = str(getnode())
+        hostname = gethostname()
+        raw = mac + hostname
+        digest = sha256(raw.encode()).digest()
+        int_val = int.from_bytes(digest, "little")
+        return int_val % modulo

@@ -77,6 +77,7 @@ const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardCol
         />
     );
 });
+BoardColumnTitle.displayName = "Board.ColumnTitle";
 
 export interface IBoardColumnTitleInput {
     isEditing: bool;
@@ -153,5 +154,6 @@ export const BoardColumnTitleInput = memo(
         );
     }
 );
+BoardColumnTitleInput.displayName = "Board.ColumnTitleInput";
 
 export default BoardColumnTitle;

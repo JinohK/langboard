@@ -75,26 +75,22 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
                     </Button>
                     <BoardSettingsLabelColor />
                     <Flex items={{ sm: "center" }} direction={{ initial: "col", sm: "row" }} gap={{ sm: "3" }} className="truncate">
-                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                            <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                    <Box textSize="sm" className="truncate">
-                                        {labelName}
-                                    </Box>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content>{labelName}</Tooltip.Content>
-                            </Tooltip.Root>
-                        </Tooltip.Provider>
-                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                            <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                    <Box textSize="sm" className="truncate text-muted-foreground/70">
-                                        {labelDescription}
-                                    </Box>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content>{labelDescription}</Tooltip.Content>
-                            </Tooltip.Root>
-                        </Tooltip.Provider>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                                <Box textSize="sm" className="truncate">
+                                    {labelName}
+                                </Box>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>{labelName}</Tooltip.Content>
+                        </Tooltip.Root>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                                <Box textSize="sm" className="truncate text-muted-foreground/70">
+                                    {labelDescription}
+                                </Box>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>{labelDescription}</Tooltip.Content>
+                        </Tooltip.Root>
                     </Flex>
                 </Flex>
                 <BoardSettingsLabelMore />

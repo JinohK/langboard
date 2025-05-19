@@ -11,6 +11,10 @@ import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+export function SkeletonBoardWikiPage(): JSX.Element {
+    return <SkeletonWikiList />;
+}
+
 const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
     const [t] = useTranslation();
     const socket = useSocket();
@@ -57,7 +61,7 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
 
     return (
         <>
-            {!data ? (
+            {!data || isFetching ? (
                 <SkeletonWikiList />
             ) : (
                 <BoardWikiProvider

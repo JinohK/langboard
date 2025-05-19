@@ -2,16 +2,16 @@
 "use client";
 
 import type { TEquationElement } from "@udecode/plate-math";
-import { cn, withRef } from "@udecode/cn";
+import { cn } from "@udecode/cn";
 import { useEquationElement } from "@udecode/plate-math/react";
-import { PlateElement, useElement, useSelected } from "@udecode/plate/react";
+import { PlateElement, PlateElementProps, useElement, useSelected } from "@udecode/plate/react";
 import { Popover } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import { EquationPopoverContent } from "@/components/plate-ui/equation-popover";
 import { RadicalIcon } from "lucide-react";
 
-export const EquationElement = withRef<typeof PlateElement, { element: TEquationElement }>(({ children, className, ...props }, ref) => {
+export function EquationElement(props: PlateElementProps<TEquationElement>) {
     const [t] = useTranslation();
     const element = useElement<TEquationElement>();
 
@@ -36,7 +36,7 @@ export const EquationElement = withRef<typeof PlateElement, { element: TEquation
     });
 
     return (
-        <PlateElement ref={ref} className={cn("my-1", className)} {...props}>
+        <PlateElement className="my-1" {...props}>
             <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
                 <Popover.Trigger asChild>
                     <div
@@ -67,7 +67,7 @@ export const EquationElement = withRef<typeof PlateElement, { element: TEquation
                 />
             </Popover.Root>
 
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

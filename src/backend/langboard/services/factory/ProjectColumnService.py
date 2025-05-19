@@ -1,4 +1,5 @@
 from typing import Any, Literal, cast, overload
+from sqlalchemy import func
 from ...core.db import DbSession, SqlBuilder, User
 from ...core.service import BaseService
 from ...core.utils.DateTime import now
@@ -21,31 +22,50 @@ class ProjectColumnService(BaseService):
     @overload
     async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
     @overload
-    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all_by_project(
-        self, project: TProjectParam, as_api: bool
+        self, project: TProjectParam, as_api: Literal[True], with_count: bool = False
+    ) -> list[dict[str, Any]]: ...
+    async def get_all_by_project(
+        self, project: TProjectParam, as_api: bool, with_count: bool = False
     ) -> list[ProjectColumn] | list[dict[str, Any]]:
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use() as db:
-            result = await db.exec(
-                SqlBuilder.select.table(ProjectColumn)
-                .where(ProjectColumn.column("project_id") == project.id)
-                .order_by(ProjectColumn.column("order").asc())
-                .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
+        if as_api and with_count:
+            sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
+                Card, Card.column("project_column_id") == ProjectColumn.column("id")
             )
+        else:
+            sql_query = SqlBuilder.select.table(ProjectColumn)
+
+        sql_query = (
+            sql_query.where(ProjectColumn.column("project_id") == project.id)
+            .order_by(ProjectColumn.column("order").asc())
+            .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
+        )
+
+        async with DbSession.use() as db:
+            result = await db.exec(sql_query)
         raw_columns = result.all()
         columns = []
         has_archive_column = False
         for raw_column in raw_columns:
-            columns.append(raw_column.api_response() if as_api else raw_column)
+            if as_api and with_count:
+                raw_column, count = cast(tuple[ProjectColumn, int], raw_column)
+            else:
+                raw_column = cast(ProjectColumn, raw_column)
+                count = None
+
+            columns.append({**raw_column.api_response(), "count": count} if as_api else raw_column)
             if raw_column.is_archive:
                 has_archive_column = True
 
         if not has_archive_column:
             archive_column = await self.get_or_create_archive_if_not_exists(project)
-            columns.append(archive_column.api_response() if as_api else archive_column)
+            if as_api:
+                archive_column = archive_column.api_response()
+                archive_column["count"] = 0 if as_api and with_count else None
+            columns.append(archive_column)
 
         return columns
 
@@ -70,8 +90,7 @@ class ProjectColumnService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(column)
-            await db.commit()
+            await db.insert(column)
 
         return column
 
@@ -103,8 +122,7 @@ class ProjectColumnService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(column)
-            await db.commit()
+            await db.insert(column)
 
         ProjectColumnPublisher.created(project, column)
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
@@ -124,11 +142,10 @@ class ProjectColumnService(BaseService):
         column.name = name
         async with DbSession.use() as db:
             await db.update(column)
-            await db.commit()
 
         ProjectColumnPublisher.name_changed(project, column, name)
         ProjectColumnActivityTask.project_column_name_changed(user_or_bot, project, old_name, column)
-        ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, old_name, column)
+        ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, column)
 
         return True
 
@@ -143,12 +160,10 @@ class ProjectColumnService(BaseService):
         update_query = self._set_order_in_column(update_query, ProjectColumn, original_order, order)
         async with DbSession.use() as db:
             await db.exec(update_query)
-            await db.commit()
 
         column.order = order
         async with DbSession.use() as db:
             await db.update(column)
-            await db.commit()
 
         ProjectColumnPublisher.order_changed(project, column)
 
@@ -175,7 +190,6 @@ class ProjectColumnService(BaseService):
         )
         async with DbSession.use() as db:
             await db.exec(query)
-            await db.commit()
 
         for i in range(count_cards_in_column):
             card = all_cards_in_column[i]
@@ -183,11 +197,9 @@ class ProjectColumnService(BaseService):
             card.archived_at = current_time
             async with DbSession.use() as db:
                 await db.update(card)
-                await db.commit()
 
         async with DbSession.use() as db:
             await db.delete(column)
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -197,7 +209,6 @@ class ProjectColumnService(BaseService):
                     (ProjectColumn.column("project_id") == project.id) & (ProjectColumn.column("order") > column.order)
                 )
             )
-            await db.commit()
 
         ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
         ProjectColumnActivityTask.project_column_deleted(user_or_bot, project, column)

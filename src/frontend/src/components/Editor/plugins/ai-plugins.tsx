@@ -1,8 +1,13 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
-import { MarkdownPlugin } from "@/components/Editor/plugins/markdown";
+import type { AIChatPluginConfig } from "@udecode/plate-ai/react";
+import { PathApi } from "@udecode/plate";
+import { streamInsertChunk, withAIBatch } from "@udecode/plate-ai";
+import { AIChatPlugin, AIPlugin, useChatChunk } from "@udecode/plate-ai/react";
+import { usePluginOption } from "@udecode/plate/react";
+import { markdownPlugin } from "@/components/Editor/plugins/markdown-plugin";
+import { AILoadingBar } from "@/components/plate-ui/ai-loading-bar";
 import { AIMenu } from "@/components/plate-ui/ai-menu";
 import { cursorOverlayPlugin } from "@/components/Editor/plugins/cursor-overlay-plugin";
 import { IUseChat } from "@/components/Editor/useChat";
@@ -18,14 +23,16 @@ Rules:
 - Your response should be tailored to the user's prompt, providing precise assistance to optimize note management.
 - For INSTRUCTIONS: Follow the <Reminder> exactly. Provide ONLY the content to be inserted or replaced. No explanations or comments.
 - For QUESTIONS: Provide a helpful and concise answer. You may include brief explanations if necessary.
+- CRITICAL: DO NOT remove or modify the following custom MDX tags: <u>, <callout>, <kbd>, <toc>, <sub>, <sup>, <mark>, <del>, <date>, <span>, <column>, <column_group>, <file>, <audio>, <video> in <Selection> unless the user explicitly requests this change.
 - CRITICAL: Distinguish between INSTRUCTIONS and QUESTIONS. Instructions typically ask you to modify or add content. Questions ask for information or clarification.
+- CRITICAL: when asked to write in markdown, do not start with \`\`\`markdown.
 `;
 
 const systemDefault = `\
 ${systemCommon}
 - <Block> is the current block of text the user is working on.
 - Ensure your output can seamlessly fit into the existing <Block> structure.
-- CRITICAL: Provide only a single block of text. DO NOT create multiple paragraphs or separate blocks.
+
 <Block>
 {block}
 </Block>
@@ -57,9 +64,7 @@ ${systemCommon}
 `;
 
 const userDefault = `<Reminder>
-CRITICAL: DO NOT use block formatting. You can only use inline formatting.
-CRITICAL: DO NOT start new lines or paragraphs.
-NEVER write <Block>.
+CRITICAL: NEVER write <Block>.
 </Reminder>
 {prompt}`;
 
@@ -93,7 +98,7 @@ export interface ICreateAIPlugins extends IUseChat {}
 export const createAIPlugins = ({ socket, eventKey, events, commonEventData }: ICreateAIPlugins) => {
     return [
         cursorOverlayPlugin,
-        MarkdownPlugin.configure({ options: { indentList: true } }),
+        markdownPlugin,
         AIPlugin,
         AIChatPlugin.configure({
             options: {
@@ -112,7 +117,55 @@ export const createAIPlugins = ({ socket, eventKey, events, commonEventData }: I
                           : PROMPT_TEMPLATES.systemDefault;
                 },
             },
-            render: { afterEditable: () => <AIMenu socket={socket} eventKey={eventKey} events={events} commonEventData={commonEventData} /> },
+            render: {
+                afterContainer: () => <AILoadingBar />,
+                afterEditable: () => <AIMenu socket={socket} eventKey={eventKey} events={events} commonEventData={commonEventData} />,
+            },
+        }).extend({
+            useHooks: ({ editor, getOption }) => {
+                const mode = usePluginOption({ key: "aiChat" } as AIChatPluginConfig, "mode");
+
+                useChatChunk({
+                    onChunk: ({ chunk, isFirst, nodes }) => {
+                        if (isFirst && mode == "insert") {
+                            editor.tf.withoutSaving(() => {
+                                editor.tf.insertNodes(
+                                    {
+                                        children: [{ text: "" }],
+                                        type: AIChatPlugin.key,
+                                    },
+                                    {
+                                        at: PathApi.next(editor.selection!.focus.path.slice(0, 1)),
+                                    }
+                                );
+                            });
+                            editor.setOption(AIChatPlugin, "streaming", true);
+                        }
+
+                        if (mode === "insert" && nodes.length > 0) {
+                            withAIBatch(
+                                editor,
+                                () => {
+                                    if (!getOption("streaming")) return;
+                                    editor.tf.withScrolling(() => {
+                                        streamInsertChunk(editor, chunk, {
+                                            textProps: {
+                                                ai: true,
+                                            },
+                                        });
+                                    });
+                                },
+                                { split: isFirst }
+                            );
+                        }
+                    },
+                    onFinish: () => {
+                        editor.setOption(AIChatPlugin, "streaming", false);
+                        editor.setOption(AIChatPlugin, "_blockChunks", "");
+                        editor.setOption(AIChatPlugin, "_blockPath", null);
+                    },
+                });
+            },
         }),
     ] as const;
 };

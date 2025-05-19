@@ -6,7 +6,7 @@ import useDeclineProjectInvitation from "@/controllers/api/board/useDeclineProje
 import useGetProjectInvitation from "@/controllers/api/board/useGetProjectInvitation";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useEffect, useState } from "react";
@@ -14,10 +14,10 @@ import { Trans, useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
 function BoardInvitationPage() {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
     const token = searchParams.get(QUERY_NAMES.PROJCT_INVITATION_TOKEN);
     const [isValidating, setIsValidating] = useState(false);
@@ -39,7 +39,6 @@ function BoardInvitationPage() {
             {
                 onSuccess: (data) => {
                     setProjectTitle(data.project.title);
-                    setIsLoadingRef.current(false);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

@@ -1,10 +1,9 @@
-import { memo, useEffect, useReducer } from "react";
+import { memo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Skeleton, Tabs } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { makeReactKey } from "@/core/utils/StringUtils";
 import ProjectList, { SkeletonProjectList } from "@/pages/DashboardPage/components/ProjectList";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import { PROJECT_TABS, TProjectTab, TProjectTabRoute } from "@/pages/DashboardPage/constants";
 import { Project } from "@/core/models";
@@ -32,7 +31,6 @@ interface IProjectTabsProps {
 }
 
 const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarredProjects, scrollAreaUpdater }: IProjectTabsProps) => {
-    const { setIsLoadingRef } = usePageHeader();
     const { navigate } = useDashboard();
     const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [t] = useTranslation();
@@ -66,12 +64,6 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
 
         navigate(ROUTES.DASHBOARD.PROJECTS[tab.toUpperCase() as TProjectTabRoute]);
     };
-
-    useEffect(() => {
-        setTimeout(() => {
-            setIsLoadingRef.current(false);
-        }, 0);
-    }, [currentTab]);
 
     return (
         <Tabs.Root value={currentTab}>

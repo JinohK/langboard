@@ -55,7 +55,7 @@ class SocketEvent:
             topics = req.socket.get_topics()
             for topic in topics:
                 if ":" in topic:
-                    key, value = topic.split(":", 1)
+                    key, value = topic.split(":", maxsplit=1)
                     params[f"{key}_id"] = value
 
             is_authorized = await role.is_authorized(req.from_app["auth_user_id"], params, actions, role_finder, False)

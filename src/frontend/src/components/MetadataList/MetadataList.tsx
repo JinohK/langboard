@@ -14,7 +14,7 @@ export interface IMetadataListProps {
 }
 
 function MetadataList({ form, errorsMap, canEdit }: IMetadataListProps) {
-    const { data, error } = useGetMetadata(form);
+    const { data, error, isFetching } = useGetMetadata(form);
     const metadataList = MetadataModel.Model.useModels((model) => model.type === form.type && model.uid === form.uid);
     const [metadata, setMetadata] = useState(metadataList[0]);
 
@@ -36,7 +36,7 @@ function MetadataList({ form, errorsMap, canEdit }: IMetadataListProps) {
 
     return (
         <>
-            {!data || !metadata ? (
+            {!data || !metadata || isFetching ? (
                 <SkeletonMetadataList />
             ) : (
                 <MetadataListInner form={form} metadata={metadata} errorsMap={errorsMap} canEdit={canEdit} />

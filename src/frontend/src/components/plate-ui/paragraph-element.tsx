@@ -1,13 +1,13 @@
 "use client";
 
 import { cn } from "@udecode/cn";
-import { withRef } from "@udecode/plate/react";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import type { PlateElementProps } from "@udecode/plate/react";
+import { PlateElement } from "@udecode/plate/react";
 
-export const ParagraphElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
+export function ParagraphElement(props: PlateElementProps) {
     return (
-        <PlateElement ref={ref} className={cn("m-0 px-0 py-1", className)} {...props}>
-            {children}
+        <PlateElement {...props} className={cn("m-0 px-0 py-1")}>
+            {props.children}
         </PlateElement>
     );
-});
+}

@@ -1,9 +1,8 @@
 import { Flex } from "@/components/base";
 import NotificationSetting from "@/components/NotificationSetting";
 import { AuthUser } from "@/core/models";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
-import { memo, useEffect } from "react";
+import { memo } from "react";
 
 export interface IBoardSettingsUserListProps {
     currentUser: AuthUser.TModel;
@@ -11,12 +10,6 @@ export interface IBoardSettingsUserListProps {
 }
 
 const BoardSettingsUserList = memo(({ currentUser, projectUID }: IBoardSettingsUserListProps) => {
-    const { setIsLoadingRef } = usePageHeader();
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
-
     return (
         <Flex direction="col" gap="3" p={{ initial: "4", md: "6", lg: "8" }} items="center">
             <BoardSettingsSection title="notification.settings.Notification settings">

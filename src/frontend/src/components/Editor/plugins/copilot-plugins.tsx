@@ -4,12 +4,13 @@
 import type { TElement } from "@udecode/plate";
 import { CopilotPlugin } from "@udecode/plate-ai/react";
 import { GhostText } from "@/components/plate-ui/ghost-text";
-import { serializeMdNodes, stripMarkdown } from "@/components/Editor/plugins/markdown";
 import TypeUtils from "@/core/utils/TypeUtils";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { generateToken } from "@/core/utils/StringUtils";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { IUseChat } from "@/components/Editor/useChat";
+import { serializeMd, stripMarkdown } from "@udecode/plate-markdown";
+import { markdownPlugin } from "@/components/Editor/plugins/markdown-plugin";
 
 export interface ICreateCopilotPlugins extends Omit<IUseChat, "events"> {
     events: {
@@ -21,6 +22,7 @@ export interface ICreateCopilotPlugins extends Omit<IUseChat, "events"> {
 
 export const createCopilotPlugins = ({ socket, eventKey, events, commonEventData }: ICreateCopilotPlugins) => {
     return [
+        markdownPlugin,
         CopilotPlugin.configure(({ api: editorApi }) => ({
             options: {
                 completeOptions: {
@@ -92,15 +94,15 @@ export const createCopilotPlugins = ({ socket, eventKey, events, commonEventData
                     body: {
                         system: `You are an advanced AI writing assistant, similar to VSCode Copilot but for general text. Your task is to predict and generate the next part of the text based on the given context.
 
-Rules:
-- Continue the text naturally up to the next punctuation mark (., ,, ;, :, ?, or !).
-- Maintain style and tone. Don't repeat given text.
-- For unclear context, provide the most likely continuation.
-- Handle code snippets, lists, or structured text if needed.
-- Don't include """ in your response.
-- CRITICAL: Always end with a punctuation mark.
-- CRITICAL: Avoid starting a new block. Do not use block formatting like >, #, 1., 2., -, etc. The suggestion should continue in the same block as the context.
-- If no context is provided or you can't generate a continuation, return "0" without explanation.`,
+  Rules:
+  - Continue the text naturally up to the next punctuation mark (., ,, ;, :, ?, or !).
+  - Maintain style and tone. Don't repeat given text.
+  - For unclear context, provide the most likely continuation.
+  - Handle code snippets, lists, or structured text if needed.
+  - Don't include """ in your response.
+  - CRITICAL: Always end with a punctuation mark.
+  - CRITICAL: Avoid starting a new block. Do not use block formatting like >, #, 1., 2., -, etc. The suggestion should continue in the same block as the context.
+  - If no context is provided or you can't generate a continuation, return "0" without explanation.`,
                     },
                     onError: () => {
                         return;
@@ -119,7 +121,9 @@ Rules:
 
                     if (!contextEntry) return "";
 
-                    const prompt = serializeMdNodes([contextEntry[0] as TElement]);
+                    const prompt = serializeMd(editor, {
+                        value: [contextEntry[0] as TElement],
+                    });
 
                     return `Continue the text up to the next punctuation mark:
 """

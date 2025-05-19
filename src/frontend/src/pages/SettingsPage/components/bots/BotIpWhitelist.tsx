@@ -7,7 +7,7 @@ import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { isValidIpv4OrRnage } from "@/core/utils/StringUtils";
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBotIpWhitelistProps {
@@ -16,18 +16,16 @@ export interface IBotIpWhitelistProps {
 
 const BotIpWhitelist = memo(({ bot }: IBotIpWhitelistProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const ipWhitelist = bot.useField("ip_whitelist");
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const { mutateAsync } = useUpdateBot(bot);
     const updateBot = (values: string[]) => {
-        if (values.length === ipWhitelist.length || isValidatingRef.current) {
+        if (values.length === ipWhitelist.length || isValidating) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = mutateAsync({
             ip_whitelist: values,
@@ -41,7 +39,7 @@ const BotIpWhitelist = memo(({ bot }: IBotIpWhitelistProps) => {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef
@@ -55,7 +53,6 @@ const BotIpWhitelist = memo(({ bot }: IBotIpWhitelistProps) => {
             },
             finally: () => {
                 setIsValidating(false);
-                isValidatingRef.current = false;
             },
         });
     };

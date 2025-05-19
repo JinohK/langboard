@@ -109,6 +109,29 @@ function BoardSettingsCronBotScheduleForm({
         valuesMapRef.current.interval = value;
     };
 
+    const handleChangeStartAtDate = (date: Date | undefined) => {
+        date?.setSeconds(0);
+        setStartAt(date);
+        if (valuesMapRef.current.endAt && valuesMapRef.current.endAt.getTime() < (date?.getTime() ?? 0)) {
+            setEndAt(date ? new Date(date.getTime() + 60 * 1000) : undefined);
+        }
+        setTimeout(() => {
+            if (BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(runningType)) {
+                triggersMapRef.current.endAt?.click();
+            }
+        }, 0);
+        valuesMapRef.current.startAt = date;
+        if (valuesMapRef.current.endAt && valuesMapRef.current.endAt.getTime() < (date?.getTime() ?? 0)) {
+            valuesMapRef.current.endAt = date ? new Date(date.getTime() + 60 * 1000) : undefined;
+        }
+    };
+
+    const handleChangeEndAtDate = (date: Date | undefined) => {
+        date?.setSeconds(0);
+        setEndAt(date);
+        valuesMapRef.current.endAt = date;
+    };
+
     return (
         <Flex direction="col" gap="2">
             <Select.Root value={runningType} onValueChange={onChangeRunningType} disabled={disabled}>
@@ -130,22 +153,7 @@ function BoardSettingsCronBotScheduleForm({
                 <DateTimePicker
                     value={startAt}
                     min={new Date(new Date().setMinutes(new Date().getMinutes()))}
-                    onChange={(date) => {
-                        date?.setSeconds(0);
-                        setStartAt(date);
-                        if (valuesMapRef.current.endAt && valuesMapRef.current.endAt.getTime() < (date?.getTime() ?? 0)) {
-                            setEndAt(date ? new Date(date.getTime() + 60 * 1000) : undefined);
-                        }
-                        setTimeout(() => {
-                            if (BotSchedule.RUNNING_TYPES_WITH_END_AT.includes(runningType)) {
-                                triggersMapRef.current.endAt?.click();
-                            }
-                        }, 0);
-                        valuesMapRef.current.startAt = date;
-                        if (valuesMapRef.current.endAt && valuesMapRef.current.endAt.getTime() < (date?.getTime() ?? 0)) {
-                            valuesMapRef.current.endAt = date ? new Date(date.getTime() + 60 * 1000) : undefined;
-                        }
-                    }}
+                    onChange={handleChangeStartAtDate}
                     timePicker={{
                         hour: true,
                         minute: true,
@@ -173,11 +181,7 @@ function BoardSettingsCronBotScheduleForm({
                 <DateTimePicker
                     value={endAt}
                     min={startAt ? new Date(startAt!.getTime() + 60 * 1000) : undefined}
-                    onChange={(date) => {
-                        date?.setSeconds(0);
-                        setEndAt(date);
-                        valuesMapRef.current.endAt = date;
-                    }}
+                    onChange={handleChangeEndAtDate}
                     timePicker={{
                         hour: true,
                         minute: true,

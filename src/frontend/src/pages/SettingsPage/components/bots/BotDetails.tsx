@@ -1,6 +1,5 @@
 import { Flex } from "@/components/base";
 import { BotModel } from "@/core/models";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import BotApiAuthType from "@/pages/SettingsPage/components/bots/BotApiAuthType";
 import BotApiKey from "@/pages/SettingsPage/components/bots/BotApiKey";
 import BotApiURL from "@/pages/SettingsPage/components/bots/BotApiURL";
@@ -11,19 +10,13 @@ import BotName from "@/pages/SettingsPage/components/bots/BotName";
 import BotPrompt from "@/pages/SettingsPage/components/bots/BotPrompt";
 import BotTriggerConditionList from "@/pages/SettingsPage/components/bots/BotTriggerConditionList";
 import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
-import { memo, useEffect } from "react";
+import { memo } from "react";
 
 export interface IBotDetailsProps {
     bot: BotModel.TModel;
 }
 
 const BotDetails = memo(({ bot }: IBotDetailsProps) => {
-    const { setIsLoadingRef } = usePageHeader();
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, [bot]);
-
     return (
         <Flex direction="col" gap="4">
             <BotAvatar bot={bot} />

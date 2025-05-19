@@ -8,7 +8,6 @@ import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
@@ -16,7 +15,7 @@ import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardCo
 import BoardColumnCard, { IBoardColumnCardProps, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { memo, useCallback, useMemo, useReducer, useRef } from "react";
 import { tv } from "tailwind-variants";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
@@ -57,7 +56,6 @@ const PAGE_SIZE = 20;
 
 const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
     const { selectCardViewType } = useBoardRelationshipController();
-    const { setIsLoadingRef } = usePageHeader();
     const { project, filters, socket, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [updated, forceUpdate] = updater;
@@ -119,24 +117,36 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
 
         listeners?.onKeyDown?.(e);
     }, []);
-    const cardCreatedHandlers = useBoardCardCreatedHandlers({
-        projectUID: project.uid,
-        columnUID: column.uid,
-        callback: () => {
-            forceUpdate();
-        },
-    });
-    const columnDeletedHandlers = useBoardUIColumnDeletedHandlers({
-        project,
-        callback: () => {
-            if (!column.is_archive) {
-                return;
-            }
+    const cardCreatedHandlers = useMemo(
+        () =>
+            useBoardCardCreatedHandlers({
+                projectUID: project.uid,
+                columnUID: column.uid,
+                callback: () => {
+                    forceUpdate();
+                },
+            }),
+        []
+    );
+    const columnDeletedHandlers = useMemo(
+        () =>
+            useBoardUIColumnDeletedHandlers({
+                project,
+                callback: () => {
+                    if (!column.is_archive) {
+                        return;
+                    }
 
-            forceUpdate();
-        },
+                    forceUpdate();
+                },
+            }),
+        []
+    );
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [cardCreatedHandlers, columnDeletedHandlers],
+        dependencies: [cardCreatedHandlers, columnDeletedHandlers],
     });
-    useSwitchSocketHandlers({ socket, handlers: [cardCreatedHandlers, columnDeletedHandlers] });
 
     callbacksRef.current[columnId] = {
         onDragEnd: (originalCard, index) => {
@@ -173,10 +183,6 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             }
         },
     };
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, [cardUIDs]);
 
     const style = {
         transition,
@@ -242,9 +248,15 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                         >
                             <SortableContext id={columnId} items={cardUIDs}>
                                 <Flex direction="col" gap="3">
-                                    {cards.map((card) => (
-                                        <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} closeHoverCardRef={closeHoverCardRef} />
-                                    ))}
+                                    {cards.map((card) => {
+                                        if (!card) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} closeHoverCardRef={closeHoverCardRef} />
+                                        );
+                                    })}
                                 </Flex>
                             </SortableContext>
                             <BoardColumnAddCard />
@@ -258,5 +270,6 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
         </BoardAddCardProvider>
     );
 });
+BoardColumn.displayName = "Board.Column";
 
 export default BoardColumn;

@@ -2,6 +2,7 @@ import { Toast } from "@/components/base";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { useEditorData } from "@/core/providers/EditorDataProvider";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import { AxiosProgressEvent } from "axios";
 import * as React from "react";
@@ -12,24 +13,13 @@ export interface UploadedFile {
     url: string;
 }
 
-export interface IUseUploadFile {
-    uploadPath?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    uploadedCallback?: (respones: any) => void;
-}
-
-export function useUploadFile({ uploadPath, uploadedCallback }: IUseUploadFile) {
+export function useUploadFile() {
     const [t] = useTranslation();
+    const { uploadPath, uploadedCallback } = useEditorData();
     const [uploadedFile, setUploadedFile] = React.useState<UploadedFile>();
     const [uploadingFile, setUploadingFile] = React.useState<File>();
     const [progress, setProgress] = React.useState<number>(0);
     const [isUploading, setIsUploading] = React.useState(false);
-
-    if (uploadPath) {
-        if (!uploadPath.startsWith("/")) {
-            uploadPath = `/${uploadPath}`;
-        }
-    }
 
     async function uploadThing(file: File) {
         if (!uploadPath) {

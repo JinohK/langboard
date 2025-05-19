@@ -98,5 +98,6 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
         </Dialog.Root>
     );
 });
+SelectRelationshipDialog.displayName = "Board.SelectRelationshipDialog";
 
 export default SelectRelationshipDialog;

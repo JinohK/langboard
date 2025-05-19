@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from socketify import App as SocketifyApp
 from socketify import OpCode
 from ...Constants import PROJECT_NAME, PROJECT_VERSION
+from ..logger import Logger
 from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
@@ -90,9 +91,14 @@ class AppRouter:
 
         socket_topic = f"{topic}:{topic_id}"
 
-        return self.__socketify_app.publish(
-            topic=socket_topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
-        )
+        result = False
+        try:
+            result = self.__socketify_app.publish(
+                topic=socket_topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
+            )
+        except Exception as e:
+            Logger.main.exception(e)
+        return result
 
     def set_openapi_schema(self, app: FastAPI):
         if app.openapi_schema:

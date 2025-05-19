@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
@@ -28,23 +29,16 @@ const useSearchFilters = <TFilterMap extends ISearchFilterMap>(
     { filterKeys, searchKey = "filters" }: IUseSearchFiltersProps<TFilterMap>,
     deps?: unknown[]
 ) => {
+    const { locationPopped } = usePageHeader();
     const [updated, setUpdated] = useState(updatedStore.getState().updated);
     const filters = useMemo(() => {
         const searchParams = new URLSearchParams(location.search);
         const rawFilters = searchParams.get(searchKey);
         const newFilters = fromString(rawFilters);
         return newFilters;
-    }, [location, location.search, updated, ...(deps || [])]);
-
-    useEffect(() => {
-        const unsub = updatedStore.subscribe(() => {
-            setTimeout(() => {
-                setUpdated(updatedStore.getState().updated);
-            }, 0);
-        });
-
-        return unsub;
-    }, [updated]);
+    }, [location, location.search, locationPopped, updated, ...(deps || [])]);
+    const filtersRef = useRef<TFilterMap>({} as TFilterMap);
+    filtersRef.current = filters;
 
     const forceUpdate = () => {
         updatedStore.getState().forceUpdate();
@@ -52,7 +46,7 @@ const useSearchFilters = <TFilterMap extends ISearchFilterMap>(
     };
 
     function toString(): string {
-        return Object.entries(filters)
+        return Object.entries(filtersRef.current)
             .map(([key, value]) => {
                 if (!value!.length) {
                     return "";
@@ -86,14 +80,24 @@ const useSearchFilters = <TFilterMap extends ISearchFilterMap>(
     function unique() {
         for (let i = 0; i < filterKeys.length; ++i) {
             const filterKey = filterKeys[i];
-            const filterValue = filters[filterKey];
+            const filterValue = filtersRef.current[filterKey];
             if (!filterValue?.length) {
                 continue;
             }
 
-            filters[filterKey] = filterValue.filter((value, index) => filterValue.indexOf(value) === index) as any;
+            filtersRef.current[filterKey] = filterValue.filter((value, index) => filterValue.indexOf(value) === index) as any;
         }
     }
+
+    useEffect(() => {
+        const unsub = updatedStore.subscribe(() => {
+            setTimeout(() => {
+                setUpdated(updatedStore.getState().updated);
+            }, 0);
+        });
+
+        return unsub;
+    }, [updated]);
 
     return {
         filters,

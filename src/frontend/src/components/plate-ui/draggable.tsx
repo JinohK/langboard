@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useMemo } from "react";
+import * as React from "react";
 
-import { cn, withRef } from "@udecode/cn";
 import { isType } from "@udecode/plate";
+import { cn } from "@udecode/cn";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
 import { CodeBlockPlugin } from "@udecode/plate-code-block/react";
 import { useDraggable, useDropLine } from "@udecode/plate-dnd";
@@ -13,7 +12,7 @@ import { ImagePlugin, MediaEmbedPlugin, PlaceholderPlugin } from "@udecode/plate
 import { BlockSelectionPlugin } from "@udecode/plate-selection/react";
 import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
 import {
-    type PlateRenderElementProps,
+    type PlateElementProps,
     type RenderNodeWrapper,
     MemoizedChildren,
     ParagraphPlugin,
@@ -24,8 +23,8 @@ import {
 } from "@udecode/plate/react";
 import { useReadOnly, useSelected } from "@udecode/plate/react";
 import { GripVertical } from "lucide-react";
+import { Button, Tooltip } from "@/components/base";
 import { STRUCTURAL_TYPES } from "@/components/Editor/transforms";
-import { Tooltip } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
 const UNDRAGGABLE_KEYS = [TableRowPlugin.key, TableCellPlugin.key];
@@ -34,7 +33,7 @@ export const DraggableAboveNodes: RenderNodeWrapper = (props) => {
     const { editor, element, path } = props;
     const readOnly = useReadOnly();
 
-    const enabled = useMemo(() => {
+    const enabled = React.useMemo(() => {
         if (readOnly) return false;
         if (path.length === 1 && !isType(editor, element, UNDRAGGABLE_KEYS)) {
             return true;
@@ -60,13 +59,13 @@ export const DraggableAboveNodes: RenderNodeWrapper = (props) => {
     return (props) => <Draggable {...props} />;
 };
 
-export const Draggable = withRef<"div", PlateRenderElementProps>(({ className, ...props }, ref) => {
+export function Draggable(props: PlateElementProps) {
     const { children, editor, element, path } = props;
     const blockSelectionApi = editor.getApi(BlockSelectionPlugin).blockSelection;
     const { isDragging, previewRef, handleRef } = useDraggable({
         element,
         onDropHandler: (_, { dragItem }) => {
-            const id = (dragItem as any).id;
+            const id = (dragItem as { id: string }).id;
 
             if (blockSelectionApi && id) {
                 blockSelectionApi.set(id);
@@ -78,7 +77,7 @@ export const Draggable = withRef<"div", PlateRenderElementProps>(({ className, .
     const isInTable = path.length === 4;
 
     return (
-        <div ref={ref} className={cn("relative", isDragging && "opacity-50", STRUCTURAL_TYPES.includes(element.type) ? "group/structural" : "group")}>
+        <div className={cn("relative", isDragging && "opacity-50", STRUCTURAL_TYPES.includes(element.type) ? "group/structural" : "group")}>
             {!isInTable && (
                 <Gutter>
                     <div
@@ -91,9 +90,9 @@ export const Draggable = withRef<"div", PlateRenderElementProps>(({ className, .
                         )}
                     >
                         <div className={cn("slate-blockToolbar", "pointer-events-auto mr-1 flex items-center", isInColumn && "mr-1.5")}>
-                            <div ref={handleRef} className="size-4">
+                            <Button ref={handleRef} variant="ghost" className="w-4.5 h-6 p-0" data-plate-prevent-deselect>
                                 <DragHandle />
-                            </div>
+                            </Button>
                         </div>
                     </div>
                 </Gutter>
@@ -101,14 +100,13 @@ export const Draggable = withRef<"div", PlateRenderElementProps>(({ className, .
 
             <div ref={previewRef} className="slate-blockWrapper">
                 <MemoizedChildren>{children}</MemoizedChildren>
-
                 <DropLine />
             </div>
         </div>
     );
-});
+}
 
-const Gutter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
+function Gutter({ children, className, ...props }: React.ComponentProps<"div">) {
     const editor = useEditorRef();
     const element = useElement();
     const path = usePath();
@@ -121,19 +119,19 @@ const Gutter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElem
 
     return (
         <div
-            ref={ref}
+            {...props}
             className={cn(
                 "slate-gutterLeft",
-                "absolute -top-px z-50 flex h-full -translate-x-full cursor-text hover:opacity-100 sm:opacity-0",
+                "absolute top-0 z-50 flex h-full -translate-x-full cursor-text hover:opacity-100 sm:opacity-0",
                 STRUCTURAL_TYPES.includes(element.type) ? "group-hover/structural:opacity-100" : "group-hover:opacity-100",
                 isSelectionAreaVisible && "hidden",
                 !selected && "opacity-0",
                 isNodeType(HEADING_KEYS.h1) && "pb-1 text-[1.875em]",
                 isNodeType(HEADING_KEYS.h2) && "pb-1 text-[1.5em]",
                 isNodeType(HEADING_KEYS.h3) && "pb-1 pt-[2px] text-[1.25em]",
-                isNodeType([HEADING_KEYS.h4, HEADING_KEYS.h5]) && "pb-0 pt-[3px] text-[1.1em]",
+                isNodeType([HEADING_KEYS.h4, HEADING_KEYS.h5]) && "pb-0 pt-1 text-[1.1em]",
                 isNodeType(HEADING_KEYS.h6) && "pb-0",
-                isNodeType(ParagraphPlugin.key) && "pb-0 pt-[3px]",
+                isNodeType(ParagraphPlugin.key) && "pb-0 pt-1",
                 isNodeType(["ul", "ol"]) && "pb-0",
                 isNodeType(BlockquotePlugin.key) && "pb-0",
                 isNodeType(CodeBlockPlugin.key) && "pb-0 pt-6",
@@ -143,59 +141,53 @@ const Gutter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElem
                 className
             )}
             contentEditable={false}
-            {...props}
         >
             {children}
         </div>
     );
-});
+}
 
-const DragHandle = React.memo(() => {
+const DragHandle = React.memo(function DragHandle() {
     const [t] = useTranslation();
     const editor = useEditorRef();
+    const element = useElement();
 
     return (
-        <Tooltip.Provider delayDuration={400}>
-            <Tooltip.Root>
-                <Tooltip.Trigger type="button">
-                    <GripVertical
-                        className="size-4 text-muted-foreground"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            event.preventDefault();
-                        }}
-                        onMouseDown={() => {
-                            editor.getApi(BlockSelectionPlugin).blockSelection?.resetSelectedIds();
-                        }}
-                    />
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                    <Tooltip.Content>{t("editor.Drag to move")}</Tooltip.Content>
-                </Tooltip.Portal>
-            </Tooltip.Root>
-        </Tooltip.Provider>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+                <div
+                    className="flex size-full items-center justify-center"
+                    onClick={() => {
+                        editor.getApi(BlockSelectionPlugin).blockSelection.set(element.id as string);
+                    }}
+                    role="button"
+                >
+                    <GripVertical className="text-muted-foreground" />
+                </div>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+                <Tooltip.Content>{t("editor.Drag to move")}</Tooltip.Content>
+            </Tooltip.Portal>
+        </Tooltip.Root>
     );
 });
 
-const DropLine = React.memo(
-    React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
-        const { dropLine } = useDropLine();
+const DropLine = React.memo(function DropLine({ className, ...props }: React.ComponentProps<"div">) {
+    const { dropLine } = useDropLine();
 
-        if (!dropLine) return null;
+    if (!dropLine) return null;
 
-        return (
-            <div
-                ref={ref}
-                {...props}
-                className={cn(
-                    "slate-dropLine",
-                    "absolute inset-x-0 h-0.5 opacity-100 transition-opacity",
-                    "bg-brand/50",
-                    dropLine === "top" && "-top-px",
-                    dropLine === "bottom" && "-bottom-px",
-                    className
-                )}
-            />
-        );
-    })
-);
+    return (
+        <div
+            {...props}
+            className={cn(
+                "slate-dropLine",
+                "absolute inset-x-0 h-0.5 opacity-100 transition-opacity",
+                "bg-brand/50",
+                dropLine === "top" && "-top-px",
+                dropLine === "bottom" && "-bottom-px",
+                className
+            )}
+        />
+    );
+});

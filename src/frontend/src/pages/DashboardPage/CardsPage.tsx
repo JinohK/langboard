@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Flex, Loading, Table } from "@/components/base";
+import { Box, Flex, Loading, Skeleton, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetDashboardCards from "@/controllers/api/dashboard/useGetDashboardCards";
@@ -8,8 +8,31 @@ import CardRow from "@/pages/DashboardPage/components/CardRow";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ProjectCard } from "@/core/models";
 
+export function SkeletonCardsPage(): JSX.Element {
+    return (
+        <>
+            {Array.from({ length: 4 }).map((_, index) => (
+                <Flex items="center" w="full" key={createShortUUID()} mt={index ? "2" : "0"}>
+                    <Box px="4" className="w-1/3">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/3">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/6">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                    <Box px="4" className="w-1/6">
+                        <Skeleton h="10" w="full" />
+                    </Box>
+                </Flex>
+            ))}
+        </>
+    );
+}
+
 function CardsPage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { mutateAsync, cardUIDs, isLastPage, isFetchingRef } = useGetDashboardCards();
     const cards = ProjectCard.Model.useModels((model) => cardUIDs.includes(model.uid), [cardUIDs]);
@@ -28,7 +51,6 @@ function CardsPage(): JSX.Element {
 
     useEffect(() => {
         setPageAliasRef.current("Dashboard");
-        setIsLoadingRef.current(false);
     }, [mutateAsync, cards]);
 
     return (

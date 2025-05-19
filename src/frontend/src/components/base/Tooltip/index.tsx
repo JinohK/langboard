@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @/max-len */
 "use client";
 
@@ -10,7 +9,17 @@ const DEFAULT_DURATION = 400;
 
 const Provider = TooltipPrimitive.Provider;
 
-const Root = TooltipPrimitive.Root;
+function Root({
+    delayDuration = DEFAULT_DURATION,
+    skipDelayDuration,
+    ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Root> & Pick<React.ComponentProps<typeof Provider>, "skipDelayDuration">) {
+    return (
+        <Provider delayDuration={delayDuration} skipDelayDuration={skipDelayDuration}>
+            <TooltipPrimitive.Root {...props} />
+        </Provider>
+    );
+}
 
 const Trigger = TooltipPrimitive.Trigger;
 
@@ -23,6 +32,7 @@ const Content = React.forwardRef<
     <TooltipPrimitive.Content
         ref={ref}
         sideOffset={sideOffset}
+        data-slot="tooltip-content"
         className={cn(
             "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
             className
@@ -32,43 +42,39 @@ const Content = React.forwardRef<
 ));
 Content.displayName = TooltipPrimitive.Content.displayName;
 
-function withTooltip<T extends React.ComponentType<any> | keyof HTMLElementTagNameMap>(Component: T) {
-    return React.forwardRef<
-        React.ComponentRef<T>,
-        {
-            tooltipContentProps?: Omit<React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>, "children">;
-            tooltipProps?: Omit<React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>, "children">;
-            tooltip?: React.ReactNode;
-        } & React.ComponentPropsWithoutRef<T> &
-            Omit<TooltipPrimitive.TooltipProviderProps, "children">
-    >(function ExtendComponent(
-        { delayDuration = 0, disableHoverableContent = true, skipDelayDuration = 0, tooltip, tooltipContentProps, tooltipProps, ...props },
-        ref
-    ) {
+type TTooltipProps<T extends React.ElementType> = {
+    tooltip?: React.ReactNode;
+    tooltipContentProps?: Omit<React.ComponentPropsWithoutRef<typeof Content>, "children">;
+    tooltipProps?: Omit<React.ComponentPropsWithoutRef<typeof Provider>, "children">;
+    tooltipTriggerProps?: React.ComponentPropsWithoutRef<typeof Trigger>;
+} & React.ComponentProps<T>;
+
+function withTooltip<T extends React.ElementType>(Component: T) {
+    return function ExtendComponent({ tooltip, tooltipContentProps, tooltipProps, tooltipTriggerProps, ...props }: TTooltipProps<T>) {
         const [mounted, setMounted] = React.useState(false);
 
         React.useEffect(() => {
             setMounted(true);
         }, []);
 
-        const component = <Component ref={ref} {...(props as any)} />;
+        const component = <Component {...(props as React.ComponentProps<T>)} />;
 
         if (tooltip && mounted) {
             return (
-                <Provider delayDuration={delayDuration} disableHoverableContent={disableHoverableContent} skipDelayDuration={skipDelayDuration}>
-                    <Root {...tooltipProps}>
-                        <Trigger asChild>{component}</Trigger>
+                <Provider {...tooltipProps}>
+                    <Root>
+                        <Trigger asChild {...tooltipTriggerProps}>
+                            {component}
+                        </Trigger>
 
-                        <Portal>
-                            <Content {...tooltipContentProps}>{tooltip}</Content>
-                        </Portal>
+                        <Content {...tooltipContentProps}>{tooltip}</Content>
                     </Root>
                 </Provider>
             );
         }
 
         return component;
-    });
+    };
 }
 
 export { DEFAULT_DURATION, Content, Provider, Root, Trigger, Portal, withTooltip };

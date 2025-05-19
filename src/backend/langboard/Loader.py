@@ -20,10 +20,10 @@ def load_modules(  # type: ignore
             continue
         namespaces = []
         for namespace in filepath.parts[::-1][1:]:
-            if namespace == __name__.split(".")[0]:
+            if namespace == __name__.split(".", maxsplit=1)[0]:
                 break
             namespaces.insert(0, namespace)
-        namespaces.insert(0, __name__.split(".")[0])
+        namespaces.insert(0, __name__.split(".", maxsplit=1)[0])
         namespaces.append(filepath.stem)
         namespace = ".".join(namespaces)
 

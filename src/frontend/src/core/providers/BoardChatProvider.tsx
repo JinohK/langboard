@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { ChatMessageModel, InternalBotModel } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import useBoardChatSentHandlers from "@/controllers/socket/board/useBoardChatSentHandlers";
@@ -78,8 +78,15 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
 
     const sentHandlers = useBoardChatSentHandlers({ projectUID, callback: () => scrollToBottomRef.current() });
     const cancelledHandlers = useBoardChatCancelHandlers({ projectUID });
-    const streamHandlers = useBoardChatStreamHandlers({ projectUID, callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback } });
-    useSwitchSocketHandlers({ socket, handlers: [sentHandlers, cancelledHandlers, streamHandlers] });
+    const streamHandlers = useMemo(
+        () => useBoardChatStreamHandlers({ projectUID, callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback } }),
+        [startCallback, bufferCallback, endCallback]
+    );
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [sentHandlers, cancelledHandlers, streamHandlers],
+        dependencies: [sentHandlers, cancelledHandlers, streamHandlers],
+    });
 
     return (
         <BoardChatContext.Provider

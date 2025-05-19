@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Iterable, Mapping, Optional, TypeVar, Union, overload
-from sqlalchemy import Delete, Insert, Sequence, Update, text
+from time import sleep
+from typing import Any, Dict, Iterable, Literal, Mapping, Optional, TypeVar, Union, overload
+from sqlalchemy import Delete, Insert, Sequence, Update
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.util import EMPTY_DICT
 from sqlmodel import update
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -11,7 +13,6 @@ from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROLE, SUB_DATABASE_URL
 from ..logger import Logger
 from ..utils.DateTime import now
-from ..utils.decorators import class_instance, thread_safe_singleton
 from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
@@ -20,14 +21,55 @@ from .SnowflakeID import SnowflakeID
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
 
-@class_instance()
-@thread_safe_singleton
 class Engine:
-    def get_main_engine(self) -> AsyncEngine:
-        return create_async_engine(MAIN_DATABASE_URL)
+    @staticmethod
+    def get_main_engine() -> AsyncEngine:
+        url = Engine.__get_sanitized_driver(MAIN_DATABASE_URL)
+        return create_async_engine(
+            url,
+            **Engine.__create_config(url),
+        )
 
-    def get_sub_engine(self) -> AsyncEngine:
-        return create_async_engine(SUB_DATABASE_URL)
+    @staticmethod
+    def get_sub_engine() -> AsyncEngine:
+        url = Engine.__get_sanitized_driver(SUB_DATABASE_URL)
+        return create_async_engine(
+            url,
+            **Engine.__create_config(url),
+        )
+
+    @staticmethod
+    def __create_config(url: str) -> dict[str, Any]:
+        if url.startswith("sqlite"):
+            return {
+                "connect_args": {
+                    "check_same_thread": False,
+                    "timeout": 30,
+                }
+            }
+
+        if url.startswith("postgresql"):
+            return {
+                "poolclass": StaticPool,
+                "pool_size": 20,
+                "max_overflow": 30,
+                "pool_timeout": 30,
+                "pool_pre_ping": True,
+                "pool_recycle": 1800,
+                "echo": False,
+            }
+
+        return {}
+
+    @staticmethod
+    def __get_sanitized_driver(url: str) -> str:
+        splitted = url.split("://", maxsplit=1)
+        driver = splitted[0]
+        if driver == "sqlite":
+            return f"sqlite+aiosqlite://{splitted[1]}"
+        if driver == "postgresql":
+            return f"postgresql+asyncpg://{splitted[1]}"
+        return url
 
 
 _logger = Logger.use("DbConnection")
@@ -40,51 +82,26 @@ class DbSession:
     """
 
     def __init__(self):
-        main_session = AsyncSession(Engine.get_main_engine(), expire_on_commit=False)
-        sub_session = AsyncSession(Engine.get_sub_engine(), expire_on_commit=False)
-
-        self._sessions: dict[DbSessionRole, AsyncSession] = {}
-        self._sessions_needs_commit: list[AsyncSession] = []
-
+        self._sessions: dict[DbSessionRole, Literal["main", "sub"]] = {}
         for role in MAIN_DATABASE_ROLE:
-            self._sessions[DbSessionRole(role)] = main_session
+            self._sessions[DbSessionRole(role)] = "main"
 
         for role in SUB_DATABASE_ROLE:
-            self._sessions[DbSessionRole(role)] = sub_session
+            self._sessions[DbSessionRole(role)] = "sub"
 
     @asynccontextmanager
     @staticmethod
     async def use():
         db = DbSession()
         try:
-            for session in set(db._sessions.values()):
-                if MAIN_DATABASE_URL.startswith("sqlite"):
-                    await session.exec(text("PRAGMA journal_mode=WAL;"))  # type: ignore
-                await session.commit()
             yield db
         finally:
             await db.close()
 
     async def close(self):
-        if self.should_commit():
-            for session in self._sessions_needs_commit:
-                if session == self._sessions[DbSessionRole.Select]:
-                    await session.flush()
-            self._sessions_needs_commit = [
-                session for session in self._sessions_needs_commit if session != self._sessions[DbSessionRole.Select]
-            ]
-            if self.should_commit():
-                _logger.warning("DbConnection is being closed without committing.")
-
-        await self.rollback()
-        for session in self._sessions.values():
-            try:
-                await session.close()
-            except Exception:
-                pass
         self._sessions.clear()
 
-    def insert(self, obj: BaseSqlModel):
+    async def insert(self, obj: BaseSqlModel):
         """Inserts a new object into the database if it is new.
 
         :param obj: The object to be inserted; must be a subclass of :class:`BaseSqlModel`.
@@ -92,16 +109,21 @@ class DbSession:
         if not obj.is_new():
             return
         obj.id = SnowflakeID()
-        session = self._get_session(DbSessionRole.Insert)
-        session.add(obj)
+        async with self.create_session(DbSessionRole.Insert) as session:
+            session.begin()
+            try:
+                session.add(obj)
+                await session.commit()
+            except Exception:
+                await session.rollback()
 
-    def insert_all(self, objs: Iterable[BaseSqlModel]):
+    async def insert_all(self, objs: Iterable[BaseSqlModel]):
         """Inserts new objects into the database if they are new.
 
         :param objs: The objects to be inserted; must be a subclass of :class:`BaseSqlModel`.
         """
         for obj in objs:
-            self.insert(obj)
+            await self.insert(obj)
 
     async def update(self, obj: BaseSqlModel):
         """Updates an object in the database if it is not new.
@@ -110,13 +132,14 @@ class DbSession:
         """
         if obj.is_new() or not obj.has_changes():
             return
-        session = self._get_session(DbSessionRole.Update)
-        try:
-            obj = await session.merge(obj)
-        except Exception:
-            pass
-        session.add(obj)
-        obj.clear_changes()
+        async with self.create_session(DbSessionRole.Update) as session:
+            try:
+                obj = await session.merge(obj)
+            except Exception:
+                pass
+            session.add(obj)
+            obj.clear_changes()
+            await session.commit()
 
     @overload
     async def delete(self, obj: BaseSqlModel): ...
@@ -132,18 +155,20 @@ class DbSession:
         """
         if obj.is_new():
             return
-        session = self._get_session(DbSessionRole.Delete)
-        obj = await session.merge(obj)
-        if purge or not isinstance(obj, SoftDeleteModel):
+        async with self.create_session(DbSessionRole.Delete) as session:
+            obj = await session.merge(obj)
+            if purge or not isinstance(obj, SoftDeleteModel):
+                obj.clear_changes()
+                await session.delete(obj)
+                await session.commit()
+                return
+            if obj.deleted_at is not None:
+                obj.clear_changes()
+                return
+            obj.deleted_at = now()
+            session.add(obj)
+            await session.commit()
             obj.clear_changes()
-            await session.delete(obj)
-            return
-        if obj.deleted_at is not None:
-            obj.clear_changes()
-            return
-        obj.deleted_at = now()
-        session.add(obj)
-        obj.clear_changes()
 
     @overload
     async def exec(
@@ -252,8 +277,6 @@ class DbSession:
         else:
             raise ValueError(f"Unknown statement type: {type(statement)}")
 
-        session = self._get_session(role)
-
         args = {
             "statement": statement,
             "params": params,
@@ -263,38 +286,29 @@ class DbSession:
             "_add_event": _add_event,
         }
 
-        result = await session.exec(**args)
+        async with self.create_session(role) as session:
+            result = await session.exec(**args)
+            if role != DbSessionRole.Select:
+                await session.commit()
+
         if should_return_count:
             return result.rowcount
         return result
 
-    def should_commit(self) -> bool:
-        """Returns `True` if there are any sessions that need to be committed."""
-        return len(self._sessions_needs_commit) > 0
-
-    async def commit(self) -> None:
-        """Commits all sessions that need to be committed."""
-        for session in self._sessions_needs_commit:
+    def create_session(self, role: DbSessionRole) -> AsyncSession:
+        max_trial = 10
+        for _ in range(max_trial):
             try:
-                await session.commit()
+                session = AsyncSession(self._get_engine(role), expire_on_commit=False)
+                return session
             except Exception:
-                pass
+                sleep(0.5)
+                continue
+        raise Exception(f"Failed to create session after {max_trial}")
 
-        self._sessions_needs_commit.clear()
-
-    async def rollback(self) -> None:
-        """Rolls back all sessions that need to be rolled back."""
-        for session in self._sessions_needs_commit:
-            if session.is_active:
-                await session.rollback()
-        self._sessions_needs_commit.clear()
-
-    def _get_session(self, role: DbSessionRole) -> AsyncSession:
-        """Returns the session for the given role.
-
-        :param role: The role of the session to be returned.
-        """
-        session = self._sessions[role]
-        # if role != DbSessionRole.Select:
-        self._sessions_needs_commit.append(session)
-        return session
+    def _get_engine(self, role: DbSessionRole) -> AsyncEngine:
+        engine_type = self._sessions.get(role, "main")
+        if engine_type == "main":
+            return Engine.get_main_engine()
+        else:
+            return Engine.get_sub_engine()

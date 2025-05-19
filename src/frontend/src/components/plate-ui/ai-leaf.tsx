@@ -21,7 +21,7 @@ export function AILeaf({ className, ...props }: React.ComponentProps<typeof Plat
         <PlateText
             className={cn(
                 className,
-                "border-b-2 border-b-purple-100 bg-purple-50 text-purple-800",
+                "border-b-2 border-b-secondary/80 bg-secondary/50 text-secondary-foreground/80",
                 "transition-all duration-200 ease-in-out",
                 isLast && aiIndicatorVariants()
             )}

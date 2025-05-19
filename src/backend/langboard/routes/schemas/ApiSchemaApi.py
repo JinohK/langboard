@@ -113,7 +113,7 @@ def _get_schema(route: AppExceptionHandlingRoute):
     if "query" in schema:
         if schema["query"]:
             schema["query"] = schema["query"].model_json_schema()
-            imports, request_fields, other_classes = _parse_model(schema["query"])
+            imports, request_fields, other_classes = _parse_model("query", schema["query"])
             request_source_imports.extend([imp for imp in imports if imp not in request_source_imports])
             request_source_model.extend(request_fields)
             request_source_others.update(other_classes)
@@ -123,7 +123,7 @@ def _get_schema(route: AppExceptionHandlingRoute):
     if "form" in schema:
         if schema["form"]:
             schema["form"] = schema["form"].model_json_schema()
-            imports, request_fields, other_classes = _parse_model(schema["form"])
+            imports, request_fields, other_classes = _parse_model("form", schema["form"])
             request_source_imports.extend([imp for imp in imports if imp not in request_source_imports])
             request_source_model.extend(request_fields)
             request_source_others.update(other_classes)
@@ -150,7 +150,7 @@ def _get_schema(route: AppExceptionHandlingRoute):
     return schema
 
 
-def _parse_model(schema: Any):
+def _parse_model(form_type: Literal["query", "form"], schema: Any):
     BASE_MODEL_CLASS_PATTERN = r"class (\w+)\(BaseModel\):"
 
     parser = JsonSchemaParser(json_dumps(schema), use_subclass_enum=True)
@@ -193,6 +193,9 @@ def _parse_model(schema: Any):
             continue
 
         if started_type == "request":
+            old_line = line.strip()
+            new_line = f"{form_type}_{old_line}"
+            line = line.replace(old_line, new_line)
             request_fields.append(line)
         else:
             other_chunks.append(line)

@@ -14,7 +14,7 @@ export interface IBotProps {
 
 const Bot = memo(({ bot }: IBotProps) => {
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteBot(bot);
     const name = bot.useField("name");
     const uname = bot.useField("bot_uname");
@@ -40,7 +40,7 @@ const Bot = memo(({ bot }: IBotProps) => {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef
@@ -59,7 +59,7 @@ const Bot = memo(({ bot }: IBotProps) => {
     };
 
     const toBotDetails = () => {
-        navigate.current(ROUTES.SETTINGS.BOT_DETAILS(bot.uid));
+        navigateRef.current(ROUTES.SETTINGS.BOT_DETAILS(bot.uid));
     };
 
     return (

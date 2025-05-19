@@ -4,11 +4,8 @@ import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
-import { createDataText } from "@/components/Editor/plugins/markdown";
-import { format } from "@/core/utils/StringUtils";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { BotModel, User } from "@/core/models";
-import { API_ROUTES } from "@/controllers/constants";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -32,7 +29,7 @@ export function SkeletonBoardCommentForm() {
 }
 
 const BoardCommentForm = memo((): JSX.Element => {
-    const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
+    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
     const [t] = useTranslation();
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
@@ -45,7 +42,6 @@ const BoardCommentForm = memo((): JSX.Element => {
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const { mutate: addCommentMutate } = useAddCardComment();
     const editorName = `${card.uid}-comment`;
@@ -93,7 +89,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setValue({
-            content: createDataText("mention", [targetUser.uid, targetUser.username]),
+            content: `@${targetUser.uid} `,
         });
 
         setTimeout(() => {
@@ -118,7 +114,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     }, [subscribeEditorSocketEvents]);
 
     const changeOpenState = (opened: bool) => {
-        if (isValidatingRef.current) {
+        if (isValidating) {
             return;
         }
 
@@ -145,7 +141,6 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         addCommentMutate(
             {
@@ -161,7 +156,6 @@ const BoardCommentForm = memo((): JSX.Element => {
                 },
                 onSettled: () => {
                     setIsValidating(false);
-                    isValidatingRef.current = false;
                     setCurrentEditor("");
                 },
             }
@@ -250,17 +244,13 @@ const BoardCommentForm = memo((): JSX.Element => {
                                 currentUser={currentUser}
                                 mentionables={mentionables}
                                 className="h-full max-h-[min(50vh,200px)] min-h-[min(50vh,200px)] overflow-y-auto px-6 py-3"
-                                socket={socket}
-                                baseSocketEvent="board:card"
-                                chatEventKey={`card-new-comment-${card.uid}`}
-                                copilotEventKey={`card-new-comment-${card.uid}`}
-                                commonSocketEventData={{
+                                editorType="card-new-comment"
+                                form={{
                                     project_uid: projectUID,
+                                    card_uid: card.uid,
                                 }}
-                                uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                                 setValue={setValue}
                                 editorComponentRef={editorComponentRef}
-                                projectUID={projectUID}
                             />
                         </Box>
                         <Flex items="center" gap="2" justify="start" p="1">

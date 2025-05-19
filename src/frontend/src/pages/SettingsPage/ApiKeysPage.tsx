@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 function ApiKeysPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const { mutate: deleteSelectedSettingsMutate } = useDeleteSelectedSettings();
 
@@ -21,7 +21,7 @@ function ApiKeysPage() {
     }, []);
 
     const openCreateDialog = () => {
-        navigate.current(ROUTES.SETTINGS.CREATE_API_KEY);
+        navigateRef.current(ROUTES.SETTINGS.CREATE_API_KEY);
     };
 
     const deleteSelectedSettings = () => {
@@ -44,7 +44,7 @@ function ApiKeysPage() {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             Toast.Add.error(t("errors.Malformed request"));

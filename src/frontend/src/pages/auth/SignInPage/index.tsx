@@ -8,12 +8,12 @@ import { generateToken } from "@/core/utils/StringUtils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { Flex } from "@/components/base";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function SignInPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const location = useLocation();
     const [email, setEmail] = useState("");
     const [form, setForm] = useState<JSX.Element>();

@@ -1,7 +1,7 @@
 from typing import Any, cast
 from ....core.ai import Bot, BotDefaultTrigger, BotTriggerCondition
 from ....core.broker import Broker
-from ....core.db import BaseSqlModel, DbSession, SqlBuilder, User
+from ....core.db import DbSession, SqlBuilder, User
 from ....core.utils.decorators import staticclass
 from ....models import Card, Project, ProjectColumn, ProjectWiki, ProjectWikiAssignedBot
 
@@ -10,7 +10,7 @@ from ....models import Card, Project, ProjectColumn, ProjectWiki, ProjectWikiAss
 class BotTaskDataHelper:
     @staticmethod
     def create_project(user_or_bot: User | Bot, project: Project) -> dict[str, Any]:
-        return {"project": project.api_response(), "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot)}
+        return {"project_uid": project.get_uid(), "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot)}
 
     @staticmethod
     async def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
@@ -21,15 +21,8 @@ class BotTaskDataHelper:
         column = cast(ProjectColumn, column.first())
         return {
             **BotTaskDataHelper.create_project(user_or_bot, project),
-            "project_column": column.api_response(),
-            "card": card.api_response(),
-        }
-
-    @staticmethod
-    def create_changes(old_dict: dict[str, Any], model: BaseSqlModel):
-        return {
-            **{f"old_{key}": old_dict[key] for key in old_dict},
-            **{f"new_{key}": getattr(model, key) for key in old_dict},
+            "project_column_uid": column.get_uid(),
+            "card_uid": card.get_uid(),
         }
 
     @staticmethod
@@ -59,7 +52,7 @@ class BotTaskDataHelper:
             return None
         return {
             **BotTaskDataHelper.create_project(user_or_bot, project),
-            "project_wiki": wiki.convert_to_private_api_response(),
+            "project_wiki_uid": wiki.get_uid(),
             **(other_data or {}),
         }
 
@@ -72,7 +65,7 @@ class BotTaskDataHelper:
         return BotTaskDataHelper.schema(
             condition,
             {
-                "project": Project.api_schema(),
+                "project_uid": "string",
                 "executor": BotTaskDataHelper.create_user_or_bot_schema(),
                 **(schema or {}),
             },
@@ -83,9 +76,9 @@ class BotTaskDataHelper:
         return BotTaskDataHelper.schema(
             condition,
             {
-                "project": Project.api_schema(),
-                "project_column": ProjectColumn.api_schema(),
-                "card": Card.api_schema(),
+                "project_uid": "string",
+                "project_column_uid": "string",
+                "card_uid": "string",
                 "executor": BotTaskDataHelper.create_user_or_bot_schema(),
                 **(schema or {}),
             },

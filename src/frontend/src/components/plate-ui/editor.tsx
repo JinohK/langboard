@@ -2,10 +2,9 @@
 "use client";
 
 import React from "react";
-import type { PlateContentProps } from "@udecode/plate/react";
+import { type PlateContentProps, PlateContent, useEditorContainerRef, useEditorRef } from "@udecode/plate/react";
 import type { VariantProps } from "class-variance-authority";
 import { cn } from "@udecode/cn";
-import { PlateContent, useEditorContainerRef, useEditorRef } from "@udecode/plate/react";
 import { cva } from "class-variance-authority";
 
 const editorContainerVariants = cva(
@@ -36,14 +35,42 @@ export const EditorContainer = ({
     const editor = useEditorRef();
     const containerRef = useEditorContainerRef();
 
+    let afterContainer: React.ReactNode = null;
+    let beforeContainer: React.ReactNode = null;
+
+    editor.pluginList.forEach((plugin) => {
+        const { render: { afterContainer: AfterContainer, beforeContainer: BeforeContainer } = {} } = plugin;
+
+        if (AfterContainer) {
+            afterContainer = (
+                <>
+                    {afterContainer}
+                    <AfterContainer {...props} />
+                </>
+            );
+        }
+        if (BeforeContainer) {
+            beforeContainer = (
+                <>
+                    {beforeContainer}
+                    <BeforeContainer {...props} />
+                </>
+            );
+        }
+    });
+
     return (
-        <div
-            id={editor.uid}
-            ref={containerRef}
-            className={cn("ignore-click-outside/toolbar", editorContainerVariants({ variant }), className)}
-            data-readonly={readOnly}
-            {...props}
-        />
+        <>
+            {beforeContainer}
+            <div
+                id={editor.uid}
+                ref={containerRef}
+                className={cn("ignore-click-outside/toolbar", editorContainerVariants({ variant }), className)}
+                data-readonly={readOnly}
+                {...props}
+            />
+            {afterContainer}
+        </>
     );
 };
 

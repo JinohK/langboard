@@ -1,14 +1,14 @@
 from typing import Any
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
-from ...core.db import EditorContentModel, User
+from ...core.db import User
 from ...models import Card, CardComment, Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "comment": CardComment.api_schema(),
+        "comment_uid": "string",
         **(other_schema or {}),
     }
 
@@ -22,22 +22,12 @@ async def card_comment_added(user_or_bot: User | Bot, project: Project, card: Ca
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardCommentUpdated,
-    _create_schema(BotTaskDataHelper.changes_schema(("content", EditorContentModel.api_schema()))),
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardCommentUpdated, _create_schema())
 @Broker.wrap_async_task_decorator
-async def card_comment_updated(
-    user_or_bot: User | Bot, project: Project, card: Card, old_content: EditorContentModel, comment: CardComment
-):
+async def card_comment_updated(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentUpdated)
     await BotTaskHelper.run(
-        bots,
-        BotTriggerCondition.CardCommentUpdated,
-        await _create_data(
-            user_or_bot, project, card, comment, BotTaskDataHelper.create_changes({"content": old_content}, comment)
-        ),
-        project,
+        bots, BotTriggerCondition.CardCommentUpdated, await _create_data(user_or_bot, project, card, comment), project
     )
 
 
@@ -87,6 +77,6 @@ async def _create_data(
 ) -> dict[str, Any]:
     return {
         **await BotTaskDataHelper.create_card(user_or_bot, project, card),
-        "comment": comment.api_response(),
+        "comment_uid": comment.get_uid(),
         **(other_data or {}),
     }

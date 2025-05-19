@@ -9,12 +9,12 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 function ActivatePage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const location = useLocation();
     const { mutate } = useActivateUser();
     const [description, setDescription] = useState<JSX.Element | null>(null);
@@ -67,9 +67,6 @@ function ActivatePage(): JSX.Element {
                     });
 
                     handle(error);
-                },
-                onSettled: () => {
-                    setIsLoadingRef.current(false);
                 },
             }
         );

@@ -175,8 +175,7 @@ class ProjectWikiService(BaseService):
             order=max_order + 1,
         )
         async with DbSession.use() as db:
-            db.insert(wiki)
-            await db.commit()
+            await db.insert(wiki)
 
         api_wiki = wiki.api_response()
         api_wiki["assigned_bots"] = []
@@ -213,7 +212,6 @@ class ProjectWikiService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(wiki)
-            await db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -228,7 +226,7 @@ class ProjectWikiService(BaseService):
             await notification_service.notify_mentioned_in_wiki(user_or_bot, project, wiki)
 
         ProjectWikiActivityTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
-        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
+        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, wiki)
 
         return model
 
@@ -247,7 +245,6 @@ class ProjectWikiService(BaseService):
                         ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
                     )
                 )
-                await db.commit()
 
             async with DbSession.use() as db:
                 await db.exec(
@@ -255,7 +252,7 @@ class ProjectWikiService(BaseService):
                         ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
                     )
                 )
-                await db.commit()
+
         else:
             if isinstance(user_or_bot, Bot):
                 project_assigned_table = ProjectAssignedBot
@@ -283,15 +280,13 @@ class ProjectWikiService(BaseService):
             }
             model_params[column_name] = user_or_bot.id
             async with DbSession.use() as db:
-                db.insert(model_table(**model_params))
-                await db.commit()
+                await db.insert(model_table(**model_params))
 
         was_public = wiki.is_public
         wiki.is_public = is_public
 
         async with DbSession.use() as db:
             await db.update(wiki)
-            await db.commit()
 
         ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
         ProjectWikiActivityTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
@@ -318,7 +313,6 @@ class ProjectWikiService(BaseService):
                     ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -326,7 +320,6 @@ class ProjectWikiService(BaseService):
                     ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
                 )
             )
-            await db.commit()
 
         bots: list[Bot] = []
         target_users: list[User] = []
@@ -340,14 +333,14 @@ class ProjectWikiService(BaseService):
 
             async with DbSession.use() as db:
                 for target_bot, project_assigned_bot in raw_bots:
-                    db.insert(
+                    await db.insert(
                         ProjectWikiAssignedBot(
                             project_assigned_id=project_assigned_bot.id, project_wiki_id=wiki.id, bot_id=target_bot.id
                         )
                     )
                     bots.append(target_bot)
                 for target_user, project_assigned_user in raw_users:
-                    db.insert(
+                    await db.insert(
                         ProjectWikiAssignedUser(
                             project_assigned_id=project_assigned_user.id,
                             project_wiki_id=wiki.id,
@@ -355,7 +348,6 @@ class ProjectWikiService(BaseService):
                         )
                     )
                     target_users.append(target_user)
-                await db.commit()
 
         ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
         ProjectWikiActivityTask.project_wiki_assignees_updated(
@@ -389,7 +381,6 @@ class ProjectWikiService(BaseService):
             for index, all_wiki in enumerate(all_wikis):
                 all_wiki.order = index
                 await db.update(all_wiki)
-            await db.commit()
 
         ProjectWikiPublisher.order_changed(project, wiki)
 
@@ -414,8 +405,7 @@ class ProjectWikiService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(wiki_attachment)
-            await db.commit()
+            await db.insert(wiki_attachment)
 
         return wiki_attachment
 
@@ -427,7 +417,6 @@ class ProjectWikiService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(wiki)
-            await db.commit()
 
         ProjectWikiPublisher.deleted(project, wiki)
         ProjectWikiActivityTask.project_wiki_deleted(user_or_bot, project, wiki)

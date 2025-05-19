@@ -171,14 +171,12 @@ function AvatarUploader({
                     )}
                     {avatarUrl && (
                         <Dock.Icon className="bg-accent/70 text-red-500 transition-colors duration-300 hover:text-red-700">
-                            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION} disableHoverableContent>
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger className="p-3" type="button">
-                                        <IconComponent icon="trash-2" className="size-full" onClick={removeAvatar} />
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content side="bottom">{t("user.Delete avatar")}</Tooltip.Content>
-                                </Tooltip.Root>
-                            </Tooltip.Provider>
+                            <Tooltip.Root disableHoverableContent>
+                                <Tooltip.Trigger className="p-3" type="button">
+                                    <IconComponent icon="trash-2" className="size-full" onClick={removeAvatar} />
+                                </Tooltip.Trigger>
+                                <Tooltip.Content side="bottom">{t("user.Delete avatar")}</Tooltip.Content>
+                            </Tooltip.Root>
                         </Dock.Icon>
                     )}
                 </Dock.Root>

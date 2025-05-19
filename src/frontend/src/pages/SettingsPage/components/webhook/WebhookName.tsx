@@ -16,7 +16,7 @@ export interface IWebhookNameProps {
 
 const WebhookName = memo(({ url }: IWebhookNameProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const name = url.useField("setting_name");
     const { mutateAsync } = useUpdateSetting(url);
 
@@ -36,7 +36,7 @@ const WebhookName = memo(({ url }: IWebhookNameProps) => {
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                         },
                         messageRef

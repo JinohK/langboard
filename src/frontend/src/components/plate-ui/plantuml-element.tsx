@@ -1,14 +1,14 @@
 "use client";
 
-import { cn, withRef } from "@udecode/cn";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import { cn } from "@udecode/cn";
+import { PlateElement, PlateElementProps } from "@udecode/plate/react";
 import { Flex, IconComponent } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { TPlantUmlElement, usePlantUmlElement } from "@/components/Editor/plugins/plantuml-plugin";
 import PlantUmlDialog from "@/components/plate-ui/plantuml-dialog";
 
-export const PlantUmlElement = withRef<typeof PlateElement, { element: TPlantUmlElement }>(({ children, className, ...props }, ref) => {
+export function PlantUmlElement(props: PlateElementProps<TPlantUmlElement>) {
     const [t] = useTranslation();
     const { element } = props;
     const [isDialogOpened, setIsDialogOpened] = useState(false);
@@ -24,7 +24,7 @@ export const PlantUmlElement = withRef<typeof PlateElement, { element: TPlantUml
 
     return (
         <>
-            <PlateElement ref={ref} className={cn("py-2.5", className)} {...props}>
+            <PlateElement {...props} className="py-2.5">
                 <figure className="group relative" contentEditable={false} onClick={() => setIsDialogOpened(true)}>
                     <Flex items="center" justify="center" rounded="sm" className={triggerClassNames}>
                         {src ? (
@@ -39,9 +39,9 @@ export const PlantUmlElement = withRef<typeof PlateElement, { element: TPlantUml
                         )}
                     </Flex>
                 </figure>
-                {children}
+                {props.children}
             </PlateElement>
             <PlantUmlDialog element={element} isDialogOpened={isDialogOpened} setIsDialogOpened={setIsDialogOpened} changeUmlCode={changeUmlCode} />
         </>
     );
-});
+}

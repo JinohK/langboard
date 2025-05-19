@@ -8,12 +8,12 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 function CompletePage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const location = useLocation();
     const { mutate } = useResendSignUpLink();
     const [isResending, setIsResending] = useState(false);
@@ -24,13 +24,15 @@ function CompletePage(): JSX.Element {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
             return;
         }
-
-        setIsLoadingRef.current(false);
     }, []);
 
     const resend = () => {
         if (!location.state?.email) {
             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+            return;
+        }
+
+        if (isResending) {
             return;
         }
 

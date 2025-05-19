@@ -287,7 +287,7 @@ class SocketManagerScope:
                     return None
 
             try:
-                return annotation(raw_data)
+                return annotation(raw_data)  # type: ignore
             except Exception as e:
                 return self._convert_scope_exception(e)
 

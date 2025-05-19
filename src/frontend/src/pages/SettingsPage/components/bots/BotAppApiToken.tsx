@@ -15,7 +15,7 @@ export interface IBotAppApiTokenProps {
 
 const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const appApiToken = bot.useField("app_api_token");
     const { mutateAsync } = useGenerateNewBotApiToken(bot);
     const [isValidating, setIsValidating] = useState(false);
@@ -37,7 +37,7 @@ const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef

@@ -41,5 +41,6 @@ const BoardColumnAddCardButton = memo(() => {
         </>
     );
 });
+BoardColumnAddCardButton.displayName = "Board.ColumnAddCardButton";
 
 export default BoardColumnAddCardButton;

@@ -4,34 +4,34 @@ import { NavigateFunction } from "react-router-dom";
 
 export interface IAppSettingContext {
     currentUser: AuthUser.TModel;
-    navigate: React.RefObject<NavigateFunction>;
+    navigateRef: React.RefObject<NavigateFunction>;
     isValidating: bool;
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }
 
 interface IAppSettingProps {
     currentUser: AuthUser.TModel;
-    navigate: React.RefObject<NavigateFunction>;
+    navigateRef: React.RefObject<NavigateFunction>;
     children: React.ReactNode;
 }
 
 const initialContext = {
     currentUser: {} as AuthUser.TModel,
-    navigate: { current: () => {} },
+    navigateRef: { current: () => {} },
     isValidating: false,
     setIsValidating: () => {},
 };
 
 const AppSettingContext = createContext<IAppSettingContext>(initialContext);
 
-export const AppSettingProvider = ({ currentUser, navigate, children }: IAppSettingProps): React.ReactNode => {
+export const AppSettingProvider = ({ currentUser, navigateRef, children }: IAppSettingProps): React.ReactNode => {
     const [isValidating, setIsValidating] = useState(false);
 
     return (
         <AppSettingContext.Provider
             value={{
                 currentUser,
-                navigate,
+                navigateRef,
                 isValidating,
                 setIsValidating,
             }}

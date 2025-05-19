@@ -30,8 +30,7 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         activity = self._model_class(**model)
 
         async with DbSession.use() as db:
-            db.insert(activity)
-            await db.commit()
+            await db.insert(activity)
 
         return activity
 

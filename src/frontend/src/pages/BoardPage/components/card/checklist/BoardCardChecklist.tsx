@@ -246,14 +246,12 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
                         w="full"
                         className="truncate"
                     >
-                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                            <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
-                                <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
-                                    <span className={cn("truncate", isChecked && "text-muted-foreground/70 line-through")}>{title}</span>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content className={sharedClassNames.popoverContent}>{title}</Tooltip.Content>
-                            </Tooltip.Root>
-                        </Tooltip.Provider>
+                        <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
+                            <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
+                                <span className={cn("truncate", isChecked && "text-muted-foreground/70 line-through")}>{title}</span>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content className={sharedClassNames.popoverContent}>{title}</Tooltip.Content>
+                        </Tooltip.Root>
                     </Flex>
                 </Flex>
                 <Flex items="center" gap="1.5">

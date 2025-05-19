@@ -107,7 +107,6 @@ class UserNotificationSettingService(BaseService):
         for unsubscription in unsubscriptions:
             async with DbSession.use() as db:
                 await db.delete(unsubscription)
-                await db.commit()
 
         return notification_types
 
@@ -169,8 +168,7 @@ class UserNotificationSettingService(BaseService):
             )
 
             async with DbSession.use() as db:
-                db.insert(unsubscription)
-                await db.commit()
+                await db.insert(unsubscription)
 
         return notification_types
 

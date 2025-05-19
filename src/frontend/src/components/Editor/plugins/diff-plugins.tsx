@@ -1,14 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlatePlugin } from "@udecode/plate";
-import { toPlatePlugin } from "@udecode/plate/react";
-import { type PlateLeafProps, PlateLeaf } from "@udecode/plate/react";
-import { type DiffOperation, withGetFragmentExcludeDiff } from "@udecode/plate-diff";
-import { cn } from "@/core/utils/ComponentUtils";
+import { type PlateLeafProps, PlateLeaf, toPlatePlugin } from "@udecode/plate/react";
+import { type DiffOperation, DiffUpdate, withGetFragmentExcludeDiff } from "@udecode/plate-diff";
+import { cn } from "@udecode/cn";
 
 const diffOperationColors: Record<DiffOperation["type"], string> = {
     delete: "[&>*]:bg-destructive/70 [&_*]:line-through",
     insert: "[&>*]:bg-green-500/70 dark:[&>*]:bg-green-700/70",
     update: "[&>*]:bg-indigo-600/70 dark:[&>*]:bg-indigo-800/70",
+};
+
+const describeUpdate = ({ newProperties, properties }: DiffUpdate) => {
+    const addedProps: string[] = [];
+    const removedProps: string[] = [];
+    const updatedProps: string[] = [];
+
+    Object.keys(newProperties).forEach((key) => {
+        const oldValue = properties[key];
+        const newValue = newProperties[key];
+
+        if (oldValue === undefined) {
+            addedProps.push(key);
+
+            return;
+        }
+        if (newValue === undefined) {
+            removedProps.push(key);
+
+            return;
+        }
+
+        updatedProps.push(key);
+    });
+
+    const descriptionParts = [];
+
+    if (addedProps.length > 0) {
+        descriptionParts.push(`Added ${addedProps.join(", ")}`);
+    }
+    if (removedProps.length > 0) {
+        descriptionParts.push(`Removed ${removedProps.join(", ")}`);
+    }
+    if (updatedProps.length > 0) {
+        updatedProps.forEach((key) => {
+            descriptionParts.push(`Updated ${key} from ${properties[key]} to ${newProperties[key]}`);
+        });
+    }
+
+    return descriptionParts.join("\n");
 };
 
 const DiffPlugin = toPlatePlugin(
@@ -64,7 +103,15 @@ function DiffLeaf({ children, ...props }: PlateLeafProps) {
     )[diffOperation.type];
 
     return (
-        <PlateLeaf {...props} asChild>
+        <PlateLeaf
+            {...props}
+            as={Component}
+            className={diffOperationColors[diffOperation.type]}
+            attributes={{
+                ...props.attributes,
+                title: diffOperation.type === "update" ? describeUpdate(diffOperation) : undefined,
+            }}
+        >
             <Component className={diffOperationColors[diffOperation.type]}>{children}</Component>
         </PlateLeaf>
     );

@@ -58,30 +58,25 @@ function BoardCardCheckitemMoreEdit({ setIsMoreMenuOpened }: { setIsMoreMenuOpen
         });
     };
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpened(true);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            changeCheckitemTitle();
+        }
+    };
+
     return (
         <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsOpened(true);
-                    }}
-                >
-                    {t("card.Edit title")}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleClick}>{t("card.Edit title")}</DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
-                <Floating.LabelInput
-                    label={t("card.Checkitem title")}
-                    defaultValue={title}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            changeCheckitemTitle();
-                        }
-                    }}
-                    ref={titleInputRef}
-                />
+                <Floating.LabelInput label={t("card.Checkitem title")} defaultValue={title} onKeyDown={handleKeyDown} ref={titleInputRef} />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

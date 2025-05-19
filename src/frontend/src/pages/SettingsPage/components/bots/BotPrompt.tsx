@@ -15,7 +15,7 @@ export interface IBotPromptProps {
 
 const BotPrompt = memo(({ bot }: IBotPromptProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const prompt = bot.useField("prompt");
     const { mutateAsync } = useUpdateBot(bot);
 
@@ -35,7 +35,7 @@ const BotPrompt = memo(({ bot }: IBotPromptProps) => {
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                         },
                         messageRef

@@ -12,17 +12,13 @@ import { useTranslation } from "react-i18next";
 function GlobalRelationshipsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate, isValidating, setIsValidating } = useAppSetting();
+    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const [selectedGlobalRelationships, setSelectedGlobalRelationships] = useState<string[]>([]);
     const { mutate: deleteSelectedGlobalRelationshipsMutate } = useDeleteSelectedGlobalRelationships();
 
     useEffect(() => {
         setPageAliasRef.current("Global relationships");
     }, []);
-
-    const openCreateDialog = () => {
-        navigate.current(ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP);
-    };
 
     const deleteSelectedGlobalRelationships = () => {
         if (isValidating || !selectedGlobalRelationships.length) {
@@ -44,7 +40,7 @@ function GlobalRelationshipsPage() {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             Toast.Add.error(t("errors.Forbidden"));
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                         [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
                             Toast.Add.error(t("errors.Malformed request"));
@@ -58,6 +54,10 @@ function GlobalRelationshipsPage() {
                 },
             }
         );
+    };
+
+    const openCreateDialog = () => {
+        navigateRef.current(ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP);
     };
 
     return (

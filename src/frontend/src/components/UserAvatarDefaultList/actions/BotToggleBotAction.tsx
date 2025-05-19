@@ -8,7 +8,7 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, Project } from "@/core/models";
 import { useUserAvatar } from "@/core/providers/UserAvatarProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IUserAvatarDefaultBotToggleActionProps {
@@ -56,14 +56,22 @@ function UserAvatarDefaultBotToggleAction({ bot, project }: IUserAvatarDefaultBo
             },
         });
     }, [isValidating, isBotDisabled]);
-    const projectBotActivationToggledHandlers = useProjectBotActivationToggledHandlers({
-        projectUID: project.uid,
-        botUID: bot.uid,
-        callback: (data) => {
-            setIsBotDisabled(() => data.is_disabled);
-        },
+    const projectBotActivationToggledHandlers = useMemo(
+        () =>
+            useProjectBotActivationToggledHandlers({
+                projectUID: project.uid,
+                botUID: bot.uid,
+                callback: (data) => {
+                    setIsBotDisabled(() => data.is_disabled);
+                },
+            }),
+        [setIsBotDisabled]
+    );
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [projectBotActivationToggledHandlers],
+        dependencies: [projectBotActivationToggledHandlers],
     });
-    useSwitchSocketHandlers({ socket, handlers: [projectBotActivationToggledHandlers], dependencies: [isBotDisabled] });
 
     if (TypeUtils.isNullOrUndefined(isBotDisabled)) {
         return <></>;

@@ -2,7 +2,7 @@ import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
-import { API_ROUTES, SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -14,7 +14,6 @@ import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { format } from "@/core/utils/StringUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
@@ -157,18 +156,14 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                             : "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.5))] min-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.5))]"
                     )}
                     readOnly={!isEditing}
-                    socket={socket}
-                    baseSocketEvent="board:wiki"
-                    chatEventKey={`wiki-content-${wiki.uid}`}
-                    copilotEventKey={`wiki-content-${wiki.uid}`}
-                    commonSocketEventData={{
+                    editorType="wiki-content"
+                    form={{
                         project_uid: projectUID,
+                        wiki_uid: wiki.uid,
                     }}
                     placeholder={!isEditing ? t("wiki.No content") : undefined}
-                    uploadPath={format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: projectUID, wiki_uid: wiki.uid })}
                     setValue={setValue}
                     editorComponentRef={editorComponentRef}
-                    projectUID={projectUID}
                 />
                 {editingUsers.length > 0 && (
                     <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">

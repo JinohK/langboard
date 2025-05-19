@@ -40,12 +40,44 @@ class CardRelationshipService(BaseService):
                     | (CardRelationship.column("card_id_child") == Card.column("id")),
                 )
                 .where(
-                    (
-                        (CardRelationship.column("card_id_parent") == card.id)
-                        | (CardRelationship.column("card_id_child") == card.id)
-                    )
-                    & (Card.column("id") != card.id)
+                    (CardRelationship.column("card_id_parent") == card.id)
+                    | (CardRelationship.column("card_id_child") == card.id)
                 )
+            )
+        raw_relationships = result.all()
+        if not as_api:
+            return list(raw_relationships)
+
+        relationships = [relationship.api_response() for relationship, _ in raw_relationships]
+        return relationships
+
+    @overload
+    async def get_all_by_project(
+        self, project: TProjectParam, as_api: Literal[False]
+    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]]: ...
+    @overload
+    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    async def get_all_by_project(
+        self, project: TProjectParam, as_api: bool
+    ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]] | list[dict[str, Any]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType)
+                .join(
+                    GlobalCardRelationshipType,
+                    CardRelationship.column("relationship_type_id") == GlobalCardRelationshipType.column("id"),
+                )
+                .join(
+                    Card,
+                    (CardRelationship.column("card_id_parent") == Card.column("id"))
+                    | (CardRelationship.column("card_id_child") == Card.column("id")),
+                )
+                .join(Project, (Card.column("project_id") == Project.column("id")))
+                .where(Project.column("id") == project.id)
             )
         raw_relationships = result.all()
         if not as_api:
@@ -107,7 +139,6 @@ class CardRelationshipService(BaseService):
                     CardRelationship.column("card_id_child" if is_parent else "card_id_parent") == card.id
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             new_relationships_dict: dict[SnowflakeID, bool] = {}
@@ -130,11 +161,10 @@ class CardRelationshipService(BaseService):
                     card_id_parent=related_card.id if is_parent else card.id,
                     card_id_child=card.id if is_parent else related_card.id,
                 )
-                db.insert(new_relationship)
+                await db.insert(new_relationship)
                 api_relationship = relationship_type.api_response()
                 api_relationship.pop("uid")
                 new_relationships_dict[related_card.id] = True
-            await db.commit()
 
         new_relationships = await self.get_all_by_card(card, as_api=True)
 

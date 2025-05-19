@@ -8,10 +8,8 @@ import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const { t } = useTranslation();
     const industryRef = useRef<string>(values.industry ?? "");
     const industryInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +33,6 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
     });
 
     useEffect(() => {
-        setIsLoadingRef.current(false);
         setInitialErrorsWithFocusingElement(["industry", "purpose"], initialErrorsRef, setErrors, formRef);
     }, []);
 

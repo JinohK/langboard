@@ -61,30 +61,25 @@ function BoardCardAttachmentMoreRename({
         });
     };
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpened(true);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            changeAttachmentName();
+        }
+    };
+
     return (
         <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsOpened(true);
-                    }}
-                >
-                    {t("card.Rename")}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleClick}>{t("card.Rename")}</DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
-                <Floating.LabelInput
-                    label={t("card.File name")}
-                    id={nameInputId}
-                    defaultValue={name}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            changeAttachmentName();
-                        }
-                    }}
-                />
+                <Floating.LabelInput label={t("card.File name")} id={nameInputId} defaultValue={name} onKeyDown={handleKeyDown} />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

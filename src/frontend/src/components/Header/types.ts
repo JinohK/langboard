@@ -10,7 +10,6 @@ export interface IHeaderNavItem {
 export interface IHeaderProps {
     navs: IHeaderNavItem[];
     title?: React.ReactNode;
-    mobileSections?: React.ReactNode;
 }
 
 interface IBaseHeaderNavItemsProps {

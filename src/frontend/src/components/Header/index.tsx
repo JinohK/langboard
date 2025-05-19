@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import CachedImage from "@/components/CachedImage";
 import HedaerNavItems from "@/components/Header/HedaerNavItems";
 import { IHeaderProps } from "@/components/Header/types";
@@ -7,19 +7,14 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { Button, Flex, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import HeaderUserMenu from "@/components/Header/HeaderUserMenu";
 import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
 
-function Header({ navs, title, mobileSections }: IHeaderProps) {
-    const { aboutMe, updated } = useAuth();
+function Header({ navs, title }: IHeaderProps) {
+    const { currentUser } = useAuth();
     const [isOpened, setIsOpen] = useState(false);
-    const navigateRef = useRef(usePageNavigate());
-    const [currentUser, setCurrentUser] = useState(aboutMe());
-
-    useEffect(() => {
-        setCurrentUser(aboutMe());
-    }, [updated]);
+    const navigateRef = useRef(useNavigate());
 
     const toDashboard = () => {
         navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
@@ -72,7 +67,8 @@ function Header({ navs, title, mobileSections }: IHeaderProps) {
                             left="6"
                             top="6"
                             gap="2"
-                            className="max-w-[calc(75vw_-_theme(spacing.16))] truncate sm:max-w-[calc(24rem_-_theme(spacing.16))]"
+                            w="full"
+                            className="max-w-[calc(100%_-_theme(spacing.16))] truncate sm:max-w-[calc(24rem_-_theme(spacing.16))]"
                         >
                             <a onClick={toDashboard} className="flex cursor-pointer items-center gap-2 text-lg font-semibold">
                                 <CachedImage src="/images/logo.png" alt="Logo" size="6" />
@@ -93,7 +89,6 @@ function Header({ navs, title, mobileSections }: IHeaderProps) {
                                 deactivatedClass="text-muted-foreground"
                                 shardClass="hover:text-foreground"
                             />
-                            {!!mobileSections && mobileSections}
                         </nav>
                     </Sheet.Content>
                 </Sheet.Root>

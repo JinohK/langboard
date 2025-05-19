@@ -62,20 +62,19 @@ class UserService(BaseService):
         user.avatar = avatar
 
         async with DbSession.use() as db:
-            db.insert(user)
-            await db.commit()
+            await db.insert(user)
 
         user_profile = UserProfile(user_id=user.id, **form)
         async with DbSession.use() as db:
-            db.insert(user_profile)
-            await db.commit()
+            await db.insert(user_profile)
+
         return user
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
         async with DbSession.use() as db:
-            db.insert(user_email)
-            await db.commit()
+            await db.insert(user_email)
+
         return user_email
 
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
@@ -142,7 +141,6 @@ class UserService(BaseService):
         user.activated_at = now()
         async with DbSession.use() as db:
             await db.update(user)
-            await db.commit()
 
         UserActivityTask.activated(user)
 
@@ -150,7 +148,6 @@ class UserService(BaseService):
         subemail.verified_at = now()
         async with DbSession.use() as db:
             await db.update(subemail)
-            await db.commit()
 
     async def update(self, user: User, form: dict) -> bool:
         profile = await self.get_profile(user)
@@ -189,7 +186,7 @@ class UserService(BaseService):
         async with DbSession.use() as db:
             await db.update(user)
             await db.update(profile)
-            await db.commit()
+
         await Auth.reset_user(user)
 
         model: dict[str, Any] = {}
@@ -216,7 +213,6 @@ class UserService(BaseService):
         user.preferred_lang = lang
         async with DbSession.use() as db:
             await db.update(user)
-            await db.commit()
 
         return True
 
@@ -228,7 +224,7 @@ class UserService(BaseService):
         async with DbSession.use() as db:
             await db.update(user)
             await db.update(subemail)
-            await db.commit()
+
         await Auth.reset_user(user)
 
         model = {"email": user.email}
@@ -239,11 +235,10 @@ class UserService(BaseService):
     async def delete_email(self, subemail: UserEmail) -> bool:
         async with DbSession.use() as db:
             await db.delete(subemail)
-            await db.commit()
+
         return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
         async with DbSession.use() as db:
             await db.update(user)
-            await db.commit()

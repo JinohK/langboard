@@ -95,8 +95,49 @@ class CardService(BaseService):
             )
         raw_cards = result.all()
         cards = []
+
+        project_label_service = self._get_service(ProjectLabelService)
+        card_relationship_service = self._get_service(CardRelationshipService)
+        checklist_service = self._get_service(ChecklistService)
+
+        raw_members = await self.get_assigned_users_by_project(project)
+        members: dict[int, list[dict[str, Any]]] = {}
+        for user, card_assigned_user in raw_members:
+            if card_assigned_user.card_id not in members:
+                members[card_assigned_user.card_id] = []
+            members[card_assigned_user.card_id].append(user.api_response())
+
+        raw_relationships = await card_relationship_service.get_all_by_project(project, as_api=False)
+        relationships: dict[int, list[dict[str, Any]]] = {}
+        for relationship, _ in raw_relationships:
+            if relationship.card_id_parent not in relationships:
+                relationships[relationship.card_id_parent] = []
+            if relationship.card_id_child not in relationships:
+                relationships[relationship.card_id_child] = []
+            relationships[relationship.card_id_parent].append(relationship.api_response())
+            relationships[relationship.card_id_child].append(relationship.api_response())
+
+        raw_labels = await project_label_service.get_all_card_labels_by_project(project)
+        labels: dict[int, list[dict[str, Any]]] = {}
+        for label, card_label in raw_labels:
+            if card_label.card_id not in labels:
+                labels[card_label.card_id] = []
+            labels[card_label.card_id].append(label.api_response())
+
+        raw_checklists = await checklist_service.get_list_only_by_project(project)
+        checklists: dict[int, list[dict[str, Any]]] = {}
+        for checklist in raw_checklists:
+            if checklist.card_id not in checklists:
+                checklists[checklist.card_id] = []
+            checklists[checklist.card_id].append(checklist.api_response())
+
         for card, count_comment in raw_cards:
-            api_card = await self.convert_board_list_api_response(card, count_comment)
+            api_card = card.api_response()
+            api_card["count_comment"] = count_comment
+            api_card["members"] = members.get(card.id, [])
+            api_card["relationships"] = relationships.get(card.id, [])
+            api_card["labels"] = labels.get(card.id, [])
+            api_card["checklists"] = checklists.get(card.id, [])
             cards.append(api_card)
 
         return cards
@@ -198,7 +239,28 @@ class CardService(BaseService):
         users = [user.api_response() for user, _ in raw_users]
         return users
 
-    async def convert_board_list_api_response(self, card: Card, count_comment: int | None = None) -> dict[str, Any]:
+    async def get_assigned_users_by_project(self, project: TProjectParam) -> list[tuple[User, CardAssignedUser]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(User, CardAssignedUser)
+                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
+                .join(Card, CardAssignedUser.column("card_id") == Card.column("id"))
+                .join(Project, Card.column("project_id") == Project.column("id"))
+                .where(Project.column("id") == project.id)
+            )
+        raw_users = result.all()
+        return list(raw_users)
+
+    async def convert_board_list_api_response(
+        self,
+        card: Card,
+        count_comment: int | None = None,
+        relationships: list[dict[str, Any]] | None = None,
+        labels: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         if count_comment is None:
             async with DbSession.use() as db:
                 result = await db.exec(
@@ -213,8 +275,14 @@ class CardService(BaseService):
         api_card = card.api_response()
         api_card["count_comment"] = count_comment
         api_card["members"] = await self.get_assigned_users(card, as_api=True)
-        api_card["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
-        api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
+        api_card["relationships"] = (
+            relationships
+            if relationships is not None
+            else await card_relationship_service.get_all_by_card(card, as_api=True)
+        )
+        api_card["labels"] = (
+            labels if labels is not None else await project_label_service.get_all_by_card(card, as_api=True)
+        )
         api_card["checklists"] = await checklist_service.get_list_only(card, as_api=True)
 
         return api_card
@@ -245,8 +313,7 @@ class CardService(BaseService):
             order=max_order + 1,
         )
         async with DbSession.use() as db:
-            db.insert(card)
-            await db.commit()
+            await db.insert(card)
 
         users: list[User] = []
         if assign_user_uids:
@@ -257,11 +324,14 @@ class CardService(BaseService):
                 where_user_ids_in=[SnowflakeID.from_short_code(uid) for uid in assign_user_uids],
             )
 
-            for assign_user, _ in raw_users:
+            for assign_user, project_assigned_user in raw_users:
                 users.append(assign_user)
                 async with DbSession.use() as db:
-                    db.insert(CardAssignedUser(card_id=card.id, user_id=assign_user.id))
-                    await db.commit()
+                    await db.insert(
+                        CardAssignedUser(
+                            project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=assign_user.id
+                        )
+                    )
 
         api_card = await self.convert_board_list_api_response(card)
         model = {"card": api_card}
@@ -307,11 +377,9 @@ class CardService(BaseService):
                 checkitem_cardified_from.title = card.title
                 async with DbSession.use() as db:
                     await db.update(checkitem_cardified_from)
-                    await db.commit()
 
         async with DbSession.use() as db:
             await db.update(card)
-            await db.commit()
 
         model: dict[str, Any] = {}
         for key in form:
@@ -326,7 +394,7 @@ class CardService(BaseService):
             await notification_service.notify_mentioned_in_card(user_or_bot, project, card)
 
         CardActivityTask.card_updated(user_or_bot, project, old_card_record, card)
-        CardBotTask.card_updated(user_or_bot, project, old_card_record, card)
+        CardBotTask.card_updated(user_or_bot, project, card)
 
         return model
 
@@ -368,25 +436,22 @@ class CardService(BaseService):
             )
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
 
             update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
                 (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
             )
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
+
         else:
             update_query = self._set_order_in_column(shared_update_query, Card, original_order, order)
             update_query = update_query.where(Card.column("project_column_id") == original_column.id)
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
 
         async with DbSession.use() as db:
             card.order = order
             await db.update(card)
-            await db.commit()
 
         CardPublisher.order_changed(project, card, original_column, cast(ProjectColumn, new_column))
 
@@ -418,7 +483,6 @@ class CardService(BaseService):
             await db.exec(
                 SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             users = []
@@ -430,11 +494,10 @@ class CardService(BaseService):
                 )
                 users: list[User] = []
                 for user, project_assigned_user in raw_users:
-                    db.insert(
+                    await db.insert(
                         CardAssignedUser(project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=user.id)
                     )
                     users.append(user)
-            await db.commit()
 
         CardPublisher.assigned_users_updated(project, card, users)
 
@@ -476,15 +539,13 @@ class CardService(BaseService):
             query = query.where(CardAssignedProjectLabel.column("project_label_id").not_in(bot_label_ids))
         async with DbSession.use() as db:
             await db.exec(query)
-            await db.commit()
 
         async with DbSession.use() as db:
             for label_uid in label_uids:
                 label = await self._get_by_param(ProjectLabel, label_uid)
                 if not label or label.project_id != project.id or (not is_bot and label.bot_id):
                     return None
-                db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
-            await db.commit()
+                await db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
 
         labels = await project_label_service.get_all_by_card(card, as_api=False)
 
@@ -530,7 +591,6 @@ class CardService(BaseService):
             await db.exec(
                 SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -539,7 +599,6 @@ class CardService(BaseService):
                     | (CardRelationship.column("card_id_child") == card.id)
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -548,11 +607,9 @@ class CardService(BaseService):
                     & (BotSchedule.column("target_id") == card.id)
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.delete(card)
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.exec(
@@ -564,7 +621,6 @@ class CardService(BaseService):
                     & (Card.column("order") > card.order)
                 )
             )
-            await db.commit()
 
         CardPublisher.deleted(project, card)
         CardActivityTask.card_deleted(user_or_bot, project, card)

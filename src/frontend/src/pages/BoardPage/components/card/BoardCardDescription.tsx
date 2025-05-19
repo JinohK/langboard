@@ -1,7 +1,6 @@
 import { Box, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
-import { API_ROUTES } from "@/controllers/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
@@ -9,7 +8,6 @@ import { BotModel, Project, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { format } from "@/core/utils/StringUtils";
 import { memo, useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +22,7 @@ export function SkeletonBoardCardDescription() {
 }
 
 const BoardCardDescription = memo((): JSX.Element => {
-    const { projectUID, card, socket, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
+    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -100,19 +98,15 @@ const BoardCardDescription = memo((): JSX.Element => {
                 mentionables={mentionables}
                 currentUser={currentUser}
                 className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
-                socket={socket}
                 readOnly={!isEditing}
-                baseSocketEvent="board:card"
-                chatEventKey={`card-description-${card.uid}`}
-                copilotEventKey={`card-description-${card.uid}`}
-                commonSocketEventData={{
+                editorType="card-description"
+                form={{
                     project_uid: projectUID,
+                    card_uid: card.uid,
                 }}
-                uploadPath={format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: projectUID, card_uid: card.uid })}
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}
                 editorComponentRef={editorComponentRef}
-                projectUID={projectUID}
             />
         </Box>
     );

@@ -8,7 +8,7 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 
 def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "attachment": CardAttachment.api_schema(),
+        "attachment_uid": "string",
         **(other_schema or {}),
     }
 
@@ -25,20 +25,16 @@ async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, ca
     )
 
 
-@BotTaskDataHelper.card_schema(
-    BotTriggerCondition.CardAttachmentNameChanged, _create_schema(BotTaskDataHelper.changes_schema(("name", "string")))
-)
+@BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentNameChanged, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_name_changed(
-    user_or_bot: User | Bot, project: Project, card: Card, old_name: str, attachment: CardAttachment
+    user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment
 ):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentNameChanged)
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentNameChanged,
-        await _create_data(
-            user_or_bot, project, card, attachment, BotTaskDataHelper.create_changes({"name": old_name}, attachment)
-        ),
+        await _create_data(user_or_bot, project, card, attachment),
         project,
     )
 
@@ -64,6 +60,6 @@ async def _create_data(
 ) -> dict[str, Any]:
     return {
         **await BotTaskDataHelper.create_card(user_or_bot, project, card),
-        "attachment": attachment.api_response(),
+        "attachment_uid": attachment.get_uid(),
         **(other_data or {}),
     }

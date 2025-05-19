@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AuthUser, User } from "@/core/models";
+import { useSocket } from "@/core/providers/SocketProvider";
+import { useEditorData } from "@/core/providers/EditorDataProvider";
 import { IEditorContent } from "@/core/models/Base";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { withProps } from "@udecode/cn";
-import { AIPlugin } from "@udecode/plate-ai/react";
+import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import {
     BoldPlugin,
     CodePlugin,
@@ -16,8 +17,9 @@ import {
 import { createCopilotPlugins } from "@/components/Editor/plugins/copilot-plugins";
 import { createAIPlugins } from "@/components/Editor/plugins/ai-plugins";
 import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
+import { CalloutPlugin } from "@udecode/plate-callout/react";
 import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from "@udecode/plate-code-block/react";
-import { ParagraphPlugin, PlateLeaf, PlatePlugin, usePlateEditor } from "@udecode/plate/react";
+import { ParagraphPlugin, PlateEditor, PlateLeaf, PlatePlugin, usePlateEditor } from "@udecode/plate/react";
 import { DatePlugin } from "@udecode/plate-date/react";
 import { EmojiInputPlugin } from "@udecode/plate-emoji/react";
 import { EquationPlugin, InlineEquationPlugin } from "@udecode/plate-math/react";
@@ -33,8 +35,10 @@ import { SlashInputPlugin } from "@udecode/plate-slash-command/react";
 import { TableCellHeaderPlugin, TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
 import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 import { editorPlugins, viewPlugins } from "@/components/Editor/plugins/editor-plugins";
+import { AIAnchorElement } from "@/components/plate-ui/ai-anchor-element";
 import { AILeaf } from "@/components/plate-ui/ai-leaf";
 import { BlockquoteElement } from "@/components/plate-ui/blockquote-element";
+import { CalloutElement } from "@/components/plate-ui/callout-element";
 import { CodeBlockElement } from "@/components/plate-ui/code-block-element";
 import { CodeLeaf } from "@/components/plate-ui/code-leaf";
 import { CodeLineElement } from "@/components/plate-ui/code-line-element";
@@ -49,7 +53,7 @@ import { KbdLeaf } from "@/components/plate-ui/kbd-leaf";
 import { LinkElement } from "@/components/plate-ui/link-element";
 import { MediaEmbedElement } from "@/components/plate-ui/media-embed-element";
 import { MentionElement } from "@/components/plate-ui/mention-element";
-import { IMentionableUser, MentionInputElement } from "@/components/plate-ui/mention-input-element";
+import { MentionInputElement } from "@/components/plate-ui/mention-input-element";
 import { ParagraphElement } from "@/components/plate-ui/paragraph-element";
 import { withPlaceholders } from "@/components/plate-ui/placeholder";
 import { SlashInputElement } from "@/components/plate-ui/slash-input-element";
@@ -57,7 +61,7 @@ import { TableCellElement, TableCellHeaderElement } from "@/components/plate-ui/
 import { TableElement } from "@/components/plate-ui/table-element";
 import { TableRowElement } from "@/components/plate-ui/table-row-element";
 import { TocElement } from "@/components/plate-ui/toc-element";
-import { deserializeMd } from "@/components/Editor/plugins/markdown";
+import { MarkdownPlugin } from "@udecode/plate-markdown";
 import { MediaPlaceholderElement } from "@/components/plate-ui/media-placeholder-element";
 import { MediaVideoElement } from "@/components/plate-ui/media-video-element";
 import { MediaAudioElement } from "@/components/plate-ui/media-audio-element";
@@ -65,73 +69,32 @@ import { MediaFileElement } from "@/components/plate-ui/media-file-element";
 import { EquationElement } from "@/components/plate-ui/equation-element";
 import { InlineEquationElement } from "@/components/plate-ui/inline-equation-element";
 import { PlantUmlElement } from "@/components/plate-ui/plantuml-element";
-import { ISocketContext } from "@/core/providers/SocketProvider";
 
 interface IBaseUseCreateEditor {
-    currentUser: AuthUser.TModel;
-    mentionables: User.TModel[];
     plugins?: PlatePlugin<any>[];
     value?: IEditorContent;
     readOnly?: bool;
-    socket?: ISocketContext;
-    baseSocketEvent?: string;
-    chatEventKey?: string;
-    copilotEventKey?: string;
-    commonSocketEventData?: Record<string, any>;
-    uploadPath?: string;
-    uploadedCallback?: (respones: any) => void;
-    projectUID?: string;
 }
 
 export interface IUseReadonlyEditor extends IBaseUseCreateEditor {
     readOnly: true;
     value: IEditorContent;
-    socket?: never;
-    baseSocketEvent?: never;
-    chatEventKey?: never;
-    copilotEventKey?: never;
-    commonSocketEventData?: never;
-    uploadPath?: never;
-    uploadedCallback?: never;
 }
 
 export interface IUseEditor extends IBaseUseCreateEditor {
     readOnly?: false;
     value?: IEditorContent;
-    socket: ISocketContext;
-    baseSocketEvent: string;
-    chatEventKey: string;
-    copilotEventKey: string;
-    commonSocketEventData?: Record<string, any>;
-    uploadPath: string;
 }
 
 export type TUseCreateEditor = IUseReadonlyEditor | IUseEditor;
 
-const createEditorSocketEvents = (baseEvent: string) => ({
-    chatEvents: {
-        send: `${baseEvent}:editor:chat:send`,
-        stream: `${baseEvent}:editor:chat:stream`,
-    },
-    copilotEvents: {
-        abort: `${baseEvent}:editor:copilot:abort`,
-        send: `${baseEvent}:editor:copilot:send`,
-        receive: `${baseEvent}:editor:copilot:receive`,
-    },
-});
-
-export const getPlateComponents = ({
-    currentUser,
-    mentionables,
-    uploadPath,
-    uploadedCallback,
-    readOnly = false,
-    projectUID,
-}: Pick<TUseCreateEditor, "currentUser" | "mentionables" | "uploadPath" | "uploadedCallback" | "readOnly" | "projectUID">) => {
+export const getPlateComponents = ({ readOnly = false }: { readOnly: bool }): Record<string, any> => {
     const viewComponents = {
+        [AIChatPlugin.key]: AIAnchorElement,
         [AudioPlugin.key]: MediaAudioElement,
         [BlockquotePlugin.key]: BlockquoteElement,
         [BoldPlugin.key]: withProps(PlateLeaf, { as: "strong" }),
+        [CalloutPlugin.key]: CalloutElement,
         [CodeBlockPlugin.key]: CodeBlockElement,
         [CodeLinePlugin.key]: CodeLineElement,
         [CodePlugin.key]: CodeLeaf,
@@ -153,22 +116,9 @@ export const getPlateComponents = ({
         [KbdPlugin.key]: KbdLeaf,
         [LinkPlugin.key]: LinkElement,
         [MediaEmbedPlugin.key]: MediaEmbedElement,
-        [MentionPlugin.key]: withProps(MentionElement, {
-            currentUser,
-            mentionables,
-            prefix: "@",
-            renderLabel: (mentionable) => {
-                const user = mentionables.find((val) => val.uid === (mentionable as unknown as IMentionableUser).key);
-                if (user) {
-                    return `${user.firstname} ${user.lastname}`;
-                } else {
-                    return mentionable.value;
-                }
-            },
-            projectUID,
-        }),
+        [MentionPlugin.key]: withProps(MentionElement, { prefix: "@" }),
         [ParagraphPlugin.key]: ParagraphElement,
-        [PlaceholderPlugin.key]: withProps(MediaPlaceholderElement, { uploadPath, uploadedCallback }),
+        [PlaceholderPlugin.key]: MediaPlaceholderElement,
         [PlantUmlPlugin.key]: PlantUmlElement,
         [StrikethroughPlugin.key]: withProps(PlateLeaf, { as: "s" }),
         [SubscriptPlugin.key]: withProps(PlateLeaf, { as: "sub" }),
@@ -190,7 +140,7 @@ export const getPlateComponents = ({
         ...viewComponents,
         [AIPlugin.key]: AILeaf,
         [EmojiInputPlugin.key]: EmojiInputElement,
-        [MentionInputPlugin.key]: withProps(MentionInputElement, { currentUser, mentionables, projectUID }),
+        [MentionInputPlugin.key]: MentionInputElement,
         [SlashInputPlugin.key]: SlashInputElement,
     };
 
@@ -198,16 +148,26 @@ export const getPlateComponents = ({
 };
 
 export const useCreateEditor = (props: TUseCreateEditor) => {
-    const { value, readOnly = false, socket, baseSocketEvent, chatEventKey, copilotEventKey, commonSocketEventData, plugins: customPlugins } = props;
+    const socket = useSocket();
+    const { value, readOnly = false, plugins: customPlugins } = props;
+    const editorData = useEditorData();
+    const { socketEvents, chatEventKey, copilotEventKey, commonSocketEventData } = editorData;
 
-    const reloadPlugins = useCallback(() => {
+    const components = useMemo(
+        () =>
+            getPlateComponents({
+                readOnly,
+            }),
+        [props, editorData, readOnly]
+    );
+    const plugins = useMemo(() => {
         const pluginList = [...(readOnly ? viewPlugins : editorPlugins), ...(customPlugins ?? [])];
-        if (!readOnly) {
-            const { chatEvents, copilotEvents } = createEditorSocketEvents(baseSocketEvent!);
+        if (!readOnly && socketEvents) {
+            const { chatEvents, copilotEvents } = socketEvents;
             pluginList.push(
-                ...createAIPlugins({ socket: socket!, eventKey: chatEventKey!, events: chatEvents, commonEventData: commonSocketEventData }),
+                ...createAIPlugins({ socket, eventKey: chatEventKey!, events: chatEvents, commonEventData: commonSocketEventData }),
                 ...createCopilotPlugins({
-                    socket: socket!,
+                    socket,
                     eventKey: copilotEventKey!,
                     events: copilotEvents,
                     commonEventData: commonSocketEventData,
@@ -216,8 +176,16 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
         }
         return pluginList;
     }, [readOnly]);
-    const [components, setComponents] = useState(getPlateComponents(props));
-    const [plugins, setPlugins] = useState(reloadPlugins());
+    const convertValue = useCallback(
+        (editor: PlateEditor) => {
+            if (value) {
+                return editor.getApi(MarkdownPlugin).markdown.deserialize(value.content);
+            } else {
+                return "";
+            }
+        },
+        [value]
+    );
     const editor = usePlateEditor(
         {
             override: {
@@ -226,38 +194,18 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
                 },
             },
             plugins,
-            value: (editor) => {
-                if (value) {
-                    return deserializeMd(editor, value.content);
-                } else {
-                    return "";
-                }
-            },
+            value: convertValue,
             autoSelect: "end",
         },
-        [components, plugins]
+        [readOnly, components, plugins, convertValue]
     );
 
     useEffect(() => {
-        const newComponents = getPlateComponents(props);
-        if (Object.keys(components).length !== Object.keys(newComponents).length) {
-            setComponents(newComponents);
-        }
-
-        const pluginList = reloadPlugins();
-        if (plugins.length !== pluginList.length) {
-            setPlugins(pluginList);
-        }
-
-        editor.api.redecorate();
-    }, [readOnly]);
-
-    useEffect(() => {
-        if (!readOnly || !value) {
+        if (!readOnly) {
             return;
         }
 
-        editor.tf.setValue(deserializeMd(editor, value.content));
+        editor.tf.setValue(convertValue(editor));
     }, [value]);
 
     return editor;

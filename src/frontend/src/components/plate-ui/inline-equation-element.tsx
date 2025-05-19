@@ -2,23 +2,23 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import { useRef, useState } from "react";
+import * as React from "react";
 import type { TEquationElement } from "@udecode/plate-math";
-import { cn, withRef } from "@udecode/cn";
+import { cn } from "@udecode/cn";
 import { useEquationElement } from "@udecode/plate-math/react";
-import { PlateElement, useEditorSelector, useElement, useSelected } from "@udecode/plate/react";
+import { PlateElement, PlateElementProps, useEditorSelector, useSelected } from "@udecode/plate/react";
 import { RadicalIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Popover } from "@/components/base";
 import { EquationPopoverContent } from "@/components/plate-ui/equation-popover";
 
-export const InlineEquationElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
+export function InlineEquationElement(props: PlateElementProps<TEquationElement>) {
     const [t] = useTranslation();
-    const element = useElement<TEquationElement>();
-    const katexRef = useRef<HTMLDivElement | null>(null);
+    const element = props.element;
+    const katexRef = React.useRef<HTMLDivElement | null>(null);
     const selected = useSelected();
     const isCollapsed = useEditorSelector((editor) => editor.api.isCollapsed(), []);
-    const [open, setOpen] = useState(selected && isCollapsed);
+    const [open, setOpen] = React.useState(selected && isCollapsed);
 
     useEquationElement({
         element,
@@ -37,7 +37,7 @@ export const InlineEquationElement = withRef<typeof PlateElement>(({ children, c
     });
 
     return (
-        <PlateElement ref={ref} className={cn("inline-block select-none rounded-sm [&_.katex-display]:my-0", className)} {...props}>
+        <PlateElement {...props} className={cn("inline-block select-none rounded-sm [&_.katex-display]:my-0")}>
             <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
                 <Popover.Trigger asChild>
                     <div
@@ -45,8 +45,7 @@ export const InlineEquationElement = withRef<typeof PlateElement>(({ children, c
                             'after:z-1 after:absolute after:inset-0 after:-left-1 after:-top-0.5 after:h-[calc(100%)+4px] after:w-[calc(100%+8px)] after:rounded-sm after:content-[""]',
                             "h-6",
                             element.texExpression.length > 0 && open && "after:bg-brand/15",
-                            element.texExpression.length === 0 && "text-muted-foreground after:bg-neutral-500/10",
-                            className
+                            element.texExpression.length === 0 && "text-muted-foreground after:bg-neutral-500/10"
                         )}
                         contentEditable={false}
                     >
@@ -63,7 +62,7 @@ export const InlineEquationElement = withRef<typeof PlateElement>(({ children, c
                 <EquationPopoverContent className="my-auto" open={open} placeholder="E = mc^2" setOpen={setOpen} isInline />
             </Popover.Root>
 
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

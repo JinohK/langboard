@@ -1,12 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Progress } from "@/components/base";
+import { createContext, useContext, useEffect, useReducer, useRef } from "react";
 import { StringCase } from "@/core/utils/StringUtils";
 import { APP_NAME } from "@/constants";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface IPageHeaderContext {
-    setIsLoadingRef: React.RefObject<(isLoading: bool) => void>;
     setPageAliasRef: React.RefObject<(alias?: string | string[]) => void>;
+    locationPopped: number;
 }
 
 interface IPageHeaderProps {
@@ -14,51 +13,24 @@ interface IPageHeaderProps {
 }
 
 const initialContext = {
-    setIsLoadingRef: { current: () => {} },
     setPageAliasRef: { current: () => {} },
+    locationPopped: 0,
 };
 
 const PageHeaderContext = createContext<IPageHeaderContext>(initialContext);
 
 export const PageHeaderProvider = ({ children }: IPageHeaderProps): React.ReactNode => {
-    const setIsLoadingRef = useRef<(isLoading: bool) => void>(() => {});
-    const setPageAliasRef = useRef<(alias?: string | string[]) => void>(() => {});
-
-    useEffect(() => {
-        setPageAliasRef.current();
-
-        const onLocationChange = () => {
-            setIsLoadingRef.current(true);
-            setPageAliasRef.current();
-        };
-
-        window.addEventListener("popstate", onLocationChange);
-
-        return () => {
-            window.removeEventListener("popstate", onLocationChange);
-        };
-    }, []);
-
-    return (
-        <PageHeaderContext.Provider
-            value={{
-                setIsLoadingRef,
-                setPageAliasRef,
-            }}
-        >
-            <PageHeader setIsLoadingRef={setIsLoadingRef} setPageAliasRef={setPageAliasRef} />
-            {children}
-        </PageHeaderContext.Provider>
-    );
-};
-
-interface IPageHaderProps extends Pick<IPageHeaderContext, "setIsLoadingRef" | "setPageAliasRef"> {}
-
-const PageHeader = ({ setIsLoadingRef, setPageAliasRef }: IPageHaderProps): React.ReactNode => {
-    const [isLoading, setIsLoading] = useState(true);
+    const [locationPopped, forceUpdate] = useReducer((x) => x + 1, 0);
     const pageAliasMap = useRef<Record<string, string[]>>({});
-    setIsLoadingRef.current = setIsLoading;
-    setPageAliasRef.current = (alias?: string | string[]) => {
+
+    const setDocumentTitle = (title: string) => {
+        if (document.title === title) {
+            return;
+        }
+
+        document.title = title;
+    };
+    const setPageAliasRef = useRef((alias?: string | string[]) => {
         const appName = new StringCase(APP_NAME).toPascal();
 
         if (!alias) {
@@ -78,17 +50,35 @@ const PageHeader = ({ setIsLoadingRef, setPageAliasRef }: IPageHaderProps): Reac
 
         pageAliasMap.current[location.pathname] = alias;
         setDocumentTitle(`${alias[0]} - ${appName}`);
+    });
+
+    const onLocationChange = (e: PopStateEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setPageAliasRef.current();
+        forceUpdate();
     };
 
-    const setDocumentTitle = (title: string) => {
-        if (document.title === title) {
-            return;
-        }
+    useEffect(() => {
+        setPageAliasRef.current();
 
-        document.title = title;
-    };
+        window.addEventListener("popstate", onLocationChange);
 
-    return <>{isLoading && <Progress indeterminate height="1" className="fixed top-0 z-[9999999]" />}</>;
+        return () => {
+            window.removeEventListener("popstate", onLocationChange);
+        };
+    }, [locationPopped]);
+
+    return (
+        <PageHeaderContext.Provider
+            value={{
+                setPageAliasRef,
+                locationPopped,
+            }}
+        >
+            {children}
+        </PageHeaderContext.Provider>
+    );
 };
 
 export const usePageHeader = () => {

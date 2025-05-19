@@ -47,7 +47,7 @@ export function SkeletonBoardColumnCard() {
     );
 }
 
-const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) => {
+function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
     const { hasRoleAction } = useBoard();
     const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
@@ -150,7 +150,7 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
         card.isOpenedInBoardColumn = false;
     }, []);
 
-    let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} setIsHoverCardHidden={setIsHoverCardHidden} />;
+    let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} labels={labels} setIsHoverCardHidden={setIsHoverCardHidden} />;
 
     if (!isOverlay && !isDragging && (description.content.trim().length || cardMembers.length || labels.length || checklists.length)) {
         cardInner = (
@@ -173,22 +173,24 @@ const BoardColumnCard = memo(({ card, closeHoverCardRef, isOverlay }: IBoardColu
                     {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                     hidden={isHoverCardHidden}
                 >
-                    <BoardColumnCardPreview card={card} />
+                    <BoardColumnCardPreview card={card} labels={labels} cardMembers={cardMembers} checklists={checklists} />
                 </HoverCard.Content>
             </HoverCard.Root>
         );
     }
 
     return <Box {...props}>{cardInner}</Box>;
-});
+}
+BoardColumnCard.displayName = "Board.ColumnCard";
 
 interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;
     card: IBoardColumnCardProps["card"];
+    labels: ProjectLabel.TModel[];
     setIsHoverCardHidden: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidden }: IBoardColumnCardCollapsibleProps) => {
+function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHidden }: IBoardColumnCardCollapsibleProps) {
     const { selectCardViewType, selectedRelationshipUIDs, currentCardUIDRef, isDisabledCard } = useBoardRelationshipController();
     const { project, filters, cardsMap, globalRelationshipTypes, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
@@ -196,7 +198,6 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
     const commentCount = card.useField("count_comment");
     const isOpenedInBoardColumn = card.useField("isOpenedInBoardColumn");
     const cardRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
-    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
@@ -272,10 +273,10 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
             }
         }
 
-        if (selectedRelationshipType) {
+        if (selectedRelationshipType && currentCardUIDRef.current) {
             const isParent = selectCardViewType === "parents";
             relationships.push([
-                cardsMap[currentCardUIDRef.current!].title,
+                cardsMap[currentCardUIDRef.current].title,
                 isParent ? selectedRelationshipType.parent_name : selectedRelationshipType.child_name,
             ]);
         }
@@ -383,21 +384,22 @@ const BoardColumnCardCollapsible = memo(({ isDragging, card, setIsHoverCardHidde
             <SelectRelationshipDialog card={card} isOpened={isSelectRelationshipDialogOpened} setIsOpened={setIsSelectRelationshipDialogOpened} />
         </>
     );
-});
+}
+BoardColumnCardCollapsible.displayName = "Board.ColumnCard.Collapsible";
 
 interface IBoardColumnCardPreviewProps {
     card: ProjectCard.TModel;
+    labels: ProjectLabel.TModel[];
+    cardMembers: User.TModel[];
+    checklists: ProjectChecklist.TModel[];
 }
 
-const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => {
+function BoardColumnCardPreview({ card, labels, cardMembers, checklists: flatChecklists }: IBoardColumnCardPreviewProps) {
     const { project, currentUser } = useBoard();
     const projectMembers = project.useForeignField<User.TModel>("members");
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
-    const cardMembers = card.useForeignField<User.TModel>("members");
-    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
-    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
     const [isOpened, setIsOpened] = useState(false);
 
@@ -440,7 +442,14 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
             {!!description.content.trim().length && (
                 <ScrollArea.Root>
                     <Box p="4" className="max-h-48 break-all [&_img]:max-w-full">
-                        <PlateEditor value={description} mentionables={mentionables} currentUser={currentUser} readOnly projectUID={project.uid} />
+                        <PlateEditor
+                            value={description}
+                            mentionables={mentionables}
+                            currentUser={currentUser}
+                            readOnly
+                            editorType="view"
+                            form={{ project_uid: project.uid }}
+                        />
                     </Box>
                 </ScrollArea.Root>
             )}
@@ -460,7 +469,8 @@ const BoardColumnCardPreview = memo(({ card }: IBoardColumnCardPreviewProps) => 
             )}
         </Flex>
     );
-});
+}
+BoardColumnCardPreview.displayName = "Board.ColumnCard.Preview";
 
 const BoardColumnCardPreviewChecklist = memo(({ checklist }: { checklist: ProjectChecklist.TModel }) => {
     const isChecked = checklist.useField("is_checked");

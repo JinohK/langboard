@@ -1,6 +1,6 @@
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { Project, ProjectCard, ProjectCheckitem, User } from "@/core/models";
 import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -90,7 +90,7 @@ interface IBoardCardSubCheckitemListProps {
 
 const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoardCardSubCheckitemListProps) => {
     const { projectUID, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isTitleOpened, setIsTitleOpened] = useState(false);
@@ -184,18 +184,14 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
                                 <BoardCardCheckitemTimer key={`board-card-checkitem-timer-${checkitem.uid}`} />
                             </Box>
                         </Flex>
-                        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                            <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
-                                <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
-                                    <span
-                                        className={cn("truncate", cardifiedCard && "sm:pl-2", isChecked && "text-muted-foreground/70 line-through")}
-                                    >
-                                        {title}
-                                    </span>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content className={sharedClassNames.popoverContent}>{title}</Tooltip.Content>
-                            </Tooltip.Root>
-                        </Tooltip.Provider>
+                        <Tooltip.Root open={isTitleOpened} onOpenChange={setIsTitleOpened}>
+                            <Tooltip.Trigger asChild onClick={() => setIsTitleOpened(!isTitleOpened)}>
+                                <span className={cn("truncate", cardifiedCard && "sm:pl-2", isChecked && "text-muted-foreground/70 line-through")}>
+                                    {title}
+                                </span>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content className={sharedClassNames.popoverContent}>{title}</Tooltip.Content>
+                        </Tooltip.Root>
                     </Flex>
                 </Flex>
                 <Flex items="center" gap="1.5">

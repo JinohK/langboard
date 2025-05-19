@@ -1,18 +1,16 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import { cn, withRef } from "@udecode/cn";
+import { cn } from "@udecode/cn";
 import { type FloatingToolbarState, flip, offset, useFloatingToolbar, useFloatingToolbarState } from "@udecode/plate-floating";
 import { useComposedRef, useEditorId, useEventEditorValue, usePluginOption } from "@udecode/plate/react";
-
 import { Toolbar } from "@/components/plate-ui/toolbar";
 
-export const FloatingToolbar = withRef<
-    typeof Toolbar,
-    {
-        state?: FloatingToolbarState;
-    }
->(({ children, state, ...props }, componentRef) => {
+type FloatingToolbarProps = React.ComponentProps<typeof Toolbar> & {
+    state?: FloatingToolbarState;
+};
+
+export function FloatingToolbar({ children, className, state, ...props }: FloatingToolbarProps) {
     const editorId = useEditorId();
     const focusedEditorId = useEventEditorValue("focus");
     const isFloatingLinkOpen = !!usePluginOption({ key: "a" }, "mode");
@@ -38,7 +36,7 @@ export const FloatingToolbar = withRef<
 
     const { clickOutsideRef, hidden, props: rootProps, ref: floatingRef } = useFloatingToolbar(floatingToolbarState);
 
-    const ref = useComposedRef<HTMLDivElement>(componentRef, floatingRef);
+    const ref = useComposedRef<HTMLDivElement>(props.ref, floatingRef);
 
     if (hidden) return null;
 
@@ -57,4 +55,4 @@ export const FloatingToolbar = withRef<
             </Toolbar>
         </div>
     );
-});
+}

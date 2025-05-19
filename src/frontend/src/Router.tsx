@@ -1,8 +1,9 @@
-import { Await, Navigate, Route, Routes } from "react-router-dom";
+import { Await, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { SuspenseComponent } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
 const modules = import.meta.glob<{ default: () => JSX.Element }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);
@@ -32,7 +33,22 @@ const Router = memo(() => {
                 resolve={loadRoutes()}
                 children={(routes) => (
                     <SuspenseComponent shouldWrapChildren={false} isPage>
-                        <Routes>{routes}</Routes>
+                        <Routes>
+                            <Route
+                                element={
+                                    <ErrorBoundary
+                                        FallbackComponent={(error) => {
+                                            console.error(error);
+                                            return <></>;
+                                        }}
+                                    >
+                                        <Outlet />
+                                    </ErrorBoundary>
+                                }
+                            >
+                                {routes}
+                            </Route>
+                        </Routes>
                     </SuspenseComponent>
                 )}
             />

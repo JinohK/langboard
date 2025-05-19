@@ -85,5 +85,6 @@ const BoardColumnAdd = memo(() => {
         </>
     );
 });
+BoardColumnAdd.displayName = "Board.ColumnAdd";
 
 export default BoardColumnAdd;

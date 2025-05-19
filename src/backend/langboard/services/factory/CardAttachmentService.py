@@ -56,8 +56,7 @@ class CardAttachmentService(BaseService):
         )
 
         async with DbSession.use() as db:
-            db.insert(card_attachment)
-            await db.commit()
+            await db.insert(card_attachment)
 
         CardAttachmentPublisher.uploaded(user, card, card_attachment)
         CardAttachmentActivityTask.card_attachment_uploaded(user, project, card, card_attachment)
@@ -78,12 +77,10 @@ class CardAttachmentService(BaseService):
         update_query = self._set_order_in_column(update_query, CardAttachment, original_order, order)
         async with DbSession.use() as db:
             await db.exec(update_query)
-            await db.commit()
 
         async with DbSession.use() as db:
             card_attachment.order = order
             await db.update(card_attachment)
-            await db.commit()
 
         CardAttachmentPublisher.order_changed(card, card_attachment)
 
@@ -102,11 +99,10 @@ class CardAttachmentService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(card_attachment)
-            await db.commit()
 
         CardAttachmentPublisher.name_changed(card, card_attachment)
         CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
-        CardAttachmentBotTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
+        CardAttachmentBotTask.card_attachment_name_changed(user, project, card, card_attachment)
 
         return True
 
@@ -127,11 +123,9 @@ class CardAttachmentService(BaseService):
                     & (CardAttachment.column("card_id") == card.id)
                 )
             )
-            await db.commit()
 
         async with DbSession.use() as db:
             await db.delete(card_attachment)
-            await db.commit()
 
         CardAttachmentPublisher.deleted(card, card_attachment)
         CardAttachmentActivityTask.card_attachment_deleted(user, project, card, card_attachment)

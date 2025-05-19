@@ -19,10 +19,6 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
     const { mutateAsync: updateCardLabelsMutateAsync } = useUpdateCardLabels();
     const [selectedLabelUIDs, setSelectedLabelUIDs] = useState(card.labels.map((label) => label.uid));
 
-    if (!hasRoleAction(Project.ERoleAction.CardUpdate)) {
-        return null;
-    }
-
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {
             return;
@@ -72,17 +68,12 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
         });
     };
 
+    if (!hasRoleAction(Project.ERoleAction.CardUpdate)) {
+        return null;
+    }
+
     return (
-        <Popover.Root
-            modal
-            open={isOpened}
-            onOpenChange={(opened) => {
-                if (isValidating) {
-                    return;
-                }
-                changeOpenedState(opened);
-            }}
-        >
+        <Popover.Root modal open={isOpened} onOpenChange={changeOpenedState}>
             <Popover.Trigger asChild>
                 <Button variant="secondary" className={buttonClassName}>
                     <IconComponent icon="file-up" size="4" />

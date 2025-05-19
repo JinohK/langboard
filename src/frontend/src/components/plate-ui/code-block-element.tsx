@@ -1,47 +1,29 @@
 /* eslint-disable @/max-len */
 "use client";
 
-import React from "react";
-import { cn, withRef } from "@udecode/cn";
+import * as React from "react";
 import { NodeApi } from "@udecode/plate";
-import { formatCodeBlock, isLangSupported } from "@udecode/plate-code-block";
-import { PlateElement } from "@udecode/plate/react";
+import { type TCodeBlockElement, formatCodeBlock, isLangSupported } from "@udecode/plate-code-block";
+import { type PlateElementProps, PlateElement } from "@udecode/plate/react";
+import { BracesIcon, CheckIcon, CopyIcon } from "lucide-react";
 import { Button } from "@/components/base";
 import { CodeBlockCombobox } from "@/components/plate-ui/code-block-combobox";
-import { BracesIcon, CheckIcon, CopyIcon } from "lucide-react";
 
-export const CodeBlockElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
+export function CodeBlockElement(props: PlateElementProps<TCodeBlockElement>) {
     const { editor, element } = props;
 
     return (
         <PlateElement
-            ref={ref}
-            className={cn(
-                className,
-                "py-1",
-                "**:[.hljs-comment,.hljs-code,.hljs-formula]:text-[#6a737d]",
-                "**:[.hljs-keyword,.hljs-doctag,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_]:text-[#d73a49]",
-                "**:[.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_]:text-[#6f42c1]",
-                "**:[.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-variable]:text-[#005cc5]",
-                "**:[.hljs-regexp,.hljs-string,.hljs-meta_.hljs-string]:text-[#032f62]",
-                "**:[.hljs-built_in,.hljs-symbol]:text-[#e36209]",
-                "**:[.hljs-name,.hljs-quote,.hljs-selector-tag,.hljs-selector-pseudo]:text-[#22863a]",
-                "**:[.hljs-emphasis]:italic",
-                "**:[.hljs-strong]:font-bold",
-                "**:[.hljs-section]:font-bold **:[.hljs-section]:text-[#005cc5]",
-                "**:[.hljs-bullet]:text-[#735c0f]",
-                "**:[.hljs-addition]:bg-[#f0fff4] **:[.hljs-addition]:text-[#22863a]",
-                "**:[.hljs-deletion]:bg-[#ffeef0] **:[.hljs-deletion]:text-[#b31d28]"
-            )}
+            className="**:[.hljs-addition]:bg-[#f0fff4] **:[.hljs-addition]:text-[#22863a] **:[.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-variable]:text-[#005cc5] **:[.hljs-built_in,.hljs-symbol]:text-[#e36209] **:[.hljs-bullet]:text-[#735c0f] **:[.hljs-comment,.hljs-code,.hljs-formula]:text-[#6a737d] **:[.hljs-deletion]:bg-[#ffeef0] **:[.hljs-deletion]:text-[#b31d28] **:[.hljs-emphasis]:italic **:[.hljs-keyword,.hljs-doctag,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_]:text-[#d73a49] **:[.hljs-name,.hljs-quote,.hljs-selector-tag,.hljs-selector-pseudo]:text-[#22863a] **:[.hljs-regexp,.hljs-string,.hljs-meta_.hljs-string]:text-[#032f62] **:[.hljs-section]:font-bold **:[.hljs-section]:text-[#005cc5] **:[.hljs-strong]:font-bold **:[.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_]:text-[#6f42c1] py-1"
             {...props}
         >
             <div className="relative rounded-md bg-muted/50">
                 <pre className="overflow-x-auto p-8 pr-4 font-mono text-sm leading-[normal] [tab-size:2] print:break-inside-avoid">
-                    <code>{children}</code>
+                    <code>{props.children}</code>
                 </pre>
 
-                <div className="absolute right-1 top-1 z-10 flex select-none gap-0.5">
-                    {isLangSupported(element.lang as string) && (
+                <div className="absolute right-1 top-1 z-10 flex select-none gap-0.5" contentEditable={false}>
+                    {isLangSupported(element.lang) && (
                         <Button
                             size="icon"
                             variant="ghost"
@@ -65,13 +47,9 @@ export const CodeBlockElement = withRef<typeof PlateElement>(({ children, classN
             </div>
         </PlateElement>
     );
-});
+}
 
-function CopyButton({
-    showLabel = false,
-    value,
-    ...props
-}: { value: (() => string) | string; showLabel?: bool } & Omit<React.ComponentProps<typeof Button>, "value">) {
+function CopyButton({ value, ...props }: { value: (() => string) | string } & Omit<React.ComponentProps<typeof Button>, "value">) {
     const [hasCopied, setHasCopied] = React.useState(false);
 
     React.useEffect(() => {

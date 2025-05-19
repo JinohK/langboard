@@ -5,9 +5,8 @@ import useCreateProject from "@/controllers/api/dashboard/useCreateProject";
 import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
-import { useEffect, useRef } from "react";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -15,9 +14,8 @@ export interface ICreateProjectFormDialogProps {
 }
 
 function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialogProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const { mutate } = useCreateProject();
     const projectTypeRef = useRef("");
     const projectTypeInputRef = useRef<HTMLInputElement>(null);
@@ -34,10 +32,6 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const setProjectType = (value: string) => {
         projectTypeRef.current = value;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer, useState } from "react";
 import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -8,7 +8,6 @@ import { ROUTES } from "@/core/routing/constants";
 import useCookieStore from "@/core/stores/CookieStore";
 import { cleanModels } from "@/core/models/Base";
 import { useTranslation } from "react-i18next";
-import { AxiosError, isAxiosError } from "axios";
 
 export interface IAuthContext {
     getAccessToken: () => string | null;
@@ -18,7 +17,7 @@ export interface IAuthContext {
     updatedUser: () => void;
     removeTokens: () => void;
     signOut: () => void;
-    aboutMe: () => AuthUser.TModel | null;
+    currentUser: AuthUser.TModel | null;
     updated: number;
 }
 
@@ -34,7 +33,7 @@ const initialContext = {
     updatedUser: () => {},
     removeTokens: () => {},
     signOut: () => {},
-    aboutMe: () => null,
+    currentUser: null,
     updated: 0,
 };
 
@@ -47,7 +46,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     const [_, i18n] = useTranslation();
     const cookieStore = useCookieStore();
     const { queryClient } = useQueryMutation();
-    const userRef = useRef<AuthUser.TModel | null>(null);
+    const [currentUser, setCurrentUser] = useState<IAuthContext["currentUser"]>(null);
     const [updated, update] = useReducer((x) => x + 1, 0);
 
     const getAccessToken = (): string | null => {
@@ -64,9 +63,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
     useEffect(() => {
         if (!isAuthenticated()) {
-            if (userRef.current) {
-                userRef.current = null;
-            }
+            setCurrentUser(() => null);
             return;
         }
 
@@ -77,33 +74,53 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 if (expiresAt > Date.now()) {
                     const cachedUser = AuthUser.Model.getModel(userUID);
                     if (cachedUser) {
-                        userRef.current = cachedUser;
+                        setCurrentUser(() => cachedUser);
                         return;
                     }
                 }
 
                 sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
-                userRef.current = null;
             }
 
-            let response;
-            try {
-                response = await api.get<{ user: AuthUser.Interface; notifications: UserNotification.Interface[] }>(API_ROUTES.AUTH.ABOUT_ME, {
-                    headers: {
-                        Authorization: `Bearer ${getAccessToken()}`,
-                    },
-                });
-            } catch (error) {
-                if (isAxiosError(error) && error.code === AxiosError.ERR_NETWORK) {
-                    setTimeout(() => {
-                        update();
-                    }, 5000);
+            const tryGetUser = async (attempts: number = 0) => {
+                const MAX_ATTEMPTS = 5;
+                if (attempts >= MAX_ATTEMPTS) {
+                    return undefined;
                 }
+
+                try {
+                    const response = await api.get<{ user: AuthUser.Interface; notifications: UserNotification.Interface[] }>(
+                        API_ROUTES.AUTH.ABOUT_ME,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${getAccessToken()}`,
+                            },
+                        }
+                    );
+
+                    if (!response) {
+                        throw new Error();
+                    }
+
+                    return response.data;
+                } catch (error) {
+                    await new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve(true);
+                        }, 5000);
+                    });
+                    return tryGetUser(attempts++);
+                }
+            };
+
+            const data = await tryGetUser();
+            if (!data) {
+                setCurrentUser(() => null);
                 return;
             }
 
-            const user = AuthUser.Model.fromObject(response.data.user);
-            UserNotification.Model.fromObjectArray(response.data.notifications);
+            const user = AuthUser.Model.fromObject(data.user);
+            UserNotification.Model.fromObjectArray(data.notifications);
 
             const hasSetLang = localStorage.getItem(HAS_SET_LANG_STORAGE_KEY);
             if (!hasSetLang) {
@@ -119,19 +136,17 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 })
             );
 
-            userRef.current = user;
-            update();
+            setCurrentUser(() => user);
             return;
         };
 
         getUser();
     }, [updated]);
 
-    const updatedUser = () => {
+    const updatedUser = useCallback(() => {
         sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
-        userRef.current = null;
         update();
-    };
+    }, [update]);
 
     const removeTokens = () => {
         cookieStore.remove(APP_ACCESS_TOKEN);
@@ -144,18 +159,14 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         update();
     };
 
-    const signOut = () => {
-        userRef.current = null;
+    const signOut = useCallback(() => {
+        setCurrentUser(() => null);
         cleanModels();
         sessionStorage.removeItem(ABOUT_ME_STORAGE_KEY);
         removeTokens();
         queryClient.clear();
         location.href = ROUTES.SIGN_IN.EMAIL;
-    };
-
-    const aboutMe = () => {
-        return userRef.current;
-    };
+    }, [queryClient, setCurrentUser]);
 
     return (
         <AuthContext.Provider
@@ -167,7 +178,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
                 updatedUser,
                 removeTokens,
                 signOut,
-                aboutMe,
+                currentUser,
                 updated,
             }}
         >

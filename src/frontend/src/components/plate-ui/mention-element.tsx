@@ -1,53 +1,55 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import type { TMentionElement } from "@udecode/plate-mention";
-import { cn, withRef } from "@udecode/cn";
-import { IS_APPLE, getHandler } from "@udecode/plate";
-import { useElement, useReadOnly } from "@udecode/plate/react";
-import { useFocused, useSelected } from "slate-react";
+import { cn } from "@udecode/cn";
+import { IS_APPLE } from "@udecode/plate";
+import { PlateElement, PlateElementProps, useFocused, useReadOnly, useSelected } from "@udecode/plate/react";
 import { useMounted } from "@/core/hooks/useMounted";
-import { PlateElement } from "@/components/plate-ui/plate-element";
-import { AuthUser, User } from "@/core/models";
+import { User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
+import { useEditorData } from "@/core/providers/EditorDataProvider";
+import { useCallback } from "react";
 
-export const MentionElement = withRef<
-    typeof PlateElement,
-    {
-        currentUser: AuthUser.TModel;
-        mentionables: User.TModel[];
-        prefix?: string;
-        renderLabel?: (mentionable: TMentionElement) => string;
-        onClick?: (mentionNode: any) => void;
-        projectUID?: string;
-    }
->(({ children, className, currentUser, mentionables, prefix, renderLabel, onClick, projectUID, ...props }, ref) => {
-    const element = useElement<TMentionElement>();
+export interface IMentionElementProps extends PlateElementProps<TMentionElement> {
+    prefix?: string;
+}
+
+export function MentionElement(props: IMentionElementProps) {
+    const element = props.element as TMentionElement;
+    const { mentionables, form } = useEditorData();
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
+    const mentionedUser = mentionables.find((user) => user.uid === element.value) ?? User.Model.createUnknownUser();
+    const renderLabel = useCallback(() => {
+        const user = mentionables.find((val) => val.uid === element.value);
+        if (user) {
+            return `${user.firstname} ${user.lastname}`;
+        } else {
+            return element.value;
+        }
+    }, [element, mentionables]);
 
     const readOnly = useReadOnly();
 
     return (
         <PlateElement
-            ref={ref}
+            {...props}
             className={cn(
                 "inline-block rounded-md bg-muted px-1.5 py-0.5 align-baseline text-sm font-medium",
                 !readOnly && "cursor-pointer",
                 selected && focused && "ring-2 ring-ring",
                 element.children[0].bold === true && "font-bold",
                 element.children[0].italic === true && "italic",
-                element.children[0].underline === true && "underline",
-                className
+                element.children[0].underline === true && "underline"
             )}
-            onClick={getHandler(onClick, element)}
-            data-slate-value={element.value}
-            contentEditable={false}
-            draggable
-            {...props}
+            attributes={{
+                ...props.attributes,
+                contentEditable: false,
+                "data-slate-value": element.value,
+                draggable: true,
+            }}
         >
             {mounted && IS_APPLE ? (
                 // Mac OS IME https://github.com/ianstormtaylor/slate/issues/3490
@@ -57,13 +59,13 @@ export const MentionElement = withRef<
                     noAvatar
                     customName={
                         <>
-                            {children}
-                            {prefix}
-                            {renderLabel ? renderLabel(element) : element.value}
+                            {props.children}
+                            {props.prefix}
+                            {renderLabel()}
                         </>
                     }
                 >
-                    <UserAvatarDefaultList user={mentionedUser} projectUID={projectUID} />
+                    <UserAvatarDefaultList user={mentionedUser} projectUID={form?.project_uid} />
                 </UserAvatar.Root>
             ) : (
                 // Others like Android https://github.com/ianstormtaylor/slate/pull/5360
@@ -73,15 +75,15 @@ export const MentionElement = withRef<
                     noAvatar
                     customName={
                         <>
-                            {prefix}
-                            {renderLabel ? renderLabel(element) : element.value}
-                            {children}
+                            {props.prefix}
+                            {renderLabel()}
+                            {props.children}
                         </>
                     }
                 >
-                    <UserAvatarDefaultList user={mentionedUser} projectUID={projectUID} />
+                    <UserAvatarDefaultList user={mentionedUser} projectUID={form?.project_uid} />
                 </UserAvatar.Root>
             )}
         </PlateElement>
     );
-});
+}

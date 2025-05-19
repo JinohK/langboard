@@ -32,7 +32,7 @@ import { resetBlockTypePlugin } from "@/components/Editor/plugins/reset-block-ty
 import { softBreakPlugin } from "@/components/Editor/plugins/soft-break-plugin";
 import { tablePlugin } from "@/components/Editor/plugins/table-plugin";
 import { tocPlugin } from "@/components/Editor/plugins/toc-plugin";
-import { MarkdownPlugin } from "@/components/Editor/plugins/markdown";
+import { markdownPlugin } from "@/components/Editor/plugins/markdown-plugin";
 import { equationPlugins } from "@/components/Editor/plugins/equation-plugin";
 import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
 
@@ -61,7 +61,7 @@ export const viewPlugins = [
     FloatingToolbarPlugin,
 
     // Deserialization
-    MarkdownPlugin.configure({ options: { indentList: true } }),
+    markdownPlugin,
 ] as const;
 
 export const editorPlugins = [

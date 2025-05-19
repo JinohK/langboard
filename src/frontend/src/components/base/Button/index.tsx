@@ -54,14 +54,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             return btn;
         } else {
             return (
-                <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
-                        <Tooltip.Content side={titleSide} align={titleAlign}>
-                            {title}
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                </Tooltip.Provider>
+                <Tooltip.Root>
+                    <Tooltip.Trigger asChild>{btn}</Tooltip.Trigger>
+                    <Tooltip.Content side={titleSide} align={titleAlign}>
+                        {title}
+                    </Tooltip.Content>
+                </Tooltip.Root>
             );
         }
     }

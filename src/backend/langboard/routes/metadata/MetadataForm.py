@@ -3,7 +3,7 @@ from ...core.routing import BaseFormModel, form_model
 
 
 class MetadataGetModel(BaseModel):
-    key: str = Field(..., title="The key of the metadata (Optional)")
+    key: str = Field(..., title="The key of the metadata")
 
 
 @form_model

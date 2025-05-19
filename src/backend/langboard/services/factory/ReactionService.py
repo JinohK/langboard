@@ -66,7 +66,6 @@ class ReactionService(BaseService):
                     reaction_params["bot_id"] = user_or_bot.id
 
                 reaction = model_class(**reaction_params)
-                db.insert(reaction)
-            await db.commit()
+                await db.insert(reaction)
 
         return not is_reacted

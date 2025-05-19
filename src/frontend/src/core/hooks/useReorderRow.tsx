@@ -3,6 +3,7 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { TBaseModelInstance } from "@/core/models/Base";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { arrayMove } from "@dnd-kit/sortable";
+import { useMemo } from "react";
 
 export interface IRow {
     uid: string;
@@ -33,25 +34,29 @@ function useReorderRow<TRow extends TBaseModelInstance<IRow>, TRowColumnKey exte
     updater,
 }: IUseReorderRowProps<TRow, TRowColumnKey>) {
     const [_, forceUpdate] = updater;
-    const handlers = useRowOrderChangedHandlers({
-        type,
-        topicId,
-        params: eventNameParams,
-        callback: (data) => {
-            switch (data.move_type) {
-                case "from_column":
-                    removeFromColumn(data.uid);
-                    break;
-                case "to_column":
-                    moveToColumn(data.uid, data.order, currentColumnId);
-                    break;
-                case "in_column":
-                    reorderInColumn(data.uid, data.order);
-                    break;
-            }
-        },
-    });
-    useSwitchSocketHandlers({ socket, handlers });
+    const handlers = useMemo(
+        () =>
+            useRowOrderChangedHandlers({
+                type,
+                topicId,
+                params: eventNameParams,
+                callback: (data) => {
+                    switch (data.move_type) {
+                        case "from_column":
+                            removeFromColumn(data.uid);
+                            break;
+                        case "to_column":
+                            moveToColumn(data.uid, data.order, currentColumnId);
+                            break;
+                        case "in_column":
+                            reorderInColumn(data.uid, data.order);
+                            break;
+                    }
+                },
+            }),
+        [type, topicId, eventNameParams]
+    );
+    useSwitchSocketHandlers({ socket, handlers, dependencies: [handlers] });
 
     const moveToColumn = (uid: string, index: number, columnUID: string) => {
         const targetRow = allRowsMap[uid] as TRow;

@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @/max-len */
 "use client";
 
-import { cn, withRef } from "@udecode/cn";
 import { useTocElement, useTocElementState } from "@udecode/plate-heading/react";
 import { cva } from "class-variance-authority";
-import { PlateElement } from "@/components/plate-ui/plate-element";
+import { PlateElement, PlateElementProps } from "@udecode/plate/react";
 import { Button } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
@@ -22,23 +20,23 @@ const headingItemVariants = cva(
     }
 );
 
-export const TocElement = withRef<typeof PlateElement>(({ children, className, ...props }, ref) => {
+export function TocElement(props: PlateElementProps) {
     const [t] = useTranslation();
     const state = useTocElementState();
-
     const { props: btnProps } = useTocElement(state);
-
     const { headingList } = state;
 
     return (
-        <PlateElement ref={ref} className={cn(className, "relative mb-1 p-0")} {...props}>
+        <PlateElement {...props} className="mb-1 p-0">
             <div contentEditable={false}>
                 {headingList.length > 0 ? (
                     headingList.map((item) => (
                         <Button
                             key={item.id}
                             variant="ghost"
-                            className={cn(headingItemVariants({ depth: item.depth as any }))}
+                            className={headingItemVariants({
+                                depth: item.depth as 1 | 2 | 3,
+                            })}
                             onClick={(e) => btnProps.onClick(e, item, "smooth")}
                             aria-current
                         >
@@ -49,7 +47,7 @@ export const TocElement = withRef<typeof PlateElement>(({ children, className, .
                     <div className="text-sm text-gray-500">{t("editor.Create a heading to display the table of contents.")}</div>
                 )}
             </div>
-            {children}
+            {props.children}
         </PlateElement>
     );
-});
+}

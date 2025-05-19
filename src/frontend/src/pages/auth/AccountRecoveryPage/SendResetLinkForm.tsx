@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import FormErrorMessage from "@/components/FormErrorMessage";
@@ -7,8 +7,7 @@ import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 export interface ISendResetLinkFormProps {
     signToken: string;
@@ -17,9 +16,8 @@ export interface ISendResetLinkFormProps {
 }
 
 function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLinkFormProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const location = useLocation();
     const { mutate } = useSendResetLink();
     const isResendRef = useRef(false);
@@ -57,10 +55,6 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     if (!(location.state?.isTwoSidedView ?? true)) {
         const buttons = (

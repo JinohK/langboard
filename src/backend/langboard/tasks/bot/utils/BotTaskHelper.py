@@ -1,4 +1,5 @@
 from json import dumps as json_dumps
+from json import loads as json_loads
 from typing import Any
 from httpx import post
 from ....core.ai import Bot, BotAPIAuthType, BotDefaultTrigger, BotTrigger, BotTriggerCondition
@@ -84,7 +85,7 @@ class BotTaskHelper:
                 "app_api_token": bot.app_api_token,
                 "prompt": bot.prompt,
             },
-            "bot_labels_for_project": [label.api_response() for label in labels] if labels else None,
+            "bot_labels_for_project": [label.api_response() for label in labels] if labels else [],
             "custom_markdown_formats": DATA_TEXT_FORMAT_DESCRIPTIONS,
         }
 
@@ -97,12 +98,15 @@ class BotTaskHelper:
             json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Langflow:
             headers["x-api-key"] = bot.api_key
-            json_data = {
-                "input_value": json_dumps(response, default=str),
-                "input_type": "chat",
-                "output_type": "chat",
-                "tweaks": {},
-            }
+            if bot.api_url.count("v1/webhook") > 0:
+                json_data = json_loads(json_dumps(response, default=str))
+            else:
+                json_data = {
+                    "input_value": json_dumps(response, default=str),
+                    "input_type": "chat",
+                    "output_type": "chat",
+                    "tweaks": {},
+                }
         elif bot.api_auth_type == BotAPIAuthType.OpenAI:
             headers["Authorization"] = f"Bearer {bot.api_key}"
             json_data = response

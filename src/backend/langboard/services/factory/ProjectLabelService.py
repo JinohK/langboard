@@ -72,6 +72,25 @@ class ProjectLabelService(BaseService):
             return list(raw_labels)
         return [label.api_response() for label in raw_labels]
 
+    async def get_all_card_labels_by_project(
+        self, project: TProjectParam
+    ) -> list[tuple[ProjectLabel, CardAssignedProjectLabel]]:
+        project = cast(Project, await self._get_by_param(Project, project))
+        if not project:
+            return []
+
+        async with DbSession.use() as db:
+            result = await db.exec(
+                SqlBuilder.select.tables(ProjectLabel, CardAssignedProjectLabel)
+                .join(
+                    CardAssignedProjectLabel,
+                    ProjectLabel.column("id") == CardAssignedProjectLabel.column("project_label_id"),
+                )
+                .where(ProjectLabel.column("project_id") == project.id)
+            )
+        raw_labels = result.all()
+        return list(raw_labels)
+
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
         project = cast(Project, await self._get_by_param(Project, project))
         labels: list[ProjectLabel] = []
@@ -85,8 +104,8 @@ class ProjectLabelService(BaseService):
                     order=len(labels),
                 )
                 labels.append(label)
-                db.insert(label)
-            await db.commit()
+                await db.insert(label)
+
         return labels
 
     async def create(
@@ -111,8 +130,7 @@ class ProjectLabelService(BaseService):
             order=max_order + 1,
         )
         async with DbSession.use() as db:
-            db.insert(label)
-            await db.commit()
+            await db.insert(label)
 
         if is_bot:
             return None
@@ -152,7 +170,6 @@ class ProjectLabelService(BaseService):
 
         async with DbSession.use() as db:
             await db.update(label)
-            await db.commit()
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -162,7 +179,7 @@ class ProjectLabelService(BaseService):
 
         ProjectLabelPublisher.updated(project, label, model)
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
-        ProjectLabelBotTask.project_label_updated(user_or_bot, project, old_label_record, label)
+        ProjectLabelBotTask.project_label_updated(user_or_bot, project, label)
 
         return model
 
@@ -184,12 +201,10 @@ class ProjectLabelService(BaseService):
         update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
         async with DbSession.use() as db:
             await db.exec(update_query)
-            await db.commit()
 
         async with DbSession.use() as db:
             label.order = order
             await db.update(label)
-            await db.commit()
 
         ProjectLabelPublisher.order_changed(project, label)
 
@@ -206,7 +221,6 @@ class ProjectLabelService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(label)
-            await db.commit()
 
         ProjectLabelPublisher.deleted(project, label)
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)

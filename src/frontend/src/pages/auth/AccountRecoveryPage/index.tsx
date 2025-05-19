@@ -10,14 +10,14 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function AccountRecoveryPage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const [email, setEmail] = useState<string | null>(location.state?.email);
     const [[form, description], setPage] = useState<[JSX.Element | null, string]>([null, ""]);
     const { mutate: validateRecoveryTokenMutate } = useValidateRecoveryToken();
@@ -53,9 +53,6 @@ function AccountRecoveryPage(): JSX.Element {
                         },
                         onError: () => {
                             navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
-                        },
-                        onSettled: () => {
-                            setIsLoadingRef.current(false);
                         },
                     }
                 );

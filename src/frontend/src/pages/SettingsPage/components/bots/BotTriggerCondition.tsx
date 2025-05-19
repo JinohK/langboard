@@ -18,7 +18,7 @@ export interface IBotTriggerConditionProps {
 
 const BotTriggerCondition = memo(({ bot, category, conditionType }: IBotTriggerConditionProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const conditions = bot.useField("conditions");
     const condition = useMemo(() => conditions?.[conditionType], [conditions]);
     const [isValidating, setIsValidating] = useState(false);
@@ -41,7 +41,7 @@ const BotTriggerCondition = memo(({ bot, category, conditionType }: IBotTriggerC
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                             messageRef.message = t("errors.Forbidden");
-                            navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                         },
                     },
                     messageRef

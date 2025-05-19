@@ -115,8 +115,7 @@ class CheckitemService(BaseService):
 
         checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order + 1)
         async with DbSession.use() as db:
-            db.insert(checkitem)
-            await db.commit()
+            await db.insert(checkitem)
 
         CheckitemPublisher.created(card, checklist, checkitem)
         CardCheckitemActivityTask.card_checkitem_created(user_or_bot, project, card, checkitem)
@@ -148,15 +147,13 @@ class CheckitemService(BaseService):
                 cardified_card.title = title
                 async with DbSession.use() as db:
                     await db.update(cardified_card)
-                    await db.commit()
 
         async with DbSession.use() as db:
             await db.update(checkitem)
-            await db.commit()
 
         CheckitemPublisher.title_changed(project, card, checkitem, cardified_card)
         CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
-        CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
+        CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, checkitem)
 
         return True
 
@@ -196,26 +193,23 @@ class CheckitemService(BaseService):
             )
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
 
             update_query = shared_update_query.values({Checkitem.order: Checkitem.order + 1}).where(
                 (Checkitem.column("order") >= order) & (Checkitem.column("checklist_id") == new_checklist.id)
             )
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
+
             checkitem.checklist_id = new_checklist.id
         else:
             update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
             update_query = self._set_order_in_column(update_query, Checkitem, original_order, order)
             async with DbSession.use() as db:
                 await db.exec(update_query)
-                await db.commit()
 
         async with DbSession.use() as db:
             checkitem.order = order
             await db.update(checkitem)
-            await db.commit()
 
         CheckitemPublisher.order_changed(card, checkitem, original_checklist, new_checklist)
 
@@ -255,7 +249,6 @@ class CheckitemService(BaseService):
                 checkitem.accumulated_seconds += accumulated_seconds
                 async with DbSession.use() as db:
                     await db.update(checkitem)
-                    await db.commit()
         else:
             if not checkitem.user_id:
                 if not isinstance(user_or_bot, User):
@@ -276,8 +269,9 @@ class CheckitemService(BaseService):
         timer_record = CheckitemTimerRecord(checkitem_id=checkitem.id, status=status, created_at=current_time)
         async with DbSession.use() as db:
             await db.update(checkitem)
-            db.insert(timer_record)
-            await db.commit()
+
+        async with DbSession.use() as db:
+            await db.insert(timer_record)
 
         target_user = None
         if checkitem.user_id:
@@ -317,7 +311,6 @@ class CheckitemService(BaseService):
         else:
             async with DbSession.use() as db:
                 await db.update(checkitem)
-                await db.commit()
 
             CheckitemPublisher.checked_changed(project, card, checkitem)
 
@@ -363,16 +356,14 @@ class CheckitemService(BaseService):
             order=max_order + 1,
         )
         async with DbSession.use() as db:
-            db.insert(new_card)
-            await db.commit()
+            await db.insert(new_card)
 
         async with DbSession.use() as db:
             checkitem.cardified_id = new_card.id
             await db.update(checkitem)
-            await db.commit()
 
         card_service = self._get_service_by_name("card")
-        api_card = await card_service.convert_board_list_api_response(new_card)
+        api_card = await card_service.convert_board_list_api_response(new_card, 0, [], [])
         CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem, new_card)
@@ -397,7 +388,6 @@ class CheckitemService(BaseService):
 
         async with DbSession.use() as db:
             await db.delete(checkitem)
-            await db.commit()
 
         CheckitemPublisher.deleted(project, card, checkitem)
         CardCheckitemActivityTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)

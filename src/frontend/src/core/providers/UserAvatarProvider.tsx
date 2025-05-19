@@ -51,8 +51,7 @@ export const UserAvatarProvider = memo(({ navigate, projectUID, user, children }
             return undefined;
         }
     }, [projectUID]);
-    const { aboutMe, updated } = useAuth();
-    const currentUser = useMemo(() => aboutMe(), [updated]);
+    const { currentUser } = useAuth();
     const currentUserRoleActions = useMemo(() => {
         if (project) {
             return project.current_auth_role_actions;

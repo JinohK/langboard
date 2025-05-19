@@ -1,5 +1,5 @@
 import { Button, Flex } from "@/components/base";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -11,7 +11,7 @@ export interface IBoardCardActionRelationshipItemProps {
 }
 
 const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCardActionRelationshipItemProps) => {
-    const navigateRef = useRef(usePageNavigate());
+    const navigateRef = useRef(useNavigate());
     const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
     const relationshipType = relationship.relationship_type;

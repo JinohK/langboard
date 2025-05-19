@@ -12,25 +12,24 @@ const BoardLabelListItem = memo(({ label }: IBoardLabelListItemProps) => {
     const description = label.useField("description");
 
     return (
-        <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-            <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                    <Flex items="center" gap="1.5" className="truncate">
-                        <Box
-                            minH="6"
-                            minW="6"
-                            rounded="md"
-                            style={{
-                                backgroundColor: color || "#FFFFFF",
-                            }}
-                        />
-                        <Box className="truncate">{name}</Box>
-                    </Flex>
-                </Tooltip.Trigger>
-                <Tooltip.Content align="end">{description}</Tooltip.Content>
-            </Tooltip.Root>
-        </Tooltip.Provider>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+                <Flex items="center" gap="1.5" className="truncate">
+                    <Box
+                        minH="6"
+                        minW="6"
+                        rounded="md"
+                        style={{
+                            backgroundColor: color || "#FFFFFF",
+                        }}
+                    />
+                    <Box className="truncate">{name}</Box>
+                </Flex>
+            </Tooltip.Trigger>
+            <Tooltip.Content align="end">{description}</Tooltip.Content>
+        </Tooltip.Root>
     );
 });
+BoardLabelListItem.displayName = "Board.LabelListItem";
 
 export default BoardLabelListItem;

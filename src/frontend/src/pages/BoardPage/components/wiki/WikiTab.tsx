@@ -137,38 +137,30 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
 
     return (
         <Box hidden={isInBin}>
-            <Tooltip.Provider delayDuration={Tooltip.DEFAULT_DURATION}>
-                <Tooltip.Root>
-                    <Tabs.Trigger
-                        value={wiki.uid}
-                        key={`board-wiki-${wiki.uid}-tab`}
-                        disabled={forbidden}
-                        onPointerDown={scrollHorizontal}
-                        {...props}
-                    >
-                        <Tooltip.Trigger asChild>
-                            <span className="max-w-40 truncate" onPointerDown={scrollHorizontal}>
-                                {forbidden ? t("wiki.Private") : title}
+            <Tooltip.Root>
+                <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={forbidden} onPointerDown={scrollHorizontal} {...props}>
+                    <Tooltip.Trigger asChild>
+                        <span className="max-w-40 truncate" onPointerDown={scrollHorizontal}>
+                            {forbidden ? t("wiki.Private") : title}
+                        </span>
+                    </Tooltip.Trigger>
+                    {modeType === "delete" && (
+                        <Button
+                            asChild
+                            variant="destructiveGhost"
+                            size="icon-sm"
+                            title={t("common.Delete")}
+                            className="ml-2 size-6"
+                            onClick={deleteWiki}
+                        >
+                            <span>
+                                <IconComponent icon="trash-2" size="3" />
                             </span>
-                        </Tooltip.Trigger>
-                        {modeType === "delete" && (
-                            <Button
-                                asChild
-                                variant="destructiveGhost"
-                                size="icon-sm"
-                                title={t("common.Delete")}
-                                className="ml-2 size-6"
-                                onClick={deleteWiki}
-                            >
-                                <span>
-                                    <IconComponent icon="trash-2" size="3" />
-                                </span>
-                            </Button>
-                        )}
-                    </Tabs.Trigger>
-                    <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
-                </Tooltip.Root>
-            </Tooltip.Provider>
+                        </Button>
+                    )}
+                </Tabs.Trigger>
+                <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
+            </Tooltip.Root>
         </Box>
     );
 });

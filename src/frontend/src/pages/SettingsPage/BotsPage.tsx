@@ -12,7 +12,7 @@ import { useParams } from "react-router-dom";
 function BotsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigate, isValidating } = useAppSetting();
+    const { navigateRef, isValidating } = useAppSetting();
     const { botUID } = useParams();
     const [bot, setBot] = useState<BotModel.TModel | null>(null);
 
@@ -26,7 +26,7 @@ function BotsPage() {
         const bot = BotModel.Model.getModel(botUID);
         if (!bot) {
             Toast.Add.error(t("settings.errors.Bot not found."));
-            navigate.current(ROUTES.SETTINGS.BOTS);
+            navigateRef.current(ROUTES.SETTINGS.BOTS);
             return;
         }
 
@@ -35,7 +35,7 @@ function BotsPage() {
     }, [botUID]);
 
     const openCreateDialog = () => {
-        navigate.current(ROUTES.SETTINGS.CREATE_BOT);
+        navigateRef.current(ROUTES.SETTINGS.CREATE_BOT);
     };
 
     return (

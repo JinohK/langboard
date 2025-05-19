@@ -1,4 +1,4 @@
-import { Box, Flex, Input, Toast } from "@/components/base";
+import { Box, Flex, IconComponent, Input, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -16,7 +16,7 @@ export interface IBotUniqueNameProps {
 
 const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const uname = bot.useField("bot_uname");
     const { mutateAsync } = useUpdateBot(bot);
 
@@ -36,7 +36,7 @@ const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                             [EHttpStatus.HTTP_409_CONFLICT]: () => t("settings.errors.Bot unique name already exists."),
                         },
@@ -60,9 +60,12 @@ const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
     return (
         <Flex items="center">
             {!isEditing ? (
-                <Box cursor="text" w="full" textSize="base" onClick={() => changeMode("edit")}>
-                    @{uname}
-                </Box>
+                <Flex items="center" cursor="pointer" w="full" textSize="base" onClick={() => changeMode("edit")}>
+                    <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
+                        @{uname}
+                    </Box>
+                    <IconComponent icon="pencil" size="4" className="ml-2" />
+                </Flex>
             ) : (
                 <>
                     <Box textSize="base">@{BotModel.Model.BOT_UNAME_PREFIX}</Box>

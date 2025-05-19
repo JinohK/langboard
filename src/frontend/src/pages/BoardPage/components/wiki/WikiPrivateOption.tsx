@@ -40,7 +40,6 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
     const allItems = useMemo(() => [...projectBots, ...projectMembers], [projectBots, projectMembers]);
     const [isValidating, setIsValidating] = useState(false);
-    const isValidatingRef = useRef(isValidating);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
     const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees();
 
@@ -55,12 +54,11 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     }, [forbidden]);
 
     const savePrivateState = (privateState: bool) => {
-        if (isValidatingRef.current || privateState === !isPublic) {
+        if (isValidating || privateState === !isPublic) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = changeWikiPublicMutateAsync({
             project_uid: projectUID,
@@ -92,18 +90,16 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             },
             finally: () => {
                 setIsValidating(false);
-                isValidatingRef.current = false;
             },
         });
     };
 
     const saveAssignees = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidatingRef.current || isPublic) {
+        if (isValidating || isPublic) {
             return;
         }
 
         setIsValidating(true);
-        isValidatingRef.current = true;
 
         const promise = updateWikiAssigneesMutateAsync({
             project_uid: projectUID,
@@ -135,7 +131,6 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             },
             finally: () => {
                 setIsValidating(false);
-                isValidatingRef.current = false;
                 endCallback();
             },
         });

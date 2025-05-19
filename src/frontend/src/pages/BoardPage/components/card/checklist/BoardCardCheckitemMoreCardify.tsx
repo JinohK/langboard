@@ -17,6 +17,18 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid
     );
 
+    const changeOpenState = (opened: bool) => {
+        if (isValidating) {
+            return;
+        }
+
+        if (!opened) {
+            setSelectedColumnUID(!card.archived_at ? card.column_uid : allColumns[0]?.uid);
+        }
+
+        setIsOpened(opened);
+    };
+
     const cardify = () => {
         if (isValidating) {
             return;
@@ -45,30 +57,16 @@ function BoardCardCheckitemMoreCardify({ setIsMoreMenuOpened }: { setIsMoreMenuO
         });
     };
 
-    const changeOpenState = (opened: bool) => {
-        if (isValidating) {
-            return;
-        }
-
-        if (!opened) {
-            setSelectedColumnUID(!card.archived_at ? card.column_uid : allColumns[0]?.uid);
-        }
-
-        setIsOpened(opened);
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpened(true);
     };
 
     return (
         <Popover.Root modal open={isOpened} onOpenChange={changeOpenState}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        changeOpenState(true);
-                    }}
-                >
-                    {t("card.Cardify")}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleClick}>{t("card.Cardify")}</DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content className={sharedClassNames.popoverContent} align="end">
                 <Flex direction="col" gap="2">

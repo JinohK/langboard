@@ -3,7 +3,6 @@
 import { BoldPlugin, CodePlugin, ItalicPlugin, StrikethroughPlugin, UnderlinePlugin } from "@udecode/plate-basic-marks/react";
 import { useEditorReadOnly } from "@udecode/plate/react";
 import { HighlightPlugin } from "@udecode/plate-highlight/react";
-import { ListStyleType } from "@udecode/plate-indent-list";
 import { AudioPlugin, FilePlugin, ImagePlugin, VideoPlugin } from "@udecode/plate-media/react";
 import { BoldIcon, Code2Icon, HighlighterIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon, WandSparklesIcon } from "lucide-react";
 import { MoreMarkDropdownMenu } from "@/components/plate-ui/more-mark-dropdown-menu";
@@ -73,8 +72,7 @@ export function FixedToolbarButtons() {
                     </ToolbarGroup>
 
                     <ToolbarGroup>
-                        <IndentListToolbarButton nodeType={ListStyleType.Disc} />
-                        <IndentListToolbarButton nodeType={ListStyleType.Decimal} />
+                        <IndentListToolbarButton />
                         <IndentTodoToolbarButton />
                     </ToolbarGroup>
 

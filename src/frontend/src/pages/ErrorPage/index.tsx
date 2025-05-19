@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 function ErrorPage(): JSX.Element {
-    const { setIsLoadingRef, setPageAliasRef } = usePageHeader();
+    const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { isAuthenticated } = useAuth();
     const code = window.location.pathname.split("/").pop();
@@ -25,7 +25,6 @@ function ErrorPage(): JSX.Element {
     const message = getErrorMessage(errorCode);
 
     useEffect(() => {
-        setIsLoadingRef.current(false);
         setPageAliasRef.current(message);
     }, []);
 

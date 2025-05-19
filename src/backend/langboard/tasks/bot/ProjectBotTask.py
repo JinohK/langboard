@@ -1,4 +1,3 @@
-from typing import Any
 from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
 from ...core.db import User
@@ -6,23 +5,12 @@ from ...models import Project
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
-@BotTaskDataHelper.project_schema(
-    BotTriggerCondition.ProjectUpdated,
-    BotTaskDataHelper.changes_schema(
-        ("title", "string?"), ("description", "string?"), ("project_type", "string?"), ("ai_description", "string?")
-    ),
-)
+@BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectUpdated)
 @Broker.wrap_async_task_decorator
-async def project_updated(user_or_bot: User | Bot, old_dict: dict[str, Any], project: Project):
+async def project_updated(user_or_bot: User | Bot, project: Project):
     bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectUpdated)
     await BotTaskHelper.run(
-        bots,
-        BotTriggerCondition.ProjectUpdated,
-        {
-            **BotTaskDataHelper.create_project(user_or_bot, project),
-            **BotTaskDataHelper.create_changes(old_dict, project),
-        },
-        project,
+        bots, BotTriggerCondition.ProjectUpdated, BotTaskDataHelper.create_project(user_or_bot, project), project
     )
 
 

@@ -16,7 +16,7 @@ export interface IGlobalRelationshipParentNameProps {
 
 const GlobalRelationshipParentName = memo(({ globalRelationship }: IGlobalRelationshipParentNameProps) => {
     const [t] = useTranslation();
-    const { navigate } = useAppSetting();
+    const { navigateRef } = useAppSetting();
     const parentName = globalRelationship.useField("parent_name");
     const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
 
@@ -36,7 +36,7 @@ const GlobalRelationshipParentName = memo(({ globalRelationship }: IGlobalRelati
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
                                 messageRef.message = t("errors.Forbidden");
-                                navigate.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
                             },
                         },
                         messageRef

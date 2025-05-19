@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { QUERY_NAMES } from "@/constants";
@@ -10,8 +10,7 @@ import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import usePageNavigate from "@/core/hooks/usePageNavigate";
+import { useNavigate } from "react-router-dom";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -22,10 +21,9 @@ export interface IPasswordformProps {
 }
 
 function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPasswordformProps): JSX.Element {
-    const { setIsLoadingRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = usePageNavigate();
+    const navigate = useNavigate();
     const [shouldShowPassword, setShouldShowPassword] = useState(false);
     const { mutate } = useSignIn();
     const { signIn } = useAuth();
@@ -70,10 +68,6 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
         },
         useDefaultBadRequestHandler: true,
     });
-
-    useEffect(() => {
-        setIsLoadingRef.current(false);
-    }, []);
 
     const backToEmail = () => {
         setEmail("");
