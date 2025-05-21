@@ -42,6 +42,18 @@ class UserNotification extends BaseModel<Interface> {
         if (TypeUtils.isString(model.type)) {
             model.type = ENotificationType[new StringCase(model.type).toPascal() as keyof typeof ENotificationType];
         }
+        if (model.notifier_bot) {
+            const botAsUser = { ...model.notifier_bot } as unknown as User.Interface;
+            if (botAsUser.type === "bot") {
+                model.notifier_bot = {
+                    uid: botAsUser.uid,
+                    name: botAsUser.firstname,
+                    bot_uname: botAsUser.username,
+                    avatar: botAsUser.avatar,
+                    as_user: botAsUser,
+                } as BotModel.Interface;
+            }
+        }
         return model;
     }
 
