@@ -52,31 +52,45 @@ class BotScheduleService:
         if pagination:
             query = query.limit(pagination.limit).offset((pagination.page - 1) * pagination.limit)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(query)
 
         if not as_api:
             return list(result.all())
 
-        schedules = []
+        schedules = result.all()
+        table_ids_dict: dict[str, list[int]] = {}
+        cached_dict = {}
         for schedule in result.all():
-            target_table = get_model_by_table_name(schedule.target_table)
-            if not target_table:
-                continue
+            if schedule.target_table not in table_ids_dict:
+                table_ids_dict[schedule.target_table] = []
+            table_ids_dict[schedule.target_table].append(schedule.target_id)
 
-            async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
+            for table_name in table_ids_dict:
+                table_ids = table_ids_dict[table_name]
+                target_table = get_model_by_table_name(table_name)
+                if not target_table:
+                    continue
+
                 result = await db.exec(
-                    SqlBuilder.select.table(target_table).where(target_table.column("id") == schedule.target_id)
+                    SqlBuilder.select.table(target_table).where(target_table.column("id").in_(table_ids))
                 )
-            target = result.first()
+
+                for target in result.all():
+                    cached_dict[f"{table_name}_{target.id}"] = target
+
+        api_schedules = []
+        for schedule in schedules:
+            cache_key = f"{schedule.target_table}_{schedule.target_id}"
+            target = cached_dict.get(cache_key)
             if not target:
                 continue
-
             api_schedule = schedule.api_response()
             api_schedule["target"] = target.api_response()
-            schedules.append(api_schedule)
+            api_schedules.append(api_schedule)
 
-        return schedules
+        return api_schedules
 
     @staticmethod
     def reload_cron():
@@ -160,7 +174,7 @@ class BotScheduleService:
             end_at=end_at,
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(bot_schedule)
 
         if has_changed:
@@ -249,10 +263,10 @@ class BotScheduleService:
             model["filterable_table"] = filterable_model.__tablename__
             model["filterable_uid"] = filterable_model.get_uid()
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(bot_schedule)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(BotSchedule).where(BotSchedule.column("interval_str") == old_interval_str)
             )
@@ -275,10 +289,10 @@ class BotScheduleService:
         cron = BotScheduleService.__get_cron()
 
         interval_str = bot_schedule.interval_str
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(bot_schedule)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(BotSchedule).where(BotSchedule.column("interval_str") == interval_str)
             )
@@ -295,7 +309,7 @@ class BotScheduleService:
             return None
 
         bot_schedule.status = status
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(bot_schedule)
 
         return bot_schedule
@@ -315,7 +329,7 @@ class BotScheduleService:
     @staticmethod
     async def __get_schedule(bot_schedule: BotSchedule | str):
         if isinstance(bot_schedule, str):
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=False) as db:
                 result = await db.exec(
                     SqlBuilder.select.table(BotSchedule).where(
                         BotSchedule.column("id") == SnowflakeID.from_short_code(bot_schedule)

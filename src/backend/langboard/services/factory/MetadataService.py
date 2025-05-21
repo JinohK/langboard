@@ -59,7 +59,7 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return None
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key") == key)
@@ -79,7 +79,7 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return None
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key") == (old_key or key))
@@ -87,7 +87,7 @@ class MetadataService(BaseService):
             )
         metadata = result.first()
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             if not metadata:
                 params: dict[str, Any] = {
                     "key": key,
@@ -111,7 +111,7 @@ class MetadataService(BaseService):
         if isinstance(keys, str):
             keys = [keys]
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key").in_(keys))

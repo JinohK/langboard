@@ -9,7 +9,6 @@ export function TableRowElement(props: PlateElementProps<TTableRowElement>) {
     return (
         <PlateElement
             {...props}
-            ref={props.ref}
             as="tr"
             className="group/row"
             attributes={{

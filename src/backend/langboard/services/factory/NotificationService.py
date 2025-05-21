@@ -36,7 +36,7 @@ class NotificationService(BaseService):
         return "notification"
 
     async def get_list(self, user: User) -> list[dict[str, Any]]:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(UserNotification)
                 .where(
@@ -99,7 +99,7 @@ class NotificationService(BaseService):
             )
 
         if notification_ids_should_delete:
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=False) as db:
                 await db.exec(
                     SqlBuilder.delete.table(UserNotification).where(
                         UserNotification.column("id").in_(notification_ids_should_delete)
@@ -158,7 +158,7 @@ class NotificationService(BaseService):
             return False
 
         notification.read_at = now()
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(notification)
 
         return True
@@ -171,7 +171,7 @@ class NotificationService(BaseService):
                 (UserNotification.column("receiver_id") == user.id) & (UserNotification.column("read_at") == None)  # noqa
             )
         )
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(sql_query)
 
     async def delete(self, user: User, notification: TNotificationParam) -> bool:
@@ -179,14 +179,14 @@ class NotificationService(BaseService):
         if not notification or notification.receiver_id != user.id:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(notification)
 
         return True
 
     async def delete_all(self, user: User):
         sql_query = SqlBuilder.delete.table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(sql_query)
 
     # from here, notifiable types are added

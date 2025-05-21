@@ -1,9 +1,25 @@
-import { MentionNode } from "@udecode/plate-markdown";
-import { TMentionElement } from "@udecode/plate-mention";
-import type { Node, Parent, RootContent, Text } from "mdast";
+import { isValidURL } from "@/core/utils/StringUtils";
+import { convertNodesSerialize, MentionNode as IBaseMentionNode, MdLink, SerializeMdOptions } from "@udecode/plate-markdown";
+import { TMentionElement as IBaseMentionElement } from "@udecode/plate-mention";
+import type { Node, Parent, Link, RootContent } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
+export interface IMentionNode extends IBaseMentionNode {
+    uid: string;
+}
+
+export interface IMentionElement extends IBaseMentionElement {
+    key: string;
+}
+
+declare module "mdast" {
+    interface StaticPhrasingContent {
+        mention: IMentionNode;
+    }
+
+    interface StaticPhrasingContentMap extends StaticPhrasingContent {}
+}
 /**
  * A remark plugin that converts <@uid> patterns in text nodes into mention
  * nodes. This plugin runs after remark-gfm and transforms <@uid> patterns
@@ -12,58 +28,51 @@ import { visit } from "unist-util-visit";
  */
 export const remark: Plugin = function () {
     return (tree: Node) => {
-        visit(tree, "text", (node: Text, index: number, parent: Parent | undefined) => {
-            if (!parent || typeof index !== "number") return;
+        visit(tree, "link", (node: Link, index: number, parent: Parent | undefined) => {
+            if (
+                !parent ||
+                typeof index !== "number" ||
+                isValidURL(node.url) ||
+                node.children?.[0].type !== "strong" ||
+                node.children[0].children?.[0].type !== "text"
+            )
+                return;
 
-            const mentionPattern = /(?:^|\s)<@([^\s]+)>/g;
-            const parts: (MentionNode | Text)[] = [];
-            let lastIndex = 0;
-            let match;
+            const uid = node.url;
+            const username = node.children[0].children[0].value.replace(/@/g, "");
 
-            const text = node.value;
-            while ((match = mentionPattern.exec(text)) !== null) {
-                const mentionStart = match[0].startsWith(" ") ? match.index + 1 : match.index;
+            const mentionNode = {
+                type: "mention",
+                uid,
+                username,
+                children: [{ type: "text", value: `@${username}` }],
+            };
 
-                if (mentionStart > lastIndex) {
-                    parts.push({
-                        type: "text",
-                        value: text.slice(lastIndex, mentionStart),
-                    });
-                }
-
-                parts.push({
-                    children: [{ type: "text", value: `@${match[1]}` }],
-                    type: "mention",
-                    username: match[1],
-                });
-
-                lastIndex = mentionStart + match[0].length - (match[0].startsWith(" ") ? 1 : 0);
-            }
-
-            if (lastIndex < text.length) {
-                parts.push({
-                    type: "text",
-                    value: text.slice(lastIndex),
-                });
-            }
-
-            if (parts.length > 0) {
-                parent.children.splice(index, 1, ...(parts as RootContent[]));
-            }
+            parent.children.splice(index, 1, mentionNode as RootContent);
         });
     };
 };
 
 export const rules = {
     mention: {
-        deserialize: (node: MentionNode): TMentionElement => ({
+        deserialize: (node: IMentionNode): IMentionElement => ({
             children: [{ text: "" }],
             type: "mention",
+            key: node.uid,
             value: node.username,
         }),
-        serialize: (node: TMentionElement) => ({
-            type: "text",
-            value: `<@${node.value.replace(/\s/g, "_")}>`,
+        serialize: (node: IMentionElement, options: SerializeMdOptions): Link => ({
+            children: convertNodesSerialize(
+                [
+                    {
+                        text: `@${node.value.replace(/\s/g, "_")}`,
+                        bold: true,
+                    },
+                ],
+                options
+            ) as MdLink["children"],
+            url: node.key,
+            type: "link",
         }),
     },
 };

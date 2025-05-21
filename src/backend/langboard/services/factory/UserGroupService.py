@@ -50,7 +50,7 @@ class UserGroupService(BaseService):
         if not user_group:
             return []
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(UserGroupAssignedEmail, User)
                 .outerjoin(
@@ -86,14 +86,12 @@ class UserGroupService(BaseService):
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(user_group)
 
-        if emails:
-            async with DbSession.use() as db:
-                for email in set(emails):
-                    assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                    await db.insert(assigned_email)
+            for email in set(emails):
+                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+                await db.insert(assigned_email)
 
         return user_group
 
@@ -104,7 +102,7 @@ class UserGroupService(BaseService):
 
         user_group.name = name
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user_group)
 
         return True
@@ -114,31 +112,30 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
 
-        app_users = await self._get_all_by(User, "email", emails)
-        app_user_subemails = await self._get_all_by(UserEmail, "email", emails)
-        unique_app_user_emails_map = {}
-        appended_emails = []
-        for app_user in app_users:
-            appended_emails.append(app_user.email)
-            unique_app_user_emails_map[app_user.id] = app_user.email
-        for app_user_subemail in app_user_subemails:
-            appended_emails.append(app_user_subemail.email)
-            if app_user_subemail.user_id in unique_app_user_emails_map:
-                continue
-            unique_app_user_emails_map[app_user_subemail.user_id] = app_user_subemail.email
+            app_users = await self._get_all_by(User, "email", emails)
+            app_user_subemails = await self._get_all_by(UserEmail, "email", emails)
+            unique_app_user_emails_map = {}
+            appended_emails = []
+            for app_user in app_users:
+                appended_emails.append(app_user.email)
+                unique_app_user_emails_map[app_user.id] = app_user.email
+            for app_user_subemail in app_user_subemails:
+                appended_emails.append(app_user_subemail.email)
+                if app_user_subemail.user_id in unique_app_user_emails_map:
+                    continue
+                unique_app_user_emails_map[app_user_subemail.user_id] = app_user_subemail.email
 
-        unique_app_user_emails = set(unique_app_user_emails_map.values())
-        none_user_emails = [email for email in emails if email not in appended_emails]
-        all_emails = unique_app_user_emails.union(none_user_emails)
+            unique_app_user_emails = set(unique_app_user_emails_map.values())
+            none_user_emails = [email for email in emails if email not in appended_emails]
+            all_emails = unique_app_user_emails.union(none_user_emails)
 
-        async with DbSession.use() as db:
             for email in all_emails:
                 assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
                 await db.insert(assigned_email)
@@ -150,14 +147,13 @@ class UserGroupService(BaseService):
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
 
-        async with DbSession.use() as db:
             await db.delete(user_group)
 
         return True

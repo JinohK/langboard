@@ -203,7 +203,7 @@ class BaseBot(metaclass=BotMetaClass):
         await BotOneTimeToken.delete_token(api_request_model.one_time_token)
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(AppSetting).where(
                     (AppSetting.setting_type == AppSettingType.LangflowUrl)

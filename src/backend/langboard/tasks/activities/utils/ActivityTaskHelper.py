@@ -29,7 +29,7 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
 
         activity = self._model_class(**model)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(activity)
 
         return activity
@@ -56,15 +56,14 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         self, old_relationship_ids: list[int], new_relationship_ids: list[int], is_parent: bool
     ):
         async def relationship_converter(relationship: CardRelationship):
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(
                     SqlBuilder.select.table(GlobalCardRelationshipType).where(
                         GlobalCardRelationshipType.column("id") == relationship.relationship_type_id
                     )
                 )
-            global_relationship = cast(GlobalCardRelationshipType, result.first())
-            target_card_id = relationship.card_id_parent if is_parent else relationship.card_id_child
-            async with DbSession.use() as db:
+                global_relationship = cast(GlobalCardRelationshipType, result.first())
+                target_card_id = relationship.card_id_parent if is_parent else relationship.card_id_child
                 result = await db.exec(SqlBuilder.select.table(Card).where(Card.column("id") == target_card_id))
             related_card = cast(Card, result.first())
 
@@ -82,7 +81,7 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         if not card:
             return history
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
             )
@@ -99,7 +98,7 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
         new_ids: list[int],
         converter: Callable[[_TBaseModel], Coroutine[Any, Any, dict[str, Any]]],
     ):
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(model_class).where(model_class.column("id").in_(set([*old_ids, *new_ids])))
             )

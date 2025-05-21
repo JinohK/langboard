@@ -142,7 +142,7 @@ class Auth:
             return cached_user
 
         try:
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
             user = result.first()
             if not user:
@@ -173,7 +173,7 @@ class Auth:
             return cached_bot
 
         try:
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(
                     SqlBuilder.select.table(Bot).where(Bot.column("app_api_token") == api_token).limit(1)
                 )
@@ -280,7 +280,7 @@ class Auth:
 
         try:
             user_id = SnowflakeID.from_short_code(user_uid)
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
             user = result.first()
             if not user:

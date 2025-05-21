@@ -262,7 +262,7 @@ class ActivityService(BaseService):
         list_query = self.__make_query(list_query, activity_class, **where_clauses)
         list_query = list_query.where(activity_class.column("created_at") <= refer_time)
         list_query = self.paginate(list_query, pagination.page, pagination.limit)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(list_query)
         result_list = result.all()
 
@@ -281,7 +281,7 @@ class ActivityService(BaseService):
             outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
         outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
         outdated_query = outdated_query.where(activity_class.column("created_at") > refer_time)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(outdated_query)
         return result.first() or 0
 

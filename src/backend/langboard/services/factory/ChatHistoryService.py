@@ -34,7 +34,7 @@ class ChatHistoryService(BaseService):
         sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(sql_query)
         histories = result.all()
 
@@ -66,19 +66,19 @@ class ChatHistoryService(BaseService):
             receiver_id=receiver.id if receiver else None,
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(chat_history)
 
         return chat_history
 
     async def update(self, chat_history: ChatHistory) -> ChatHistory:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(chat_history)
 
         return chat_history
 
     async def delete(self, chat_history: ChatHistory):
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(chat_history)
 
     async def clear(
@@ -96,5 +96,5 @@ class ChatHistoryService(BaseService):
         if filterable is not None:
             sql_query = sql_query.where(ChatHistory.column("filterable") == SnowflakeID.from_short_code(filterable))
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(sql_query)

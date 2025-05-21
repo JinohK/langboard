@@ -124,12 +124,11 @@ class ActivityHistoryHelper:
             new_data = data if isinstance(data, EditorContentModel) else EditorContentModel(**data)
             user_or_bot_uids, _ = find_mentioned(new_data)
             user_or_bot_ids = [SnowflakeID.from_short_code(uid) for uid in user_or_bot_uids]
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(SqlBuilder.select.table(User).where(User.column("id").in_(user_or_bot_ids)))
-            mentionables: list[Bot | User] = list(result.all())
-            async with DbSession.use() as db:
+                mentionables: list[Bot | User] = list(result.all())
                 result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
-            mentionables.extend(list(result.all()))
+                mentionables.extend(list(result.all()))
 
             return {
                 "type": "editor",

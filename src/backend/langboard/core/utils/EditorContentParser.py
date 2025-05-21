@@ -1,12 +1,13 @@
 from re import compile, findall
 from ..db import EditorContentModel
+from .String import concat
 
 
 DATA_TEXT_FORMAT_DESCRIPTIONS: dict[str, str] = {
     "audio": "Audio url format: <audio src='audio_url' />",
     "date": "Date format: <date>yyyy-MM-dd</date>",
     "file": "File url format: <file name='filename' src='file_url' />",
-    "mention": "User mention format: <@user_or_bot_uid>",
+    "mention": "User mention format: [**user_or_bot_name**](user_or_bot_uid)",
     "video": "Video url format: <video src='video_url' />",
     "uml": "UML format: $$uml\numl_code\n$$",
     "equation": "Equation format: $$\nmath_code\n$$",
@@ -15,27 +16,27 @@ DATA_TEXT_FORMAT_DESCRIPTIONS: dict[str, str] = {
 
 
 def find_mentioned(editor: EditorContentModel) -> tuple[set[str], dict[str, str]]:
-    mention_pattern = compile(r"<@([a-zA-Z0-9]+)>")
+    mention_pattern = compile(r"\[\*\*@([\w-]+)\*\*\]\(([\w]+)\)")
     mentions = findall(mention_pattern, editor.content)
 
     content = change_date_element(editor)
 
     result: set[str] = set()
     mentioned_lines: dict[str, str] = {}
-    for user_uid in mentions:
-        if user_uid in result:
+    for username, uid in mentions:
+        if uid in result:
             continue
-        result.add(user_uid)
-        mention_str = f"<@{user_uid}>"
+        result.add(uid)
+        mention_str = concat("[**", username, "**](", uid, ")")
         content_lines = content.split(mention_str)
         if len(content_lines) < 2:
-            mentioned_lines[user_uid] = mention_str
+            mentioned_lines[uid] = mention_str
             continue
         front_lines = content_lines[0].splitlines()
         front_line = front_lines.pop() if front_lines else ""
         last_lines = content_lines[1].splitlines()
         last_line = last_lines.pop(0) if last_lines else ""
-        mentioned_lines[user_uid] = f"{front_line}{mention_str}{last_line}"
+        mentioned_lines[uid] = f"{front_line}{mention_str}{last_line}"
 
     return result, mentioned_lines
 

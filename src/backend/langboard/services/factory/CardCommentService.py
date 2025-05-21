@@ -24,7 +24,7 @@ class CardCommentService(BaseService):
         card = cast(Card, await self._get_by_param(Card, card))
         if not card:
             return []
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardComment, User, Bot, with_deleted=True)
                 .outerjoin(User, CardComment.column("user_id") == User.column("id"))
@@ -79,7 +79,7 @@ class CardCommentService(BaseService):
             comment_params["bot_id"] = user_or_bot.id
 
         comment = CardComment(**comment_params)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(comment)
 
         CardCommentPublisher.created(user_or_bot, project, card, comment)
@@ -110,7 +110,7 @@ class CardCommentService(BaseService):
 
         old_content = comment.content
         comment.content = content
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(comment)
 
         CardCommentPublisher.updated(project, card, comment)
@@ -135,7 +135,7 @@ class CardCommentService(BaseService):
             return None
         project, card, comment = params
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(comment)
 
         CardCommentPublisher.deleted(project, card, comment)

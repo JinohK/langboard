@@ -24,7 +24,7 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
@@ -40,7 +40,7 @@ class ProjectLabelService(BaseService):
         project = cast(Project, await self._get_by_param(Project, project))
         if not project:
             return []
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") != None))  # noqa
@@ -58,7 +58,7 @@ class ProjectLabelService(BaseService):
         if not card:
             return []
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .join(
@@ -79,7 +79,7 @@ class ProjectLabelService(BaseService):
         if not project:
             return []
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(ProjectLabel, CardAssignedProjectLabel)
                 .join(
@@ -94,7 +94,7 @@ class ProjectLabelService(BaseService):
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
         project = cast(Project, await self._get_by_param(Project, project))
         labels: list[ProjectLabel] = []
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             for default_label in ProjectLabel.DEFAULT_LABELS:
                 label = ProjectLabel(
                     project_id=project.id,
@@ -129,15 +129,13 @@ class ProjectLabelService(BaseService):
             description=description,
             order=max_order + 1,
         )
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(label)
 
-        if is_bot:
-            return None
-
-        ProjectLabelPublisher.created(project, label)
-        ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
-        ProjectLabelBotTask.project_label_created(user_or_bot, project, label)
+        if not is_bot:
+            ProjectLabelPublisher.created(project, label)
+            ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
+            ProjectLabelBotTask.project_label_created(user_or_bot, project, label)
 
         return label, label.api_response()
 
@@ -168,7 +166,7 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(label)
 
         model: dict[str, Any] = {}
@@ -199,10 +197,8 @@ class ProjectLabelService(BaseService):
             (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None)  # noqa
         )
         update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
-
-        async with DbSession.use() as db:
             label.order = order
             await db.update(label)
 
@@ -219,7 +215,7 @@ class ProjectLabelService(BaseService):
         if label.bot_id and not isinstance(user_or_bot, Bot):
             return None
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(label)
 
         ProjectLabelPublisher.deleted(project, label)

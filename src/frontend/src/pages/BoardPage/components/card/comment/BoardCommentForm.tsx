@@ -89,7 +89,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setValue({
-            content: `@${targetUser.uid} `,
+            content: `[**@${targetUser.username}**](${targetUser.uid}) `,
         });
 
         setTimeout(() => {
@@ -157,6 +157,9 @@ const BoardCommentForm = memo((): JSX.Element => {
                 onSettled: () => {
                     setIsValidating(false);
                     setCurrentEditor("");
+                    setTimeout(() => {
+                        changeOpenState(false);
+                    }, 0);
                 },
             }
         );

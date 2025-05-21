@@ -73,7 +73,7 @@ class AppSettingService(BaseService):
         setting = AppSetting(setting_type=setting_type, setting_name=setting_name)
         setting.set_value(setting_value)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(setting)
 
         return setting
@@ -106,7 +106,7 @@ class AppSettingService(BaseService):
         if not setting.has_changes():
             return True
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(setting)
 
         return setting
@@ -116,14 +116,14 @@ class AppSettingService(BaseService):
         if not setting:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(setting)
         return True
 
     async def delete_selected(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
 
         return True
@@ -137,7 +137,7 @@ class AppSettingService(BaseService):
             description=description,
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(global_relationship)
 
         model = {"global_relationships": global_relationship.api_response()}
@@ -170,7 +170,7 @@ class AppSettingService(BaseService):
         if not old_global_relationship_record:
             return True
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(global_relationship)
 
         model = {}
@@ -190,7 +190,7 @@ class AppSettingService(BaseService):
         if not global_relationship:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(global_relationship)
 
         AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
@@ -200,7 +200,7 @@ class AppSettingService(BaseService):
     async def delete_selected_global_relationships(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(GlobalCardRelationshipType).where(
                     GlobalCardRelationshipType.column("id").in_(ids)

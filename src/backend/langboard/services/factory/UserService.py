@@ -34,7 +34,7 @@ class UserService(BaseService):
         user = await self._get_by(User, "email", email)
         if user:
             return user, None
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(User, UserEmail)
                 .join(
@@ -61,18 +61,16 @@ class UserService(BaseService):
         user = User(**form)
         user.avatar = avatar
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(user)
-
-        user_profile = UserProfile(user_id=user.id, **form)
-        async with DbSession.use() as db:
+            user_profile = UserProfile(user_id=user.id, **form)
             await db.insert(user_profile)
 
         return user
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(user_email)
 
         return user_email
@@ -139,14 +137,14 @@ class UserService(BaseService):
 
     async def activate(self, user: User) -> None:
         user.activated_at = now()
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user)
 
         UserActivityTask.activated(user)
 
     async def verify_subemail(self, subemail: UserEmail) -> None:
         subemail.verified_at = now()
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(subemail)
 
     async def update(self, user: User, form: dict) -> bool:
@@ -183,7 +181,7 @@ class UserService(BaseService):
         if not old_user_record:
             return True
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user)
             await db.update(profile)
 
@@ -211,7 +209,7 @@ class UserService(BaseService):
             return False
 
         user.preferred_lang = lang
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user)
 
         return True
@@ -221,7 +219,7 @@ class UserService(BaseService):
         user.email = subemail.email
         subemail.email = user_email
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user)
             await db.update(subemail)
 
@@ -233,12 +231,12 @@ class UserService(BaseService):
         return True
 
     async def delete_email(self, subemail: UserEmail) -> bool:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.delete(subemail)
 
         return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(user)

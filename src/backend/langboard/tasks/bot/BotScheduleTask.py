@@ -29,35 +29,34 @@ async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
         return
 
     project = None
-    if isinstance(model, ProjectColumn):
-        async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
+        if isinstance(model, ProjectColumn):
             result = await db.exec(SqlBuilder.select.table(Project).where(Project.column("id") == model.project_id))
-        project = result.first()
-        if not project:
-            return
-        data = {
-            "project_column_uid": model.get_uid(),
-            "project_uid": project.get_uid(),
-            "scope": ProjectColumn.__tablename__,
-        }
-    elif isinstance(model, Card):
-        async with DbSession.use() as db:
+            project = result.first()
+            if not project:
+                return
+            data = {
+                "project_column_uid": model.get_uid(),
+                "project_uid": project.get_uid(),
+                "scope": ProjectColumn.__tablename__,
+            }
+        elif isinstance(model, Card):
             result = await db.exec(
                 SqlBuilder.select.tables(ProjectColumn, Project)
                 .join(Project, ProjectColumn.column("project_id") == Project.column("id"))
                 .where(ProjectColumn.column("id") == model.project_column_id)
             )
-        column, project = result.first() or (None, None)
-        if not column or not project:
+            column, project = result.first() or (None, None)
+            if not column or not project:
+                return
+            data = {
+                "project_column_uid": column.get_uid(),
+                "card_uid": model.get_uid(),
+                "project_uid": project.get_uid(),
+                "scope": Card.__tablename__,
+            }
+        else:
             return
-        data = {
-            "project_column_uid": column.get_uid(),
-            "card_uid": model.get_uid(),
-            "project_uid": project.get_uid(),
-            "scope": Card.__tablename__,
-        }
-    else:
-        return
 
     await BotTaskHelper.run(bot, BotDefaultTrigger.BotCronScheduled, data, project)
 
@@ -81,7 +80,7 @@ async def run_scheduled_bots_cron(interval_str: str):
         logger.error(f"Invalid interval string: {interval_str}")
         return
 
-    async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
         result = await db.exec(
             SqlBuilder.select.tables(BotSchedule, Bot)
             .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
@@ -97,7 +96,7 @@ async def run_scheduled_bots_cron(interval_str: str):
 
 async def _check_bot_schedule_runnable():
     current_time = now()
-    async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
         result = await db.exec(
             SqlBuilder.select.table(BotSchedule).where(
                 (BotSchedule.column("status") == BotScheduleStatus.Pending)
@@ -105,43 +104,42 @@ async def _check_bot_schedule_runnable():
             )
         )
 
-    for bot_schedule in result.all():
-        if bot_schedule.running_type == BotScheduleRunningType.Duration:
-            if (
-                not bot_schedule.start_at
-                or not bot_schedule.end_at
-                or bot_schedule.start_at >= bot_schedule.end_at
-                or bot_schedule.start_at > current_time
-                or bot_schedule.end_at < current_time
-            ):
+        for bot_schedule in result.all():
+            if bot_schedule.running_type == BotScheduleRunningType.Duration:
+                if (
+                    not bot_schedule.start_at
+                    or not bot_schedule.end_at
+                    or bot_schedule.start_at >= bot_schedule.end_at
+                    or bot_schedule.start_at > current_time
+                    or bot_schedule.end_at < current_time
+                ):
+                    continue
+            elif bot_schedule.running_type == BotScheduleRunningType.Onetime:
+                if not bot_schedule.start_at or bot_schedule.start_at < current_time:
+                    continue
+            elif bot_schedule.running_type == BotScheduleRunningType.Reserved:
+                if not bot_schedule.start_at or bot_schedule.start_at < current_time:
+                    continue
+            else:
                 continue
-        elif bot_schedule.running_type == BotScheduleRunningType.Onetime:
-            if not bot_schedule.start_at or bot_schedule.start_at < current_time:
-                continue
-        elif bot_schedule.running_type == BotScheduleRunningType.Reserved:
-            if not bot_schedule.start_at or bot_schedule.start_at < current_time:
-                continue
-        else:
-            continue
-        old_status = bot_schedule.status
-        await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Started)
+            old_status = bot_schedule.status
+            await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Started)
 
-        if bot_schedule.status != old_status:
-            model = await _get_target_model(bot_schedule.target_table, bot_schedule.target_id)
-            if not model:
-                continue
+            if bot_schedule.status != old_status:
+                model = await _get_target_model(bot_schedule.target_table, bot_schedule.target_id)
+                if not model:
+                    continue
 
-            project = None
-            if isinstance(model, ProjectColumn) or isinstance(model, Card):
-                async with DbSession.use() as db:
+                project = None
+                if isinstance(model, ProjectColumn) or isinstance(model, Card):
                     result = await db.exec(
                         SqlBuilder.select.table(Project).where(Project.column("id") == model.project_id)
                     )
-                project = result.first()
-            if not project:
-                continue
+                    project = result.first()
+                if not project:
+                    continue
 
-            ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
+                ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
 
 
 async def _get_target_model(target_table: str, target_id: SnowflakeID | int):
@@ -149,7 +147,7 @@ async def _get_target_model(target_table: str, target_id: SnowflakeID | int):
     if not table:
         return None
 
-    async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
         result = await db.exec(SqlBuilder.select.table(table).where(table.column("id") == target_id))
     model = result.first()
     if not model:

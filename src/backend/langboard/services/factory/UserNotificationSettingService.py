@@ -47,12 +47,12 @@ class UserNotificationSettingService(BaseService):
                 return _QueryBuilder(query)
 
             async def all(self):
-                async with DbSession.use() as db:
+                async with DbSession.use(readonly=True) as db:
                     result = await db.exec(self.__query)
                 return list(result.all())
 
             async def first(self):
-                async with DbSession.use() as db:
+                async with DbSession.use(readonly=True) as db:
                     result = await db.exec(self.__query)
                 return result.first()
 
@@ -104,8 +104,8 @@ class UserNotificationSettingService(BaseService):
 
         unsubscriptions = await query.all()
 
-        for unsubscription in unsubscriptions:
-            async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
+            for unsubscription in unsubscriptions:
                 await db.delete(unsubscription)
 
         return notification_types
@@ -154,20 +154,20 @@ class UserNotificationSettingService(BaseService):
         unsubscriptions = await query.all()
         already_unsubscribed_types = [unsubscription.notification_type for unsubscription in unsubscriptions]
 
-        for notification_type in notification_types:
-            if notification_type in already_unsubscribed_types:
-                continue
+        async with DbSession.use(readonly=False) as db:
+            for notification_type in notification_types:
+                if notification_type in already_unsubscribed_types:
+                    continue
 
-            unsubscription = UserNotificationUnsubscription(
-                user_id=user.id,
-                channel=channel,
-                notification_type=notification_type,
-                scope_type=scope,
-                specific_table=model.__tablename__ if model else None,
-                specific_id=model.id if model else None,
-            )
+                unsubscription = UserNotificationUnsubscription(
+                    user_id=user.id,
+                    channel=channel,
+                    notification_type=notification_type,
+                    scope_type=scope,
+                    specific_table=model.__tablename__ if model else None,
+                    specific_id=model.id if model else None,
+                )
 
-            async with DbSession.use() as db:
                 await db.insert(unsubscription)
 
         return notification_types

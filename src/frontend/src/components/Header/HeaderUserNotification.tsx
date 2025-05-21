@@ -316,14 +316,16 @@ function HeaderUserNotificationItemContent({ notification, className }: { notifi
 }
 
 function HeaderUserNotificationItemMentionedText({ content }: { content: string }) {
-    const mentionPattern = /<@([^\s]+)>/g;
+    const mentionPattern = /\[\*\*@([\w-]+)\*\*\]\(([\w]+)\)/g;
     const [elements, title] = useMemo(() => {
         const newElements = [];
         let lastIndex = 0;
         let match: RegExpExecArray | null;
         let newTitle: string = "";
         while ((match = mentionPattern.exec(content)) !== null) {
-            const [fullMatch, username] = match;
+            const [fullMatch, username, userUID] = match;
+            const targetUser = User.Model.getModel(userUID);
+            const userName = targetUser ? `${targetUser.firstname} ${targetUser.lastname}` : username;
             const matchIndex = match.index;
 
             if (matchIndex > lastIndex) {
@@ -342,10 +344,10 @@ function HeaderUserNotificationItemMentionedText({ content }: { content: string 
                     key={`mention-${matchIndex}`}
                     className="cursor-default select-none rounded-full bg-primary/70 px-2 py-1 text-primary-foreground"
                 >
-                    @{username}
+                    @{userName}
                 </Box>
             );
-            newTitle = `${newTitle}@${username}`;
+            newTitle = `${newTitle}@${userName}`;
 
             lastIndex = matchIndex + fullMatch.length;
         }

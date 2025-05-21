@@ -29,7 +29,7 @@ async def run_webhook(event: str, data: dict[str, Any]):
 
 
 async def _get_webhook_url() -> list[str]:
-    async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
         result = await db.exec(
             SqlBuilder.select.table(AppSetting).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
         )

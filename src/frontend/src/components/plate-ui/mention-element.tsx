@@ -1,6 +1,6 @@
 "use client";
 
-import type { TMentionElement } from "@udecode/plate-mention";
+import type { IMentionElement } from "@/components/Editor/plugins/markdown/mention";
 import { cn } from "@udecode/cn";
 import { IS_APPLE } from "@udecode/plate";
 import { PlateElement, PlateElementProps, useFocused, useReadOnly, useSelected } from "@udecode/plate/react";
@@ -11,19 +11,19 @@ import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { useEditorData } from "@/core/providers/EditorDataProvider";
 import { useCallback } from "react";
 
-export interface IMentionElementProps extends PlateElementProps<TMentionElement> {
+export interface IMentionElementProps extends PlateElementProps<IMentionElement> {
     prefix?: string;
 }
 
 export function MentionElement(props: IMentionElementProps) {
-    const element = props.element as TMentionElement;
+    const element = props.element as IMentionElement;
     const { mentionables, form } = useEditorData();
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionables.find((user) => user.uid === element.value) ?? User.Model.createUnknownUser();
+    const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
     const renderLabel = useCallback(() => {
-        const user = mentionables.find((val) => val.uid === element.value);
+        const user = mentionables.find((val) => val.uid === element.key);
         if (user) {
             return `${user.firstname} ${user.lastname}`;
         } else {

@@ -67,7 +67,7 @@ class BaseService(ABC):
     ) -> _TBaseModel | None:
         if not is_none and value is None:
             return None
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(model_class, with_deleted=with_deleted)
                 .where(model_class.column(column) == value)
@@ -76,7 +76,7 @@ class BaseService(ABC):
         return result.first()
 
     async def _get_all(self, model_class: type[_TBaseModel], with_deleted: bool = False) -> Sequence[_TBaseModel]:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(SqlBuilder.select.table(model_class, with_deleted=with_deleted))
         return result.all()
 
@@ -87,7 +87,7 @@ class BaseService(ABC):
         if not isinstance(values, list):
             values = [values]
         sql_query = sql_query.where(model_class.column(column).in_(values))
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(sql_query)
         return result.all()
 
@@ -127,7 +127,7 @@ class BaseService(ABC):
             query = query.where(model_class.column("deleted_at") == None)  # noqa
         if where_clauses:
             query = self._where_recursive(query, model_class, **where_clauses)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(query)
 
         max_order, count_all = result.first() or (None, None)
@@ -145,13 +145,13 @@ class BaseService(ABC):
             )
             if where_clauses:
                 query = self._where_recursive(query, model_class, **where_clauses)
-            async with DbSession.use() as db:
+            async with DbSession.use(readonly=True) as db:
                 result = await db.exec(query)
             rows = result.all()
             i = 0
-            for row in rows:
-                row.order = i
-                async with DbSession.use() as db:
+            async with DbSession.use(readonly=False) as db:
+                for row in rows:
+                    row.order = i
                     await db.update(row)
                 i += 1
 

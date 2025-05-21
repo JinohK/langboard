@@ -87,7 +87,7 @@ async def card_comment_unreacted(
 async def _get_default_history(helper: ActivityTaskHelper, project: Project, card: Card, comment: CardComment):
     target_model = User if comment.user_id else Bot
     target_id = comment.user_id if comment.user_id else comment.bot_id
-    async with DbSession.use() as db:
+    async with DbSession.use(readonly=True) as db:
         result = await db.exec(
             SqlBuilder.select.table(target_model, with_deleted=True).where(target_model.column("id") == target_id)
         )

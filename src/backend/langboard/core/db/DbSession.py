@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from time import sleep
-from typing import Any, Dict, Iterable, Literal, Mapping, Optional, TypeVar, Union, overload
+from typing import Any, ClassVar, Dict, Iterable, Mapping, Optional, TypeVar, Union, cast, overload
+from asyncpg.exceptions import TooManyConnectionsError
 from sqlalchemy import Delete, Insert, Sequence, Update
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -10,10 +11,9 @@ from sqlmodel import update
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.base import Executable
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...Constants import MAIN_DATABASE_ROLE, MAIN_DATABASE_URL, SUB_DATABASE_ROLE, SUB_DATABASE_URL
+from ...Constants import MAIN_DATABASE_URL, READONLY_DATABASE_URL
 from ..logger import Logger
 from ..utils.DateTime import now
-from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
 
@@ -22,8 +22,14 @@ _TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
 
 class Engine:
+    __main_engine: ClassVar[Optional[AsyncEngine]] = None
+    __sub_engine: ClassVar[Optional[AsyncEngine]] = None
+
     @staticmethod
     def get_main_engine() -> AsyncEngine:
+        if Engine.__main_engine:
+            return Engine.__main_engine
+
         url = Engine.__get_sanitized_driver(MAIN_DATABASE_URL)
         return create_async_engine(
             url,
@@ -31,8 +37,11 @@ class Engine:
         )
 
     @staticmethod
-    def get_sub_engine() -> AsyncEngine:
-        url = Engine.__get_sanitized_driver(SUB_DATABASE_URL)
+    def get_readonly_engine() -> AsyncEngine:
+        if Engine.__sub_engine:
+            return Engine.__sub_engine
+
+        url = Engine.__get_sanitized_driver(READONLY_DATABASE_URL)
         return create_async_engine(
             url,
             **Engine.__create_config(url),
@@ -45,15 +54,15 @@ class Engine:
                 "connect_args": {
                     "check_same_thread": False,
                     "timeout": 30,
-                }
+                },
+                "poolclass": StaticPool,
             }
 
         if url.startswith("postgresql"):
             return {
-                "poolclass": StaticPool,
-                "pool_size": 20,
-                "max_overflow": 30,
-                "pool_timeout": 30,
+                "pool_size": 30,
+                "max_overflow": 50,
+                "pool_timeout": 60,
                 "pool_pre_ping": True,
                 "pool_recycle": 1800,
                 "echo": False,
@@ -81,47 +90,85 @@ class DbSession:
     The purpose of this class is to provide a single interface for multiple database sessions.
     """
 
-    def __init__(self):
-        self._sessions: dict[DbSessionRole, Literal["main", "sub"]] = {}
-        for role in MAIN_DATABASE_ROLE:
-            self._sessions[DbSessionRole(role)] = "main"
-
-        for role in SUB_DATABASE_ROLE:
-            self._sessions[DbSessionRole(role)] = "sub"
+    def __init__(self, session: AsyncSession, readonly: bool):
+        self.__session = session
+        self.__readonly = readonly
 
     @asynccontextmanager
     @staticmethod
-    async def use():
-        db = DbSession()
+    async def use(readonly: bool):
         try:
-            yield db
+            async with DbSession.__create_session(readonly=readonly) as session:
+                if readonly:
+                    db = DbSession(session, readonly=readonly)
+                else:
+                    async with session._maker_context_manager():
+                        db = DbSession(session, readonly=readonly)
+                yield db
+                if not readonly:
+                    await session.commit()
         finally:
             await db.close()
 
+    @asynccontextmanager
+    @staticmethod
+    async def __create_session(readonly: bool):
+        max_trial = 10
+        engine = Engine.get_readonly_engine() if readonly else Engine.get_main_engine()
+        session = None
+        raised = False
+        for _ in range(max_trial):
+            try:
+                session = AsyncSession(engine, expire_on_commit=False)
+                yield session
+                break
+            except TooManyConnectionsError as e:
+                _logger.error(f"Failed to create session: {e}")
+                sleep(0.5)
+                continue
+            except TimeoutError as e:
+                _logger.error(f"Failed to create session: {e}")
+                sleep(0.5)
+                continue
+            except Exception as e:
+                _logger.error(f"Failed to use session: {e}")
+                raised = True
+                break
+
+        if session:
+            await session.close()
+
+        if raised:
+            raise Exception(f"Failed to create session after {max_trial}")
+
     async def close(self):
-        self._sessions.clear()
+        self.__session = cast(AsyncSession, None)
+        self.__readonly = True
 
     async def insert(self, obj: BaseSqlModel):
         """Inserts a new object into the database if it is new.
 
         :param obj: The object to be inserted; must be a subclass of :class:`BaseSqlModel`.
         """
+        if self.__readonly:
+            raise Exception("Cannot insert into a readonly database")
+
         if not obj.is_new():
             return
         obj.id = SnowflakeID()
-        async with self.create_session(DbSessionRole.Insert) as session:
-            session.begin()
-            try:
-                session.add(obj)
-                await session.commit()
-            except Exception:
-                await session.rollback()
+        try:
+            self.__session.add(obj)
+        except Exception:
+            await self.__session.rollback()
 
     async def insert_all(self, objs: Iterable[BaseSqlModel]):
         """Inserts new objects into the database if they are new.
 
         :param objs: The objects to be inserted; must be a subclass of :class:`BaseSqlModel`.
         """
+        if self.__readonly:
+            raise Exception("Cannot insert into a readonly database")
+
         for obj in objs:
             await self.insert(obj)
 
@@ -130,16 +177,17 @@ class DbSession:
 
         :param obj: The object to be updated; must be a subclass of :class:`BaseSqlModel`.
         """
+        if self.__readonly:
+            raise Exception("Cannot update in a readonly database")
+
         if obj.is_new() or not obj.has_changes():
             return
-        async with self.create_session(DbSessionRole.Update) as session:
-            try:
-                obj = await session.merge(obj)
-            except Exception:
-                pass
-            session.add(obj)
-            obj.clear_changes()
-            await session.commit()
+        try:
+            obj = await self.__session.merge(obj)
+        except Exception:
+            pass
+        self.__session.add(obj)
+        obj.clear_changes()
 
     @overload
     async def delete(self, obj: BaseSqlModel): ...
@@ -153,22 +201,26 @@ class DbSession:
         :param obj: The object to be deleted; must be a subclass of :class:`BaseSqlModel`.
         :param purge: If `True`, the object will be hard-deleted for subclasses of :class:`SoftDeleteModel`.
         """
+        if self.__readonly:
+            raise Exception("Cannot delete from a readonly database")
+
         if obj.is_new():
             return
-        async with self.create_session(DbSessionRole.Delete) as session:
-            obj = await session.merge(obj)
+        obj = await self.__session.merge(obj)
+        try:
             if purge or not isinstance(obj, SoftDeleteModel):
                 obj.clear_changes()
-                await session.delete(obj)
-                await session.commit()
+                await self.__session.delete(obj)
+                await self.__session.commit()
                 return
             if obj.deleted_at is not None:
                 obj.clear_changes()
                 return
             obj.deleted_at = now()
-            session.add(obj)
-            await session.commit()
+            self.__session.add(obj)
             obj.clear_changes()
+        except Exception:
+            await self.__session.rollback()
 
     @overload
     async def exec(
@@ -266,16 +318,9 @@ class DbSession:
             statement = update(statement.table).values(deleted_at=now()).where(statement.whereclause)  # type: ignore
 
         should_return_count = not isinstance(statement, Select) and not isinstance(statement, SelectOfScalar)
-        if isinstance(statement, Insert):
-            role = DbSessionRole.Insert
-        elif isinstance(statement, Update):
-            role = DbSessionRole.Update
-        elif isinstance(statement, Delete):
-            role = DbSessionRole.Delete
-        elif isinstance(statement, Select) or isinstance(statement, SelectOfScalar):
-            role = DbSessionRole.Select
-        else:
-            raise ValueError(f"Unknown statement type: {type(statement)}")
+
+        if self.__readonly and should_return_count:
+            raise Exception("Cannot execute non-select statements in a readonly database")
 
         args = {
             "statement": statement,
@@ -286,29 +331,8 @@ class DbSession:
             "_add_event": _add_event,
         }
 
-        async with self.create_session(role) as session:
-            result = await session.exec(**args)
-            if role != DbSessionRole.Select:
-                await session.commit()
+        result = await self.__session.exec(**args)
 
         if should_return_count:
             return result.rowcount
         return result
-
-    def create_session(self, role: DbSessionRole) -> AsyncSession:
-        max_trial = 10
-        for _ in range(max_trial):
-            try:
-                session = AsyncSession(self._get_engine(role), expire_on_commit=False)
-                return session
-            except Exception:
-                sleep(0.5)
-                continue
-        raise Exception(f"Failed to create session after {max_trial}")
-
-    def _get_engine(self, role: DbSessionRole) -> AsyncEngine:
-        engine_type = self._sessions.get(role, "main")
-        if engine_type == "main":
-            return Engine.get_main_engine()
-        else:
-            return Engine.get_sub_engine()

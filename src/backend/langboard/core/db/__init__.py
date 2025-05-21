@@ -9,7 +9,6 @@ from .ColumnTypes import (
     SnowflakeIDType,
 )
 from .DbSession import DbSession
-from .DbSessionRole import DbSessionRole
 from .Models import BaseSqlModel, ChatContentModel, EditorContentModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
 from .SqlBuilder import SqlBuilder
@@ -24,7 +23,6 @@ __all__ = [
     "SoftDeleteModel",
     "EditorContentModel",
     "ChatContentModel",
-    "DbSessionRole",
     "SecretStr",
     "SecretStrType",
     "SnowflakeID",

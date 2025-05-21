@@ -44,7 +44,7 @@ class ProjectColumnService(BaseService):
             .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(sql_query)
         raw_columns = result.all()
         columns = []
@@ -70,7 +70,7 @@ class ProjectColumnService(BaseService):
         return columns
 
     async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(
                     (ProjectColumn.column("project_id") == project.id) & ProjectColumn.column("is_archive") == True  # noqa
@@ -89,7 +89,7 @@ class ProjectColumnService(BaseService):
             is_archive=True,
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(column)
 
         return column
@@ -103,7 +103,7 @@ class ProjectColumnService(BaseService):
         sql_query = SqlBuilder.select.count(Card, Card.id).where(
             (Card.column("project_id") == project.id) & (Card.column("project_column_id") == column.id)
         )
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(sql_query)
             count = result.first() or 0
         return count
@@ -121,7 +121,7 @@ class ProjectColumnService(BaseService):
             order=max_order + 1,
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(column)
 
         ProjectColumnPublisher.created(project, column)
@@ -140,7 +140,7 @@ class ProjectColumnService(BaseService):
 
         old_name = column.name
         column.name = name
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(column)
 
         ProjectColumnPublisher.name_changed(project, column, name)
@@ -158,11 +158,9 @@ class ProjectColumnService(BaseService):
         original_order = column.order
         update_query = SqlBuilder.update.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
         update_query = self._set_order_in_column(update_query, ProjectColumn, original_order, order)
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
-
-        column.order = order
-        async with DbSession.use() as db:
+            column.order = order
             await db.update(column)
 
         ProjectColumnPublisher.order_changed(project, column)
@@ -188,20 +186,17 @@ class ProjectColumnService(BaseService):
             .values({Card.order: Card.order + count_cards_in_column})
             .where(Card.column("project_column_id") == archive_column.id)
         )
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(query)
 
-        for i in range(count_cards_in_column):
-            card = all_cards_in_column[i]
-            card.project_column_id = archive_column.id
-            card.archived_at = current_time
-            async with DbSession.use() as db:
+            for i in range(count_cards_in_column):
+                card = all_cards_in_column[i]
+                card.project_column_id = archive_column.id
+                card.archived_at = current_time
                 await db.update(card)
 
-        async with DbSession.use() as db:
             await db.delete(column)
 
-        async with DbSession.use() as db:
             await db.exec(
                 SqlBuilder.update.table(ProjectColumn)
                 .values({ProjectColumn.order: ProjectColumn.order - 1})

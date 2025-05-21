@@ -1,4 +1,4 @@
-from typing import Any, Literal, cast, overload
+from typing import Any, Literal, Sequence, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
@@ -27,7 +27,7 @@ class CardRelationshipService(BaseService):
         if not card:
             return []
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType)
                 .join(
@@ -64,7 +64,7 @@ class CardRelationshipService(BaseService):
         if not project:
             return []
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType)
                 .join(
@@ -94,7 +94,7 @@ class CardRelationshipService(BaseService):
             return []
         project, card = params
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(CardRelationship, GlobalCardRelationshipType, Card)
                 .join(
@@ -133,38 +133,58 @@ class CardRelationshipService(BaseService):
             related_card.id for _, _, related_card in await self.get_by_card_with_type(project, card, not is_parent)
         ]
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(CardRelationship).where(
                     CardRelationship.column("card_id_child" if is_parent else "card_id_parent") == card.id
                 )
             )
 
-        async with DbSession.use() as db:
-            new_relationships_dict: dict[SnowflakeID, bool] = {}
-            for related_card_uid, relationship_type_uid in relationships:
-                related_card = await self._get_by_param(Card, related_card_uid)
+        related_card_ids: set[SnowflakeID] = set()
+        relationship_type_ids: set[SnowflakeID] = set()
+        converted_relationships: list[tuple[SnowflakeID, SnowflakeID]] = []
+        for related_card_uid, relationship_type_uid in relationships:
+            related_card_id = SnowflakeID.from_short_code(related_card_uid)
+            relationship_type_id = SnowflakeID.from_short_code(relationship_type_uid)
+            related_card_ids.add(related_card_id)
+            relationship_type_ids.add(relationship_type_id)
+            converted_relationships.append((related_card_id, relationship_type_id))
+
+        async with DbSession.use(readonly=True) as db:
+            result = await db.exec(
+                SqlBuilder.select.column(Card.column("id"))
+                .where(Card.column("project_id") == project.id)
+                .where(Card.column("id").in_(related_card_ids))
+            )
+            related_card_ids = set(cast(Sequence[SnowflakeID], result.all()))
+
+            result = await db.exec(
+                SqlBuilder.select.table(GlobalCardRelationshipType).where(
+                    GlobalCardRelationshipType.column("id").in_(relationship_type_ids)
+                )
+            )
+            relationship_types = {relationship_type.id: relationship_type for relationship_type in result.all()}
+
+        new_relationships_dict: dict[SnowflakeID, bool] = {}
+        async with DbSession.use(readonly=False) as db:
+            for related_card_id, relationship_type_id in converted_relationships:
                 if (
-                    not related_card
-                    or related_card.project_id != project.id
-                    or related_card.id in new_relationships_dict
-                    or related_card.id in opposite_relationship_ids
+                    related_card_id not in related_card_ids
+                    or relationship_type_id not in relationship_types
+                    or related_card_id in new_relationships_dict
+                    or related_card_id in opposite_relationship_ids
                 ):
                     continue
 
-                relationship_type = await self._get_by_param(GlobalCardRelationshipType, relationship_type_uid)
-                if not relationship_type:
-                    continue
-
                 new_relationship = CardRelationship(
-                    relationship_type_id=relationship_type.id,
-                    card_id_parent=related_card.id if is_parent else card.id,
-                    card_id_child=card.id if is_parent else related_card.id,
+                    relationship_type_id=relationship_type_id,
+                    card_id_parent=related_card_id if is_parent else card.id,
+                    card_id_child=card.id if is_parent else related_card_id,
                 )
                 await db.insert(new_relationship)
-                api_relationship = relationship_type.api_response()
+                api_relationship = relationship_types[relationship_type_id].api_response()
                 api_relationship.pop("uid")
-                new_relationships_dict[related_card.id] = True
+                new_relationships_dict[related_card_id] = True
 
         new_relationships = await self.get_all_by_card(card, as_api=True)
 

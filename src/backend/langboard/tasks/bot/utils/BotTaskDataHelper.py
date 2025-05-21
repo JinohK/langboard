@@ -14,7 +14,7 @@ class BotTaskDataHelper:
 
     @staticmethod
     async def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             column = await db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
             )
@@ -40,7 +40,7 @@ class BotTaskDataHelper:
         wiki: ProjectWiki,
         other_data: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectWikiAssignedBot).where(
                     (ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
@@ -103,6 +103,6 @@ class BotTaskDataHelper:
             if bot_id not in old_bot_ids:
                 first_time_assigned.append(bot_id)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(first_time_assigned)))
         return list(result.all())

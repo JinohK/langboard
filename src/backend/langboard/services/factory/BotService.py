@@ -69,7 +69,7 @@ class BotService(BaseService):
             prompt=prompt or "",
         )
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.insert(bot)
 
         BotPublisher.bot_created(bot)
@@ -108,7 +108,7 @@ class BotService(BaseService):
         if not old_bot_record:
             return True
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(bot)
 
         model: dict[str, Any] = {}
@@ -137,7 +137,7 @@ class BotService(BaseService):
         if not bot:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(BotTrigger).where(
                     (BotTrigger.column("bot_id") == bot.id)
@@ -146,9 +146,8 @@ class BotService(BaseService):
                 )
             )
 
-        for condition in conditions:
-            trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
-            async with DbSession.use() as db:
+            for condition in conditions:
+                trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
                 await db.insert(trigger)
 
         return True
@@ -158,21 +157,20 @@ class BotService(BaseService):
         if not bot:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(BotTrigger).where(
                     (BotTrigger.column("bot_id") == bot.id) & (BotTrigger.column("condition") == condition)
                 )
             )
         trigger = result.first()
-        if trigger:
-            if trigger.is_predefined:
-                return False
-            async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
+            if trigger:
+                if trigger.is_predefined:
+                    return False
                 await db.delete(trigger)
-        else:
-            trigger = BotTrigger(bot_id=bot.id, condition=condition)
-            async with DbSession.use() as db:
+            else:
+                trigger = BotTrigger(bot_id=bot.id, condition=condition)
                 await db.insert(trigger)
 
         return True
@@ -191,7 +189,7 @@ class BotService(BaseService):
             valid_ip_whitelist.append(ip)
 
         bot.ip_whitelist = valid_ip_whitelist
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(bot)
 
         return bot, {"ip_whitelist": valid_ip_whitelist}
@@ -202,7 +200,7 @@ class BotService(BaseService):
             return None
 
         bot.app_api_token = await self.generate_api_key()
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.update(bot)
 
         return bot
@@ -212,12 +210,10 @@ class BotService(BaseService):
         if not bot:
             return False
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=False) as db:
             await db.exec(
                 SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("bot_id") == bot.id)
             )
-
-        async with DbSession.use() as db:
             await db.delete(bot)
 
         BotPublisher.bot_deleted(bot.get_uid())

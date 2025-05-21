@@ -20,7 +20,7 @@ class BotTaskHelper:
     @staticmethod
     async def get_project_assigned_bots(project: Project | int, condition: BotTriggerCondition) -> list[Bot]:
         project_id = project if isinstance(project, int) else project.id
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(Bot)
                 .join(ProjectAssignedBot, ProjectAssignedBot.column("bot_id") == Bot.column("id"))
@@ -35,7 +35,7 @@ class BotTaskHelper:
 
     @staticmethod
     async def get_project_labels_by_bot(project: Project, bot: Bot) -> list[ProjectLabel]:
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(ProjectLabel).where(
                     (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == bot.id)
@@ -55,9 +55,9 @@ class BotTaskHelper:
 
         await run_webhook(event.value, data)
 
-        for bot in bots:
-            if project:
-                async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
+            for bot in bots:
+                if project:
                     result = await db.exec(
                         SqlBuilder.select.table(ProjectAssignedBot).where(
                             (ProjectAssignedBot.column("bot_id") == bot.id)
@@ -65,10 +65,10 @@ class BotTaskHelper:
                             & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
                         )
                     )
-                if not result.first():
-                    continue
-            labels = await BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
-            BotTaskHelper.__run(bot, event.value, data, labels)
+                    if not result.first():
+                        continue
+                labels = await BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
+                BotTaskHelper.__run(bot, event.value, data, labels)
 
     @staticmethod
     def __run(bot: Bot, event: str, data: dict[str, Any], labels: list[ProjectLabel] | None):

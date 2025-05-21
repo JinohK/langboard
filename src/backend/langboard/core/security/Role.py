@@ -30,7 +30,7 @@ class Role:
         else:
             query = role_finder(query, path_params, user_or_bot_id, is_bot)
 
-        async with DbSession.use() as db:
+        async with DbSession.use(readonly=True) as db:
             result = await db.exec(query.limit(1))
         role = result.first()
 

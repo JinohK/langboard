@@ -37,7 +37,7 @@ export function MentionInputElement(props: IMentionInputElement) {
             }
 
             const fakeUser = user.asFake() as IMentionableUser;
-            fakeUser.text = user.uid;
+            fakeUser.text = user.username;
             fakeUser.key = user.uid;
 
             userList.push(fakeUser);

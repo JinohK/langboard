@@ -7,9 +7,6 @@ from sys import executable
 from typing import Any, Literal, cast
 
 
-_TDatabaseRole = Literal["SELECT", "INSERT", "UPDATE", "DELETE"]
-
-
 def _get_env(name: str, default: Any = None) -> Any | str:
     is_default = name not in environ or not environ[name]
     return default if is_default else environ[name]
@@ -35,27 +32,7 @@ PROJECT_VERSION = version(PROJECT_NAME)
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
-MAIN_DATABASE_ROLE: set[_TDatabaseRole] = cast(
-    Any, set(_get_env("MAIN_DATABASE_ROLE", "INSERT,UPDATE,DELETE").replace(" ", "").upper().split(","))
-)
-SUB_DATABASE_URL = _get_env("SUB_DATABASE_URL", MAIN_DATABASE_URL)
-SUB_DATABASE_ROLE: set[_TDatabaseRole] = cast(
-    Any, set(_get_env("SUB_DATABASE_ROLE", "SELECT").replace(" ", "").upper().split(","))
-)
-_AVAILABLE_DATABASE_ROLES = set(["SELECT", "INSERT", "UPDATE", "DELETE"])
-
-for role in MAIN_DATABASE_ROLE:
-    if role in SUB_DATABASE_ROLE:
-        raise ValueError(f"Database role conflict: {role}")
-
-_added_roles = set()
-for role in set([*MAIN_DATABASE_ROLE, *SUB_DATABASE_ROLE]):
-    if role not in _AVAILABLE_DATABASE_ROLES:
-        raise ValueError(f"Invalid database role: {role}")
-    _added_roles.add(role)
-
-if _added_roles != _AVAILABLE_DATABASE_ROLES:
-    raise ValueError(f"Database roles must include all of {_AVAILABLE_DATABASE_ROLES}")
+READONLY_DATABASE_URL = _get_env("READONLY_DATABASE_URL", MAIN_DATABASE_URL)
 
 # Logging
 TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
