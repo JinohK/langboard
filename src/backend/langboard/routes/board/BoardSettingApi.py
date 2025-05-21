@@ -288,7 +288,7 @@ async def change_project_label_order(
     if not isinstance(user_or_bot, User):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
-    result = await service.project_label.change_order(user_or_bot, project_uid, label_uid, form.order)
+    result = await service.project_label.change_order(project_uid, label_uid, form.order)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 

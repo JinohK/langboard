@@ -1,6 +1,6 @@
 from typing import Any, Literal, TypeVar, overload
 from ...core.db import BaseSqlModel, DbSession, SqlBuilder
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...models.BaseMetadataModel import BaseMetadataModel
 
 
@@ -32,7 +32,7 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return []
 
-        metadata_list = await self._get_all_by(model, foreign_key, foreign_model.id)
+        metadata_list = await ServiceHelper.get_all_by(model, foreign_key, foreign_model.id)
         if not as_api:
             return list(metadata_list)
 

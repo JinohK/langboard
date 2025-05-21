@@ -17,15 +17,18 @@ async def run_webhook(event: str, data: dict[str, Any]):
         return
 
     for url in urls:
+        res = None
         try:
             res = post(
                 url,
                 json={"event": event, "data": data},
             )
-            if res.status_code != 200:
-                Broker.logger.error("Failed to request webhook: %s", res.text)
+            res.raise_for_status()
         except Exception:
-            Broker.logger.error("Failed to request webhook: %s", url)
+            if res:
+                Broker.logger.error("Failed to request webhook: \nURL: %s\nResponse: %s", res.text)
+            else:
+                Broker.logger.error("Failed to request webhook: \nURL: %s", url)
 
 
 async def _get_webhook_url() -> list[str]:

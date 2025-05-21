@@ -2,7 +2,7 @@ from json import dumps as json_dumps
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot, BotAPIAuthType, BotTrigger, BotTriggerCondition
 from ...core.db import DbSession, SqlBuilder
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.setting import AppSetting
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
@@ -21,21 +21,21 @@ class BotService(BaseService):
         return "bot"
 
     async def get_by_uid(self, uid: str) -> Bot | None:
-        return await self._get_by_param(Bot, uid)
+        return await ServiceHelper.get_by_param(Bot, uid)
 
     @overload
     async def get_list(self, as_api: Literal[False], is_setting: bool = False) -> list[Bot]: ...
     @overload
     async def get_list(self, as_api: Literal[True], is_setting: bool = False) -> list[dict[str, Any]]: ...
     async def get_list(self, as_api: bool, is_setting: bool = False) -> list[Bot] | list[dict[str, Any]]:
-        bots = await self._get_all(Bot)
+        bots = await ServiceHelper.get_all(Bot)
         if not as_api:
             return list(bots)
         api_bots = []
         for bot in bots:
             api_bot = bot.api_response(is_setting)
             if is_setting:
-                conditions = await self._get_all_by(BotTrigger, "bot_id", bot.id)
+                conditions = await ServiceHelper.get_all_by(BotTrigger, "bot_id", bot.id)
                 api_bot["conditions"] = {
                     condition.condition.value: {"is_predefined": condition.is_predefined} for condition in conditions
                 }
@@ -53,7 +53,7 @@ class BotService(BaseService):
         prompt: str | None = None,
         avatar: FileModel | None = None,
     ) -> Bot | None:
-        existing_bot = await self._get_by(Bot, "bot_uname", bot_uname)
+        existing_bot = await ServiceHelper.get_by(Bot, "bot_uname", bot_uname)
         if existing_bot:
             return None
 
@@ -78,7 +78,7 @@ class BotService(BaseService):
         return bot
 
     async def update(self, bot: TBotParam, form: dict) -> bool | tuple[Bot, dict[str, Any]] | None:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return None
         mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_key", "prompt"]
@@ -97,7 +97,7 @@ class BotService(BaseService):
             setattr(bot, key, new_value)
 
         if "bot_uname" in form:
-            existing_bot = await self._get_by(Bot, "bot_uname", form["bot_uname"])
+            existing_bot = await ServiceHelper.get_by(Bot, "bot_uname", form["bot_uname"])
             if existing_bot:
                 return False
 
@@ -133,7 +133,7 @@ class BotService(BaseService):
         return bot, model
 
     async def predefine_conditions(self, bot: TBotParam, conditions: list[BotTriggerCondition]):
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return False
 
@@ -153,7 +153,7 @@ class BotService(BaseService):
         return True
 
     async def toggle_condition(self, bot: TBotParam, condition: BotTriggerCondition):
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return False
 
@@ -176,7 +176,7 @@ class BotService(BaseService):
         return True
 
     async def update_ip_whitelist(self, bot: TBotParam, ip_whitelist: list[str]) -> bool | tuple[Bot, dict[str, Any]]:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return False
 
@@ -195,7 +195,7 @@ class BotService(BaseService):
         return bot, {"ip_whitelist": valid_ip_whitelist}
 
     async def generate_new_api_token(self, bot: TBotParam) -> Bot | None:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return None
 
@@ -206,7 +206,7 @@ class BotService(BaseService):
         return bot
 
     async def delete(self, bot: TBotParam) -> bool:
-        bot = cast(Bot, await self._get_by_param(Bot, bot))
+        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
         if not bot:
             return False
 
@@ -223,7 +223,7 @@ class BotService(BaseService):
     async def generate_api_key(self) -> str:
         api_key = f"sk-{generate_random_string(53)}"
         while True:
-            is_existed = await self._get_by(AppSetting, "setting_value", json_dumps(api_key))
+            is_existed = await ServiceHelper.get_by(AppSetting, "setting_value", json_dumps(api_key))
             if not is_existed:
                 break
             api_key = f"sk-{generate_random_string(53)}"

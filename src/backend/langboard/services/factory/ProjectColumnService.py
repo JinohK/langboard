@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
 from ...core.db import DbSession, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn
 from ...publishers import ProjectColumnPublisher
@@ -17,7 +17,7 @@ class ProjectColumnService(BaseService):
         return "project_column"
 
     async def get_by_uid(self, uid: str) -> ProjectColumn | None:
-        return await self._get_by_param(ProjectColumn, uid)
+        return await ServiceHelper.get_by_param(ProjectColumn, uid)
 
     @overload
     async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
@@ -28,7 +28,7 @@ class ProjectColumnService(BaseService):
     async def get_all_by_project(
         self, project: TProjectParam, as_api: bool, with_count: bool = False
     ) -> list[ProjectColumn] | list[dict[str, Any]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
         if as_api and with_count:
@@ -80,7 +80,7 @@ class ProjectColumnService(BaseService):
         if archive_column:
             return archive_column
 
-        max_order = await self._get_max_order(ProjectColumn, "project_id", project.id)
+        max_order = await ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
 
         column = ProjectColumn(
             project_id=project.id,
@@ -109,11 +109,11 @@ class ProjectColumnService(BaseService):
         return count
 
     async def create(self, user_or_bot: TUserOrBot, project: TProjectParam, name: str) -> ProjectColumn | None:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return None
 
-        max_order = await self._get_max_order(ProjectColumn, "project_id", project.id)
+        max_order = await ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
 
         column = ProjectColumn(
             project_id=project.id,
@@ -157,7 +157,7 @@ class ProjectColumnService(BaseService):
 
         original_order = column.order
         update_query = SqlBuilder.update.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
-        update_query = self._set_order_in_column(update_query, ProjectColumn, original_order, order)
+        update_query = ServiceHelper.set_order_in_column(update_query, ProjectColumn, original_order, order)
         async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
             column.order = order
@@ -176,7 +176,7 @@ class ProjectColumnService(BaseService):
             return False
 
         archive_column = await self.get_or_create_archive_if_not_exists(project)
-        all_cards_in_column = await self._get_all_by(Card, "project_column_id", column.id)
+        all_cards_in_column = await ServiceHelper.get_all_by(Card, "project_column_id", column.id)
         count_cards_in_column = len(all_cards_in_column)
 
         current_time = now()
@@ -212,8 +212,8 @@ class ProjectColumnService(BaseService):
         return True
 
     async def __get_records_by_params(self, project: TProjectParam, column: TColumnParam):
-        project = cast(Project, await self._get_by_param(Project, project))
-        column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, column))
         if not project or not column or column.project_id != project.id:
             return None
 

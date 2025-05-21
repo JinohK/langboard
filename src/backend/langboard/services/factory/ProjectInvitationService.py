@@ -5,7 +5,7 @@ from sqlalchemy import String
 from sqlalchemy import cast as sql_cast
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, UserEmail, UserNotification
 from ...models.UserNotification import NotificationType
@@ -46,7 +46,7 @@ class ProjectInvitationService(BaseService):
     async def get_invited_users(
         self, project: TProjectParam, as_api: bool
     ) -> list[tuple[ProjectInvitation, User | None]] | list[dict[str, Any]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -83,7 +83,7 @@ class ProjectInvitationService(BaseService):
         if not invitation:
             return None
 
-        project = await self._get_by_param(Project, invitation.project_id)
+        project = await ServiceHelper.get_by_param(Project, invitation.project_id)
         return project
 
     async def get_invitation_related_data(self, project: Project, emails: list[str]) -> InvitationRelatedResult:
@@ -138,7 +138,7 @@ class ProjectInvitationService(BaseService):
                         invitation_result.users_by_email[email] = user
                     invitation_result.emails_should_invite.append(email)
 
-        prev_assigned_users = await self._get_all_by(ProjectAssignedUser, "project_id", project.id)
+        prev_assigned_users = await ServiceHelper.get_all_by(ProjectAssignedUser, "project_id", project.id)
         for assigned_user in prev_assigned_users:
             if assigned_user.user_id == project.owner_id:
                 invitation_result.already_assigned_ids.append(assigned_user.id)
@@ -156,7 +156,7 @@ class ProjectInvitationService(BaseService):
         project: TProjectParam,
         invitation_result: InvitationRelatedResult,
     ) -> bool:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return False
 
@@ -201,7 +201,7 @@ class ProjectInvitationService(BaseService):
         if not invitation:
             return False
 
-        project = await self._get_by_param(Project, invitation.project_id)
+        project = await ServiceHelper.get_by_param(Project, invitation.project_id)
         if not project:
             return False
 
@@ -236,7 +236,7 @@ class ProjectInvitationService(BaseService):
         if not invitation:
             return False
 
-        project = await self._get_by_param(Project, invitation.project_id)
+        project = await ServiceHelper.get_by_param(Project, invitation.project_id)
         if not project:
             return False
 
@@ -282,7 +282,7 @@ class ProjectInvitationService(BaseService):
             return None
 
         if user.email != invitation.email:
-            subemail = await self._get_by(UserEmail, "email", invitation.email)
+            subemail = await ServiceHelper.get_by(UserEmail, "email", invitation.email)
             if not subemail or subemail.user_id != user.id:
                 return None
 
@@ -290,9 +290,7 @@ class ProjectInvitationService(BaseService):
 
     async def __delete_notification(self, user: User, project: Project, invitation: ProjectInvitation):
         notification_service = self._get_service(NotificationService)
-        record_list = json_dumps(
-            notification_service.create_record_list([(project, "project"), (invitation, "invitation")])
-        )
+        record_list = json_dumps(notification_service.create_record_list([project, invitation]))
         async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.table(UserNotification).where(

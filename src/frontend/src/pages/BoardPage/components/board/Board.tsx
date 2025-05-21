@@ -122,7 +122,7 @@ Board.displayName = "Board";
 
 const BoardResult = memo(() => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
-    const { project, columns: flatColumns, socket, hasRoleAction } = useBoard();
+    const { project, columns: flatColumns, cardsMap, socket, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const { columns, reorder: reorderColumns } = useReorderColumn({
         type: "ProjectColumn",
@@ -144,6 +144,7 @@ const BoardResult = memo(() => {
         onDragStart,
         onDragEnd,
         onDragOverOrMove,
+        onDragCancel,
     } = useColumnRowSortable<IBoardColumnProps["column"], IBoardColumnCardProps["card"]>({
         columnDragDataType: "Column",
         rowDragDataType: "Card",
@@ -175,6 +176,16 @@ const BoardResult = memo(() => {
             return `board-column-${(columnOrCard as IBoardColumnCardProps["card"]).column_uid ?? columnOrCard.uid}`;
         },
     });
+
+    useEffect(() => {
+        if (!activeCard) {
+            return;
+        }
+
+        if (!cardsMap[activeCard.uid]) {
+            onDragCancel();
+        }
+    }, [cardsMap]);
 
     return (
         <>

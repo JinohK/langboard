@@ -7,9 +7,9 @@ from psutil import process_iter
 from ...Constants import CRON_TAB_FILE
 from ...core.schema import Pagination
 from ..ai import Bot, BotSchedule, BotScheduleRunningType, BotScheduleStatus
-from ..db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder
+from ..db import BaseSqlModel, DbSession, SqlBuilder
 from ..utils.decorators import staticclass
-from ..utils.ModelUtils import get_model_by_table_name
+from .ServiceHelper import ServiceHelper
 
 
 @staticclass
@@ -59,26 +59,9 @@ class BotScheduleService:
             return list(result.all())
 
         schedules = result.all()
-        table_ids_dict: dict[str, list[int]] = {}
-        cached_dict = {}
-        for schedule in result.all():
-            if schedule.target_table not in table_ids_dict:
-                table_ids_dict[schedule.target_table] = []
-            table_ids_dict[schedule.target_table].append(schedule.target_id)
-
-        async with DbSession.use(readonly=True) as db:
-            for table_name in table_ids_dict:
-                table_ids = table_ids_dict[table_name]
-                target_table = get_model_by_table_name(table_name)
-                if not target_table:
-                    continue
-
-                result = await db.exec(
-                    SqlBuilder.select.table(target_table).where(target_table.column("id").in_(table_ids))
-                )
-
-                for target in result.all():
-                    cached_dict[f"{table_name}_{target.id}"] = target
+        cached_dict = await ServiceHelper.get_references(
+            [(schedule.target_table, schedule.target_id) for schedule in schedules], as_type="api"
+        )
 
         api_schedules = []
         for schedule in schedules:
@@ -87,7 +70,7 @@ class BotScheduleService:
             if not target:
                 continue
             api_schedule = schedule.api_response()
-            api_schedule["target"] = target.api_response()
+            api_schedule["target"] = target
             api_schedules.append(api_schedule)
 
         return api_schedules
@@ -192,7 +175,7 @@ class BotScheduleService:
         start_at: datetime | None = None,
         end_at: datetime | None = None,
     ) -> tuple[BotSchedule, dict[str, Any]] | None:
-        bot_schedule = await BotScheduleService.__get_schedule(bot_schedule)
+        bot_schedule = cast(BotSchedule, await ServiceHelper.get_by_param(BotSchedule, bot_schedule))
         if not bot_schedule:
             return None
 
@@ -266,23 +249,18 @@ class BotScheduleService:
         async with DbSession.use(readonly=False) as db:
             await db.update(bot_schedule)
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
-                SqlBuilder.select.table(BotSchedule).where(BotSchedule.column("interval_str") == old_interval_str)
-            )
-        has_result = bool(result.first())
-
-        if not has_result:
+        has_old_intervals = bool(await ServiceHelper.get_by(BotSchedule, "interval_str", old_interval_str))
+        if not has_old_intervals:
             cron.remove_all(comment=old_interval_str)
 
-        if has_changed or has_result:
+        if has_changed or has_old_intervals:
             BotScheduleService.__save_cron(cron)
 
         return bot_schedule, model
 
     @staticmethod
     async def unschedule(bot_schedule: BotSchedule | str) -> BotSchedule | None:
-        bot_schedule = await BotScheduleService.__get_schedule(bot_schedule)
+        bot_schedule = cast(BotSchedule, await ServiceHelper.get_by_param(BotSchedule, bot_schedule))
         if not bot_schedule:
             return None
 
@@ -292,19 +270,15 @@ class BotScheduleService:
         async with DbSession.use(readonly=False) as db:
             await db.delete(bot_schedule)
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
-                SqlBuilder.select.table(BotSchedule).where(BotSchedule.column("interval_str") == interval_str)
-            )
-
-        if not result.first():
+        has_interval = bool(await ServiceHelper.get_by(BotSchedule, "interval_str", interval_str))
+        if not has_interval:
             cron.remove_all(comment=interval_str)
             BotScheduleService.__save_cron(cron)
         return bot_schedule
 
     @staticmethod
     async def change_status(bot_schedule: BotSchedule | str, status: BotScheduleStatus) -> BotSchedule | None:
-        bot_schedule = await BotScheduleService.__get_schedule(bot_schedule)
+        bot_schedule = cast(BotSchedule, await ServiceHelper.get_by_param(BotSchedule, bot_schedule))
         if not bot_schedule:
             return None
 
@@ -325,19 +299,6 @@ class BotScheduleService:
         cron.env.update(environ)
 
         return cron
-
-    @staticmethod
-    async def __get_schedule(bot_schedule: BotSchedule | str):
-        if isinstance(bot_schedule, str):
-            async with DbSession.use(readonly=False) as db:
-                result = await db.exec(
-                    SqlBuilder.select.table(BotSchedule).where(
-                        BotSchedule.column("id") == SnowflakeID.from_short_code(bot_schedule)
-                    )
-                )
-            bot_schedule = cast(BotSchedule, result.first())
-
-        return bot_schedule
 
     @staticmethod
     def __create_job(cron: CronTab, interval_str: str, running_type: BotScheduleRunningType | None = None) -> bool:

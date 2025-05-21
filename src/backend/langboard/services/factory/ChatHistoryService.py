@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from ...core.db import ChatContentModel, DbSession, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...models import ChatHistory
 from .Types import TUserParam
 
@@ -30,7 +30,7 @@ class ChatHistoryService(BaseService):
         if filterable is not None:
             sql_query = sql_query.where(ChatHistory.filterable == SnowflakeID.from_short_code(filterable))
 
-        sql_query = self.paginate(sql_query, pagination.page, pagination.limit)
+        sql_query = ServiceHelper.paginate(sql_query, pagination.page, pagination.limit)
         sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
@@ -45,7 +45,7 @@ class ChatHistoryService(BaseService):
         return chat_histories
 
     async def get_by_uid(self, uid: str) -> ChatHistory | None:
-        return await self._get_by_param(ChatHistory, uid)
+        return await ServiceHelper.get_by_param(ChatHistory, uid)
 
     async def create(
         self,
@@ -55,8 +55,8 @@ class ChatHistoryService(BaseService):
         sender: TUserParam | None = None,
         receiver: TUserParam | None = None,
     ) -> ChatHistory:
-        sender = await self._get_by_param(User, sender) if sender else None
-        receiver = await self._get_by_param(User, receiver) if receiver else None
+        sender = await ServiceHelper.get_by_param(User, sender) if sender else None
+        receiver = await ServiceHelper.get_by_param(User, receiver) if receiver else None
         filterable = SnowflakeID.from_short_code(filterable) if isinstance(filterable, str) else filterable
         chat_history = ChatHistory(
             history_type=history_type,

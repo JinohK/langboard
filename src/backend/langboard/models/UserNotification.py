@@ -22,7 +22,7 @@ class UserNotification(BaseSqlModel, table=True):
     receiver_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
     notification_type: NotificationType = Field(nullable=False, sa_type=EnumLikeType(NotificationType))
     message_vars: dict[str, Any] = Field(default={}, sa_type=JSON)
-    record_list: list[tuple[str, SnowflakeID, str]] = Field(default=[], sa_type=JSON)
+    record_list: list[tuple[str, SnowflakeID]] = Field(default=[], sa_type=JSON)
     read_at: datetime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod

@@ -1,6 +1,6 @@
 from typing import Any, Literal, Sequence, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
 from ...publishers import CardRelationshipPublisher
 from ...tasks.activities import CardRelationshipActivityTask
@@ -23,7 +23,7 @@ class CardRelationshipService(BaseService):
     async def get_all_by_card(
         self, card: TCardParam, as_api: bool
     ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]] | list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
 
@@ -60,7 +60,7 @@ class CardRelationshipService(BaseService):
     async def get_all_by_project(
         self, project: TProjectParam, as_api: bool
     ) -> list[tuple[CardRelationship, GlobalCardRelationshipType]] | list[dict[str, Any]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
 
@@ -197,8 +197,8 @@ class CardRelationshipService(BaseService):
         return True
 
     async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
-        project = cast(Project, await self._get_by_param(Project, project))
-        card = cast(Card, await self._get_by_param(Card, card))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not project or not card or card.project_id != project.id:
             return None
 

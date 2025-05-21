@@ -2,7 +2,7 @@ import { Slot } from "@radix-ui/react-slot";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as React from "react";
 import { type VariantProps, tv } from "tailwind-variants";
-import { Tooltip } from "@/components/base";
+import * as Tooltip from "@/components/base/Tooltip";
 import { cn } from "@/core/utils/ComponentUtils";
 
 export const ButtonVariants = tv(

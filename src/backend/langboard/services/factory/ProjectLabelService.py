@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
-from ...core.db import DbSession, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.db import DbSession, SqlBuilder
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.Converter import convert_python_data
 from ...models import Card, CardAssignedProjectLabel, Project, ProjectLabel
 from ...publishers import ProjectLabelPublisher
@@ -21,7 +21,7 @@ class ProjectLabelService(BaseService):
     @overload
     async def get_all(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all(self, project: TProjectParam, as_api: bool) -> list[ProjectLabel] | list[dict[str, Any]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -37,7 +37,7 @@ class ProjectLabelService(BaseService):
         return [label.api_response() for label in raw_labels]
 
     async def get_all_bot(self, project: TProjectParam) -> list[ProjectLabel]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -54,7 +54,7 @@ class ProjectLabelService(BaseService):
     @overload
     async def get_all_by_card(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all_by_card(self, card: TCardParam, as_api: bool) -> list[ProjectLabel] | list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
 
@@ -75,7 +75,7 @@ class ProjectLabelService(BaseService):
     async def get_all_card_labels_by_project(
         self, project: TProjectParam
     ) -> list[tuple[ProjectLabel, CardAssignedProjectLabel]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
 
@@ -92,7 +92,7 @@ class ProjectLabelService(BaseService):
         return list(raw_labels)
 
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         labels: list[ProjectLabel] = []
         async with DbSession.use(readonly=False) as db:
             for default_label in ProjectLabel.DEFAULT_LABELS:
@@ -111,7 +111,7 @@ class ProjectLabelService(BaseService):
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, name: str, color: str, description: str
     ) -> tuple[ProjectLabel, dict[str, Any]] | None:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return None
 
@@ -119,7 +119,7 @@ class ProjectLabelService(BaseService):
         if is_bot:
             max_order = -2  # -1 is for the bot label
         else:
-            max_order = await self._get_max_order(ProjectLabel, "project_id", project.id)
+            max_order = await ServiceHelper.get_max_order(ProjectLabel, "project_id", project.id)
 
         label = ProjectLabel(
             project_id=project.id,
@@ -181,9 +181,7 @@ class ProjectLabelService(BaseService):
 
         return model
 
-    async def change_order(
-        self, user: User, project: TProjectParam, label: TProjectLabelParam, order: int
-    ) -> Literal[True] | None:
+    async def change_order(self, project: TProjectParam, label: TProjectLabelParam, order: int) -> Literal[True] | None:
         params = await self.__get_records_by_params(project, label)
         if not params:
             return None
@@ -196,7 +194,7 @@ class ProjectLabelService(BaseService):
         update_query = SqlBuilder.update.table(ProjectLabel).where(
             (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None)  # noqa
         )
-        update_query = self._set_order_in_column(update_query, ProjectLabel, original_order, order)
+        update_query = ServiceHelper.set_order_in_column(update_query, ProjectLabel, original_order, order)
         async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
             label.order = order
@@ -225,8 +223,8 @@ class ProjectLabelService(BaseService):
         return True
 
     async def __get_records_by_params(self, project: TProjectParam, label: TProjectLabelParam):
-        project = cast(Project, await self._get_by_param(Project, project))
-        label = cast(ProjectLabel, await self._get_by_param(ProjectLabel, label))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        label = cast(ProjectLabel, await ServiceHelper.get_by_param(ProjectLabel, label))
         if not project or not label or label.project_id != project.id:
             return None
 

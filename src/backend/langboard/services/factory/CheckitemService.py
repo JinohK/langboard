@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SqlBuilder, User
 from ...core.schema import Pagination
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
 from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn
 from ...models.Checkitem import CheckitemStatus
@@ -19,7 +19,7 @@ class CheckitemService(BaseService):
         return "checkitem"
 
     async def get_by_uid(self, uid: str) -> Checkitem | None:
-        return await self._get_by_param(Checkitem, uid)
+        return await ServiceHelper.get_by_param(Checkitem, uid)
 
     @overload
     async def get_list(
@@ -32,8 +32,8 @@ class CheckitemService(BaseService):
     async def get_list(
         self, card: TCardParam, checklist: TChecklistParam, as_api: bool
     ) -> list[tuple[Checkitem, Card | None, User | None]] | list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
-        checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        checklist = cast(Checklist, await ServiceHelper.get_by_param(Checklist, checklist))
         if not card or not checklist or checklist.card_id != card.id:
             return []
 
@@ -73,7 +73,7 @@ class CheckitemService(BaseService):
             .order_by(Checkitem.column("created_at").desc())
             .group_by(Checkitem.column("id"), Checkitem.column("created_at"))
         )
-        query = self.paginate(query, pagination.page, pagination.limit)
+        query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
         async with DbSession.use(readonly=True) as db:
             result = await db.exec(query)
         records = result.all()
@@ -107,11 +107,11 @@ class CheckitemService(BaseService):
         if not params:
             return None
         project, card, _ = params
-        checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+        checklist = cast(Checklist, await ServiceHelper.get_by_param(Checklist, checklist))
         if not checklist or checklist.card_id != card.id:
             return None
 
-        max_order = await self._get_max_order(Checkitem, "checklist_id", checklist.id)
+        max_order = await ServiceHelper.get_max_order(Checkitem, "checklist_id", checklist.id)
 
         checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order + 1)
         async with DbSession.use(readonly=False) as db:
@@ -141,7 +141,7 @@ class CheckitemService(BaseService):
         cardified_card = None
         async with DbSession.use(readonly=False) as db:
             if checkitem.cardified_id:
-                cardified_card = await self._get_by(Card, "id", checkitem.cardified_id)
+                cardified_card = await ServiceHelper.get_by(Card, "id", checkitem.cardified_id)
                 if not cardified_card:
                     checkitem.cardified_id = None
                 else:
@@ -174,8 +174,8 @@ class CheckitemService(BaseService):
         original_checklist = None
         new_checklist = None
         if checklist_uid:
-            original_checklist = await self._get_by_param(Checklist, checkitem.checklist_id)
-            new_checklist = await self._get_by_param(Checklist, checklist_uid)
+            original_checklist = await ServiceHelper.get_by_param(Checklist, checkitem.checklist_id)
+            new_checklist = await ServiceHelper.get_by_param(Checklist, checklist_uid)
             if (
                 not original_checklist
                 or not new_checklist
@@ -201,7 +201,7 @@ class CheckitemService(BaseService):
                 checkitem.checklist_id = new_checklist.id
             else:
                 update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
-                update_query = self._set_order_in_column(update_query, Checkitem, original_order, order)
+                update_query = ServiceHelper.set_order_in_column(update_query, Checkitem, original_order, order)
                 await db.exec(update_query)
 
             checkitem.order = order
@@ -268,7 +268,7 @@ class CheckitemService(BaseService):
 
         target_user = None
         if checkitem.user_id:
-            target_user = await self._get_by(User, "id", checkitem.user_id)
+            target_user = await ServiceHelper.get_by(User, "id", checkitem.user_id)
 
         if should_publish:
             CheckitemPublisher.status_changed(project, card, checkitem, timer_record, target_user)
@@ -332,14 +332,14 @@ class CheckitemService(BaseService):
         if checkitem.cardified_id or (card.archived_at and not column_uid):
             return False
 
-        target_column = await self._get_by_param(ProjectColumn, column_uid or card.project_column_id)
+        target_column = await ServiceHelper.get_by_param(ProjectColumn, column_uid or card.project_column_id)
         if not target_column or target_column.is_archive:
             return False
 
         if checkitem.status != CheckitemStatus.Stopped:
             await self.change_status(user_or_bot, project, card, checkitem, CheckitemStatus.Stopped)
 
-        max_order = await self._get_max_order(
+        max_order = await ServiceHelper.get_max_order(
             Card, "project_id", card.project_id, {"project_column_id": target_column.id}
         )
         new_card = Card(
@@ -353,8 +353,7 @@ class CheckitemService(BaseService):
             checkitem.cardified_id = new_card.id
             await db.update(checkitem)
 
-        card_service = self._get_service_by_name("card")
-        api_card = await card_service.convert_board_list_api_response(new_card, 0, [], [], [], [])
+        api_card = new_card.board_api_response(0, [], [], [], [])
         CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem, new_card)
@@ -422,13 +421,13 @@ class CheckitemService(BaseService):
     async def __get_records_by_params(
         self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam | None = None
     ) -> tuple[Project, Card, Checkitem | None] | None:
-        project = cast(Project, await self._get_by_param(Project, project))
-        card = cast(Card, await self._get_by_param(Card, card))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card or not project or card.project_id != project.id:
             return None
 
         if checkitem:
-            checkitem = cast(Checkitem, await self._get_by_param(Checkitem, checkitem))
+            checkitem = cast(Checkitem, await ServiceHelper.get_by_param(Checkitem, checkitem))
             if not checkitem:
                 return None
         else:

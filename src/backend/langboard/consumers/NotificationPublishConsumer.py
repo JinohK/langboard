@@ -26,9 +26,7 @@ async def web_notification_publish(model: NotificationPublishModel):
     if has_unsubscription:
         return
 
-    record_list = [
-        (table_name, SnowflakeID(record_id), key_name) for table_name, record_id, key_name in model.record_list
-    ]
+    record_list = [(table_name, SnowflakeID(record_id)) for table_name, record_id in model.record_list]
 
     notification = UserNotification(
         notifier_type="user" if isinstance(model.notifier, User) else "bot",

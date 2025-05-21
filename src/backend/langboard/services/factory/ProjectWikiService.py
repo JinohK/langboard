@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
 from ...models import (
@@ -28,16 +28,16 @@ class ProjectWikiService(BaseService):
         return "project_wiki"
 
     async def get_by_uid(self, uid: str) -> ProjectWiki | None:
-        return await self._get_by_param(ProjectWiki, uid)
+        return await ServiceHelper.get_by_param(ProjectWiki, uid)
 
     async def get_all_by_project(self, project: TProjectParam) -> list[ProjectWiki]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
-        return list(await self._get_all_by(ProjectWiki, "project_id", project.id))
+        return list(await ServiceHelper.get_all_by(ProjectWiki, "project_id", project.id))
 
     async def get_board_list(self, user_or_bot: TUserOrBot, project: TProjectParam) -> list[dict[str, Any]]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -88,7 +88,7 @@ class ProjectWikiService(BaseService):
     async def get_assigned_bots(
         self, wiki: TWikiParam, as_api: bool
     ) -> list[tuple[Bot, ProjectWikiAssignedBot]] | list[dict[str, Any]]:
-        wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
+        wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -113,7 +113,7 @@ class ProjectWikiService(BaseService):
     async def get_assigned_users(
         self, wiki: TWikiParam, as_api: bool
     ) -> list[tuple[User, ProjectWikiAssignedUser]] | list[dict[str, Any]]:
-        wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
+        wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
         if not wiki:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -130,7 +130,7 @@ class ProjectWikiService(BaseService):
         return users
 
     async def is_assigned(self, user_or_bot: TUserOrBot, project_wiki: TWikiParam) -> bool:
-        project_wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, project_wiki))
+        project_wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, project_wiki))
         if not project_wiki:
             return False
 
@@ -166,7 +166,7 @@ class ProjectWikiService(BaseService):
             return None
         project, _ = params
 
-        max_order = await self._get_max_order(ProjectWiki, "project_id", project.id)
+        max_order = await ServiceHelper.get_max_order(ProjectWiki, "project_id", project.id)
 
         wiki = ProjectWiki(
             project_id=project.id,
@@ -368,7 +368,7 @@ class ProjectWikiService(BaseService):
 
         all_wikis = [
             all_wiki
-            for all_wiki in await self._get_all_by(ProjectWiki, "project_id", project.id)
+            for all_wiki in await ServiceHelper.get_all_by(ProjectWiki, "project_id", project.id)
             if all_wiki.id != wiki.id
         ]
         all_wikis = [*all_wikis[:order], wiki, *all_wikis[order:]]
@@ -390,7 +390,7 @@ class ProjectWikiService(BaseService):
             return None
         project, wiki = params
 
-        max_order = await self._get_max_order(ProjectWikiAttachment, "wiki_id", wiki.id)
+        max_order = await ServiceHelper.get_max_order(ProjectWikiAttachment, "wiki_id", wiki.id)
 
         wiki_attachment = ProjectWikiAttachment(
             user_id=user.id,
@@ -429,12 +429,12 @@ class ProjectWikiService(BaseService):
     async def __get_records_by_params(  # type: ignore
         self, project: TProjectParam, wiki: TWikiParam | None = None
     ):
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return None
 
         if wiki:
-            wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
+            wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
             if not wiki or wiki.project_id != project.id:
                 return None
         else:

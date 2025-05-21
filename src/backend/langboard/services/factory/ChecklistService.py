@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
 from ...models import Card, Checkitem, Checklist, Project
 from ...models.Checkitem import CheckitemStatus
@@ -28,11 +28,11 @@ class ChecklistService(BaseService):
     async def get_list(
         self, card: TCardParam, as_api: bool
     ) -> list[tuple[Checklist, list[tuple[Checkitem, Card | None, User | None]]]] | list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
 
-        raw_checklists = await self._get_all_by(Checklist, "card_id", card.id)
+        raw_checklists = await ServiceHelper.get_all_by(Checklist, "card_id", card.id)
         if not raw_checklists:
             return []
 
@@ -57,18 +57,18 @@ class ChecklistService(BaseService):
     @overload
     async def get_list_only(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_list_only(self, card: TCardParam, as_api: bool) -> list[Checklist] | list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
 
-        raw_checklists = await self._get_all_by(Checklist, "card_id", card.id)
+        raw_checklists = await ServiceHelper.get_all_by(Checklist, "card_id", card.id)
         if not as_api:
             return list(raw_checklists)
 
         return [checklist.api_response() for checklist in raw_checklists]
 
     async def get_list_only_by_project(self, project: TProjectParam) -> list[Checklist]:
-        project = cast(Project, await self._get_by_param(Project, project))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
         if not project:
             return []
 
@@ -88,7 +88,7 @@ class ChecklistService(BaseService):
             return None
         project, card, _ = params
 
-        max_order = await self._get_max_order(Checklist, "card_id", card.id)
+        max_order = await ServiceHelper.get_max_order(Checklist, "card_id", card.id)
 
         checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
         async with DbSession.use(readonly=False) as db:
@@ -132,7 +132,7 @@ class ChecklistService(BaseService):
 
         original_order = checklist.order
         update_query = SqlBuilder.update.table(Checklist).where(Checklist.column("card_id") == card.id)
-        update_query = self._set_order_in_column(update_query, Checklist, original_order, order)
+        update_query = ServiceHelper.set_order_in_column(update_query, Checklist, original_order, order)
         async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
             checklist.order = order
@@ -225,13 +225,13 @@ class ChecklistService(BaseService):
     async def __get_records_by_params(
         self, project: TProjectParam, card: TCardParam, checklist: TChecklistParam | None = None
     ) -> tuple[Project, Card, Checklist | None] | None:
-        project = cast(Project, await self._get_by_param(Project, project))
-        card = cast(Card, await self._get_by_param(Card, card))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card or not project or card.project_id != project.id:
             return None
 
         if checklist:
-            checklist = cast(Checklist, await self._get_by_param(Checklist, checklist))
+            checklist = cast(Checklist, await ServiceHelper.get_by_param(Checklist, checklist))
             if not checklist or checklist.card_id != card.id:
                 return None
         else:

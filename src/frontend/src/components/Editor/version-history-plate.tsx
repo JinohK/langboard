@@ -10,7 +10,7 @@ import { diffPlugins } from "@/components/Editor/plugins/diff-plugins";
 import { viewPlugins } from "@/components/Editor/plugins/editor-plugins";
 import { MarkdownPlugin } from "@udecode/plate-markdown";
 import { cloneDeep } from "lodash";
-import { IEditorDataContext } from "@/core/providers/EditorDataProvider";
+import { EditorDataProvider, TEditorDataProviderProps } from "@/core/providers/EditorDataProvider";
 
 function VersionHistory(props: Omit<PlateProps, "children">) {
     return (
@@ -21,15 +21,13 @@ function VersionHistory(props: Omit<PlateProps, "children">) {
 }
 
 interface DiffProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    components: () => any;
     current: Value;
     previous: Value;
 }
 
 const plugins = [...viewPlugins, ...diffPlugins];
 
-function Diff({ components, current, previous }: DiffProps) {
+function Diff({ current, previous }: DiffProps) {
     const diffValue = React.useMemo(() => {
         const revision = createPlateEditor({
             plugins,
@@ -41,40 +39,39 @@ function Diff({ components, current, previous }: DiffProps) {
         }) as Value;
     }, [previous, current]);
 
-    const editor = createPlateEditor({
-        override: {
-            components: {
-                ...components(),
+    const editor = usePlateEditor(
+        {
+            override: {
+                components: getPlateComponents({ readOnly: true }),
             },
+            plugins,
+            value: cloneDeep(diffValue),
         },
-        plugins,
-        value: diffValue,
-    });
+        [diffValue]
+    );
 
     return <VersionHistory readOnly editor={editor} />;
 }
 
-export interface IVersionHistoryPlateProps extends Pick<IEditorDataContext, "mentionables" | "currentUser"> {
+export interface IVersionHistoryPlateProps extends Pick<TEditorDataProviderProps, "form" | "mentionables" | "currentUser"> {
     oldValue?: IEditorContent;
     newValue?: IEditorContent;
 }
 
 export default function VersionHistoryPlate({ oldValue, newValue, ...props }: IVersionHistoryPlateProps) {
-    const components = () => getPlateComponents({ ...props, readOnly: true });
     const revision = usePlateEditor({
         override: {
-            components: {
-                ...components(),
-            },
+            components: getPlateComponents({ readOnly: true }),
         },
         plugins,
     });
 
     return (
-        <Diff
-            components={components}
-            current={[...revision.getApi(MarkdownPlugin).markdown.deserialize(newValue?.content ?? "")]}
-            previous={[...revision.getApi(MarkdownPlugin).markdown.deserialize(oldValue?.content ?? "")]}
-        />
+        <EditorDataProvider editorType="view" {...props}>
+            <Diff
+                current={revision.getApi(MarkdownPlugin).markdown.deserialize(newValue?.content ?? "")}
+                previous={revision.getApi(MarkdownPlugin).markdown.deserialize(oldValue?.content ?? "")}
+            />
+        </EditorDataProvider>
     );
 }

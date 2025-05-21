@@ -27,7 +27,7 @@ def find_mentioned(editor: EditorContentModel) -> tuple[set[str], dict[str, str]
         if uid in result:
             continue
         result.add(uid)
-        mention_str = concat("[**", username, "**](", uid, ")")
+        mention_str = concat("[**@", username, "**](", uid, ")")
         content_lines = content.split(mention_str)
         if len(content_lines) < 2:
             mentioned_lines[uid] = mention_str

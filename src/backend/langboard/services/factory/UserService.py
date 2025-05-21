@@ -6,7 +6,7 @@ from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.caching import Cache
 from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.security import Auth
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
@@ -28,10 +28,10 @@ class UserService(BaseService):
         return f"{cache_type}:{email}"
 
     async def get_by_uid(self, uid: str) -> User | None:
-        return await self._get_by_param(User, uid)
+        return await ServiceHelper.get_by_param(User, uid)
 
     async def get_by_email(self, email: str | None) -> tuple[User, UserEmail | None] | tuple[None, None]:
-        user = await self._get_by(User, "email", email)
+        user = await ServiceHelper.get_by(User, "email", email)
         if user:
             return user, None
         async with DbSession.use(readonly=True) as db:
@@ -55,7 +55,7 @@ class UserService(BaseService):
         return await self.get_by_email(email)
 
     async def get_profile(self, user: User) -> UserProfile:
-        return cast(UserProfile, await self._get_by(UserProfile, "user_id", user.id))
+        return cast(UserProfile, await ServiceHelper.get_by(UserProfile, "user_id", user.id))
 
     async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
@@ -78,7 +78,7 @@ class UserService(BaseService):
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
         if not user.id:
             return []
-        raw_subemails = await self._get_all_by(UserEmail, "user_id", user.id)
+        raw_subemails = await ServiceHelper.get_all_by(UserEmail, "user_id", user.id)
         subemails = [subemail.api_response() for subemail in raw_subemails]
         return subemails
 
@@ -119,7 +119,7 @@ class UserService(BaseService):
         except Exception:
             return None, None, None
 
-        user = await self._get_by(User, "id", token_info["id"])
+        user = await ServiceHelper.get_by(User, "id", token_info["id"])
         if not user:
             return None, None, None
 

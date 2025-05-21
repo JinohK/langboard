@@ -1,6 +1,6 @@
 from ...core.db import DbSession, SqlBuilder
 from ...core.routing import GLOBAL_TOPIC_ID, NONE_TOPIC_ID, SocketTopic
-from ...core.service import BaseService, SocketPublishModel, SocketPublishService
+from ...core.service import BaseService, ServiceHelper
 
 
 class {class_name}Service(BaseService):

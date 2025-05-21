@@ -1,7 +1,7 @@
 from typing import Literal, Self, cast, overload
 from sqlmodel.sql.expression import SelectOfScalar
 from ...core.db import BaseSqlModel, DbSession, SqlBuilder, User
-from ...core.service import BaseService, NotificationPublishModel
+from ...core.service import BaseService, NotificationPublishModel, ServiceHelper
 from ...models import Card, Project, ProjectColumn, ProjectWiki, UserNotificationUnsubscription
 from ...models.UserNotification import NotificationType
 from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
@@ -37,12 +37,21 @@ class UserNotificationSettingService(BaseService):
             def where_scope(self, scope: Literal[NotificationScope.All]) -> Self: ...
             @overload
             def where_scope(self, scope: Literal[NotificationScope.Specific], model: BaseSqlModel) -> Self: ...
-            def where_scope(self, scope: NotificationScope, model: BaseSqlModel | None = None):
+            @overload
+            def where_scope(self, scope: Literal[NotificationScope.Specific], model: tuple[str, int]) -> Self: ...
+            def where_scope(self, scope: NotificationScope, model: BaseSqlModel | tuple[str, int] | None = None):
                 query = self.__query.where(UserNotificationUnsubscription.scope_type == scope)
+
                 if scope == NotificationScope.Specific and model:
+                    if isinstance(model, tuple):
+                        tablename, record_id = model
+                    else:
+                        tablename = model.__tablename__
+                        record_id = model.id
+
                     query = self.__query.where(
-                        (UserNotificationUnsubscription.column("specific_table") == model.__tablename__)
-                        & (UserNotificationUnsubscription.column("specific_id") == model.id)
+                        (UserNotificationUnsubscription.column("specific_table") == tablename)
+                        & (UserNotificationUnsubscription.column("specific_id") == record_id)
                     )
                 return _QueryBuilder(query)
 
@@ -185,12 +194,16 @@ class UserNotificationSettingService(BaseService):
         if not model.scope_models:
             return False
 
+        table_ids_dict = ServiceHelper.combine_table_with_ids(model.scope_models)
         for table_name, record_id in model.scope_models:
-            scope_model = await self.get_record_by_table_name_with_id(table_name, record_id)
-            if not scope_model:
+            if (
+                table_name not in table_ids_dict
+                or not table_ids_dict[table_name]
+                or record_id not in table_ids_dict[table_name]
+            ):
                 continue
 
-            unsubscription = await query.where_scope(NotificationScope.Specific, scope_model).first()
+            unsubscription = await query.where_scope(NotificationScope.Specific, (table_name, record_id)).first()
             if unsubscription:
                 return True
 
@@ -249,7 +262,7 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project:
-            project = cast(Project, await self._get_by_param(Project, project))
+            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
             if not project:
                 return []
             params["scope"] = NotificationScope.Specific
@@ -295,8 +308,8 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and column:
-            project = cast(Project, await self._get_by_param(Project, project))
-            column = cast(ProjectColumn, await self._get_by_param(ProjectColumn, column))
+            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+            column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, column))
             if not project or not column or column.project_id != project.id:
                 return []
             params["scope"] = NotificationScope.Specific
@@ -337,8 +350,8 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and card:
-            project = cast(Project, await self._get_by_param(Project, project))
-            card = cast(Card, await self._get_by_param(Card, card))
+            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+            card = cast(Card, await ServiceHelper.get_by_param(Card, card))
             if not project or not card or card.project_id != project.id:
                 return []
             params["scope"] = NotificationScope.Specific
@@ -373,8 +386,8 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and wiki:
-            project = cast(Project, await self._get_by_param(Project, project))
-            wiki = cast(ProjectWiki, await self._get_by_param(ProjectWiki, wiki))
+            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+            wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
             if not project or not wiki or wiki.project_id != project.id:
                 return []
             params["scope"] = NotificationScope.Specific

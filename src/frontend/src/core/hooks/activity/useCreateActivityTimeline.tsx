@@ -266,6 +266,9 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                     <VersionHistoryPlate
                         mentionables={mentionables}
                         currentUser={currentUser}
+                        form={{
+                            project_uid: history?.project?.uid,
+                        }}
                         oldValue={before}
                         newValue={after}
                         key={createShortUUID()}

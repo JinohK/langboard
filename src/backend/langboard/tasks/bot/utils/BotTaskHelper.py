@@ -34,16 +34,6 @@ class BotTaskHelper:
         return list(result.all())
 
     @staticmethod
-    async def get_project_labels_by_bot(project: Project, bot: Bot) -> list[ProjectLabel]:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
-                SqlBuilder.select.table(ProjectLabel).where(
-                    (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == bot.id)
-                )
-            )
-        return list(result.all())
-
-    @staticmethod
     async def run(
         bots: Bot | list[Bot],
         event: BotTriggerCondition | BotDefaultTrigger,
@@ -67,8 +57,17 @@ class BotTaskHelper:
                     )
                     if not result.first():
                         continue
-                labels = await BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
+                labels = await BotTaskHelper.get_project_labels_by_bot(project, bot, db) if project else None
                 BotTaskHelper.__run(bot, event.value, data, labels)
+
+    @staticmethod
+    async def get_project_labels_by_bot(project: Project, bot: Bot, db: DbSession) -> list[ProjectLabel]:
+        result = await db.exec(
+            SqlBuilder.select.table(ProjectLabel).where(
+                (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == bot.id)
+            )
+        )
+        return list(result.all())
 
     @staticmethod
     def __run(bot: Bot, event: str, data: dict[str, Any], labels: list[ProjectLabel] | None):
@@ -114,6 +113,7 @@ class BotTaskHelper:
             logger.error("Unknown API Auth Type: %s", bot.api_auth_type)
             return
 
+        res = None
         try:
             res = post(
                 bot.api_url,
@@ -122,9 +122,11 @@ class BotTaskHelper:
                 timeout=120,
             )
 
-            if res.status_code != 200:
+            res.raise_for_status()
+        except Exception:
+            if res:
                 logger.error(
                     "Failed to request bot: %s(@%s) %s: %s", bot.name, bot.bot_uname, str(res.status_code), res.text
                 )
-        except Exception:
-            logger.error("Failed to request bot: %s(@%s)", bot.name, bot.bot_uname)
+            else:
+                logger.error("Failed to request bot: %s(@%s)", bot.name, bot.bot_uname)

@@ -11,22 +11,33 @@ class ReactionService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "reaction"
 
-    async def get_all(self, model_class: type[BaseReactionModel], target_id: SnowflakeID) -> dict[str, list[str]]:
+    async def get_all(
+        self, model_class: type[BaseReactionModel], target_ids: SnowflakeID | list[SnowflakeID]
+    ) -> dict[int, dict[str, list[str]]]:
+        if not isinstance(target_ids, list):
+            target_ids = [target_ids]
+
         async with DbSession.use(readonly=True) as db:
             result = await db.exec(
                 SqlBuilder.select.tables(model_class, User, Bot)
                 .outerjoin(User, model_class.column("user_id") == User.column("id"))
                 .outerjoin(Bot, model_class.column("bot_id") == Bot.column("id"))
-                .where(model_class.column(model_class.get_target_column_name()) == target_id)
+                .where(model_class.column(model_class.get_target_column_name()).in_(target_ids))
             )
         records = result.all()
 
-        reactions: dict[str, list[str]] = {}
+        reactions: dict[int, dict[str, list[str]]] = {}
         for reaction, reacted_user, reacted_bot in records:
             reaction_type = reaction.reaction_type
-            if reaction_type not in reactions:
-                reactions[reaction_type] = []
-            reactions[reaction_type].append(reacted_user.get_uid() if reacted_user else reacted_bot.get_uid())
+            reaction_target_column_name = model_class.get_target_column_name()
+            reaction_target_id = getattr(reaction, reaction_target_column_name)
+            if reaction_target_id not in reactions:
+                reactions[reaction_target_id] = {}
+            if reaction_type not in reactions[reaction_target_id]:
+                reactions[reaction_target_id][reaction_type] = []
+            reactions[reaction_target_id][reaction_type].append(
+                reacted_user.get_uid() if reacted_user else reacted_bot.get_uid()
+            )
 
         return reactions
 

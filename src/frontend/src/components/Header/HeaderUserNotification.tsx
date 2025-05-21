@@ -380,13 +380,13 @@ function HeaderUserNotificationItemMentionedText({ content }: { content: string 
 const getRoute = (notification: UserNotification.TModel) => {
     switch (notification.type) {
         case ENotificationType.ProjectInvited:
-            return `${ROUTES.BOARD.INVITATION}?${QUERY_NAMES.PROJCT_INVITATION_TOKEN}=${notification.records.invitation.encrypted_token}`;
+            return `${ROUTES.BOARD.INVITATION}?${QUERY_NAMES.PROJCT_INVITATION_TOKEN}=${notification.records.project_invitation.encrypted_token}`;
         case ENotificationType.MentionedInCard:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
         case ENotificationType.MentionedInComment:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
         case ENotificationType.MentionedInWiki:
-            return ROUTES.BOARD.WIKI_PAGE(notification.records.project.uid, notification.records.wiki.uid);
+            return ROUTES.BOARD.WIKI_PAGE(notification.records.project.uid, notification.records.project_wiki.uid);
         case ENotificationType.ReactedToComment:
             return ROUTES.BOARD.CARD(notification.records.project.uid, notification.records.card.uid);
         case ENotificationType.AssignedToCard:

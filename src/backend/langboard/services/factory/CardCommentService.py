@@ -1,7 +1,7 @@
 from typing import Any, cast, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, EditorContentModel, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...models import Card, CardComment, CardCommentReaction, Project
 from ...publishers import CardCommentPublisher
 from ...tasks.activities import CardCommentActivityTask
@@ -18,10 +18,10 @@ class CardCommentService(BaseService):
         return "card_comment"
 
     async def get_by_uid(self, uid: str) -> CardComment | None:
-        return await self._get_by_param(CardComment, uid)
+        return await ServiceHelper.get_by_param(CardComment, uid)
 
     async def get_board_list(self, card: TCardParam) -> list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -38,6 +38,7 @@ class CardCommentService(BaseService):
         raw_comments = result.all()
 
         reaction_service = self._get_service(ReactionService)
+        reactions = await reaction_service.get_all(CardCommentReaction, [comment.id for comment, _, _ in raw_comments])
 
         comments = []
         for comment, user, bot in raw_comments:
@@ -48,7 +49,7 @@ class CardCommentService(BaseService):
                 api_comment["user"] = user.api_response()
             else:
                 api_comment["bot"] = bot.api_response()
-            api_comment["reactions"] = await reaction_service.get_all(CardCommentReaction, comment.id)
+            api_comment["reactions"] = reactions.get(comment.id, {})
             comments.append(api_comment)
 
         return comments
@@ -186,13 +187,13 @@ class CardCommentService(BaseService):
     async def __get_records_by_params(  # type: ignore
         self, project: TProjectParam, card: TCardParam, comment: TCommentParam | None = None
     ):
-        project = cast(Project, await self._get_by_param(Project, project))
-        card = cast(Card, await self._get_by_param(Card, card))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card or not project or card.project_id != project.id:
             return None
 
         if comment:
-            comment = cast(CardComment, await self._get_by_param(CardComment, comment))
+            comment = cast(CardComment, await ServiceHelper.get_by_param(CardComment, comment))
             if not comment or comment.card_id != card.id:
                 return None
         else:

@@ -57,6 +57,7 @@ const DiffPlugin = toPlatePlugin(
     }).overrideEditor(withGetFragmentExcludeDiff),
     {
         render: {
+            node: DiffLeaf,
             aboveNodes:
                 () =>
                 ({ children, editor, element }) => {
@@ -86,7 +87,6 @@ const DiffPlugin = toPlatePlugin(
                         </Component>
                     );
                 },
-            node: DiffLeaf,
         },
     }
 );
@@ -94,25 +94,16 @@ const DiffPlugin = toPlatePlugin(
 function DiffLeaf({ children, ...props }: PlateLeafProps) {
     const diffOperation = props.leaf.diffOperation as DiffOperation;
 
-    const Component = (
-        {
-            delete: "del",
-            insert: "ins",
-            update: "span",
-        } as any
-    )[diffOperation.type];
-
     return (
         <PlateLeaf
             {...props}
-            as={Component}
             className={diffOperationColors[diffOperation.type]}
             attributes={{
                 ...props.attributes,
                 title: diffOperation.type === "update" ? describeUpdate(diffOperation) : undefined,
             }}
         >
-            <Component className={diffOperationColors[diffOperation.type]}>{children}</Component>
+            {children}
         </PlateLeaf>
     );
 }

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
-import { Flex, IconComponent } from "@/components/base";
+import Flex from "@/components/base/Flex";
+import IconComponent from "@/components/base/IconComponent";
 import { default as BaseButton, ButtonProps } from "@/components/base/Button";
 import { cn } from "@/core/utils/ComponentUtils";
 

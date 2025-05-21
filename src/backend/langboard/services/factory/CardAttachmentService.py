@@ -1,6 +1,6 @@
 from typing import Any, cast, overload
 from ...core.db import DbSession, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
 from ...models import Card, CardAttachment, Project
 from ...publishers import CardAttachmentPublisher
@@ -16,10 +16,10 @@ class CardAttachmentService(BaseService):
         return "card_attachment"
 
     async def get_by_uid(self, uid: str) -> CardAttachment | None:
-        return await self._get_by_param(CardAttachment, uid)
+        return await ServiceHelper.get_by_param(CardAttachment, uid)
 
     async def get_board_list(self, card: TCardParam) -> list[dict[str, Any]]:
-        card = cast(Card, await self._get_by_param(Card, card))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card:
             return []
         async with DbSession.use(readonly=True) as db:
@@ -45,7 +45,7 @@ class CardAttachmentService(BaseService):
             return None
         project, card, _ = params
 
-        max_order = await self._get_max_order(CardAttachment, "card_id", card.id)
+        max_order = await ServiceHelper.get_max_order(CardAttachment, "card_id", card.id)
 
         card_attachment = CardAttachment(
             user_id=user.id,
@@ -74,7 +74,7 @@ class CardAttachmentService(BaseService):
 
         original_order = card_attachment.order
         update_query = SqlBuilder.update.table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
-        update_query = self._set_order_in_column(update_query, CardAttachment, original_order, order)
+        update_query = ServiceHelper.set_order_in_column(update_query, CardAttachment, original_order, order)
         async with DbSession.use(readonly=False) as db:
             await db.exec(update_query)
             card_attachment.order = order
@@ -140,13 +140,13 @@ class CardAttachmentService(BaseService):
     async def __get_records_by_params(  # type: ignore
         self, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam | None = None
     ):
-        project = cast(Project, await self._get_by_param(Project, project))
-        card = cast(Card, await self._get_by_param(Card, card))
+        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
         if not card or not project or card.project_id != project.id:
             return None
 
         if card_attachment:
-            card_attachment = cast(CardAttachment, await self._get_by_param(CardAttachment, card_attachment))
+            card_attachment = cast(CardAttachment, await ServiceHelper.get_by_param(CardAttachment, card_attachment))
             if not card_attachment or card_attachment.card_id != card.id:
                 return None
         else:

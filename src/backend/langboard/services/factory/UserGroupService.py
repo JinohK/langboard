@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SqlBuilder, User
-from ...core.service import BaseService
+from ...core.service import BaseService, ServiceHelper
 from ...models import UserEmail, UserGroup, UserGroupAssignedEmail
 from .Types import TUserGroupParam
 
@@ -23,7 +23,7 @@ class UserGroupService(BaseService):
         if not user.id:
             return []
 
-        raw_groups = await self._get_all_by(UserGroup, "user_id", user.id)
+        raw_groups = await ServiceHelper.get_all_by(UserGroup, "user_id", user.id)
         groups = []
         for group in raw_groups:
             records = await self.get_user_emails_by_group(group, as_api=cast(Literal[False], as_api))
@@ -46,7 +46,7 @@ class UserGroupService(BaseService):
     async def get_user_emails_by_group(
         self, user_group: TUserGroupParam, as_api: bool
     ) -> list[tuple[UserGroupAssignedEmail, User | None]] | list[dict[str, Any]]:
-        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
         if not user_group:
             return []
 
@@ -82,7 +82,7 @@ class UserGroupService(BaseService):
         return users
 
     async def create(self, user: User, name: str, emails: list[str] | None = None) -> UserGroup:
-        max_order = await self._get_max_order(UserGroup, "user_id", user.id)
+        max_order = await ServiceHelper.get_max_order(UserGroup, "user_id", user.id)
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
@@ -96,7 +96,7 @@ class UserGroupService(BaseService):
         return user_group
 
     async def change_name(self, user: User, user_group: TUserGroupParam, name: str) -> bool:
-        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
             return False
 
@@ -108,7 +108,7 @@ class UserGroupService(BaseService):
         return True
 
     async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> bool:
-        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
             return False
 
@@ -119,8 +119,8 @@ class UserGroupService(BaseService):
                 )
             )
 
-            app_users = await self._get_all_by(User, "email", emails)
-            app_user_subemails = await self._get_all_by(UserEmail, "email", emails)
+            app_users = await ServiceHelper.get_all_by(User, "email", emails)
+            app_user_subemails = await ServiceHelper.get_all_by(UserEmail, "email", emails)
             unique_app_user_emails_map = {}
             appended_emails = []
             for app_user in app_users:
@@ -143,7 +143,7 @@ class UserGroupService(BaseService):
         return True
 
     async def delete(self, user: User, user_group: TUserGroupParam) -> bool:
-        user_group = cast(UserGroup, await self._get_by_param(UserGroup, user_group))
+        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
         if not user_group or user_group.user_id != user.id:
             return False
 

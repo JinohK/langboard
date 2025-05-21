@@ -47,6 +47,23 @@ class Card(SoftDeleteModel, table=True):
             "archived_at": self.archived_at,
         }
 
+    def board_api_response(
+        self,
+        count_comment: int,
+        members: list[dict[str, Any]],
+        relationships: list[dict[str, Any]],
+        labels: list[dict[str, Any]],
+        checklists: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return {
+            **self.api_response(),
+            "count_comment": count_comment,
+            "members": members,
+            "relationships": relationships,
+            "labels": labels,
+            "checklists": checklists,
+        }
+
     def notification_data(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),

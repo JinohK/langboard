@@ -5,7 +5,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
-import { Flex, ScrollArea } from "@/components/base";
+import Flex from "@/components/base/Flex";
+import * as ScrollArea from "@/components/base/ScrollArea";
 
 const Root = DialogPrimitive.Root;
 
