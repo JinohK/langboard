@@ -13,7 +13,7 @@ class RunCommandOptions(BaseCommandOptions):
     ws_deflate: bool = Field(default=False, description="Enable permessage-deflate extension", short="wd")  # type: ignore
     ws_max_size: int = Field(default=16777216, description="Max size message in bytes", short="wms")  # type: ignore
     ws_auto_ping: bool = Field(default=True, description="Send ping automatically", short="wap")  # type: ignore
-    ws_idle_timeout: int = Field(default=20, description="Idle timeout", short="wit")  # type: ignore
+    ws_idle_timeout: int = Field(default=60, description="Idle timeout", short="wit")  # type: ignore
     ws_reset_idle_on_send: bool = Field(
         default=True,
         description="Reset idle timeout on send",

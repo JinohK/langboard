@@ -43,7 +43,7 @@ class EdiitorSocketEventCreator:
 
     async def abort_chat(self, ws: WebSocket, key: str):
         await BotRunner.abort(InternalBotType.EditorChat, key)
-        ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
+        await ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
 
     async def copilot(
         self, ws: WebSocket, project_uid: str, prompt: str, system: str, key: str, user: User = Auth.scope("socket")
@@ -53,42 +53,42 @@ class EdiitorSocketEventCreator:
 
     async def abort_copilot(self, ws: WebSocket, key: str):
         await BotRunner.abort(InternalBotType.EditorCopilot, key)
-        ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
+        await ws.send(f"{self.event_prefix}:editor:copilot:abort:{key}", {"text": "0"})
 
     async def _chat(self, ws: WebSocket, project_uid: str, form: dict, key: str, user: User):
         stream_or_str = await BotRunner.run_abortable(
             self.chat_bot_type, {**form, "project_uid": project_uid, "user_uid": user.get_uid()}, key
         )
         ws_stream = ws.stream(f"{self.event_prefix}:editor:chat:stream")
-        ws_stream.start()
+        await ws_stream.start()
         message = ""
         if not stream_or_str:
             pass
         elif isinstance(stream_or_str, str):
-            ws_stream.buffer(data={"message": stream_or_str})
+            await ws_stream.buffer(data={"message": stream_or_str})
             message = stream_or_str
         else:
             async for chunk in stream_or_str:
                 if not chunk:
                     continue
-                ws_stream.buffer(data={"message": chunk})
+                await ws_stream.buffer(data={"message": chunk})
                 message = f"{message}{chunk}"
-        ws_stream.end(data={"message": message})
+        await ws_stream.end(data={"message": message})
 
     async def _copilot(self, ws: WebSocket, project_uid: str, form: dict, key: str, user: User):
         stream_or_str = await BotRunner.run_abortable(
             self.copilot_type, {**form, "project_uid": project_uid, "user_uid": user.get_uid()}, key
         )
         if not stream_or_str:
-            ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "0"})
+            await ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "0"})
             return
 
         if isinstance(stream_or_str, str):
-            ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": stream_or_str})
+            await ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": stream_or_str})
         else:
             chunks = []
             async for chunk in stream_or_str:
                 if not chunk:
                     continue
                 chunks.append(chunk)
-            ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "".join(chunks)})
+            await ws.send(f"{self.event_prefix}:editor:copilot:receive:{key}", {"text": "".join(chunks)})

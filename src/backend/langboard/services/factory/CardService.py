@@ -201,7 +201,6 @@ class CardService(BaseService):
                 .join(ProjectColumn, Card.column("project_column_id") == ProjectColumn.column("id"))
                 .where(Card.column("project_id") == project.id)
                 .order_by(Card.column("order").asc())
-                .group_by(Card.column("id"), Card.column("order"))
             )
         records = result.all()
         if not as_api:

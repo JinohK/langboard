@@ -15,6 +15,7 @@ import {
     ProjectWiki,
     User,
     MetadataModel,
+    BotSchedule,
 } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 
@@ -49,6 +50,7 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
 
         return true;
     });
+    BotSchedule.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
     ProjectColumn.Model.deleteModels((model) => model.project_uid === projectUID);
     ProjectLabel.Model.deleteModels((model) => model.project_uid === projectUID);
     ProjectCard.Model.deleteModels((model) => {
@@ -99,6 +101,8 @@ export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
             model.order -= 1;
         }
     });
+
+    BotSchedule.Model.deleteModels((model) => model.target_table === "card" && model.target_uid === cardUID);
 
     if (shouldUnsubscribe) {
         socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);

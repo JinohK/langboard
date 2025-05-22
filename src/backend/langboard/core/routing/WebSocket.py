@@ -1,3 +1,4 @@
+from collections import deque
 from enum import Enum
 from typing import Any, Self, cast, overload
 from socketify import OpCode, SendStatus
@@ -8,40 +9,45 @@ from .SocketTopic import SocketTopic
 
 
 class IWebSocketStream:
-    def start(self, data: Any = None, compress: bool = False): ...
-    def buffer(self, data: Any = None, compress: bool = False): ...
-    def end(self, data: Any = None, compress: bool = False): ...
+    async def start(self, data: Any = None, compress: bool = False): ...
+    async def buffer(self, data: Any = None, compress: bool = False): ...
+    async def end(self, data: Any = None, compress: bool = False): ...
 
 
 class WebSocket(SocketifyWebSocket):
-    def __init__(self, ws: SocketifyWebSocket):
+    MAX_BACKPRESSURE = 16 * 1024 * 1024
+
+    def __init__(self, ws: SocketifyWebSocket, message_queue: deque):
         for attr in ws.__dict__:
             setattr(self, attr, ws.__dict__[attr])
         self.__ws = ws
+        self.__message_queue = message_queue
 
-    def get_topics(self):
+    async def get_topics(self):
         return self.__ws.get_topics()
 
-    def subscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
+    async def subscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
         if isinstance(topic, Enum):
             topic = topic.value
 
         for topic_id in topic_ids:
             self.__ws.subscribe(f"{topic}:{topic_id}")
-        self.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=cast(str, topic_ids)))
+        await self.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=cast(str, topic_ids)))
 
-    def unsubscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
+    async def unsubscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
         if isinstance(topic, Enum):
             topic = topic.value
         for topic_id in topic_ids:
             self.__ws.unsubscribe(f"{topic}:{topic_id}")
-        self.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=cast(str, topic_ids)))
+        await self.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=cast(str, topic_ids)))
 
     @overload
-    def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
+    async def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
     @overload
-    def send(self, event_response: SocketResponse, data: None = None, compress: bool = False, fin: bool = True): ...
-    def send(
+    async def send(
+        self, event_response: SocketResponse, data: None = None, compress: bool = False, fin: bool = True
+    ): ...
+    async def send(
         self,
         event_response: SocketResponse | str,
         data: Any = None,
@@ -55,7 +61,15 @@ class WebSocket(SocketifyWebSocket):
         else:
             return self
 
+        if self.has_backpressure():
+            self.__message_queue.append(response_model)
+            return self
+
         result = self.__ws.send(response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress, fin=fin)
+        if result == SendStatus.BACKPRESSURE or result == SendStatus.DROPPED:
+            self.__message_queue.append(response_model)
+            return self
+
         if isinstance(result, SocketifyWebSocket):
             return self
         return result
@@ -65,22 +79,22 @@ class WebSocket(SocketifyWebSocket):
             def __init__(self, ws: WebSocket):
                 self.__ws = ws
 
-            def start(self, data: Any = None, compress: bool = False):
-                self.__send("start", data, compress=compress)
+            async def start(self, data: Any = None, compress: bool = False):
+                await self.__send("start", data, compress=compress)
                 return self
 
-            def buffer(self, data: Any = None, compress: bool = False):
-                self.__send("buffer", data, compress=compress)
+            async def buffer(self, data: Any = None, compress: bool = False):
+                await self.__send("buffer", data, compress=compress)
                 return self
 
-            def end(self, data: Any = None, compress: bool = False):
-                self.__send("end", data, compress=compress)
+            async def end(self, data: Any = None, compress: bool = False):
+                await self.__send("end", data, compress=compress)
                 self.__ws = None
 
-            def __send(self, event_response: str, data: Any = None, compress: bool = False):
+            async def __send(self, event_response: str, data: Any = None, compress: bool = False):
                 if not self.__ws:
                     return
-                self.__ws.send(f"{event}:{event_response}", data, compress=compress)
+                await self.__ws.send(f"{event}:{event_response}", data, compress=compress)
 
         return cast(IWebSocketStream, _WebSocketStream(self))
 
@@ -91,22 +105,22 @@ class WebSocket(SocketifyWebSocket):
                 self.__topic = topic if isinstance(topic, str) else topic.value
                 self.__topic_id = topic_id
 
-            def start(self, data: Any = None, compress: bool = False):
-                self.__send("start", data, compress=compress)
+            async def start(self, data: Any = None, compress: bool = False):
+                await self.__send("start", data, compress=compress)
                 return self
 
-            def buffer(self, data: Any = None, compress: bool = False):
-                self.__send("buffer", data, compress=compress)
+            async def buffer(self, data: Any = None, compress: bool = False):
+                await self.__send("buffer", data, compress=compress)
                 return self
 
-            def end(self, data: Any = None, compress: bool = False):
-                self.__send("end", data, compress=compress)
+            async def end(self, data: Any = None, compress: bool = False):
+                await self.__send("end", data, compress=compress)
                 self.__ws = None
 
-            def __send(self, event_response: str, data: Any = None, compress: bool = False):
+            async def __send(self, event_response: str, data: Any = None, compress: bool = False):
                 if not self.__ws:
                     return
-                self.__ws.send(
+                await self.__ws.send(
                     SocketResponse(
                         event=f"{event}:{event_response}",
                         topic=self.__topic,
@@ -118,9 +132,12 @@ class WebSocket(SocketifyWebSocket):
 
         return cast(IWebSocketStream, _WebSocketStream(self, topic, topic_id))
 
+    def has_backpressure(self) -> bool:
+        return self.__ws.get_buffered_amount() >= self.MAX_BACKPRESSURE
+
     @deprecated(
         """
-        🚨 Do not use this method. Use `AppRouter.publish` instead.
+        🚨 Do not use this method. Use `await AppRouter.publish` instead.
         """
     )
     async def publish(

@@ -22,6 +22,7 @@ class BotScheduleService:
         as_api: Literal[False],
         pagination: Pagination | None = None,
         refer_time: datetime | None = None,
+        status: BotScheduleStatus | None = None,
     ) -> list[BotSchedule]: ...
     @staticmethod
     @overload
@@ -31,6 +32,7 @@ class BotScheduleService:
         as_api: Literal[True],
         pagination: Pagination | None = None,
         refer_time: datetime | None = None,
+        status: BotScheduleStatus | None = None,
     ) -> list[dict[str, Any]]: ...
     @staticmethod
     async def get_all_by_filterable(
@@ -39,12 +41,16 @@ class BotScheduleService:
         as_api: bool,
         pagination: Pagination | None = None,
         refer_time: datetime | None = None,
+        status: BotScheduleStatus | None = None,
     ) -> list[BotSchedule] | list[dict[str, Any]]:
         query = SqlBuilder.select.table(BotSchedule).where(
             (BotSchedule.column("bot_id") == bot.id)
             & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
             & (BotSchedule.column("filterable_id") == filterable_model.id)
         )
+
+        if status:
+            query = query.where(BotSchedule.column("status") == status)
 
         if refer_time is not None:
             query = query.where(BotSchedule.column("created_at") <= refer_time)
@@ -71,6 +77,58 @@ class BotScheduleService:
                 continue
             api_schedule = schedule.api_response()
             api_schedule["target"] = target
+            api_schedules.append(api_schedule)
+
+        return api_schedules
+
+    @staticmethod
+    @overload
+    async def get_all_by_scope(
+        bot: Bot,
+        scope_model: BaseSqlModel,
+        filterable_model: BaseSqlModel,
+        as_api: Literal[False],
+        status: BotScheduleStatus | None = None,
+    ) -> list[BotSchedule]: ...
+    @staticmethod
+    @overload
+    async def get_all_by_scope(
+        bot: Bot,
+        scope_model: BaseSqlModel,
+        filterable_model: BaseSqlModel,
+        as_api: Literal[True],
+        status: BotScheduleStatus | None = None,
+    ) -> list[dict[str, Any]]: ...
+    @staticmethod
+    async def get_all_by_scope(
+        bot: Bot,
+        scope_model: BaseSqlModel,
+        filterable_model: BaseSqlModel,
+        as_api: bool,
+        status: BotScheduleStatus | None = None,
+    ) -> list[BotSchedule] | list[dict[str, Any]]:
+        query = SqlBuilder.select.table(BotSchedule).where(
+            (BotSchedule.column("bot_id") == bot.id)
+            & (BotSchedule.column("target_table") == scope_model.__tablename__)
+            & (BotSchedule.column("target_id") == scope_model.id)
+            & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
+            & (BotSchedule.column("filterable_id") == filterable_model.id)
+        )
+
+        if status:
+            query = query.where(BotSchedule.column("status") == status)
+
+        async with DbSession.use(readonly=True) as db:
+            result = await db.exec(query)
+
+        if not as_api:
+            return list(result.all())
+
+        schedules = result.all()
+
+        api_schedules = []
+        for schedule in schedules:
+            api_schedule = schedule.api_response()
             api_schedules.append(api_schedule)
 
         return api_schedules

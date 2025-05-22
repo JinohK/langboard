@@ -115,31 +115,38 @@ class DbSession:
     async def __create_session(readonly: bool):
         max_trial = 10
         engine = Engine.get_readonly_engine() if readonly else Engine.get_main_engine()
-        session = None
-        raised = False
+        session: AsyncSession | None = None
+        exception = None
         for _ in range(max_trial):
+            exception = None
             try:
-                session = AsyncSession(engine, expire_on_commit=False)
+                session = AsyncSession(engine, expire_on_commit=False, future=True)
                 yield session
                 break
             except TooManyConnectionsError as e:
-                _logger.error(f"Failed to create session: {e}")
+                exception = e
+                if session:
+                    await session.close()
                 sleep(0.5)
                 continue
             except TimeoutError as e:
-                _logger.error(f"Failed to create session: {e}")
+                exception = e
+                if session:
+                    await session.close()
                 sleep(0.5)
                 continue
             except Exception as e:
-                _logger.error(f"Failed to use session: {e}")
-                raised = True
+                exception = e
                 break
 
-        if session:
-            await session.close()
+        try:
+            if session:
+                await session.close()
+        except Exception:
+            pass
 
-        if raised:
-            raise Exception(f"Failed to create session after {max_trial}")
+        if exception:
+            raise exception
 
     async def close(self):
         self.__session = cast(AsyncSession, None)
@@ -211,7 +218,6 @@ class DbSession:
             if purge or not isinstance(obj, SoftDeleteModel):
                 obj.clear_changes()
                 await self.__session.delete(obj)
-                await self.__session.commit()
                 return
             if obj.deleted_at is not None:
                 obj.clear_changes()

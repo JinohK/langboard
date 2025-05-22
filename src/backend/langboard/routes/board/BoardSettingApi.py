@@ -67,9 +67,23 @@ async def get_project_details(
     project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
-    bots = await service.bot.get_list(as_api=True)
-    columns = await service.project_column.get_all_by_project(project, as_api=True)
-    cards = await service.card.get_all_by_project(project, as_api=True)
+    from ...core.logger import Logger
+
+    try:
+        bots = await service.bot.get_list(as_api=True)
+    except Exception:
+        Logger.main.error("bots")
+        return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        columns = await service.project_column.get_all_by_project(project, as_api=True)
+    except Exception:
+        Logger.main.error("columns")
+        return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        cards = await service.card.get_all_by_project(project, as_api=True)
+    except Exception:
+        Logger.main.error("cards")
+        return JsonResponse(content={}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse(content={"project": response, "bots": bots, "columns": columns, "cards": cards})
 

@@ -14,8 +14,8 @@ EDITOR_TYPES = [("card", SocketTopic.Board), ("wiki", SocketTopic.BoardWiki)]
 _TEditorCache = dict[str, list[str]]
 
 
-def get_project_uid(ws: WebSocket) -> str | None:
-    topics = ws.get_topics()
+async def get_project_uid(ws: WebSocket) -> str | None:
+    topics = await ws.get_topics()
     for topic in topics:
         if not topic.startswith(f"{SocketTopic.Board.value}:"):
             continue
@@ -27,7 +27,7 @@ def get_project_uid(ws: WebSocket) -> str | None:
 def register_board_editor(editor_type: str, editor_topic: SocketTopic):
     @AppRouter.socket.on(SocketDefaultEvent.Close)
     async def board_close(ws: WebSocket, user: User = Auth.scope("socket")):
-        project_uid = get_project_uid(ws)
+        project_uid = await get_project_uid(ws)
         if not project_uid:
             return
 
@@ -55,13 +55,13 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         ws: WebSocket,
         uid: str,
     ):
-        project_uid = get_project_uid(ws)
+        project_uid = await get_project_uid(ws)
         if not project_uid:
             return
 
         editors: _TEditorCache | None = await Cache.get(f"board:{editor_type}:editors:{project_uid}")
         user_uids = editors[uid] if editors and uid in editors else []
-        ws.send(
+        await ws.send(
             SocketResponse(
                 topic=editor_topic.value,
                 topic_id=project_uid,
@@ -73,7 +73,7 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
     @AppRouter.socket.on(f"board:{editor_type}:editor:start")
     @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
     async def editor_start_editing(ws: WebSocket, uid: str, user: User = Auth.scope("socket")):
-        project_uid = get_project_uid(ws)
+        project_uid = await get_project_uid(ws)
         if not project_uid:
             return
 
@@ -96,7 +96,7 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
     @AppRouter.socket.on(f"board:{editor_type}:editor:stop")
     @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
     async def editor_stop_editing(ws: WebSocket, uid: str, user: User = Auth.scope("socket")):
-        project_uid = get_project_uid(ws)
+        project_uid = await get_project_uid(ws)
         if not project_uid:
             return
 

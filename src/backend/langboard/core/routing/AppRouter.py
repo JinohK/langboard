@@ -1,3 +1,4 @@
+from collections import deque
 from enum import Enum
 from typing import Any, Callable, TypeVar, cast, overload
 from fastapi import APIRouter, FastAPI
@@ -29,6 +30,7 @@ class AppRouter:
 
     api: APIRouter
     socket: SocketManager
+    _message_queue: deque[SocketResponse | tuple[str, str]] = deque()
 
     def __init__(self):
         self.api = APIRouter(route_class=AppExceptionHandlingRoute)

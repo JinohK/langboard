@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import Field
-from ....core.ai import BotSchedule, BotScheduleRunningType
+from ....core.ai import BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
 from ....core.utils.DateTime import now
@@ -8,7 +8,16 @@ from ....models import Card, ProjectColumn
 
 
 class BotSchedulePagination(Pagination):
+    status: BotScheduleStatus | None = Field(
+        default=None, title=f"Status: {', '.join(BotScheduleStatus.__members__.keys())} (Default: None)"
+    )
     refer_time: datetime = now()
+
+
+class BotScheduleSearchForm(Pagination):
+    status: BotScheduleStatus | None = Field(
+        default=None, title=f"Status: {', '.join(BotScheduleStatus.__members__.keys())} (Default: None)"
+    )
 
 
 @form_model

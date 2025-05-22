@@ -8,7 +8,13 @@ from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectBotPublisher
 from ...services import Service
-from .scopes import BotSchedulePagination, CreateBotCronTimeForm, UpdateBotCronTimeForm, project_role_finder
+from .scopes import (
+    BotSchedulePagination,
+    BotScheduleSearchForm,
+    CreateBotCronTimeForm,
+    UpdateBotCronTimeForm,
+    project_role_finder,
+)
 
 
 @AppRouter.schema(query=BotSchedulePagination)
@@ -43,10 +49,92 @@ async def get_bot_schedules(
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
     schedules = await BotScheduleService.get_all_by_filterable(
-        bot, project, as_api=True, pagination=pagination, refer_time=pagination.refer_time
+        bot, project, as_api=True, pagination=pagination, refer_time=pagination.refer_time, status=pagination.status
     )
 
     return JsonResponse(content={"schedules": schedules})
+
+
+@AppRouter.schema(query=BotScheduleSearchForm)
+@AppRouter.api.get(
+    "/board/{project_uid}/settings/bot/{bot_uid}/card/{card_uid}/schedules",
+    tags=["Board.Settings.BotCron"],
+    description="Get all bot cron schedules for a specific card.",
+    responses=(
+        OpenApiSchema()
+        .suc({"schedules": [BotSchedule], "card": Card})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project, bot, or card not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def get_bot_schedules_by_card(
+    project_uid: str,
+    bot_uid: str,
+    card_uid: str,
+    search: BotScheduleSearchForm = Depends(),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    bot = await service.bot.get_by_uid(bot_uid)
+    if not bot:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    project = await service.project.get_by_uid(project_uid)
+    card = await service.card.get_by_uid(card_uid)
+    if not project or not card or card.project_id != project.id:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, _ = await service.project.is_assigned(bot, project)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    schedules = await BotScheduleService.get_all_by_scope(bot, card, project, as_api=True, status=search.status)
+
+    return JsonResponse(content={"schedules": schedules, "card": card.api_response()})
+
+
+@AppRouter.schema(query=BotScheduleSearchForm)
+@AppRouter.api.get(
+    "/board/{project_uid}/settings/bot/{bot_uid}/column/{column_uid}/schedules",
+    tags=["Board.Settings.BotCron"],
+    description="Get all bot cron schedules for a specific column.",
+    responses=(
+        OpenApiSchema()
+        .suc({"schedules": [BotSchedule], "column": Card})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project, bot, or column not found.")
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add
+async def get_bot_schedules_by_column(
+    project_uid: str,
+    bot_uid: str,
+    column_uid: str,
+    search: BotScheduleSearchForm = Depends(),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    bot = await service.bot.get_by_uid(bot_uid)
+    if not bot:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    project = await service.project.get_by_uid(project_uid)
+    column = await service.project_column.get_by_uid(column_uid)
+    if not project or not column or column.project_id != project.id:
+        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+
+    result, _ = await service.project.is_assigned(bot, project)
+    if not result:
+        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+
+    schedules = await BotScheduleService.get_all_by_scope(bot, column, project, as_api=True, status=search.status)
+
+    return JsonResponse(content={"schedules": schedules, "project_column": column.api_response()})
 
 
 @AppRouter.schema(form=CreateBotCronTimeForm)

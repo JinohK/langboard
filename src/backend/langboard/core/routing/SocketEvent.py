@@ -52,7 +52,7 @@ class SocketEvent:
             role = Role(model_class)
 
             params = {}
-            topics = req.socket.get_topics()
+            topics = await req.socket.get_topics()
             for topic in topics:
                 if ":" in topic:
                     key, value = topic.split(":", maxsplit=1)

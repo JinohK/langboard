@@ -70,9 +70,9 @@ class ServiceHelper:
         table_ids_dict = ServiceHelper.combine_table_with_ids(references)
 
         cached_dict = {}
-        async with ServiceHelper.__use_db(db, readonly=True) as db:
+        async with ServiceHelper.__use_db(db, readonly=True) as target_db:
             for table_name, record_ids in table_ids_dict.items():
-                records = await ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids, db=db)
+                records = await ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids, db=target_db)
                 if not records:
                     continue
 
@@ -167,8 +167,8 @@ class ServiceHelper:
             query = query.where(model_class.column("deleted_at") == None)  # noqa
         if where_clauses:
             query = ServiceHelper.where_recursive(query, model_class, **where_clauses)
-        async with ServiceHelper.__use_db(readonly_db, readonly=True) as db:
-            result = await db.exec(query)
+        async with ServiceHelper.__use_db(readonly_db, readonly=True) as target_db:
+            result = await target_db.exec(query)
 
         max_order, count_all = result.first() or (None, None)
         if max_order is None or count_all is None:
@@ -185,15 +185,15 @@ class ServiceHelper:
             )
             if where_clauses:
                 query = ServiceHelper.where_recursive(query, model_class, **where_clauses)
-            async with ServiceHelper.__use_db(readonly_db, readonly=True) as db:
-                result = await db.exec(query)
+            async with ServiceHelper.__use_db(readonly_db, readonly=True) as target_db:
+                result = await target_db.exec(query)
             rows = result.all()
             i = 0
-            async with ServiceHelper.__use_db(db, readonly=False) as db:
+            async with ServiceHelper.__use_db(db, readonly=False) as target_db:
                 for row in rows:
                     row.order = i
-                    await db.update(row)
-                i += 1
+                    await target_db.update(row)
+                    i += 1
 
         return max_order
 
@@ -208,20 +208,23 @@ class ServiceHelper:
     ) -> _TBaseModel | None:
         if not is_none and value is None:
             return None
-        async with ServiceHelper.__use_db(db, readonly=True) as db:
-            result = await db.exec(
+        result = None
+        async with ServiceHelper.__use_db(db, readonly=True) as target_db:
+            result = await target_db.exec(
                 SqlBuilder.select.table(model_class, with_deleted=with_deleted)
                 .where(model_class.column(column) == value)
                 .limit(1)
             )
+        if not result:
+            return None
         return result.first()
 
     @staticmethod
     async def get_all(
         model_class: type[_TBaseModel], with_deleted: bool = False, db: DbSession | None = None
     ) -> Sequence[_TBaseModel]:
-        async with ServiceHelper.__use_db(db, readonly=True) as db:
-            result = await db.exec(SqlBuilder.select.table(model_class, with_deleted=with_deleted))
+        async with ServiceHelper.__use_db(db, readonly=True) as target_db:
+            result = await target_db.exec(SqlBuilder.select.table(model_class, with_deleted=with_deleted))
         return result.all()
 
     @staticmethod
@@ -253,15 +256,19 @@ class ServiceHelper:
         if not isinstance(values, list) and not isinstance(values, set):
             values = [values]
         sql_query = sql_query.where(model_class.column(column).in_(values))
-        async with ServiceHelper.__use_db(db, readonly=True) as db:
-            result = await db.exec(sql_query)
+        async with ServiceHelper.__use_db(db, readonly=True) as target_db:
+            result = await target_db.exec(sql_query)
         return result.all()
 
     @staticmethod
     @asynccontextmanager
     async def __use_db(db: DbSession | None, readonly: bool):
         if db is None:
-            async with DbSession.use(readonly=readonly) as db:
-                yield db
+            try:
+                async with DbSession.use(readonly=readonly) as db:
+                    yield db
+            except Exception:
+                if db:
+                    await db.close()
         else:
             yield db
