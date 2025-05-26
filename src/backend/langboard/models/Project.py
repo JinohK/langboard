@@ -5,7 +5,7 @@ from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
 
 
 class Project(SoftDeleteModel, table=True):
-    owner_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    owner_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     title: str = Field(nullable=False)
     description: str | None = Field(default=None, sa_type=TEXT)
     ai_description: str | None = Field(default=None, sa_type=TEXT)

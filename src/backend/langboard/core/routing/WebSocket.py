@@ -1,59 +1,40 @@
-from collections import deque
-from enum import Enum
-from typing import Any, Self, cast, overload
-from socketify import OpCode, SendStatus
-from socketify import WebSocket as SocketifyWebSocket
-from typing_extensions import deprecated
+from typing import Any, Literal, Self, cast, overload
+from fastapi import WebSocket as FastAPIWebSocket
+from ..db import User
 from .SocketResponse import SocketResponse
+from .SocketResponseCode import SocketResponseCode
 from .SocketTopic import SocketTopic
 
 
 class IWebSocketStream:
-    async def start(self, data: Any = None, compress: bool = False): ...
-    async def buffer(self, data: Any = None, compress: bool = False): ...
-    async def end(self, data: Any = None, compress: bool = False): ...
+    async def start(self, data: Any = None): ...
+    async def buffer(self, data: Any = None): ...
+    async def end(self, data: Any = None): ...
 
 
-class WebSocket(SocketifyWebSocket):
-    MAX_BACKPRESSURE = 16 * 1024 * 1024
-
-    def __init__(self, ws: SocketifyWebSocket, message_queue: deque):
-        for attr in ws.__dict__:
-            setattr(self, attr, ws.__dict__[attr])
+class WebSocket:
+    def __init__(self, ws: FastAPIWebSocket, user: User):
         self.__ws = ws
-        self.__message_queue = message_queue
+        self.__user = user
+        self.__subscriptions: dict[str, set[str]] = {}
 
     async def get_topics(self):
-        return self.__ws.get_topics()
+        return self.__subscriptions
 
-    async def subscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
-        if isinstance(topic, Enum):
-            topic = topic.value
-
-        for topic_id in topic_ids:
-            self.__ws.subscribe(f"{topic}:{topic_id}")
-        await self.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=cast(str, topic_ids)))
-
-    async def unsubscribe(self, topic: str | SocketTopic, topic_ids: list[str]):
-        if isinstance(topic, Enum):
-            topic = topic.value
-        for topic_id in topic_ids:
-            self.__ws.unsubscribe(f"{topic}:{topic_id}")
-        await self.send(event_response=SocketResponse(event="unsubscribed", topic=topic, topic_id=cast(str, topic_ids)))
+    def get_user(self) -> User:
+        return self.__user
 
     @overload
-    async def send(self, event_response: str, data: Any = None, compress: bool = False, fin: bool = True): ...
+    async def send(self, event_response: Literal["ping"]): ...
     @overload
-    async def send(
-        self, event_response: SocketResponse, data: None = None, compress: bool = False, fin: bool = True
-    ): ...
-    async def send(
-        self,
-        event_response: SocketResponse | str,
-        data: Any = None,
-        compress: bool = False,
-        fin: bool = True,
-    ) -> Self | SendStatus | None:
+    async def send(self, event_response: str, data: Any = None): ...
+    @overload
+    async def send(self, event_response: SocketResponse): ...
+    async def send(self, event_response: SocketResponse | str, data: Any = None) -> Self | None:
+        if event_response == "ping":
+            await self.__ws.send_text("")
+            return self
+
         if isinstance(event_response, str):
             response_model = SocketResponse(event=event_response, data=data)
         elif isinstance(event_response, SocketResponse):
@@ -61,40 +42,44 @@ class WebSocket(SocketifyWebSocket):
         else:
             return self
 
-        if self.has_backpressure():
-            self.__message_queue.append(response_model)
-            return self
+        await self.__ws.send_text(response_model.model_dump_json())
+        return self
 
-        result = self.__ws.send(response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress, fin=fin)
-        if result == SendStatus.BACKPRESSURE or result == SendStatus.DROPPED:
-            self.__message_queue.append(response_model)
-            return self
+    async def send_error(
+        self,
+        error_code: SocketResponseCode | int,
+        message: str,
+        should_close: bool = True,
+    ) -> None:
+        _error_code = error_code.value if isinstance(error_code, SocketResponseCode) else error_code
+        if should_close:
+            await self.__ws.send_json({"message": message, "code": _error_code})
+            await self.__ws.close(code=_error_code)
+            return
 
-        if isinstance(result, SocketifyWebSocket):
-            return self
-        return result
+        await self.send("error", {"message": message, "code": _error_code})
 
     def stream(self, event: str):
         class _WebSocketStream:
             def __init__(self, ws: WebSocket):
                 self.__ws = ws
 
-            async def start(self, data: Any = None, compress: bool = False):
-                await self.__send("start", data, compress=compress)
+            async def start(self, data: Any = None):
+                await self.__send("start", data)
                 return self
 
-            async def buffer(self, data: Any = None, compress: bool = False):
-                await self.__send("buffer", data, compress=compress)
+            async def buffer(self, data: Any = None):
+                await self.__send("buffer", data)
                 return self
 
-            async def end(self, data: Any = None, compress: bool = False):
-                await self.__send("end", data, compress=compress)
+            async def end(self, data: Any = None):
+                await self.__send("end", data)
                 self.__ws = None
 
-            async def __send(self, event_response: str, data: Any = None, compress: bool = False):
+            async def __send(self, event_response: str, data: Any = None):
                 if not self.__ws:
                     return
-                await self.__ws.send(f"{event}:{event_response}", data, compress=compress)
+                await self.__ws.send(f"{event}:{event_response}", data)
 
         return cast(IWebSocketStream, _WebSocketStream(self))
 
@@ -105,19 +90,19 @@ class WebSocket(SocketifyWebSocket):
                 self.__topic = topic if isinstance(topic, str) else topic.value
                 self.__topic_id = topic_id
 
-            async def start(self, data: Any = None, compress: bool = False):
-                await self.__send("start", data, compress=compress)
+            async def start(self, data: Any = None):
+                await self.__send("start", data)
                 return self
 
-            async def buffer(self, data: Any = None, compress: bool = False):
-                await self.__send("buffer", data, compress=compress)
+            async def buffer(self, data: Any = None):
+                await self.__send("buffer", data)
                 return self
 
-            async def end(self, data: Any = None, compress: bool = False):
-                await self.__send("end", data, compress=compress)
+            async def end(self, data: Any = None):
+                await self.__send("end", data)
                 self.__ws = None
 
-            async def __send(self, event_response: str, data: Any = None, compress: bool = False):
+            async def __send(self, event_response: str, data: Any = None):
                 if not self.__ws:
                     return
                 await self.__ws.send(
@@ -127,42 +112,6 @@ class WebSocket(SocketifyWebSocket):
                         topic_id=self.__topic_id,
                         data=data,
                     ),
-                    compress=compress,
                 )
 
         return cast(IWebSocketStream, _WebSocketStream(self, topic, topic_id))
-
-    def has_backpressure(self) -> bool:
-        return self.__ws.get_buffered_amount() >= self.MAX_BACKPRESSURE
-
-    @deprecated(
-        """
-        🚨 Do not use this method. Use `await AppRouter.publish` instead.
-        """
-    )
-    async def publish(
-        self,
-        topic: SocketTopic | str,
-        topic_id: str,
-        event_response: SocketResponse | str,
-        data: Any = None,
-        compress: bool = False,
-    ) -> bool:
-        if isinstance(event_response, str):
-            response_model = SocketResponse(event=event_response, data=data)
-        elif isinstance(event_response, SocketResponse):
-            response_model = event_response
-        else:
-            return False
-
-        if isinstance(topic, Enum):
-            topic = topic.value
-
-        response_model.topic = topic
-        response_model.topic_id = topic_id
-
-        socket_topic = f"{topic}:{topic_id}"
-
-        return self.__ws.publish(
-            topic=socket_topic, message=response_model.model_dump_json(), opcode=OpCode.TEXT, compress=compress
-        )

@@ -5,7 +5,7 @@ from .Card import Card
 
 
 class CardMetadata(BaseMetadataModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

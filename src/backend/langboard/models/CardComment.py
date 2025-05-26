@@ -6,9 +6,9 @@ from .Card import Card
 
 
 class CardComment(SoftDeleteModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
-    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User, nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot, nullable=True)
     content: EditorContentModel = Field(default=EditorContentModel(), sa_type=ModelColumnType(EditorContentModel))
 
     @staticmethod

@@ -17,23 +17,23 @@ async def card_relationship_updated(
     is_parent: bool,
 ):
     helper = ActivityTaskHelper(ProjectActivity)
-    removed_relationships, added_relationships = await helper.get_updated_card_relationships(
+    removed_relationships, added_relationships = helper.get_updated_card_relationships(
         old_relationship_ids, new_relationship_ids, is_parent
     )
     if not removed_relationships and not added_relationships:
         return
 
     activity_history = {
-        **await helper.create_project_default_history(project, card),
+        **helper.create_project_default_history(project, card),
         "removed_relationships": removed_relationships,
         "added_relationships": added_relationships,
     }
-    activity = await helper.record(
+    activity = helper.record(
         user_or_bot,
         activity_history,
         **_get_activity_params(ProjectActivityType.CardRelationshipsUpdated, project, card),
     )
-    await record_project_activity(user_or_bot, activity)
+    record_project_activity(user_or_bot, activity)
 
 
 def _get_activity_params(activity_type: ProjectActivityType, project: Project, card: Card):

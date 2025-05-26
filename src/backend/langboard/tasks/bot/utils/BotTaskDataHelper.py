@@ -13,12 +13,15 @@ class BotTaskDataHelper:
         return {"project_uid": project.get_uid(), "executor": BotTaskDataHelper.create_user_or_bot(user_or_bot)}
 
     @staticmethod
-    async def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
-        async with DbSession.use(readonly=True) as db:
-            column = await db.exec(
+    def create_card(user_or_bot: User | Bot, project: Project, card: Card) -> dict[str, Any]:
+        column = None
+        with DbSession.use(readonly=True) as db:
+            column = db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
             )
-        column = cast(ProjectColumn, column.first())
+            column = cast(ProjectColumn, column.first())
+        if not column:
+            raise ValueError(f"Column with ID {card.project_column_id} not found in project {project.id}")
         return {
             **BotTaskDataHelper.create_project(user_or_bot, project),
             "project_column_uid": column.get_uid(),
@@ -33,21 +36,22 @@ class BotTaskDataHelper:
         return response
 
     @staticmethod
-    async def create_private_wiki(
+    def create_private_wiki(
         runner_bot: Bot,
         user_or_bot: User | Bot,
         project: Project,
         wiki: ProjectWiki,
         other_data: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        is_assigned = False
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(ProjectWikiAssignedBot).where(
                     (ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
                     & (ProjectWikiAssignedBot.column("bot_id") == runner_bot.id)
                 )
             )
-        is_assigned = bool(result.first())
+            is_assigned = bool(result.first())
         if not is_assigned:
             return None
         return {
@@ -97,12 +101,14 @@ class BotTaskDataHelper:
         return {"oneOf": {"User": User.api_schema(), "Bot": Bot.api_schema()}}
 
     @staticmethod
-    async def get_updated_assigned_bots(old_bot_ids: list[int], new_bot_ids: list[int]):
+    def get_updated_assigned_bots(old_bot_ids: list[int], new_bot_ids: list[int]):
         first_time_assigned: list[int] = []
         for bot_id in new_bot_ids:
             if bot_id not in old_bot_ids:
                 first_time_assigned.append(bot_id)
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(first_time_assigned)))
-        return list(result.all())
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(first_time_assigned)))
+            records = result.all()
+        return records

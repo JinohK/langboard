@@ -23,7 +23,7 @@ class UserGroupService(BaseService):
         if not user.id:
             return []
 
-        raw_groups = await ServiceHelper.get_all_by(UserGroup, "user_id", user.id)
+        raw_groups = ServiceHelper.get_all_by(UserGroup, "user_id", user.id)
         groups = []
         for group in raw_groups:
             records = await self.get_user_emails_by_group(group, as_api=cast(Literal[False], as_api))
@@ -46,12 +46,13 @@ class UserGroupService(BaseService):
     async def get_user_emails_by_group(
         self, user_group: TUserGroupParam, as_api: bool
     ) -> list[tuple[UserGroupAssignedEmail, User | None]] | list[dict[str, Any]]:
-        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
+        user_group = ServiceHelper.get_by_param(UserGroup, user_group)
         if not user_group:
             return []
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(UserGroupAssignedEmail, User)
                 .outerjoin(
                     UserEmail,
@@ -69,7 +70,7 @@ class UserGroupService(BaseService):
                     UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"), User.column("id")
                 )
             )
-        records = result.all()
+            records = result.all()
         if not as_api:
             return list(records)
 
@@ -82,78 +83,81 @@ class UserGroupService(BaseService):
         return users
 
     async def create(self, user: User, name: str, emails: list[str] | None = None) -> UserGroup:
-        max_order = await ServiceHelper.get_max_order(UserGroup, "user_id", user.id)
+        max_order = ServiceHelper.get_max_order(UserGroup, "user_id", user.id)
         emails = emails or []
         user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(user_group)
+        with DbSession.use(readonly=False) as db:
+            db.insert(user_group)
 
-            for email in set(emails):
-                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                await db.insert(assigned_email)
+        for email in set(emails):
+            assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+            with DbSession.use(readonly=False) as db:
+                db.insert(assigned_email)
 
         return user_group
 
     async def change_name(self, user: User, user_group: TUserGroupParam, name: str) -> bool:
-        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
+        user_group = ServiceHelper.get_by_param(UserGroup, user_group)
         if not user_group or user_group.user_id != user.id:
             return False
 
         user_group.name = name
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user_group)
+        with DbSession.use(readonly=False) as db:
+            db.update(user_group)
 
         return True
 
     async def update_assigned_emails(self, user: User, user_group: TUserGroupParam, emails: list[str]) -> bool:
-        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
+        user_group = ServiceHelper.get_by_param(UserGroup, user_group)
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
 
-            app_users = await ServiceHelper.get_all_by(User, "email", emails)
-            app_user_subemails = await ServiceHelper.get_all_by(UserEmail, "email", emails)
-            unique_app_user_emails_map = {}
-            appended_emails = []
-            for app_user in app_users:
-                appended_emails.append(app_user.email)
-                unique_app_user_emails_map[app_user.id] = app_user.email
-            for app_user_subemail in app_user_subemails:
-                appended_emails.append(app_user_subemail.email)
-                if app_user_subemail.user_id in unique_app_user_emails_map:
-                    continue
-                unique_app_user_emails_map[app_user_subemail.user_id] = app_user_subemail.email
+        app_users = ServiceHelper.get_all_by(User, "email", emails)
+        app_user_subemails = ServiceHelper.get_all_by(UserEmail, "email", emails)
+        unique_app_user_emails_map = {}
+        appended_emails = []
+        for app_user in app_users:
+            appended_emails.append(app_user.email)
+            unique_app_user_emails_map[app_user.id] = app_user.email
+        for app_user_subemail in app_user_subemails:
+            appended_emails.append(app_user_subemail.email)
+            if app_user_subemail.user_id in unique_app_user_emails_map:
+                continue
+            unique_app_user_emails_map[app_user_subemail.user_id] = app_user_subemail.email
 
-            unique_app_user_emails = set(unique_app_user_emails_map.values())
-            none_user_emails = [email for email in emails if email not in appended_emails]
-            all_emails = unique_app_user_emails.union(none_user_emails)
+        unique_app_user_emails = set(unique_app_user_emails_map.values())
+        none_user_emails = [email for email in emails if email not in appended_emails]
+        all_emails = unique_app_user_emails.union(none_user_emails)
 
-            for email in all_emails:
-                assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
-                await db.insert(assigned_email)
+        for email in all_emails:
+            assigned_email = UserGroupAssignedEmail(group_id=user_group.id, email=email)
+            with DbSession.use(readonly=False) as db:
+                db.insert(assigned_email)
 
         return True
 
     async def delete(self, user: User, user_group: TUserGroupParam) -> bool:
-        user_group = cast(UserGroup, await ServiceHelper.get_by_param(UserGroup, user_group))
+        user_group = ServiceHelper.get_by_param(UserGroup, user_group)
         if not user_group or user_group.user_id != user.id:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(UserGroupAssignedEmail).where(
                     UserGroupAssignedEmail.column("group_id") == user_group.id
                 )
             )
 
-            await db.delete(user_group)
+        with DbSession.use(readonly=False) as db:
+            db.delete(user_group)
 
         return True

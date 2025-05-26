@@ -22,12 +22,11 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
         FilterMiddleware.__init__(self, app, routes, AuthFilter)
 
     async def __call__(self, scope, receive, send) -> None:
-        if scope["type"] != "http":
+        if scope["type"] != "http" or scope.get("is_batch", False):
             await self.app(scope, receive, send)
             return
 
         should_filter, _ = self.should_filter(scope)
-
         if should_filter:
             headers = Headers(scope=scope)
 

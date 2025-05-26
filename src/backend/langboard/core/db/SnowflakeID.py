@@ -1,3 +1,4 @@
+from random import getrandbits
 from threading import Lock
 from time import time
 from typing import Any
@@ -29,7 +30,7 @@ class SnowflakeID(int):
 
             cls._last_timestamp = current_timestamp
 
-            snowflake_value = ((current_timestamp - SnowflakeID.EPOCH) << 22) | (machine_id << 10) | cls._sequence
+            snowflake_value = ((current_timestamp - SnowflakeID.EPOCH) << 22) | (machine_id << 12) | getrandbits(20)
 
         return super().__new__(cls, snowflake_value)
 

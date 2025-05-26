@@ -1,6 +1,5 @@
-from typing import cast
+from typing import Any, cast
 from pydantic import Field
-from socketify import AppOptions
 from ....Constants import IS_EXECUTABLE
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from ..WebSocketOptions import WebSocketOptions
@@ -66,14 +65,14 @@ class RunCommandOptions(BaseCommandOptions):
             close_on_backpressure_limit=self.ws_close_on_backpressure_limit,
         )
 
-    def create_ssl_options(self) -> AppOptions:
-        return AppOptions(
-            key_file_name=self.ssl_keyfile,
-            cert_file_name=self.ssl_certfile,
-            passphrase=self.ssl_keyfile_pass,
-            ca_file_name=self.ssl_ca_certs,
-            ssl_ciphers=self.ssl_ciphers,
-        )
+    def create_ssl_options(self) -> Any:
+        return {
+            "ssl_keyfile": self.ssl_keyfile,
+            "ssl_certfile": self.ssl_certfile,
+            "ssl_keyfile_pass": self.ssl_keyfile_pass,
+            "ssl_ca_certs": self.ssl_ca_certs,
+            "ssl_ciphers": self.ssl_ciphers,
+        }
 
 
 class RunCommand(BaseCommand):

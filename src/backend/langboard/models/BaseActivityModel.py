@@ -6,8 +6,8 @@ from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 
 
 class BaseActivityModel(BaseSqlModel):
-    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User, nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot, nullable=True)
     activity_history: dict[str, Any] = Field(default={}, sa_type=JSON)
 
     @staticmethod

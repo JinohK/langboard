@@ -8,16 +8,22 @@ import TypeUtils from "@/core/utils/TypeUtils";
 interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
     smooth?: bool;
     scrollToBottomRef?: React.RefObject<() => void>;
+    isAtBottomRef?: React.RefObject<bool>;
 }
 
 const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
-    ({ className, children, smooth = false, scrollToBottomRef, ...props }, ref) => {
+    ({ className, children, smooth = false, scrollToBottomRef, isAtBottomRef, ...props }, ref) => {
         const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll } = useAutoScroll({
             smooth,
             content: children,
         });
+
         if (scrollToBottomRef) {
             scrollToBottomRef.current = scrollToBottom;
+        }
+
+        if (isAtBottomRef) {
+            isAtBottomRef.current = isAtBottom;
         }
 
         return (

@@ -13,9 +13,9 @@ class CheckitemStatus(Enum):
 
 
 class Checkitem(SoftDeleteModel, table=True):
-    checklist_id: SnowflakeID = SnowflakeIDField(foreign_key=Checklist.expr("id"), nullable=False, index=True)
-    cardified_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
-    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True, index=True)
+    checklist_id: SnowflakeID = SnowflakeIDField(foreign_key=Checklist, nullable=False, index=True)
+    cardified_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card, nullable=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User, nullable=True, index=True)
     title: str = Field(nullable=False)
     status: CheckitemStatus = Field(default=CheckitemStatus.Stopped, nullable=False)
     order: int = Field(default=0, nullable=False)

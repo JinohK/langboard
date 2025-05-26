@@ -86,8 +86,7 @@ class Auth:
         elif where == "socket":
 
             async def get_user_or_bot(req: SocketRequest) -> User | None:
-                user = await Auth.get_user_by_id(req.from_app["auth_user_id"])
-                return user  # type: ignore
+                return req.socket.get_user()
 
         else:
             raise ValueError("Auth.scope must be called with either 'api' or 'socket'")
@@ -142,9 +141,10 @@ class Auth:
             return cached_user
 
         try:
-            async with DbSession.use(readonly=True) as db:
-                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
-            user = result.first()
+            user = None
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
+                user = result.first()
             if not user:
                 return InvalidTokenError("Invalid token")
 
@@ -173,11 +173,10 @@ class Auth:
             return cached_bot
 
         try:
-            async with DbSession.use(readonly=True) as db:
-                result = await db.exec(
-                    SqlBuilder.select.table(Bot).where(Bot.column("app_api_token") == api_token).limit(1)
-                )
-            bot = result.first()
+            bot = None
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(Bot).where(Bot.column("app_api_token") == api_token).limit(1))
+                bot = result.first()
             if not bot:
                 return None
 
@@ -280,9 +279,10 @@ class Auth:
 
         try:
             user_id = SnowflakeID.from_short_code(user_uid)
-            async with DbSession.use(readonly=True) as db:
-                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
-            user = result.first()
+            user = None
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
+                user = result.first()
             if not user:
                 return status.HTTP_401_UNAUTHORIZED
         except Exception:

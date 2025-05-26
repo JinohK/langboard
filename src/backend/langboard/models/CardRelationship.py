@@ -6,10 +6,10 @@ from .GlobalCardRelationshipType import GlobalCardRelationshipType
 
 class CardRelationship(BaseSqlModel, table=True):
     relationship_type_id: SnowflakeID = SnowflakeIDField(
-        foreign_key=GlobalCardRelationshipType.expr("id"), nullable=False, index=True
+        foreign_key=GlobalCardRelationshipType, nullable=False, index=True
     )
-    card_id_parent: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
-    card_id_child: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    card_id_parent: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
+    card_id_child: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

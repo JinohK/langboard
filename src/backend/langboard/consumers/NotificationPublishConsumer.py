@@ -37,8 +37,8 @@ async def web_notification_publish(model: NotificationPublishModel):
         record_list=record_list,
     )
 
-    async with DbSession.use(readonly=False) as db:
-        await db.insert(notification)
+    with DbSession.use(readonly=False) as db:
+        db.insert(notification)
 
     api_notification = await service.notification.convert_to_api_response(notification)
     NotificationPublisher.notified(model.target_user, api_notification)

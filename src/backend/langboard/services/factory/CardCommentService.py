@@ -1,4 +1,4 @@
-from typing import Any, cast, overload
+from typing import Any
 from ...core.ai import Bot
 from ...core.db import DbSession, EditorContentModel, SqlBuilder, User
 from ...core.service import BaseService, ServiceHelper
@@ -18,14 +18,15 @@ class CardCommentService(BaseService):
         return "card_comment"
 
     async def get_by_uid(self, uid: str) -> CardComment | None:
-        return await ServiceHelper.get_by_param(CardComment, uid)
+        return ServiceHelper.get_by_param(CardComment, uid)
 
     async def get_board_list(self, card: TCardParam) -> list[dict[str, Any]]:
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_comments = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(CardComment, User, Bot, with_deleted=True)
                 .outerjoin(User, CardComment.column("user_id") == User.column("id"))
                 .outerjoin(Bot, CardComment.column("bot_id") == Bot.column("id"))
@@ -35,7 +36,7 @@ class CardCommentService(BaseService):
                     CardComment.column("id"), CardComment.column("created_at"), User.column("id"), Bot.column("id")
                 )
             )
-        raw_comments = result.all()
+            raw_comments = result.all()
 
         reaction_service = self._get_service(ReactionService)
         reactions = await reaction_service.get_all(CardCommentReaction, [comment.id for comment, _, _ in raw_comments])
@@ -61,10 +62,10 @@ class CardCommentService(BaseService):
         card: TCardParam,
         content: EditorContentModel | dict[str, Any],
     ) -> CardComment | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
-        project, card, _ = params
+        project, card = params
 
         if isinstance(content, dict):
             content = EditorContentModel(**content)
@@ -80,8 +81,8 @@ class CardCommentService(BaseService):
             comment_params["bot_id"] = user_or_bot.id
 
         comment = CardComment(**comment_params)
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(comment)
+        with DbSession.use(readonly=False) as db:
+            db.insert(comment)
 
         CardCommentPublisher.created(user_or_bot, project, card, comment)
 
@@ -101,7 +102,9 @@ class CardCommentService(BaseService):
         comment: TCommentParam,
         content: EditorContentModel | dict[str, Any],
     ) -> CardComment | None:
-        params = await self.__get_records_by_params(project, card, comment)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (CardComment, comment)
+        )
         if not params:
             return None
         project, card, comment = params
@@ -111,8 +114,8 @@ class CardCommentService(BaseService):
 
         old_content = comment.content
         comment.content = content
-        async with DbSession.use(readonly=False) as db:
-            await db.update(comment)
+        with DbSession.use(readonly=False) as db:
+            db.update(comment)
 
         CardCommentPublisher.updated(project, card, comment)
 
@@ -131,13 +134,15 @@ class CardCommentService(BaseService):
         card: TCardParam,
         comment: TCommentParam,
     ) -> CardComment | None:
-        params = await self.__get_records_by_params(project, card, comment)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (CardComment, comment)
+        )
         if not params:
             return None
         project, card, comment = params
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(comment)
+        with DbSession.use(readonly=False) as db:
+            db.delete(comment)
 
         CardCommentPublisher.deleted(project, card, comment)
         CardCommentActivityTask.card_comment_deleted(user_or_bot, project, card, comment)
@@ -153,7 +158,9 @@ class CardCommentService(BaseService):
         comment: TCommentParam,
         reaction: str,
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, comment)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (CardComment, comment)
+        )
         if not params:
             return None
         project, card, comment = params
@@ -175,28 +182,3 @@ class CardCommentService(BaseService):
             CardCommentBotTask.card_comment_unreacted(user_or_bot, project, card, comment, reaction)
 
         return is_reacted
-
-    @overload
-    async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam
-    ) -> tuple[Project, Card, None] | None: ...
-    @overload
-    async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam, comment: TCommentParam
-    ) -> tuple[Project, Card, CardComment] | None: ...
-    async def __get_records_by_params(  # type: ignore
-        self, project: TProjectParam, card: TCardParam, comment: TCommentParam | None = None
-    ):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
-        if not card or not project or card.project_id != project.id:
-            return None
-
-        if comment:
-            comment = cast(CardComment, await ServiceHelper.get_by_param(CardComment, comment))
-            if not comment or comment.card_id != card.id:
-                return None
-        else:
-            comment = None
-
-        return project, card, comment

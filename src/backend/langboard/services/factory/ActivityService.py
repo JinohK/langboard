@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal, TypeVar, cast, overload
+from typing import Any, Literal, TypeVar, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder, User
@@ -31,9 +31,11 @@ class ActivityService(BaseService):
     async def get_list_by_user(
         self, user: TUserParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
     ) -> tuple[list[dict[str, Any]], int, User] | int | None:
-        user = cast(User, await ServiceHelper.get_by_param(User, user))
+        user = ServiceHelper.get_by_param(User, user)
         if not user:
-            return []
+            if only_count:
+                return 0
+            return None
 
         if only_count:
             return await self.__count_new_records(UserActivity, refer_time, user_id=user.id)
@@ -77,12 +79,12 @@ class ActivityService(BaseService):
         refer_time: datetime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, User | Bot] | int | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        assignee = cast(User, await ServiceHelper.get_by_param(User, assignee))
+        project = ServiceHelper.get_by_param(Project, project)
+        assignee = ServiceHelper.get_by_param(User, assignee)
         if not assignee:
-            assignee = cast(Bot, await ServiceHelper.get_by_param(Bot, assignee))
-            if not assignee:
-                return None
+            assignee = ServiceHelper.get_by_param(Bot, assignee)
+        if not assignee:
+            return None
 
         if not project or not assignee:
             return None
@@ -130,7 +132,7 @@ class ActivityService(BaseService):
     async def get_list_by_project(
         self, project: TProjectParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
     ) -> tuple[list[dict[str, Any]], int, Project] | int | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
@@ -163,10 +165,10 @@ class ActivityService(BaseService):
         refer_time: datetime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | int | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
-        if not project or not card or card.project_id != project.id:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
+        if not params:
             return None
+        project, card = params
 
         if only_count:
             return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id, card_id=card.id)
@@ -197,10 +199,10 @@ class ActivityService(BaseService):
         refer_time: datetime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | int | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
-        if not project or not wiki or wiki.project_id != project.id:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
+        if not params:
             return None
+        project, wiki = params
 
         if only_count:
             return await self.__count_new_records(
@@ -213,7 +215,7 @@ class ActivityService(BaseService):
         return [activity.api_response() for activity in activities], count_new_records, project, wiki
 
     async def __get_cached_references(self, activities: list[UserActivity]):
-        refer_activities = await ServiceHelper.get_references(
+        refer_activities = ServiceHelper.get_references(
             [
                 (activity.refer_activity_table, activity.refer_activity_id)
                 for activity in activities
@@ -231,7 +233,7 @@ class ActivityService(BaseService):
                 refer_activity_reference_ids.append((Project.__tablename__, refer_activity.project_id))
                 refer_activity_reference_ids.append((ProjectWiki.__tablename__, refer_activity.project_wiki_id))
 
-        cached_references = await ServiceHelper.get_references(refer_activity_reference_ids, as_type="raw")
+        cached_references = ServiceHelper.get_references(refer_activity_reference_ids, as_type="raw")
         references = {}
         for activity in activities:
             if not activity.refer_activity_id or not activity.refer_activity_table:
@@ -284,13 +286,14 @@ class ActivityService(BaseService):
         list_query = self.__make_query(list_query, activity_class, **where_clauses)
         list_query = list_query.where(activity_class.column("created_at") <= refer_time)
         list_query = ServiceHelper.paginate(list_query, pagination.page, pagination.limit)
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(list_query)
-        result_list = result.all()
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(list_query)
+            records = result.all()
 
         count_new_records = await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
 
-        return list(result_list), count_new_records
+        return records, count_new_records
 
     async def __count_new_records(
         self,
@@ -303,9 +306,11 @@ class ActivityService(BaseService):
             outdated_query = SqlBuilder.select.count(activity_class, activity_class.column("id"))
         outdated_query = self.__make_query(outdated_query, activity_class, **where_clauses)
         outdated_query = outdated_query.where(activity_class.column("created_at") > refer_time)
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(outdated_query)
-        return result.first() or 0
+        record = 0
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(outdated_query)
+            record = result.first() or 0
+        return record
 
     @overload
     def __make_query(

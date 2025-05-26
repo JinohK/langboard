@@ -5,7 +5,7 @@ from .ProjectWiki import ProjectWiki
 
 
 class ProjectWikiMetadata(BaseMetadataModel, table=True):
-    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), index=True)
+    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki, index=True)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

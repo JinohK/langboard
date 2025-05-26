@@ -18,19 +18,19 @@ from ...models import (
 
 
 TUserOrBot = User | Bot
-TProjectParam = Project | int | str
-TColumnParam = ProjectColumn | int | str
-TCardParam = Card | int | str
-TAttachmentParam = CardAttachment | int | str
-TCommentParam = CardComment | int | str
-TChecklistParam = Checklist | int | str
-TCheckitemParam = Checkitem | int | str
-TWikiParam = ProjectWiki | int | str
-TUserParam = User | int | str
-TUserGroupParam = UserGroup | int | str
-TProjectLabelParam = ProjectLabel | int | str
-TBotParam = Bot | int | str
-TSettingParam = AppSetting | int | str
-TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str
-TNotificationParam = UserNotification | int | str
-TBotScheduleParam = BotSchedule | int | str
+TProjectParam = Project | int | str | None
+TColumnParam = ProjectColumn | int | str | None
+TCardParam = Card | int | str | None
+TAttachmentParam = CardAttachment | int | str | None
+TCommentParam = CardComment | int | str | None
+TChecklistParam = Checklist | int | str | None
+TCheckitemParam = Checkitem | int | str | None
+TWikiParam = ProjectWiki | int | str | None
+TUserParam = User | int | str | None
+TUserGroupParam = UserGroup | int | str | None
+TProjectLabelParam = ProjectLabel | int | str | None
+TBotParam = Bot | int | str | None
+TSettingParam = AppSetting | int | str | None
+TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str | None
+TNotificationParam = UserNotification | int | str | None
+TBotScheduleParam = BotSchedule | int | str | None

@@ -32,9 +32,9 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return []
 
-        metadata_list = await ServiceHelper.get_all_by(model, foreign_key, foreign_model.id)
+        metadata_list = ServiceHelper.get_all_by(model, foreign_key, foreign_model.id)
         if not as_api:
-            return list(metadata_list)
+            return metadata_list
 
         if not as_dict:
             return [metadata.api_schema() for metadata in metadata_list]
@@ -59,13 +59,14 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return None
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        metadata = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key") == key)
                 )
             )
-        metadata = result.first()
+            metadata = result.first()
 
         if not as_api:
             return metadata
@@ -79,15 +80,16 @@ class MetadataService(BaseService):
         if foreign_key not in model.model_fields:
             return None
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        metadata = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key") == (old_key or key))
                 )
             )
-        metadata = result.first()
+            metadata = result.first()
 
-        async with DbSession.use(readonly=False) as db:
+        with DbSession.use(readonly=False) as db:
             if not metadata:
                 params: dict[str, Any] = {
                     "key": key,
@@ -95,11 +97,11 @@ class MetadataService(BaseService):
                 }
                 params[foreign_key] = foreign_model.id
                 metadata = model(**params)
-                await db.insert(metadata)
+                db.insert(metadata)
             else:
                 metadata.key = key
                 metadata.value = value
-                await db.update(metadata)
+                db.update(metadata)
 
         return metadata
 
@@ -111,8 +113,8 @@ class MetadataService(BaseService):
         if isinstance(keys, str):
             keys = [keys]
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(model).where(
                     (model.column(foreign_key) == foreign_model.id) & (model.column("key").in_(keys))
                 )

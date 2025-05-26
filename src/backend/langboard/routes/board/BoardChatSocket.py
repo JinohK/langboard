@@ -3,7 +3,6 @@ from ...core.ai import BotRunner, InternalBotType
 from ...core.caching import Cache
 from ...core.db import ChatContentModel, User
 from ...core.filter import RoleFilter
-from ...core.logger import Logger
 from ...core.routing import AppRouter, IWebSocketStream, SocketResponse, SocketTopic, WebSocket
 from ...core.security import Auth
 from ...core.utils.String import concat
@@ -107,7 +106,7 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, servi
                 is_received = True
                 new_content.content = concat(new_content.content, chunk)
                 if last_content != new_content.content:
-                    await ws_stream.buffer(data={"uid": ai_message_uid, "message": new_content.model_dump()})
+                    await ws_stream.buffer(data={"uid": ai_message_uid, "chunk": chunk})
                     last_content = new_content.content
 
             ai_message.message = new_content
@@ -121,8 +120,7 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, servi
 
         await service.chat_history.update(ai_message)
         await ws_stream.end(data={"uid": ai_message_uid, "status": "success"})
-    except Exception as e:
-        Logger.main.exception(e)
+    except Exception:
         await ws_stream.end(data={"uid": ai_message_uid, "status": "failed"})
 
 

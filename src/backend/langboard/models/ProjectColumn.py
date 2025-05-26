@@ -6,7 +6,7 @@ from .Project import Project
 
 class ProjectColumn(SoftDeleteModel, table=True):
     DEFAULT_ARCHIVE_COLUMN_NAME: ClassVar[str] = "Archive"
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
     name: str = Field(nullable=False)
     order: int = Field(default=1, nullable=False)
     is_archive: bool = Field(default=False, nullable=False)

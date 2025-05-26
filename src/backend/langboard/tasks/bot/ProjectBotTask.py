@@ -8,8 +8,8 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 @BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectUpdated)
 @Broker.wrap_async_task_decorator
 async def project_updated(user_or_bot: User | Bot, project: Project):
-    bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectUpdated)
-    await BotTaskHelper.run(
+    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectUpdated)
+    BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectUpdated, BotTaskDataHelper.create_project(user_or_bot, project), project
     )
 
@@ -17,7 +17,7 @@ async def project_updated(user_or_bot: User | Bot, project: Project):
 @BotTaskDataHelper.project_schema(BotTriggerCondition.ProjectDeleted)
 @Broker.wrap_async_task_decorator
 async def project_deleted(user: User, project: Project):
-    bots = await BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectDeleted)
-    await BotTaskHelper.run(
+    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectDeleted)
+    BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectDeleted, BotTaskDataHelper.create_project(user, project), project
     )

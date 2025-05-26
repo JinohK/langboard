@@ -9,7 +9,7 @@ from .Project import Project
 
 
 class ProjectInvitation(BaseSqlModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
     email: str = Field(nullable=False)
     token: str = Field(nullable=False)
 

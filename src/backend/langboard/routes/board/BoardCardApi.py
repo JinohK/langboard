@@ -227,6 +227,8 @@ async def change_card_details(
         elif key == "deadline_at":
             if value:
                 value = datetime.fromisoformat(value)
+                if value.tzinfo is None:
+                    value = value.replace(tzinfo=datetime.now().astimezone().tzinfo)
             else:
                 value = None
         form_dict[key] = value

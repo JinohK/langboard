@@ -6,6 +6,7 @@ import ESocketStatus from "@/core/helpers/ESocketStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
 import useSocketStore, {
     getTopicWithId,
+    ISocketCreateSocketProps,
     ISocketEvent,
     ISocketStore,
     TEventName,
@@ -72,6 +73,7 @@ export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = 
     start: ISocketEvent<TStartResponse>;
     buffer: ISocketEvent<TBufferResponse>;
     end: ISocketEvent<TEndResponse>;
+    error: ISocketCreateSocketProps<unknown>["onError"];
 }
 
 export interface ISocketContext {
@@ -114,6 +116,8 @@ const initialContext = {
 };
 
 const SocketContext = createContext<ISocketContext>(initialContext);
+
+const streamErrorCallbacks: Partial<Record<ESocketTopic, Record<string, IStreamCallbackMap["error"]>>> = {};
 
 const createSharedSocketHandlers = () => {
     const {
@@ -162,6 +166,15 @@ const createSharedSocketHandlers = () => {
             event: `${props.event}:end`,
             callback: callbacks.end,
         });
+
+        const topic = props.topic ?? ESocketTopic.None;
+        if (!streamErrorCallbacks[topic]) {
+            streamErrorCallbacks[topic] = {};
+        }
+
+        if (!streamErrorCallbacks[topic][props.event]) {
+            streamErrorCallbacks[topic][props.event] = callbacks.error;
+        }
     };
 
     const streamOff: ISocketContext["streamOff"] = (props) => {
@@ -183,6 +196,11 @@ const createSharedSocketHandlers = () => {
             event: `${props.event}:end`,
             callback: props.callbacks.end,
         });
+
+        const topic = props.topic ?? ESocketTopic.None;
+        if (streamErrorCallbacks[topic]?.[props.event]) {
+            delete streamErrorCallbacks[topic]![props.event];
+        }
     };
 
     const send = (props: TSocketSendProps) => {
@@ -260,6 +278,17 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                 });
             },
             onError: async (event) => {
+                const errorCallbacks = Object.entries(streamErrorCallbacks);
+                for (let i = 0; i < errorCallbacks.length; ++i) {
+                    const [topic, callbacks] = errorCallbacks[i];
+                    const events = Object.entries(callbacks!);
+                    for (let j = 0; j < events.length; ++j) {
+                        const callback = callbacks![events[j][0]];
+                        await callback(event);
+                    }
+                    delete streamErrorCallbacks[topic];
+                }
+
                 await runEvents({
                     eventName: "error",
                     data: event,

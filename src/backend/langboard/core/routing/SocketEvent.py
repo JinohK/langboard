@@ -58,8 +58,8 @@ class SocketEvent:
                     key, value = topic.split(":", maxsplit=1)
                     params[f"{key}_id"] = value
 
-            is_authorized = await role.is_authorized(req.from_app["auth_user_id"], params, actions, role_finder, False)
-            if not is_authorized:
+            is_authorized = await role.is_authorized(req.socket.get_user().id, params, actions, role_finder, False)
+            if not is_authorized and not req.socket.get_user().is_admin:
                 return SocketStatusCodeException(code=SocketResponseCode.WS_3003_FORBIDDEN, message="Forbidden")
 
         try:

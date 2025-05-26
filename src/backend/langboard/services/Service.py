@@ -16,8 +16,8 @@ class Service(ServiceFactory):
 
         return Depends(create_factory)
 
-    @contextmanager
     @staticmethod
+    @contextmanager
     def use():
         service = Service()
         yield service

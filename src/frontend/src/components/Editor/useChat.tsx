@@ -8,6 +8,7 @@ import { ISocketContext } from "@/core/providers/SocketProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useChat as useBaseChat } from "@ai-sdk/react";
 import { generateToken } from "@/core/utils/StringUtils";
+import useSocketStreamHandler from "@/core/hooks/useSocketStreamHandler";
 
 export interface IUseChat {
     socket: ISocketContext;
@@ -88,7 +89,43 @@ const createStream = ({ socket, eventKey, events, signal, key, send }: ICreateSt
         async start(controller) {
             const stream = new Promise((resolve) => {
                 const chatEventKey = `plate-chat-${eventKey}:${key}`;
-                const streamStart = () => {};
+                let off: (() => void) | undefined = undefined;
+                const { on } = useSocketStreamHandler({
+                    topic: ESocketTopic.None,
+                    eventKey: chatEventKey,
+                    onProps: {
+                        name: events.stream,
+                        callbacks: {
+                            start: () => {},
+                            buffer: (data: { message: string }) => {
+                                controller.enqueue(encoder.encode(`0:${JSON.stringify(data.message)}\n`));
+                            },
+                            end: (data: { message: string }) => {
+                                const endData = {
+                                    finishReason: "stop",
+                                    usage: {
+                                        promptTokens: 0,
+                                        completionTokens: data.message.length,
+                                    },
+                                };
+
+                                if (!data.message.length) {
+                                    endData.finishReason = "error";
+                                }
+
+                                controller.enqueue(`d:${JSON.stringify(endData)}\n`);
+                                off?.();
+                                resolve(undefined);
+                            },
+                            error: () => {
+                                controller.enqueue(`d:${JSON.stringify({ finishReason: "error" })}\n`);
+                                off?.();
+                                resolve(undefined);
+                            },
+                        },
+                    },
+                });
+
                 const abortHandler = () => {
                     socket.send({
                         topic: ESocketTopic.None,
@@ -100,46 +137,7 @@ const createStream = ({ socket, eventKey, events, signal, key, send }: ICreateSt
 
                 signal?.addEventListener("abort", abortHandler);
 
-                const streamBuffer = (data: { message: string }) => {
-                    controller.enqueue(encoder.encode(`0:${JSON.stringify(data.message)}\n`));
-                };
-                const streamEnd = (data: { message: string }) => {
-                    const endData = {
-                        finishReason: "stop",
-                        usage: {
-                            promptTokens: 0,
-                            completionTokens: data.message.length,
-                        },
-                    };
-
-                    if (!data.message.length) {
-                        endData.finishReason = "error";
-                    }
-
-                    controller.enqueue(`d:${JSON.stringify(endData)}\n`);
-                    socket.streamOff({
-                        topic: ESocketTopic.None,
-                        eventKey: chatEventKey,
-                        event: events.stream,
-                        callbacks: {
-                            start: streamStart,
-                            buffer: streamBuffer,
-                            end: streamEnd,
-                        },
-                    });
-                    resolve(undefined);
-                };
-
-                socket.stream({
-                    topic: ESocketTopic.None,
-                    eventKey: chatEventKey,
-                    event: events.stream,
-                    callbacks: {
-                        start: streamStart,
-                        buffer: streamBuffer,
-                        end: streamEnd,
-                    },
-                });
+                off = on();
 
                 send();
             });

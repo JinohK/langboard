@@ -4,7 +4,7 @@ from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 
 
 class UserGroup(BaseSqlModel, table=True):
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     name: str = Field(nullable=False)
     order: int = Field(nullable=False, default=0)
 

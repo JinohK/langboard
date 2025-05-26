@@ -19,7 +19,7 @@ class NotificationScope(Enum):
 
 class UserNotificationUnsubscription(BaseSqlModel, table=True):
     UNAVAILABLE_TYPES: ClassVar[list[NotificationType]] = [NotificationType.ProjectInvited]
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     channel: NotificationChannel = Field(nullable=False, sa_type=EnumLikeType(NotificationChannel))
     notification_type: NotificationType = Field(nullable=False, sa_type=EnumLikeType(NotificationType))
     scope_type: NotificationScope = Field(nullable=False, sa_type=EnumLikeType(NotificationScope))

@@ -26,7 +26,7 @@ class BotSchedule(BaseSqlModel, table=True):
         BotScheduleRunningType.Onetime,
     ]
     RUNNING_TYPES_WITH_END_AT: ClassVar[list[BotScheduleRunningType]] = [BotScheduleRunningType.Duration]
-    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
+    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot, nullable=False, index=True)
     running_type: BotScheduleRunningType = Field(
         default=BotScheduleRunningType.Infinite, nullable=False, sa_type=EnumLikeType(BotScheduleRunningType)
     )

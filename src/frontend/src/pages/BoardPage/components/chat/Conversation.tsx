@@ -14,7 +14,7 @@ export interface IConversationProps {
 }
 
 function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
-    const { projectUID, scrollToBottomRef } = useBoardChat();
+    const { projectUID, scrollToBottomRef, isAtBottomRef } = useBoardChat();
     const [t] = useTranslation();
     const [isLoaded, setIsLoaded] = useState(false);
     const isFetchingRef = useRef(false);
@@ -96,7 +96,7 @@ function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
                 height: `calc(100% - ${chatInputHeight}px - 5rem)`,
             }}
         >
-            <ChatMessageList scrollToBottomRef={scrollToBottomRef} ref={conversationRef}>
+            <ChatMessageList scrollToBottomRef={scrollToBottomRef} isAtBottomRef={isAtBottomRef} ref={conversationRef}>
                 {!isLastPage && <Loading size="3" variant="secondary" spacing="1" animate="bounce" my="3" />}
                 {sortedMessages.map((chatMessage) => (
                     <ChatMessage key={`chat-bubble-${chatMessage.uid}`} chatMessage={chatMessage} />

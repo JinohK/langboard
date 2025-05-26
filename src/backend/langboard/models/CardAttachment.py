@@ -6,8 +6,8 @@ from .Card import Card
 
 
 class CardAttachment(SoftDeleteModel, table=True):
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
     filename: str = Field(nullable=False)
     file: FileModel = Field(sa_type=ModelColumnType(FileModel))
     order: int = Field(default=0)

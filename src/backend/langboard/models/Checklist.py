@@ -5,7 +5,7 @@ from .Card import Card
 
 
 class Checklist(SoftDeleteModel, table=True):
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
     title: str = Field(nullable=False)
     order: int = Field(default=0, nullable=False)
     is_checked: bool = Field(default=False, nullable=False)

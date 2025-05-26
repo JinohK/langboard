@@ -17,7 +17,7 @@ DATA_TEXT_FORMAT_DESCRIPTIONS: dict[str, str] = {
 
 def find_mentioned(editor: EditorContentModel) -> tuple[set[str], dict[str, str]]:
     mention_pattern = compile(r"\[\*\*@([\w-]+)\*\*\]\(([\w]+)\)")
-    mentions = findall(mention_pattern, editor.content)
+    mentions = findall(mention_pattern, editor.content.replace("\\", ""))
 
     content = change_date_element(editor)
 

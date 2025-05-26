@@ -17,7 +17,7 @@ class ProjectColumnService(BaseService):
         return "project_column"
 
     async def get_by_uid(self, uid: str) -> ProjectColumn | None:
-        return await ServiceHelper.get_by_param(ProjectColumn, uid)
+        return ServiceHelper.get_by_param(ProjectColumn, uid)
 
     @overload
     async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
@@ -28,12 +28,13 @@ class ProjectColumnService(BaseService):
     async def get_all_by_project(
         self, project: TProjectParam, as_api: bool, with_count: bool = False
     ) -> list[ProjectColumn] | list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
         if as_api and with_count:
             sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
-                Card, Card.column("project_column_id") == ProjectColumn.column("id")
+                Card,
+                (Card.column("project_column_id") == ProjectColumn.column("id")) & (Card.column("deleted_at") == None),  # noqa
             )
         else:
             sql_query = SqlBuilder.select.table(ProjectColumn)
@@ -44,9 +45,10 @@ class ProjectColumnService(BaseService):
             .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
         )
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(sql_query)
-        raw_columns = result.all()
+        raw_columns = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(sql_query)
+            raw_columns = result.all()
         columns = []
         has_archive_column = False
         for raw_column in raw_columns:
@@ -70,17 +72,18 @@ class ProjectColumnService(BaseService):
         return columns
 
     async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        archive_column = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(
                     (ProjectColumn.column("project_id") == project.id) & ProjectColumn.column("is_archive") == True  # noqa
                 )
             )
-        archive_column = result.first()
+            archive_column = result.first()
         if archive_column:
             return archive_column
 
-        max_order = await ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
+        max_order = ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
 
         column = ProjectColumn(
             project_id=project.id,
@@ -89,13 +92,13 @@ class ProjectColumnService(BaseService):
             is_archive=True,
         )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(column)
+        with DbSession.use(readonly=False) as db:
+            db.insert(column)
 
         return column
 
     async def count_cards(self, project: TProjectParam, column: TColumnParam) -> int:
-        params = await self.__get_records_by_params(project, column)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
         if not params:
             return 0
         project, column = params
@@ -103,17 +106,18 @@ class ProjectColumnService(BaseService):
         sql_query = SqlBuilder.select.count(Card, Card.id).where(
             (Card.column("project_id") == project.id) & (Card.column("project_column_id") == column.id)
         )
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(sql_query)
+        count = 0
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(sql_query)
             count = result.first() or 0
         return count
 
     async def create(self, user_or_bot: TUserOrBot, project: TProjectParam, name: str) -> ProjectColumn | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
-        max_order = await ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
+        max_order = ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
 
         column = ProjectColumn(
             project_id=project.id,
@@ -121,8 +125,8 @@ class ProjectColumnService(BaseService):
             order=max_order + 1,
         )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(column)
+        with DbSession.use(readonly=False) as db:
+            db.insert(column)
 
         ProjectColumnPublisher.created(project, column)
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
@@ -133,15 +137,15 @@ class ProjectColumnService(BaseService):
     async def change_name(
         self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, name: str
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, column)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
         if not params:
             return None
         project, column = params
 
         old_name = column.name
         column.name = name
-        async with DbSession.use(readonly=False) as db:
-            await db.update(column)
+        with DbSession.use(readonly=False) as db:
+            db.update(column)
 
         ProjectColumnPublisher.name_changed(project, column, name)
         ProjectColumnActivityTask.project_column_name_changed(user_or_bot, project, old_name, column)
@@ -150,7 +154,7 @@ class ProjectColumnService(BaseService):
         return True
 
     async def change_order(self, user: User, project: TProjectParam, column: TColumnParam, order: int) -> bool:
-        params = await self.__get_records_by_params(project, column)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
         if not params:
             return False
         project, column = params
@@ -158,17 +162,19 @@ class ProjectColumnService(BaseService):
         original_order = column.order
         update_query = SqlBuilder.update.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectColumn, original_order, order)
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(update_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(update_query)
+
+        with DbSession.use(readonly=False) as db:
             column.order = order
-            await db.update(column)
+            db.update(column)
 
         ProjectColumnPublisher.order_changed(project, column)
 
         return True
 
     async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam) -> bool:
-        params = await self.__get_records_by_params(project, column)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
         if not params:
             return False
         project, column = params
@@ -176,7 +182,7 @@ class ProjectColumnService(BaseService):
             return False
 
         archive_column = await self.get_or_create_archive_if_not_exists(project)
-        all_cards_in_column = await ServiceHelper.get_all_by(Card, "project_column_id", column.id)
+        all_cards_in_column = ServiceHelper.get_all_by(Card, "project_column_id", column.id)
         count_cards_in_column = len(all_cards_in_column)
 
         current_time = now()
@@ -186,18 +192,21 @@ class ProjectColumnService(BaseService):
             .values({Card.order: Card.order + count_cards_in_column})
             .where(Card.column("project_column_id") == archive_column.id)
         )
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(query)
 
             for i in range(count_cards_in_column):
                 card = all_cards_in_column[i]
                 card.project_column_id = archive_column.id
                 card.archived_at = current_time
-                await db.update(card)
+                with DbSession.use(readonly=False) as db:
+                    db.update(card)
 
-            await db.delete(column)
+        with DbSession.use(readonly=False) as db:
+            db.delete(column)
 
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.update.table(ProjectColumn)
                 .values({ProjectColumn.order: ProjectColumn.order - 1})
                 .where(
@@ -210,11 +219,3 @@ class ProjectColumnService(BaseService):
         ProjectColumnBotTask.project_column_deleted(user_or_bot, project, column)
 
         return True
-
-    async def __get_records_by_params(self, project: TProjectParam, column: TColumnParam):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, column))
-        if not project or not column or column.project_id != project.id:
-            return None
-
-        return project, column

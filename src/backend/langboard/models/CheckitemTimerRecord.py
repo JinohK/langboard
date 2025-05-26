@@ -5,7 +5,7 @@ from .Checkitem import Checkitem, CheckitemStatus
 
 
 class CheckitemTimerRecord(BaseSqlModel, table=True):
-    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem.expr("id"), nullable=False, index=True)
+    checkitem_id: SnowflakeID = SnowflakeIDField(foreign_key=Checkitem, nullable=False, index=True)
     status: CheckitemStatus = Field(nullable=False)
 
     @staticmethod

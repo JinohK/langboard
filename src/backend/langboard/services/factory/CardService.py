@@ -41,15 +41,15 @@ class CardService(BaseService):
         return "card"
 
     async def get_by_uid(self, uid: str) -> Card | None:
-        return await ServiceHelper.get_by_param(Card, uid)
+        return ServiceHelper.get_by_param(Card, uid)
 
     async def get_details(self, project: TProjectParam, card: TCardParam) -> dict[str, Any] | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
 
-        column = await ServiceHelper.get_by_param(ProjectColumn, card.project_column_id)
+        column = ServiceHelper.get_by_param(ProjectColumn, card.project_column_id)
         if not column:
             return None
 
@@ -75,11 +75,13 @@ class CardService(BaseService):
         return api_card
 
     async def get_board_list(self, project: TProjectParam) -> list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+
+        raw_cards = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(
                     Card,
                     func.count(CardComment.column("id")).label("count_comment"),  # type: ignore
@@ -93,7 +95,7 @@ class CardService(BaseService):
                 .order_by(Card.column("order").asc())
                 .group_by(Card.column("id"), Card.column("order"))
             )
-        raw_cards = result.all()
+            raw_cards = result.all()
         cards = []
 
         project_label_service = self._get_service(ProjectLabelService)
@@ -173,9 +175,11 @@ class CardService(BaseService):
             .group_by(Card.column("id"), Card.column("created_at"), Project.column("id"))
         )
         query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(query)
-        records = result.all()
+
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            records = result.all()
 
         api_cards = []
         api_projects: dict[int, dict[str, Any]] = {}
@@ -192,17 +196,19 @@ class CardService(BaseService):
     @overload
     async def get_all_by_project(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all_by_project(self, project: TProjectParam, as_api: bool) -> list[Card] | list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(Card, ProjectColumn)
                 .join(ProjectColumn, Card.column("project_column_id") == ProjectColumn.column("id"))
                 .where(Card.column("project_id") == project.id)
                 .order_by(Card.column("order").asc())
             )
-        records = result.all()
+            records = result.all()
         if not as_api:
             return [card for card, _ in records]
 
@@ -222,36 +228,40 @@ class CardService(BaseService):
     async def get_assigned_users(
         self, card: TCardParam, as_api: bool
     ) -> list[tuple[User, CardAssignedUser]] | list[dict[str, Any]]:
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+
+        raw_users = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(User, CardAssignedUser)
                 .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
                 .where(CardAssignedUser.column("card_id") == card.id)
             )
-        raw_users = result.all()
+            raw_users = result.all()
         if not as_api:
-            return list(raw_users)
+            return raw_users
 
         users = [user.api_response() for user, _ in raw_users]
         return users
 
     async def get_assigned_users_by_project(self, project: TProjectParam) -> list[tuple[User, CardAssignedUser]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+
+        raw_users = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(User, CardAssignedUser)
                 .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
                 .join(Card, CardAssignedUser.column("card_id") == Card.column("id"))
                 .join(Project, Card.column("project_id") == Project.column("id"))
                 .where(Project.column("id") == project.id)
             )
-        raw_users = result.all()
-        return list(raw_users)
+            raw_users = result.all()
+        return raw_users
 
     async def create(
         self,
@@ -261,12 +271,14 @@ class CardService(BaseService):
         title: str,
         assign_user_uids: list[str] | None = None,
     ) -> tuple[Card, dict[str, Any]] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, column))
-        if not project or not column or column.project_id != project.id or column.is_archive:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
+        if not params:
+            return None
+        project, column = params
+        if column.is_archive:
             return None
 
-        max_order = await ServiceHelper.get_max_order(Card, "project_id", project.id, {"project_column_id": column.id})
+        max_order = ServiceHelper.get_max_order(Card, "project_id", project.id, {"project_column_id": column.id})
 
         card = Card(
             project_id=project.id,
@@ -274,8 +286,8 @@ class CardService(BaseService):
             title=title,
             order=max_order + 1,
         )
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(card)
+        with DbSession.use(readonly=False) as db:
+            db.insert(card)
 
         users: list[User] = []
         if assign_user_uids:
@@ -286,10 +298,10 @@ class CardService(BaseService):
                 where_user_ids_in=[SnowflakeID.from_short_code(uid) for uid in assign_user_uids],
             )
 
-            async with DbSession.use(readonly=False) as db:
-                for assign_user, project_assigned_user in raw_users:
+            for assign_user, project_assigned_user in raw_users:
+                with DbSession.use(readonly=False) as db:
                     users.append(assign_user)
-                    await db.insert(
+                    db.insert(
                         CardAssignedUser(
                             project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=assign_user.id
                         )
@@ -311,7 +323,7 @@ class CardService(BaseService):
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, form: dict
     ) -> dict[str, Any] | Literal[True] | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
@@ -332,15 +344,16 @@ class CardService(BaseService):
         if not old_card_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            checkitem_cardified_from = None
-            if "title" in old_card_record:
-                checkitem_cardified_from = await ServiceHelper.get_by(Checkitem, "cardified_id", card.id)
-                if checkitem_cardified_from:
-                    checkitem_cardified_from.title = card.title
-                    await db.update(checkitem_cardified_from)
+        checkitem_cardified_from = None
+        if "title" in old_card_record:
+            checkitem_cardified_from = ServiceHelper.get_by(Checkitem, "cardified_id", card.id)
+            if checkitem_cardified_from:
+                checkitem_cardified_from.title = card.title
+                with DbSession.use(readonly=False) as db:
+                    db.update(checkitem_cardified_from)
 
-            await db.update(card)
+        with DbSession.use(readonly=False) as db:
+            db.update(card)
 
         model: dict[str, Any] = {}
         for key in form:
@@ -367,18 +380,18 @@ class CardService(BaseService):
         order: int,
         new_column: TColumnParam | None,
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
 
         original_column = None
-        original_column = await ServiceHelper.get_by_param(ProjectColumn, card.project_column_id)
+        original_column = ServiceHelper.get_by_param(ProjectColumn, card.project_column_id)
         if not original_column or original_column.project_id != project.id:
             return None
 
         if new_column:
-            new_column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, new_column))
+            new_column = ServiceHelper.get_by_param(ProjectColumn, new_column)
             if not new_column or new_column.project_id != card.project_id:
                 return None
 
@@ -387,27 +400,30 @@ class CardService(BaseService):
 
         original_order = card.order
 
-        async with DbSession.use(readonly=False) as db:
-            shared_update_query = SqlBuilder.update.table(Card).where(
-                (Card.column("id") != card.id) & (Card.column("project_id") == card.project_id)
+        shared_update_query = SqlBuilder.update.table(Card).where(
+            (Card.column("id") != card.id) & (Card.column("project_id") == card.project_id)
+        )
+        if new_column:
+            update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
+                (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
             )
-            if new_column:
-                update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
-                    (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
-                )
-                await db.exec(update_query)
+            with DbSession.use(readonly=False) as db:
+                db.exec(update_query)
 
-                update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
-                    (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
-                )
-                await db.exec(update_query)
-            else:
-                update_query = ServiceHelper.set_order_in_column(shared_update_query, Card, original_order, order)
-                update_query = update_query.where(Card.column("project_column_id") == original_column.id)
-                await db.exec(update_query)
+            update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
+                (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
+            )
+            with DbSession.use(readonly=False) as db:
+                db.exec(update_query)
+        else:
+            update_query = ServiceHelper.set_order_in_column(shared_update_query, Card, original_order, order)
+            update_query = update_query.where(Card.column("project_column_id") == original_column.id)
+            with DbSession.use(readonly=False) as db:
+                db.exec(update_query)
 
+        with DbSession.use(readonly=False) as db:
             card.order = order
-            await db.update(card)
+            db.update(card)
 
         CardPublisher.order_changed(project, card, original_column, cast(ProjectColumn, new_column))
 
@@ -424,31 +440,35 @@ class CardService(BaseService):
         card: TCardParam,
         assign_user_uids: list[str] | None = None,
     ) -> list[User] | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        original_assigned_user_ids = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.column(CardAssignedUser.user_id).where(CardAssignedUser.card_id == card.id)
             )
-        original_assigned_user_ids = list(result.all())
+            original_assigned_user_ids = result.all()
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
-                SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
+        raw_users = []
+        if assign_user_uids:
+            assign_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
+            project_service = self._get_service(ProjectService)
+            raw_users = await project_service.get_assigned_users(
+                project, as_api=False, where_user_ids_in=assign_user_ids
             )
 
-            users: list[User] = []
-            if assign_user_uids:
-                assign_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
-                project_service = self._get_service(ProjectService)
-                raw_users = await project_service.get_assigned_users(
-                    project.id, as_api=False, where_user_ids_in=assign_user_ids
-                )
-                for user, project_assigned_user in raw_users:
-                    await db.insert(
+        users: list[User] = []
+        if original_assigned_user_ids:
+            with DbSession.use(readonly=False) as db:
+                db.exec(SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id))
+
+        if raw_users:
+            for user, project_assigned_user in raw_users:
+                with DbSession.use(readonly=False) as db:
+                    db.insert(
                         CardAssignedUser(project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=user.id)
                     )
                     users.append(user)
@@ -469,12 +489,12 @@ class CardService(BaseService):
             [user.id for user in users],
         )
 
-        return list(users)
+        return users
 
     async def update_labels(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, label_uids: list[str]
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
@@ -491,15 +511,15 @@ class CardService(BaseService):
             bot_labels = await project_label_service.get_all_bot(project)
             bot_label_ids = [label.id for label in bot_labels]
             query = query.where(CardAssignedProjectLabel.column("project_label_id").not_in(bot_label_ids))
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(query)
 
-        async with DbSession.use(readonly=False) as db:
-            for label_uid in label_uids:
-                label = await ServiceHelper.get_by_param(ProjectLabel, label_uid)
-                if not label or label.project_id != project.id or (not is_bot and label.bot_id):
-                    return None
-                await db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
+        for label_uid in label_uids:
+            label = ServiceHelper.get_by_param(ProjectLabel, label_uid)
+            if not label or label.project_id != project.id or (not is_bot and label.bot_id):
+                return None
+            with DbSession.use(readonly=False) as db:
+                db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
 
         labels = await project_label_service.get_all_by_card(card, as_api=False)
 
@@ -516,7 +536,7 @@ class CardService(BaseService):
         return True
 
     async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam) -> bool:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return False
         project, card = params
@@ -524,15 +544,16 @@ class CardService(BaseService):
         if not card.archived_at:
             return False
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        started_checkitems = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(Checkitem)
                 .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
                 .where(
                     (Checklist.column("card_id") == card.id) & (Checkitem.column("status") == CheckitemStatus.Started)
                 )
             )
-        started_checkitems = result.all()
+            started_checkitems = result.all()
 
         checkitem_service = self._get_service(CheckitemService)
         current_time = now()
@@ -541,24 +562,30 @@ class CardService(BaseService):
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
-                SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id)
-            )
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id))
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(CardRelationship).where(
                     (CardRelationship.column("card_id_parent") == card.id)
                     | (CardRelationship.column("card_id_child") == card.id)
                 )
             )
-            await db.exec(
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(BotSchedule).where(
                     (BotSchedule.column("target_table") == Card.__tablename__)
                     & (BotSchedule.column("target_id") == card.id)
                 )
             )
-            await db.delete(card)
-            await db.exec(
+
+        with DbSession.use(readonly=False) as db:
+            db.delete(card)
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.update.table(Card)
                 .values({Card.order: Card.order - 1})
                 .where(
@@ -573,11 +600,3 @@ class CardService(BaseService):
         CardBotTask.card_deleted(user_or_bot, project, card)
 
         return True
-
-    async def __get_records_by_params(self, project: TProjectParam, card: TCardParam):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
-        if not project or not card or card.project_id != project.id:
-            return None
-
-        return project, card

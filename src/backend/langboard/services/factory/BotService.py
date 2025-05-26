@@ -1,5 +1,5 @@
 from json import dumps as json_dumps
-from typing import Any, Literal, cast, overload
+from typing import Any, Literal, overload
 from ...core.ai import Bot, BotAPIAuthType, BotTrigger, BotTriggerCondition
 from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
@@ -21,21 +21,21 @@ class BotService(BaseService):
         return "bot"
 
     async def get_by_uid(self, uid: str) -> Bot | None:
-        return await ServiceHelper.get_by_param(Bot, uid)
+        return ServiceHelper.get_by_param(Bot, uid)
 
     @overload
     async def get_list(self, as_api: Literal[False], is_setting: bool = False) -> list[Bot]: ...
     @overload
     async def get_list(self, as_api: Literal[True], is_setting: bool = False) -> list[dict[str, Any]]: ...
     async def get_list(self, as_api: bool, is_setting: bool = False) -> list[Bot] | list[dict[str, Any]]:
-        bots = await ServiceHelper.get_all(Bot)
+        bots = ServiceHelper.get_all(Bot)
         if not as_api:
-            return list(bots)
+            return bots
         api_bots = []
         for bot in bots:
             api_bot = bot.api_response(is_setting)
             if is_setting:
-                conditions = await ServiceHelper.get_all_by(BotTrigger, "bot_id", bot.id)
+                conditions = ServiceHelper.get_all_by(BotTrigger, "bot_id", bot.id)
                 api_bot["conditions"] = {
                     condition.condition.value: {"is_predefined": condition.is_predefined} for condition in conditions
                 }
@@ -53,7 +53,7 @@ class BotService(BaseService):
         prompt: str | None = None,
         avatar: FileModel | None = None,
     ) -> Bot | None:
-        existing_bot = await ServiceHelper.get_by(Bot, "bot_uname", bot_uname)
+        existing_bot = ServiceHelper.get_by(Bot, "bot_uname", bot_uname)
         if existing_bot:
             return None
 
@@ -69,8 +69,8 @@ class BotService(BaseService):
             prompt=prompt or "",
         )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(bot)
+        with DbSession.use(readonly=False) as db:
+            db.insert(bot)
 
         BotPublisher.bot_created(bot)
         BotDefaultTask.bot_created(bot)
@@ -78,7 +78,7 @@ class BotService(BaseService):
         return bot
 
     async def update(self, bot: TBotParam, form: dict) -> bool | tuple[Bot, dict[str, Any]] | None:
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return None
         mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_key", "prompt"]
@@ -97,7 +97,7 @@ class BotService(BaseService):
             setattr(bot, key, new_value)
 
         if "bot_uname" in form:
-            existing_bot = await ServiceHelper.get_by(Bot, "bot_uname", form["bot_uname"])
+            existing_bot = ServiceHelper.get_by(Bot, "bot_uname", form["bot_uname"])
             if existing_bot:
                 return False
 
@@ -108,8 +108,8 @@ class BotService(BaseService):
         if not old_bot_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(bot)
+        with DbSession.use(readonly=False) as db:
+            db.update(bot)
 
         model: dict[str, Any] = {}
         for key in form:
@@ -133,12 +133,12 @@ class BotService(BaseService):
         return bot, model
 
     async def predefine_conditions(self, bot: TBotParam, conditions: list[BotTriggerCondition]):
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(BotTrigger).where(
                     (BotTrigger.column("bot_id") == bot.id)
                     & (BotTrigger.column("condition").in_(conditions))
@@ -148,35 +148,37 @@ class BotService(BaseService):
 
             for condition in conditions:
                 trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
-                await db.insert(trigger)
+                db.insert(trigger)
 
         return True
 
     async def toggle_condition(self, bot: TBotParam, condition: BotTriggerCondition):
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return False
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        trigger = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(BotTrigger).where(
                     (BotTrigger.column("bot_id") == bot.id) & (BotTrigger.column("condition") == condition)
                 )
             )
-        trigger = result.first()
-        async with DbSession.use(readonly=False) as db:
+            trigger = result.first()
+
+        with DbSession.use(readonly=False) as db:
             if trigger:
                 if trigger.is_predefined:
                     return False
-                await db.delete(trigger)
+                db.delete(trigger)
             else:
                 trigger = BotTrigger(bot_id=bot.id, condition=condition)
-                await db.insert(trigger)
+                db.insert(trigger)
 
         return True
 
     async def update_ip_whitelist(self, bot: TBotParam, ip_whitelist: list[str]) -> bool | tuple[Bot, dict[str, Any]]:
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return False
 
@@ -189,32 +191,30 @@ class BotService(BaseService):
             valid_ip_whitelist.append(ip)
 
         bot.ip_whitelist = valid_ip_whitelist
-        async with DbSession.use(readonly=False) as db:
-            await db.update(bot)
+        with DbSession.use(readonly=False) as db:
+            db.update(bot)
 
         return bot, {"ip_whitelist": valid_ip_whitelist}
 
     async def generate_new_api_token(self, bot: TBotParam) -> Bot | None:
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return None
 
         bot.app_api_token = await self.generate_api_key()
-        async with DbSession.use(readonly=False) as db:
-            await db.update(bot)
+        with DbSession.use(readonly=False) as db:
+            db.update(bot)
 
         return bot
 
     async def delete(self, bot: TBotParam) -> bool:
-        bot = cast(Bot, await ServiceHelper.get_by_param(Bot, bot))
+        bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
-                SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("bot_id") == bot.id)
-            )
-            await db.delete(bot)
+        with DbSession.use(readonly=False) as db:
+            db.exec(SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("bot_id") == bot.id))
+            db.delete(bot)
 
         BotPublisher.bot_deleted(bot.get_uid())
 
@@ -223,7 +223,7 @@ class BotService(BaseService):
     async def generate_api_key(self) -> str:
         api_key = f"sk-{generate_random_string(53)}"
         while True:
-            is_existed = await ServiceHelper.get_by(AppSetting, "setting_value", json_dumps(api_key))
+            is_existed = ServiceHelper.get_by(AppSetting, "setting_value", json_dumps(api_key))
             if not is_existed:
                 break
             api_key = f"sk-{generate_random_string(53)}"

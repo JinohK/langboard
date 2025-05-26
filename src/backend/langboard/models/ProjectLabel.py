@@ -19,8 +19,8 @@ class ProjectLabel(BaseSqlModel, table=True):
         {"name": "Fixing", "color": "#388E3C", "description": "Tasks that are being fixed."},
         {"name": "Fetch", "color": "#1DE9B6", "description": "Tasks that are fetching data."},
     ]
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot, nullable=True)
     name: str = Field(nullable=False)
     color: str = Field(nullable=False)
     description: str = Field(nullable=False)

@@ -34,9 +34,9 @@ async def socket_publish(data: dict):
         else:
             topic = publish_model.topic.value
 
-        await AppRouter.publish(
+        await AppRouter.socket.publish(
             topic=topic,
             topic_id=publish_model.topic_id,
-            event_response=publish_model.event,
+            event=publish_model.event,
             data=data,
         )

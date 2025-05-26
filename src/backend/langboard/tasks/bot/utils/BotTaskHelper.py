@@ -18,10 +18,11 @@ logger = Logger.use("BotTask")
 @staticclass
 class BotTaskHelper:
     @staticmethod
-    async def get_project_assigned_bots(project: Project | int, condition: BotTriggerCondition) -> list[Bot]:
+    def get_project_assigned_bots(project: Project | int, condition: BotTriggerCondition) -> list[Bot]:
         project_id = project if isinstance(project, int) else project.id
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(Bot)
                 .join(ProjectAssignedBot, ProjectAssignedBot.column("bot_id") == Bot.column("id"))
                 .join(BotTrigger, BotTrigger.column("bot_id") == Bot.column("id"))
@@ -31,10 +32,11 @@ class BotTaskHelper:
                     & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
                 )
             )
-        return list(result.all())
+            records = result.all()
+        return records
 
     @staticmethod
-    async def run(
+    def run(
         bots: Bot | list[Bot],
         event: BotTriggerCondition | BotDefaultTrigger,
         data: dict[str, Any],
@@ -43,31 +45,36 @@ class BotTaskHelper:
         if not isinstance(bots, list):
             bots = [bots]
 
-        await run_webhook(event.value, data)
+        run_webhook(event.value, data)
 
-        async with DbSession.use(readonly=True) as db:
-            for bot in bots:
-                if project:
-                    result = await db.exec(
+        for bot in bots:
+            if project:
+                record = None
+                with DbSession.use(readonly=True) as db:
+                    result = db.exec(
                         SqlBuilder.select.table(ProjectAssignedBot).where(
                             (ProjectAssignedBot.column("bot_id") == bot.id)
                             & (ProjectAssignedBot.column("project_id") == project.id)
                             & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
                         )
                     )
-                    if not result.first():
-                        continue
-                labels = await BotTaskHelper.get_project_labels_by_bot(project, bot, db) if project else None
-                BotTaskHelper.__run(bot, event.value, data, labels)
+                    record = result.first()
+                if not record:
+                    continue
+            labels = BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
+            BotTaskHelper.__run(bot, event.value, data, labels)
 
     @staticmethod
-    async def get_project_labels_by_bot(project: Project, bot: Bot, db: DbSession) -> list[ProjectLabel]:
-        result = await db.exec(
-            SqlBuilder.select.table(ProjectLabel).where(
-                (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == bot.id)
+    def get_project_labels_by_bot(project: Project, bot: Bot) -> list[ProjectLabel]:
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
+                SqlBuilder.select.table(ProjectLabel).where(
+                    (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == bot.id)
+                )
             )
-        )
-        return list(result.all())
+            records = result.all()
+        return records
 
     @staticmethod
     def __run(bot: Bot, event: str, data: dict[str, Any], labels: list[ProjectLabel] | None):

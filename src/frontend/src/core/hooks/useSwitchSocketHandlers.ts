@@ -1,6 +1,6 @@
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler from "@/core/helpers/SocketHandler";
-import useSocketStreamHandler from "@/core/helpers/SocketStreamHandler";
+import useSocketStreamHandler from "@/core/hooks/useSocketStreamHandler";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { getTopicWithId } from "@/core/stores/SocketStore";
 import { createUUID } from "@/core/utils/StringUtils";

@@ -16,8 +16,8 @@ class ProjectWikiActivityType(Enum):
 
 
 class ProjectWikiActivity(BaseActivityModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), index=True)
-    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), index=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, index=True)
+    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki, index=True)
     activity_type: ProjectWikiActivityType = Field(nullable=False, sa_type=EnumLikeType(ProjectWikiActivityType))
 
     @staticmethod

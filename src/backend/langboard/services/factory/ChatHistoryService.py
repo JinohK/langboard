@@ -34,9 +34,10 @@ class ChatHistoryService(BaseService):
         sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(sql_query)
-        histories = result.all()
+        histories = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(sql_query)
+            histories = result.all()
 
         chat_histories = []
         for chat_history in histories:
@@ -45,7 +46,7 @@ class ChatHistoryService(BaseService):
         return chat_histories
 
     async def get_by_uid(self, uid: str) -> ChatHistory | None:
-        return await ServiceHelper.get_by_param(ChatHistory, uid)
+        return ServiceHelper.get_by_param(ChatHistory, uid)
 
     async def create(
         self,
@@ -55,8 +56,8 @@ class ChatHistoryService(BaseService):
         sender: TUserParam | None = None,
         receiver: TUserParam | None = None,
     ) -> ChatHistory:
-        sender = await ServiceHelper.get_by_param(User, sender) if sender else None
-        receiver = await ServiceHelper.get_by_param(User, receiver) if receiver else None
+        sender = ServiceHelper.get_by_param(User, sender) if sender else None
+        receiver = ServiceHelper.get_by_param(User, receiver) if receiver else None
         filterable = SnowflakeID.from_short_code(filterable) if isinstance(filterable, str) else filterable
         chat_history = ChatHistory(
             history_type=history_type,
@@ -66,20 +67,20 @@ class ChatHistoryService(BaseService):
             receiver_id=receiver.id if receiver else None,
         )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(chat_history)
+        with DbSession.use(readonly=False) as db:
+            db.insert(chat_history)
 
         return chat_history
 
     async def update(self, chat_history: ChatHistory) -> ChatHistory:
-        async with DbSession.use(readonly=False) as db:
-            await db.update(chat_history)
+        with DbSession.use(readonly=False) as db:
+            db.update(chat_history)
 
         return chat_history
 
     async def delete(self, chat_history: ChatHistory):
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(chat_history)
+        with DbSession.use(readonly=False) as db:
+            db.delete(chat_history)
 
     async def clear(
         self,
@@ -96,5 +97,5 @@ class ChatHistoryService(BaseService):
         if filterable is not None:
             sql_query = sql_query.where(ChatHistory.column("filterable") == SnowflakeID.from_short_code(filterable))
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(sql_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(sql_query)

@@ -5,7 +5,7 @@ from .UserGroup import UserGroup
 
 
 class UserGroupAssignedEmail(BaseSqlModel, table=True):
-    group_id: SnowflakeID = SnowflakeIDField(foreign_key=UserGroup.expr("id"), nullable=False, index=True)
+    group_id: SnowflakeID = SnowflakeIDField(foreign_key=UserGroup, nullable=False, index=True)
     email: str = Field(nullable=False)
 
     @staticmethod

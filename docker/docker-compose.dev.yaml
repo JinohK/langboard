@@ -19,6 +19,10 @@ services:
       - ./server/nginx.conf:/etc/nginx/nginx.conf
       - ../src/frontend/dist:/usr/share/nginx/html
     command: [nginx-debug, "-g", "daemon off;"]
+    depends_on:
+      - frontend
+      - backend
+      - docs
     networks:
       - dev_net
     restart: always
@@ -65,8 +69,8 @@ services:
       - LOGGING_DIR=${LOGGING_DIR}
       - CRON_TAB_FILE=${CRON_TAB_FILE}
       - SENTRY_DSN=${SENTRY_DSN}
-      - MAIN_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db:5432/${POSTGRES_DB}
-      - READONLY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_replica:5432/${POSTGRES_DB}
+      - MAIN_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
+      - READONLY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
       - CACHE_TYPE=redis
       - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
       - COMMON_SECRET_KEY=${COMMON_SECRET_KEY}
@@ -102,7 +106,7 @@ services:
       - ./volumes/crontab:/etc/crontab
       - ../scripts/run_bot_cron.sh:/app/scripts/run_bot_cron.sh:x
     depends_on:
-      - db
+      - db-bouncer
     networks:
       - dev_net
     restart: always
@@ -154,9 +158,41 @@ services:
       - dev_net
     restart: always
 
+  db-bouncer:
+    init: true
+    image: bitnami/pgbouncer:latest
+    container_name: ${PROJECT_NAME}_db_bouncer
+    ports:
+      - 6432:6432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_HOST=db
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRES_DB}
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_AUTH_TYPE=trust
+      - PGBOUNCER_USERLIST_FILE=/bitnami/userlists.txt
+      - PGBOUNCER_DSN_0=master=host=db port=5432 dbname=${POSTGRES_DB}
+      - PGBOUNCER_DSN_1=readonly=host=db-replica port=5432 dbname=${POSTGRES_DB}
+      - PGBOUNCER_MAX_CLIENT_CONNS=${POSTGRES_MAX_CONNECTIONS}
+      - PGBOUNCER_SERVER_IDLE_TIMEOUT=${PGBOUNCER_SERVER_IDLE_TIMEOUT}
+      - PGBOUNCER_CLIENT_IDLE_TIMEOUT=${PGBOUNCER_CLIENT_IDLE_TIMEOUT}
+      - PGBOUNCER_DEFAULT_POOL_SIZE=${PGBOUNCER_DEFAULT_POOL_SIZE}
+      - PGBOUNCER_RESERVE_POOL_TIMEOUT=${PGBOUNCER_RESERVE_POOL_TIMEOUT}
+      - PGBOUNCER_QUERY_WAIT_TIMEOUT=${PGBOUNCER_QUERY_WAIT_TIMEOUT}
+    volumes:
+      - ./db_bouncer/userlists.txt:/bitnami/userlists.txt
+    depends_on:
+      - db
+      - db-replica
+    networks:
+      - dev_net
+    restart: always
+
   db:
     init: true
-    image: bitnami/postgresql:17.4.0-debian-12-r4
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db
     ports:
       - ${MASTER_POSTGRES_PORT}:5432
@@ -167,6 +203,7 @@ services:
       - POSTGRESQL_USERNAME=${POSTGRES_USER}
       - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRESQL_DATABASE=${POSTGRES_DB}
+      - POSTGRESQL_MAX_CONNECTIONS=${POSTGRES_MAX_CONNECTIONS}
       - POSTGRESQL_LOG_TIMEZONE=UTC
       - POSTGRESQL_TIMEZONE=UTC
     volumes:
@@ -178,7 +215,7 @@ services:
 
   db-replica:
     init: true
-    image: bitnami/postgresql:17.4.0-debian-12-r4
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_replica
     ports:
       - ${REPLICA_POSTGRES_PORT}:5432
@@ -190,6 +227,7 @@ services:
       - POSTGRESQL_MASTER_PORT_NUMBER=5432
       - POSTGRESQL_USERNAME=${POSTGRES_USER}
       - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_MAX_CONNECTIONS=${POSTGRES_MAX_CONNECTIONS}
       - POSTGRESQL_LOG_TIMEZONE=UTC
       - POSTGRESQL_TIMEZONE=UTC
     networks:
@@ -200,7 +238,7 @@ services:
 
   db-backup:
     init: true
-    image: bitnami/postgresql:17.4.0-debian-12-r4
+    image: bitnami/postgresql:latest
     container_name: ${PROJECT_NAME}_db_backup
     environment:
       - POSTGRESQL_REPLICATION_MODE=slave
@@ -212,6 +250,7 @@ services:
       - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRESQL_LOG_TIMEZONE=UTC
       - POSTGRESQL_TIMEZONE=UTC
+      - DBNAME=${POSTGRES_DB}
     volumes:
       - ./volumes/db_backup:/backup
       - ./db/backup.sh:/docker-entrypoint-initdb.d/backup.sh

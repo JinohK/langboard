@@ -6,7 +6,7 @@ from .BotTriggerCondition import BotTriggerCondition
 
 
 class BotTrigger(BaseSqlModel, table=True):
-    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
+    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot, nullable=False, index=True)
     condition: BotTriggerCondition = Field(nullable=False, sa_type=EnumLikeType(BotTriggerCondition))
     is_predefined: bool = Field(default=False, nullable=False)
 

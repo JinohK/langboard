@@ -1,4 +1,4 @@
-from typing import Literal, Self, cast, overload
+from typing import Literal, Self, overload
 from sqlmodel.sql.expression import SelectOfScalar
 from ...core.db import BaseSqlModel, DbSession, SqlBuilder, User
 from ...core.service import BaseService, NotificationPublishModel, ServiceHelper
@@ -56,14 +56,18 @@ class UserNotificationSettingService(BaseService):
                 return _QueryBuilder(query)
 
             async def all(self):
-                async with DbSession.use(readonly=True) as db:
-                    result = await db.exec(self.__query)
-                return list(result.all())
+                records = []
+                with DbSession.use(readonly=True) as db:
+                    result = db.exec(self.__query)
+                    records = result.all()
+                return records
 
             async def first(self):
-                async with DbSession.use(readonly=True) as db:
-                    result = await db.exec(self.__query)
-                return result.first()
+                record = None
+                with DbSession.use(readonly=True) as db:
+                    result = db.exec(self.__query)
+                    record = result.first()
+                return record
 
         query = SqlBuilder.select.table(UserNotificationUnsubscription).where(
             UserNotificationUnsubscription.column("user_id") == user.id
@@ -113,9 +117,9 @@ class UserNotificationSettingService(BaseService):
 
         unsubscriptions = await query.all()
 
-        async with DbSession.use(readonly=False) as db:
-            for unsubscription in unsubscriptions:
-                await db.delete(unsubscription)
+        for unsubscription in unsubscriptions:
+            with DbSession.use(readonly=False) as db:
+                db.delete(unsubscription)
 
         return notification_types
 
@@ -163,21 +167,21 @@ class UserNotificationSettingService(BaseService):
         unsubscriptions = await query.all()
         already_unsubscribed_types = [unsubscription.notification_type for unsubscription in unsubscriptions]
 
-        async with DbSession.use(readonly=False) as db:
-            for notification_type in notification_types:
-                if notification_type in already_unsubscribed_types:
-                    continue
+        for notification_type in notification_types:
+            if notification_type in already_unsubscribed_types:
+                continue
 
-                unsubscription = UserNotificationUnsubscription(
-                    user_id=user.id,
-                    channel=channel,
-                    notification_type=notification_type,
-                    scope_type=scope,
-                    specific_table=model.__tablename__ if model else None,
-                    specific_id=model.id if model else None,
-                )
+            unsubscription = UserNotificationUnsubscription(
+                user_id=user.id,
+                channel=channel,
+                notification_type=notification_type,
+                scope_type=scope,
+                specific_table=model.__tablename__ if model else None,
+                specific_id=model.id if model else None,
+            )
 
-                await db.insert(unsubscription)
+            with DbSession.use(readonly=False) as db:
+                db.insert(unsubscription)
 
         return notification_types
 
@@ -262,7 +266,7 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project:
-            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+            project = ServiceHelper.get_by_param(Project, project)
             if not project:
                 return []
             params["scope"] = NotificationScope.Specific
@@ -308,10 +312,10 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and column:
-            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-            column = cast(ProjectColumn, await ServiceHelper.get_by_param(ProjectColumn, column))
-            if not project or not column or column.project_id != project.id:
+            records = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
+            if not records:
                 return []
+            project, column = records
             params["scope"] = NotificationScope.Specific
             params["model"] = column
         else:
@@ -350,10 +354,10 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and card:
-            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-            card = cast(Card, await ServiceHelper.get_by_param(Card, card))
-            if not project or not card or card.project_id != project.id:
+            records = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
+            if not records:
                 return []
+            project, card = records
             params["scope"] = NotificationScope.Specific
             params["model"] = card
         else:
@@ -386,10 +390,10 @@ class UserNotificationSettingService(BaseService):
         }
 
         if project and wiki:
-            project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-            wiki = cast(ProjectWiki, await ServiceHelper.get_by_param(ProjectWiki, wiki))
-            if not project or not wiki or wiki.project_id != project.id:
+            records = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
+            if not records:
                 return []
+            project, wiki = records
             params["scope"] = NotificationScope.Specific
             params["model"] = wiki
         else:

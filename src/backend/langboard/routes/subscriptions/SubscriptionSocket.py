@@ -5,21 +5,21 @@ from ...services import Service
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.Dashboard)
-async def dashboard_project_subscription_validator(topic_id: str, user: User) -> bool:
+async def dashboard_project_subscription_validator(user: User, topic_id: str) -> bool:
     with Service.use() as service:
         result, _ = await service.project.is_assigned(user, topic_id)
     return result
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.Board)
-async def board_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_subscription_validator(user: User, topic_id: str) -> bool:
     with Service.use() as service:
         result, _ = await service.project.is_assigned(user, topic_id)
     return result
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.BoardCard)
-async def board_card_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_card_subscription_validator(user: User, topic_id: str) -> bool:
     with Service.use() as service:
         card = await service.card.get_by_uid(topic_id)
         if not card:
@@ -34,21 +34,21 @@ async def board_card_subscription_validator(topic_id: str, user: User) -> bool:
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.BoardWiki)
-async def board_wiki_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_wiki_subscription_validator(user: User, topic_id: str) -> bool:
     with Service.use() as service:
         result, _ = await service.project.is_assigned(user, topic_id)
     return result
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.BoardWikiPrivate)
-async def board_wiki_private_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_wiki_private_subscription_validator(user: User, topic_id: str) -> bool:
     with Service.use() as service:
         result = await service.project_wiki.is_assigned(user, topic_id)
     return result
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.BoardSettings)
-async def board_settings_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_settings_subscription_validator(user: User, topic_id: str) -> bool:
     if user.is_admin:
         return True
 
@@ -68,7 +68,7 @@ async def board_settings_subscription_validator(topic_id: str, user: User) -> bo
 
 # DO NOT USE THIS TOPIC FOR RECEIVING MESSAGES FROM CLIENT
 @AppRouter.socket.subscription_validator(SocketTopic.ProjectBot)
-async def board_bot_subscription_validator(topic_id: str, user: User) -> bool:
+async def board_bot_subscription_validator(user: User, topic_id: str) -> bool:
     if not topic_id.count("-"):
         return False
     bot_uid, project_uid = topic_id.split("-")
@@ -91,7 +91,7 @@ async def board_bot_subscription_validator(topic_id: str, user: User) -> bool:
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.User)
-async def user_subscription_validator(topic_id: str, user: User) -> bool:
+async def user_subscription_validator(user: User, topic_id: str) -> bool:
     if user.get_uid() == topic_id:
         # Disallow user to subscribe to themselves
         return False
@@ -108,5 +108,5 @@ async def user_subscription_validator(topic_id: str, user: User) -> bool:
 
 
 @AppRouter.socket.subscription_validator(SocketTopic.UserPrivate)
-async def user_private_subscription_validator(topic_id: str, user: User) -> bool:
+async def user_private_subscription_validator(user: User, topic_id: str) -> bool:
     return user.get_uid() == topic_id

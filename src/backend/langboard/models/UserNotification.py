@@ -19,7 +19,7 @@ class NotificationType(Enum):
 class UserNotification(BaseSqlModel, table=True):
     notifier_type: str = Field(nullable=False)
     notifier_id: SnowflakeID = SnowflakeIDField(nullable=False, index=True)
-    receiver_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    receiver_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     notification_type: NotificationType = Field(nullable=False, sa_type=EnumLikeType(NotificationType))
     message_vars: dict[str, Any] = Field(default={}, sa_type=JSON)
     record_list: list[tuple[str, SnowflakeID]] = Field(default=[], sa_type=JSON)

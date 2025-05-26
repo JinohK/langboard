@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, ClassVar, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar, overload
 from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -185,6 +185,35 @@ class BaseSqlModel(ABC, SQLModel):
 
     @abstractmethod
     def notification_data(self) -> dict[str, Any]: ...
+
+    @overload
+    @classmethod
+    def get_foreign_models(cls) -> dict[str, type[SQLModel]]: ...
+    @overload
+    @classmethod
+    def get_foreign_models(cls, opposite: Literal[False]) -> dict[str, type[SQLModel]]: ...
+    @overload
+    @classmethod
+    def get_foreign_models(cls, opposite: Literal[True]) -> dict[type[SQLModel], set[str]]: ...
+    @classmethod
+    def get_foreign_models(cls, opposite: bool = False) -> dict[str, type[SQLModel]] | dict[type[SQLModel], set[str]]:
+        foreign_models = {}
+        for field_name, field in cls.model_fields.items():
+            if not isinstance(field.json_schema_extra, dict) or "foreign_table" not in field.json_schema_extra:
+                continue
+
+            foreign_table = field.json_schema_extra["foreign_table"]
+            if not isinstance(foreign_table, type) or not issubclass(foreign_table, SQLModel):
+                continue
+
+            if opposite:
+                if foreign_table not in foreign_models:
+                    foreign_models[foreign_table] = set()
+                foreign_models[foreign_table].add(field_name)
+            else:
+                foreign_models[field_name] = foreign_table
+
+        return foreign_models
 
     @abstractmethod
     def _get_repr_keys(self) -> list[str | tuple[str, str]]: ...

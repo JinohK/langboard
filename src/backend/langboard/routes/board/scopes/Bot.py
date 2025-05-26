@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import Field
+from pydantic import AwareDatetime, Field
 from ....core.ai import BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
@@ -29,11 +29,11 @@ class CreateBotCronTimeForm(BaseFormModel):
     )
     target_table: str = Field(..., title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})")
     target_uid: str = Field(..., title="Target UID")
-    start_at: datetime | None = Field(
+    start_at: AwareDatetime | None = Field(
         default=None,
         title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
     )
-    end_at: datetime | None = Field(
+    end_at: AwareDatetime | None = Field(
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )
@@ -51,11 +51,11 @@ class UpdateBotCronTimeForm(BaseFormModel):
         title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})",
     )
     target_uid: str | None = Field(default=None, title="Target UID")
-    start_at: datetime | None = Field(
+    start_at: AwareDatetime | None = Field(
         default=None,
         title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
     )
-    end_at: datetime | None = Field(
+    end_at: AwareDatetime | None = Field(
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )

@@ -17,14 +17,15 @@ class ReactionService(BaseService):
         if not isinstance(target_ids, list):
             target_ids = [target_ids]
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(model_class, User, Bot)
                 .outerjoin(User, model_class.column("user_id") == User.column("id"))
                 .outerjoin(Bot, model_class.column("bot_id") == Bot.column("id"))
                 .where(model_class.column(model_class.get_target_column_name()).in_(target_ids))
             )
-        records = result.all()
+            records = result.all()
 
         reactions: dict[int, dict[str, list[str]]] = {}
         for reaction, reacted_user, reacted_bot in records:
@@ -51,20 +52,21 @@ class ReactionService(BaseService):
         user_or_bot_column = (
             model_class.column("user_id") if isinstance(user_or_bot, User) else model_class.column("bot_id")
         )
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        reaction = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(model_class).where(
                     (user_or_bot_column == user_or_bot.id)
                     & (model_class.column(model_class.get_target_column_name()) == target_id)
                     & (model_class.column("reaction_type") == reaction_type)
                 )
             )
-        reaction = result.first()
+            reaction = result.first()
         is_reacted = bool(reaction)
 
-        async with DbSession.use(readonly=False) as db:
+        with DbSession.use(readonly=False) as db:
             if is_reacted:
-                await db.delete(reaction)
+                db.delete(reaction)
             else:
                 reaction_params = {
                     "reaction_type": reaction_type,
@@ -77,6 +79,6 @@ class ReactionService(BaseService):
                     reaction_params["bot_id"] = user_or_bot.id
 
                 reaction = model_class(**reaction_params)
-                await db.insert(reaction)
+                db.insert(reaction)
 
         return not is_reacted

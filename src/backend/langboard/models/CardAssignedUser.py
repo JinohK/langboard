@@ -5,11 +5,9 @@ from .ProjectAssignedUser import ProjectAssignedUser
 
 
 class CardAssignedUser(BaseSqlModel, table=True):
-    project_assigned_id: SnowflakeID = SnowflakeIDField(
-        foreign_key=ProjectAssignedUser.expr("id"), nullable=False, index=True
-    )
-    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=False, index=True)
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), nullable=False, index=True)
+    project_assigned_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectAssignedUser, nullable=False, index=True)
+    card_id: SnowflakeID = SnowflakeIDField(foreign_key=Card, nullable=False, index=True)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

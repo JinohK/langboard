@@ -96,9 +96,9 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    async def create_card_comment_history(comment: CardComment, user_or_bot: User | Bot):
+    def create_card_comment_history(comment: CardComment, user_or_bot: User | Bot):
         return {
-            "content": await ActivityHistoryHelper.convert_to_python(comment.content),
+            "content": ActivityHistoryHelper.convert_to_python(comment.content),
             "author": ActivityHistoryHelper.create_user_or_bot_history(user_or_bot),
         }
 
@@ -110,25 +110,28 @@ class ActivityHistoryHelper:
         }
 
     @staticmethod
-    async def create_changes(before: dict[str, Any], model: BaseSqlModel):
+    def create_changes(before: dict[str, Any], model: BaseSqlModel):
         after = {key: getattr(model, key) for key in before}
         for key in before:
-            before[key] = await ActivityHistoryHelper.convert_to_python(before[key])
-            after[key] = await ActivityHistoryHelper.convert_to_python(after[key])
+            before[key] = ActivityHistoryHelper.convert_to_python(before[key])
+            after[key] = ActivityHistoryHelper.convert_to_python(after[key])
 
         return {"changes": {"before": before, "after": after}}
 
     @staticmethod
-    async def convert_to_python(data: Any) -> Any:
+    def convert_to_python(data: Any) -> Any:
         if isinstance(data, EditorContentModel) or (isinstance(data, dict) and "content" in data):
             new_data = data if isinstance(data, EditorContentModel) else EditorContentModel(**data)
             user_or_bot_uids, _ = find_mentioned(new_data)
             user_or_bot_ids = [SnowflakeID.from_short_code(uid) for uid in user_or_bot_uids]
-            async with DbSession.use(readonly=True) as db:
-                result = await db.exec(SqlBuilder.select.table(User).where(User.column("id").in_(user_or_bot_ids)))
-                mentionables: list[Bot | User] = list(result.all())
-                result = await db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
-                mentionables.extend(list(result.all()))
+            mentionables: list[Bot | User] = []
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(User).where(User.column("id").in_(user_or_bot_ids)))
+                mentionables.extend(result.all())
+
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(Bot).where(Bot.column("id").in_(user_or_bot_ids)))
+                mentionables.extend(result.all())
 
             return {
                 "type": "editor",

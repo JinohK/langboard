@@ -1,4 +1,4 @@
-from typing import Any, Literal, cast, overload
+from typing import Any, Literal, overload
 from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
@@ -21,45 +21,49 @@ class ProjectLabelService(BaseService):
     @overload
     async def get_all(self, project: TProjectParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all(self, project: TProjectParam, as_api: bool) -> list[ProjectLabel] | list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_labels = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
-        raw_labels = result.all()
+            raw_labels = result.all()
         if not as_api:
-            return list(raw_labels)
+            return raw_labels
         return [label.api_response() for label in raw_labels]
 
     async def get_all_bot(self, project: TProjectParam) -> list[ProjectLabel]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") != None))  # noqa
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
-        return list(result.all())
+            records = result.all()
+        return records
 
     @overload
     async def get_all_by_card(self, card: TCardParam, as_api: Literal[False]) -> list[ProjectLabel]: ...
     @overload
     async def get_all_by_card(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all_by_card(self, card: TCardParam, as_api: bool) -> list[ProjectLabel] | list[dict[str, Any]]:
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_labels = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(ProjectLabel)
                 .join(
                     CardAssignedProjectLabel,
@@ -67,20 +71,21 @@ class ProjectLabelService(BaseService):
                 )
                 .where(CardAssignedProjectLabel.column("card_id") == card.id)
             )
-        raw_labels = result.all()
+            raw_labels = result.all()
         if not as_api:
-            return list(raw_labels)
+            return raw_labels
         return [label.api_response() for label in raw_labels]
 
     async def get_all_card_labels_by_project(
         self, project: TProjectParam
     ) -> list[tuple[ProjectLabel, CardAssignedProjectLabel]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_labels = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(ProjectLabel, CardAssignedProjectLabel)
                 .join(
                     CardAssignedProjectLabel,
@@ -88,30 +93,33 @@ class ProjectLabelService(BaseService):
                 )
                 .where(ProjectLabel.column("project_id") == project.id)
             )
-        raw_labels = result.all()
-        return list(raw_labels)
+            raw_labels = result.all()
+        return raw_labels
 
     async def init_defaults(self, project: TProjectParam) -> list[ProjectLabel]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return []
+
         labels: list[ProjectLabel] = []
-        async with DbSession.use(readonly=False) as db:
-            for default_label in ProjectLabel.DEFAULT_LABELS:
-                label = ProjectLabel(
-                    project_id=project.id,
-                    name=default_label["name"],
-                    color=default_label["color"],
-                    description=default_label["description"],
-                    order=len(labels),
-                )
-                labels.append(label)
-                await db.insert(label)
+        for default_label in ProjectLabel.DEFAULT_LABELS:
+            label = ProjectLabel(
+                project_id=project.id,
+                name=default_label["name"],
+                color=default_label["color"],
+                description=default_label["description"],
+                order=len(labels),
+            )
+            labels.append(label)
+            with DbSession.use(readonly=False) as db:
+                db.insert(label)
 
         return labels
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, name: str, color: str, description: str
     ) -> tuple[ProjectLabel, dict[str, Any]] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
@@ -119,7 +127,7 @@ class ProjectLabelService(BaseService):
         if is_bot:
             max_order = -2  # -1 is for the bot label
         else:
-            max_order = await ServiceHelper.get_max_order(ProjectLabel, "project_id", project.id)
+            max_order = ServiceHelper.get_max_order(ProjectLabel, "project_id", project.id)
 
         label = ProjectLabel(
             project_id=project.id,
@@ -129,8 +137,8 @@ class ProjectLabelService(BaseService):
             description=description,
             order=max_order + 1,
         )
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(label)
+        with DbSession.use(readonly=False) as db:
+            db.insert(label)
 
         if not is_bot:
             ProjectLabelPublisher.created(project, label)
@@ -142,7 +150,7 @@ class ProjectLabelService(BaseService):
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
     ) -> dict[str, Any] | Literal[True] | None:
-        params = await self.__get_records_by_params(project, label)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectLabel, label))
         if not params:
             return None
         project, label = params
@@ -166,8 +174,8 @@ class ProjectLabelService(BaseService):
         if not old_label_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(label)
+        with DbSession.use(readonly=False) as db:
+            db.update(label)
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -182,7 +190,7 @@ class ProjectLabelService(BaseService):
         return model
 
     async def change_order(self, project: TProjectParam, label: TProjectLabelParam, order: int) -> Literal[True] | None:
-        params = await self.__get_records_by_params(project, label)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectLabel, label))
         if not params:
             return None
         project, label = params
@@ -195,17 +203,19 @@ class ProjectLabelService(BaseService):
             (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None)  # noqa
         )
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectLabel, original_order, order)
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(update_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(update_query)
+
+        with DbSession.use(readonly=False) as db:
             label.order = order
-            await db.update(label)
+            db.update(label)
 
         ProjectLabelPublisher.order_changed(project, label)
 
         return True
 
     async def delete(self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam) -> bool | None:
-        params = await self.__get_records_by_params(project, label)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectLabel, label))
         if not params:
             return None
         project, label = params
@@ -213,19 +223,11 @@ class ProjectLabelService(BaseService):
         if label.bot_id and not isinstance(user_or_bot, Bot):
             return None
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(label)
+        with DbSession.use(readonly=False) as db:
+            db.delete(label)
 
         ProjectLabelPublisher.deleted(project, label)
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
         ProjectLabelBotTask.project_label_deleted(user_or_bot, project, label)
 
         return True
-
-    async def __get_records_by_params(self, project: TProjectParam, label: TProjectLabelParam):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        label = cast(ProjectLabel, await ServiceHelper.get_by_param(ProjectLabel, label))
-        if not project or not label or label.project_id != project.id:
-            return None
-
-        return project, label

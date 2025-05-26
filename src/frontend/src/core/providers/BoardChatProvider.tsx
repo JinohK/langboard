@@ -16,6 +16,7 @@ export interface IBoardChatContext {
     isSending: bool;
     setIsSending: React.Dispatch<React.SetStateAction<bool>>;
     scrollToBottomRef: React.RefObject<() => void>;
+    isAtBottomRef: React.RefObject<bool>;
 }
 
 interface IBoardChatProviderProps {
@@ -31,6 +32,7 @@ const initialContext = {
     isSending: false,
     setIsSending: () => {},
     scrollToBottomRef: { current: () => {} },
+    isAtBottomRef: { current: true },
 };
 
 const BoardChatContext = createContext<IBoardChatContext>(initialContext);
@@ -40,22 +42,43 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const [t] = useTranslation();
     const [isSending, setIsSending] = useState(false);
     const scrollToBottomRef = useRef<() => void>(() => {});
+    const isAtBottomRef = useRef(true);
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
         data.ai_message.projectUID = projectUID;
         ChatMessageModel.Model.fromObject({ ...data.ai_message, isPending: true }, true);
         scrollToBottomRef.current();
     }, []);
-    const bufferCallback = useCallback((data: { uid: string; message: IChatContent }) => {
+    const bufferCallback = useCallback((data: { uid: string; message?: IChatContent; chunk?: string }) => {
         const chatMessage = ChatMessageModel.Model.getModel(data.uid);
         if (!chatMessage) {
             return;
         }
 
-        if (data.message?.content && chatMessage.isPending) {
-            chatMessage.isPending = undefined;
-        }
+        if (data.message) {
+            if (data.message.content && chatMessage.isPending) {
+                chatMessage.isPending = undefined;
+            }
 
-        chatMessage.message = data.message;
+            chatMessage.message = data.message;
+        } else if (data.chunk) {
+            if (!chatMessage.message || !chatMessage.message.content) {
+                chatMessage.message = { content: "" };
+            }
+
+            if (data.chunk && chatMessage.isPending) {
+                chatMessage.isPending = undefined;
+            }
+
+            const message = {
+                content: `${chatMessage.message.content}${data.chunk}`,
+            };
+
+            chatMessage.message = message;
+
+            if (isAtBottomRef.current) {
+                scrollToBottomRef.current();
+            }
+        }
     }, []);
     const endCallback = useCallback((data: { uid: string; status: "success" | "failed" | "cancelled" }) => {
         const chatMessage = ChatMessageModel.Model.getModel(data.uid);
@@ -74,12 +97,29 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
         }
 
         setIsSending(false);
+
+        if (isAtBottomRef.current) {
+            scrollToBottomRef.current();
+        }
+    }, []);
+    const errorCallback = useCallback(() => {
+        ChatMessageModel.Model.getModels(() => true).forEach((message) => {
+            if (message.isPending) {
+                message.isPending = undefined;
+            }
+        });
+        setIsSending(false);
+        Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
     }, []);
 
     const sentHandlers = useBoardChatSentHandlers({ projectUID, callback: () => scrollToBottomRef.current() });
     const cancelledHandlers = useBoardChatCancelHandlers({ projectUID });
     const streamHandlers = useMemo(
-        () => useBoardChatStreamHandlers({ projectUID, callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback } }),
+        () =>
+            useBoardChatStreamHandlers({
+                projectUID,
+                callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback, error: errorCallback },
+            }),
         [startCallback, bufferCallback, endCallback]
     );
     useSwitchSocketHandlers({
@@ -97,6 +137,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                 isSending,
                 setIsSending,
                 scrollToBottomRef,
+                isAtBottomRef,
             }}
         >
             {children}

@@ -203,14 +203,15 @@ class BaseBot(metaclass=BotMetaClass):
         await BotOneTimeToken.delete_token(api_request_model.one_time_token)
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_settings = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(AppSetting).where(
                     (AppSetting.setting_type == AppSettingType.LangflowUrl)
                     | (AppSetting.setting_type == AppSettingType.LangflowApiKey)
                 )
             )
-        raw_settings = result.all()
+            raw_settings = result.all()
         settings = {row.setting_type: row.get_value() for row in raw_settings}
 
         if not settings or AppSettingType.LangflowUrl not in settings or AppSettingType.LangflowApiKey not in settings:

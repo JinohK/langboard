@@ -6,8 +6,8 @@ from .Project import Project
 
 
 class ProjectAssignedBot(BaseSqlModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), nullable=False, index=True)
-    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
+    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot, nullable=False, index=True)
     is_disabled: bool = Field(default=False, nullable=False)
 
     @staticmethod

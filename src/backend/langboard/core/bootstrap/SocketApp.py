@@ -1,8 +1,6 @@
 from json import loads as json_loads
-from typing import Any, Union, cast
-from fastapi import status
-from socketify import OpCode, Request, Response, SendStatus
-from socketify import WebSocket as SocketifyWebSocket
+from fastapi import HTTPException, WebSocketDisconnect, status
+from fastapi import WebSocket as FastAPIWebSocket
 from ..db import User
 from ..routing import (
     GLOBAL_TOPIC_ID,
@@ -21,75 +19,50 @@ from ..utils.decorators import thread_safe_singleton
 
 
 @thread_safe_singleton
-class SocketApp(dict):
-    """Manages the socket application for :class:`socketify.ASGI`."""
+class SocketApp:
+    async def route(self, raw_ws: FastAPIWebSocket):
+        authorization = raw_ws.query_params.get("authorization", None)
+        if not authorization:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    def __init__(self):
-        self["upgrade"] = self.on_upgrade
-        self["open"] = self.on_open
-        self["message"] = self.on_message
-        self["close"] = self.on_close
-        self["subscription"] = self.on_subscription
-
-    async def on_upgrade(self, res: Response, req: Request, socket_context) -> None:
-        AppRouter.set_socketify_app(req.app)
-
-        req.preserve()
-
-        queries = req.get_queries()
-        if queries is None:
-            res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
-            return
+        validation_result = await Auth.validate({Auth.AUTHORIZATION_HEADER: authorization})
+        if isinstance(validation_result, User):
+            pass
         else:
-            validation_result = await Auth.validate(queries)
-            if isinstance(validation_result, User):
-                pass
-            elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-                res.send(status=status.HTTP_422_UNPROCESSABLE_ENTITY, end_connection=True)
-                return
-            else:
-                res.send(status=status.HTTP_401_UNAUTHORIZED, end_connection=True)
-                return
+            raise HTTPException(status_code=validation_result)
 
-        auth_token = queries.get("Authorization", queries.get("authorization", None))
-        auth_token = auth_token[0] if isinstance(auth_token, list) else auth_token
+        ws = WebSocket(raw_ws, validation_result)
+        await raw_ws.accept()
 
-        user_data = {
-            "auth_user_id": validation_result.id,
-            "auth_token": auth_token,
-        }
+        await AppRouter.socket.subscribe(ws, SocketTopic.Global, [GLOBAL_TOPIC_ID])
 
-        key = req.get_header("sec-websocket-key")
-        protocol = req.get_header("sec-websocket-protocol")
-        extensions = req.get_header("sec-websocket-extensions")
+        await self.__run_events(SocketDefaultEvent.Open, self.__create_request(ws))
 
-        res.upgrade(key, protocol, extensions, socket_context, user_data)
+        try:
+            while True:
+                message = await raw_ws.receive_text()
+                try:
+                    await self.__validate_token(authorization)
+                except SocketStatusCodeException as e:
+                    await ws.send_error(e.code, e.message)
+                    return
+                await self.__on_message(ws, message)
+        except SocketStatusCodeException as e:
+            await ws.send_error(e.code, e.message)
+        except WebSocketDisconnect:
+            pass
+        except Exception:
+            pass
 
-    async def on_open(self, ws: SocketifyWebSocket) -> None:
-        user_data = ws.get_user_data()
-        if not user_data or not self._is_valid_user_data(user_data):
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return
+        try:
+            await self.__run_events(SocketDefaultEvent.Close, self.__create_request(ws))
+            await AppRouter.socket.unsubscribe_all(ws)
+        except Exception:
+            pass
 
-        if not await self._validate_token(ws, user_data["auth_token"]):
-            return
-
-        req = self._create_request(ws, user_data)
-        await req.socket.subscribe(SocketTopic.Global, [GLOBAL_TOPIC_ID])
-
-        await self._run_events(SocketDefaultEvent.Open, req)
-
-    async def on_message(self, ws: SocketifyWebSocket, message: str | bytes, code: OpCode) -> None:
-        user_data = ws.get_user_data()
-        if not user_data or not self._is_valid_user_data(user_data):
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return
-
-        if not await self._validate_token(ws, user_data["auth_token"]):
-            return
-
+    async def __on_message(self, ws: WebSocket, message: str):
         if not message:
-            ws.send("", OpCode.PONG)
+            await ws.send("ping")
             return
 
         try:
@@ -97,106 +70,24 @@ class SocketApp(dict):
             if not isinstance(data, dict) or "event" not in data or not isinstance(data["event"], str):
                 raise Exception()
         except Exception:
-            await self._send_error(
-                ws, "Invalid data", error_code=SocketResponseCode.WS_4001_INVALID_DATA, should_close=False
-            )
+            await ws.send_error(SocketResponseCode.WS_4001_INVALID_DATA, "Invalid data", should_close=False)
             return
 
         event = data.pop("event")
-        if await self._toggle_subscription(ws, event, data, user_data):
+        if await AppRouter.socket.toggle_subscription(ws, event, data):
             return
 
         event_data = data.get("data", data)
 
-        req = self._create_request(
+        req = self.__create_request(
             ws,
-            user_data,
             event_data,
             from_app={"topic": data.get("topic", None), "topic_id": data.get("topic_id", None)},
         )
 
-        await self._run_events(event, req)
+        await self.__run_events(event, req)
 
-    async def on_close(self, ws: SocketifyWebSocket, code: int, message: Union[bytes, str] | None) -> None:
-        user_data = ws.get_user_data()
-        if not user_data or not self._is_valid_user_data(user_data):
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return
-
-        req = self._create_request(
-            ws,
-            user_data,
-            {"message": message},
-            from_app={"code": code},
-        )
-
-        await self._run_events(SocketDefaultEvent.Close, req)
-
-    async def on_drain(self, ws: SocketifyWebSocket) -> None:
-        user_data = ws.get_user_data()
-        if not user_data or not self._is_valid_user_data(user_data):
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return
-
-        if not await self._validate_token(ws, user_data["auth_token"]):
-            return
-
-        websocket = WebSocket(ws, AppRouter._message_queue)
-
-        while AppRouter._message_queue:
-            if websocket.has_backpressure():
-                break
-
-            data = AppRouter._message_queue.popleft()
-
-            try:
-                if isinstance(data, tuple):
-                    topic, message = data
-                    ws.publish(topic, message)
-                else:
-                    message = data
-                    result = websocket.send(message)
-                if result == SendStatus.BACKPRESSURE or result == SendStatus.DROPPED:
-                    break
-            except Exception:
-                AppRouter._message_queue.appendleft(data)
-                break
-
-    async def on_subscription(self, ws: SocketifyWebSocket, topic: str, subscriptions, subscriptions_before) -> None:
-        user_data = ws.get_user_data()
-        if not user_data or not self._is_valid_user_data(user_data):
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return
-
-        if not await self._validate_token(ws, user_data["auth_token"]):
-            return
-
-        req = self._create_request(
-            ws,
-            user_data,
-            {"topic": topic},
-            from_app={
-                "subscriptions": subscriptions,
-                "subscriptions_before": subscriptions_before,
-            },
-        )
-
-        await self._run_events(SocketDefaultEvent.Subscription, req)
-
-    def _is_valid_user_data(self, user_data: Any | None) -> bool:
-        """Checks if the given user data is valid.
-
-        :param user_data: The user data to check.
-        """
-        return (
-            isinstance(user_data, dict)
-            and "auth_user_id" in user_data
-            and isinstance(user_data["auth_user_id"], int)
-            and "auth_token" in user_data
-            and isinstance(user_data["auth_token"], str)
-        )
-
-    async def _validate_token(self, ws: SocketifyWebSocket, token: str) -> bool:
+    async def __validate_token(self, token: str):
         """Validates the given token.
 
         :param ws: The websocket to send the error to.
@@ -205,86 +96,25 @@ class SocketApp(dict):
         validation_result = await Auth.validate({"Authorization": token})
 
         if isinstance(validation_result, User):
-            return True
-        elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
-            await self._send_error(ws, "Token has expired", error_code=SocketResponseCode.WS_3001_EXPIRED_TOKEN)
-            return False
-        elif validation_result == status.HTTP_401_UNAUTHORIZED:
-            await self._send_error(ws, "Invalid token", error_code=SocketResponseCode.WS_3000_UNAUTHORIZED)
-            return False
-        else:
-            await self._send_error(ws, "Invalid connection", error_code=SocketResponseCode.WS_4000_INVALID_CONNECTION)
-            return False
-
-    async def _send_error(
-        self,
-        ws: SocketifyWebSocket | WebSocket,
-        message: str,
-        error_code: SocketResponseCode | int,
-        should_close: bool = True,
-    ) -> None:
-        _error_code = error_code.value if isinstance(error_code, SocketResponseCode) else error_code
-        if should_close:
-            ws.end(_error_code, {"message": message, "code": _error_code})
             return
-
-        if not isinstance(ws, WebSocket):
-            ws = WebSocket(ws, AppRouter._message_queue)
-
-        await ws.send("error", {"message": message, "code": _error_code})
-
-    async def _toggle_subscription(self, ws: SocketifyWebSocket, event: str, data: dict, user_data: Any) -> bool:
-        if event != "subscribe" and event != "unsubscribe":
-            return False
-
-        websocket = WebSocket(ws, AppRouter._message_queue)
-
-        is_subscribe = event == "subscribe"
-        topic = data.get("topic", None)
-        topic_id = data.get("topic_id", None)
-        if not topic or not topic_id:
-            await self._send_error(
-                ws, "Invalid data", error_code=SocketResponseCode.WS_4001_INVALID_DATA, should_close=False
-            )
-            return True
-
-        topic_ids = [topic_id] if not isinstance(topic_id, list) else topic_id
-
-        if is_subscribe:
-            validator = AppRouter.socket.get_subscription_validator(topic)
-            user = cast(User, await Auth.get_user_by_id(user_data["auth_user_id"]))
-            if validator:
-                validated_topic_ids = []
-                for topic_id in topic_ids:
-                    if await validator(topic_id, user):
-                        validated_topic_ids.append(topic_id)
-            else:
-                validated_topic_ids = topic_ids
-
-            result = await websocket.subscribe(topic, validated_topic_ids)
-            if isinstance(result, SocketResponseCode):
-                await self._send_error(ws, "Forbidden", error_code=result, should_close=False)
-                return True
+        elif validation_result == status.HTTP_422_UNPROCESSABLE_ENTITY:
+            raise SocketStatusCodeException(SocketResponseCode.WS_3001_EXPIRED_TOKEN, "Token has expired")
+        elif validation_result == status.HTTP_401_UNAUTHORIZED:
+            raise SocketStatusCodeException(SocketResponseCode.WS_3000_UNAUTHORIZED, "Invalid token")
         else:
-            await websocket.unsubscribe(topic, topic_ids)
+            raise SocketStatusCodeException(SocketResponseCode.WS_4000_INVALID_CONNECTION, "Invalid connection")
 
-        return True
-
-    def _create_request(
-        self, ws: SocketifyWebSocket, user_data: dict, data: dict | list | None = None, from_app: dict | None = None
+    def __create_request(
+        self, ws: WebSocket, data: dict | list | None = None, from_app: dict | None = None
     ) -> SocketRequest:
-        socket = WebSocket(ws, AppRouter._message_queue)
         req = SocketRequest(
-            socket=socket,
+            socket=ws,
             data=data,
-            from_app={
-                **(from_app or {}),
-                "auth_user_id": user_data["auth_user_id"],
-            },
+            from_app=from_app,
         )
         return req
 
-    async def _run_events(self, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
+    async def __run_events(self, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
         route_events = await AppRouter.socket.get_events(event_name)
         cached_params: TCachedScopes = {}
 
@@ -292,26 +122,24 @@ class SocketApp(dict):
             response = await event.run(cached_params, req)
 
             if isinstance(response, SocketStatusCodeException):
-                await self._send_error(
-                    req.socket,
-                    response.message,
+                await req.socket.send_error(
                     response.code,
+                    response.message,
                     should_close=False,
                 )
                 return
 
             if isinstance(response, SocketEventException):
-                await self._send_error(
-                    req.socket,
-                    str(response.raw_exception),
+                await req.socket.send_error(
                     SocketResponseCode.WS_1011_INTERNAL_ERROR,
+                    str(response.raw_exception),
                     should_close=False,
                 )
                 return
 
             if isinstance(response, SocketManagerScopeException):
-                await self._send_error(
-                    req.socket, str(response.raw_exception), SocketResponseCode.WS_4001_INVALID_DATA, should_close=False
+                await req.socket.send_error(
+                    SocketResponseCode.WS_4001_INVALID_DATA, str(response.raw_exception), should_close=False
                 )
                 return
 

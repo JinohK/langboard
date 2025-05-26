@@ -6,11 +6,9 @@ from .ProjectWiki import ProjectWiki
 
 
 class ProjectWikiAssignedBot(BaseSqlModel, table=True):
-    project_assigned_id: SnowflakeID = SnowflakeIDField(
-        foreign_key=ProjectAssignedBot.expr("id"), nullable=False, index=True
-    )
-    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki.expr("id"), nullable=False, index=True)
-    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=False, index=True)
+    project_assigned_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectAssignedBot, nullable=False, index=True)
+    project_wiki_id: SnowflakeID = SnowflakeIDField(foreign_key=ProjectWiki, nullable=False, index=True)
+    bot_id: SnowflakeID = SnowflakeIDField(foreign_key=Bot, nullable=False, index=True)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

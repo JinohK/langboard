@@ -36,8 +36,9 @@ class NotificationService(BaseService):
         return "notification"
 
     async def get_list(self, user: User) -> list[dict[str, Any]]:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_notifications = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(UserNotification)
                 .where(
                     (UserNotification.column("receiver_id") == user.id)
@@ -48,14 +49,14 @@ class NotificationService(BaseService):
                 )
                 .order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
             )
-        raw_notifications = result.all()
+            raw_notifications = result.all()
 
         references: list[tuple[str, int]] = []
         for notification in raw_notifications:
             references.append((notification.notifier_type, notification.notifier_id))
             for table_name, record_id in notification.record_list:
                 references.append((table_name, record_id))
-        cached_dict = await ServiceHelper.get_references(references, as_type="notification")
+        cached_dict = ServiceHelper.get_references(references, as_type="notification")
 
         notifications = []
         notification_ids_should_delete = []
@@ -87,8 +88,8 @@ class NotificationService(BaseService):
             )
 
         if notification_ids_should_delete:
-            async with DbSession.use(readonly=False) as db:
-                await db.exec(
+            with DbSession.use(readonly=False) as db:
+                db.exec(
                     SqlBuilder.delete.table(UserNotification).where(
                         UserNotification.column("id").in_(notification_ids_should_delete)
                     )
@@ -102,7 +103,7 @@ class NotificationService(BaseService):
 
         records: dict[str, Any] = {}
         for table_name, record_ids in table_ids_dict.items():
-            results = await ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids)
+            results = ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids)
             if not results:
                 continue
             for record in results:
@@ -125,9 +126,9 @@ class NotificationService(BaseService):
         self, notification: UserNotification, as_api: bool
     ) -> User | Bot | tuple[str, dict[str, Any]]:
         if notification.notifier_type == "user":
-            notifier = cast(User, await ServiceHelper.get_by(User, "id", notification.notifier_id, with_deleted=True))
+            notifier = cast(User, ServiceHelper.get_by(User, "id", notification.notifier_id, with_deleted=True))
         else:
-            notifier = cast(Bot, await ServiceHelper.get_by(Bot, "id", notification.notifier_id, with_deleted=True))
+            notifier = cast(Bot, ServiceHelper.get_by(Bot, "id", notification.notifier_id, with_deleted=True))
 
         if not as_api:
             return notifier
@@ -137,13 +138,13 @@ class NotificationService(BaseService):
         return "notifier_bot", notifier.api_response()
 
     async def read(self, user: User, notification: TNotificationParam) -> bool:
-        notification = cast(UserNotification, await ServiceHelper.get_by_param(UserNotification, notification))
+        notification = ServiceHelper.get_by_param(UserNotification, notification)
         if not notification or notification.receiver_id != user.id:
             return False
 
         notification.read_at = now()
-        async with DbSession.use(readonly=False) as db:
-            await db.update(notification)
+        with DbSession.use(readonly=False) as db:
+            db.update(notification)
 
         return True
 
@@ -155,23 +156,23 @@ class NotificationService(BaseService):
                 (UserNotification.column("receiver_id") == user.id) & (UserNotification.column("read_at") == None)  # noqa
             )
         )
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(sql_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(sql_query)
 
     async def delete(self, user: User, notification: TNotificationParam) -> bool:
-        notification = cast(UserNotification, await ServiceHelper.get_by_param(UserNotification, notification))
+        notification = ServiceHelper.get_by_param(UserNotification, notification)
         if not notification or notification.receiver_id != user.id:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(notification)
+        with DbSession.use(readonly=False) as db:
+            db.delete(notification)
 
         return True
 
     async def delete_all(self, user: User):
         sql_query = SqlBuilder.delete.table(UserNotification).where(UserNotification.column("receiver_id") == user.id)
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(sql_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(sql_query)
 
     # from here, notifiable types are added
     async def notify_project_invited(
@@ -319,7 +320,7 @@ class NotificationService(BaseService):
             if result or not mentioned_in:
                 continue
 
-            target_bot = await ServiceHelper.get_by_param(Bot, user_or_bot_uid)
+            target_bot = ServiceHelper.get_by_param(Bot, user_or_bot_uid)
             if not target_bot or target_bot.id == notifier.id:
                 continue
 
@@ -340,7 +341,7 @@ class NotificationService(BaseService):
         email_template_name: TEmailTemplateName | None = None,
         email_formats: dict[str, str] | None = None,
     ) -> bool:
-        target_user = cast(User, await ServiceHelper.get_by_param(User, target_user))
+        target_user = ServiceHelper.get_by_param(User, target_user)
         if not target_user or target_user.id == notifier.id:
             return False
 
@@ -403,5 +404,5 @@ class NotificationService(BaseService):
         return url
 
     async def __get_column_by_card(self, card: Card):
-        column = await ServiceHelper.get_by(ProjectColumn, "id", card.project_column_id)
+        column = ServiceHelper.get_by_param(ProjectColumn, card.project_column_id)
         return cast(ProjectColumn, column)

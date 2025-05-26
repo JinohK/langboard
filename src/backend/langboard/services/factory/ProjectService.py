@@ -27,7 +27,7 @@ class ProjectService(BaseService):
         return "project"
 
     async def get_by_uid(self, uid: str) -> Project | None:
-        return await ServiceHelper.get_by_param(Project, uid)
+        return ServiceHelper.get_by_param(Project, uid)
 
     async def get_role_actions(self, user_or_bot: TUserOrBot, project: Project) -> list[str]:
         if isinstance(user_or_bot, User) and user_or_bot.is_admin:
@@ -45,7 +45,7 @@ class ProjectService(BaseService):
             roles = await role_service.project.get_roles(bot_id=user_or_bot.id)
         else:
             roles = await role_service.project.get_roles(user_id=user_or_bot.id)
-        return list(roles)
+        return roles
 
     @overload
     async def get_assigned_bots(
@@ -58,7 +58,7 @@ class ProjectService(BaseService):
     async def get_assigned_bots(
         self, project: TProjectParam, as_api: bool, where_bot_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[Bot, ProjectAssignedBot]] | list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
         query = (
@@ -70,11 +70,12 @@ class ProjectService(BaseService):
         if where_bot_ids_in is not None:
             query = query.where(Bot.column("id").in_(where_bot_ids_in))
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(query)
-        raw_bots = result.all()
+        raw_bots = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            raw_bots = result.all()
         if not as_api:
-            return list(raw_bots)
+            return raw_bots
 
         bots = [bot.api_response() for bot, _ in raw_bots]
         return bots
@@ -90,7 +91,7 @@ class ProjectService(BaseService):
     async def get_assigned_users(
         self, project: TProjectParam, as_api: bool, where_user_ids_in: list[SnowflakeID] | None = None
     ) -> list[tuple[User, ProjectAssignedUser]] | list[dict[str, Any]]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
         query = (
@@ -102,11 +103,12 @@ class ProjectService(BaseService):
         if where_user_ids_in is not None:
             query = query.where(User.column("id").in_(where_user_ids_in))
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(query)
-        raw_users = result.all()
+        raw_users = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            raw_users = result.all()
         if not as_api:
-            return list(raw_users)
+            return raw_users
 
         users = [user.api_response() for user, _ in raw_users]
         return users
@@ -119,9 +121,10 @@ class ProjectService(BaseService):
             .order_by(Project.column("updated_at").desc(), Project.column("id").desc())
         )
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(sql_query)
-        raw_projects = result.all()
+        raw_projects = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(sql_query)
+            raw_projects = result.all()
 
         column_service = self._get_service(ProjectColumnService)
 
@@ -152,8 +155,9 @@ class ProjectService(BaseService):
         if not user or user.is_new():
             return []
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        raw_projects = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(Project)
                 .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
                 .where(ProjectAssignedUser.column("user_id") == user.id)
@@ -170,7 +174,7 @@ class ProjectService(BaseService):
                     ProjectAssignedUser.column("last_viewed_at"),
                 )
             )
-        raw_projects = result.all()
+            raw_projects = result.all()
         projects = []
         for project in raw_projects:
             api_project = project.api_response()
@@ -182,12 +186,15 @@ class ProjectService(BaseService):
     async def get_details(
         self, user_or_bot: TUserOrBot, project: TProjectParam, is_setting: bool
     ) -> tuple[Project, dict[str, Any]] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
         response = project.api_response()
-        owner = cast(User, await ServiceHelper.get_by_param(User, project.owner_id, with_deleted=True))
+        owner = ServiceHelper.get_by_param(User, project.owner_id, with_deleted=True)
+        if not owner:
+            return None
+
         response["owner"] = owner.api_response()
         response["members"] = await self.get_assigned_users(project, as_api=True)
         response["bots"] = await self.get_assigned_bots(project, as_api=True)
@@ -212,14 +219,15 @@ class ProjectService(BaseService):
     async def is_assigned(
         self, user_or_bot: TUserOrBot, project: TProjectParam
     ) -> tuple[bool, ProjectAssignedBot | ProjectAssignedUser | None]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
-            return False
+            return False, None
 
         target_table = ProjectAssignedBot if isinstance(user_or_bot, Bot) else ProjectAssignedUser
         target_column = "bot_id" if isinstance(user_or_bot, Bot) else "user_id"
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        assignee = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(target_table)
                 .where(
                     (target_table.column("project_id") == project.id)
@@ -227,25 +235,27 @@ class ProjectService(BaseService):
                 )
                 .limit(1)
             )
-        assigned_data = result.first()
-        return bool(assigned_data), assigned_data
+            assignee = result.first()
+        return bool(assignee), assignee
 
     async def is_user_related_to_other_user(self, user: User, target_user: User) -> bool:
         user_a = aliased(ProjectAssignedUser)
         user_b = aliased(ProjectAssignedUser)
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        record = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.column(user_a.id)
                 .join(user_b, cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id)
                 .where((user_a.user_id == user.id) & (user_b.user_id == target_user.id))
             )
-
-        return bool(result.first())
+            record = result.first()
+        return bool(record)
 
     async def toggle_star(self, user: User, uid: str) -> bool:
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        starred, project_id = None, None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.columns(ProjectAssignedUser.starred, Project.id)
                 .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
                 .where(
@@ -254,13 +264,13 @@ class ProjectService(BaseService):
                 )
                 .limit(1)
             )
-        starred, project_id = result.first() or (None, None)
+            starred, project_id = result.first() or (None, None)
 
         if project_id is None:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            result = await db.exec(
+        with DbSession.use(readonly=False) as db:
+            result = db.exec(
                 SqlBuilder.update.table(ProjectAssignedUser)
                 .values(starred=not starred)
                 .where(
@@ -272,8 +282,8 @@ class ProjectService(BaseService):
         return result > 0
 
     async def set_last_view(self, user: User, project: Project) -> None:
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.update.table(ProjectAssignedUser)
                 .values(last_viewed_at=now())
                 .where(
@@ -286,8 +296,8 @@ class ProjectService(BaseService):
         self, user: User, title: str, description: str | None = None, project_type: str = "Other"
     ) -> Project:
         project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(project)
+        with DbSession.use(readonly=False) as db:
+            db.insert(project)
 
         column_service = self._get_service(ProjectColumnService)
         await column_service.get_or_create_archive_if_not_exists(project)
@@ -295,8 +305,8 @@ class ProjectService(BaseService):
         await self._get_service(ProjectLabelService).init_defaults(project)
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(assigned_user)
+        with DbSession.use(readonly=False) as db:
+            db.insert(assigned_user)
 
         role_service = self._get_service(RoleService)
         await role_service.project.grant_all(user_id=user.id, project_id=project.id)
@@ -308,7 +318,7 @@ class ProjectService(BaseService):
     async def update(
         self, user_or_bot: TUserOrBot, project: TProjectParam, form: dict
     ) -> dict[str, Any] | Literal[True] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
@@ -328,8 +338,8 @@ class ProjectService(BaseService):
         if not old_project_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(project)
+        with DbSession.use(readonly=False) as db:
+            db.update(project)
 
         model: dict[str, Any] = {}
         for key in mutable_keys:
@@ -346,7 +356,7 @@ class ProjectService(BaseService):
     async def update_assigned_bots(
         self, user: User, project: TProjectParam, assign_bots: list[str] | list[SnowflakeID]
     ) -> list[Bot] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
@@ -354,8 +364,8 @@ class ProjectService(BaseService):
         old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
         old_assigned_bot_ids: list[int] = [bot.id for bot, _ in old_assigned_bots]
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(ProjectRole).where(
                     (ProjectRole.column("project_id") == project.id)
                     & (ProjectRole.column("bot_id").not_in(assigned_bot_ids))
@@ -363,24 +373,26 @@ class ProjectService(BaseService):
                 )
             )
 
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(ProjectAssignedBot).where(
                     (ProjectAssignedBot.column("project_id") == project.id)
                     & (ProjectAssignedBot.column("bot_id").not_in(assigned_bot_ids))
                 )
             )
 
-            role_service = self._get_service(RoleService)
+        role_service = self._get_service(RoleService)
 
-            bots = []
-            if assign_bots:
-                bots = await ServiceHelper.get_all_by(Bot, "id", assigned_bot_ids)
-                for bot in bots:
-                    if bot.id in old_assigned_bot_ids:
-                        continue
+        bots = []
+        if assign_bots:
+            bots = ServiceHelper.get_all_by(Bot, "id", assigned_bot_ids)
+            for bot in bots:
+                if bot.id in old_assigned_bot_ids:
+                    continue
 
-                    await db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
-                    await role_service.project.grant_default(bot_id=bot.id, project_id=project.id)
+                with DbSession.use(readonly=False) as db:
+                    db.insert(ProjectAssignedBot(project_id=project.id, bot_id=bot.id))
+                await role_service.project.grant_default(bot_id=bot.id, project_id=project.id)
 
         new_bot_ids: list[int] = [bot.id for bot in bots]
 
@@ -388,10 +400,10 @@ class ProjectService(BaseService):
         ProjectActivityTask.project_assigned_bots_updated(user, project, old_assigned_bot_ids, new_bot_ids)
         BotDefaultTask.bot_project_assigned(user, project, old_assigned_bot_ids, new_bot_ids)
 
-        return list(bots)
+        return bots
 
     async def update_assigned_users(self, user: User, project: TProjectParam, emails: list[str]) -> bool:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return False
 
@@ -400,8 +412,8 @@ class ProjectService(BaseService):
         invitation_service = self._get_service(ProjectInvitationService)
         invitation_related_data = await invitation_service.get_invitation_related_data(project, emails)
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(ProjectRole).where(
                     (ProjectRole.column("project_id") == project.id)
                     & (ProjectRole.column("user_id").in_(invitation_related_data.user_ids_should_delete))
@@ -410,7 +422,8 @@ class ProjectService(BaseService):
                 )
             )
 
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(ProjectAssignedUser).where(
                     (ProjectAssignedUser.column("project_id") == project.id)
                     & ProjectAssignedUser.column("id").in_(invitation_related_data.assigned_ids_should_delete)
@@ -434,10 +447,10 @@ class ProjectService(BaseService):
         return result
 
     async def unassign_assignee(self, user: User, project: TProjectParam, target: TUserParam | TBotParam) -> bool:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        target_user = cast(User, await ServiceHelper.get_by_param(User, target))
+        project = ServiceHelper.get_by_param(Project, project)
+        target_user = ServiceHelper.get_by_param(User, target)
         if not target_user:
-            target_bot = cast(Bot, await ServiceHelper.get_by_param(Bot, target))
+            target_bot = ServiceHelper.get_by_param(Bot, target)
             if not target_bot:
                 return False
             target = target_bot
@@ -464,8 +477,8 @@ class ProjectService(BaseService):
         return await self.update_assigned_users(user, project, new_user_emails)
 
     async def update_bot_roles(self, project: TProjectParam, target_bot: TBotParam, roles: list[ProjectRoleAction]):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        target_bot = cast(Bot, await ServiceHelper.get_by_param(Bot, target_bot))
+        project = ServiceHelper.get_by_param(Project, project)
+        target_bot = ServiceHelper.get_by_param(Bot, target_bot)
         if not project or not target_bot:
             return False
 
@@ -490,8 +503,8 @@ class ProjectService(BaseService):
         return True
 
     async def update_user_roles(self, project: TProjectParam, target_user: TUserParam, roles: list[ProjectRoleAction]):
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        target_user = cast(User, await ServiceHelper.get_by_param(User, target_user))
+        project = ServiceHelper.get_by_param(Project, project)
+        target_user = ServiceHelper.get_by_param(User, target_user)
         if not project or not target_user or not (await self.is_assigned(target_user, project))[0]:
             return False
 
@@ -515,8 +528,8 @@ class ProjectService(BaseService):
         return True
 
     async def toggle_bot_activation(self, user: User, project: TProjectParam, target_bot: TBotParam) -> bool:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        target_bot = cast(Bot, await ServiceHelper.get_by_param(Bot, target_bot))
+        project = ServiceHelper.get_by_param(Project, project)
+        target_bot = ServiceHelper.get_by_param(Bot, target_bot)
         if not project or not target_bot:
             return False
 
@@ -528,9 +541,9 @@ class ProjectService(BaseService):
 
         is_disabled = not assigned_bot.is_disabled
 
-        async with DbSession.use(readonly=False) as db:
+        with DbSession.use(readonly=False) as db:
             assigned_bot.is_disabled = is_disabled
-            await db.update(assigned_bot)
+            db.update(assigned_bot)
 
         ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
         ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, is_disabled)
@@ -538,12 +551,13 @@ class ProjectService(BaseService):
         return True
 
     async def delete(self, user: User, project: TProjectParam) -> bool:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return False
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        started_checkitems = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(Checkitem, Card)
                 .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
                 .join(Card, Checklist.column("card_id") == Card.column("id"))
@@ -551,7 +565,7 @@ class ProjectService(BaseService):
                     (Card.column("project_id") == project.id) & (Checkitem.column("status") == CheckitemStatus.Started)
                 )
             )
-        started_checkitems = result.all()
+            started_checkitems = result.all()
 
         checkitem_service = self._get_service_by_name("checkitem")
         current_time = now()
@@ -560,8 +574,8 @@ class ProjectService(BaseService):
                 user, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(project)
+        with DbSession.use(readonly=False) as db:
+            db.delete(project)
 
         ProjectPublisher.deleted(project)
         ProjectActivityTask.project_deleted(user, project)

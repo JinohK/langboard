@@ -71,8 +71,8 @@ class ProjectActivityType(Enum):
 
 
 class ProjectActivity(BaseActivityModel, table=True):
-    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project.expr("id"), index=True)
-    card_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card.expr("id"), nullable=True)
+    project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, index=True)
+    card_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Card, nullable=True)
     activity_type: ProjectActivityType = Field(nullable=False, sa_type=EnumLikeType(ProjectActivityType))
 
     @staticmethod

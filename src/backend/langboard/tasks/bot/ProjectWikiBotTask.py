@@ -47,14 +47,14 @@ async def _run_wiki_task(
     wiki: ProjectWiki,
     other_data: dict[str, Any] | None = None,
 ):
-    bots = await BotTaskHelper.get_project_assigned_bots(project, condition)
+    bots = BotTaskHelper.get_project_assigned_bots(project, condition)
     if wiki.is_public:
-        await BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki, other_data), project)
+        BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki, other_data), project)
         return
     for bot in bots:
-        data = await BotTaskDataHelper.create_private_wiki(bot, user_or_bot, project, wiki, other_data)
+        data = BotTaskDataHelper.create_private_wiki(bot, user_or_bot, project, wiki, other_data)
         if data is not None:
-            await BotTaskHelper.run(bot, condition, data, project)
+            BotTaskHelper.run(bot, condition, data, project)
 
 
 def create_wiki_data(

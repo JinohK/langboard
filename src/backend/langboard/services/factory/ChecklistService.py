@@ -28,11 +28,11 @@ class ChecklistService(BaseService):
     async def get_list(
         self, card: TCardParam, as_api: bool
     ) -> list[tuple[Checklist, list[tuple[Checkitem, Card | None, User | None]]]] | list[dict[str, Any]]:
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
 
-        raw_checklists = await ServiceHelper.get_all_by(Checklist, "card_id", card.id)
+        raw_checklists = ServiceHelper.get_all_by(Checklist, "card_id", card.id)
         if not raw_checklists:
             return []
 
@@ -57,42 +57,44 @@ class ChecklistService(BaseService):
     @overload
     async def get_list_only(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_list_only(self, card: TCardParam, as_api: bool) -> list[Checklist] | list[dict[str, Any]]:
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
+        card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
 
-        raw_checklists = await ServiceHelper.get_all_by(Checklist, "card_id", card.id)
+        raw_checklists = ServiceHelper.get_all_by(Checklist, "card_id", card.id)
         if not as_api:
-            return list(raw_checklists)
+            return raw_checklists
 
         return [checklist.api_response() for checklist in raw_checklists]
 
     async def get_list_only_by_project(self, project: TProjectParam) -> list[Checklist]:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
+        project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
 
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.table(Checklist)
                 .join(Card, Checklist.column("card_id") == Card.column("id"))
                 .where(Card.column("project_id") == project.id)
             )
-        return list(result.all())
+            records = result.all()
+        return records
 
     async def create(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, title: str
     ) -> Checklist | None:
-        params = await self.__get_records_by_params(project, card)
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
-        project, card, _ = params
+        project, card = params
 
-        max_order = await ServiceHelper.get_max_order(Checklist, "card_id", card.id)
+        max_order = ServiceHelper.get_max_order(Checklist, "card_id", card.id)
 
         checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(checklist)
+        with DbSession.use(readonly=False) as db:
+            db.insert(checklist)
 
         ChecklistPublisher.created(card, checklist)
         CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
@@ -103,7 +105,9 @@ class ChecklistService(BaseService):
     async def change_title(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, checklist)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (Checklist, checklist)
+        )
         if not params:
             return None
         project, card, checklist = params
@@ -113,8 +117,8 @@ class ChecklistService(BaseService):
 
         old_title = checklist.title
         checklist.title = title
-        async with DbSession.use(readonly=False) as db:
-            await db.update(checklist)
+        with DbSession.use(readonly=False) as db:
+            db.update(checklist)
 
         ChecklistPublisher.title_changed(card, checklist)
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
@@ -125,7 +129,9 @@ class ChecklistService(BaseService):
     async def change_order(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, order: int
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, checklist)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (Checklist, checklist)
+        )
         if not params:
             return None
         project, card, checklist = params
@@ -133,10 +139,12 @@ class ChecklistService(BaseService):
         original_order = checklist.order
         update_query = SqlBuilder.update.table(Checklist).where(Checklist.column("card_id") == card.id)
         update_query = ServiceHelper.set_order_in_column(update_query, Checklist, original_order, order)
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(update_query)
+        with DbSession.use(readonly=False) as db:
+            db.exec(update_query)
+
+        with DbSession.use(readonly=False) as db:
             checklist.order = order
-            await db.update(checklist)
+            db.update(checklist)
 
         ChecklistPublisher.order_changed(card, checklist)
 
@@ -145,14 +153,16 @@ class ChecklistService(BaseService):
     async def toggle_checked(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, checklist)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (Checklist, checklist)
+        )
         if not params:
             return None
         project, card, checklist = params
 
         checklist.is_checked = not checklist.is_checked
-        async with DbSession.use(readonly=False) as db:
-            await db.update(checklist)
+        with DbSession.use(readonly=False) as db:
+            db.update(checklist)
 
         ChecklistPublisher.checked_changed(card, checklist)
 
@@ -173,7 +183,9 @@ class ChecklistService(BaseService):
         checklist: TChecklistParam,
         user_uids: list[str],
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, checklist)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (Checklist, checklist)
+        )
         if not params:
             return None
         project, card, checklist = params
@@ -192,7 +204,9 @@ class ChecklistService(BaseService):
     async def delete(
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
     ) -> bool | None:
-        params = await self.__get_records_by_params(project, card, checklist)
+        params = ServiceHelper.get_records_with_foreign_by_params(
+            (Project, project), (Card, card), (Checklist, checklist)
+        )
         if not params:
             return None
         project, card, checklist = params
@@ -205,36 +219,11 @@ class ChecklistService(BaseService):
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
             )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(checklist)
+        with DbSession.use(readonly=False) as db:
+            db.delete(checklist)
 
         ChecklistPublisher.deleted(card, checklist)
         CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)
         CardChecklistBotTask.card_checklist_deleted(user_or_bot, project, card, checklist)
 
         return True
-
-    @overload
-    async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam
-    ) -> tuple[Project, Card, None] | None: ...
-    @overload
-    async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
-    ) -> tuple[Project, Card, Checklist] | None: ...
-    async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam, checklist: TChecklistParam | None = None
-    ) -> tuple[Project, Card, Checklist | None] | None:
-        project = cast(Project, await ServiceHelper.get_by_param(Project, project))
-        card = cast(Card, await ServiceHelper.get_by_param(Card, card))
-        if not card or not project or card.project_id != project.id:
-            return None
-
-        if checklist:
-            checklist = cast(Checklist, await ServiceHelper.get_by_param(Checklist, checklist))
-            if not checklist or checklist.card_id != card.id:
-                return None
-        else:
-            checklist = None
-
-        return project, card, checklist

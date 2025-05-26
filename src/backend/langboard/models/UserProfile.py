@@ -4,7 +4,7 @@ from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
 
 
 class UserProfile(BaseSqlModel, table=True):
-    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User.expr("id"), unique=True, nullable=False)
+    user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, unique=True, nullable=False)
     industry: str = Field(nullable=False)
     purpose: str = Field(nullable=False)
     affiliation: str | None = Field(default=None, nullable=True)

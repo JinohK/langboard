@@ -28,14 +28,15 @@ class UserService(BaseService):
         return f"{cache_type}:{email}"
 
     async def get_by_uid(self, uid: str) -> User | None:
-        return await ServiceHelper.get_by_param(User, uid)
+        return ServiceHelper.get_by_param(User, uid)
 
     async def get_by_email(self, email: str | None) -> tuple[User, UserEmail | None] | tuple[None, None]:
-        user = await ServiceHelper.get_by(User, "email", email)
+        user = ServiceHelper.get_by(User, "email", email)
         if user:
             return user, None
-        async with DbSession.use(readonly=True) as db:
-            result = await db.exec(
+        record = (None, None)
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
                 SqlBuilder.select.tables(User, UserEmail)
                 .join(
                     UserEmail,
@@ -44,7 +45,8 @@ class UserService(BaseService):
                 .where(UserEmail.column("email") == email)
                 .limit(1)
             )
-        return result.first() or (None, None)
+            record = result.first() or (None, None)
+        return record
 
     async def get_by_token(
         self, token: str | None, key: str | None
@@ -55,30 +57,32 @@ class UserService(BaseService):
         return await self.get_by_email(email)
 
     async def get_profile(self, user: User) -> UserProfile:
-        return cast(UserProfile, await ServiceHelper.get_by(UserProfile, "user_id", user.id))
+        return cast(UserProfile, ServiceHelper.get_by(UserProfile, "user_id", user.id))
 
     async def create(self, form: dict, avatar: FileModel | None = None) -> User:
         user = User(**form)
         user.avatar = avatar
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(user)
+        with DbSession.use(readonly=False) as db:
+            db.insert(user)
+
+        with DbSession.use(readonly=False) as db:
             user_profile = UserProfile(user_id=user.id, **form)
-            await db.insert(user_profile)
+            db.insert(user_profile)
 
         return user
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(user_email)
+        with DbSession.use(readonly=False) as db:
+            db.insert(user_email)
 
         return user_email
 
     async def get_subemails(self, user: User) -> list[dict[str, Any]]:
         if not user.id:
             return []
-        raw_subemails = await ServiceHelper.get_all_by(UserEmail, "user_id", user.id)
+        raw_subemails = ServiceHelper.get_all_by(UserEmail, "user_id", user.id)
         subemails = [subemail.api_response() for subemail in raw_subemails]
         return subemails
 
@@ -119,7 +123,7 @@ class UserService(BaseService):
         except Exception:
             return None, None, None
 
-        user = await ServiceHelper.get_by(User, "id", token_info["id"])
+        user = ServiceHelper.get_by(User, "id", token_info["id"])
         if not user:
             return None, None, None
 
@@ -137,15 +141,15 @@ class UserService(BaseService):
 
     async def activate(self, user: User) -> None:
         user.activated_at = now()
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user)
+        with DbSession.use(readonly=False) as db:
+            db.update(user)
 
         UserActivityTask.activated(user)
 
     async def verify_subemail(self, subemail: UserEmail) -> None:
         subemail.verified_at = now()
-        async with DbSession.use(readonly=False) as db:
-            await db.update(subemail)
+        with DbSession.use(readonly=False) as db:
+            db.update(subemail)
 
     async def update(self, user: User, form: dict) -> bool:
         profile = await self.get_profile(user)
@@ -181,9 +185,9 @@ class UserService(BaseService):
         if not old_user_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user)
-            await db.update(profile)
+        with DbSession.use(readonly=False) as db:
+            db.update(user)
+            db.update(profile)
 
         await Auth.reset_user(user)
 
@@ -209,8 +213,8 @@ class UserService(BaseService):
             return False
 
         user.preferred_lang = lang
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user)
+        with DbSession.use(readonly=False) as db:
+            db.update(user)
 
         return True
 
@@ -219,9 +223,9 @@ class UserService(BaseService):
         user.email = subemail.email
         subemail.email = user_email
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user)
-            await db.update(subemail)
+        with DbSession.use(readonly=False) as db:
+            db.update(user)
+            db.update(subemail)
 
         await Auth.reset_user(user)
 
@@ -231,12 +235,12 @@ class UserService(BaseService):
         return True
 
     async def delete_email(self, subemail: UserEmail) -> bool:
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(subemail)
+        with DbSession.use(readonly=False) as db:
+            db.delete(subemail)
 
         return True
 
     async def change_password(self, user: User, password: str) -> None:
         user.set_password(password)
-        async with DbSession.use(readonly=False) as db:
-            await db.update(user)
+        with DbSession.use(readonly=False) as db:
+            db.update(user)

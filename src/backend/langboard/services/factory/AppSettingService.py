@@ -1,5 +1,5 @@
 from json import dumps as json_dumps
-from typing import Any, Literal, cast, overload
+from typing import Any, Literal, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.setting import AppSetting, AppSettingType
@@ -21,7 +21,7 @@ class AppSettingService(BaseService):
     @overload
     async def get_by_type(self, setting_type: AppSettingType, as_api: Literal[True]) -> dict[str, Any] | None: ...
     async def get_by_type(self, setting_type: AppSettingType, as_api: bool) -> AppSetting | dict[str, Any] | None:
-        setting = await ServiceHelper.get_by(AppSetting, "setting_type", setting_type)
+        setting = ServiceHelper.get_by(AppSetting, "setting_type", setting_type)
         if not setting:
             return None
         if as_api:
@@ -35,35 +35,35 @@ class AppSettingService(BaseService):
     async def get_all_by_type(
         self, setting_type: AppSettingType, as_api: bool
     ) -> list[AppSetting] | list[dict[str, Any]]:
-        settings = await ServiceHelper.get_all_by(AppSetting, "setting_type", setting_type)
+        settings = ServiceHelper.get_all_by(AppSetting, "setting_type", setting_type)
         if as_api:
             return [setting.api_response() for setting in settings]
-        return list(settings)
+        return settings
 
     @overload
     async def get_all(self, as_api: Literal[False]) -> list[AppSetting]: ...
     @overload
     async def get_all(self, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_all(self, as_api: bool) -> list[AppSetting] | list[dict[str, Any]]:
-        settings = await ServiceHelper.get_all(AppSetting)
+        settings = ServiceHelper.get_all(AppSetting)
         if as_api:
             return [setting.api_response() for setting in settings]
-        return list(settings)
+        return settings
 
     @overload
     async def get_global_relationships(self, as_api: Literal[False]) -> list[GlobalCardRelationshipType]: ...
     @overload
     async def get_global_relationships(self, as_api: Literal[True]) -> list[dict[str, Any]]: ...
     async def get_global_relationships(self, as_api: bool) -> list[GlobalCardRelationshipType] | list[dict[str, Any]]:
-        global_relationships = await ServiceHelper.get_all(GlobalCardRelationshipType)
+        global_relationships = ServiceHelper.get_all(GlobalCardRelationshipType)
         if as_api:
             return [relationship.api_response() for relationship in global_relationships]
-        return list(global_relationships)
+        return global_relationships
 
     async def generate_api_key(self) -> str:
         api_key = f"sk-{generate_random_string(53)}"
         while True:
-            is_existed = await ServiceHelper.get_by(AppSetting, "setting_value", json_dumps(api_key))
+            is_existed = ServiceHelper.get_by(AppSetting, "setting_value", json_dumps(api_key))
             if not is_existed:
                 break
             api_key = f"sk-{generate_random_string(53)}"
@@ -73,13 +73,13 @@ class AppSettingService(BaseService):
         setting = AppSetting(setting_type=setting_type, setting_name=setting_name)
         setting.set_value(setting_value)
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(setting)
+        with DbSession.use(readonly=False) as db:
+            db.insert(setting)
 
         return setting
 
     async def init_langflow(self):
-        settings = await ServiceHelper.get_all_by(
+        settings = ServiceHelper.get_all_by(
             AppSetting, "setting_type", [AppSettingType.LangflowUrl, AppSettingType.LangflowApiKey]
         )
         settings_set = set([setting.setting_type for setting in settings])
@@ -94,7 +94,7 @@ class AppSettingService(BaseService):
     async def update(
         self, setting: TSettingParam, setting_name: str | None = None, setting_value: Any | None = None
     ) -> AppSetting | Literal[True] | None:
-        setting = cast(AppSetting, await ServiceHelper.get_by_param(AppSetting, setting))
+        setting = ServiceHelper.get_by_param(AppSetting, setting)
         if not setting:
             return None
 
@@ -106,25 +106,25 @@ class AppSettingService(BaseService):
         if not setting.has_changes():
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(setting)
+        with DbSession.use(readonly=False) as db:
+            db.update(setting)
 
         return setting
 
     async def delete(self, setting: TSettingParam) -> bool:
-        setting = cast(AppSetting, await ServiceHelper.get_by_param(AppSetting, setting))
+        setting = ServiceHelper.get_by_param(AppSetting, setting)
         if not setting:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(setting)
+        with DbSession.use(readonly=False) as db:
+            db.delete(setting)
         return True
 
     async def delete_selected(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
+        with DbSession.use(readonly=False) as db:
+            db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
 
         return True
 
@@ -137,8 +137,8 @@ class AppSettingService(BaseService):
             description=description,
         )
 
-        async with DbSession.use(readonly=False) as db:
-            await db.insert(global_relationship)
+        with DbSession.use(readonly=False) as db:
+            db.insert(global_relationship)
 
         model = {"global_relationships": global_relationship.api_response()}
         AppSettingPublisher.global_relationship_created(model)
@@ -148,10 +148,7 @@ class AppSettingService(BaseService):
     async def update_global_relationship(
         self, global_relationship: TGlobalCardRelationshipTypeParam, form: dict
     ) -> bool | tuple[GlobalCardRelationshipType, dict[str, Any]] | None:
-        global_relationship = cast(
-            GlobalCardRelationshipType,
-            await ServiceHelper.get_by_param(GlobalCardRelationshipType, global_relationship),
-        )
+        global_relationship = ServiceHelper.get_by_param(GlobalCardRelationshipType, global_relationship)
         if not global_relationship:
             return None
         mutable_keys = ["parent_name", "child_name", "description"]
@@ -171,8 +168,8 @@ class AppSettingService(BaseService):
         if not old_global_relationship_record:
             return True
 
-        async with DbSession.use(readonly=False) as db:
-            await db.update(global_relationship)
+        with DbSession.use(readonly=False) as db:
+            db.update(global_relationship)
 
         model = {}
         for key in form:
@@ -185,15 +182,12 @@ class AppSettingService(BaseService):
         return global_relationship, model
 
     async def delete_global_relationship(self, global_relationship: TGlobalCardRelationshipTypeParam) -> bool:
-        global_relationship = cast(
-            GlobalCardRelationshipType,
-            await ServiceHelper.get_by_param(GlobalCardRelationshipType, global_relationship),
-        )
+        global_relationship = ServiceHelper.get_by_param(GlobalCardRelationshipType, global_relationship)
         if not global_relationship:
             return False
 
-        async with DbSession.use(readonly=False) as db:
-            await db.delete(global_relationship)
+        with DbSession.use(readonly=False) as db:
+            db.delete(global_relationship)
 
         AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
 
@@ -202,8 +196,8 @@ class AppSettingService(BaseService):
     async def delete_selected_global_relationships(self, uids: list[str]) -> bool:
         ids: list[SnowflakeID] = [SnowflakeID.from_short_code(uid) for uid in uids]
 
-        async with DbSession.use(readonly=False) as db:
-            await db.exec(
+        with DbSession.use(readonly=False) as db:
+            db.exec(
                 SqlBuilder.delete.table(GlobalCardRelationshipType).where(
                     GlobalCardRelationshipType.column("id").in_(ids)
                 )

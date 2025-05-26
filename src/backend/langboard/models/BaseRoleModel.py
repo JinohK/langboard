@@ -11,8 +11,8 @@ ALL_GRANTED = "*"
 
 class BaseRoleModel(BaseSqlModel):
     actions: list[str] = Field(default=[ALL_GRANTED], sa_type=CSVType)
-    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User.expr("id"), nullable=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot.expr("id"), nullable=True)
+    user_id: SnowflakeID | None = SnowflakeIDField(foreign_key=User, nullable=True)
+    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot, nullable=True)
 
     @staticmethod
     @abstractmethod

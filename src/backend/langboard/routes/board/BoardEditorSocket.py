@@ -39,10 +39,10 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         for uid, user_uids in editors.items():
             if current_user_uid in user_uids:
                 editors[uid] = [user_uid for user_uid in user_uids if user_uid != current_user_uid]
-                await AppRouter.publish(
+                await AppRouter.socket.publish(
                     topic=editor_topic,
                     topic_id=project_uid,
-                    event_response=f"board:{editor_type}:editor:stop:{uid}",
+                    event=f"board:{editor_type}:editor:stop:{uid}",
                     data={"user_uids": editors[uid]},
                 )
             if not editors[uid]:
@@ -86,10 +86,10 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
         if user_uid not in editors[uid]:
             editors[uid].append(user_uid)
         await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
-        await AppRouter.publish(
+        await AppRouter.socket.publish(
             topic=editor_topic,
             topic_id=project_uid,
-            event_response=f"board:{editor_type}:editor:start:{uid}",
+            event=f"board:{editor_type}:editor:start:{uid}",
             data={"user_uids": editors[uid]},
         )
 
@@ -105,10 +105,10 @@ def register_board_editor(editor_type: str, editor_topic: SocketTopic):
             user_uid = user.get_uid()
             editors[uid] = [editing_user_uid for editing_user_uid in editors[uid] if editing_user_uid != user_uid]
             await Cache.set(f"board:{editor_type}:editors:{project_uid}", editors, ttl=24 * 60 * 60)
-        await AppRouter.publish(
+        await AppRouter.socket.publish(
             topic=editor_topic,
             topic_id=project_uid,
-            event_response=f"board:{editor_type}:editor:stop:{uid}",
+            event=f"board:{editor_type}:editor:stop:{uid}",
             data={"user_uids": editors[uid] if editors else []},
         )
 
