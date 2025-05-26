@@ -1,8 +1,8 @@
-from typing import Optional, cast
+from typing import Any, Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from socketify import ASGI, AppListenOptions, AppOptions
+from uvicorn import run as run_server
 from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
@@ -23,7 +23,7 @@ class App:
         port: int = 5381,
         uds: Optional[str] = None,
         lifespan: bool = True,
-        ssl_options: Optional[AppOptions] = None,
+        ssl_options: Any = None,
         ws_options: Optional[WebSocketOptions] = None,
         workers: int = 1,
         task_factory_maxitems: int = 100000,
@@ -32,7 +32,6 @@ class App:
         self.api = FastAPI(debug=True)
         self.ws = SocketApp()
         self._logger = Logger.main
-        self._server: Optional[ASGI] = None
         self._host = host
         self._port = port
         self._uds = uds
@@ -75,36 +74,11 @@ class App:
         load_modules("routes", "Api", log=not self._is_restarting)
         load_modules("routes", "Socket", log=not self._is_restarting)
         self.api.include_router(AppRouter.api)
+        self.api.websocket_route("/")(self.ws.route)
 
     def _start_server(self):
-        if self._uds:
-            listen_options = AppListenOptions(domain=self._uds)
-        else:
-            listen_options = AppListenOptions(port=self._port, host=self._host)
-
-        def listen_log(config):
-            from .core.service import BotScheduleService
-
-            BotScheduleService.reload_cron()
-
-            if self._is_restarting:
-                msg = "Server restarted successfully."
-            elif self._uds:
-                msg = f"Listening on {config.domain} {'https' if self._ssl_options else 'http'}://localhost"
-            else:
-                msg = f"Listening on {'https' if self._ssl_options else 'http'}://{config.host if config.host and len(config.host) > 1 else 'localhost' }:{config.port}"
-            self._logger.info(msg)
-
-        self._server = ASGI(
-            self.api,
-            options=self._ssl_options,
-            websocket=cast(bool, self.ws),
-            websocket_options=self._ws_options.model_dump() if self._ws_options else None,
-            task_factory_max_items=self._task_factory_maxitems,
-            lifespan=self._lifespan,
-        ).listen(listen_options, listen_log)
-
-        self._server.run(workers=self._workers)
+        AppRouter.set_app(self.api)
+        run_server(self.api, host=self._host, port=self._port, uds=self._uds, workers=self._workers)
 
 
 if __name__ == "__main__":

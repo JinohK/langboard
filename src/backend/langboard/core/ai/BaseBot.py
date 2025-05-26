@@ -199,6 +199,9 @@ class BaseBot(metaclass=BotMetaClass):
             return get_langflow_output_message(response)
         except Exception:
             pass
+        finally:
+            if task_id in self.__abortable_tasks:
+                del self.__abortable_tasks[task_id]
 
         await BotOneTimeToken.delete_token(api_request_model.one_time_token)
 
