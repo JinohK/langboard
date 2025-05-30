@@ -11,6 +11,7 @@ import {
 export interface IProjectCardActivityHistory extends IProjectColumnActivityHistory {
     card: {
         title: string;
+        is_deleted?: bool;
     };
 }
 

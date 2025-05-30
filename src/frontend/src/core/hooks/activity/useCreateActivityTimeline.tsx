@@ -351,7 +351,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 px="2"
                 py="0.5"
                 textSize="sm"
-                cursor={moveUrl ? "pointer" : undefined}
+                cursor={moveUrl ? "pointer" : "default"}
                 className={cn("bg-muted text-muted-foreground", !!moveUrl && "transition-all hover:bg-primary hover:text-primary-foreground")}
                 onClick={moveUrl ? () => navigateRef.current(moveUrl) : undefined}
                 style={style}
@@ -362,17 +362,20 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
     };
 
     const ProjectComponent = ({ project, references }: IBaseActivityComponentProps & { project: IProjectActivityHistory["project"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.MAIN(references!.project!.uid)}>{project.title}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{project.title}</ActivityBadge>;
     };
 
     const ProjectColumnComponent = ({ column, references }: IBaseActivityComponentProps & { column: IProjectColumnActivityHistory["column"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.MAIN(references!.project!.uid)}>{column.name}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{column.name}</ActivityBadge>;
     };
 
     const ProjectLabelComponent = ({ label, references }: IBaseActivityComponentProps & { label: IProjectLabelActivityHistory["label"] }) => {
+        const moveURL = references?.project?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
         return (
             <ActivityBadge
-                moveUrl={ROUTES.BOARD.MAIN(references!.project!.uid)}
+                moveUrl={moveURL}
                 style={{
                     backgroundColor: label.color,
                     color: getTextColorFromHex(label.color),
@@ -384,32 +387,40 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
     };
 
     const ProjectWikiComponent = ({ wiki, references }: IBaseActivityComponentProps & { wiki: IProjectWikiActivityHistory["wiki"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.WIKI_PAGE(references!.project!.uid, references!.project_wiki!.uid)}>{wiki.title}</ActivityBadge>;
+        const moveURL =
+            references?.project?.is_deleted || references?.project_wiki?.is_deleted
+                ? undefined
+                : ROUTES.BOARD.WIKI_PAGE(references!.project!.uid, references!.project_wiki!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{wiki.title}</ActivityBadge>;
     };
 
     const ProjectCardComponent = ({ card, references }: IBaseActivityComponentProps & { card: IProjectCardActivityHistory["card"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.CARD(references!.project!.uid, references!.card!.uid)}>{card.title}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted || references?.card?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{card.title}</ActivityBadge>;
     };
 
     const ProjectCardAttachmentComponent = ({
         attachment,
         references,
     }: IBaseActivityComponentProps & { attachment: IProjectCardAttachmentActivityHistory["attachment"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.CARD(references!.project!.uid, references!.card!.uid)}>{attachment.name}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted || references?.card?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{attachment.name}</ActivityBadge>;
     };
 
     const ProjectCardChecklistComponent = ({
         checklist,
         references,
     }: IBaseActivityComponentProps & { checklist: IProjectCardChecklistActivityHistory["checklist"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.CARD(references!.project!.uid, references!.card!.uid)}>{checklist.title}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted || references?.card?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{checklist.title}</ActivityBadge>;
     };
 
     const ProjectCardCheckitemComponent = ({
         checkitem,
         references,
     }: IBaseActivityComponentProps & { checkitem: IProjectCardCheckitemActivityHistory["checkitem"] }) => {
-        return <ActivityBadge moveUrl={ROUTES.BOARD.CARD(references!.project!.uid, references!.card!.uid)}>{checkitem.title}</ActivityBadge>;
+        const moveURL = references?.project?.is_deleted || references?.card?.is_deleted ? undefined : ROUTES.BOARD.MAIN(references!.project!.uid);
+        return <ActivityBadge moveUrl={moveURL}>{checkitem.title}</ActivityBadge>;
     };
 
     return { SkeletonActivity, ActivityTimeline };

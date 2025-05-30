@@ -6,6 +6,7 @@ import { IBaseActivity, IChangesInActivityHistory, IUpdatedAssigneesInActivityHi
 export interface IProjectWikiActivityHistory extends IProjectActivityHistory {
     wiki: {
         title: string;
+        is_deleted?: bool;
     };
 }
 

@@ -12,6 +12,7 @@ export interface IProjectActivityHistory {
     project: {
         title: string;
         project_type: string;
+        is_deleted?: bool;
     };
 }
 

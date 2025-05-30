@@ -363,10 +363,14 @@ class ActivityService(BaseService):
                     activity_references["card"]["is_deleted"] = True
         elif isinstance(activity, ProjectWikiActivity) and activity.project_id:
             activity_references["refer_type"] = "project_wiki"
-            reference = cached_references.get(f"{ProjectWiki.__tablename__}_{activity.project_wiki_id}")
+            reference = cast(
+                ProjectWiki, cached_references.get(f"{ProjectWiki.__tablename__}_{activity.project_wiki_id}")
+            )
             if not reference:
                 return None
             activity_references["project_wiki"] = reference.api_response()
+            if reference.deleted_at:
+                activity_references["project_wiki"]["is_deleted"] = True
 
         if not activity_references:
             return None
