@@ -20,6 +20,12 @@ const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOption
         const url = format(API_ROUTES.BOARD.CARD.COMMENT.GET_LIST, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.get(url);
 
+        const comments = ProjectCardComment.Model.fromObjectArray(res.data.comments);
+
+        ProjectCardComment.Model.deleteModels(
+            (model) => model.card_uid === params.card_uid && !comments.some((comment: ProjectCardComment.TModel) => comment.uid === model.uid)
+        );
+
         return {
             comments: ProjectCardComment.Model.fromObjectArray(res.data.comments),
         };

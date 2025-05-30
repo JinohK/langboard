@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import useAppSettingDeletedHandlers from "@/controllers/socket/settings/useAppSettingDeletedHandlers";
+import useAppSettingUpdatedHandlers from "@/controllers/socket/settings/useAppSettingUpdatedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -22,6 +24,14 @@ export interface Interface extends IBaseModel {
 class AppSettingModel extends BaseModel<Interface> {
     static get MODEL_NAME() {
         return "AppSettingModel" as const;
+    }
+
+    constructor(model: Record<string, unknown>) {
+        super(model);
+
+        this.subscribeSocketEvents([useAppSettingUpdatedHandlers, useAppSettingDeletedHandlers], {
+            setting: this,
+        });
     }
 
     public static convertModel(model: Interface): Interface {

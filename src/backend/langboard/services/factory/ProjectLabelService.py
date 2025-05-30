@@ -205,8 +205,6 @@ class ProjectLabelService(BaseService):
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectLabel, original_order, order)
         with DbSession.use(readonly=False) as db:
             db.exec(update_query)
-
-        with DbSession.use(readonly=False) as db:
             label.order = order
             db.update(label)
 

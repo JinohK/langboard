@@ -2,7 +2,15 @@ from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
 from httpx import post
-from ....core.ai import Bot, BotAPIAuthType, BotDefaultTrigger, BotTrigger, BotTriggerCondition
+from ....core.ai import (
+    Bot,
+    BotAPIAuthType,
+    BotDefaultTrigger,
+    BotTrigger,
+    BotTriggerCondition,
+    LangboardCalledVariablesComponent,
+    LangflowConstants,
+)
 from ....core.db import DbSession, SqlBuilder
 from ....core.logger import Logger
 from ....core.utils.decorators import staticclass
@@ -61,8 +69,8 @@ class BotTaskHelper:
                     record = result.first()
                 if not record:
                     continue
-            labels = BotTaskHelper.get_project_labels_by_bot(project, bot) if project else None
-            BotTaskHelper.__run(bot, event.value, data, labels)
+            labels = BotTaskHelper.get_project_labels_by_bot(project, bot) if project else []
+            BotTaskHelper.__run(bot, event.value, data, project, labels)
 
     @staticmethod
     def get_project_labels_by_bot(project: Project, bot: Bot) -> list[ProjectLabel]:
@@ -77,21 +85,14 @@ class BotTaskHelper:
         return records
 
     @staticmethod
-    def __run(bot: Bot, event: str, data: dict[str, Any], labels: list[ProjectLabel] | None):
+    def __run(bot: Bot, event: str, data: dict[str, Any], project: Project | None, labels: list[ProjectLabel] | None):
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
         response = {
-            "event": event,
             "data": data,
-            "current_running_bot": {
-                **BotTaskDataHelper.create_user_or_bot(bot),
-                "app_api_token": bot.app_api_token,
-                "prompt": bot.prompt,
-            },
-            "bot_labels_for_project": [label.api_response() for label in labels] if labels else [],
             "custom_markdown_formats": DATA_TEXT_FORMAT_DESCRIPTIONS,
         }
 
@@ -103,15 +104,32 @@ class BotTaskHelper:
             headers["Authorization"] = f"Bearer {bot.api_key}"
             json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Langflow:
-            headers["x-api-key"] = bot.api_key
+            headers[LangflowConstants.ApiKey.value] = bot.api_key
+            tweaks = {
+                **LangboardCalledVariablesComponent(
+                    event=event,
+                    app_api_token=bot.app_api_token,
+                    project_uid=project.get_uid() if project else None,
+                    bot_labels_for_project=[label.api_response() for label in labels] if labels else None,
+                    current_runner_type="bot",
+                    current_runner_data={
+                        **BotTaskDataHelper.create_user_or_bot(bot),
+                        "prompt": bot.prompt,
+                    },
+                ).to_tweaks()
+            }
+
             if bot.api_url.count("v1/webhook") > 0:
-                json_data = json_loads(json_dumps(response, default=str))
+                json_data = {
+                    "input": json_loads(json_dumps(response, default=str)),
+                    "tweaks": tweaks,
+                }
             else:
                 json_data = {
                     "input_value": json_dumps(response, default=str),
                     "input_type": "chat",
                     "output_type": "chat",
-                    "tweaks": {},
+                    "tweaks": tweaks,
                 }
         elif bot.api_auth_type == BotAPIAuthType.OpenAI:
             headers["Authorization"] = f"Bearer {bot.api_key}"

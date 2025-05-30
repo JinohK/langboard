@@ -4,7 +4,7 @@ import Cron from "@/components/Cron";
 import { BotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBotScheduleFormMap {
@@ -68,8 +68,13 @@ function BoardSettingsCronBotScheduleForm({
         },
         [startAt, endAt]
     );
+    const lastValueCronStringRef = useRef<string>(undefined);
 
     const onChangeRunningType = (value: BotSchedule.ERunningType) => {
+        if (valuesMapRef.current.runningType === BotSchedule.ERunningType.Onetime && lastValueCronStringRef.current) {
+            valuesMapRef.current.interval = lastValueCronStringRef.current;
+        }
+
         setRunningType(value as BotSchedule.ERunningType);
         valuesMapRef.current.runningType = value as BotSchedule.ERunningType;
         const now = new Date();
@@ -91,6 +96,11 @@ function BoardSettingsCronBotScheduleForm({
 
         setStartAt(valuesMapRef.current.startAt);
         setEndAt(valuesMapRef.current.endAt);
+
+        if (value === BotSchedule.ERunningType.Onetime) {
+            lastValueCronStringRef.current = valuesMapRef.current.interval;
+            valuesMapRef.current.interval = "* * * * *";
+        }
     };
 
     const onChangeScopeType = (value: BotSchedule.TTargetTable) => {
@@ -237,7 +247,9 @@ function BoardSettingsCronBotScheduleForm({
                     </Select.Content>
                 </Select.Root>
             )}
-            <Cron value={initialValuesMap?.interval ?? "@reboot"} setValue={onChangeCron} disabled={disabled} readOnly={disabled} />
+            {runningType !== BotSchedule.ERunningType.Onetime && (
+                <Cron value={initialValuesMap?.interval ?? "@reboot"} setValue={onChangeCron} disabled={disabled} readOnly={disabled} />
+            )}
         </Flex>
     );
 }

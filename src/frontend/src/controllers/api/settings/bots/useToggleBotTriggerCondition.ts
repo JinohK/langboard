@@ -18,14 +18,6 @@ const useToggleBotTriggerCondition = (bot: BotModel.TModel, options?: TMutationO
             condition: params.condition,
         });
 
-        const conditions = { ...bot.conditions };
-        if (conditions[params.condition]) {
-            delete conditions[params.condition];
-        } else {
-            conditions[params.condition] = { is_predefined: false };
-        }
-        bot.conditions = conditions;
-
         return res.data;
     };
 

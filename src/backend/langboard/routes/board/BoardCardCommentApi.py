@@ -136,6 +136,6 @@ async def toggle_reaction_card_comment(
 
 def _is_owner(user_or_bot: User | Bot, card_comment: CardComment):
     if isinstance(user_or_bot, User):
-        return card_comment.user_id == user_or_bot.id or not user_or_bot.is_admin
+        return card_comment.user_id == user_or_bot.id or user_or_bot.is_admin
     else:
         return card_comment.bot_id == user_or_bot.id

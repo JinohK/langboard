@@ -6,5 +6,6 @@
   "Forbidden": "Forbidden",
   "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later.",
   "Server has been temporarily disabled. Please try again later.": "Server has been temporarily disabled. Please try again later.",
-  "Download failed.": "Download failed."
+  "Download failed.": "Download failed.",
+  "Failed to upload attachment. File size may be too large.": "Failed to upload attachment. File size may be too large."
 }

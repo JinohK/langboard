@@ -141,8 +141,6 @@ class ChecklistService(BaseService):
         update_query = ServiceHelper.set_order_in_column(update_query, Checklist, original_order, order)
         with DbSession.use(readonly=False) as db:
             db.exec(update_query)
-
-        with DbSession.use(readonly=False) as db:
             checklist.order = order
             db.update(checklist)
 

@@ -12,10 +12,10 @@ const useBoardChatCancelHandlers = ({ projectUID }: IUseBoardChatCancelHandlersP
         topicId: projectUID,
         eventKey: `board-card-sent-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT_CANCELLED,
+            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.CANCELLED,
         },
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CHAT_CANCEL,
+            name: SOCKET_CLIENT_EVENTS.BOARD.CHAT.CANCEL,
         },
     });
 };

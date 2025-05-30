@@ -57,15 +57,17 @@ def _watch(options: RunCommandOptions):
 
 
 def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
-    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count()))]
+    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count() - 1))]
+    file_reader_queue = Queue()
+    worker_queues.append(file_reader_queue)
     DispatcherQueue.start(worker_queues)
 
     workers = options.workers
     options.workers = 1
     processes: list[Process] = []
     try:
-        for i in range(min(workers, cpu_count())):
-            process = _run_app_wrapper(i, options, worker_queues, is_restarting)
+        for i in range(min(workers, cpu_count() - 1)):
+            process = _run_app_wrapper(i, options, worker_queues, file_reader_queue, is_restarting)
             processes.append(process)
 
         broker_process = _run_broker(is_restarting)
@@ -104,20 +106,31 @@ def _run_broker(is_restarting: bool = False) -> Process | None:
 
 
 def _run_app_wrapper(
-    index: int, options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False
+    index: int,
+    options: RunCommandOptions,
+    worker_queues: list[Queue],
+    file_reader_queue: Queue,
+    is_restarting: bool = False,
 ) -> Process:
     if is_restarting:
         Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
-    process = Process(target=_start_app, args=(index, options, worker_queues, is_restarting))
+    process = Process(target=_start_app, args=(index, options, worker_queues, file_reader_queue, is_restarting))
     process.start()
     return process
 
 
-def _start_app(index: int, options: RunCommandOptions, worker_queues: list[Queue], is_restarting: bool = False) -> None:
-    from .core.broadcast import DispatcherQueue, WorkerQueue
+def _start_app(
+    index: int,
+    options: RunCommandOptions,
+    worker_queues: list[Queue],
+    file_reader_queue: Queue,
+    is_restarting: bool = False,
+) -> None:
+    from .core.broadcast import DispatcherQueue, FileReaderQueue, WorkerQueue
 
     DispatcherQueue.start(worker_queues)
     WorkerQueue.queue = worker_queues[index]
+    FileReaderQueue.queue = file_reader_queue
 
     pid = getpid()
     ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
@@ -129,11 +142,15 @@ def _start_app(index: int, options: RunCommandOptions, worker_queues: list[Queue
         broker_thread = Thread(target=_start_broker, args=(is_restarting,))
         broker_thread.start()
 
-    queue_thread = Thread(
+    Thread(
         target=_start_worker_queue,
         args=(is_restarting,),
-    )
-    queue_thread.start()
+    ).start()
+
+    Thread(
+        target=_start_file_reader_queue,
+        args=(is_restarting,),
+    ).start()
 
     app = App(
         host=HOST,
@@ -166,3 +183,11 @@ def _start_worker_queue(is_restarting: bool = False) -> None:
     load_modules("consumers", "Consumer", log=not is_restarting)
 
     WorkerQueue.start()
+
+
+def _start_file_reader_queue(is_restarting: bool = False) -> None:
+    from .core.broadcast import FileReaderQueue
+
+    load_modules("consumers", "Consumer", log=not is_restarting)
+
+    FileReaderQueue.start()

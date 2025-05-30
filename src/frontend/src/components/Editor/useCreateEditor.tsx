@@ -150,15 +150,14 @@ export const getPlateComponents = ({ readOnly = false }: { readOnly: bool }): Re
 export const useCreateEditor = (props: TUseCreateEditor) => {
     const socket = useSocket();
     const { value, readOnly = false, plugins: customPlugins } = props;
-    const editorData = useEditorData();
-    const { socketEvents, chatEventKey, copilotEventKey, commonSocketEventData } = editorData;
+    const { socketEvents, chatEventKey, copilotEventKey, commonSocketEventData } = useEditorData();
 
     const components = useMemo(
         () =>
             getPlateComponents({
                 readOnly,
             }),
-        [props, editorData, readOnly]
+        [props, readOnly]
     );
     const plugins = useMemo(() => {
         const pluginList = [...(readOnly ? viewPlugins : editorPlugins), ...(customPlugins ?? [])];
@@ -175,7 +174,7 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
             );
         }
         return pluginList;
-    }, [readOnly]);
+    }, [readOnly, socketEvents, chatEventKey, copilotEventKey, commonSocketEventData]);
     const convertValue = useCallback(
         (editor: PlateEditor) => {
             if (value) {

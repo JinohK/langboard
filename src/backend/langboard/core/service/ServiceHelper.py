@@ -34,22 +34,29 @@ class ServiceHelper:
     @overload
     @staticmethod
     def get_references(
-        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]], as_type: Literal["api"]
+        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]],
+        as_type: Literal["api"],
+        with_deleted: bool = False,
     ) -> dict[str, dict[str, Any]]: ...
     @overload
     @staticmethod
     def get_references(
-        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]], as_type: Literal["notification"]
+        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]],
+        as_type: Literal["notification"],
+        with_deleted: bool = False,
     ) -> dict[str, dict[str, Any]]: ...
     @overload
     @staticmethod
     def get_references(
-        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]], as_type: Literal["raw"]
+        references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]],
+        as_type: Literal["raw"],
+        with_deleted: bool = False,
     ) -> dict[str, BaseSqlModel]: ...
     @staticmethod
     def get_references(
         references: list[tuple[str, SnowflakeID]] | list[tuple[str, int]],
         as_type: Literal["api", "notification", "raw"],
+        with_deleted: bool = False,
     ) -> dict[str, dict[str, Any]] | dict[str, BaseSqlModel]:
         """Get records by table name and ids.
 
@@ -67,7 +74,7 @@ class ServiceHelper:
 
         cached_dict = {}
         for table_name, record_ids in table_ids_dict.items():
-            records = ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids)
+            records = ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids, with_deleted)
             if not records:
                 continue
 
@@ -85,13 +92,13 @@ class ServiceHelper:
 
     @staticmethod
     def get_records_by_table_name_with_ids(
-        table_name: str, record_ids: list[SnowflakeID | int] | set[SnowflakeID | int]
+        table_name: str, record_ids: list[SnowflakeID | int] | set[SnowflakeID | int], with_deleted: bool = False
     ) -> Sequence[BaseSqlModel] | None:
         table = get_model_by_table_name(table_name)
         if not table:
             return None
 
-        return ServiceHelper.get_all_by(table, "id", record_ids)
+        return ServiceHelper.get_all_by(table, "id", record_ids, with_deleted)
 
     @overload
     @staticmethod
@@ -330,6 +337,7 @@ class ServiceHelper:
 
                 query = query.join(table, on_clause).where(table.column("id") == table_id)
 
+        query = query.limit(1)
         records = None
         with DbSession.use(readonly=True) as target_db:
             result = target_db.exec(query)

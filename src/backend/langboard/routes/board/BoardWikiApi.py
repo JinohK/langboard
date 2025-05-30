@@ -240,6 +240,9 @@ async def update_project_wiki_assignees(
     if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
         return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
 
+    if not form.assignees:
+        raise MissingException("body", "assignees")
+
     result = await service.project_wiki.update_assignees(user_or_bot, project_uid, project_wiki, form.assignees)
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)

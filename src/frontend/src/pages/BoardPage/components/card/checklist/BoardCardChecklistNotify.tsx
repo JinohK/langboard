@@ -1,14 +1,15 @@
 import { Toast } from "@/components/base";
-import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import useNotifyCardChecklist from "@/controllers/api/card/checklist/useNotifyCardChecklist";
 import { Project, User, UserGroup } from "@/core/models";
 import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistNotify() {
-    const { projectUID, card, currentUser, sharedClassNames, hasRoleAction } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
     const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
     const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist();
     const [t] = useTranslation();
@@ -16,36 +17,37 @@ function BoardCardChecklistNotify() {
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
 
-    const notify = (selectedItems: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidating || !selectedItems.length) {
-            return;
-        }
+    const notify = useCallback(
+        (selectedItems: User.TModel[]) => {
+            if (isValidating || !selectedItems.length) {
+                return;
+            }
 
-        setIsValidating(true);
+            setIsValidating(true);
 
-        endCallback();
-        const promise = notifyChecklistMutateAsync({
-            project_uid: projectUID,
-            card_uid: card.uid,
-            checklist_uid: checklist.uid,
-            user_uids: selectedItems.map((item) => item.uid),
-        });
+            const promise = notifyChecklistMutateAsync({
+                project_uid: projectUID,
+                card_uid: card.uid,
+                checklist_uid: checklist.uid,
+                user_uids: selectedItems.map((item) => item.uid),
+            });
 
-        Toast.Add.promise(promise, {
-            loading: t("common.Deleting..."),
-            error: sharedErrorHandler,
-            success: () => {
-                return t("card.successes.Notified members successfully.");
-            },
-            finally: () => {
-                setIsValidating(false);
-                endCallback();
-            },
-        });
-    };
+            Toast.Add.promise(promise, {
+                loading: t("common.Deleting..."),
+                error: sharedErrorHandler,
+                success: () => {
+                    return t("card.successes.Notified members successfully.");
+                },
+                finally: () => {
+                    setIsValidating(false);
+                },
+            });
+        },
+        [isValidating, setIsValidating]
+    );
 
     return (
-        <MultiSelectAssigneesPopover
+        <MultiSelectAssignee.Popover
             popoverButtonProps={{
                 size: "icon",
                 className: "h-8 w-5 sm:size-8",
@@ -53,7 +55,11 @@ function BoardCardChecklistNotify() {
                 title: t("card.Notify members"),
             }}
             popoverContentProps={{
-                className: sharedClassNames.popoverContent,
+                className: cn(
+                    "max-w-[calc(100vw_-_theme(spacing.20))]",
+                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
+                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                ),
                 align: "start",
             }}
             userAvatarListProps={{
@@ -63,26 +69,22 @@ function BoardCardChecklistNotify() {
                 listAlign: "start",
                 className: "space-x-1",
             }}
-            multiSelectProps={{
-                placeholder: t("card.Select members..."),
-                className: cn(
-                    "max-w-[calc(100vw_-_theme(spacing.20))]",
-                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
-                ),
-                inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
+            placeholder={t("card.Select members...")}
+            allSelectables={projectMembers.filter((member) => member.uid !== currentUser.uid)}
+            originalAssignees={[]}
+            tagContentProps={{
+                projectUID,
             }}
+            createSearchText={
+                ((item: User.TModel) => `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`) as IFormProps["createSearchText"]
+            }
+            createLabel={((item: User.TModel) => `${item.firstname} ${item.lastname}`.trim()) as IFormProps["createLabel"]}
             addIcon="bell-plus"
             addIconSize="5"
             saveText={t("card.Notify")}
-            onSave={notify}
-            isValidating={isValidating}
-            allItems={projectMembers.filter((member) => member.uid !== currentUser.uid)}
+            save={notify as TSaveHandler}
             groups={groups}
-            assignedFilter={() => false}
-            initialSelectedItems={[]}
             canEdit={canEdit}
-            projectUID={projectUID}
         />
     );
 }

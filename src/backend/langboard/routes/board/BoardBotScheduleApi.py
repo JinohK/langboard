@@ -1,9 +1,10 @@
 from fastapi import Depends, status
-from ...core.ai import Bot, BotSchedule
+from ...core.ai import Bot, BotSchedule, BotScheduleRunningType
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.service import BotScheduleService
+from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers import ProjectBotPublisher
@@ -152,6 +153,9 @@ async def schedule_bot_crons(
     if not BotScheduleService.is_valid_interval_str(form.interval_str):
         return JsonResponse(content={}, status_code=status.HTTP_400_BAD_REQUEST)
 
+    if form.running_type == BotScheduleRunningType.Duration and not form.start_at:
+        form.start_at = now()
+
     if not BotScheduleService.get_default_status_with_dates(
         running_type=form.running_type, start_at=form.start_at, end_at=form.end_at
     ):
@@ -165,9 +169,6 @@ async def schedule_bot_crons(
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     project, bot = result
-
-    if not target_model:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
     bot_schedule = await BotScheduleService.schedule(
         bot, form.interval_str, target_model, project, form.running_type, form.start_at, form.end_at

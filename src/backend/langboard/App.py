@@ -7,6 +7,7 @@ from .core.bootstrap import SocketApp, WebSocketOptions
 from .core.logger import Logger
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
 from .core.security import Auth
+from .core.service import BotScheduleService
 from .core.utils.decorators import singleton
 from .Loader import load_modules
 from .middlewares import AuthMiddleware, RoleMiddleware
@@ -78,6 +79,7 @@ class App:
 
     def _start_server(self):
         AppRouter.set_app(self.api)
+        BotScheduleService.reload_cron()
         run_server(self.api, host=self._host, port=self._port, uds=self._uds, workers=self._workers)
 
 

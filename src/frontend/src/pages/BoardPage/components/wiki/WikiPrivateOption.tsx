@@ -1,4 +1,3 @@
-import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
 import { Flex, Label, Skeleton, Switch, Toast } from "@/components/base";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
@@ -11,6 +10,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
+import MultiSelectAssignee, { TAssignee, TSaveHandler } from "@/components/MultiSelectAssignee";
 
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.TModel;
@@ -38,7 +38,12 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     const assignedBots = wiki.useForeignField<BotModel.TModel>("assigned_bots");
     const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
-    const allItems = useMemo(() => [...projectBots, ...projectMembers], [projectBots, projectMembers]);
+    const allItems = useMemo(() => [...projectBots, ...projectMembers].filter((item) => item.uid !== currentUser.uid), [projectBots, projectMembers]);
+    const showableAssignees = useMemo(() => [...assignedBots, ...assignedMembers], [assignedBots, assignedMembers]);
+    const originalAssignees = useMemo(
+        () => [...assignedBots, ...assignedMembers].filter((item) => item.uid !== currentUser.uid),
+        [assignedBots, assignedMembers]
+    );
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
     const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees();
@@ -94,7 +99,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         });
     };
 
-    const saveAssignees = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
+    const saveAssignees = (items: TAssignee[]) => {
         if (isValidating || isPublic) {
             return;
         }
@@ -131,7 +136,6 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
             },
             finally: () => {
                 setIsValidating(false);
-                endCallback();
             },
         });
     };
@@ -143,14 +147,18 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 <span>{t(`wiki.${isPublic ? "Public" : "Private"}`)}</span>
             </Label>
             {!isPublic && (
-                <MultiSelectAssigneesPopover
+                <MultiSelectAssignee.Popover
                     popoverButtonProps={{
                         size: "icon",
                         className: "size-8",
                         title: t("project.Assign members"),
                     }}
                     popoverContentProps={{
-                        className: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
+                        className: cn(
+                            "max-w-[calc(100vw_-_theme(spacing.20))]",
+                            "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
+                            "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                        ),
                         align: "start",
                     }}
                     userAvatarListProps={{
@@ -159,32 +167,35 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                         spacing: "3",
                         listAlign: "start",
                     }}
-                    multiSelectProps={{
-                        placeholder: t("card.Select members..."),
-                        className: cn(
-                            "max-w-[calc(100vw_-_theme(spacing.20))]",
-                            "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                            "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
-                        ),
-                        inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
+                    placeholder={t("wiki.Select members and bots...")}
+                    allSelectables={allItems}
+                    originalAssignees={originalAssignees}
+                    showableAssignees={showableAssignees}
+                    tagContentProps={{
+                        projectUID,
                     }}
                     addIconSize="6"
-                    onSave={saveAssignees}
-                    isValidating={isValidating}
-                    allItems={allItems}
-                    groups={groups}
-                    assignedFilter={(item) => {
-                        if (item instanceof User.Model) {
-                            return assignedMembers.includes(item);
+                    save={saveAssignees as TSaveHandler}
+                    createSearchText={(item) => {
+                        if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
+                            item = item as BotModel.TModel;
+                            return `${item.uid} ${item.name} ${item.bot_uname}`;
                         } else {
-                            return assignedBots.includes(item);
+                            item = item as User.TModel;
+                            return `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`;
                         }
                     }}
-                    initialSelectedItems={allItems.filter(
-                        (item) => assignedBots.includes(item as BotModel.TModel) || assignedMembers.includes(item as User.TModel)
-                    )}
+                    createLabel={(item) => {
+                        if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
+                            item = item as BotModel.TModel;
+                            return `${item.name} (${item.bot_uname})`;
+                        } else {
+                            item = item as User.TModel;
+                            return `${item.firstname} ${item.lastname}`.trim();
+                        }
+                    }}
+                    groups={groups}
                     canEdit
-                    projectUID={projectUID}
                 />
             )}
         </Flex>

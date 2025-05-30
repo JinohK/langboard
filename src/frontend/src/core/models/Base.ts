@@ -531,6 +531,10 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         this.update({ uid: value } as any);
     }
 
+    public get MODEL_NAME(): keyof IModelMap {
+        return this.constructor.name as any;
+    }
+
     public asFake<TDerived extends TBaseModelInstance<any>>(this: TDerived): TDerived {
         const constructor = this.#getConstructor();
         const model = {

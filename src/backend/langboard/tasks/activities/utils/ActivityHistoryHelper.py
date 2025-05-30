@@ -56,7 +56,7 @@ class ActivityHistoryHelper:
     @staticmethod
     def create_project_column_history(column: ProjectColumn):
         return {
-            "name": column.DEFAULT_ARCHIVE_COLUMN_NAME,
+            "name": column.name,
         }
 
     @staticmethod

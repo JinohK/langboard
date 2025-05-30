@@ -34,13 +34,12 @@ class Result(Generic[_TSelectParam]):
     def first(self) -> Optional[_TSelectParam]:
         return self.__records[0] if self.__records else None
 
-    def __copy_record(self, record: Any) -> Any:
+    def __copy_record(self, record: Any):
         if isinstance(record, BaseSqlModel):
-            self.__records.append(self.__copy_model(record))
+            record = self.__copy_model(record)
         elif isinstance(record, tuple):
-            self.__records.append(self.__convert_tuple_record(record))
-        else:
-            self.__records.append(record)
+            record = self.__convert_tuple_record(record)
+        return record
 
     def __convert_tuple_record(self, record: tuple) -> tuple:
         tuple_record = []
@@ -107,7 +106,7 @@ class _Engine:
         splitted = url.split("://", maxsplit=1)
         driver = splitted[0]
         if driver == "sqlite":
-            return f"sqlite+aiosqlite://{splitted[1]}"
+            return f"sqlite://{splitted[1]}"
         if driver == "postgresql":
             return f"postgresql+psycopg://{splitted[1]}"
         return url

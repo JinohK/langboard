@@ -31,6 +31,12 @@ class BotRunner:
             return
         await bot.abort(task_id)
 
+    async def upload_file(self, bot_type: InternalBotType, file: Any) -> str | None:
+        bot = self.__get_bot(bot_type)
+        if bot is None:
+            return None
+        return await bot.upload_file(file)
+
     async def is_available(self, bot_type: InternalBotType) -> bool:
         if bot_type not in BaseBot.__bots__:
             return False

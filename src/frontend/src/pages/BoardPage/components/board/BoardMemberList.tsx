@@ -1,12 +1,14 @@
-import { getMultiSelectItemLabel, MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import MultiSelectAssignee, { TAssignee, TSaveHandler } from "@/components/MultiSelectAssignee";
 import { Toast } from "@/components/base";
+import { EMAIL_REGEX } from "@/constants";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel, Project, User, UserGroup } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useMemo, useState } from "react";
+import TypeUtils from "@/core/utils/TypeUtils";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardMemberListProps {
@@ -23,20 +25,21 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const bots = project.useForeignField<BotModel.TModel>("bots");
     const invitedMembers = project.useForeignField<User.TModel>("invited_members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
-    const allItems = useMemo(() => [...members, ...bots, ...invitedMembers], [members, bots, invitedMembers]);
-    const [isValidating, setIsValidating] = useState(false);
+    const allSelectables = useMemo(
+        () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        [members, invitedMembers]
+    );
+    const showableAssignees = useMemo(() => [...members, ...bots].slice(0, 6), [members, bots]);
+    const selectedAssignees = useMemo(
+        () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        [members, invitedMembers]
+    );
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
 
-    const save = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidating) {
-            return;
-        }
-
-        setIsValidating(true);
-
+    const save = (items: (string | User.TModel)[]) => {
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
-            emails: (items as User.TModel[]).map((user) => user.email),
+            emails: items.map((item) => (TypeUtils.isString(item) ? item : item.email)),
         });
 
         Toast.Add.promise(promise, {
@@ -57,22 +60,22 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             success: () => {
                 return t("project.successes.Assigned members updated and invited new users successfully.");
             },
-            finally: () => {
-                endCallback();
-                setIsValidating(false);
-            },
         });
     };
 
     return (
-        <MultiSelectAssigneesPopover
+        <MultiSelectAssignee.Popover
             popoverButtonProps={{
                 size: "icon",
                 className: cn("size-8 xs:size-10", isSelectCardView ? "hidden" : ""),
                 title: t("project.Assign members"),
             }}
             popoverContentProps={{
-                className: "w-full max-w-[calc(var(--radix-popper-available-width)_-_theme(spacing.10))]",
+                className: cn(
+                    "max-w-[calc(100vw_-_theme(spacing.20))]",
+                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
+                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                ),
                 align: "start",
             }}
             userAvatarListProps={{
@@ -81,34 +84,50 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 spacing: "3",
                 listAlign: "start",
             }}
-            multiSelectProps={{
-                placeholder: t("card.Select members..."),
-                className: cn(
-                    "max-w-[calc(100vw_-_theme(spacing.20))]",
-                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
-                ),
-                inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-            }}
             addIconSize="6"
-            onSave={save}
-            isValidating={isValidating}
-            allItems={allItems}
-            groups={groups}
-            selectableFilter={(item) => item.uid !== owner.uid && !bots.includes(item as BotModel.TModel)}
-            newItemFilter={(item) => invitedMembers.includes(item as User.TModel)}
-            assignedFilter={(item) => {
-                if (item instanceof User.Model) {
-                    return members.includes(item);
+            allSelectables={allSelectables}
+            showableAssignees={showableAssignees}
+            originalAssignees={selectedAssignees}
+            createSearchText={(item: string | TAssignee) => {
+                if (TypeUtils.isString(item)) {
+                    return item;
+                }
+
+                if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
+                    return "";
+                }
+
+                item = item as User.TModel;
+                if (item.isValidUser()) {
+                    return `${item.firstname} ${item.lastname}`.trim();
                 } else {
-                    return bots.includes(item);
+                    return `${item.email} (${t("project.invited")})`;
                 }
             }}
-            initialSelectedItems={allItems.filter((item) => members.includes(item as User.TModel) || invitedMembers.includes(item as User.TModel))}
-            canAssignNonMembers
-            createNewUserLabel={(item) => `${getMultiSelectItemLabel(item).trim()} (${t("project.invited")})`}
-            canEdit={canEdit}
-            projectUID={project.uid}
+            createLabel={(item: string | TAssignee) => {
+                if (TypeUtils.isString(item)) {
+                    return item;
+                }
+
+                if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
+                    item = item as BotModel.TModel;
+                    return `${item.name} (${item.bot_uname})`;
+                } else {
+                    item = item as User.TModel;
+                    if (item.isValidUser()) {
+                        return `${item.firstname} ${item.lastname}`.trim();
+                    } else {
+                        return item.email;
+                    }
+                }
+            }}
+            placeholder={t("myAccount.Add an email...")}
+            canAddNew
+            validateNewItem={(value) => !!value && EMAIL_REGEX.test(value)}
+            save={save as TSaveHandler}
+            withUserGroups
+            groups={groups}
+            canEdit={canEdit || owner.uid === currentUser.uid}
         />
     );
 });

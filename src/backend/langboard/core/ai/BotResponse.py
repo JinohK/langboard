@@ -29,14 +29,27 @@ class LangflowStreamResponse:
                 return
 
             for chunk in stream_response.iter_lines():
-                if not chunk.replace(" ", "").startswith('{"event":"token"'):
+                if not chunk.replace(" ", ""):
                     continue
 
                 try:
                     json_chunk = json_loads(chunk)
                 except Exception:
                     continue
-                if "event" not in json_chunk or "data" not in json_chunk or "chunk" not in json_chunk["data"]:
+
+                if "event" not in json_chunk or "data" not in json_chunk:
                     continue
-                yield json_chunk["data"]["chunk"]
+
+                event = json_chunk["event"]
+                data = json_chunk["data"]
+
+                if event == "add_message":
+                    if "sender" in data and data["sender"].lower() == "user":
+                        continue
+                    else:
+                        yield json_chunk["data"]["text"]
+                elif event == "token":
+                    if "token" in data:
+                        yield data["chunk"]
+
         await BotOneTimeToken.delete_token(self.__one_time_token)

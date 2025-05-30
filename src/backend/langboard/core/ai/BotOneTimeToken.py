@@ -24,15 +24,11 @@ class BotOneTimeToken:
 
     @staticmethod
     async def get_user_uid(one_time_token: str) -> str | None:
-        if one_time_token == "this-is-test-token":
-            return "evUoTUezk10"
         cache_key = BotOneTimeToken.__get_cache_key(one_time_token)
         return await Cache.get(cache_key)
 
     @staticmethod
     async def delete_token(one_time_token: str):
-        if one_time_token == "this-is-test-token":
-            return
         cache_key = BotOneTimeToken.__get_cache_key(one_time_token)
         await Cache.delete(cache_key)
 

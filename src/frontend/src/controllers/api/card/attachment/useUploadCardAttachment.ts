@@ -14,7 +14,7 @@ export interface IUploadCardAttachmentForm {
 const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmentForm>) => {
     const { mutate } = useQueryMutation();
 
-    const updateCardComment = async (params: IUploadCardAttachmentForm) => {
+    const updateCardAttachment = async (params: IUploadCardAttachmentForm) => {
         const url = format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, {
             uid: params.project_uid,
             card_uid: params.card_uid,
@@ -28,7 +28,7 @@ const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmen
         return res.data;
     };
 
-    const result = mutate(["upload-card-attachment"], updateCardComment, {
+    const result = mutate(["upload-card-attachment"], updateCardAttachment, {
         ...options,
         retry: 0,
     });

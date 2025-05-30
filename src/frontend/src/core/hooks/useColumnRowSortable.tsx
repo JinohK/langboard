@@ -121,6 +121,11 @@ function useColumnRowSortable<
             },
         }),
         useSensor(KeyboardSensor, {
+            keyboardCodes: {
+                start: ["Enter"],
+                cancel: ["Escape"],
+                end: ["Enter"],
+            },
             coordinateGetter: createCoordinateGetter(columnDragDataType),
         })
     );

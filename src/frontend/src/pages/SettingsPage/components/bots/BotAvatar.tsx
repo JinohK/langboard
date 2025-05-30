@@ -6,7 +6,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { memo, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBotAvatarProps {
@@ -20,31 +20,33 @@ const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
     const isAvatarDeletedRef = useRef(false);
     const [isValidating, setIsValidating] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const { mutateAsync } = useUpdateBot(bot);
 
-    const onChange = () => {
-        if (isValidating || !fileInputRef.current) {
-            return;
-        }
-
-        setIsValidating(true);
-
-        const file = fileInputRef.current.files![0];
-        const hasAvatar = !!avatar;
-
-        const promise = mutateAsync({
-            avatar: file,
-        });
-
-        showToast(promise, () => {
-            if (hasAvatar) {
-                return t("settings.successes.Bot avatar changed successfully.");
-            } else {
-                return t("settings.successes.Bot avatar uploaded successfully.");
+    const onChange = useCallback(
+        (files: File[] | FileList) => {
+            if (isValidating || !files.length) {
+                return;
             }
-        });
-    };
+
+            setIsValidating(true);
+
+            const file = files[0];
+            const hasAvatar = !!avatar;
+
+            const promise = mutateAsync({
+                avatar: file,
+            });
+
+            showToast(promise, () => {
+                if (hasAvatar) {
+                    return t("settings.successes.Bot avatar changed successfully.");
+                } else {
+                    return t("settings.successes.Bot avatar uploaded successfully.");
+                }
+            });
+        },
+        [isValidating]
+    );
 
     const onDeleted = () => {
         if (isValidating) {

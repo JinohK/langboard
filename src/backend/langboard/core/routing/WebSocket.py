@@ -16,10 +16,10 @@ class WebSocket:
     def __init__(self, ws: FastAPIWebSocket, user: User):
         self.__ws = ws
         self.__user = user
-        self.__subscriptions: dict[str, set[str]] = {}
+        self._subscriptions: dict[str, set[str]] = {}
 
     async def get_topics(self):
-        return self.__subscriptions
+        return self._subscriptions
 
     def get_user(self) -> User:
         return self.__user

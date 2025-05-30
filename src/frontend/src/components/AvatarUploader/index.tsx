@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { VariantProps } from "tailwind-variants";
@@ -20,7 +20,7 @@ interface IBaseAvatarUploaderProps {
     avatarSize?: VariantProps<typeof AvatarVariants>["size"];
     hideDock?: bool;
     notInForm?: bool;
-    onChange?: () => void;
+    onChange?: (files: File[] | FileList) => void;
     onDeleted?: () => void;
 }
 
@@ -84,7 +84,7 @@ function AvatarUploader({
             setAvatarUrl(reader.result as string);
         };
         reader.readAsDataURL(file);
-        onChange?.();
+        onChange?.(files);
     }, []);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         accept: { "image/*": [] },
@@ -118,6 +118,10 @@ function AvatarUploader({
         }
         setAvatarUrl(initialAvatarUrl);
     };
+
+    useEffect(() => {
+        setAvatarUrl(initialAvatarUrl);
+    }, [initialAvatarUrl]);
 
     const input = <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />;
 

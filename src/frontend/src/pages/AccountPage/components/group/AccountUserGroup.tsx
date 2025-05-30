@@ -1,13 +1,15 @@
-import { MultiSelectAssigneesForm, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import { Box, Card, Flex, Skeleton, Toast } from "@/components/base";
+import { EMAIL_REGEX } from "@/constants";
 import useUpdateUserGroupAssignedEmails from "@/controllers/api/account/useUpdateUserGroupAssignedEmails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import TypeUtils from "@/core/utils/TypeUtils";
 import AccountUserGroupDeleteButton from "@/pages/AccountPage/components/group/AccountUserGroupDeleteButton";
 import AccountUserGroupName from "@/pages/AccountPage/components/group/AccountUserGroupName";
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonAccountUserGroup(): JSX.Element {
@@ -35,14 +37,14 @@ export interface IAccountUserGroupProps {
 const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
+    const [readOnly, setReadOnly] = useState(true);
     const { currentUser } = useAccountSetting();
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
-    const setSelectedItemsRef = useRef<React.Dispatch<React.SetStateAction<TMultiSelectAssigneeItem[]>>>(() => {});
     const { mutate } = useUpdateUserGroupAssignedEmails(group);
     const users = group.useForeignField<User.TModel>("users");
 
-    const onValueChange = (values: TMultiSelectAssigneeItem[]) => {
-        if (values.length === users.length || isValidating) {
+    const onSave = (values: (string | User.TModel)[]) => {
+        if (isValidating) {
             return;
         }
 
@@ -50,7 +52,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
 
         mutate(
             {
-                emails: (values as User.TModel[]).map((u) => u.email),
+                emails: values.map((u) => (TypeUtils.isString(u) ? u : u.email)),
             },
             {
                 onSuccess: () => {
@@ -79,21 +81,28 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 <AccountUserGroupDeleteButton group={group} />
             </Card.Header>
             <Card.Content>
-                <MultiSelectAssigneesForm
-                    multiSelectProps={{
-                        placeholder: t("myAccount.Add an email..."),
-                        className: "w-full",
-                        inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-                        createNewCommandItemLabel: (values: string[]) => t("myAccount.Add '{emails}'", { emails: values }),
+                <MultiSelectAssignee.Form
+                    allSelectables={users}
+                    originalAssignees={users}
+                    createSearchText={
+                        ((item: User.TModel) => `${item.uid} ${item.email} ${item.firstname} ${item.lastname}`) as IFormProps["createSearchText"]
+                    }
+                    createLabel={
+                        ((item: User.TModel) =>
+                            item.isValidUser() ? `${item.firstname} ${item.lastname}`.trim() : item.email) as IFormProps["createLabel"]
+                    }
+                    placeholder={t("myAccount.Add an email...")}
+                    useEditorProps={{
+                        canAddNew: true,
+                        useButton: true,
+                        validateNewItem: (value) => !!value && EMAIL_REGEX.test(value),
+                        isValidating,
+                        readOnly,
+                        setReadOnly,
+                        save: onSave as TSaveHandler,
+                        withUserGroups: true,
+                        groups: groups.filter((g) => g.uid !== group.uid),
                     }}
-                    allItems={users}
-                    groups={groups.filter((g) => g.uid !== group.uid)}
-                    newItemFilter={() => true}
-                    initialSelectedItems={users}
-                    isValidating={isValidating}
-                    canAssignNonMembers
-                    onValueChange={onValueChange}
-                    setSelectedItemsRef={setSelectedItemsRef}
                 />
             </Card.Content>
         </Card.Root>

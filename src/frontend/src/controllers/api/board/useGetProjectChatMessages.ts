@@ -22,7 +22,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
 
         ++pageRef.current;
 
-        const url = format(API_ROUTES.BOARD.CHAT_MESSAGES, { uid: projectUID });
+        const url = format(API_ROUTES.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
                 refer_time: lastCurrentDateRef.current,

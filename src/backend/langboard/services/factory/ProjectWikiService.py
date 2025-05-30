@@ -289,7 +289,8 @@ class ProjectWikiService(BaseService):
         was_public = wiki.is_public
         wiki.is_public = is_public
 
-        db.update(wiki)
+        with DbSession.use(readonly=False) as db:
+            db.update(wiki)
 
         ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
         ProjectWikiActivityTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
@@ -374,17 +375,13 @@ class ProjectWikiService(BaseService):
             return None
         project, wiki = params
 
-        all_wikis = [
-            all_wiki
-            for all_wiki in ServiceHelper.get_all_by(ProjectWiki, "project_id", project.id)
-            if all_wiki.id != wiki.id
-        ]
-        all_wikis = [*all_wikis[:order], wiki, *all_wikis[order:]]
-
-        for index, all_wiki in enumerate(all_wikis):
-            with DbSession.use(readonly=False) as db:
-                all_wiki.order = index
-                db.update(all_wiki)
+        original_order = wiki.order
+        update_query = SqlBuilder.update.table(ProjectWiki).where((ProjectWiki.column("project_id") == project.id))
+        update_query = ServiceHelper.set_order_in_column(update_query, ProjectWiki, original_order, order)
+        with DbSession.use(readonly=False) as db:
+            db.exec(update_query)
+            wiki.order = order
+            db.update(wiki)
 
         ProjectWikiPublisher.order_changed(project, wiki)
 

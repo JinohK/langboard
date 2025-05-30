@@ -112,8 +112,14 @@ class BotService(BaseService):
             db.update(bot)
 
         model: dict[str, Any] = {}
+        unpublishable_model: dict[str, Any] = {}
         for key in form:
-            if key not in mutable_keys or key not in old_bot_record or key in unpublishable_keys:
+            if key in unpublishable_keys:
+                if key in old_bot_record:
+                    unpublishable_model[key] = convert_python_data(getattr(bot, key))
+                continue
+
+            if key not in mutable_keys or key not in old_bot_record:
                 continue
             if key == "avatar":
                 if bot.avatar:
@@ -124,6 +130,7 @@ class BotService(BaseService):
                 model[key] = convert_python_data(getattr(bot, key))
 
         BotPublisher.bot_updated(bot.get_uid(), model)
+        BotPublisher.bot_setting_updated(bot.get_uid(), unpublishable_model)
 
         model = {**model}
         for key in unpublishable_keys:
@@ -150,6 +157,9 @@ class BotService(BaseService):
                 trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
                 db.insert(trigger)
 
+        model = {"conditions": [condition.value for condition in conditions]}
+        BotPublisher.bot_condition_predefined(bot.get_uid(), model)
+
         return True
 
     async def toggle_condition(self, bot: TBotParam, condition: BotTriggerCondition):
@@ -160,12 +170,13 @@ class BotService(BaseService):
         trigger = None
         with DbSession.use(readonly=True) as db:
             result = db.exec(
-                SqlBuilder.select.table(BotTrigger).where(
-                    (BotTrigger.column("bot_id") == bot.id) & (BotTrigger.column("condition") == condition)
-                )
+                SqlBuilder.select.table(BotTrigger)
+                .where((BotTrigger.column("bot_id") == bot.id) & (BotTrigger.column("condition") == condition))
+                .limit(1)
             )
             trigger = result.first()
 
+        should_enable = not trigger
         with DbSession.use(readonly=False) as db:
             if trigger:
                 if trigger.is_predefined:
@@ -174,6 +185,9 @@ class BotService(BaseService):
             else:
                 trigger = BotTrigger(bot_id=bot.id, condition=condition)
                 db.insert(trigger)
+
+        model = {"condition": condition.value, "is_enabled": should_enable}
+        BotPublisher.bot_condition_toggled(bot.get_uid(), model)
 
         return True
 
@@ -194,6 +208,8 @@ class BotService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(bot)
 
+        BotPublisher.bot_setting_updated(bot.get_uid(), {"ip_whitelist": valid_ip_whitelist})
+
         return bot, {"ip_whitelist": valid_ip_whitelist}
 
     async def generate_new_api_token(self, bot: TBotParam) -> Bot | None:
@@ -204,6 +220,8 @@ class BotService(BaseService):
         bot.app_api_token = await self.generate_api_key()
         with DbSession.use(readonly=False) as db:
             db.update(bot)
+
+        BotPublisher.bot_setting_updated(bot.get_uid(), {"app_api_token": bot.app_api_token})
 
         return bot
 

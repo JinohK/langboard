@@ -17,10 +17,13 @@ import LangflowPage from "@/pages/SettingsPage/LangflowPage";
 import WebhooksPage from "@/pages/SettingsPage/WebhookPage";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSocket } from "@/core/providers/SocketProvider";
+import ESocketTopic from "@/core/helpers/ESocketTopic";
 
 function SettingsProxy(): JSX.Element {
     const [t] = useTranslation();
     const { currentUser } = useAuth();
+    const socket = useSocket();
     const navigateRef = useRef(useNavigate());
     const pathname = location.pathname.split("/").slice(0, 3).join("/");
     const { data, isFetching, error } = useIsSettingsAvailable();
@@ -52,7 +55,9 @@ function SettingsProxy(): JSX.Element {
             {},
             {
                 onSuccess: () => {
-                    setIsReady(() => true);
+                    socket.subscribe(ESocketTopic.AppSettings, ["all"], () => {
+                        setIsReady(() => true);
+                    });
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

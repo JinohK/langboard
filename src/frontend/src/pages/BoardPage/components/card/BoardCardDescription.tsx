@@ -34,7 +34,12 @@ const BoardCardDescription = memo((): JSX.Element => {
     const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
-        customStartEditing: () => setCurrentEditor(editorName),
+        customStartEditing: () => {
+            setCurrentEditor(editorName);
+            setTimeout(() => {
+                editorComponentRef.current?.focus();
+            }, 0);
+        },
         valueType: "editor",
         canEmpty: true,
         save: (value) => {

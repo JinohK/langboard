@@ -1,9 +1,7 @@
 import { Toast } from "@/components/base";
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
 import useBoardWikiProjectBotsUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectBotsUpdatedHandlers";
 import useBoardWikiProjectUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectUsersUpdatedHandlers";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
@@ -124,22 +122,10 @@ export const BoardWikiProvider = ({
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditorRef.current) {
-            socket.send({
-                topic: ESocketTopic.BoardWiki,
-                topicId: projectUID,
-                eventName: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_STOP_EDITING,
-                data: { uid: currentEditorRef.current },
-            });
             editorsRef.current[currentEditorRef.current]?.(false);
         }
 
         if (uid) {
-            socket.send({
-                topic: ESocketTopic.BoardWiki,
-                topicId: projectUID,
-                eventName: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_START_EDITING,
-                data: { uid },
-            });
             editorsRef.current[uid]?.(true);
         }
 

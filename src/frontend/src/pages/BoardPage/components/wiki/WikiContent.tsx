@@ -1,12 +1,8 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
-import { UserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import subscribeEditorSocketEvents from "@/core/helpers/subscribeEditorSocketEvents";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { ProjectWiki, User } from "@/core/models";
@@ -16,7 +12,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IWikiContentProps {
@@ -39,10 +35,9 @@ export function SkeletonWikiContent() {
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
-    const { projectUID, projectMembers, projectBots, currentUser, socket, editorsRef, setCurrentEditor, navigate } = useBoardWiki();
+    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor, navigate } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
-    const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
     const mentionables = useMemo(
@@ -102,28 +97,6 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     };
 
     useEffect(() => {
-        let unsubscribe: () => void = () => {};
-        setTimeout(() => {
-            unsubscribe = subscribeEditorSocketEvents({
-                socket,
-                topic: ESocketTopic.BoardWiki,
-                topicId: projectUID,
-                onEventNames: SOCKET_SERVER_EVENTS.BOARD.WIKI,
-                eventNameFormatMap: { uid: wiki.uid },
-                eventKey: `board-wiki-content-editor-${wiki.uid}`,
-                getUsersSendEvent: SOCKET_CLIENT_EVENTS.BOARD.WIKI.EDITOR_USERS,
-                getUsersSendEventData: { uid: wiki.uid },
-                startCallback: (userUIDs) => setEditingUserUIDs(userUIDs),
-                stopCallback: (userUIDs) => setEditingUserUIDs(userUIDs),
-            });
-        }, 0);
-
-        return () => {
-            unsubscribe();
-        };
-    }, [subscribeEditorSocketEvents]);
-
-    useEffect(() => {
         if (!isEditing) {
             return;
         }
@@ -134,8 +107,6 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             window.removeEventListener("pointerdown", stopEditing);
         };
     }, [isEditing]);
-
-    const editingUsers = editingUserUIDs.filter((uid) => uid !== currentUser.uid);
 
     return (
         <Box className="max-h-[calc(100vh_-_theme(spacing.36))] overflow-y-auto">
@@ -165,18 +136,6 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     setValue={setValue}
                     editorComponentRef={editorComponentRef}
                 />
-                {editingUsers.length > 0 && (
-                    <Flex items="center" justify="end" gap="2" mb="1" mr="1" position="fixed" bottom="1" right="2">
-                        <UserAvatarList
-                            users={editingUsers.map((userUID) => projectMembers.find((user) => user.uid === userUID)!)}
-                            maxVisible={3}
-                            size="xs"
-                            spacing="1"
-                            listAlign="end"
-                        />
-                        <span className="text-muted-foreground/70">{t(`common.${editingUsers.length === 1 ? "is" : "are"} editing...`)}</span>
-                    </Flex>
-                )}
             </Box>
             <Flex items="center" justify="start" pt="2" mx="2" gap="2" className="border-t">
                 <Button variant="secondary" onClick={() => navigate(ROUTES.BOARD.WIKI_ACTIVITY(projectUID, wiki.uid))}>

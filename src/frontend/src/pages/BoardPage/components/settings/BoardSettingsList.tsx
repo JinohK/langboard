@@ -28,11 +28,11 @@ const BoardSettingsList = memo(() => {
             <BoardSettingsSection title="project.settings.Bot roles">
                 <BoardSettingsBotRoleList key={`board-settings-bot-roles-${project.uid}`} />
             </BoardSettingsSection>
-            <BoardSettingsSection title="project.settings.Member roles">
-                <BoardSettingsMemberRoleList key={`board-settings-member-roles-${project.uid}`} />
-            </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Bot schedules">
                 <BoardSettingsCronBotList key={`board-settings-bot-schedules-${project.uid}`} />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Member roles">
+                <BoardSettingsMemberRoleList key={`board-settings-member-roles-${project.uid}`} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />

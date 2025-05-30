@@ -12,7 +12,7 @@ const useBoardChatStreamHandlers = ({ projectUID, callbacks }: IUseBoardChatStre
         topicId: projectUID,
         eventKey: `board-chat-stream-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT_STREAM,
+            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.STREAM,
             params: { uid: projectUID },
             callbacks,
         },

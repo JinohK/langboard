@@ -31,7 +31,7 @@ PROJECT_NAME = _get_env("PROJECT_NAME")
 PROJECT_VERSION = version(PROJECT_NAME)
 
 # Database
-MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite+aiosqlite:///{PROJECT_NAME}.db")
+MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
 READONLY_DATABASE_URL = _get_env("READONLY_DATABASE_URL", MAIN_DATABASE_URL)
 
 # Logging

@@ -123,7 +123,10 @@ const useChangeEditMode = <
             }
 
             if (!TypeUtils.isElement(valueRef.current) && TypeUtils.isObject<IEditorContent>(valueRef.current)) {
-                valueRef.current.content = value;
+                (valueRef.current as IEditorContent) = {
+                    ...(valueRef.current as IEditorContent),
+                    content: value,
+                };
                 value = valueRef.current;
             }
 

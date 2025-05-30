@@ -1,4 +1,4 @@
-import { MultiSelectAssigneesPopover, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import { Toast } from "@/components/base";
 import useUpdateCardAssignedUsers from "@/controllers/api/card/useUpdateCardAssignedUsers";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -6,30 +6,23 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, User, UserGroup } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardCardMemberList = memo(() => {
-    const { projectUID, card, sharedClassNames, currentUser, hasRoleAction } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const members = card.useForeignField<User.TModel>("members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
-    const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers();
 
-    const onSave = (items: TMultiSelectAssigneeItem[], endCallback: () => void) => {
-        if (isValidating) {
-            return;
-        }
-
-        setIsValidating(true);
-
+    const onSave = async (items: User.TModel[]) => {
         const promise = updateCardAssignedUsersMutateAsync({
             project_uid: projectUID,
             card_uid: card.uid,
-            assigned_users: User.filterValidUserUIDs(items as User.TModel[]),
+            assigned_users: User.filterValidUserUIDs(items),
         });
 
         Toast.Add.promise(promise, {
@@ -50,22 +43,22 @@ const BoardCardMemberList = memo(() => {
             success: () => {
                 return t("card.successes.Assigned members updated successfully.");
             },
-            finally: () => {
-                endCallback();
-                setIsValidating(false);
-            },
         });
     };
 
     return (
-        <MultiSelectAssigneesPopover
+        <MultiSelectAssignee.Popover
             popoverButtonProps={{
                 size: "icon",
                 className: "size-8 lg:size-10",
                 title: t("card.Assign members"),
             }}
             popoverContentProps={{
-                className: sharedClassNames.popoverContent,
+                className: cn(
+                    "max-w-[calc(100vw_-_theme(spacing.20))]",
+                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
+                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                ),
                 align: "start",
             }}
             userAvatarListProps={{
@@ -75,24 +68,22 @@ const BoardCardMemberList = memo(() => {
                 listAlign: "start",
                 className: "space-x-1",
             }}
-            multiSelectProps={{
-                placeholder: t("card.Select members..."),
-                className: cn(
-                    "max-w-[calc(100vw_-_theme(spacing.20))]",
-                    "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
-                ),
-                inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-            }}
             addIconSize={{ initial: "4", lg: "6" }}
-            onSave={onSave}
-            isValidating={isValidating}
-            allItems={projectMembers}
-            groups={groups}
-            assignedFilter={(item) => members.includes(item as User.TModel)}
-            initialSelectedItems={members}
             canEdit={canEdit}
-            projectUID={projectUID}
+            save={onSave as TSaveHandler}
+            allSelectables={projectMembers}
+            tagContentProps={{
+                projectUID,
+            }}
+            originalAssignees={members}
+            createSearchText={
+                ((item: User.TModel) => `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`) as IFormProps["createSearchText"]
+            }
+            createLabel={((item: User.TModel) => `${item.firstname} ${item.lastname}`.trim()) as IFormProps["createLabel"]}
+            placeholder={t("card.Select members...")}
+            withUserGroups
+            groups={groups}
+            filterGroupUser={(item: User.TModel) => item.isValidUser() && !item.isBot() && projectMembers.some((member) => member.uid === item.uid)}
         />
     );
 });

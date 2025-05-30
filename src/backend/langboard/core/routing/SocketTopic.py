@@ -15,5 +15,6 @@ class SocketTopic(Enum):
     ProjectBot = "project_bot"
     User = "user"
     UserPrivate = "user_private"
+    AppSettings = "app_settings"
     Global = "global"
     NoneTopic = "none"

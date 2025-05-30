@@ -1,8 +1,9 @@
-from ..core.broadcast import WorkerQueue
+from ..core.broadcast import FileReaderQueue, WorkerQueue
 from ..core.routing import AppRouter, SocketTopic
 from ..core.service import SocketPublishService
 
 
+@FileReaderQueue.consume("socket_publish")
 @WorkerQueue.consume("socket_publish")
 async def socket_publish(data: dict):
     try:

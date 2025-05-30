@@ -13,7 +13,7 @@ class DispatcherQueue:
 
     def __init__(self):
         self.__worker_queues: list[Queue] = []
-        self.__is_closed = False
+        self.__is_closed = True
 
     @overload
     def put(self, event: str, data: dict[str, Any]): ...
@@ -21,12 +21,14 @@ class DispatcherQueue:
     def put(self, event: DispatcherModel): ...
     def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
         if not self.__worker_queues:
+            record_model(event, data, file_only=True)
             return
 
         data_file_name = record_model(event, data)
         for worker_queue in self.__worker_queues:
             try:
                 worker_queue.put(data_file_name)
+                break
             except Exception:
                 continue
 

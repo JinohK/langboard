@@ -117,9 +117,13 @@ class SocketManager:
             topic = topic.value
 
         for topic_id in topic_ids:
+            if topic not in ws._subscriptions:
+                ws._subscriptions[topic] = set()
+
             if (topic, topic_id) not in self.__subscribers:
                 self.__subscribers[(topic, topic_id)] = set()
 
+            ws._subscriptions[topic].add(topic_id)
             self.__subscribers[(topic, topic_id)].add(ws)
 
         await ws.send(event_response=SocketResponse(event="subscribed", topic=topic, topic_id=topic_ids))
@@ -132,6 +136,9 @@ class SocketManager:
             topic = topic.value
 
         for topic_id in topic_ids:
+            if topic in ws._subscriptions and topic_id in ws._subscriptions[topic]:
+                ws._subscriptions[topic].remove(topic_id)
+
             if (topic, topic_id) not in self.__subscribers:
                 return
 

@@ -40,19 +40,25 @@ async def is_chat_available(topic: str, topic_id: str):
 @AppRouter.socket.on("board:chat:send")
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
 async def project_chat(
-    ws: WebSocket, topic_id: str, message: str, user: User = Auth.scope("socket"), service: Service = Service.scope()
+    ws: WebSocket,
+    topic_id: str,
+    message: str,
+    file_path: str | None = None,
+    user: User = Auth.scope("socket"),
+    service: Service = Service.scope(),
 ):
-    AppRouter.socket.run_in_thread(run_chat, ws, topic_id, message, user, service)
+    AppRouter.socket.run_in_thread(run_chat, ws, topic_id, message, file_path, user, service)
 
 
-async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, service: Service):
+async def run_chat(ws: WebSocket, topic_id: str, message: str, file_path: str | None, user: User, service: Service):
     try:
         project = await service.project.get_by_uid(topic_id)
         if not project:
             return
 
         stream_or_str = await BotRunner.run(
-            InternalBotType.ProjectChat, {"message": message, "user_uid": user.get_uid(), "project_uid": topic_id}
+            InternalBotType.ProjectChat,
+            {"message": message, "user_uid": user.get_uid(), "project_uid": topic_id, "file_path": file_path},
         )
         if not stream_or_str:
             return SocketResponse(
@@ -104,9 +110,18 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, user: User, servi
                     return
 
                 is_received = True
-                new_content.content = concat(new_content.content, chunk)
+                old_content = new_content.content
+                updated_content = ""
+                if chunk:
+                    if old_content:
+                        new_content.content = chunk if chunk.startswith(old_content) else concat(old_content, chunk)
+                        updated_content = chunk.split(old_content, 1)[-1] if chunk.startswith(old_content) else chunk
+                    else:
+                        new_content.content = chunk
+                        updated_content = chunk
+
                 if last_content != new_content.content:
-                    await ws_stream.buffer(data={"uid": ai_message_uid, "chunk": chunk})
+                    await ws_stream.buffer(data={"uid": ai_message_uid, "chunk": updated_content})
                     last_content = new_content.content
 
             ai_message.message = new_content

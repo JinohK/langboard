@@ -182,7 +182,9 @@ async def create_card(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.card.create(user_or_bot, project_uid, form.column_uid, form.title, form.assign_users)
+    result = await service.card.create(
+        user_or_bot, project_uid, form.column_uid, form.title, form.description, form.assign_users
+    )
     if not result:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
     _, api_card = result
@@ -376,7 +378,7 @@ async def archive_card(
 @AppRouter.api.delete(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
-    description="Delete a card.",
+    description="Delete a card. (Only available for archived cards)",
     responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], project_role_finder)

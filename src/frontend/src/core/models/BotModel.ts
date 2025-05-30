@@ -1,9 +1,13 @@
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
-import { convertServerFileURL } from "@/core/utils/StringUtils";
+import { convertServerFileURL, StringCase } from "@/core/utils/StringUtils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useBotSettingTriggerConditionPredefinedHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionPredefinedHandlers";
+import useBotSettingTriggerConditionToggledHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionToggledHandlers";
+import useBotSettingUpdatedHandlers from "@/controllers/socket/settings/bots/useBotSettingUpdatedHandlers";
 
 export enum EAPIAuthType {
     Basic = "basic",
@@ -43,15 +47,40 @@ class BotModel extends BaseModel<Interface> {
     constructor(model: Record<string, unknown>) {
         super(model);
 
-        this.subscribeSocketEvents([useBotUpdatedHandlers, useBotDeletedHandlers], {
-            bot: this,
-        });
+        this.subscribeSocketEvents(
+            [
+                useBotUpdatedHandlers,
+                useBotSettingUpdatedHandlers,
+                useBotSettingTriggerConditionPredefinedHandlers,
+                useBotSettingTriggerConditionToggledHandlers,
+                useBotDeletedHandlers,
+            ],
+            {
+                bot: this,
+            }
+        );
     }
 
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
             model.avatar = convertServerFileURL(model.avatar);
         }
+
+        if (model.api_auth_type) {
+            if (TypeUtils.isString(model.api_auth_type)) {
+                model.api_auth_type = EAPIAuthType[new StringCase(model.api_auth_type).toPascal() as keyof typeof EAPIAuthType];
+            }
+        }
+
+        if (model.conditions) {
+            Object.entries(model.conditions).forEach(([key, value]) => {
+                if (TypeUtils.isString(key)) {
+                    const conditionKey = key as EBotTriggerCondition;
+                    model.conditions[conditionKey] = value;
+                }
+            });
+        }
+
         return model;
     }
 

@@ -1,16 +1,17 @@
 from abc import abstractmethod
-from json import dumps as json_dumps
-from typing import Any, Literal, overload
+from typing import Any, BinaryIO, Literal, overload
 from httpx import get, post
 from pydantic import BaseModel
 from requests import Response as HTTPResponse
 from requests import Session as HTTPSession
+from starlette.datastructures import UploadFile
 from ..db import DbSession, SqlBuilder
 from ..setting import AppSetting, AppSettingType
 from ..utils.String import generate_random_string
 from .BotOneTimeToken import BotOneTimeToken
 from .BotResponse import LangflowStreamResponse, get_langflow_output_message
 from .InternalBotType import InternalBotType
+from .LangflowHelper import LangboardCalledVariablesComponent, LangflowConstants
 
 
 class LangflowRequestModel(BaseModel):
@@ -28,18 +29,13 @@ class _LangflowAPIRequestModel:
     def __init__(self, settings: dict[AppSettingType, str], request_model: LangflowRequestModel, use_stream: bool):
         self.url = f"{settings[AppSettingType.LangflowUrl]}/api/v1/run/{request_model.flow_id}?stream={use_stream}"
         self.session_id = request_model.session_id if request_model.session_id else generate_random_string(32)
-        self.headers = {"Content-Type": "application/json", "x-api-key": settings[AppSettingType.LangflowApiKey]}
+        self.headers = {
+            "Content-Type": "application/json",
+            LangflowConstants.ApiKey.value: settings[AppSettingType.LangflowApiKey],
+        }
         self.one_time_token = BotOneTimeToken.create_token()
         req_data: dict[str, Any] = {
-            "input_value": json_dumps(
-                {
-                    "event": "chat",
-                    "message": request_model.message,
-                    "project_uid": request_model.project_uid,
-                    "current_user_uid": request_model.user_uid,
-                    "one_time_token": self.one_time_token,
-                }
-            ),
+            "input_value": request_model.message,
             "session": self.session_id,
             "session_id": self.session_id,
         }
@@ -47,8 +43,17 @@ class _LangflowAPIRequestModel:
             req_data["input_type"] = request_model.input_type
         if request_model.output_type:
             req_data["output_type"] = request_model.output_type
-        if request_model.tweaks:
-            req_data["tweaks"] = request_model.tweaks
+        req_data["tweaks"] = {
+            **(request_model.tweaks or {}),
+            **LangboardCalledVariablesComponent(
+                event="chat",
+                app_api_token=self.one_time_token,
+                project_uid=request_model.project_uid,
+                current_runner_type="user",
+                current_runner_data={"uid": request_model.user_uid},
+            ).to_tweaks(),
+        }
+
         self.req_data = req_data
         self.use_stream = use_stream
 
@@ -85,6 +90,9 @@ class BaseBot(metaclass=BotMetaClass):
 
     @abstractmethod
     async def run_abortable(self, data: dict[str, Any], task_id: str) -> str | LangflowStreamResponse | None: ...
+
+    @abstractmethod
+    async def upload_file(self, file: UploadFile | BinaryIO) -> str | None: ...
 
     @abstractmethod
     async def is_available(self) -> bool: ...
@@ -204,6 +212,34 @@ class BaseBot(metaclass=BotMetaClass):
                 del self.__abortable_tasks[task_id]
 
         await BotOneTimeToken.delete_token(api_request_model.one_time_token)
+
+    async def _upload_file_to_langflow(self, file: UploadFile | BinaryIO) -> str | None:
+        settings = await self.__get_langflow_settings()
+        if not settings:
+            return None
+
+        url = f"{settings[AppSettingType.LangflowUrl]}/api/v2/files"
+        headers = {"x-api-key": settings[AppSettingType.LangflowApiKey]}
+
+        if isinstance(file, UploadFile):
+            filename = file.filename
+            file = file.file
+        else:
+            filename = file.name
+
+        if not filename:
+            return None
+
+        try:
+            response = post(url, headers=headers, files={"file": (filename, file)})
+            response.raise_for_status()
+
+            response_data = response.json()
+            if "path" not in response_data:
+                return None
+            return response_data["path"]
+        except Exception:
+            return None
 
     async def __get_langflow_settings(self) -> dict[AppSettingType, str] | None:
         raw_settings = []

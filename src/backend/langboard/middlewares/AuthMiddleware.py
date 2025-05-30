@@ -41,8 +41,8 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
         await self.app(scope, receive, send)
 
     async def _validate(self, headers: Headers) -> User | Bot | int:
-        if headers.get("X-Api-Token", headers.get("x-api-token")):
-            validation_result = await Auth.validate_user_by_chatbot(headers)
+        if headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower())):
+            validation_result = await Auth.validate_user_by_api_token(headers)
             if isinstance(validation_result, User):
                 return validation_result
 

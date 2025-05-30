@@ -15,6 +15,8 @@ export interface IBoardChatContext {
     socket: ISocketContext;
     isSending: bool;
     setIsSending: React.Dispatch<React.SetStateAction<bool>>;
+    isUploading: bool;
+    setIsUploading: React.Dispatch<React.SetStateAction<bool>>;
     scrollToBottomRef: React.RefObject<() => void>;
     isAtBottomRef: React.RefObject<bool>;
 }
@@ -31,6 +33,8 @@ const initialContext = {
     socket: {} as ISocketContext,
     isSending: false,
     setIsSending: () => {},
+    isUploading: false,
+    setIsUploading: () => {},
     scrollToBottomRef: { current: () => {} },
     isAtBottomRef: { current: true },
 };
@@ -41,6 +45,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const socket = useSocket();
     const [t] = useTranslation();
     const [isSending, setIsSending] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const scrollToBottomRef = useRef<() => void>(() => {});
     const isAtBottomRef = useRef(true);
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
@@ -136,6 +141,8 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                 socket,
                 isSending,
                 setIsSending,
+                isUploading,
+                setIsUploading,
                 scrollToBottomRef,
                 isAtBottomRef,
             }}

@@ -6,6 +6,7 @@ from .InternalBotType import InternalBotType
 class BaseDataModel(BaseModel):
     project_uid: str
     user_uid: str
+    file_path: str | None = None
 
 
 class ProjectChatDataModel(BaseDataModel):

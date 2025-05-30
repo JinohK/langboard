@@ -76,6 +76,9 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(setting)
 
+        model = {"setting": setting.api_response()}
+        AppSettingPublisher.setting_created(model)
+
         return setting
 
     async def init_langflow(self):
@@ -98,16 +101,22 @@ class AppSettingService(BaseService):
         if not setting:
             return None
 
+        model = {}
+
         if setting_name:
             setting.setting_name = setting_name
+            model["setting_name"] = setting_name
         if setting_value and not setting.is_immutable_type():
             setting.set_value(setting_value)
+            model["setting_value"] = setting.convert_to_secret()
 
         if not setting.has_changes():
             return True
 
         with DbSession.use(readonly=False) as db:
             db.update(setting)
+
+        AppSettingPublisher.setting_updated(setting.get_uid(), model)
 
         return setting
 
@@ -118,6 +127,9 @@ class AppSettingService(BaseService):
 
         with DbSession.use(readonly=False) as db:
             db.delete(setting)
+
+        AppSettingPublisher.setting_deleted(setting.get_uid())
+
         return True
 
     async def delete_selected(self, uids: list[str]) -> bool:
@@ -125,6 +137,8 @@ class AppSettingService(BaseService):
 
         with DbSession.use(readonly=False) as db:
             db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
+
+        AppSettingPublisher.selected_setting_deleted(uids)
 
         return True
 

@@ -34,7 +34,15 @@ interface IPlateEditorProps extends IBasePlateEditorProps {
 
 export type TPlateEditorProps = IPlateViewerProps | IPlateEditorProps;
 
-export function PlateEditor({
+export function PlateEditor(props: TPlateEditorProps & Omit<TEditorDataProviderProps, "children">) {
+    return (
+        <EditorDataProvider {...(props as any)}>
+            <EditorWrapper {...props} />
+        </EditorDataProvider>
+    );
+}
+
+function EditorWrapper({
     value,
     readOnly,
     variant = "ai",
@@ -44,7 +52,7 @@ export function PlateEditor({
     editorComponentRef,
     placeholder,
     ...props
-}: TPlateEditorProps & Omit<TEditorDataProviderProps, "children">) {
+}: TPlateEditorProps) {
     if (!editorRef) {
         editorRef = useRef<TEditor>(null);
     }
@@ -60,27 +68,25 @@ export function PlateEditor({
 
     return (
         <FocusScope trapped={false} loop={false} className="w-full">
-            <EditorDataProvider {...(props as any)}>
-                <DndProvider backend={HTML5Backend}>
-                    <Plate
-                        editor={editor}
-                        readOnly={readOnly}
-                        onValueChange={(opts) => {
-                            if (readOnly) {
-                                return;
-                            }
+            <DndProvider backend={HTML5Backend}>
+                <Plate
+                    editor={editor}
+                    readOnly={readOnly}
+                    onValueChange={(opts) => {
+                        if (readOnly) {
+                            return;
+                        }
 
-                            setValue?.({
-                                content: opts.editor.api.markdown.serialize(),
-                            });
-                        }}
-                    >
-                        <EditorContainer readOnly={readOnly}>
-                            <Editor variant={variant} className={className} placeholder={placeholder} ref={editorComponentRef} />
-                        </EditorContainer>
-                    </Plate>
-                </DndProvider>
-            </EditorDataProvider>
+                        setValue?.({
+                            content: opts.editor.api.markdown.serialize(),
+                        });
+                    }}
+                >
+                    <EditorContainer readOnly={readOnly}>
+                        <Editor variant={variant} className={className} placeholder={placeholder} ref={editorComponentRef} />
+                    </EditorContainer>
+                </Plate>
+            </DndProvider>
         </FocusScope>
     );
 }

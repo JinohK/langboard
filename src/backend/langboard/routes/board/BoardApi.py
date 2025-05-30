@@ -1,5 +1,5 @@
 from typing import cast
-from fastapi import Depends, status
+from fastapi import status
 from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
@@ -9,7 +9,6 @@ from ...core.security import Auth
 from ...models import (
     Card,
     CardRelationship,
-    ChatHistory,
     Checklist,
     GlobalCardRelationshipType,
     Project,
@@ -21,7 +20,7 @@ from ...models import (
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
-from .scopes import ChatHistoryPagination, InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
+from .scopes import InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
 
 
 @AppRouter.schema()
@@ -208,45 +207,6 @@ async def get_project_assigned_bots(
     bots = await service.project.get_assigned_bots(project, as_api=True)
 
     return JsonResponse(content={"bots": bots})
-
-
-@AppRouter.api.get(
-    "/board/{project_uid}/chat",
-    tags=["Board"],
-    responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().role().no_bot().get(),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
-async def get_project_chat(
-    project_uid: str,
-    query: ChatHistoryPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    histories = await service.chat_history.get_list(user_or_bot, "project", query.refer_time, query, project_uid)
-
-    return JsonResponse(content={"histories": histories})
-
-
-@AppRouter.api.delete(
-    "/board/{project_uid}/chat/clear",
-    tags=["Board"],
-    responses=OpenApiSchema().auth().role().no_bot().get(),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
-async def clear_project_chat(
-    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    await service.chat_history.clear(user_or_bot, "project", project_uid)
-
-    return JsonResponse(content={})
 
 
 @AppRouter.schema()

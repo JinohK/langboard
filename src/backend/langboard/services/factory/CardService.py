@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
 from ...core.ai import Bot, BotSchedule
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.Converter import convert_python_data
@@ -172,7 +172,7 @@ class CardService(BaseService):
             )
             .where(Checkitem.column("created_at") <= refer_time)
             .order_by(Card.column("created_at").desc())
-            .group_by(Card.column("id"), Card.column("created_at"), Project.column("id"))
+            .group_by(Card.column("id"), Card.column("created_at"), ProjectColumn.column("id"), Project.column("id"))
         )
         query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
 
@@ -269,6 +269,7 @@ class CardService(BaseService):
         project: TProjectParam,
         column: TColumnParam,
         title: str,
+        description: EditorContentModel | None = None,
         assign_user_uids: list[str] | None = None,
     ) -> tuple[Card, dict[str, Any]] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
@@ -284,6 +285,7 @@ class CardService(BaseService):
             project_id=project.id,
             project_column_id=column.id,
             title=title,
+            description=description or EditorContentModel(),
             order=max_order + 1,
         )
         with DbSession.use(readonly=False) as db:
@@ -400,28 +402,26 @@ class CardService(BaseService):
 
         original_order = card.order
 
-        shared_update_query = SqlBuilder.update.table(Card).where(
-            (Card.column("id") != card.id) & (Card.column("project_id") == card.project_id)
-        )
-        if new_column:
-            update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
-                (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
-            )
-            with DbSession.use(readonly=False) as db:
-                db.exec(update_query)
-
-            update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
-                (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
-            )
-            with DbSession.use(readonly=False) as db:
-                db.exec(update_query)
-        else:
-            update_query = ServiceHelper.set_order_in_column(shared_update_query, Card, original_order, order)
-            update_query = update_query.where(Card.column("project_column_id") == original_column.id)
-            with DbSession.use(readonly=False) as db:
-                db.exec(update_query)
-
         with DbSession.use(readonly=False) as db:
+            shared_update_query = SqlBuilder.update.table(Card).where(
+                (Card.column("id") != card.id) & (Card.column("project_id") == card.project_id)
+            )
+
+            if new_column:
+                update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
+                    (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
+                )
+                db.exec(update_query)
+
+                update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
+                    (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
+                )
+                db.exec(update_query)
+            else:
+                update_query = ServiceHelper.set_order_in_column(shared_update_query, Card, original_order, order)
+                update_query = update_query.where(Card.column("project_column_id") == original_column.id)
+                db.exec(update_query)
+
             card.order = order
             db.update(card)
 
@@ -452,6 +452,11 @@ class CardService(BaseService):
             )
             original_assigned_user_ids = result.all()
 
+        users: list[User] = []
+        if original_assigned_user_ids:
+            with DbSession.use(readonly=False) as db:
+                db.exec(SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id))
+
         raw_users = []
         if assign_user_uids:
             assign_user_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
@@ -459,11 +464,6 @@ class CardService(BaseService):
             raw_users = await project_service.get_assigned_users(
                 project, as_api=False, where_user_ids_in=assign_user_ids
             )
-
-        users: list[User] = []
-        if original_assigned_user_ids:
-            with DbSession.use(readonly=False) as db:
-                db.exec(SqlBuilder.delete.table(CardAssignedUser).where(CardAssignedUser.column("card_id") == card.id))
 
         if raw_users:
             for user, project_assigned_user in raw_users:

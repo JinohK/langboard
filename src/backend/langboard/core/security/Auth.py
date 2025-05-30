@@ -268,7 +268,7 @@ class Auth:
         return status.HTTP_401_UNAUTHORIZED
 
     @staticmethod
-    async def validate_user_by_chatbot(headers: Headers) -> User | Literal[401]:
+    async def validate_user_by_api_token(headers: Headers) -> User | Literal[401]:
         api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
         if not api_token:
             return status.HTTP_401_UNAUTHORIZED

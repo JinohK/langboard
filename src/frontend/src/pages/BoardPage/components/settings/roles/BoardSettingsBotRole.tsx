@@ -68,7 +68,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
                 },
             });
         },
-        [isDisabled, botRoles]
+        [isValidating, isDisabled, botRoles]
     );
     const boardBotActivationToggledHandlers = useMemo(
         () =>

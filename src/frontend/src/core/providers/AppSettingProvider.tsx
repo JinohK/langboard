@@ -1,4 +1,9 @@
+import useBotSettingCreatedHandlers from "@/controllers/socket/settings/bots/useBotSettingCreatedHandlers";
+import useAppSettingCreatedHandlers from "@/controllers/socket/settings/useAppSettingCreatedHandlers";
+import useSelectedAppSettingsDeletedHandlers from "@/controllers/socket/settings/useSelectedAppSettingsDeletedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser } from "@/core/models";
+import { useSocket } from "@/core/providers/SocketProvider";
 import { createContext, useContext, useState } from "react";
 import { NavigateFunction } from "react-router-dom";
 
@@ -25,7 +30,13 @@ const initialContext = {
 const AppSettingContext = createContext<IAppSettingContext>(initialContext);
 
 export const AppSettingProvider = ({ currentUser, navigateRef, children }: IAppSettingProps): React.ReactNode => {
+    const socket = useSocket();
     const [isValidating, setIsValidating] = useState(false);
+    const appSettingCreatedHandlers = useAppSettingCreatedHandlers({});
+    const selectedAppSettingsDeletedHandlers = useSelectedAppSettingsDeletedHandlers({});
+    const botSettingCreatedHandlers = useBotSettingCreatedHandlers({});
+
+    useSwitchSocketHandlers({ socket, handlers: [appSettingCreatedHandlers, selectedAppSettingsDeletedHandlers, botSettingCreatedHandlers] });
 
     return (
         <AppSettingContext.Provider

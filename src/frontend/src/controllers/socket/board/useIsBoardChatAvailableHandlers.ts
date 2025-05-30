@@ -30,7 +30,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
         topicId: projectUID,
         eventKey: `is-board-chat-available-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.IS_CHAT_AVAILABLE,
+            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.IS_AVAILABLE,
             callback,
             responseConverter: (data) => {
                 if (data.available) {
@@ -40,7 +40,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
             },
         },
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.IS_CHAT_AVAILABLE,
+            name: SOCKET_CLIENT_EVENTS.BOARD.CHAT.IS_AVAILABLE,
         },
     });
 };

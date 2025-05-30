@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, Literal, TypeVar, cast, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.ai import Bot
 from ...core.db import DbSession, SqlBuilder, User
+from ...core.db.Models import BaseSqlModel
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
 from ...models import Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, UserActivity
@@ -214,64 +215,6 @@ class ActivityService(BaseService):
         )
         return [activity.api_response() for activity in activities], count_new_records, project, wiki
 
-    async def __get_cached_references(self, activities: list[UserActivity]):
-        refer_activities = ServiceHelper.get_references(
-            [
-                (activity.refer_activity_table, activity.refer_activity_id)
-                for activity in activities
-                if activity.refer_activity_table and activity.refer_activity_id
-            ],
-            as_type="raw",
-        )
-        refer_activity_reference_ids: list[tuple[str, int]] = []
-        for refer_activity in refer_activities.values():
-            if isinstance(refer_activity, ProjectActivity):
-                refer_activity_reference_ids.append((Project.__tablename__, refer_activity.project_id))
-                if refer_activity.card_id:
-                    refer_activity_reference_ids.append((Card.__tablename__, refer_activity.card_id))
-            elif isinstance(refer_activity, ProjectWikiActivity):
-                refer_activity_reference_ids.append((Project.__tablename__, refer_activity.project_id))
-                refer_activity_reference_ids.append((ProjectWiki.__tablename__, refer_activity.project_wiki_id))
-
-        cached_references = ServiceHelper.get_references(refer_activity_reference_ids, as_type="raw")
-        references = {}
-        for activity in activities:
-            if not activity.refer_activity_id or not activity.refer_activity_table:
-                continue
-
-            refer_activitiy_cache_key = f"{activity.refer_activity_table}_{activity.refer_activity_id}"
-            if refer_activitiy_cache_key not in refer_activities:
-                continue
-
-            refer_activity = refer_activities[refer_activitiy_cache_key]
-            activity_references = {}
-            if isinstance(refer_activity, ProjectActivity) and refer_activity.project_id:
-                activity_references["refer_type"] = "project"
-                refer_activity_reference = cached_references.get(f"{Project.__tablename__}_{refer_activity.project_id}")
-                if not refer_activity_reference:
-                    continue
-                activity_references["project"] = refer_activity_reference
-                if refer_activity.card_id:
-                    refer_activity_reference = cached_references.get(f"{Card.__tablename__}_{refer_activity.card_id}")
-                    if not refer_activity_reference:
-                        continue
-                    activity_references["card"] = refer_activity_reference
-            elif isinstance(refer_activity, ProjectWikiActivity):
-                activity_references["refer_type"] = "project_wiki"
-                refer_activity_reference = cached_references.get(f"{Project.__tablename__}_{refer_activity.project_id}")
-                if not refer_activity_reference:
-                    continue
-                activity_references["project"] = refer_activity_reference
-                refer_activity_reference = cached_references.get(
-                    f"{ProjectWiki.__tablename__}_{refer_activity.project_wiki_id}"
-                )
-                if not refer_activity_reference:
-                    continue
-                activity_references["project_wiki"] = refer_activity_reference
-
-            references[activity.id] = {"refer": refer_activity.api_response(), "references": activity_references}
-        return references
-
     async def __get_list(
         self,
         activity_class: type[_TActivityModel],
@@ -359,3 +302,72 @@ class ActivityService(BaseService):
                 | (ProjectWikiActivity.column("project_id") == project.id)
             )
         )
+
+    async def __get_cached_references(self, activities: list[UserActivity]):
+        refer_activities = ServiceHelper.get_references(
+            [
+                (activity.refer_activity_table, activity.refer_activity_id)
+                for activity in activities
+                if activity.refer_activity_table and activity.refer_activity_id
+            ],
+            as_type="raw",
+        )
+        refer_activity_reference_ids: list[tuple[str, int]] = []
+        for refer_activity in refer_activities.values():
+            if isinstance(refer_activity, ProjectActivity):
+                refer_activity_reference_ids.append((Project.__tablename__, refer_activity.project_id))
+                if refer_activity.card_id:
+                    refer_activity_reference_ids.append((Card.__tablename__, refer_activity.card_id))
+            elif isinstance(refer_activity, ProjectWikiActivity):
+                refer_activity_reference_ids.append((Project.__tablename__, refer_activity.project_id))
+                refer_activity_reference_ids.append((ProjectWiki.__tablename__, refer_activity.project_wiki_id))
+
+        cached_references = ServiceHelper.get_references(refer_activity_reference_ids, as_type="raw", with_deleted=True)
+        references = {}
+        for activity in activities:
+            if not activity.refer_activity_id or not activity.refer_activity_table:
+                continue
+
+            refer_activitiy_cache_key = f"{activity.refer_activity_table}_{activity.refer_activity_id}"
+            if refer_activitiy_cache_key not in refer_activities:
+                continue
+
+            refer_activity = cast(BaseActivityModel, refer_activities[refer_activitiy_cache_key])
+            activity_references = self.__get_converted_references(cached_references, refer_activity)
+            if not activity_references:
+                continue
+
+            references[activity.id] = {"refer": refer_activity.api_response(), "references": activity_references}
+        return references
+
+    def __get_converted_references(
+        self, cached_references: dict[str, BaseSqlModel], activity: BaseActivityModel
+    ) -> dict[str, Any] | None:
+        activity_references = {}
+        if isinstance(activity, (ProjectActivity, ProjectWikiActivity)) and activity.project_id:
+            reference = cast(Project, cached_references.get(f"{Project.__tablename__}_{activity.project_id}"))
+            if not reference:
+                return None
+            activity_references["project"] = reference.api_response()
+            if reference.deleted_at:
+                activity_references["project"]["is_deleted"] = True
+
+        if isinstance(activity, ProjectActivity) and activity.project_id:
+            activity_references["refer_type"] = "project"
+            if activity.card_id:
+                reference = cast(Card, cached_references.get(f"{Card.__tablename__}_{activity.card_id}"))
+                if not reference:
+                    return None
+                activity_references["card"] = reference.api_response()
+                if reference.deleted_at:
+                    activity_references["card"]["is_deleted"] = True
+        elif isinstance(activity, ProjectWikiActivity) and activity.project_id:
+            activity_references["refer_type"] = "project_wiki"
+            reference = cached_references.get(f"{ProjectWiki.__tablename__}_{activity.project_wiki_id}")
+            if not reference:
+                return None
+            activity_references["project_wiki"] = reference.api_response()
+
+        if not activity_references:
+            return None
+        return activity_references

@@ -18,7 +18,7 @@ const useBoardChatSentHandlers = ({ callback, projectUID }: IUseBoardChatSentHan
         topicId: projectUID,
         eventKey: `board-card-sent-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT_SENT,
+            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.SENT,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

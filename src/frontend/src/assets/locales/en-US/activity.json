@@ -78,6 +78,10 @@
         "default": "<Recorder/> updated the card <Card/>.",
         "user_view": "You updated the card <Card/> in the project <Project/>."
       },
+      "card_deleted": {
+        "default": "<Recorder/> deleted the card <Card/>.",
+        "user_view": "You deleted the card <Card/> in the project <Project/>."
+      },
       "card_moved": {
         "default": "<Recorder/> moved the card <Card/> from the column <FromColumn/> to the column <Column/>.",
         "user_view": "You moved the card <Card/> from the column <FromColumn/> to the column <Column/> in the project <Project/>."

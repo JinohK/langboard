@@ -5,7 +5,7 @@ from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import ProjectColumn, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
@@ -16,7 +16,14 @@ from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
     "/board/{project_uid}/column",
     tags=["Board.Column"],
     description="Create a project column.",
-    responses=OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project not found.").get(),
+    responses=(
+        OpenApiSchema()
+        .suc({"column": (ProjectColumn, {"schema": {"count": "integer"}})})
+        .auth(with_bot=True)
+        .role(with_bot=True)
+        .err(404, "Project not found.")
+        .get()
+    ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
 @AuthFilter.add
@@ -26,11 +33,18 @@ async def create_project_column(
     user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = await service.project_column.create(user_or_bot, project_uid, form.name)
-    if not result:
+    column = await service.project_column.create(user_or_bot, project_uid, form.name)
+    if not column:
         return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse(
+        content={
+            "column": {
+                **column.api_response(),
+                "count": 0,
+            }
+        }
+    )
 
 
 @AppRouter.schema(form=ColumnForm)

@@ -1,5 +1,4 @@
-import { Box, Toast } from "@/components/base";
-import { MultiSelectAssigneesForm, TMultiSelectAssigneeItem } from "@/components/MultiSelectPopoverForm";
+import { Toast } from "@/components/base";
 import useUpdateProjectAssignedBots from "@/controllers/api/board/settings/useUpdateProjectAssignedBots";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -7,6 +6,7 @@ import { BotModel } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 
 const BoardSettingsBots = memo(() => {
     const [t] = useTranslation();
@@ -14,8 +14,14 @@ const BoardSettingsBots = memo(() => {
     const { project, allBots } = useBoardSettings();
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
     const { mutateAsync } = useUpdateProjectAssignedBots();
+    const [readOnly, setReadOnly] = useState(true);
 
-    const saveOnValueChanged = (items: TMultiSelectAssigneeItem[]) => {
+    const save = async (selectedBots: BotModel.TModel[]) => {
+        if (readOnly) {
+            setReadOnly(false);
+            return;
+        }
+
         if (isValidating) {
             return;
         }
@@ -24,7 +30,7 @@ const BoardSettingsBots = memo(() => {
 
         const promise = mutateAsync({
             uid: project.uid,
-            assigned_bots: (items as BotModel.TModel[]).map((bot) => bot.uid),
+            assigned_bots: selectedBots.map((bot) => bot.uid),
         });
 
         Toast.Add.promise(promise, {
@@ -47,26 +53,27 @@ const BoardSettingsBots = memo(() => {
             },
             finally: () => {
                 setIsValidating(false);
+                setReadOnly(true);
             },
         });
     };
 
     return (
-        <Box py="4">
-            <MultiSelectAssigneesForm
-                multiSelectProps={{
-                    placeholder: t("project.settings.Add a bot..."),
-                    className: "w-full",
-                    inputClassName: "ml-1 placeholder:text-gray-500 placeholder:font-medium",
-                }}
-                isValidating={isValidating}
-                allItems={allBots}
-                newItemFilter={(item) => allBots.includes(item as BotModel.TModel)}
-                initialSelectedItems={projectBots}
-                onValueChange={saveOnValueChanged}
-                projectUID={project.uid}
-            />
-        </Box>
+        <MultiSelectAssignee.Form
+            allSelectables={allBots}
+            originalAssignees={projectBots}
+            createSearchText={((item: BotModel.TModel) => `${item.uid} ${item.name} ${item.bot_uname}`) as IFormProps["createSearchText"]}
+            createLabel={((item: BotModel.TModel) => `${item.name} (${item.bot_uname})`) as IFormProps["createLabel"]}
+            placeholder={t("project.settings.Add a bot...")}
+            useEditorProps={{
+                canAddNew: false,
+                useButton: true,
+                isValidating,
+                readOnly,
+                setReadOnly,
+                save: save as TSaveHandler,
+            }}
+        />
     );
 });
 

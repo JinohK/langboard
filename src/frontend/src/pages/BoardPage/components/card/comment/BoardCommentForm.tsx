@@ -1,12 +1,11 @@
 import { Box, Button, Drawer, Flex, Form, Skeleton, SubmitButton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { BotModel, User } from "@/core/models";
-import { UserAvatarList } from "@/components/UserAvatarList";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
@@ -29,7 +28,7 @@ export function SkeletonBoardCommentForm() {
 }
 
 const BoardCommentForm = memo((): JSX.Element => {
-    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef, subscribeEditorSocketEvents } = useBoardCard();
+    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [t] = useTranslation();
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
@@ -42,9 +41,8 @@ const BoardCommentForm = memo((): JSX.Element => {
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const [editingUserUIDs, setEditingUserUIDs] = useState<string[]>([]);
     const { mutate: addCommentMutate } = useAddCardComment();
-    const editorName = `${card.uid}-comment`;
+    const editorName = `${card.uid}-comment-form`;
     const isClickedRef = useRef(false);
     const { stopEditing } = useToggleEditingByClickOutside("[data-card-comment-form]", (mode) => {
         if (mode === "view") {
@@ -99,20 +97,6 @@ const BoardCommentForm = memo((): JSX.Element => {
         }, 0);
     };
 
-    useEffect(() => {
-        const unsubscribe = subscribeEditorSocketEvents(
-            editorName,
-            (userUIDs) => {
-                setEditingUserUIDs(userUIDs);
-            },
-            (userUIDs) => {
-                setEditingUserUIDs(userUIDs);
-            }
-        );
-
-        return unsubscribe;
-    }, [subscribeEditorSocketEvents]);
-
     const changeOpenState = (opened: bool) => {
         if (isValidating) {
             return;
@@ -131,6 +115,9 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setIsOpened(opened);
+        setTimeout(() => {
+            editorComponentRef.current?.focus();
+        }, 0);
     };
 
     editorsRef.current[editorName] = changeOpenState;
@@ -165,20 +152,6 @@ const BoardCommentForm = memo((): JSX.Element => {
         );
     };
 
-    const commentingUsers = editingUserUIDs.filter((uid) => uid !== currentUser.uid);
-    const commentingUsersElement = commentingUsers.length > 0 && (
-        <Flex items="center" justify="end" gap="2" mb="1" mr="1">
-            <UserAvatarList
-                users={commentingUsers.map((userUID) => card.project_members.find((user) => user.uid === userUID)!)}
-                maxVisible={3}
-                size="xs"
-                spacing="1"
-                listAlign="end"
-            />
-            <span className="text-muted-foreground/70">{t(`card.${commentingUsers.length === 1 ? "is" : "are"} commenting...`)}</span>
-        </Flex>
-    );
-
     const clickOutside = (e: React.MouseEvent | CustomEvent) => {
         if (!isOpened) {
             return;
@@ -189,7 +162,6 @@ const BoardCommentForm = memo((): JSX.Element => {
 
     return (
         <Form.Root className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
-            {commentingUsersElement}
             <Drawer.Root
                 modal={false}
                 handleOnly
@@ -231,9 +203,6 @@ const BoardCommentForm = memo((): JSX.Element => {
                         className="max-w-[100vw] rounded-t-[10px] bg-background sm:max-w-screen-sm lg:max-w-screen-md"
                         data-card-comment-form
                     >
-                        <Box position="absolute" right="0" className="-top-8">
-                            {commentingUsersElement}
-                        </Box>
                         <Drawer.Handle
                             className="flex h-2 !w-full cursor-grab justify-center !bg-transparent py-3 text-center"
                             onMouseDown={() => onDrawerHandlePointerStart("mouse")}

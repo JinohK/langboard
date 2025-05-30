@@ -32,6 +32,9 @@ function CustomSelect(props: CustomSelectProps) {
 
     const selectedLabels = useMemo(() => {
         const labels = value?.map((value: number) => formatValue(value, unit, humanizeLabels, leadingZero, clockFormat)) ?? [];
+        if (labels.length && isNaN(Number(labels[0]))) {
+            return labels.join(", ");
+        }
 
         if (!value || value[0] !== Number(labels[0])) {
             return "";

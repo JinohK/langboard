@@ -11,7 +11,7 @@ const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectCha
     const { mutate } = useQueryMutation();
 
     const clearProjectChatMessages = async (params: IClearProjectChatMessagesForm) => {
-        const url = format(API_ROUTES.BOARD.CLEAR_CHAT_MESSAGES, { uid: params.uid });
+        const url = format(API_ROUTES.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
         const res = await api.delete(url);
 
         return res.data;

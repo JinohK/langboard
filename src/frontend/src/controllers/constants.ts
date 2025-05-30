@@ -32,6 +32,7 @@ export const API_ROUTES = {
             DELETE: "/account/group/{group_uid}",
         },
     },
+    BATCH: "/batch",
     NOTIFICATION: {
         SETTINGS: {
             ALL: "/notification/setting/all",
@@ -68,14 +69,17 @@ export const API_ROUTES = {
         GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
         IS_PROJECT_ASSIGNEE: "/board/{uid}/is-assigned/{assignee_uid}",
-        CHAT_MESSAGES: "/board/{uid}/chat",
-        CLEAR_CHAT_MESSAGES: "/board/{uid}/chat/clear",
         GET_CARDS: "/board/{uid}/cards",
         GET_COLUMN_CARDS: "/board/{uid}/column/{column_uid}/cards",
         UPDATE_ASSIGNED_USERS: "/board/{uid}/assigned-users",
         UNASSIGN_ASSIGNEE: "/board/{uid}/unassign/{assignee_uid}",
         ACCEPT_INVITATION: "/project/invite/accept",
         DECLINE_INVITATION: "/project/invite/decline",
+        CHAT: {
+            GET_MESSAGES: "/board/{uid}/chat",
+            CLEAR_MESSAGES: "/board/{uid}/chat/clear",
+            UPLOAD: "/board/{uid}/chat/upload",
+        },
         COLUMN: {
             CREATE: "/board/{uid}/column",
             CHANGE_NAME: "/board/{uid}/column/{column_uid}/name",
@@ -211,16 +215,18 @@ export const SOCKET_SERVER_EVENTS = {
         },
     },
     BOARD: {
-        IS_CHAT_AVAILABLE: "board:chat:available",
-        CHAT_SENT: "board:chat:sent",
-        CHAT_CANCELLED: "board:chat:cancelled",
-        CHAT_STREAM: "board:chat:stream",
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
         BOT_ROLES_UPDATED: "board:roles:bot:updated:{uid}",
         USER_ROLES_UPDATED: "board:roles:user:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
         DELETED: "board:deleted:{uid}",
+        CHAT: {
+            IS_AVAILABLE: "board:chat:available",
+            SENT: "board:chat:sent",
+            CANCELLED: "board:chat:cancelled",
+            STREAM: "board:chat:stream",
+        },
         LABEL: {
             CREATED: "board:label:created:{uid}",
             DETAILS_CHANGED: "board:label:details:changed:{uid}",
@@ -307,15 +313,27 @@ export const SOCKET_SERVER_EVENTS = {
     },
     GLOBALS: {
         BOTS: {
-            CREATED: "settings:bot:created",
-            UPDATED: "settings:bot:updated:{uid}",
-            DELETED: "settings:bot:deleted:{uid}",
+            CREATED: "bot:created",
+            UPDATED: "bot:updated:{uid}",
+            DELETED: "bot:deleted:{uid}",
         },
         GLOBAL_RELATIONSHIPS: {
             CREATED: "settings:global-relationship:created",
             UPDATED: "settings:global-relationship:updated:{uid}",
             DELETED: "settings:global-relationship:deleted:{uid}",
             SELECTIONS_DELETED: "settings:global-relationship:deleted",
+        },
+    },
+    SETTINGS: {
+        CREATED: "settings:created",
+        UPDATED: "settings:updated:{uid}",
+        DELETED: "settings:deleted:{uid}",
+        SELECTIONS_DELETED: "settings:deleted",
+        BOTS: {
+            CREATED: "settings:bot:created",
+            UPDATED: "settings:bot:updated:{uid}",
+            TRIGGER_CONDITION_PREDEFINED: "settings:bot:trigger-condition:predefined:{uid}",
+            TRIGGER_CONDITION_TOGGLED: "settings:bot:trigger-condition:toggled:{uid}",
         },
     },
     PROJECT_BOT: {
@@ -325,19 +343,13 @@ export const SOCKET_SERVER_EVENTS = {
 
 export const SOCKET_CLIENT_EVENTS = {
     BOARD: {
-        IS_CHAT_AVAILABLE: "board:chat:available",
-        CHAT_SEND: "board:chat:send",
-        CHAT_CANCEL: "board:chat:cancel",
-        CARD: {
-            EDITOR_USERS: "board:card:editor:users",
-            EDITOR_START_EDITING: "board:card:editor:start",
-            EDITOR_STOP_EDITING: "board:card:editor:stop",
+        CHAT: {
+            IS_AVAILABLE: "board:chat:available",
+            SEND: "board:chat:send",
+            CANCEL: "board:chat:cancel",
         },
         WIKI: {
             GET_DETAILS: "board:wiki:details",
-            EDITOR_USERS: "board:wiki:editor:users",
-            EDITOR_START_EDITING: "board:wiki:editor:start",
-            EDITOR_STOP_EDITING: "board:wiki:editor:stop",
         },
     },
     USER: {

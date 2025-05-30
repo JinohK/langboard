@@ -144,6 +144,7 @@ class BotScheduleService:
                 if process.name() != "cron":
                     continue
                 process.kill()
+            subprocess_run(["crontab", "-r"])
             subprocess_run(["crontab", str(CRON_TAB_FILE)])
             subprocess_run(["cron"])
         except Exception:
@@ -243,7 +244,10 @@ class BotScheduleService:
 
         model = {}
         has_changed = False
+        old_status = bot_schedule.status
+        old_interval_str = bot_schedule.interval_str
 
+        cron = None
         if running_type:
             if bot_schedule.running_type != running_type:
                 result = BotScheduleService.get_default_status_with_dates(
@@ -261,10 +265,7 @@ class BotScheduleService:
                 model["start_at"] = start_at
                 model["end_at"] = end_at
 
-                cron = BotScheduleService.__get_cron()
-                has_changed = BotScheduleService.__create_job(
-                    BotScheduleService.__get_cron(), bot_schedule.interval_str, running_type
-                )
+                cron, has_changed = await BotScheduleService.change_status(bot_schedule, status, no_update=True)
             else:
                 if bot_schedule.start_at != start_at or bot_schedule.end_at != end_at:
                     result = BotScheduleService.get_default_status_with_dates(
@@ -281,15 +282,6 @@ class BotScheduleService:
                 if BotSchedule.RUNNING_TYPES_WITH_END_AT.count(running_type) > 0 and end_at:
                     bot_schedule.end_at = end_at
                     model["end_at"] = end_at
-
-        if interval_str and BotScheduleService.is_valid_interval_str(interval_str):
-            cron = BotScheduleService.__get_cron()
-
-            old_interval_str = bot_schedule.interval_str
-            has_changed = BotScheduleService.__create_job(cron, interval_str)
-
-            bot_schedule.interval_str = interval_str
-            model["interval_str"] = interval_str
 
         if target_model and (
             target_model.__tablename__ != bot_schedule.target_table or target_model.id != bot_schedule.target_id
@@ -308,14 +300,33 @@ class BotScheduleService:
             model["filterable_table"] = filterable_model.__tablename__
             model["filterable_uid"] = filterable_model.get_uid()
 
+        if interval_str and BotScheduleService.is_valid_interval_str(interval_str) and old_interval_str != interval_str:
+            bot_schedule.interval_str = interval_str
+            model["interval_str"] = interval_str
+
+            if not cron:
+                cron = BotScheduleService.__get_cron()
+
+            if (
+                bot_schedule.running_type in BotSchedule.RUNNING_TYPES_WITH_START_AT
+                and bot_schedule.status == BotScheduleStatus.Pending
+            ):
+                has_changed = BotScheduleService.__create_job(cron, interval_str, running_type) or has_changed
+            else:
+                has_changed = BotScheduleService.__create_job(cron, interval_str) or has_changed
+
         with DbSession.use(readonly=False) as db:
             db.update(bot_schedule)
 
-        has_old_intervals = bool(ServiceHelper.get_by(BotSchedule, "interval_str", old_interval_str))
+        has_old_intervals = BotScheduleService.__has_interval_schedule(old_interval_str, old_status)
         if not has_old_intervals:
-            cron.remove_all(comment=old_interval_str)
+            if not cron:
+                cron = BotScheduleService.__get_cron()
+            cron.remove_all(
+                comment=f"scheduled {old_interval_str}" if old_status == BotScheduleStatus.Pending else old_interval_str
+            )
 
-        if has_changed or has_old_intervals:
+        if cron and (has_changed or not has_old_intervals):
             BotScheduleService.__save_cron(cron)
 
         return bot_schedule, model
@@ -328,27 +339,73 @@ class BotScheduleService:
 
         cron = BotScheduleService.__get_cron()
 
+        status = bot_schedule.status
         interval_str = bot_schedule.interval_str
         with DbSession.use(readonly=False) as db:
             db.delete(bot_schedule)
 
-        has_interval = bool(ServiceHelper.get_by(BotSchedule, "interval_str", interval_str))
+        has_interval = BotScheduleService.__has_interval_schedule(interval_str, status)
         if not has_interval:
-            cron.remove_all(comment=interval_str)
+            cron.remove_all(
+                comment=f"scheduled {interval_str}" if status == BotScheduleStatus.Pending else interval_str
+            )
             BotScheduleService.__save_cron(cron)
         return bot_schedule
 
+    @overload
     @staticmethod
-    async def change_status(bot_schedule: _TBotScheduleParam, status: BotScheduleStatus) -> BotSchedule | None:
+    async def change_status(bot_schedule: _TBotScheduleParam, status: BotScheduleStatus) -> BotSchedule | None: ...
+    @overload
+    @staticmethod
+    async def change_status(
+        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: Literal[False]
+    ) -> BotSchedule | None: ...
+    @overload
+    @staticmethod
+    async def change_status(
+        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: Literal[True]
+    ) -> tuple[CronTab, bool]: ...
+    @staticmethod
+    async def change_status(
+        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: bool = False
+    ) -> BotSchedule | tuple[CronTab, bool] | None:
         bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
+        cron = BotScheduleService.__get_cron()
         if not bot_schedule:
-            return None
+            return None if not no_update else (cron, False)
 
+        old_status = bot_schedule.status
         bot_schedule.status = status
-        with DbSession.use(readonly=False) as db:
-            db.update(bot_schedule)
+        if not no_update:
+            with DbSession.use(readonly=False) as db:
+                db.update(bot_schedule)
 
-        return bot_schedule
+        has_changed = False
+        has_old_intervals = True
+        old_comment = bot_schedule.interval_str
+        if old_status == BotScheduleStatus.Pending and status == BotScheduleStatus.Started:
+            has_changed = BotScheduleService.__create_job(cron, bot_schedule.interval_str)
+            has_old_intervals = BotScheduleService.__has_interval_schedule(bot_schedule.interval_str, old_status)
+            old_comment = f"scheduled {bot_schedule.interval_str}"
+        elif old_status == BotScheduleStatus.Started and status == BotScheduleStatus.Pending:
+            has_changed = BotScheduleService.__create_job(cron, bot_schedule.interval_str, bot_schedule.running_type)
+            has_old_intervals = BotScheduleService.__has_interval_schedule(bot_schedule.interval_str, old_status)
+        elif old_status == BotScheduleStatus.Started and status == BotScheduleStatus.Stopped:
+            has_old_intervals = BotScheduleService.__has_interval_schedule(bot_schedule.interval_str, old_status)
+        elif old_status == BotScheduleStatus.Stopped and status == BotScheduleStatus.Started:
+            has_changed = BotScheduleService.__create_job(cron, bot_schedule.interval_str)
+        elif old_status == BotScheduleStatus.Pending and status == BotScheduleStatus.Stopped:
+            has_old_intervals = BotScheduleService.__has_interval_schedule(bot_schedule.interval_str, old_status)
+            old_comment = f"scheduled {bot_schedule.interval_str}"
+        elif old_status == BotScheduleStatus.Stopped and status == BotScheduleStatus.Pending:
+            has_changed = BotScheduleService.__create_job(cron, bot_schedule.interval_str, bot_schedule.running_type)
+
+        if not has_old_intervals:
+            cron.remove_all(comment=old_comment)
+
+        if has_changed or not has_old_intervals:
+            BotScheduleService.__save_cron(cron)
+        return bot_schedule if not no_update else (cron, has_changed)
 
     @staticmethod
     def __get_cron():
@@ -367,8 +424,7 @@ class BotScheduleService:
         comment = None
         if running_type:
             if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0:
-                interval_str = "* * * * *"
-                comment = "scheduled"
+                comment = f"scheduled {interval_str}"
         if comment is None:
             comment = interval_str
 
@@ -388,3 +444,15 @@ class BotScheduleService:
     def __save_cron(cron: CronTab):
         cron.write()
         BotScheduleService.reload_cron()
+
+    @staticmethod
+    def __has_interval_schedule(interval_str: str, status: BotScheduleStatus) -> bool:
+        result = False
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
+                SqlBuilder.select.table(BotSchedule)
+                .where((BotSchedule.column("interval_str") == interval_str) & (BotSchedule.column("status") == status))
+                .limit(1)
+            )
+            result = bool(result.first())
+        return result

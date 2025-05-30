@@ -1,5 +1,5 @@
 from ...core.db import User
-from ...core.routing import AppRouter, SocketTopic
+from ...core.routing import GLOBAL_TOPIC_ID, AppRouter, SocketTopic
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 
@@ -110,3 +110,8 @@ async def user_subscription_validator(user: User, topic_id: str) -> bool:
 @AppRouter.socket.subscription_validator(SocketTopic.UserPrivate)
 async def user_private_subscription_validator(user: User, topic_id: str) -> bool:
     return user.get_uid() == topic_id
+
+
+@AppRouter.socket.subscription_validator(SocketTopic.AppSettings)
+async def app_settings_subscription_validator(user: User, topic_id: str) -> bool:
+    return user.is_admin and topic_id == GLOBAL_TOPIC_ID
