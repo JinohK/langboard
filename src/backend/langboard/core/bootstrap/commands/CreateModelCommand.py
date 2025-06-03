@@ -1,6 +1,6 @@
 from pydantic import Field
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_model_py, format_template, make_name
+from .CommandUtils import create_py, format_template, make_name
 
 
 class CreateModelCommandOptions(BaseCommandOptions):
@@ -51,4 +51,4 @@ class CreateModelCommand(BaseCommand):
 
         code = format_template("sql_model", formats)
 
-        create_model_py(name, code)
+        create_py("model", name, code)

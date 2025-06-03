@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Button, Command, Flex, IconComponent, Popover, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useChangePrimaryEmail from "@/controllers/api/account/useChangePrimaryEmail";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 
@@ -32,7 +31,7 @@ function PrimaryEmailForm(): JSX.Element {
 
     const handleSubmit = () => {
         if (!selectedEmail) {
-            Toast.Add.error(t("myAccount.errors.The email is already primary."));
+            Toast.Add.error(t("errors.requests.EX1002"));
             return;
         }
 
@@ -54,17 +53,7 @@ function PrimaryEmailForm(): JSX.Element {
                     }, 0);
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_304_NOT_MODIFIED]: () => {
-                            Toast.Add.error(t("myAccount.errors.The email is already primary."));
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                        },
-                        [EHttpStatus.HTTP_423_LOCKED]: () => {
-                            Toast.Add.error(t("myAccount.errors.The email is not verified yet."));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

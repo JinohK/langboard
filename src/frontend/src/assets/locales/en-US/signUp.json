@@ -34,7 +34,6 @@
       "email-exists": "Email already exists. Try another one.",
       "password": "Passwords do not match.",
       "avatar": "Only image files are allowed."
-    },
-    "Account already activated. Please sign in.": "Account already activated. Please sign in."
+    }
   }
 }

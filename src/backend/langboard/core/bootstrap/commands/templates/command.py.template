@@ -1,0 +1,39 @@
+from ..BaseCommand import BaseCommand, BaseCommandOptions
+from .CommandUtils import format_template, make_name
+
+
+class {class_name}CommandOptions(BaseCommandOptions):
+    pass
+
+
+class {class_name}Command(BaseCommand):
+    @staticmethod
+    def is_only_in_dev() -> bool:
+        return True
+
+    @property
+    def option_class(self) -> type[{class_name}CommandOptions]:
+        return {class_name}CommandOptions
+
+    @property
+    def command(self) -> str:
+        return ""
+
+    @property
+    def positional_name(self) -> str:
+        return "name"
+
+    @property
+    def description(self) -> str:
+        return ""
+
+    @property
+    def choices(self) -> list[str] | None:
+        return None
+
+    @property
+    def store_type(self) -> type[bool] | type[str]:
+        return str
+
+    def execute(self, name: str, _: {class_name}CommandOptions) -> None:
+        # Do something...

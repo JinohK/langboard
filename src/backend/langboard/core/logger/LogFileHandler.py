@@ -1,3 +1,4 @@
+from datetime import datetime
 from logging import NOTSET, LogRecord
 from pathlib import Path
 from typing import Optional, TextIO
@@ -49,7 +50,8 @@ class LogFileHandler(RichHandler):
             if not message.endswith("\n"):
                 message = concat(message, "\n")
             message = Text.from_markup(message).plain
-        self._stream.write(message)
+
+        self._stream.write(f"[{datetime.fromtimestamp(int(record.created))}] {message}")
         self._stream.flush()
 
     def _get_log_file_name(self):

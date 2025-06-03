@@ -5,7 +5,7 @@ from .CardAttachmentService import CardAttachmentService
 from .CardCommentService import CardCommentService
 from .CardRelationshipService import CardRelationshipService
 from .CardService import CardService
-from .ChatHistoryService import ChatHistoryService
+from .ChatService import ChatService
 from .CheckitemService import CheckitemService
 from .ChecklistService import ChecklistService
 from .EmailService import EmailService
@@ -31,7 +31,7 @@ __all__ = [
     "CardCommentService",
     "CardRelationshipService",
     "CardService",
-    "ChatHistoryService",
+    "ChatService",
     "CheckitemService",
     "ChecklistService",
     "EmailService",

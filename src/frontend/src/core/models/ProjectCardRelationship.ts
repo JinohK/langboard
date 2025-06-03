@@ -1,4 +1,5 @@
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 
 export type TRelationship = "parents" | "children";

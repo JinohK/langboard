@@ -1,6 +1,7 @@
 import * as ProjectCard from "@/core/models/ProjectCard";
 import * as User from "@/core/models/User";
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";

@@ -168,18 +168,20 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
         if (apiErrorHandlers || useDefaultBadRequestHandler) {
             const handlers = { ...(apiErrorHandlers ?? {}) };
             if (useDefaultBadRequestHandler) {
-                handlers[EHttpStatus.HTTP_400_BAD_REQUEST] = (_, responseErrors) => {
-                    const handledErrors = handleResponseErrors(errorLangPrefix, responseErrors);
-                    if (handledErrors) {
-                        setErrors(handledErrors);
-                        const firstFieldName = Object.keys(handledErrors)[0];
-                        if (firstFieldName) {
-                            focusComponentRef.current = formRef.current?.[firstFieldName] ?? firstFieldName;
-                            formRef.current?.[firstFieldName]?.focus();
+                handlers[EHttpStatus.HTTP_400_BAD_REQUEST] = {
+                    message: (_, responseErrors) => {
+                        const handledErrors = handleResponseErrors(errorLangPrefix, responseErrors);
+                        if (handledErrors) {
+                            setErrors(handledErrors);
+                            const firstFieldName = Object.keys(handledErrors)[0];
+                            if (firstFieldName) {
+                                focusComponentRef.current = formRef.current?.[firstFieldName] ?? firstFieldName;
+                                formRef.current?.[firstFieldName]?.focus();
+                            }
                         }
-                    }
 
-                    badRequestHandlerCallback?.(handledErrors, focusComponentRef.current);
+                        badRequestHandlerCallback?.(handledErrors, focusComponentRef.current);
+                    },
                 };
             }
 

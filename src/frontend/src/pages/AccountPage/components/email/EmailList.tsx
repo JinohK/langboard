@@ -47,11 +47,7 @@ function EmailList(): JSX.Element {
                     Toast.Add.success(t("myAccount.successes.Email deleted successfully."));
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
-                            Toast.Add.error(t("myAccount.errors.Cannot delete primary email."));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },
@@ -77,15 +73,8 @@ function EmailList(): JSX.Element {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_304_NOT_MODIFIED]: () => {
-                            updatedUser();
-                            Toast.Add.error(t("myAccount.errors.The email is already verified."));
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                        },
-                        [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                            Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                        [EHttpStatus.HTTP_304_NOT_MODIFIED]: {
+                            after: () => updatedUser(),
                         },
                     });
 

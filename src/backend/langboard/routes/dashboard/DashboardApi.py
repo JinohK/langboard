@@ -1,8 +1,7 @@
 from fastapi import Depends, status
-from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import Card, Checkitem, Project, ProjectColumn
@@ -21,19 +20,13 @@ from .DashboardForm import DashboardPagination, DashboardProjectCreateForm
             }
         )
         .auth()
-        .no_bot()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
-async def get_starred_projects(
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    projects = await service.project.get_starred_projects(user_or_bot)
+@AuthFilter.add("user")
+async def get_starred_projects(user: User = Auth.scope("api_user"), service: Service = Service.scope()) -> JsonResponse:
+    projects = await service.project.get_starred_projects(user)
 
     return JsonResponse(content={"projects": projects})
 
@@ -60,19 +53,13 @@ async def get_starred_projects(
             }
         )
         .auth()
-        .no_bot()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
-async def get_projects(
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    projects = await service.project.get_dashboard_list(user_or_bot)
+@AuthFilter.add("user")
+async def get_projects(user: User = Auth.scope("api_user"), service: Service = Service.scope()) -> JsonResponse:
+    projects = await service.project.get_dashboard_list(user)
 
     return JsonResponse(content={"projects": projects})
 
@@ -80,40 +67,30 @@ async def get_projects(
 @AppRouter.api.post(
     "/dashboard/projects/new",
     tags=["Dashboard"],
-    responses=OpenApiSchema().suc({"project_uid": "string"}).auth().no_bot().get(),
+    responses=OpenApiSchema().suc({"project_uid": "string"}, 201).auth().forbidden().get(),
 )
-@AuthFilter.add
+@AuthFilter.add("user")
 async def create_project(
-    form: DashboardProjectCreateForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    form: DashboardProjectCreateForm, user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ):
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    project = await service.project.create(user_or_bot, form.title, form.description, form.project_type)
+    project = await service.project.create(user, form.title, form.description, form.project_type)
     return JsonResponse(content={"project_uid": project.get_uid()}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.put(
     "/dashboard/projects/{project_uid}/star",
     tags=["Dashboard"],
-    responses=OpenApiSchema().auth().no_bot().err(404, "Project not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@AuthFilter.add
+@AuthFilter.add("user")
 async def toggle_star_project(
-    project_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    project_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    result = await service.project.toggle_star(user_or_bot, project_uid)
+    result = await service.project.toggle_star(user, project_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.get(
@@ -128,20 +105,15 @@ async def toggle_star_project(
             }
         )
         .auth()
-        .no_bot()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
+@AuthFilter.add("user")
 async def get_card_list(
-    pagination: DashboardPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    pagination: DashboardPagination = Depends(), user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    cards, projects = await service.card.get_dashboard_list(user_or_bot, pagination, pagination.refer_time)
+    cards, projects = await service.card.get_dashboard_list(user, pagination, pagination.refer_time)
 
     return JsonResponse(content={"cards": cards, "projects": projects})
 
@@ -170,19 +142,14 @@ async def get_card_list(
             }
         )
         .auth()
-        .no_bot()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
+@AuthFilter.add("user")
 async def track_checkitems(
-    pagination: DashboardPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    pagination: DashboardPagination = Depends(), user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    checkitems, cards, projects = await service.checkitem.get_track_list(user_or_bot, pagination, pagination.refer_time)
+    checkitems, cards, projects = await service.checkitem.get_track_list(user, pagination, pagination.refer_time)
 
     return JsonResponse(content={"checkitems": checkitems, "cards": cards, "projects": projects})

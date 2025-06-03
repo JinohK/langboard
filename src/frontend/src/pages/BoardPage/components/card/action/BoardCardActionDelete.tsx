@@ -1,6 +1,5 @@
 import { Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteCard from "@/controllers/api/card/useDeleteCard";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useNavigate } from "react-router-dom";
@@ -36,13 +35,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
             loading: t("common.Deleting..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Card not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

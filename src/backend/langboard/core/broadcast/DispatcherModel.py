@@ -31,7 +31,7 @@ def record_model(event: str | DispatcherModel, data: dict[str, Any] | None = Non
     return name
 
 
-def load_model(name: str):
+def load_model(name: str, should_delete: bool):
     file_path = BROADCAST_DIR / name
 
     if not file_path.exists():
@@ -41,7 +41,8 @@ def load_model(name: str):
         json = file.read().strip()
         file.close()
 
-    file_path.unlink(missing_ok=True)
+    if should_delete:
+        file_path.unlink(missing_ok=True)
 
     try:
         model = DispatcherModel.model_validate_json(json)

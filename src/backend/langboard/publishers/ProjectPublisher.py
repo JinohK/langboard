@@ -4,7 +4,7 @@ from ..core.db import User
 from ..core.routing import SocketTopic
 from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Project
+from ..models import ChatTemplate, Project
 
 
 @staticclass
@@ -128,3 +128,38 @@ class ProjectPublisher:
             )
 
         SocketPublishService.put_dispather({}, publish_models)
+
+    @staticmethod
+    def chat_template_created(project: Project, model: dict[str, Any]):
+        topic_id = project.get_uid()
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:chat:template:created:{topic_id}",
+            data_keys=list(model.keys()),
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
+    @staticmethod
+    def chat_template_updated(project: Project, template: ChatTemplate, model: dict[str, Any]):
+        topic_id = project.get_uid()
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:chat:template:updated:{template.get_uid()}",
+            data_keys=list(model.keys()),
+        )
+
+        SocketPublishService.put_dispather(model, publish_model)
+
+    @staticmethod
+    def chat_template_deleted(project: Project, template_uid: str):
+        topic_id = project.get_uid()
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:chat:template:deleted:{template_uid}",
+        )
+
+        SocketPublishService.put_dispather({}, publish_model)

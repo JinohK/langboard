@@ -1,6 +1,5 @@
 import { Button, Flex, Popover, SubmitButton, Toast } from "@/components/base";
 import useRescheduleProjectBotCron from "@/controllers/api/board/settings/useRescheduleProjectBotCron";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
@@ -88,13 +87,7 @@ function BoardSettingsCronBotScheduleEdit({
             loading: t("project.settings.Rescheduling..."),
             error: (error: unknown) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

@@ -1,4 +1,4 @@
-import { Box, Button, Flex, ScrollArea, Toast } from "@/components/base";
+import { Box, Button, Flex, ScrollArea } from "@/components/base";
 import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
 import useGetCards from "@/controllers/api/board/useGetCards";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -85,7 +85,6 @@ export interface IBoardProps {
 
 const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
     const { data, error } = useGetCards({ project_uid: project.uid });
-    const [t] = useTranslation();
 
     useEffect(() => {
         if (!error) {
@@ -93,13 +92,11 @@ const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found."));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 
@@ -160,9 +157,15 @@ const BoardResult = memo(() => {
                     {
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
-                                wildcardError: () => {
-                                    Toast.Add.error(t("errors.Internal server error"));
-                                    reorderColumns(originalColumn, originalColumnOrder);
+                                code: {
+                                    after: () => {
+                                        reorderColumns(originalColumn, originalColumnOrder);
+                                    },
+                                },
+                                wildcard: {
+                                    after: () => {
+                                        reorderColumns(originalColumn, originalColumnOrder);
+                                    },
                                 },
                             });
 

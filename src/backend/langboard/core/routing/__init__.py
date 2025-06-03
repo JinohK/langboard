@@ -1,3 +1,4 @@
+from .ApiErrorCode import ApiErrorCode
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .AppRouter import AppRouter
 from .BaseMiddleware import BaseMiddleware
@@ -14,6 +15,7 @@ from .WebSocket import IWebSocketStream, WebSocket
 
 
 __all__ = [
+    "ApiErrorCode",
     "AppExceptionHandlingRoute",
     "AppRouter",
     "BaseFormModel",

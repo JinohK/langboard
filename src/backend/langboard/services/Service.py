@@ -43,8 +43,8 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.EmailService)
 
     @property
-    def chat_history(self):
-        return self._create_or_get_service(factory.ChatHistoryService)
+    def chat(self):
+        return self._create_or_get_service(factory.ChatService)
 
     @property
     def project_column(self):

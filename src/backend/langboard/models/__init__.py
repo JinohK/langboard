@@ -7,6 +7,7 @@ from .CardCommentReaction import CardCommentReaction
 from .CardMetadata import CardMetadata
 from .CardRelationship import CardRelationship
 from .ChatHistory import ChatHistory
+from .ChatTemplate import ChatTemplate
 from .Checkitem import Checkitem
 from .CheckitemTimerRecord import CheckitemTimerRecord
 from .Checklist import Checklist
@@ -44,6 +45,7 @@ __all__ = [
     "CardMetadata",
     "CardRelationship",
     "ChatHistory",
+    "ChatTemplate",
     "Checkitem",
     "CheckitemTimerRecord",
     "Checklist",

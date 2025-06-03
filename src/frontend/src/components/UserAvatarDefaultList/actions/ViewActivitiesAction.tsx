@@ -1,5 +1,5 @@
 import { Popover } from "@/components/base";
-import { ActivityModel, AuthUser, Project, User } from "@/core/models";
+import { AuthUser, Project, User } from "@/core/models";
 import ActivityList from "@/components/ActivityList";
 import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ export interface IUserAvatarDefaultViewActivitiesActionProps {
 
 function UserAvatarDefaultViewActivitiesAction({ user, project, currentUser }: IUserAvatarDefaultViewActivitiesActionProps): JSX.Element | null {
     const [t] = useTranslation();
-    const activities = ActivityModel.Model.useModels((model) => model.filterable_type === "user" && model.filterable_uid === user.uid);
     const triggerRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [maxHeight, setMaxHeight] = useState("0px");
@@ -84,7 +83,6 @@ function UserAvatarDefaultViewActivitiesAction({ user, project, currentUser }: I
                 <ActivityList
                     form={{ type: "project_assignee", assignee_uid: user.uid, project_uid: project.uid }}
                     currentUser={currentUser}
-                    activities={activities}
                     infiniteScrollerClassName="max-h-[calc(var(--max-height)_-_theme(spacing.8))] px-4 pb-2.5"
                     style={style as React.CSSProperties}
                     isUserView

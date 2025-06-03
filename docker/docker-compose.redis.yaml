@@ -1,0 +1,20 @@
+services:
+  redis:
+    init: true
+    container_name: ${PROJECT_NAME}_redis
+    command: redis-server --port 6379 --requirepass ${REDIS_PASSWORD}
+    image: redis:latest
+    environment:
+      - REQUIREPASS=${REDIS_PASSWORD}
+      - CLIENTPORT=6379
+      - REDIS_LOG_DIR=/${REDIS_LOG_DIR}
+      - REDIS_LOG_FILE=/${REDIS_LOG_FILE}
+    volumes:
+      - ./volumes/cache:/data
+      - ./volumes/logs/redis:/${REDIS_LOG_DIR}
+      - ./cache/redis.conf:/usr/local/bin/redis.conf
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - net
+    restart: always

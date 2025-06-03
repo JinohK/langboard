@@ -1,7 +1,6 @@
 import { Button, Flex, Input, Popover, Select, SubmitButton, Toast } from "@/components/base";
 import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
 import useCreateCard from "@/controllers/api/board/useCreateCard";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn, User } from "@/core/models";
 import { useRef, useState } from "react";
@@ -53,12 +52,7 @@ function UserAvatarDefaultUserCreateAssignCardAction({ user, project }: IUserAva
             loading: t("common.Adding..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

@@ -1,4 +1,4 @@
-import { Button, Collapsible, Flex, Toast } from "@/components/base";
+import { Button, Collapsible, Flex } from "@/components/base";
 import ImagePreviewModal from "@/components/ImagePreviewModal";
 import useChangeCardAttachmentOrder from "@/controllers/api/card/attachment/useChangeCardAttachmentOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -58,9 +58,15 @@ function BoardCardAttachmentList(): JSX.Element {
                     {
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
-                                wildcardError: () => {
-                                    Toast.Add.error(t("errors.Internal server error"));
-                                    reorderAttachments(originalAttachment, originalAttachmentOrder);
+                                code: {
+                                    after: () => {
+                                        reorderAttachments(originalAttachment, originalAttachmentOrder);
+                                    },
+                                },
+                                wildcard: {
+                                    after: () => {
+                                        reorderAttachments(originalAttachment, originalAttachmentOrder);
+                                    },
                                 },
                             });
 

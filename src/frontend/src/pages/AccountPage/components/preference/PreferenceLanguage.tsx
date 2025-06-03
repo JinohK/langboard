@@ -4,7 +4,6 @@ import useUpdatePreferredLanguage from "@/controllers/api/account/useUpdatePrefe
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 
 function PreferenceLanguage() {
     const { currentUser, isValidating, setIsValidating } = useAccountSetting();
@@ -25,12 +24,7 @@ function PreferenceLanguage() {
             loading: t("common.Updating..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("myAccount.errors.Invalid language."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

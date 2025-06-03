@@ -29,7 +29,6 @@
     "Column deleted successfully.": "Column deleted successfully."
   },
   "errors": {
-    "Project not found.": "Project not found.",
     "Project closed.": "Project closed.",
     "missing": {
       "title": "Enter a title."
@@ -91,6 +90,11 @@
     "Delete project": "Delete project",
     "Are you sure you want to delete this project?": "Are you sure you want to delete this project?",
     "All data will be lost.": "All data will be lost.",
+    "Chat templates": "Chat templates",
+    "Add a template": "Add a template",
+    "Template name": "Template name",
+    "Template": "Template",
+    "Are you sure you want to delete this template?": "Are you sure you want to delete this template?",
     "successes": {
       "Assigned bots updated successfully.": "Assigned bots updated successfully.",
       "Bot roles updated successfully.": "Bot roles updated successfully.",
@@ -105,6 +109,9 @@
       "Color changed successfully.": "Color changed successfully.",
       "Description changed successfully.": "Description changed successfully.",
       "Label deleted successfully.": "Label deleted successfully.",
+      "Chat template added successfully.": "Chat template added successfully.",
+      "Chat template updated successfully.": "Chat template updated successfully.",
+      "Chat template deleted successfully.": "Chat template deleted successfully.",
       "Project deleted successfully.": "Project deleted successfully."
     },
     "errors": {
@@ -113,7 +120,6 @@
       "Cron end time is required.": "Cron end time is required.",
       "Cron scope type is required.": "Cron scope type is required.",
       "Cron scope UID is required.": "Cron scope UID is required.",
-      "Label not found.": "Label not found.",
       "Label name cannot be empty.": "Label name cannot be empty.",
       "Color cannot be empty.": "Color cannot be empty.",
       "Description cannot be empty.": "Description cannot be empty."

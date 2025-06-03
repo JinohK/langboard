@@ -18,7 +18,19 @@ class WebSocket:
         self.__user = user
         self._subscriptions: dict[str, set[str]] = {}
 
-    async def get_topics(self):
+    async def flush(self):
+        try:
+            await self.close()
+        except Exception:
+            pass
+        self.__ws = cast(FastAPIWebSocket, None)
+        self.__user = cast(User, None)
+        self._subscriptions.clear()
+
+    async def close(self, code: SocketResponseCode | int = SocketResponseCode.WS_1000_NORMAL_CLOSURE):
+        await self.__ws.close(code=code.value if isinstance(code, SocketResponseCode) else code)
+
+    def get_topics(self):
         return self._subscriptions
 
     def get_user(self) -> User:
@@ -54,7 +66,7 @@ class WebSocket:
         _error_code = error_code.value if isinstance(error_code, SocketResponseCode) else error_code
         if should_close:
             await self.__ws.send_json({"message": message, "code": _error_code})
-            await self.__ws.close(code=_error_code)
+            await self.close(code=_error_code)
             return
 
         await self.send("error", {"message": message, "code": _error_code})

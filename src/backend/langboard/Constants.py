@@ -16,7 +16,8 @@ IS_EXECUTABLE = _get_env("IS_EXECUTABLE", "false") == "true"
 
 # Directory
 BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
-DATA_DIR = BASE_DIR / ".." / ".." / ".." / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
+ROOT_DIR = BASE_DIR / ".." / ".." / ".."
+DATA_DIR = ROOT_DIR / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
 
 # URL
 HOST = _get_env("BACKEND_HOST", "localhost")
@@ -33,6 +34,8 @@ PROJECT_VERSION = version(PROJECT_NAME)
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
 READONLY_DATABASE_URL = _get_env("READONLY_DATABASE_URL", MAIN_DATABASE_URL)
+DB_TIMEOUT = int(_get_env("DB_TIMEOUT", "120"))  # seconds
+DB_TCP_USER_TIMEOUT = int(_get_env("DB_TCP_USER_TIMEOUT", "1000"))  # milliseconds
 
 # Logging
 TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
@@ -41,6 +44,12 @@ LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
 
 # Sentry
 SENTRY_DSN = _get_env("SENTRY_DSN")
+
+BROADCAST_TYPE: Literal["in-memory", "kafka"] = cast(Any, _get_env("BROADCAST_TYPE", "in-memory"))
+BROADCAST_URLS = _get_env("BROADCAST_URLS", "").split(",") if _get_env("BROADCAST_URLS") else []
+_AVAILABLE_BROADCAST_TYPES = set(["in-memory", "kafka"])
+if BROADCAST_TYPE not in _AVAILABLE_BROADCAST_TYPES:
+    raise ValueError(f"Invalid broadcast type: {BROADCAST_TYPE}. Must be one of {_AVAILABLE_BROADCAST_TYPES}")
 
 # Cache
 CACHE_TYPE: Literal["in-memory", "redis"] = cast(Any, _get_env("CACHE_TYPE", "in-memory"))

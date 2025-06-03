@@ -11,10 +11,6 @@ class BaseCommandOptions(ABC, BaseModel):
 
 
 class BaseCommand(ABC, Generic[_TOption]):
-    def __init__(self, *args, **kwargs) -> None:
-        self._args = args
-        self._kwargs = kwargs
-
     @staticmethod
     @abstractmethod
     def is_only_in_dev() -> bool: ...
@@ -46,6 +42,10 @@ class BaseCommand(ABC, Generic[_TOption]):
     @property
     @abstractmethod
     def store_type(self) -> type[bool] | type[str]: ...
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._args = args
+        self._kwargs = kwargs
 
     @abstractmethod
     def execute(self, *args, **kwargs) -> None: ...

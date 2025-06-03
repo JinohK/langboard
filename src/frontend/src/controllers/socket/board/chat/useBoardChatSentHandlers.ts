@@ -22,7 +22,6 @@ const useBoardChatSentHandlers = ({ callback, projectUID }: IUseBoardChatSentHan
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                data.user_message.projectUID = projectUID;
                 ChatMessageModel.Model.fromObject(data.user_message, true);
                 return {};
             },

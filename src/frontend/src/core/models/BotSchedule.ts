@@ -1,6 +1,7 @@
 import useBoardBotCronDeletedHandlers from "@/controllers/socket/board/settings/useBoardBotCronDeletedHandlers";
 import useBoardBotCronRescheduledHandlers from "@/controllers/socket/board/settings/useBoardBotCronRescheduledHandlers";
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 

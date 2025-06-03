@@ -17,7 +17,7 @@ _cached_apis: dict[str, str] = {}
     tags=["Batcher"],
     description="Batch API for processing multiple requests in a single call. The response will be a list of responses corresponding to each request schema provided in the form.",
 )
-@AuthFilter.add
+@AuthFilter.add()
 async def batch_apis(request: Request, form: BatchForm):
     if not _cached_apis:
         _set_cache_apis()

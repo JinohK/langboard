@@ -1,6 +1,5 @@
 import { Button, IconComponent, Toast } from "@/components/base";
 import useDeleteUserGroup from "@/controllers/api/account/useDeleteUserGroup";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
@@ -28,11 +27,7 @@ function AccountUserGroupDeleteButton({ group }: IAccountUserGroupDeleteButtonPr
                     Toast.Add.success(t("myAccount.successes.User group deleted successfully."));
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

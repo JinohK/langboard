@@ -6,7 +6,7 @@ from ...core.filter import RoleFilter
 from ...core.routing import AppRouter, IWebSocketStream, SocketResponse, SocketTopic, WebSocket
 from ...core.security import Auth
 from ...core.utils.String import concat
-from ...models import ChatHistory, ProjectRole
+from ...models import ChatHistory, Project, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import project_role_finder
@@ -68,8 +68,8 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, file_path: str | 
                 data={"available": False},
             )
 
-        user_message = await service.chat_history.create(
-            "project", ChatContentModel(content=message), filterable=topic_id, sender=user.id
+        user_message = await service.chat.create(
+            Project.__tablename__, topic_id, ChatContentModel(content=message), sender=user.id
         )
 
         await ws.send(
@@ -86,9 +86,7 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, file_path: str | 
         if await stop_chat_if_cancelled(ws, topic_id, service):
             return
 
-        ai_message = await service.chat_history.create(
-            "project", ChatContentModel(), filterable=topic_id, receiver=user.id
-        )
+        ai_message = await service.chat.create(Project.__tablename__, topic_id, ChatContentModel(), receiver=user.id)
         ws_stream = ws.stream_with_topic(SocketTopic.Board, topic_id, "board:chat:stream")
         ai_message_uid = ai_message.get_uid()
         await ws_stream.start(data={"ai_message": ai_message.api_response()})
@@ -129,11 +127,11 @@ async def run_chat(ws: WebSocket, topic_id: str, message: str, file_path: str | 
             if not is_received:
                 is_cancelled = await stop_chat_if_cancelled(ws, topic_id, service, ai_message, ws_stream)
                 if not is_cancelled:
-                    await service.chat_history.delete(ai_message)
+                    await service.chat.delete(ai_message)
                     await ws_stream.end(data={"uid": ai_message_uid, "status": "failed"})
                 return
 
-        await service.chat_history.update(ai_message)
+        await service.chat.update(ai_message)
         await ws_stream.end(data={"uid": ai_message_uid, "status": "success"})
     except Exception:
         await ws_stream.end(data={"uid": ai_message_uid, "status": "failed"})
@@ -172,7 +170,7 @@ async def stop_chat_if_cancelled(
     if ai_message and stream:
         await stream.end(data={"uid": ai_message.get_uid(), "status": "cancelled"})
         if not ai_message.message:
-            await service.chat_history.delete(ai_message)
+            await service.chat.delete(ai_message)
         else:
-            await service.chat_history.update(ai_message)
+            await service.chat.update(ai_message)
     return True

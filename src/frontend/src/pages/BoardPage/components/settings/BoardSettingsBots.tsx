@@ -1,6 +1,5 @@
 import { Toast } from "@/components/base";
 import useUpdateProjectAssignedBots from "@/controllers/api/board/settings/useUpdateProjectAssignedBots";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
@@ -37,13 +36,7 @@ const BoardSettingsBots = memo(() => {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

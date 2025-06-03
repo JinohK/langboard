@@ -70,8 +70,8 @@ const dropdownArrowVariants = cva(
 );
 
 type ToolbarButtonProps = {
-    isDropdown?: boolean;
-    pressed?: boolean;
+    isDropdown?: bool;
+    pressed?: bool;
 } & Omit<React.ComponentPropsWithoutRef<typeof ToolbarToggleItem>, "asChild" | "value"> &
     VariantProps<typeof toolbarButtonVariants>;
 

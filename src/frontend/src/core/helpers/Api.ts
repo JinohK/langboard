@@ -79,24 +79,32 @@ api.interceptors.response.use(
     (value) => value,
     async (error) => {
         const { handleAsync } = setupApiErrorHandler({
-            nonApiError: (e) => {
-                throw e;
+            nonApi: {
+                message: (e) => {
+                    throw e;
+                },
             },
-            wildcardError: (e) => {
-                throw e;
+            wildcard: {
+                message: (e) => {
+                    throw e;
+                },
             },
-            [EHttpStatus.HTTP_401_UNAUTHORIZED]: (e) => {
-                const cookieStore = getCookieStore();
-                cookieStore.remove(APP_ACCESS_TOKEN);
-                cookieStore.remove(APP_REFRESH_TOKEN);
-                redirectToSignIn();
-                throw e;
+            [EHttpStatus.HTTP_401_UNAUTHORIZED]: {
+                message: (e) => {
+                    const cookieStore = getCookieStore();
+                    cookieStore.remove(APP_ACCESS_TOKEN);
+                    cookieStore.remove(APP_REFRESH_TOKEN);
+                    redirectToSignIn();
+                    throw e;
+                },
             },
-            [EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY]: async (e) => {
-                const originalConfig: AxiosRequestConfig = e.config!;
-                const token = await refresh();
-                originalConfig.headers!.Authorization = `Bearer ${token}`;
-                return await api(originalConfig);
+            [EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY]: {
+                message: async (e) => {
+                    const originalConfig: AxiosRequestConfig = e.config!;
+                    const token = await refresh();
+                    originalConfig.headers!.Authorization = `Bearer ${token}`;
+                    return await api(originalConfig);
+                },
             },
         });
 

@@ -1,4 +1,5 @@
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import * as User from "@/core/models/User";
 
 export interface Interface extends IBaseModel {

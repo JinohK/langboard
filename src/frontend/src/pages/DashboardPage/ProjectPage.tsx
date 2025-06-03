@@ -1,6 +1,4 @@
 import { memo, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Toast } from "@/components/base";
 import useGetProjects from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -19,7 +17,6 @@ interface IProjectPageProps {
 const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
     const { navigate, currentUser } = useDashboard();
-    const [t] = useTranslation();
     const { data, isFetching, error } = useGetProjects();
 
     useEffect(() => {
@@ -28,13 +25,11 @@ const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found."));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 

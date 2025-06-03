@@ -25,8 +25,8 @@ export type TSelectItem = {
 
 type SelectEditorContextValue = {
     items: TSelectItem[];
-    open: boolean;
-    setOpen: (open: boolean) => void;
+    open: bool;
+    setOpen: (open: bool) => void;
     defaultValue?: TSelectItem[];
     value?: TSelectItem[];
     onValueChange?: (items: TSelectItem[]) => void;
@@ -252,7 +252,7 @@ const createEditorValue = (value?: TSelectItem[]) => [
     },
 ];
 
-const fzfFilter = (value: string, search: string): boolean => {
+const fzfFilter = (value: string, search: string): bool => {
     if (!search) return true;
 
     const fzf = new Fzf([value], {

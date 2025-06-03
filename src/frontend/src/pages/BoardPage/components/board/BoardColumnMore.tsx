@@ -2,7 +2,6 @@ import { Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "
 import NotificationSetting from "@/components/NotificationSetting";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useDeleteProjectColumn from "@/controllers/api/board/useDeleteProjectColumn";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -84,13 +83,7 @@ const BoardColumnMoreDelete = memo(({ column }: Omit<IBoardColumnMoreProps, "isE
             loading: t("common.Deleting..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

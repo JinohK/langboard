@@ -1,6 +1,6 @@
 from ...utils.String import pascal_to_snake
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_model_py, format_template, make_name
+from .CommandUtils import create_py, format_template, make_name
 
 
 class CreateMetadataCommandOptions(BaseCommandOptions):
@@ -46,4 +46,4 @@ class CreateMetadataCommand(BaseCommand):
         }
 
         model_code = format_template("metadata_sql_model", formats)
-        create_model_py(f"{name}Metadata", model_code)
+        create_py("model", f"{name}Metadata", model_code)

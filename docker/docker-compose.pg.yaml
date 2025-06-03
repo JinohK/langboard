@@ -1,0 +1,100 @@
+services:
+  db-bouncer:
+    init: true
+    image: bitnami/pgbouncer:latest
+    container_name: ${PROJECT_NAME}_db_bouncer
+    ports:
+      - 6432:6432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_HOST=db
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRES_DB}
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_AUTH_TYPE=trust
+      - PGBOUNCER_USERLIST_FILE=/bitnami/userlists.txt
+      - PGBOUNCER_DSN_0=master=host=db port=5432 dbname=${POSTGRES_DB}
+      - PGBOUNCER_DSN_1=readonly=host=db-replica port=5432 dbname=${POSTGRES_DB}
+      - PGBOUNCER_MAX_CLIENT_CONNS=${POSTGRES_MAX_CONNECTIONS}
+      - PGBOUNCER_SERVER_IDLE_TIMEOUT=${PGBOUNCER_SERVER_IDLE_TIMEOUT}
+      - PGBOUNCER_CLIENT_IDLE_TIMEOUT=${PGBOUNCER_CLIENT_IDLE_TIMEOUT}
+      - PGBOUNCER_DEFAULT_POOL_SIZE=${PGBOUNCER_DEFAULT_POOL_SIZE}
+      - PGBOUNCER_RESERVE_POOL_TIMEOUT=${PGBOUNCER_RESERVE_POOL_TIMEOUT}
+      - PGBOUNCER_QUERY_WAIT_TIMEOUT=${PGBOUNCER_QUERY_WAIT_TIMEOUT}
+    volumes:
+      - ./db_bouncer/userlists.txt:/bitnami/userlists.txt
+    depends_on:
+      - db
+      - db-replica
+    networks:
+      - net
+    restart: always
+
+  db:
+    init: true
+    image: bitnami/postgresql:latest
+    container_name: ${PROJECT_NAME}_db
+    ports:
+      - ${MASTER_POSTGRES_PORT}:5432
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+      - POSTGRESQL_USERNAME=${POSTGRES_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRES_DB}
+      - POSTGRESQL_MAX_CONNECTIONS=${POSTGRES_MAX_CONNECTIONS}
+      - POSTGRESQL_LOG_TIMEZONE=UTC
+      - POSTGRESQL_TIMEZONE=UTC
+    volumes:
+      - ./volumes/db:/bitnami/postgresql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - net
+    restart: always
+
+  db-replica:
+    init: true
+    image: bitnami/postgresql:latest
+    container_name: ${PROJECT_NAME}_db_replica
+    ports:
+      - ${REPLICA_POSTGRES_PORT}:5432
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=${PROJECT_NAME}_db
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=${POSTGRES_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_MAX_CONNECTIONS=${POSTGRES_MAX_CONNECTIONS}
+      - POSTGRESQL_LOG_TIMEZONE=UTC
+      - POSTGRESQL_TIMEZONE=UTC
+    networks:
+      - net
+    depends_on:
+      - db
+    restart: always
+
+  db-backup:
+    init: true
+    build:
+      context: ./db_backup
+    container_name: ${PROJECT_NAME}_db_backup
+    environment:
+      - PG_MASTER_HOST=${PROJECT_NAME}_db
+      - PG_MASTER_PORT=5432
+      - PG_USER=${POSTGRES_REPLICATION_USER}
+      - PG_PASS=${POSTGRES_REPLICATION_PASSWORD}
+      - PG_DB=${POSTGRES_DB}
+    volumes:
+      - ./volumes/db_backup:/backup
+      - ./db_backup/backup.sh:/scripts/backup.sh
+      - ./db_backup/cron.tab:/var/spool/cron/crontabs/root
+      - ./volumes/logs/db_backup:/logs
+    networks:
+      - net
+    depends_on:
+      - db
+    restart: always

@@ -33,3 +33,7 @@ def get_model_by_table_name(table_name: str) -> type[BaseSqlModel] | None:
             tables[table_name] = model
             return model
     return None
+
+
+def ensure_models_imported():
+    pass

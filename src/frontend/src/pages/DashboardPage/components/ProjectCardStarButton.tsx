@@ -1,6 +1,5 @@
-import { Button, IconComponent, Toast } from "@/components/base";
+import { Button, IconComponent } from "@/components/base";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project } from "@/core/models";
 import { memo } from "react";
@@ -37,11 +36,7 @@ const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, update
                     updateStarredProjects();
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("dashboard.errors.Project not found."));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

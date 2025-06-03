@@ -1,7 +1,8 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
-import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends IBaseModel {

@@ -1,6 +1,5 @@
 import { Toast } from "@/components/base";
 import useCreateCard from "@/controllers/api/board/useCreateCard";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { Project, ProjectColumn } from "@/core/models";
@@ -86,12 +85,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                 loading: t("common.Adding..."),
                 error: (error) => {
                     const messageRef = { message: "" };
-                    const { handle } = setupApiErrorHandler(
-                        {
-                            [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                        },
-                        messageRef
-                    );
+                    const { handle } = setupApiErrorHandler({}, messageRef);
 
                     handle(error);
                     return messageRef.message;

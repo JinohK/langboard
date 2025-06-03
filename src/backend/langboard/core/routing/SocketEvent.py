@@ -52,7 +52,7 @@ class SocketEvent:
             role = Role(model_class)
 
             params = {}
-            topics = await req.socket.get_topics()
+            topics = req.socket.get_topics()
             for topic in topics:
                 params[f"{topic}_id"] = topics[topic]
 

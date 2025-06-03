@@ -9,7 +9,7 @@ export function TableCellElementStatic({
     isHeader,
     ...props
 }: SlateElementProps<TTableCellElement> & {
-    isHeader?: boolean;
+    isHeader?: bool;
 }) {
     const { editor, element } = props;
     const { api } = editor.getPlugin(BaseTablePlugin);

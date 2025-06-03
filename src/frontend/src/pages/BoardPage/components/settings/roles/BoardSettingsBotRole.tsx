@@ -4,7 +4,6 @@ import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useToggleProjectBotActivation from "@/controllers/api/board/settings/useToggleProjectBotActivation";
 import useUpdateProjectBotRoles from "@/controllers/api/board/settings/useUpdateProjectBotRoles";
 import useBoardBotActivationToggledHandlers from "@/controllers/socket/board/settings/useBoardBotActivationToggledHandlers";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, Project, User } from "@/core/models";
@@ -49,13 +48,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
                 loading: t("common.Updating..."),
                 error: (error) => {
                     const messageRef = { message: "" };
-                    const { handle } = setupApiErrorHandler(
-                        {
-                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                            [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                        },
-                        messageRef
-                    );
+                    const { handle } = setupApiErrorHandler({}, messageRef);
 
                     handle(error);
                     return messageRef.message;
@@ -101,13 +94,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
             loading: t("common.Changing..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

@@ -42,7 +42,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
         projectUID,
         cardUID,
         callback: () => {
-            Toast.Add.error(t("card.errors.Card deleted."));
+            Toast.Add.error(t("card.successes.Card deleted."));
             navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
         },
     });
@@ -53,13 +53,11 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("project.errors.Project not found."));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 

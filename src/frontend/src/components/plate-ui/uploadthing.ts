@@ -1,4 +1,3 @@
-import { Toast } from "@/components/base";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -55,14 +54,17 @@ export function useUploadFile() {
         } catch (error) {
             // TODO: Show error message
             const { handle } = setupApiErrorHandler({
-                [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                    Toast.Add.error(t("editor.errors.upload.unknown"));
+                [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                    message: t("editor.errors.upload.unknown"),
+                    toast: true,
                 },
-                [EHttpStatus.HTTP_400_BAD_REQUEST]: () => {
-                    Toast.Add.error(t("editor.errors.upload.unknown"));
+                [EHttpStatus.HTTP_400_BAD_REQUEST]: {
+                    message: t("editor.errors.upload.unknown"),
+                    toast: true,
                 },
-                [EHttpStatus.HTTP_500_INTERNAL_SERVER_ERROR]: () => {
-                    Toast.Add.error(t("editor.errors.upload.unknown"));
+                [EHttpStatus.HTTP_500_INTERNAL_SERVER_ERROR]: {
+                    message: t("editor.errors.upload.unknown"),
+                    toast: true,
                 },
             });
 

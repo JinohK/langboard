@@ -1,6 +1,5 @@
-import { Button, DateTimePicker, Flex, IconComponent, Skeleton, SubmitButton, Toast } from "@/components/base";
+import { Button, DateTimePicker, Flex, IconComponent, Skeleton, SubmitButton } from "@/components/base";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -14,7 +13,7 @@ export function SkeletonBoardCardDeadline() {
 
 const BoardCardDeadline = memo(() => {
     const { projectUID, card, hasRoleAction } = useBoardCard();
-    const { t } = useTranslation();
+    const [t] = useTranslation();
     const { mutate: changeCardDetailsMutate } = useChangeCardDetails("deadline_at");
     const deadline = card.useField("deadline_at");
     const [isSaving, setIsSaving] = useState(false);
@@ -40,11 +39,7 @@ const BoardCardDeadline = memo(() => {
             },
             {
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("card.errors.Comment not found."));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

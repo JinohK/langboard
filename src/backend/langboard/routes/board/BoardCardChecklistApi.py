@@ -2,7 +2,7 @@ from fastapi import status
 from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import Checkitem, Checklist, ProjectRole
@@ -15,7 +15,7 @@ from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrd
 @AppRouter.api.get(
     "/board/{project_uid}/card/{card_uid}/checklist",
     tags=["Board.Card"],
-    description="Get card comments.",
+    description="Get card checklists.",
     responses=OpenApiSchema()
     .suc(
         {
@@ -43,12 +43,12 @@ from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrd
             ],
         }
     )
-    .auth(with_bot=True)
-    .role(with_bot=True)
+    .auth()
+    .forbidden()
     .get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def get_card_checklists(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     checklists = await service.checklist.get_list(card_uid, as_api=True)
     return JsonResponse(content={"checklists": checklists})
@@ -60,16 +60,11 @@ async def get_card_checklists(card_uid: str, service: Service = Service.scope())
     tags=["Board.Card.Checklist"],
     description="Create a checklist.",
     responses=(
-        OpenApiSchema()
-        .suc({"checklist": Checklist})
-        .auth(with_bot=True)
-        .role(with_bot=True)
-        .err(404, "Project or card not found.")
-        .get()
+        OpenApiSchema().suc({"checklist": Checklist}, 201).auth().forbidden().err(404, ApiErrorCode.NF2004).get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def create_checklist(
     project_uid: str,
     card_uid: str,
@@ -79,7 +74,7 @@ async def create_checklist(
 ) -> JsonResponse:
     result = await service.checklist.create(user_or_bot, project_uid, card_uid, form.title)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
         content={
@@ -97,12 +92,10 @@ async def create_checklist(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/checkitem",
     tags=["Board.Card.Checklist"],
     description="Create a checkitem.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def create_checkitem(
     project_uid: str,
     card_uid: str,
@@ -113,9 +106,9 @@ async def create_checkitem(
 ) -> JsonResponse:
     result = await service.checkitem.create(user_or_bot, project_uid, card_uid, checklist_uid, form.title)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
+    return JsonResponse(status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.schema(form=CardChecklistNotifyForm)
@@ -123,12 +116,10 @@ async def create_checkitem(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/notify",
     tags=["Board.Card.Checklist"],
     description="Notify members of the checklist.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def notify_checklist(
     project_uid: str,
     card_uid: str,
@@ -139,9 +130,9 @@ async def notify_checklist(
 ) -> JsonResponse:
     result = await service.checklist.notify(user_or_bot, project_uid, card_uid, checklist_uid, form.user_uids)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema(form=CardCheckRelatedForm)
@@ -149,12 +140,10 @@ async def notify_checklist(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/title",
     tags=["Board.Card.Checklist"],
     description="Change checklist title.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def change_checklist_title(
     project_uid: str,
     card_uid: str,
@@ -165,9 +154,9 @@ async def change_checklist_title(
 ) -> JsonResponse:
     result = await service.checklist.change_title(user_or_bot, project_uid, card_uid, checklist_uid, form.title)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema(form=ChangeRootOrderForm)
@@ -175,12 +164,10 @@ async def change_checklist_title(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/order",
     tags=["Board.Card.Checklist"],
     description="Change checklist order.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def change_checklist_order(
     project_uid: str,
     card_uid: str,
@@ -191,9 +178,9 @@ async def change_checklist_order(
 ) -> JsonResponse:
     result = await service.checklist.change_order(user_or_bot, project_uid, card_uid, checklist_uid, form.order)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema()
@@ -201,12 +188,10 @@ async def change_checklist_order(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}/toggle-checked",
     tags=["Board.Card.Checklist"],
     description="Toggle checklist checked.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def toggle_checklist_checked(
     project_uid: str,
     card_uid: str,
@@ -216,9 +201,9 @@ async def toggle_checklist_checked(
 ) -> JsonResponse:
     result = await service.checklist.toggle_checked(user_or_bot, project_uid, card_uid, checklist_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema()
@@ -226,12 +211,10 @@ async def toggle_checklist_checked(
     "/board/{project_uid}/card/{card_uid}/checklist/{checklist_uid}",
     tags=["Board.Card.Checklist"],
     description="Delete a checklist.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or checklist not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def delete_checklist(
     project_uid: str,
     card_uid: str,
@@ -241,6 +224,6 @@ async def delete_checklist(
 ) -> JsonResponse:
     result = await service.checklist.delete(user_or_bot, project_uid, card_uid, checklist_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2012, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()

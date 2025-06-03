@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { QUERY_NAMES } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
-import { Button, Flex, Toast } from "@/components/base";
+import { Button, Flex } from "@/components/base";
 import useActivateUser from "@/controllers/api/auth/useActivateUser";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -57,12 +57,11 @@ function ActivatePage(): JSX.Element {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
                         },
-                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
-                            Toast.Add.error(t("signUp.errors.Account already activated. Please sign in."));
-                            navigate(ROUTES.SIGN_IN.EMAIL);
+                        [EHttpStatus.HTTP_409_CONFLICT]: {
+                            after: () => navigate(ROUTES.SIGN_IN.EMAIL),
                         },
                     });
 

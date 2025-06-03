@@ -1,3 +1,4 @@
+from .BaseSeed import BaseSeed
 from .ColumnTypes import (
     CSVType,
     DateTimeField,
@@ -16,6 +17,7 @@ from .User import User
 
 
 __all__ = [
+    "BaseSeed",
     "DbSession",
     "DateTimeField",
     "ModelColumnType",

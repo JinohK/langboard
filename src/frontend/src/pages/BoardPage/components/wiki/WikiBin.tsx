@@ -1,6 +1,5 @@
 import { Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteWiki from "@/controllers/api/wiki/useDeleteWiki";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -36,12 +35,7 @@ const WikiBin = memo(({ moreDroppableZoneCallbacksRef }: IWikiBinProps) => {
                 loading: t("common.Deleting..."),
                 error: (error) => {
                     const messageRef = { message: "" };
-                    const { handle } = setupApiErrorHandler(
-                        {
-                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("wiki.errors.Can't access this wiki."),
-                        },
-                        messageRef
-                    );
+                    const { handle } = setupApiErrorHandler({}, messageRef);
 
                     handle(error);
                     return messageRef.message;

@@ -15,7 +15,7 @@ _TSubModel1 = TypeVar("_TSubModel1", bound=BaseSqlModel)
 _TSubModel2 = TypeVar("_TSubModel2", bound=BaseSqlModel)
 _TSubModel3 = TypeVar("_TSubModel3", bound=BaseSqlModel)
 
-_TIdParam = _TBaseModel | SnowflakeID | int | str | None
+_TIdParam = BaseSqlModel | SnowflakeID | int | str | None
 
 
 @staticclass
@@ -236,6 +236,16 @@ class ServiceHelper:
                 model_class, "id", SnowflakeID.from_short_code(id_param), with_deleted=with_deleted
             )
         return None
+
+    @staticmethod
+    def convert_id(id_param: SnowflakeID | int | str) -> SnowflakeID:
+        if isinstance(id_param, SnowflakeID):
+            return id_param
+        if isinstance(id_param, int):
+            return SnowflakeID(id_param)
+        if isinstance(id_param, str):
+            return SnowflakeID.from_short_code(id_param)
+        return SnowflakeID(0)
 
     @staticmethod
     def get_all_by(

@@ -4,7 +4,7 @@ from starlette.types import ASGIApp
 from ..core.ai import Bot
 from ..core.db import User
 from ..core.filter import FilterMiddleware, RoleFilter
-from ..core.routing import JsonResponse
+from ..core.routing import ApiErrorCode, JsonResponse
 from ..core.security import Role
 
 
@@ -29,13 +29,13 @@ class RoleMiddleware(FilterMiddleware):
 
         if should_filter:
             if "auth" not in scope:
-                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                response = JsonResponse(status_code=status.HTTP_401_UNAUTHORIZED)
                 await response(scope, receive, send)
                 return
 
             user_or_bot: User | Bot = scope["auth"]
             if not user_or_bot.id:
-                response = JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+                response = JsonResponse(status_code=status.HTTP_401_UNAUTHORIZED)
                 await response(scope, receive, send)
                 return
 
@@ -51,7 +51,7 @@ class RoleMiddleware(FilterMiddleware):
                     is_bot=isinstance(user_or_bot, Bot),
                 )
                 if not is_authorized:
-                    response = JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+                    response = JsonResponse(content=ApiErrorCode.PE1001, status_code=status.HTTP_403_FORBIDDEN)
                     await response(scope, receive, send)
                     return
 

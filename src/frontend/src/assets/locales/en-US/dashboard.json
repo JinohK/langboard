@@ -1,30 +1,27 @@
 {
-    "Projects": "Projects",
-    "tabs": {
-        "all": "All",
-        "starred": "Starred",
-        "recent": "Recent",
-        "unstarred": "Unstarred"
-    },
-    "Star this project": "Star this project",
-    "Unstar this project": "Unstar this project",
-    "No projects found": "No projects found",
-    "Cards": "Cards",
-    "Starred": "Starred",
-    "Tracking": "Tracking",
-    "Checkitem": "Checkitem",
-    "Title": "Title",
-    "Column": "Column",
-    "Card": "Card",
-    "Status": "Status",
-    "Started at": "Started at",
-    "Time taken": "Time taken",
-    "Started": "Started",
-    "Paused": "Paused",
-    "Stopped": "Stopped",
-    "Create New Project": "Create New Project",
-    "My Activity": "My Activity",
-    "errors": {
-        "Project not found.": "Project not found."
-    }
+  "Projects": "Projects",
+  "tabs": {
+    "all": "All",
+    "starred": "Starred",
+    "recent": "Recent",
+    "unstarred": "Unstarred"
+  },
+  "Star this project": "Star this project",
+  "Unstar this project": "Unstar this project",
+  "No projects found": "No projects found",
+  "Cards": "Cards",
+  "Starred": "Starred",
+  "Tracking": "Tracking",
+  "Checkitem": "Checkitem",
+  "Title": "Title",
+  "Column": "Column",
+  "Card": "Card",
+  "Status": "Status",
+  "Started at": "Started at",
+  "Time taken": "Time taken",
+  "Started": "Started",
+  "Paused": "Paused",
+  "Stopped": "Stopped",
+  "Create New Project": "Create New Project",
+  "My Activity": "My Activity"
 }

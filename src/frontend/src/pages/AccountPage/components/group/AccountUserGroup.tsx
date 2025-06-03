@@ -2,7 +2,6 @@ import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/Mult
 import { Box, Card, Flex, Skeleton, Toast } from "@/components/base";
 import { EMAIL_REGEX } from "@/constants";
 import useUpdateUserGroupAssignedEmails from "@/controllers/api/account/useUpdateUserGroupAssignedEmails";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
@@ -59,11 +58,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                     Toast.Add.success(t("myAccount.successes.User group emails updated successfully."));
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

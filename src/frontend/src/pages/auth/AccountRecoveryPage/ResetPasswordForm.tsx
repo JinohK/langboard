@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import PasswordInput from "@/components/PasswordInput";
-import { QUERY_NAMES } from "@/constants";
 import { Button, Flex, Form, SubmitButton } from "@/components/base";
 import useRecoveryPassword from "@/controllers/api/auth/useRecoveryPassword";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -32,14 +31,8 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
             navigate(location, { state: { isTwoSidedView: false } });
         },
         apiErrorHandlers: {
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                backToSignin();
-            },
-            [EHttpStatus.HTTP_410_GONE]: () => {
-                const searchParams = new URLSearchParams(location.search);
-                searchParams.delete(QUERY_NAMES.RECOVERY_TOKEN);
-
-                navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`);
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => backToSignin(),
             },
         },
         useDefaultBadRequestHandler: true,

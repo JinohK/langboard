@@ -74,11 +74,17 @@ class Auth:
     def scope(where: Literal["api"]) -> User | Bot: ...
     @staticmethod
     @overload
+    def scope(where: Literal["api_user"]) -> User: ...
+    @staticmethod
+    @overload
+    def scope(where: Literal["api_bot"]) -> Bot: ...
+    @staticmethod
+    @overload
     def scope(where: Literal["socket"]) -> User: ...
     @staticmethod
-    def scope(where: Literal["api", "socket"]) -> User | Bot:
+    def scope(where: Literal["api", "api_user", "api_bot", "socket"]) -> User | Bot:
         """Creates a scope for the user to be used in :class:`fastapi.FastAPI` endpoints."""
-        if where == "api":
+        if where in {"api", "api_user", "api_bot"}:
 
             def get_user_or_bot(req: Request) -> User | Bot | None:  # type: ignore
                 return req.auth

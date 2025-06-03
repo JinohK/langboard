@@ -1,15 +1,17 @@
-import { BaseModel, IBaseModel, IChatContent, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IChatContent } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface Interface extends IBaseModel {
     icon?: string;
+    filterable_table: "project";
+    filterable_uid: string;
     sender_uid?: string;
     receiver_uid?: string;
     message: IChatContent;
     updated_at: Date;
 
     // variable set from the client side
-    projectUID: string;
     isReceived: bool;
     isPending?: bool;
 }
@@ -33,11 +35,18 @@ class ChatMessageModel extends BaseModel<Interface> {
         return model;
     }
 
-    public get projectUID() {
-        return this.getValue("projectUID");
+    public get filterable_table() {
+        return this.getValue("filterable_table");
     }
-    public set projectUID(value: string) {
-        this.update({ projectUID: value });
+    public set filterable_table(value: string) {
+        this.update({ filterable_table: value });
+    }
+
+    public get filterable_uid() {
+        return this.getValue("filterable_uid");
+    }
+    public set filterable_uid(value: string) {
+        this.update({ filterable_uid: value });
     }
 
     public get icon() {

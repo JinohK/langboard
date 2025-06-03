@@ -1,4 +1,4 @@
-import { Flex, Toast } from "@/components/base";
+import { Flex } from "@/components/base";
 import useChangeWikiOrder from "@/controllers/api/wiki/useChangeWikiOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
@@ -13,7 +13,6 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { memo, useEffect, useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
 
 export interface IWikiTabListProps {
     changeTab: (uid: string) => void;
@@ -31,7 +30,6 @@ export function SkeletonWikiTabList() {
 
 const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
     const { projectUID, wikis: flatWikis, socket, modeType } = useBoardWiki();
-    const [t] = useTranslation();
     const { mutate: changeWikiOrderMutate } = useChangeWikiOrder();
     const moreDroppableZoneCallbacksRef = useRef<TMoreWikiTabDropzonCallbacks>({});
     const {
@@ -74,9 +72,15 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
                     {
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
-                                wildcardError: () => {
-                                    Toast.Add.error(t("errors.Internal server error"));
-                                    reorderWikis(orignalWiki, originalWikiOrder);
+                                code: {
+                                    after: () => {
+                                        reorderWikis(orignalWiki, originalWikiOrder);
+                                    },
+                                },
+                                wildcard: {
+                                    after: () => {
+                                        reorderWikis(orignalWiki, originalWikiOrder);
+                                    },
                                 },
                             });
 

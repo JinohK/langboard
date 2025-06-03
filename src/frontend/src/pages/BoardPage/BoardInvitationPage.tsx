@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Toast } from "@/components/base";
+import { Box, Button, Flex } from "@/components/base";
 import { FormOnlyLayout } from "@/components/Layout";
 import { QUERY_NAMES } from "@/constants";
 import useAcceptProjectInvitation from "@/controllers/api/board/useAcceptProjectInvitation";
@@ -42,9 +42,8 @@ function BoardInvitationPage() {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("dashboard.errors.Project not found."));
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
                         },
                     });
 
@@ -74,9 +73,8 @@ function BoardInvitationPage() {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                        [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
                         },
                     });
 
@@ -109,9 +107,8 @@ function BoardInvitationPage() {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                        [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
                         },
                     });
 

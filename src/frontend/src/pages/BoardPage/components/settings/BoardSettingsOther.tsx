@@ -1,6 +1,5 @@
 import { Box, Button, Flex, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteProject from "@/controllers/api/board/settings/useDeleteProject";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { deleteProjectModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -31,13 +30,7 @@ const BoardSettingsOther = memo(() => {
             loading: t("common.Deleting..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

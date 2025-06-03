@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from ...Constants import PROJECT_NAME, PROJECT_VERSION
 from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
+from .ApiErrorCode import ApiErrorCode
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
 from .SocketManager import SocketManager
 
@@ -58,10 +59,44 @@ class AppRouter:
         if "schemas" not in openapi_schema["components"]:
             openapi_schema["components"]["schemas"] = {}
 
+        for error_code in ApiErrorCode.__members__.values():
+            openapi_schema["components"]["schemas"][f"ApiErrorCode{error_code.name}"] = {
+                "title": error_code.name,
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "title": "Error Code",
+                        "type": "string",
+                    },
+                    "message": {
+                        "title": "Error Message",
+                        "type": "string",
+                    },
+                },
+                "example": {
+                    "code": error_code.name,
+                    "message": error_code.value,
+                },
+            }
+
+        openapi_schema["components"]["schemas"]["EmptyResponse"] = {
+            "title": "EmptyResponse",
+            "type": "object",
+            "properties": {},
+        }
+
         openapi_schema["components"]["schemas"]["ValidationError"] = {
             "title": "ValidationError",
             "type": "object",
             "properties": {
+                "code": {
+                    "title": "Error Code",
+                    "type": "string",
+                },
+                "message": {
+                    "title": "Error Message",
+                    "type": "string",
+                },
                 "<error type>": {
                     "title": "Error Type",
                     "type": "object",
@@ -72,7 +107,7 @@ class AppRouter:
                             "items": {"anyOf": [{"type": "string", "example": "<field name>"}]},
                         }
                     },
-                }
+                },
             },
         }
 

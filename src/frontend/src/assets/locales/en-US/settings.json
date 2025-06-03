@@ -71,7 +71,6 @@
     "Selected webhooks deleted successfully.": "Selected webhooks deleted successfully."
   },
   "errors": {
-    "Bot not found.": "Bot not found.",
     "missing": {
       "bot_name": "Enter a bot name.",
       "bot_uname": "Enter a bot unique name.",

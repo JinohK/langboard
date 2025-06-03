@@ -5,6 +5,7 @@ from ...models import (
     Card,
     CardAttachment,
     CardComment,
+    ChatTemplate,
     Checkitem,
     Checklist,
     GlobalCardRelationshipType,
@@ -34,3 +35,4 @@ TSettingParam = AppSetting | int | str | None
 TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str | None
 TNotificationParam = UserNotification | int | str | None
 TBotScheduleParam = BotSchedule | int | str | None
+TChatTemplateParam = ChatTemplate | int | str | None

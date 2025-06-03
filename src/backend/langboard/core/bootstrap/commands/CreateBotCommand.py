@@ -1,7 +1,7 @@
 from ....Loader import load_modules
 from ...ai import BaseBot, InternalBotType
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_bot_py, format_template
+from .CommandUtils import create_py, format_template
 
 
 class CreateBotCommandOptions(BaseCommandOptions):
@@ -60,7 +60,7 @@ class CreateBotCommand(BaseCommand):
 
         code = format_template("bot", formats)
 
-        create_bot_py(bot_type.name, code)
+        create_py("bot", bot_type.name, code)
 
     def __get_available_bots(self) -> list[tuple[str, str]]:
         load_modules("bots", "Bot", log=False)

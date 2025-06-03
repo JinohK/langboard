@@ -37,11 +37,8 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                     const messageRef = { message: "" };
                     const { handle } = setupApiErrorHandler(
                         {
-                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                                setTimeout(() => {
-                                    navigate(ROUTES.BOARD.WIKI(projectUID));
-                                }, 0);
-                                return t("wiki.errors.Can't access this wiki.");
+                            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                                after: () => navigate(ROUTES.BOARD.WIKI(projectUID)),
                             },
                         },
                         messageRef

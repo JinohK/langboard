@@ -8,29 +8,9 @@ import useSocketHandler from "@/core/helpers/SocketHandler";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { createUUID } from "@/core/utils/StringUtils";
-import type { Model as ActivityModel } from "@/core/models/ActivityModel";
-import type { Model as AppSettingModel } from "@/core/models/AppSettingModel";
-import type { Model as AuthUserModel } from "@/core/models/AuthUser";
-import type { Model as BotModel } from "@/core/models/BotModel";
-import type { Model as BotSchedule } from "@/core/models/BotSchedule";
-import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
-import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
-import type { Model as MetadataModel } from "@/core/models/MetadataModel";
-import type { Model as ProjectModel } from "@/core/models/Project";
-import type { Model as ProjectCardModel } from "@/core/models/ProjectCard";
-import type { Model as ProjectCardAttachmentModel } from "@/core/models/ProjectCardAttachment";
-import type { Model as ProjectCardCommentModel } from "@/core/models/ProjectCardComment";
-import type { Model as ProjectCardRelationshipModel } from "@/core/models/ProjectCardRelationship";
-import type { Model as ProjectChecklistModel } from "@/core/models/ProjectChecklist";
-import type { Model as ProjectCheckitemModel } from "@/core/models/ProjectCheckitem";
-import type { Model as ProjectColumnModel } from "@/core/models/ProjectColumn";
-import type { Model as ProjectLabelModel } from "@/core/models/ProjectLabel";
-import type { Model as ProjectWikiModel } from "@/core/models/ProjectWiki";
-import type { Model as UserModel } from "@/core/models/User";
-import type { Model as UserGroupModel } from "@/core/models/UserGroup";
-import type { Model as UserNotificationModel } from "@/core/models/UserNotification";
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
+import { MODEL_REGISTRIES, IModelMap } from "@/core/models/ModelRegistry";
 
 export const ROLE_ALL_GRANTED = "*";
 
@@ -53,30 +33,6 @@ export type TStateStore<T = any, V = undefined> = V extends undefined
     : UseBoundStore<StoreApi<Omit<T, keyof V>>> & {
           [K in keyof V]: Record<string, UseBoundStore<StoreApi<V[K]>>>;
       };
-
-interface IModelMap {
-    ActivityModel: typeof ActivityModel;
-    AppSettingModel: typeof AppSettingModel;
-    AuthUser: typeof AuthUserModel;
-    BotModel: typeof BotModel;
-    BotSchedule: typeof BotSchedule;
-    ChatMessageModel: typeof ChatMessageModel;
-    GlobalRelationshipType: typeof GlobalRelationshipTypeModel;
-    MetadataModel: typeof MetadataModel;
-    Project: typeof ProjectModel;
-    ProjectCard: typeof ProjectCardModel;
-    ProjectCardAttachment: typeof ProjectCardAttachmentModel;
-    ProjectCardComment: typeof ProjectCardCommentModel;
-    ProjectCardRelationship: typeof ProjectCardRelationshipModel;
-    ProjectChecklist: typeof ProjectChecklistModel;
-    ProjectCheckitem: typeof ProjectCheckitemModel;
-    ProjectColumn: typeof ProjectColumnModel;
-    ProjectLabel: typeof ProjectLabelModel;
-    ProjectWiki: typeof ProjectWikiModel;
-    User: typeof UserModel;
-    UserGroup: typeof UserGroupModel;
-    UserNotification: typeof UserNotificationModel;
-}
 
 export interface IModelNotifiersMap {
     CREATION: Partial<Record<keyof IModelMap, Record<string, [(model: BaseModel<any>) => bool, (models: BaseModel<any>[]) => void]>>>;
@@ -110,11 +66,6 @@ export type TBaseModelClass<TModel extends IBaseModel> = {
 export type TBaseModelInstance<TModel extends IBaseModel> = {
     [K in keyof TModel]: TModel[K];
 } & InstanceType<TBaseModelClass<TModel>>;
-
-const MODELS: IModelMap = {} as any;
-export const registerModel = (model: TBaseModelClass<any>) => {
-    MODELS[model.MODEL_NAME] = model as any;
-};
 
 type TModelStoreMap = {
     [TModelName in keyof IModelMap]: {
@@ -755,7 +706,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     continue;
                 }
 
-                MODELS[modelName].fromObject(subModel);
+                MODEL_REGISTRIES[modelName].fromObject(subModel);
                 if (!uids.includes(subModel.uid)) {
                     uids.push(subModel.uid);
                 }
@@ -800,5 +751,5 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 }
 
 export const cleanModels = () => {
-    Object.values(MODELS).forEach((model) => model.cleanUp());
+    Object.values(MODEL_REGISTRIES).forEach((model) => model.cleanUp());
 };

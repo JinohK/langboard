@@ -1,7 +1,8 @@
 import * as AuthUser from "@/core/models/AuthUser";
 import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
-import { BaseModel, IBaseModel, IEditorContent, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import useBoardWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardWikiDeletedHandlers";
 import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoardWikiPublicChangedHandlers";
 import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoardWikiDetailsChangedHandlers";

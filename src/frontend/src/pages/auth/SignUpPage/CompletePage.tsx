@@ -46,15 +46,11 @@ function CompletePage(): JSX.Element {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
                         },
-                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
-                            Toast.Add.error(t("signUp.errors.Account already activated. Please sign in."));
-                            navigate(ROUTES.SIGN_IN.EMAIL);
-                        },
-                        [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                            Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+                        [EHttpStatus.HTTP_409_CONFLICT]: {
+                            after: () => navigate(ROUTES.SIGN_IN.EMAIL),
                         },
                     });
 

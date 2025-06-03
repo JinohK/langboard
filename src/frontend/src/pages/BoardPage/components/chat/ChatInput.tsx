@@ -1,12 +1,13 @@
 import { Box, Button, Flex, IconComponent, Input, Textarea, Toast } from "@/components/base";
-import useUploadProjectChatAttachment from "@/controllers/api/board/useUploadProjectChatAttachment";
+import useUploadProjectChatAttachment from "@/controllers/api/board/chat/useUploadProjectChatAttachment";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
-import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
+import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
+import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTemplateListDialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import mimeTypes from "react-native-mime-types";
@@ -205,6 +206,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                     >
                         <IconComponent icon="paperclip" size="4" />
                     </Button>
+                    <ChatTemplateListDialog chatInputRef={chatInputRef} updateHeight={updateHeight} />
                 </Box>
                 <Button
                     type="button"

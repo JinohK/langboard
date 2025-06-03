@@ -1,4 +1,4 @@
-import { Box, Button, Collapsible, Flex, IconComponent, Toast, Tooltip } from "@/components/base";
+import { Box, Button, Collapsible, Flex, IconComponent, Tooltip } from "@/components/base";
 import useChangeCardCheckitemOrder, { IChangeCardCheckitemOrderForm } from "@/controllers/api/card/checkitem/useChangeCardCheckitemOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
@@ -33,7 +33,6 @@ interface IBoardCardChecklistDragData extends ISortableDragData<ProjectChecklist
 
 const BoardCardChecklist = memo(({ checklist, checkitemsMap, callbacksRef, isOverlay }: IBoardCardChecklistProps): JSX.Element => {
     const { projectUID, card, socket, hasRoleAction } = useBoardCard();
-    const [t] = useTranslation();
     const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
     const checklistId = `board-checklist-${checklist.uid}`;
     const updater = useReducer((x) => x + 1, 0);
@@ -97,12 +96,19 @@ const BoardCardChecklist = memo(({ checklist, checkitemsMap, callbacksRef, isOve
             changeCheckitemOrderMutate(form, {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        wildcardError: () => {
-                            Toast.Add.error(t("errors.Internal server error"));
-                            reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
-
-                            checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
-                            checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
+                        code: {
+                            after: () => {
+                                reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
+                                checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
+                                checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
+                            },
+                        },
+                        wildcard: {
+                            after: () => {
+                                reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
+                                checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
+                                checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
+                            },
                         },
                     });
 

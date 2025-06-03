@@ -16,7 +16,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
             return { isUpdated: false };
         }
 
-        if (!ChatMessageModel.Model.getModel((model) => model.projectUID === projectUID)) {
+        if (!ChatMessageModel.Model.getModel((model) => model.filterable_table === "project" && model.filterable_uid === projectUID)) {
             pageRef.current = 0;
         }
 
@@ -30,11 +30,6 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
                 limit,
             },
         });
-
-        for (let i = 0; i < res.data.histories.length; ++i) {
-            const history = res.data.histories[i];
-            history.projectUID = projectUID;
-        }
 
         ChatMessageModel.Model.fromObjectArray(res.data.histories, true);
 

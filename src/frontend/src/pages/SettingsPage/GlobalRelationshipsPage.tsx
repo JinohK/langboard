@@ -38,12 +38,8 @@ function GlobalRelationshipsPage() {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

@@ -1,6 +1,7 @@
 import useUserUpdatedHandlers from "@/controllers/socket/user/useUserUpdatedHandlers";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { BaseModel, IBaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import createFakeModel from "@/core/models/FakeModel";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { convertServerFileURL } from "@/core/utils/StringUtils";

@@ -9,7 +9,7 @@ import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
-    const { t } = useTranslation();
+    const [t] = useTranslation();
     const dataTransferRef = useRef(new DataTransfer());
     const avatarUrlRef = useRef<string>((values as unknown as Record<string, string>).avatarUrl ?? null);
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Record<string, unknown>>({

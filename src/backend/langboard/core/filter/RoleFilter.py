@@ -33,7 +33,9 @@ class RoleFilter(BaseFilter, Generic[_TMethod]):
 
         This will return a decorator.
 
-        :param method: Method to be filtered
+        :param role_model: Role model class to be used for filtering
+        :param actions: List of actions that the role can perform
+        :param role_finder: Optional function to find the role in the database
         """
 
         def _add(method: _TMethod) -> _TMethod:

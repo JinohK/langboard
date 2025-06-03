@@ -79,6 +79,12 @@ export const API_ROUTES = {
             GET_MESSAGES: "/board/{uid}/chat",
             CLEAR_MESSAGES: "/board/{uid}/chat/clear",
             UPLOAD: "/board/{uid}/chat/upload",
+            TEMPLATE: {
+                GET_LIST: "/board/{uid}/chat/templates",
+                CREATE: "/board/{uid}/chat/template",
+                UPDATE: "/board/{uid}/chat/template/{template_uid}",
+                DELETE: "/board/{uid}/chat/template/{template_uid}",
+            },
         },
         COLUMN: {
             CREATE: "/board/{uid}/column",
@@ -226,6 +232,11 @@ export const SOCKET_SERVER_EVENTS = {
             SENT: "board:chat:sent",
             CANCELLED: "board:chat:cancelled",
             STREAM: "board:chat:stream",
+            TEMPLATE: {
+                CREATED: "board:chat:template:created:{uid}",
+                UPDATED: "board:chat:template:updated:{uid}",
+                DELETED: "board:chat:template:deleted:{uid}",
+            },
         },
         LABEL: {
             CREATED: "board:label:created:{uid}",

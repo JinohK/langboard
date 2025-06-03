@@ -2,7 +2,6 @@ import MultiSelectAssignee, { TAssignee, TSaveHandler } from "@/components/Multi
 import { Toast } from "@/components/base";
 import { EMAIL_REGEX } from "@/constants";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel, Project, User, UserGroup } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -46,13 +45,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             loading: t("common.Updating..."),
             error: (error: unknown) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("project.errors.Project not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;
@@ -83,6 +76,9 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 size: { initial: "sm", xs: "default" },
                 spacing: "3",
                 listAlign: "start",
+            }}
+            tagContentProps={{
+                projectUID: project.uid,
             }}
             addIconSize="6"
             allSelectables={allSelectables}

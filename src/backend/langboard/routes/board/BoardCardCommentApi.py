@@ -2,7 +2,7 @@ from fastapi import status
 from ...core.ai import Bot
 from ...core.db import EditorContentModel, User
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...models import CardComment, ProjectRole
@@ -16,10 +16,10 @@ from .scopes import ToggleCardCommentReactionForm, project_role_finder
     "/board/{project_uid}/card/{card_uid}/comment",
     tags=["Board.Card.Comment"],
     description="Add a comment to a card.",
-    responses=(OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project or card not found.").get()),
+    responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def add_card_comment(
     project_uid: str,
     card_uid: str,
@@ -29,9 +29,9 @@ async def add_card_comment(
 ) -> JsonResponse:
     result = await service.card_comment.create(user_or_bot, project_uid, card_uid, comment)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={}, status_code=status.HTTP_201_CREATED)
+    return JsonResponse(status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.schema(form=EditorContentModel)
@@ -39,17 +39,10 @@ async def add_card_comment(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
     description="Update a comment.",
-    responses=(
-        OpenApiSchema()
-        .auth(with_bot=True)
-        .role(with_bot=True)
-        .err(403, "No permission to update this comment.")
-        .err(404, "Project, card, or comment not found.")
-        .get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2014).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def update_card_comment(
     project_uid: str,
     card_uid: str,
@@ -60,14 +53,14 @@ async def update_card_comment(
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
     if not _is_owner(user_or_bot, card_comment):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
     result = await service.card_comment.update(user_or_bot, project_uid, card_uid, card_comment, comment)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema()
@@ -75,17 +68,10 @@ async def update_card_comment(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}",
     tags=["Board.Card.Comment"],
     description="Delete a comment.",
-    responses=(
-        OpenApiSchema()
-        .auth(with_bot=True)
-        .role(with_bot=True)
-        .err(403, "No permission to delete this comment.")
-        .err(404, "Project, card, or comment not found.")
-        .get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2014).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def delete_card_comment(
     project_uid: str,
     card_uid: str,
@@ -95,14 +81,14 @@ async def delete_card_comment(
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
     if not _is_owner(user_or_bot, card_comment):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
     result = await service.card_comment.delete(user_or_bot, project_uid, card_uid, card_comment)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.schema(form=ToggleCardCommentReactionForm)
@@ -110,12 +96,10 @@ async def delete_card_comment(
     "/board/{project_uid}/card/{card_uid}/comment/{comment_uid}/react",
     tags=["Board.Card.Comment"],
     description="Toggle reaction on a comment.",
-    responses=(
-        OpenApiSchema().auth(with_bot=True).role(with_bot=True).err(404, "Project, card, or comment not found.").get()
-    ),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2014).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def toggle_reaction_card_comment(
     project_uid: str,
     card_uid: str,
@@ -126,10 +110,10 @@ async def toggle_reaction_card_comment(
 ) -> JsonResponse:
     card_comment = await service.card_comment.get_by_uid(comment_uid)
     if not card_comment:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
     result = await service.card_comment.toggle_reaction(user_or_bot, project_uid, card_uid, card_comment, form.reaction)
     if result is None:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2014, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"is_reacted": result})
 

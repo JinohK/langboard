@@ -4,6 +4,7 @@ from json import loads as json_loads
 from typing import Any, Callable, Concatenate, Coroutine, Generic, ParamSpec, Protocol, TypeVar, cast
 from celery import Celery
 from celery.app.task import Task
+from celery.apps import worker
 from celery.apps.worker import Worker
 from celery.signals import celeryd_after_setup, setup_logging
 from ...Constants import CACHE_TYPE, CACHE_URL, DATA_DIR, PROJECT_NAME
@@ -36,6 +37,9 @@ def _(*args, **kwargs):
 @celeryd_after_setup.connect
 def _(sender: str, instance: Worker, **kwargs) -> None:
     instance.emit_banner = lambda: None
+
+
+worker.safe_say = lambda _, __: None
 
 
 @class_instance()

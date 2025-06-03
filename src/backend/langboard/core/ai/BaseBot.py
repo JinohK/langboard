@@ -1,9 +1,8 @@
 from abc import abstractmethod
 from typing import Any, BinaryIO, Literal, overload
+import requests
 from httpx import get, post
 from pydantic import BaseModel
-from requests import Response as HTTPResponse
-from requests import Session as HTTPSession
 from starlette.datastructures import UploadFile
 from ..db import DbSession, SqlBuilder
 from ..setting import AppSetting, AppSettingType
@@ -83,7 +82,7 @@ class BaseBot(metaclass=BotMetaClass):
     def __init__(self):
         if self.__class__ is BaseBot:
             raise TypeError("Can't instantiate abstract class BaseBot")
-        self.__abortable_tasks: dict[str, list[HTTPSession | HTTPResponse]] = {}
+        self.__abortable_tasks: dict[str, list[requests.Session | requests.Response]] = {}
 
     @abstractmethod
     async def run(self, data: dict[str, Any]) -> str | LangflowStreamResponse | None: ...
@@ -178,7 +177,7 @@ class BaseBot(metaclass=BotMetaClass):
             return False
 
         api_request_model = _LangflowAPIRequestModel(settings, request_model, use_stream)
-        session = HTTPSession()
+        session = requests.Session()
         self.__abortable_tasks[task_id] = [session]
 
         await BotOneTimeToken.set_token(api_request_model.one_time_token, request_model.user_uid)

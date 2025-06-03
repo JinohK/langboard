@@ -1,47 +1,39 @@
 from multiprocessing import Queue
 from typing import Any, overload
+from ...Constants import BROADCAST_TYPE
 from ..utils.decorators import class_instance, thread_safe_singleton
-from .DispatcherModel import DispatcherModel, record_model
+from .BaseDispatcherQueue import BaseDispatcherQueue
+from .DispatcherModel import DispatcherModel
 
 
 @class_instance()
 @thread_safe_singleton
-class DispatcherQueue:
+class DispatcherQueue(BaseDispatcherQueue):
     @property
     def is_closed(self) -> bool:
-        return self.__is_closed
+        return self.__instance.is_closed
 
     def __init__(self):
-        self.__worker_queues: list[Queue] = []
-        self.__is_closed = True
+        if BROADCAST_TYPE == "in-memory":
+            from .memory import MemoryDispatcherQueue
+
+            self.__instance = MemoryDispatcherQueue()
+        elif BROADCAST_TYPE == "kafka":
+            from .kafka import KafkaDispatcherQueue
+
+            self.__instance = KafkaDispatcherQueue()
+        else:
+            raise ValueError(f"Unsupported BROADCAST_TYPE: {BROADCAST_TYPE}")
+
+    def start(self, worker_queues: list[Queue]):
+        self.__instance.start(worker_queues)
 
     @overload
     def put(self, event: str, data: dict[str, Any]): ...
     @overload
     def put(self, event: DispatcherModel): ...
     def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
-        if not self.__worker_queues:
-            record_model(event, data, file_only=True)
-            return
-
-        data_file_name = record_model(event, data)
-        for worker_queue in self.__worker_queues:
-            try:
-                worker_queue.put(data_file_name)
-                break
-            except Exception:
-                continue
-
-    def start(self, worker_queues: list[Queue]):
-        self.__worker_queues = worker_queues
-        self.__is_closed = False
+        self.__instance.put(event, data)
 
     def close(self):
-        if not self.__worker_queues:
-            return
-
-        for worker_queue in self.__worker_queues:
-            worker_queue.put("EOF")
-
-        self.__is_closed = True
-        self.__worker_queues.clear()
+        self.__instance.close()

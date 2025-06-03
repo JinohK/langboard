@@ -2,6 +2,7 @@ from json import dumps as json_dumps
 from typing import Any, Mapping
 from fastapi.responses import Response
 from starlette.background import BackgroundTask
+from .ApiErrorCode import ApiErrorCode
 
 
 class JsonResponse(Response):
@@ -9,12 +10,20 @@ class JsonResponse(Response):
 
     def __init__(
         self,
-        content: Any,
+        content: Any | None = None,
         status_code: int = 200,
         headers: Mapping[str, str] | None = None,
         media_type: str | None = None,
         background: BackgroundTask | None = None,
     ) -> None:
+        if not content:
+            content = {}
+
+        if isinstance(content, str):
+            content = {"message": content}
+        elif isinstance(content, ApiErrorCode):
+            content = content.to_dict()
+
         super().__init__(content, status_code, headers, media_type, background)
 
     def render(self, content: Any) -> bytes:

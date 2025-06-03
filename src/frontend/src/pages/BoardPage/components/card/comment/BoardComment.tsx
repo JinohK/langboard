@@ -4,7 +4,6 @@ import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { BotModel, Project, ProjectCardComment, User } from "@/core/models";
@@ -99,14 +98,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                     cancelEditing();
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                        },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("card.errors.Comment not found."));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                     cancelEditing();
@@ -135,13 +127,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
             loading: t("common.Deleting..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Comment not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

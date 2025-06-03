@@ -1,10 +1,58 @@
 from pathlib import Path
-from ....Constants import BASE_DIR
+from typing import Literal
+from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
+from pydantic import BaseModel
+from ....Constants import BASE_DIR, ROOT_DIR
 from ...logger import Logger
 from ...utils.String import concat, pascal_to_snake, snake_to_pascal
 
 
-_logger = Logger.use("cli")
+logger = Logger.use("cli")
+
+_TPyConfigType = Literal["model", "bot", "task", "publisher", "command", "seed"]
+
+
+def _get_py_config(config_type: _TPyConfigType):
+    class _TPyConfig(BaseModel):
+        dirpath: Path
+        filename: str
+        should_update_init: bool
+
+    config_map: dict[_TPyConfigType, _TPyConfig] = {
+        "model": _TPyConfig(
+            dirpath=BASE_DIR / "models",
+            filename="{name}.py",
+            should_update_init=True,
+        ),
+        "bot": _TPyConfig(
+            dirpath=BASE_DIR / "bots",
+            filename="{name}Bot.py",
+            should_update_init=False,
+        ),
+        "task": _TPyConfig(
+            dirpath=BASE_DIR / "tasks",
+            filename="{name}Task.py",
+            should_update_init=False,
+        ),
+        "publisher": _TPyConfig(
+            dirpath=BASE_DIR / "publishers",
+            filename="{name}Publisher.py",
+            should_update_init=True,
+        ),
+        "command": _TPyConfig(
+            dirpath=BASE_DIR / "core" / "bootstrap" / "commands",
+            filename="{name}Command.py",
+            should_update_init=False,
+        ),
+        "seed": _TPyConfig(
+            dirpath=BASE_DIR / "migrations" / "seeds",
+            filename="{name}Seed.py",
+            should_update_init=True,
+        ),
+    }
+
+    return config_map.get(config_type, None)
 
 
 def make_name(name: str, remove_ends: str | None = None) -> str:
@@ -19,10 +67,6 @@ def make_name(name: str, remove_ends: str | None = None) -> str:
     return name
 
 
-def get_template_path(file_name: str) -> Path:
-    return Path(__file__).parent / "templates" / f"{file_name}.template"
-
-
 def format_template(file_name: str, formats: dict[str, str]) -> str:
     template_path = get_template_path(f"{file_name}.py")
     formats["empty_dict"] = "{}"
@@ -31,7 +75,74 @@ def format_template(file_name: str, formats: dict[str, str]) -> str:
     return template_path.read_text().format_map(formats)
 
 
-def update_init_py(target_dir: Path, init_path: Path) -> None:
+def create_py(config_type: _TPyConfigType, name: str, code: str) -> None:
+    config = _get_py_config(config_type)
+    if not config:
+        raise ValueError(f"Py config type: {config_type}")
+
+    file_name = config.filename.format(name=name)
+    save_path = config.dirpath / file_name
+
+    config.dirpath.mkdir(parents=True, exist_ok=True)
+
+    if save_path.exists():
+        raise FileExistsError(f"{config_type.capitalize()} already exists: {name}")
+
+    with open(save_path, "w") as f:
+        f.write(code)
+        f.close()
+
+    logger.info(f"Created {config_type}: {name}")
+
+    if config.should_update_init:
+        update_init_py(config.dirpath)
+
+
+def create_service_py(name: str, code: str, factory: tuple[str, str] | None = None) -> None:
+    target_dir = BASE_DIR / "services" / "factory"
+    if factory:
+        target_dir = target_dir / factory[0]
+
+    class_name = f"{name}{factory[1]}Service" if factory else f"{name}Service"
+    save_path = target_dir / f"{class_name}.py"
+    main_service = (
+        (BASE_DIR / "services" / "factory" / f"{factory[1]}Service.py")
+        if factory
+        else (BASE_DIR / "services" / "Service.py")
+    )
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    if save_path.exists():
+        raise FileExistsError(f"Service already exists: {name}")
+
+    with open(save_path, "w") as f:
+        f.write(code)
+        f.close()
+
+    logger.info(f"Created service: {save_path}")
+
+    update_init_py(target_dir)
+
+    main_service_code = main_service.read_text()
+    codes = [main_service_code]
+    codes.append("    @property")
+    codes.append(f"    def {pascal_to_snake(name)}(self):")
+    codes.append(f"        return self._create_or_get_service(factory.{class_name})\n")
+
+    with open(main_service, "w") as f:
+        f.write("\n".join(codes))
+        f.close()
+
+    logger.info(f"Updated service imports: {main_service}")
+
+
+def get_template_path(file_name: str) -> Path:
+    return Path(__file__).parent / "templates" / f"{file_name}.template"
+
+
+def update_init_py(target_dir: Path) -> None:
+    init_path = target_dir / "__init__.py"
     existed_names: list[str] = []
     for file in target_dir.glob("*.py"):
         if file.name.count("__") > 1 or file.name.startswith("Base") or file.name.replace(".py", "").endswith("Types"):
@@ -48,114 +159,17 @@ def update_init_py(target_dir: Path, init_path: Path) -> None:
         f.write("]\n")
         f.close()
 
-    _logger.info(f"Updated init file: {init_path}")
+    logger.info(f"Updated init file: {init_path}")
 
 
-def create_model_py(name: str, code: str) -> None:
-    target_dir = BASE_DIR / "models"
-    save_path = target_dir / f"{name}.py"
-    init_path = target_dir / "__init__.py"
+def run_db_command(command: Literal["upgrade", "downgrade", "migrate"], *args, **kwargs) -> None:
+    alembic_config = AlembicConfig(str(ROOT_DIR / "alembic.ini"))
 
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    if save_path.exists():
-        raise FileExistsError(f"Model already exists: {name}")
-
-    with open(save_path, "w") as f:
-        f.write(code)
-        f.close()
-
-    _logger.info(f"Created model: {name}")
-
-    update_init_py(target_dir, init_path)
-
-
-def create_service_py(name: str, code: str, factory: tuple[str, str] | None = None) -> None:
-    target_dir = BASE_DIR / "services" / "factory"
-    if factory:
-        target_dir = target_dir / factory[0]
-
-    class_name = f"{name}{factory[1]}Service" if factory else f"{name}Service"
-    save_path = target_dir / f"{class_name}.py"
-    init_path = target_dir / "__init__.py"
-    main_service = (
-        (BASE_DIR / "services" / "factory" / f"{factory[1]}Service.py")
-        if factory
-        else (BASE_DIR / "services" / "Service.py")
-    )
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    if save_path.exists():
-        raise FileExistsError(f"Service already exists: {name}")
-
-    with open(save_path, "w") as f:
-        f.write(code)
-        f.close()
-
-    _logger.info(f"Created service: {save_path}")
-
-    update_init_py(target_dir, init_path)
-
-    main_service_code = main_service.read_text()
-    codes = [main_service_code]
-    codes.append("    @property")
-    codes.append(f"    def {pascal_to_snake(name)}(self):")
-    codes.append(f"        return self._create_or_get_service(factory.{class_name})\n")
-
-    with open(main_service, "w") as f:
-        f.write("\n".join(codes))
-        f.close()
-
-    _logger.info(f"Updated service imports: {main_service}")
-
-
-def create_bot_py(name: str, code: str) -> None:
-    target_dir = BASE_DIR / "bots"
-    save_path = target_dir / f"{name}Bot.py"
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    if save_path.exists():
-        raise FileExistsError(f"Bot already exists: {name}")
-
-    with open(save_path, "w") as f:
-        f.write(code)
-        f.close()
-
-    _logger.info(f"Created bot: {name}")
-
-
-def create_task_py(name: str, code: str) -> None:
-    target_dir = BASE_DIR / "tasks"
-    save_path = target_dir / f"{name}Task.py"
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    if save_path.exists():
-        raise FileExistsError(f"Task already exists: {name}")
-
-    with open(save_path, "w") as f:
-        f.write(code)
-        f.close()
-
-    _logger.info(f"Created task: {name}")
-
-
-def create_publisher_py(name: str, code: str) -> None:
-    target_dir = BASE_DIR / "publishers"
-    save_path = target_dir / f"{name}Publisher.py"
-    init_path = target_dir / "__init__.py"
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    if save_path.exists():
-        raise FileExistsError(f"Publisher already exists: {name}")
-
-    with open(save_path, "w") as f:
-        f.write(code)
-        f.close()
-
-    _logger.info(f"Created publisher: {name}")
-
-    update_init_py(target_dir, init_path)
+    if command == "upgrade":
+        alembic_command.upgrade(alembic_config, *args, **kwargs)
+    elif command == "downgrade":
+        alembic_command.downgrade(alembic_config, *args, **kwargs)
+    elif command == "migrate":
+        alembic_command.revision(alembic_config, *args, **kwargs)
+    else:
+        raise ValueError("Unknown db command.")

@@ -1,0 +1,11 @@
+from typing import Any, AsyncGenerator
+from ...core.db import BaseSeed
+
+
+class {class_name}Seed(BaseSeed):
+    @staticmethod
+    def name() -> str:
+        return "{snake_name}"
+
+    async def create_seed(self) -> AsyncGenerator[list[BaseSeed.TBaseSqlModel], Any]:
+        yield []

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import useGetProjectChatMessages from "@/controllers/api/board/useGetProjectChatMessages";
+import useGetProjectChatMessages from "@/controllers/api/board/chat/useGetProjectChatMessages";
 import { Box, Loading } from "@/components/base";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { ChatMessageList } from "@/components/Chat/ChatMessageList";
@@ -20,7 +20,7 @@ function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
     const isFetchingRef = useRef(false);
     const [isFetched, setIsFetched] = useState(false);
     const { mutateAsync, isLastPage } = useGetProjectChatMessages(projectUID);
-    const messages = ChatMessageModel.Model.useModels((model) => model.projectUID === projectUID);
+    const messages = ChatMessageModel.Model.useModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
     const conversationRef = useRef<HTMLDivElement>(null);
     const sortedMessages = useMemo(() => messages.sort((a, b) => a.updated_at.getTime() - b.updated_at.getTime()), [messages]);
     const lastChatListHeightRef = useRef(0);

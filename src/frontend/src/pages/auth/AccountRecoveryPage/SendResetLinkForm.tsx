@@ -46,11 +46,8 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
             }
         },
         apiErrorHandlers: {
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                backToSignin();
-            },
-            [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => backToSignin(),
             },
         },
         useDefaultBadRequestHandler: true,

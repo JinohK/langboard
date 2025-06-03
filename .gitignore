@@ -210,4 +210,7 @@ uploads
 **/tests/**
 !**/tests/**/.gitkeep
 
+**/backend/**/seeds/*
+!**/backend/**/seeds/.gitkeep
+
 bundler

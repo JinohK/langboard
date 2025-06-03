@@ -1,6 +1,5 @@
 import { Button, Flex, Floating, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useCreateCardChecklist from "@/controllers/api/card/checklist/useCreateCardChecklist";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -49,13 +48,7 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
             loading: t("common.Adding..."),
             error: (error: unknown) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Card not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 export interface IInfiniteScrollerProps extends React.HTMLAttributes<React.ElementType> {
     as?: React.ElementType;
@@ -20,55 +20,54 @@ const InfiniteScroller = forwardRef<HTMLElement, IInfiniteScrollerProps>(
         const listenerOptions = useRef<EventListenerOptions | AddEventListenerOptions>({ passive: isPassiveSupportedRef.current });
         const [pageLoaded, setPageLoaded] = useState(pageStart);
         const canScrollRef = useRef(true);
+        const handleScroll = useCallback(() => {
+            if (!canScrollRef.current || !hasMore) {
+                return;
+            }
+
+            const scrollableTarget = scrollable();
+            if (!scrollableTarget) {
+                return;
+            }
+
+            const offset = scrollableTarget.scrollHeight - scrollableTarget.scrollTop - scrollableTarget.clientHeight;
+            if (offset >= threshold || !scrollableTarget.offsetParent) {
+                return;
+            }
+
+            canScrollRef.current = false;
+            const beforeScrollHeight = scrollableTarget.scrollHeight;
+            const beforeScrollTop = scrollableTarget.scrollTop;
+            const nextPage = pageLoaded + 1;
+            setTimeout(async () => {
+                const isLoaded = await loadMore(nextPage);
+                if (!isLoaded) {
+                    canScrollRef.current = true;
+                    return;
+                }
+
+                setPageLoaded(nextPage);
+                scrollableTarget.scrollTop = scrollableTarget.scrollHeight - beforeScrollHeight + beforeScrollTop;
+                canScrollRef.current = true;
+            }, 0);
+        }, [pageLoaded, hasMore, loadMore, setPageLoaded]);
 
         useEffect(() => {
             if (!scrollable() || !hasMore) {
                 return;
             }
 
-            const onScroll = () => {
-                if (!canScrollRef.current || !hasMore) {
-                    return;
-                }
-
-                const scrollableTarget = scrollable();
-                if (!scrollableTarget) {
-                    return;
-                }
-
-                const offset = scrollableTarget.scrollHeight - scrollableTarget.scrollTop - scrollableTarget.clientHeight;
-                if (offset >= threshold || !scrollableTarget.offsetParent) {
-                    return;
-                }
-
-                canScrollRef.current = false;
-                const beforeScrollHeight = scrollableTarget.scrollHeight;
-                const beforeScrollTop = scrollableTarget.scrollTop;
-                const nextPage = pageLoaded + 1;
-                setTimeout(async () => {
-                    const isLoaded = await loadMore(nextPage);
-                    if (!isLoaded) {
-                        canScrollRef.current = true;
-                        return;
-                    }
-
-                    setPageLoaded(nextPage);
-                    scrollableTarget.scrollTop = scrollableTarget.scrollHeight - beforeScrollHeight + beforeScrollTop;
-                    canScrollRef.current = true;
-                }, 0);
-            };
-
             const target = scrollable();
-            target?.addEventListener("wheel", onScroll, listenerOptions.current);
-            target?.addEventListener("scroll", onScroll, listenerOptions.current);
-            target?.addEventListener("resize", onScroll, listenerOptions.current);
+            target?.addEventListener("wheel", handleScroll, listenerOptions.current);
+            target?.addEventListener("scroll", handleScroll, listenerOptions.current);
+            target?.addEventListener("resize", handleScroll, listenerOptions.current);
 
             return () => {
-                target?.removeEventListener("wheel", onScroll, listenerOptions.current);
-                target?.removeEventListener("scroll", onScroll, listenerOptions.current);
-                target?.removeEventListener("resize", onScroll, listenerOptions.current);
+                target?.removeEventListener("wheel", handleScroll, listenerOptions.current);
+                target?.removeEventListener("scroll", handleScroll, listenerOptions.current);
+                target?.removeEventListener("resize", handleScroll, listenerOptions.current);
             };
-        }, [pageLoaded, hasMore]);
+        }, [handleScroll]);
 
         const Comp = as;
         return (

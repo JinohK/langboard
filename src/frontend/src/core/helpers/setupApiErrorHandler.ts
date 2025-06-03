@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AxiosError, isAxiosError } from "axios";
 import { t } from "i18next";
 import { Toast } from "@/components/base";
@@ -8,75 +9,122 @@ export type TResponseErrors = Record<string, Record<string, string[] | undefined
 
 type TCallbackReturnUnknown = unknown | Promise<unknown>;
 type TCallbackReturnString = string | Promise<string>;
+type TCallbackReturnVoid = void | Promise<void>;
+type TCallbackReturn = TCallbackReturnUnknown | TCallbackReturnString | TCallbackReturnVoid;
 
-type TAxiosErrorCallback = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: AxiosError<any, any>,
-    responseErrors: TResponseErrors
-) => TCallbackReturnUnknown | TCallbackReturnString | void | Promise<void>;
-
-export interface IApiErrorHandlerMap extends Partial<Record<EHttpStatus, TAxiosErrorCallback>> {
-    nonApiError?: (error: unknown) => TCallbackReturnUnknown | TCallbackReturnString | void | Promise<void>;
-    networkError?: (error: AxiosError) => TCallbackReturnUnknown | TCallbackReturnString | void | Promise<void>;
-    wildcardError?: TAxiosErrorCallback;
+interface IApiErrorHandler<TError> {
+    message?: ((error: TError, responseErrors?: TResponseErrors) => TCallbackReturn) | string;
+    after?: (message: TCallbackReturn, error: TError, responseErrors?: TResponseErrors) => TCallbackReturnVoid;
+    toast?: bool;
 }
 
-const setupApiErrorHandler = (map: IApiErrorHandlerMap, messageRef?: { message: string }) => {
-    const handleResult = (result: TCallbackReturnUnknown | TCallbackReturnString | void | Promise<void>, isToast: bool) => {
-        if (result && TypeUtils.isString(result)) {
-            if (messageRef) {
-                messageRef.message = result;
-            } else if (isToast) {
-                Toast.Add.error(result);
-            } else {
-                return result;
-            }
+export interface IApiErrorHandlerMap extends Partial<Record<EHttpStatus, IApiErrorHandler<AxiosError>>> {
+    code?: IApiErrorHandler<string>;
+    nonApi?: IApiErrorHandler<unknown>;
+    network?: IApiErrorHandler<AxiosError>;
+    wildcard?: IApiErrorHandler<AxiosError>;
+}
+
+export interface ISetupApiErrorHandlerProps {
+    map: IApiErrorHandlerMap;
+    messageRef?: { message: string };
+}
+
+const DEFAULT_CONFIGS: IApiErrorHandlerMap = {
+    [EHttpStatus.HTTP_403_FORBIDDEN]: {
+        message: () => t("errors.Forbidden"),
+        after: (_, err) => console.error(err),
+        toast: true,
+    },
+    code: {
+        message: (code) => t(`errors.requests.${code}`),
+        toast: true,
+    },
+    nonApi: {
+        message: () => t("errors.Unknown error"),
+        toast: true,
+    },
+    network: {
+        message: () => t("errors.Network error"),
+        toast: true,
+    },
+    wildcard: {
+        message: () => t("errors.Internal server error"),
+        toast: true,
+    },
+};
+
+const setupApiErrorHandler = (configs: IApiErrorHandlerMap, messageRef?: { message: string }) => {
+    const handleResult = (result: TCallbackReturn, isToast: bool) => {
+        if (!result || !TypeUtils.isString(result)) {
+            return result;
+        }
+
+        if (messageRef) {
+            messageRef.message = result;
+        } else if (isToast) {
+            Toast.Add.error(result);
         } else {
             return result;
         }
     };
 
+    const convertHandlerWithConfig = (error: any, config: IApiErrorHandler<any>): [() => TCallbackReturn, () => TCallbackReturnVoid] => {
+        const responseErrors = error?.response?.data?.errors as TResponseErrors;
+        const message = TypeUtils.isString(config.message) ? config.message : config.message?.(error, responseErrors);
+
+        return [() => handleResult(message, config.toast ?? false), () => config.after?.(message, error, responseErrors)];
+    };
+
+    const convertHandler = <TKey extends keyof IApiErrorHandlerMap>(
+        error: unknown,
+        type: TKey
+    ): [() => TCallbackReturn, () => TCallbackReturnVoid] => {
+        return convertHandlerWithConfig(error, {
+            ...DEFAULT_CONFIGS[type],
+            ...(configs[type] ?? {}),
+        });
+    };
+
     const getHandler = <T>(error: T) => {
         if (!isAxiosError(error)) {
-            if (map.nonApiError) {
-                return () => handleResult(map.nonApiError!(error), false);
-            } else {
-                return () => {
-                    console.error(error);
-                    return handleResult(t("errors.Unknown error"), true);
-                };
-            }
+            return convertHandler(error, "nonApi");
         }
 
-        const status = error.response?.status;
-        const handler = map[status as EHttpStatus];
-        if (!handler) {
-            if (error.code === AxiosError.ERR_NETWORK) {
-                if (map.networkError) {
-                    return () => handleResult(map.networkError!(error), false);
-                } else {
-                    return () => handleResult(t("errors.Network error"), true);
-                }
-            }
-
-            if (map.wildcardError) {
-                return () => handleResult(map.wildcardError!(error, error.response?.data.errors), false);
-            } else {
-                return () => handleResult(t("errors.Internal server error"), true);
-            }
+        const status = error.response!.status as EHttpStatus;
+        const errorCode = error.response?.data?.code;
+        const config = configs[status];
+        if (errorCode) {
+            return convertHandlerWithConfig(error, {
+                message: (DEFAULT_CONFIGS.code!.message as (code: string) => string)!(errorCode),
+                toast: true,
+                ...(config ?? configs.code ?? {}),
+            });
         }
 
-        return () => handleResult(handler(error, error.response?.data.errors), false);
+        if (config) {
+            return convertHandlerWithConfig(error, config);
+        }
+
+        if (error.code === AxiosError.ERR_NETWORK) {
+            return convertHandler(error, "network");
+        }
+
+        return convertHandler(error, "wildcard");
     };
 
     const handle = <T>(error: T) => {
-        const handler = getHandler(error);
-        return handler();
+        const [handler, after] = getHandler(error);
+        const result = handler();
+        after();
+        return result;
     };
 
     const handleAsync = async <T>(error: T) => {
-        const handler = getHandler(error);
-        return await handler();
+        const [handler, after] = getHandler(error);
+        const result = await handler();
+        await after();
+        return result;
     };
 
     return { handle, handleAsync };

@@ -8,10 +8,10 @@ from ...core.storage import Storage
 def get_file(storage_type: str = Path(), storage_name: str = Path(), filename: str = Path()) -> Response:
     media_type, _ = guess_type(filename)
     if media_type is None:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(status_code=status.HTTP_404_NOT_FOUND)
 
     file = Storage.get(storage_type, storage_name, filename)
     if file is None:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(status_code=status.HTTP_404_NOT_FOUND)
 
     return Response(content=file, media_type=media_type)

@@ -1,20 +1,12 @@
-from logging import INFO
-from multiprocessing import Process, Queue, cpu_count
-from os import getpid, kill, sep
-from os.path import dirname
-from pathlib import Path
-from signal import SIGINT
-from threading import Thread
-from sqlalchemy.orm import close_all_sessions
-from .App import App
-from .Constants import HOST, IS_EXECUTABLE, PORT
+from os import sep
+from .AppConfig import AppConfig
+from .Constants import BROADCAST_TYPE, CACHE_TYPE, HOST, IS_EXECUTABLE, PORT
 from .core.bootstrap import Commander
 from .core.bootstrap.BaseCommand import BaseCommand
+from .core.bootstrap.commands.DbUpgradeCommand import DbUpgradeCommand, DbUpgradeCommandOptions
 from .core.bootstrap.commands.RunCommand import RunCommandOptions
-from .core.broadcast import DispatcherQueue
-from .core.broker import Broker
-from .core.logger import Logger
 from .Loader import load_modules
+from .ServerRunner import run as run_server
 
 
 def execute():
@@ -32,127 +24,15 @@ def execute():
 
 
 def _run_app(options: RunCommandOptions):
-    if options.workers < 1:
-        options.workers = 1
-
-    _watch(options)
-
-
-def _watch(options: RunCommandOptions):
-    from .core.bootstrap.WatchHandler import start_watch
-
-    processes = _run_workers(options)
-
-    def on_close(*_):
-        _close_processes(processes, False)
-
-    def callback(*_):
-        if not IS_EXECUTABLE and options.watch:
-            _close_processes(processes, True)
-            processes.extend(_run_workers(options, is_restarting=True))
-
-    watch_path = "." if IS_EXECUTABLE else Path(dirname(__file__))
-
-    start_watch(watch_path, callback, on_close)
-
-
-def _run_workers(options: RunCommandOptions, is_restarting: bool = False):
-    worker_queues = [Queue() for _ in range(min(options.workers, cpu_count() - 1))]
-    file_reader_queue = Queue()
-    worker_queues.append(file_reader_queue)
-    DispatcherQueue.start(worker_queues)
-
-    workers = options.workers
-    options.workers = 1
-    processes: list[Process] = []
-    try:
-        for i in range(min(workers, cpu_count() - 1)):
-            process = _run_app_wrapper(i, options, worker_queues, file_reader_queue, is_restarting)
-            processes.append(process)
-
-        broker_process = _run_broker(is_restarting)
-        if broker_process:
-            processes.append(broker_process)
-
-        options.workers = workers
-
-        return processes
-    except Exception:
-        _close_processes(processes, is_restarting)
-        raise
-
-
-def _close_processes(processes: list[Process], is_restarting: bool = False):
-    DispatcherQueue.close()
-    if not is_restarting:
-        Logger.main.info("Terminating the server..")
-
-    close_all_sessions()
-    for process in processes:
-        process.terminate()
-        process.kill()
-        process.join()
-        process.close()
-    processes.clear()
-
-
-def _run_broker(is_restarting: bool = False) -> Process | None:
-    if Broker.is_in_memory():
-        return None
-
-    process = Process(target=_start_broker, args=(is_restarting,))
-    process.start()
-    return process
-
-
-def _run_app_wrapper(
-    index: int,
-    options: RunCommandOptions,
-    worker_queues: list[Queue],
-    file_reader_queue: Queue,
-    is_restarting: bool = False,
-) -> Process:
-    if is_restarting:
-        Logger.main._log(level=INFO, msg="File changed. Restarting the server..", args=())
-    process = Process(target=_start_app, args=(index, options, worker_queues, file_reader_queue, is_restarting))
-    process.start()
-    return process
-
-
-def _start_app(
-    index: int,
-    options: RunCommandOptions,
-    worker_queues: list[Queue],
-    file_reader_queue: Queue,
-    is_restarting: bool = False,
-) -> None:
-    from .core.broadcast import DispatcherQueue, FileReaderQueue, WorkerQueue
-
-    DispatcherQueue.start(worker_queues)
-    WorkerQueue.queue = worker_queues[index]
-    FileReaderQueue.queue = file_reader_queue
-
-    pid = getpid()
     ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
-
     websocket_options = options.create_websocket_options()
 
-    broker_thread = None
-    if Broker.is_in_memory():
-        broker_thread = Thread(target=_start_broker, args=(is_restarting,))
-        broker_thread.start()
+    if options.watch or "in-memory" in {BROADCAST_TYPE, CACHE_TYPE}:
+        options.workers = 1
 
-    Thread(
-        target=_start_worker_queue,
-        args=(is_restarting,),
-    ).start()
+    DbUpgradeCommand().execute(DbUpgradeCommandOptions())
 
-    Thread(
-        target=_start_file_reader_queue,
-        args=(is_restarting,),
-    ).start()
-
-    app = App(
+    AppConfig.create(
         host=HOST,
         port=PORT,
         uds=options.uds,
@@ -160,34 +40,10 @@ def _start_app(
         ssl_options=ssl_options,
         ws_options=websocket_options,
         workers=options.workers,
-        task_factory_maxitems=options.task_factory_maxitems,
-        is_restarting=is_restarting,
+        watch=options.watch,
     )
 
-    app.run()
-
-    kill(pid, SIGINT)
-
-
-def _start_broker(is_restarting: bool = False) -> None:
-    from .core.broker import Broker
-
-    load_modules("tasks", "Task", log=not is_restarting)
-
-    Broker.start()
-
-
-def _start_worker_queue(is_restarting: bool = False) -> None:
-    from .core.broadcast import WorkerQueue
-
-    load_modules("consumers", "Consumer", log=not is_restarting)
-
-    WorkerQueue.start()
-
-
-def _start_file_reader_queue(is_restarting: bool = False) -> None:
-    from .core.broadcast import FileReaderQueue
-
-    load_modules("consumers", "Consumer", log=not is_restarting)
-
-    FileReaderQueue.start()
+    try:
+        run_server()
+    except KeyboardInterrupt:
+        return

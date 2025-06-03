@@ -89,18 +89,13 @@
     "Checkitem deleted successfully.": "Checkitem deleted successfully.",
     "Comment updated successfully.": "Comment updated successfully.",
     "Comment deleted successfully.": "Comment deleted successfully.",
-    "Relationships updated successfully.": "Relationships updated successfully."
+    "Relationships updated successfully.": "Relationships updated successfully.",
+    "Card deleted.": "Card deleted."
   },
   "errors": {
-    "Card not found.": "Card not found.",
-    "File not found.": "File not found.",
     "File name cannot be empty.": "File name cannot be empty.",
-    "Checklist not found.": "Checklist not found.",
     "Checklist title cannot be empty.": "Checklist title cannot be empty.",
-    "Checkitem not found.": "Checkitem not found.",
     "Checkitem title cannot be empty.": "Checkitem title cannot be empty.",
-    "Comment not found.": "Comment not found.",
-    "Comment content cannot be empty.": "Comment content cannot be empty.",
-    "Card deleted.": "Card deleted."
+    "Comment content cannot be empty.": "Comment content cannot be empty."
   }
 }

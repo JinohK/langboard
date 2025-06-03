@@ -1,6 +1,5 @@
 import { Dialog } from "@/components/base";
 import { useRef } from "react";
-import { ActivityModel } from "@/core/models";
 import ActivityList from "@/components/ActivityList";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/core/routing/constants";
@@ -9,13 +8,6 @@ import { useAuth } from "@/core/providers/AuthProvider";
 function WikiActivityDialog(): JSX.Element | null {
     const navigateRef = useRef(useNavigate());
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
-    const activities = ActivityModel.Model.useModels(
-        (model) =>
-            model.filterable_type === "project" &&
-            model.filterable_uid === projectUID &&
-            model.sub_filterable_type === "project_wiki" &&
-            model.sub_filterable_uid === wikiUID
-    );
     const { currentUser } = useAuth();
 
     const close = () => {
@@ -33,7 +25,6 @@ function WikiActivityDialog(): JSX.Element | null {
                 <ActivityList
                     form={{ type: "project_wiki", project_uid: projectUID, wiki_uid: wikiUID }}
                     currentUser={currentUser}
-                    activities={activities}
                     infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                 />
             </Dialog.Content>

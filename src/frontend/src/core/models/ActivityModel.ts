@@ -2,7 +2,8 @@
 import { TProjectRelatedActivityInterface } from "@/core/models/activities/merged.type";
 import { TProjectWikiActivityInterface } from "@/core/models/activities/project.wiki.activity.type";
 import { TUserActivityInterface } from "@/core/models/activities/user.activity.type";
-import { BaseModel, registerModel } from "@/core/models/Base";
+import { BaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export type TActivity = TUserActivityInterface | TProjectRelatedActivityInterface | TProjectWikiActivityInterface;

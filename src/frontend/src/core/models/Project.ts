@@ -2,7 +2,8 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
-import { IBaseModel, BaseModel, registerModel, TRoleAllGranted } from "@/core/models/Base";
+import { IBaseModel, BaseModel, TRoleAllGranted } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
@@ -32,6 +33,7 @@ import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useB
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
 import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
+import useBoardChatTemplateCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatTemplateCreatedHandlers";
 
 export enum ERoleAction {
     Read = "read",
@@ -100,6 +102,7 @@ class Project extends BaseModel<IStore> {
                 useBoardLabelOrderChangedHandlers,
                 useBoardLabelDeletedHandlers,
                 useCardRelationshipsUpdatedHandlers,
+                useBoardChatTemplateCreatedHandlers,
             ],
             {
                 topic: ESocketTopic.Board,

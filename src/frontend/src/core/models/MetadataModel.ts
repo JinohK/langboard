@@ -1,4 +1,5 @@
-import { IBaseModel, BaseModel, registerModel } from "@/core/models/Base";
+import { IBaseModel, BaseModel } from "@/core/models/Base";
+import { registerModel } from "@/core/models/ModelRegistry";
 
 export type TType = "card" | "project_wiki";
 

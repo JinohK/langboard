@@ -1,10 +1,9 @@
 import ActivityList from "@/components/ActivityList";
 import { Button, IconComponent, Popover } from "@/components/base";
-import { ActivityModel } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardCardActionActivityProps extends ISharedBoardCardActionProps {}
@@ -12,16 +11,10 @@ export interface IBoardCardActionActivityProps extends ISharedBoardCardActionPro
 const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActivityProps) => {
     const { projectUID, card, currentUser } = useBoardCard();
     const [t] = useTranslation();
-    const activities = ActivityModel.Model.useModels(
-        (model) =>
-            model.filterable_type === "project" &&
-            model.filterable_uid === projectUID &&
-            model.sub_filterable_type === "card" &&
-            model.sub_filterable_uid === card.uid
-    );
+    const [isOpened, setIsOpened] = useState(false);
 
     return (
-        <Popover.Root>
+        <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
                 <Button variant="secondary" className={buttonClassName}>
                     <IconComponent icon="history" size="4" />
@@ -32,7 +25,6 @@ const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActiv
                 <ActivityList
                     form={{ type: "card", project_uid: projectUID, card_uid: card.uid }}
                     currentUser={currentUser}
-                    activities={activities}
                     scrollAreaClassName={cn(
                         "w-[calc(100vw_-_theme(spacing.9))]",
                         "sm:w-[calc(theme(screens.sm)_-_theme(spacing.9))]",

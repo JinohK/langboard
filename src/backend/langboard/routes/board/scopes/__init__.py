@@ -1,6 +1,7 @@
 from .Attachment import ChangeAttachmentNameForm
 from .Bot import BotSchedulePagination, BotScheduleSearchForm, CreateBotCronTimeForm, UpdateBotCronTimeForm
 from .Card import ChangeCardDetailsForm, CreateCardForm, UpdateCardLabelsForm, UpdateCardRelationshipsForm
+from .Chat import CreateChatTemplate, UpdateChatTemplate
 from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
@@ -33,6 +34,8 @@ __all__ = [
     "UpdateCardLabelsForm",
     "UpdateCardRelationshipsForm",
     "ChangeCardDetailsForm",
+    "CreateChatTemplate",
+    "UpdateChatTemplate",
     "InviteProjectMemberForm",
     "UpdateProjectDetailsForm",
     "UpdateRolesForm",

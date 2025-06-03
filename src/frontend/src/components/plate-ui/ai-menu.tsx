@@ -41,7 +41,7 @@ export function AIMenu({ socket, eventKey, events, commonEventData }: IAIMenuPro
         }
     }, [streaming]);
 
-    const setOpen = (open: boolean) => {
+    const setOpen = (open: bool) => {
         if (open) {
             api.aiChat.show();
         } else {

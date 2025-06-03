@@ -1,20 +1,18 @@
 from contextlib import contextmanager
 from time import sleep
 from typing import Any, Dict, Generic, Iterable, Mapping, Optional, Sequence, TypeVar, Union, cast, overload
-from psycopg.errors import OperationalError as PsycopgOperationalError
-from sqlalchemy import Delete, Engine, Insert, IteratorResult, NullPool, Update, create_engine
+import psycopg.errors
+from sqlalchemy import Delete, Insert, IteratorResult, Update
 from sqlalchemy import Sequence as SqlSequence
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.util import EMPTY_DICT
 from sqlmodel import Session, update
 from sqlmodel.sql.base import Executable
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...Constants import MAIN_DATABASE_URL, PROJECT_NAME, READONLY_DATABASE_URL
 from ..logger import Logger
 from ..utils.DateTime import now
-from ..utils.decorators import class_instance, thread_safe_singleton
+from .DbEngine import DbEngine
 from .Models import BaseSqlModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
 
@@ -54,64 +52,6 @@ class Result(Generic[_TSelectParam]):
         return record.__class__.model_validate(record.model_dump())
 
 
-@class_instance()
-@thread_safe_singleton
-class _Engine:
-    __main_engine: Optional[Engine] = None
-    __readonly_engine: Optional[Engine] = None
-
-    def get_main_engine(self) -> Engine:
-        if self.__main_engine:
-            return self.__main_engine
-
-        url = self.__get_sanitized_driver(MAIN_DATABASE_URL)
-        return create_engine(
-            url,
-            **self.__create_config(url),
-        )
-
-    def get_readonly_engine(self) -> Engine:
-        if self.__readonly_engine:
-            return self.__readonly_engine
-
-        url = self.__get_sanitized_driver(READONLY_DATABASE_URL)
-        return create_engine(
-            url,
-            **self.__create_config(url),
-        )
-
-    def __create_config(self, url: str) -> dict[str, Any]:
-        if url.startswith("sqlite"):
-            return {
-                "connect_args": {
-                    "check_same_thread": False,
-                    "timeout": 30,
-                },
-                "poolclass": StaticPool,
-                "pool_pre_ping": True,
-            }
-
-        if url.startswith("postgresql"):
-            return {
-                "connect_args": {
-                    "conninfo": f"application_name={PROJECT_NAME}&timeout=120&statement_cache_size=0&tcp_user_timeout=1000",
-                },
-                "poolclass": NullPool,
-                "pool_pre_ping": True,
-            }
-
-        return {}
-
-    def __get_sanitized_driver(self, url: str) -> str:
-        splitted = url.split("://", maxsplit=1)
-        driver = splitted[0]
-        if driver == "sqlite":
-            return f"sqlite://{splitted[1]}"
-        if driver == "postgresql":
-            return f"postgresql+psycopg://{splitted[1]}"
-        return url
-
-
 _logger = Logger.use("DbConnection")
 
 
@@ -133,7 +73,7 @@ class DbSession:
             session = None
             db = None
             try:
-                engine = _Engine.get_readonly_engine() if readonly else _Engine.get_main_engine()
+                engine = DbEngine.get_readonly_engine() if readonly else DbEngine.get_main_engine()
                 with Session(engine, expire_on_commit=False) as session:
                     db = DbSession(session, readonly=readonly)
                     with session.begin():
@@ -148,7 +88,7 @@ class DbSession:
                     db.close()
                 if session:
                     session.close()
-                if isinstance(e, OperationalError) and isinstance(e.orig, PsycopgOperationalError):
+                if isinstance(e, OperationalError) and isinstance(e.orig, psycopg.errors.OperationalError):
                     if str(e.orig).count("max_client_conn") > 0:
                         sleep(1)
                         _logger.warning(f"Database connection error: {e}. Retrying...")

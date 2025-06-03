@@ -1,4 +1,4 @@
-import { Box, Button, Collapsible, Flex, Toast } from "@/components/base";
+import { Box, Button, Collapsible, Flex } from "@/components/base";
 import useChangeCardChecklistOrder from "@/controllers/api/card/checklist/useChangeCardChecklistOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
@@ -77,9 +77,15 @@ function BoardCardChecklistGroup(): JSX.Element {
                     {
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
-                                wildcardError: () => {
-                                    Toast.Add.error(t("errors.Internal server error"));
-                                    reorderCheckitems(originalChecklist, originalCheckitemOrder);
+                                code: {
+                                    after: () => {
+                                        reorderCheckitems(originalChecklist, originalCheckitemOrder);
+                                    },
+                                },
+                                wildcard: {
+                                    after: () => {
+                                        reorderCheckitems(originalChecklist, originalCheckitemOrder);
+                                    },
                                 },
                             });
 

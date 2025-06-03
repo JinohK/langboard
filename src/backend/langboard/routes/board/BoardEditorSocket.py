@@ -11,7 +11,7 @@ EDITOR_TYPES = ["card", "wiki"]
 
 
 async def get_project_uid(ws: WebSocket) -> str | None:
-    topics = await ws.get_topics()
+    topics = ws.get_topics()
     for topic in topics:
         if not topic.startswith(SocketTopic.Board.value):
             continue

@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Flex, Floating, Form, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
@@ -58,11 +57,6 @@ function AddSubEmailForm(): JSX.Element {
             Toast.Add.success(t("myAccount.successes.Please check your inbox to verify your email."));
             formRef.current?.reset();
             updatedUser();
-        },
-        apiErrorHandlers: {
-            [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-            },
         },
         useDefaultBadRequestHandler: true,
     });

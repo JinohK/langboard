@@ -1,4 +1,3 @@
-import { Toast } from "@/components/base";
 import ComingSoon from "@/components/ComingSoon";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
@@ -36,9 +35,8 @@ function SettingsProxy(): JSX.Element {
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
         });
 
@@ -61,9 +59,8 @@ function SettingsProxy(): JSX.Element {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

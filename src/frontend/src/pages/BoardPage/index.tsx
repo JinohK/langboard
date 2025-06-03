@@ -8,7 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/useIsBoardChatAvailableHandlers";
+import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/chat/useIsBoardChatAvailableHandlers";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
@@ -116,19 +116,18 @@ const BoardProxy = memo((): JSX.Element => {
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("project.errors.Project not found."));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
-            networkError: () => {
-                Toast.Add.error(t("errors.Network error"));
-                setTimeout(() => {
-                    refetch();
-                }, 5000);
+            network: {
+                after: () => {
+                    setTimeout(() => {
+                        refetch();
+                    }, 5000);
+                },
             },
         });
 

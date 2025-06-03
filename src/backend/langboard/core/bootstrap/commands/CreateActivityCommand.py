@@ -1,5 +1,5 @@
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_model_py, create_task_py, format_template, make_name
+from .CommandUtils import create_py, format_template, make_name
 
 
 class CreateActivityCommandOptions(BaseCommandOptions):
@@ -43,7 +43,7 @@ class CreateActivityCommand(BaseCommand):
         }
 
         model_code = format_template("activity_sql_model", formats)
-        create_model_py(f"{name}Activity", model_code)
+        create_py("model", f"{name}Activity", model_code)
 
         task_code = format_template("activity_task", formats)
-        create_task_py(name, task_code)
+        create_py("task", name, task_code)

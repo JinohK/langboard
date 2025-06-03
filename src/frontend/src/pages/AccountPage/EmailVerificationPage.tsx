@@ -39,17 +39,14 @@ function EmailVerificationPage() {
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_304_NOT_MODIFIED]: () => {
-                            Toast.Add.error(t("myAccount.errors.The email is already verified."));
-                            navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
+                        [EHttpStatus.HTTP_304_NOT_MODIFIED]: {
+                            after: () => navigate(ROUTES.ACCOUNT.EMAILS.ROUTE),
                         },
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND));
+                        [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
                         },
-                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
-                            Toast.Add.error(t("myAccount.errors.The email is probably deleted."));
-                            navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
+                        [EHttpStatus.HTTP_409_CONFLICT]: {
+                            after: () => navigate(ROUTES.ACCOUNT.EMAILS.ROUTE),
                         },
                     });
 

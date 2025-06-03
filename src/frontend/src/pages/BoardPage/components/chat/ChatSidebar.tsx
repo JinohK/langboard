@@ -1,7 +1,7 @@
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, DropdownMenu, Flex, IconComponent, Toast } from "@/components/base";
-import useClearProjectChatMessages from "@/controllers/api/board/useClearProjectChatMessages";
+import { Box, Button, DropdownMenu, Flex, IconComponent } from "@/components/base";
+import useClearProjectChatMessages from "@/controllers/api/board/chat/useClearProjectChatMessages";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
@@ -23,13 +23,12 @@ const ChatSidebar = memo((): JSX.Element => {
             { uid: projectUID },
             {
                 onSuccess: () => {
-                    ChatMessageModel.Model.deleteModels((model) => model.projectUID === projectUID);
+                    ChatMessageModel.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

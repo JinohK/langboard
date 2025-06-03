@@ -1,4 +1,4 @@
-import { Box, Flex, Toast } from "@/components/base";
+import { Box, Flex } from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -34,7 +34,6 @@ export function SkeletonBoardCommentList() {
 function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
     const { projectUID, card } = useBoardCard();
     const { data: commentsData, error, isFetching } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
-    const [t] = useTranslation();
     const navigateRef = useRef(useNavigate());
 
     useEffect(() => {
@@ -43,13 +42,11 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                Toast.Add.error(t("errors.Forbidden"));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found."));
-                navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 

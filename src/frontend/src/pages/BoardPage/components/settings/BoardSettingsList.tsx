@@ -4,6 +4,7 @@ import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSetti
 import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
+import BoardSettingsChatTemplateList from "@/pages/BoardPage/components/settings/chat/BoardSettingsChatTemplateList";
 import BoardSettingsCronBotList from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotList";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import BoardSettingsBotRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsBotRoleList";
@@ -36,6 +37,9 @@ const BoardSettingsList = memo(() => {
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Label">
                 <BoardSettingsLabelList />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Chat templates">
+                <BoardSettingsChatTemplateList key={`board-settings-chat-templates-${project.uid}`} />
             </BoardSettingsSection>
             {currentUser.is_admin || project.owner.uid === currentUser.uid ? (
                 <BoardSettingsSection title="project.settings.Other">

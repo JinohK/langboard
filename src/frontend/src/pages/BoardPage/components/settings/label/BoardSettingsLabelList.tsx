@@ -1,4 +1,4 @@
-import { Flex, Toast } from "@/components/base";
+import { Flex } from "@/components/base";
 import useChangeProjectLabelOrder from "@/controllers/api/board/settings/useChangeProjectLabelOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
@@ -12,11 +12,9 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { memo, useId, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
 
 const BoardSettingsLabelList = memo(() => {
     const { project, socket } = useBoardSettings();
-    const [t] = useTranslation();
     const { mutate: changeProjectLabelOrderMutate } = useChangeProjectLabelOrder();
     const flatLabels = project.useForeignField<ProjectLabel.TModel>("labels");
     const { columns: labels, reorder: reorderLabels } = useReorderColumn({
@@ -49,9 +47,15 @@ const BoardSettingsLabelList = memo(() => {
                     {
                         onError: (error) => {
                             const { handle } = setupApiErrorHandler({
-                                wildcardError: () => {
-                                    Toast.Add.error(t("errors.Internal server error"));
-                                    reorderLabels(originalLabel, originalLabelOrder);
+                                code: {
+                                    after: () => {
+                                        reorderLabels(originalLabel, originalLabelOrder);
+                                    },
+                                },
+                                wildcard: {
+                                    after: () => {
+                                        reorderLabels(originalLabel, originalLabelOrder);
+                                    },
                                 },
                             });
 

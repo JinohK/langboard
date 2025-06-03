@@ -1,64 +1,145 @@
 from fastapi import Depends, File, UploadFile, status
-from ...core.ai import Bot, BotRunner, InternalBotType
+from ...core.ai import BotRunner, InternalBotType
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
-from ...models import ChatHistory, ProjectRole
+from ...models import ChatHistory, ChatTemplate, Project, ProjectRole
 from ...models.ProjectRole import ProjectRoleAction
+from ...publishers import ProjectPublisher
 from ...services import Service
-from .scopes import ChatHistoryPagination, project_role_finder
+from .scopes import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate, project_role_finder
 
 
 @AppRouter.api.get(
     "/board/{project_uid}/chat",
-    tags=["Board"],
-    responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().role().no_bot().get(),
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().forbidden().get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add("user")
 async def get_project_chat(
     project_uid: str,
     query: ChatHistoryPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
+    user: User = Auth.scope("api_user"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    histories = await service.chat_history.get_list(user_or_bot, "project", query.refer_time, query, project_uid)
+    histories = await service.chat.get_list(user, Project.__tablename__, project_uid, query.refer_time, query)
 
     return JsonResponse(content={"histories": histories})
 
 
 @AppRouter.api.delete(
     "/board/{project_uid}/chat/clear",
-    tags=["Board"],
-    responses=OpenApiSchema().auth().role().no_bot().get(),
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().auth().forbidden().get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add("user")
 async def clear_project_chat(
-    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+    await service.chat.clear(user, Project.__tablename__, project_uid)
 
-    await service.chat_history.clear(user_or_bot, "project", project_uid)
-
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
-@AppRouter.api.post("/board/{project_uid}/chat/upload")
+@AppRouter.api.post(
+    "/board/{project_uid}/chat/upload",
+    tags=["Board.Chat"],
+    responses=(OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2001).err(406, ApiErrorCode.OP1002).get()),
+)
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add("user")
 async def upload_board_chat_file(project_uid: str, attachment: UploadFile = File(), service: Service = Service.scope()):
     if not await service.project.get_by_uid(project_uid):
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
 
     file_path = await BotRunner.upload_file(InternalBotType.ProjectChat, attachment)
     if not file_path:
-        return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+        return JsonResponse(content=ApiErrorCode.OP1002, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     return JsonResponse(content={"file_path": file_path}, status_code=status.HTTP_201_CREATED)
+
+
+@AppRouter.api.get(
+    "/board/{project_uid}/chat/templates",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().suc({"templates": [ChatTemplate]}).auth().forbidden().get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add("user")
+async def get_chat_templates(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    templates = await service.chat.get_templates(Project.__tablename__, project_uid)
+
+    return JsonResponse(content={"templates": templates})
+
+
+@AppRouter.api.post(
+    "/board/{project_uid}/chat/template",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add("user")
+async def create_chat_template(
+    project_uid: str, form: CreateChatTemplate, service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
+
+    template = await service.chat.create_template(project, form.name, form.template)
+
+    ProjectPublisher.chat_template_created(project, {"template": template.api_response()})
+
+    return JsonResponse(status_code=status.HTTP_201_CREATED)
+
+
+@AppRouter.api.put(
+    "/board/{project_uid}/chat/template/{template_uid}",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add("user")
+async def update_chat_template(
+    project_uid: str, template_uid: str, form: UpdateChatTemplate, service: Service = Service.scope()
+) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+
+    result = await service.chat.update_template(template_uid, form.name, form.template)
+    if not result:
+        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+
+    if result is True:
+        return JsonResponse()
+
+    template, model = result
+    ProjectPublisher.chat_template_updated(project, template, model)
+
+    return JsonResponse()
+
+
+@AppRouter.api.delete(
+    "/board/{project_uid}/chat/template/{template_uid}",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@AuthFilter.add("user")
+async def delete_chat_template(project_uid: str, template_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if not project:
+        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+
+    result = await service.chat.delete_template(template_uid)
+    if not result:
+        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+
+    ProjectPublisher.chat_template_deleted(project, template_uid)
+
+    return JsonResponse()

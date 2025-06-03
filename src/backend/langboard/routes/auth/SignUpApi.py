@@ -1,7 +1,7 @@
 from fastapi import File, UploadFile, status
 from ...Constants import QUERY_NAMES
 from ...core.caching import Cache
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.storage import Storage, StorageName
 from ...services import Service
@@ -19,14 +19,14 @@ async def exists_email(form: CheckEmailForm, service: Service = Service.scope())
 @AppRouter.api.post(
     "/auth/signup",
     tags=["Auth.SignUp"],
-    responses=OpenApiSchema().err(409, "User exists.").err(503, "Email service is unavailable.").get(),
+    responses=OpenApiSchema().err(409, ApiErrorCode.EX1003).err(503, ApiErrorCode.OP1001).get(),
 )
 async def signup(
     form: SignUpForm = SignUpForm.scope(), avatar: UploadFile | None = File(None), service: Service = Service.scope()
 ) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     if user:
-        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse(content=ApiErrorCode.EX1003, status_code=status.HTTP_409_CONFLICT)
 
     file_model = Storage.upload(avatar, StorageName.Avatar) if avatar else None
     user = await service.user.create(form.model_dump(), avatar=file_model)
@@ -39,29 +39,25 @@ async def signup(
         user.preferred_lang, user.email, "signup", {"recipient": user.firstname, "url": token_url}
     )
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return JsonResponse(content=ApiErrorCode.OP1001, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.post(
     "/auth/signup/resend",
     tags=["Auth.SignUp"],
     responses=(
-        OpenApiSchema()
-        .err(404, "User not found.")
-        .err(409, "User is already actviated.")
-        .err(503, "Email service is unavailable.")
-        .get()
+        OpenApiSchema().err(404, ApiErrorCode.NF1004).err(409, ApiErrorCode.EX1004).err(503, ApiErrorCode.OP1001).get()
     ),
 )
 async def resend_signup_link(form: ResendLinkForm, service: Service = Service.scope()) -> JsonResponse:
     user, _ = await service.user.get_by_email(form.email)
     if not user:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF1004, status_code=status.HTTP_404_NOT_FOUND)
 
     if user.activated_at:
-        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse(content=ApiErrorCode.EX1004, status_code=status.HTTP_409_CONFLICT)
 
     cache_key = service.user.create_cache_name("signup", user.email)
 
@@ -73,23 +69,23 @@ async def resend_signup_link(form: ResendLinkForm, service: Service = Service.sc
         user.preferred_lang, user.email, "signup", {"recipient": user.firstname, "url": token_url}
     )
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return JsonResponse(content=ApiErrorCode.OP1001, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.post(
     "/auth/signup/activate",
     tags=["Auth.SignUp"],
-    responses=OpenApiSchema().err(404, "User not found.").err(409, "User is already actviated.").get(),
+    responses=OpenApiSchema().err(404, ApiErrorCode.NF1004).err(409, ApiErrorCode.EX1004).get(),
 )
 async def activate_account(form: ActivateUserForm, service: Service = Service.scope()) -> JsonResponse:
     user, cache_key, _ = await service.user.validate_token_from_url("signup", form.signup_token)
     if not user or not cache_key:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF1004, status_code=status.HTTP_404_NOT_FOUND)
 
     if user.activated_at:
-        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse(content=ApiErrorCode.EX1004, status_code=status.HTTP_409_CONFLICT)
 
     await service.user.activate(user)
 

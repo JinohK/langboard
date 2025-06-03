@@ -1,5 +1,5 @@
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_model_py, create_service_py, format_template, make_name
+from .CommandUtils import create_py, create_service_py, format_template, make_name
 
 
 class CreateRoleCommandOptions(BaseCommandOptions):
@@ -43,7 +43,7 @@ class CreateRoleCommand(BaseCommand):
         }
 
         model_code = format_template("role_sql_model", formats)
-        create_model_py(f"{name}Role", model_code)
+        create_py("model", f"{name}Role", model_code)
 
         service_code = format_template("role_service", formats)
         create_service_py(name, service_code, factory=("roles", "Role"))

@@ -5,6 +5,7 @@ export * as BotModel from "@/core/models/BotModel";
 export * as BotSchedule from "@/core/models/BotSchedule";
 export * as InternalBotModel from "@/core/models/InternalBotModel";
 export * as ChatMessageModel from "@/core/models/ChatMessageModel";
+export * as ChatTemplateModel from "@/core/models/ChatTemplateModel";
 export * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 export * as MetadataModel from "@/core/models/MetadataModel";
 export * as Project from "@/core/models/Project";

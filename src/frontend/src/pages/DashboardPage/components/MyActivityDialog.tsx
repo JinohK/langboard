@@ -1,6 +1,5 @@
 import { Dialog } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { ActivityModel } from "@/core/models";
 import ActivityList from "@/components/ActivityList";
 
 export interface IMyActivityDialogProps {
@@ -10,7 +9,6 @@ export interface IMyActivityDialogProps {
 
 function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.Element | null {
     const { currentUser } = useAuth();
-    const activities = ActivityModel.Model.useModels((model) => model.filterable_type === "user" && model.filterable_uid === currentUser?.uid);
 
     if (!currentUser) {
         return null;
@@ -23,7 +21,6 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
                 <ActivityList
                     form={{ type: "user", user_uid: currentUser.uid }}
                     currentUser={currentUser}
-                    activities={activities}
                     infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                     isUserView
                 />

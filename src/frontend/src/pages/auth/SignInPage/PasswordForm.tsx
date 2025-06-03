@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { QUERY_NAMES } from "@/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton, Toast } from "@/components/base";
+import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -36,7 +36,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
         mutate,
         mutateOnSuccess: (data) => {
             if (!data.access_token || !data.refresh_token) {
-                setErrors({ password: "signIn.errors.Couldn't find your {app} Account" });
+                setErrors({ password: "errors.requests.VA1001" });
                 setTimeout(() => {
                     formRef.current!.password.focus();
                 }, 0);
@@ -49,21 +49,27 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
             navigate(decodeURIComponent(redirectUrl));
         },
         apiErrorHandlers: {
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                setErrors({ password: "signIn.errors.invalid.password" });
-                setTimeout(() => {
-                    formRef.current!.password.focus();
-                }, 0);
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: (message) => {
+                    setErrors({ password: message as string });
+                    setTimeout(() => {
+                        formRef.current!.password.focus();
+                    }, 0);
+                },
+                toast: false,
             },
-            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
-                Toast.Add.error(t("signIn.errors.Email is not verified yet."));
-                setEmail("");
-                const searchParams = new URLSearchParams(location.search);
-                searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
-                navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
+            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: {
+                after: () => {
+                    setEmail("");
+                    const searchParams = new URLSearchParams(location.search);
+                    searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
+                    navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
+                },
             },
-            [EHttpStatus.HTTP_423_LOCKED]: () => {
-                navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email } });
+            [EHttpStatus.HTTP_423_LOCKED]: {
+                after: () => {
+                    navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email } });
+                },
             },
         },
         useDefaultBadRequestHandler: true,

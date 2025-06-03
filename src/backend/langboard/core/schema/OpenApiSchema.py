@@ -3,20 +3,35 @@ from typing import Any, Literal, Self, cast
 from fastapi import status
 from fastapi.openapi.constants import REF_PREFIX
 from ..db import BaseSqlModel
+from ..routing import ApiErrorCode
 
 
 class OpenApiSchema:
-    def __init__(self, use_success: bool = True) -> None:
-        self.__schema: dict[int | str, dict[str, Any]] = {
-            status.HTTP_400_BAD_REQUEST: {
-                "description": "Invalid request.",
-                "content": {"application/json": {"schema": {"$ref": REF_PREFIX + "ValidationError"}}},
-            },
-            "default": {},
-        }
+    def __init__(self, success_code: Literal[200, 201] | None = 200) -> None:
+        self.__schema: dict[int | str, dict[str, Any]] = {}
+        self.__errors: list[tuple[int, ApiErrorCode | str | tuple[str, dict]]] = [
+            (
+                status.HTTP_400_BAD_REQUEST,
+                (
+                    "Invalid request.",
+                    {
+                        "ref": "ValidationError",
+                        "example": {
+                            "code": ApiErrorCode.VA0000.name,
+                            "message": ApiErrorCode.VA0000.value,
+                            "errors": {
+                                "Literal[body, query, path, header]": {
+                                    "location": ["<field name>"],
+                                },
+                            },
+                        },
+                    },
+                ),
+            ),
+        ]
 
-        if use_success:
-            self.__schema[status.HTTP_200_OK] = {
+        if success_code:
+            self.__schema[success_code] = {
                 "description": "Successful response.",
                 "content": self.__empty_schema(),
             }
@@ -34,68 +49,28 @@ class OpenApiSchema:
         }
         return self
 
-    def err(self, status_code: int, description: str) -> Self:
-        self.__schema[status_code] = {"description": description, "content": self.__empty_schema()}
+    def err(self, status_code: int, error_code: ApiErrorCode) -> Self:
+        self.__errors.append((status_code, error_code))
         return self
 
-    def auth(self, with_bot: bool = False) -> Self:
-        description_401 = "Authentication token is invalid."
-        if with_bot:
-            description_401 = "Authentication token is invalid or Bot api token is invalid."
-
-        self.__schema[status.HTTP_401_UNAUTHORIZED] = {
-            "description": description_401,
-            "content": self.__empty_schema(),
-        }
-        self.__schema[status.HTTP_422_UNPROCESSABLE_ENTITY] = {
-            "description": "Authentication token is expired.",
-            "content": self.__empty_schema(),
-        }
+    def auth(self, only_bot: bool = False) -> Self:
+        self.__errors.append((status.HTTP_401_UNAUTHORIZED, "Authentication token is invalid."))
+        if not only_bot:
+            self.__errors.append((status.HTTP_422_UNPROCESSABLE_ENTITY, "Authentication token is expired."))
         return self
 
-    def role(self, with_bot: bool = False) -> Self:
-        description_403 = "User does not have the required role."
-        if with_bot:
-            description_403 = "User or bot does not have the required role."
-        self.__schema[status.HTTP_403_FORBIDDEN] = {
-            "description": description_403,
-            "content": self.__empty_schema(),
-        }
-
-        return self
-
-    def no_bot(self) -> Self:
-        self.__schema[status.HTTP_403_FORBIDDEN] = {
-            "description": "Bot cannot access this endpoint.",
-            "content": self.__empty_schema(),
-        }
-        return self
-
-    def only_bot(self) -> Self:
-        self.__schema[status.HTTP_401_UNAUTHORIZED] = {
-            "description": "Bot api token is invalid.",
-            "content": self.__empty_schema(),
-        }
-        self.__schema[status.HTTP_403_FORBIDDEN] = {
-            "description": "Only bot can access this endpoint.",
-            "content": self.__empty_schema(),
-        }
-        return self
-
-    def only_admin(self) -> Self:
-        self.__schema[status.HTTP_403_FORBIDDEN] = {
-            "description": "Only admin can access this endpoint.",
-            "content": self.__empty_schema(),
-        }
+    def forbidden(self) -> Self:
+        self.__errors.append((status.HTTP_403_FORBIDDEN, ApiErrorCode.PE1001))
         return self
 
     def get(self) -> dict[int | str, dict[str, Any]]:
+        self.__set_errors()
         schema = self.__schema
         self.__schema = {}
         return schema
 
     def __empty_schema(self) -> dict[str, Any]:
-        return {"application/json": {"example": {}}}
+        return {"application/json": {"schema": {"$ref": f"{REF_PREFIX}EmptyResponse"}}}
 
     def __make_schema_recursive(self, value: Any) -> Any:
         if isinstance(value, type) and issubclass(value, Enum):
@@ -131,3 +106,60 @@ class OpenApiSchema:
             return new_list
 
         return value
+
+    def __set_errors(self) -> None:
+        description_lines_map: dict[int, list[str]] = {}
+        refs_map: dict[int, list[str]] = {}
+        examples_map: dict[int, dict] = {}
+
+        for status_code, error in self.__errors:
+            if status_code not in description_lines_map:
+                description_lines_map[status_code] = []
+            if status_code not in refs_map:
+                refs_map[status_code] = []
+            if status_code not in examples_map:
+                examples_map[status_code] = {}
+
+            description_lines = description_lines_map[status_code]
+            refs = refs_map[status_code]
+            examples = examples_map[status_code]
+
+            if isinstance(error, ApiErrorCode):
+                description_lines.append(f"{error.name}: {error.value}")
+                refs.append(f"{REF_PREFIX}ApiErrorCode{error.name}")
+                examples[error.name] = {"code": error.name, "message": error.value}
+            elif isinstance(error, tuple):
+                description, ref_map = error
+                ref = ref_map["ref"]
+                example = ref_map.get("example", {})
+                description_lines.append(description)
+                refs.append(f"{REF_PREFIX}{ref}")
+                examples[ref] = example
+            else:
+                description_lines.append(error)
+                refs.append(f"{REF_PREFIX}EmptyResponse")
+                examples[error] = {"EmptyResponse": {}}
+
+        if len(description_lines_map) != len(refs_map) or len(description_lines_map) != len(examples_map):
+            raise ValueError("Mismatch in status codes among description_lines_map, refs_map, and examples_map.")
+
+        for status_code, description_lines in description_lines_map.items():
+            if status_code not in refs_map or status_code not in examples_map:
+                raise ValueError(f"Status code {status_code} is missing in refs_map or examples_map.")
+
+            refs = refs_map[status_code]
+            examples = examples_map[status_code]
+
+            if len(refs) == 1:
+                schema = {"$ref": refs[0]}
+                examples = {"example": examples[list(examples.keys())[0]]}
+            else:
+                schema = {
+                    "oneOf": [{"$ref": ref} for ref in refs],
+                }
+                examples = {"examples": examples}
+
+            self.__schema[status_code] = {
+                "description": "\n\n".join(description_lines),
+                "content": {"application/json": {"schema": schema, **examples}},
+            }

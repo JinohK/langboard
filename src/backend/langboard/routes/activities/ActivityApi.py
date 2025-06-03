@@ -1,5 +1,4 @@
-from fastapi import Depends, status
-from ...core.ai import Bot
+from fastapi import Depends
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
@@ -30,24 +29,17 @@ USER_ACTIVITY_SCHEMA = {
 
 
 @AppRouter.api.get(
-    "/activity/user", tags=["Activity"], responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().no_bot().get()
+    "/activity/user", tags=["Activity"], responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().forbidden().get()
 )
-@AuthFilter.add
+@AuthFilter.add("user")
 async def get_current_user_activities(
-    pagination: ActivityPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    pagination: ActivityPagination = Depends(), user: User = Auth.scope("api_user"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     if pagination.only_count:
-        result = await service.activity.get_list_by_user(
-            user_or_bot, pagination, pagination.refer_time, only_count=True
-        )
+        result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time, only_count=True)
         return JsonResponse(content={"count_new_records": result or 0})
 
-    result = await service.activity.get_list_by_user(user_or_bot, pagination, pagination.refer_time)
+    result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time)
     if not result:
         return JsonResponse(content={"activities": []})
     activities, count_new_records, _ = result
@@ -57,20 +49,13 @@ async def get_current_user_activities(
 @AppRouter.api.get(
     "/activity/project/{project_uid}/assignee/{assignee_uid}",
     tags=["Activity"],
-    responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().no_bot().get(),
+    responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().forbidden().get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add("user")
 async def get_project_assignee_activities(
-    project_uid: str,
-    assignee_uid: str,
-    pagination: ActivityPagination = Depends(),
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    project_uid: str, assignee_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     if pagination.only_count:
         result = await service.activity.get_list_by_project_assignee(
             project_uid, assignee_uid, pagination, pagination.refer_time, only_count=True
@@ -90,11 +75,11 @@ async def get_project_assignee_activities(
     "/activity/project/{project_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().no_bot().get()
+        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def get_project_activities(
     project_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
@@ -121,11 +106,11 @@ async def get_project_activities(
     "/activity/project/{project_uid}/card/{card_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().no_bot().get()
+        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def get_card_activities(
     project_uid: str, card_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
@@ -159,11 +144,15 @@ async def get_card_activities(
     "/activity/project/{project_uid}/wiki/{wiki_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema().suc({"activities": [ProjectWikiActivity], "count_new_records": "integer"}).auth().no_bot().get()
+        OpenApiSchema()
+        .suc({"activities": [ProjectWikiActivity], "count_new_records": "integer"})
+        .auth()
+        .forbidden()
+        .get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add
+@AuthFilter.add()
 async def get_wiki_activities(
     project_uid: str, wiki_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:

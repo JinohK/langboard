@@ -1,6 +1,5 @@
 import { SubmitButton, Toast } from "@/components/base";
 import useCreateUserGroup from "@/controllers/api/account/useCreateUserGroup";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,11 +25,7 @@ function AccountUserGroupAddButton(): JSX.Element {
                     Toast.Add.success(t("myAccount.successes.User group created successfully."));
                 },
                 onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                            Toast.Add.error(t("errors.Malformed request"));
-                        },
-                    });
+                    const { handle } = setupApiErrorHandler({});
 
                     handle(error);
                 },

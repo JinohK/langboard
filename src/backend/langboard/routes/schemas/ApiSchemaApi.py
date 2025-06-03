@@ -56,7 +56,7 @@ async def get_api_schema(api_name: str):
         schema = _get_schema(route)
 
         return JsonResponse(content={"schema": schema})
-    return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+    return JsonResponse(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @AppRouter.api.get(

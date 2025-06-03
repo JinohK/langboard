@@ -11,7 +11,7 @@ import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
-    const { t } = useTranslation();
+    const [t] = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusComponentRef } = useForm({
         errorLangPrefix: "signUp.errors",

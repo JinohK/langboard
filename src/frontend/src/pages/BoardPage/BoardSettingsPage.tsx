@@ -1,6 +1,5 @@
 import { memo, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Box, Flex, Skeleton, Toast } from "@/components/base";
+import { Box, Flex, Skeleton } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -27,7 +26,6 @@ export function SkeletonBoardSettingsPage(): JSX.Element {
 }
 
 const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
-    const [t] = useTranslation();
     const { data, error } = useGetProjectDetails({ uid: projectUID });
 
     useEffect(() => {
@@ -36,10 +34,11 @@ const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRel
         }
 
         const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: () => {},
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                Toast.Add.error(t("dashboard.errors.Project not found."));
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                toast: false,
+            },
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 

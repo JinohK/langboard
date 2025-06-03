@@ -1,5 +1,5 @@
 from ..BaseCommand import BaseCommand, BaseCommandOptions
-from .CommandUtils import create_publisher_py, format_template, make_name
+from .CommandUtils import create_py, format_template, make_name
 
 
 class CreatePublisherCommandOptions(BaseCommandOptions):
@@ -44,4 +44,4 @@ class CreatePublisherCommand(BaseCommand):
 
         code = format_template("publisher", formats)
 
-        create_publisher_py(name, code)
+        create_py("publisher", name, code)

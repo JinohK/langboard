@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar, Box, Button, Card, Flex, SubmitButton, Toast } from "@/components/base";
+import { Avatar, Box, Button, Card, Flex, SubmitButton } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
@@ -66,15 +66,13 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
             navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email } });
         },
         apiErrorHandlers: {
-            [EHttpStatus.HTTP_409_CONFLICT]: () => {
-                Toast.Add.error(t("signUp.errors.invalid.email-exists"));
-                moveStep(values, ROUTES.SIGN_UP.REQUIRED, { email: t("signUp.errors.invalid.email-exists") });
+            [EHttpStatus.HTTP_409_CONFLICT]: {
+                after: (message) => {
+                    moveStep(values, ROUTES.SIGN_UP.REQUIRED, { email: message as string });
+                },
             },
-            [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: () => {
-                navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email } });
-                setTimeout(() => {
-                    Toast.Add.error(t("errors.Email service is temporarily unavailable. Please try again later."));
-                }, 0);
+            [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: {
+                after: () => navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email } }),
             },
         },
         useDefaultBadRequestHandler: true,

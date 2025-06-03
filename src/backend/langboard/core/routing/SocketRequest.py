@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+from typing import cast
 from .WebSocket import WebSocket
 
 
@@ -15,3 +17,19 @@ class SocketRequest:
         self.socket = socket
         self.data = data
         self.from_app = from_app or {}
+
+    @contextmanager
+    @staticmethod
+    def create(socket: WebSocket, data: list | dict | None = None, from_app: dict | None = None):
+        """Context manager to create a socket request."""
+        req = SocketRequest(socket, data, from_app)
+        try:
+            yield req
+        finally:
+            req.flush()
+
+    def flush(self) -> None:
+        """Flushes the request data."""
+        self.data = None
+        self.from_app = {}
+        self.socket = cast(WebSocket, None)

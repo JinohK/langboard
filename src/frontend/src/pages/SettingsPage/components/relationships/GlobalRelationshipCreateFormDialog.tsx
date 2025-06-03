@@ -80,9 +80,8 @@ function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelati
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

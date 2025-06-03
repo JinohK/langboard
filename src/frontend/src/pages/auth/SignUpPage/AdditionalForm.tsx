@@ -10,7 +10,7 @@ import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
 function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
-    const { t } = useTranslation();
+    const [t] = useTranslation();
     const industryRef = useRef<string>(values.industry ?? "");
     const industryInputRef = useRef<HTMLInputElement>(null);
     const purposeRef = useRef<string>(values.purpose ?? "");

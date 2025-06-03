@@ -28,7 +28,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
         mutate,
         mutateOnSuccess: (data) => {
             if (!data.token) {
-                setErrors({ email: "signIn.errors.Couldn't find your {app} Account" });
+                setErrors({ email: "errors.requests.VA1001" });
                 return;
             }
 
@@ -41,14 +41,20 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
             navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
         },
         apiErrorHandlers: {
-            [EHttpStatus.HTTP_404_NOT_FOUND]: () => {
-                setErrors({ email: "signIn.errors.Couldn't find your {app} Account" });
-                setTimeout(() => {
-                    formRef.current!.email.focus();
-                }, 0);
+            [EHttpStatus.HTTP_404_NOT_FOUND]: {
+                after: (message) => {
+                    setErrors({ email: message as string });
+                    setTimeout(() => {
+                        formRef.current!.email.focus();
+                    }, 0);
+                },
+                toast: false,
             },
-            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: () => {
-                setErrors({ email: "signIn.errors.Email is not verified yet." });
+            [EHttpStatus.HTTP_406_NOT_ACCEPTABLE]: {
+                after: (message) => {
+                    setErrors({ email: message as string });
+                },
+                toast: false,
             },
         },
         useDefaultBadRequestHandler: true,

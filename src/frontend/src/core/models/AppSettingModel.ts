@@ -3,6 +3,7 @@ import useAppSettingDeletedHandlers from "@/controllers/socket/settings/useAppSe
 import useAppSettingUpdatedHandlers from "@/controllers/socket/settings/useAppSettingUpdatedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { StringCase } from "@/core/utils/StringUtils";
+import { registerModel } from "@/core/models/ModelRegistry";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export enum ESettingType {
@@ -91,6 +92,8 @@ class AppSettingModel extends BaseModel<Interface> {
         this.update({ total_used_count: value });
     }
 }
+
+registerModel(AppSettingModel);
 
 export const Model = AppSettingModel;
 export type TModel = AppSettingModel;

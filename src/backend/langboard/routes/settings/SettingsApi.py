@@ -1,8 +1,7 @@
 from fastapi import File, UploadFile, status
 from ...core.ai import Bot
-from ...core.db import User
 from ...core.filter import AuthFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.setting import AppSetting, AppSettingType
@@ -23,12 +22,10 @@ from .Form import (
 )
 
 
-@AppRouter.api.post("/settings/available", tags=["AppSettings"], responses=OpenApiSchema().auth().only_admin().get())
-@AuthFilter.add
-async def is_settings_available(user_or_bot: User | Bot = Auth.scope("api")) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-    return JsonResponse(content={})
+@AppRouter.api.post("/settings/available", tags=["AppSettings"], responses=OpenApiSchema().auth().forbidden().get())
+@AuthFilter.add("admin")
+async def is_settings_available() -> JsonResponse:
+    return JsonResponse()
 
 
 @AppRouter.api.get(
@@ -44,17 +41,12 @@ async def is_settings_available(user_or_bot: User | Bot = Auth.scope("api")) -> 
             }
         )
         .auth()
-        .only_admin()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
-async def get_all_settings(
-    user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def get_all_settings(service: Service = Service.scope()) -> JsonResponse:
     await service.app_setting.init_langflow()
 
     settings = await service.app_setting.get_all(as_api=True)
@@ -67,88 +59,64 @@ async def get_all_settings(
 @AppRouter.api.post(
     "/settings/app",
     tags=["AppSettings"],
-    responses=OpenApiSchema().suc({"setting": AppSetting, "revealed_value": "string"}).auth().only_admin().get(),
+    responses=OpenApiSchema().suc({"setting": AppSetting, "revealed_value": "string"}, 201).auth().forbidden().get(),
 )
-@AuthFilter.add
-async def create_setting(
-    form: CreateSettingForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def create_setting(form: CreateSettingForm, service: Service = Service.scope()) -> JsonResponse:
     if form.setting_type == AppSettingType.ApiKey:
         form.setting_value = await service.app_setting.generate_api_key()
 
     setting = await service.app_setting.create(form.setting_type, form.setting_name, form.setting_value)
     revealed_value = setting.get_value()
 
-    return JsonResponse(content={"setting": setting.api_response(), "revealed_value": revealed_value})
+    return JsonResponse(
+        content={"setting": setting.api_response(), "revealed_value": revealed_value},
+        status_code=status.HTTP_201_CREATED,
+    )
 
 
 @AppRouter.api.put(
     "/settings/app/{setting_uid}",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Setting not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3002).get(),
 )
-@AuthFilter.add
-async def update_setting(
-    setting_uid: str,
-    form: UpdateSettingForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def update_setting(setting_uid: str, form: UpdateSettingForm, service: Service = Service.scope()) -> JsonResponse:
     result = await service.app_setting.update(setting_uid, form.setting_name, form.setting_value)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3002, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.delete(
     "/settings/app/{setting_uid}",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Setting not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3002).get(),
 )
-@AuthFilter.add
-async def delete_setting(
-    setting_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def delete_setting(setting_uid: str, service: Service = Service.scope()) -> JsonResponse:
     result = await service.app_setting.delete(setting_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3002, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.delete(
     "/settings/app",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Settings not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3002).get(),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def delete_selected_settings(
-    form: DeleteSelectedSettingsForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    form: DeleteSelectedSettingsForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     result = await service.app_setting.delete_selected(form.setting_uids)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3002, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.post(
@@ -156,23 +124,19 @@ async def delete_selected_settings(
     tags=["AppSettings"],
     responses=(
         OpenApiSchema()
-        .suc({"bot": (Bot, {"is_setting": True}), "revealed_app_api_token": "string"})
+        .suc({"bot": (Bot, {"is_setting": True}), "revealed_app_api_token": "string"}, 201)
         .auth()
-        .only_admin()
-        .err(409, "Bot uname already exists.")
+        .forbidden()
+        .err(409, ApiErrorCode.EX3001)
         .get()
     ),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def create_bot(
     form: CreateBotForm = CreateBotForm.scope(),
     avatar: UploadFile | None = File(None),
-    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     uploaded_avatar = None
     file_model = Storage.upload(avatar, StorageName.BotAvatar) if avatar else None
     if file_model:
@@ -194,9 +158,12 @@ async def create_bot(
         uploaded_avatar,
     )
     if not bot:
-        return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse(content=ApiErrorCode.EX3001, status_code=status.HTTP_409_CONFLICT)
 
-    return JsonResponse(content={"bot": bot.api_response(is_setting=True), "revealed_app_api_token": bot.app_api_token})
+    return JsonResponse(
+        content={"bot": bot.api_response(is_setting=True), "revealed_app_api_token": bot.app_api_token},
+        status_code=status.HTTP_201_CREATED,
+    )
 
 
 @AppRouter.api.put(
@@ -215,23 +182,19 @@ async def create_bot(
             }
         )
         .auth()
-        .only_admin()
-        .err(404, "Bot not found.")
-        .err(409, "Bot uname already exists.")
+        .forbidden()
+        .err(404, ApiErrorCode.NF3001)
+        .err(409, ApiErrorCode.EX3001)
         .get()
     ),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def update_bot(
     bot_uid: str,
     form: UpdateBotForm = UpdateBotForm.scope(),
     avatar: UploadFile | None = File(None),
-    user_or_bot: User | Bot = Auth.scope("api"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     form_dict = form.model_dump()
     if "bot_name" in form_dict:
         form_dict["name"] = form_dict.pop("bot_name")
@@ -245,18 +208,18 @@ async def update_bot(
 
     result = await service.bot.update(bot_uid, form_dict)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
     if form.ip_whitelist is not None:
         ip_whitelist = form.ip_whitelist.strip().replace(" ", "").split(",")
-        result = await service.bot.update_ip_whitelist(bot_uid, ip_whitelist)
-        if not result:
-            return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        ip_result = await service.bot.update_ip_whitelist(bot_uid, ip_whitelist)
+        if not ip_result:
+            return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
     if isinstance(result, bool):
         if not result:
-            return JsonResponse(content={}, status_code=status.HTTP_409_CONFLICT)
-        return JsonResponse(content={})
+            return JsonResponse(content=ApiErrorCode.EX3001, status_code=status.HTTP_409_CONFLICT)
+        return JsonResponse()
 
     _, model = result
 
@@ -270,23 +233,16 @@ async def update_bot(
         OpenApiSchema()
         .suc({"secret_app_api_token": "string", "revealed_app_api_token": "string"})
         .auth()
-        .only_admin()
-        .err(404, "Bot not found.")
+        .forbidden()
+        .err(404, ApiErrorCode.NF3001)
         .get()
     ),
 )
-@AuthFilter.add
-async def generate_new_bot_api_token(
-    bot_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def generate_new_bot_api_token(bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
     bot = await service.bot.generate_new_api_token(bot_uid)
     if not bot:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
         content={
@@ -301,86 +257,65 @@ async def generate_new_bot_api_token(
     "/settings/bot/trigger-condition/predefine",
     tags=["AppSettings"],
     description="Predefine bot trigger conditions.",
-    responses=OpenApiSchema().only_bot().err(404, "Bot not found.").get(),
+    responses=OpenApiSchema().auth(only_bot=True).forbidden().err(404, ApiErrorCode.NF3001).get(),
 )
-@AuthFilter.add
+@AuthFilter.add("bot")
 async def predefine_bot_trigger_condition(
-    form: PredefineBotTriggerConditionForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    form: PredefineBotTriggerConditionForm, bot: Bot = Auth.scope("api_bot"), service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, Bot):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
+    result = await service.bot.predefine_conditions(bot, form.conditions)
+    if not result:
+        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
-    bot = await service.bot.predefine_conditions(user_or_bot, form.conditions)
-    if not bot:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.put(
     "/settings/bot/{bot_uid}/trigger-condition",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3001).get(),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def toggle_bot_trigger_condition(
-    bot_uid: str,
-    form: ToggleBotTriggerConditionForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    bot_uid: str, form: ToggleBotTriggerConditionForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     bot = await service.bot.toggle_condition(bot_uid, form.condition)
     if not bot:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.delete(
     "/settings/bot/{bot_uid}",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Bot not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3001).get(),
 )
-@AuthFilter.add
-async def delete_bot(
-    bot_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def delete_bot(bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
     result = await service.bot.delete(bot_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.post(
     "/settings/global-relationship",
     tags=["AppSettings"],
-    responses=OpenApiSchema().suc({"global_relationship": GlobalCardRelationshipType}).auth().only_admin().get(),
+    responses=OpenApiSchema().suc({"global_relationship": GlobalCardRelationshipType}, 201).auth().forbidden().get(),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def create_global_relationship(
-    form: CreateGlobalRelationshipTypeForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    form: CreateGlobalRelationshipTypeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     global_relationship = await service.app_setting.create_global_relationship(
         form.parent_name, form.child_name, form.description
     )
 
-    return JsonResponse(content={"global_relationship": global_relationship.api_response()})
+    return JsonResponse(
+        content={"global_relationship": global_relationship.api_response()}, status_code=status.HTTP_201_CREATED
+    )
 
 
 @AppRouter.api.put(
@@ -396,29 +331,23 @@ async def create_global_relationship(
             }
         )
         .auth()
-        .only_admin()
-        .err(404, "Global relationship not found.")
+        .forbidden()
+        .err(404, ApiErrorCode.NF3003)
         .get()
     ),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def update_global_relationship(
-    global_relationship_uid: str,
-    form: UpdateGlobalRelationshipTypeForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    global_relationship_uid: str, form: UpdateGlobalRelationshipTypeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     form_dict = form.model_dump()
 
     result = await service.app_setting.update_global_relationship(global_relationship_uid, form_dict)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3003, status_code=status.HTTP_404_NOT_FOUND)
 
     if isinstance(result, bool):
-        return JsonResponse(content={})
+        return JsonResponse()
 
     _, model = result
 
@@ -428,40 +357,28 @@ async def update_global_relationship(
 @AppRouter.api.delete(
     "/settings/global-relationship/{global_relationship_uid}",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Global relationship not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3003).get(),
 )
-@AuthFilter.add
-async def delete_global_relationship(
-    global_relationship_uid: str,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
-) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
+@AuthFilter.add("admin")
+async def delete_global_relationship(global_relationship_uid: str, service: Service = Service.scope()) -> JsonResponse:
     result = await service.app_setting.delete_global_relationship(global_relationship_uid)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3003, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()
 
 
 @AppRouter.api.delete(
     "/settings/global-relationship",
     tags=["AppSettings"],
-    responses=OpenApiSchema().auth().only_admin().err(404, "Global relationships not found.").get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3003).get(),
 )
-@AuthFilter.add
+@AuthFilter.add("admin")
 async def delete_selected_global_relationship(
-    form: DeleteSelectedGlobalRelationshipTypesForm,
-    user_or_bot: User | Bot = Auth.scope("api"),
-    service: Service = Service.scope(),
+    form: DeleteSelectedGlobalRelationshipTypesForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not isinstance(user_or_bot, User) or not user_or_bot.is_admin:
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
     result = await service.app_setting.delete_selected_global_relationships(form.relationship_type_uids)
     if not result:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF3003, status_code=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse(content={})
+    return JsonResponse()

@@ -1,7 +1,6 @@
 import { Box, Button, Dialog, IconComponent } from "@/components/base";
 import { MetadataList } from "@/components/MetadataList";
 import MetadataAddButton from "@/components/MetadataList/MetadataAddButton";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { Project } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
@@ -14,10 +13,7 @@ const BoardCardActionMetadata = memo(({ buttonClassName }: IBoardCardActionMetad
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
-    const errorsMap = () => ({
-        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Card not found."),
-    });
+    const errorsMap = () => ({});
 
     return (
         <Dialog.Root modal open={isOpened} onOpenChange={setIsOpened}>

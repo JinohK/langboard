@@ -41,9 +41,8 @@ const BotApiKey = memo(({ bot }: IBotApiKeyProps) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler(
                     {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            messageRef.message = t("errors.Forbidden");
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

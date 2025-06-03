@@ -37,7 +37,8 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
     };
 
     ActivityModel.Model.deleteModels((model) => model.filterable_type === "project" && model.filterable_uid === projectUID);
-    ChatMessageModel.Model.deleteModels((model) => model.projectUID === projectUID);
+    ChatMessageModel.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
+    ChatMessageModel.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
     ProjectWiki.Model.deleteModels((model) => {
         MetadataModel.Model.deleteModels((metadataModel) => metadataModel.uid === model.uid);
         if (model.project_uid !== projectUID) {

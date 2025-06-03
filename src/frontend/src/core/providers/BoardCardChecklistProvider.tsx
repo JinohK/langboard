@@ -1,7 +1,5 @@
 import { createContext, useContext } from "react";
-import { useTranslation } from "react-i18next";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ProjectChecklist } from "@/core/models";
 
 export interface IBoardCardChecklistContext {
@@ -33,17 +31,9 @@ export const BoardCardChecklistProvider = ({
     setIsValidating,
     children,
 }: IBoardCardChecklistProviderProps): React.ReactNode => {
-    const [t] = useTranslation();
-
     const sharedErrorHandler = (error: unknown) => {
         const messageRef = { message: "" };
-        const { handle } = setupApiErrorHandler(
-            {
-                [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Checklist not found."),
-            },
-            messageRef
-        );
+        const { handle } = setupApiErrorHandler({}, messageRef);
 
         handle(error);
         return messageRef.message;

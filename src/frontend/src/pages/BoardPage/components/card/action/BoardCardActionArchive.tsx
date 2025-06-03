@@ -1,6 +1,5 @@
 import { Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useArchiveCard from "@/controllers/api/card/useArchiveCard";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
@@ -32,13 +31,7 @@ const BoardCardActionArchive = memo(({ buttonClassName }: IBoardCardActionArchiv
             loading: t("common.Updating..."),
             error: (error) => {
                 const messageRef = { message: "" };
-                const { handle } = setupApiErrorHandler(
-                    {
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("errors.Forbidden"),
-                        [EHttpStatus.HTTP_404_NOT_FOUND]: () => t("card.errors.Card not found."),
-                    },
-                    messageRef
-                );
+                const { handle } = setupApiErrorHandler({}, messageRef);
 
                 handle(error);
                 return messageRef.message;

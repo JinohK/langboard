@@ -99,14 +99,16 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: () => {
-                            Toast.Add.error(t("errors.Forbidden"));
-                            navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true });
+                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
-                        [EHttpStatus.HTTP_409_CONFLICT]: () => {
-                            newErrors.uname = t("settings.errors.Bot unique name already exists.");
-                            setErrors(newErrors);
-                            inputsRef.current.uname?.focus();
+                        [EHttpStatus.HTTP_409_CONFLICT]: {
+                            after: (message) => {
+                                newErrors.uname = message as string;
+                                setErrors(newErrors);
+                                inputsRef.current.uname?.focus();
+                            },
+                            toast: false,
                         },
                     });
 

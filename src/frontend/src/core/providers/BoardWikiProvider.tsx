@@ -140,7 +140,7 @@ export const BoardWikiProvider = ({
         const wiki = ProjectWiki.Model.getModel(uid);
         if (!wiki || wiki.project_uid !== projectUID || wiki.forbidden) {
             if (shouldNavigate) {
-                Toast.Add.error(t("wiki.errors.Can't access this wiki."));
+                Toast.Add.error(t("errors.requests.PE2006"));
                 setCurrentEditor("");
                 navigate(ROUTES.BOARD.WIKI(projectUID));
             }

@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { ChatMessageModel, InternalBotModel } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
-import useBoardChatSentHandlers from "@/controllers/socket/board/useBoardChatSentHandlers";
+import useBoardChatSentHandlers from "@/controllers/socket/board/chat/useBoardChatSentHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { useTranslation } from "react-i18next";
 import { Toast } from "@/components/base";
-import useBoardChatStreamHandlers from "@/controllers/socket/board/useBoardChatStreamHandlers";
-import useBoardChatCancelHandlers from "@/controllers/socket/board/useBoardChatCancelHandlers";
+import useBoardChatStreamHandlers from "@/controllers/socket/board/chat/useBoardChatStreamHandlers";
+import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
 import { IChatContent } from "@/core/models/Base";
 
 export interface IBoardChatContext {
@@ -49,7 +49,6 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const scrollToBottomRef = useRef<() => void>(() => {});
     const isAtBottomRef = useRef(true);
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
-        data.ai_message.projectUID = projectUID;
         ChatMessageModel.Model.fromObject({ ...data.ai_message, isPending: true }, true);
         scrollToBottomRef.current();
     }, []);

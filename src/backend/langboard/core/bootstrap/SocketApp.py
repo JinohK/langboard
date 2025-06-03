@@ -36,7 +36,8 @@ class SocketApp:
 
         await AppRouter.socket.subscribe(ws, SocketTopic.Global, [GLOBAL_TOPIC_ID])
 
-        await self.__run_events(SocketDefaultEvent.Open, self.__create_request(ws))
+        with self.__create_request(ws) as req:
+            await self.__run_events(SocketDefaultEvent.Open, req)
 
         try:
             while True:
@@ -55,10 +56,13 @@ class SocketApp:
             pass
 
         try:
-            await self.__run_events(SocketDefaultEvent.Close, self.__create_request(ws))
+            with self.__create_request(ws) as req:
+                await self.__run_events(SocketDefaultEvent.Close, req)
             await AppRouter.socket.unsubscribe_all(ws)
         except Exception:
             pass
+        finally:
+            await ws.flush()
 
     async def __on_message(self, ws: WebSocket, message: str):
         if not message:
@@ -79,13 +83,12 @@ class SocketApp:
 
         event_data = data.get("data", data)
 
-        req = self.__create_request(
+        with self.__create_request(
             ws,
             event_data,
             from_app={"topic": data.get("topic", None), "topic_id": data.get("topic_id", None)},
-        )
-
-        await self.__run_events(event, req)
+        ) as req:
+            await self.__run_events(event, req)
 
     async def __validate_token(self, token: str):
         """Validates the given token.
@@ -104,15 +107,12 @@ class SocketApp:
         else:
             raise SocketStatusCodeException(SocketResponseCode.WS_4000_INVALID_CONNECTION, "Invalid connection")
 
-    def __create_request(
-        self, ws: WebSocket, data: dict | list | None = None, from_app: dict | None = None
-    ) -> SocketRequest:
-        req = SocketRequest(
+    def __create_request(self, ws: WebSocket, data: dict | list | None = None, from_app: dict | None = None):
+        return SocketRequest.create(
             socket=ws,
             data=data,
             from_app=from_app,
         )
-        return req
 
     async def __run_events(self, event_name: SocketDefaultEvent | str, req: SocketRequest) -> None:
         route_events = await AppRouter.socket.get_events(event_name)
@@ -127,7 +127,7 @@ class SocketApp:
                     response.message,
                     should_close=False,
                 )
-                return
+                break
 
             if isinstance(response, SocketEventException):
                 await req.socket.send_error(
@@ -135,13 +135,13 @@ class SocketApp:
                     str(response.raw_exception),
                     should_close=False,
                 )
-                return
+                break
 
             if isinstance(response, SocketManagerScopeException):
                 await req.socket.send_error(
                     SocketResponseCode.WS_4001_INVALID_DATA, str(response.raw_exception), should_close=False
                 )
-                return
+                break
 
             if isinstance(response, SocketResponse):
                 await req.socket.send(response)

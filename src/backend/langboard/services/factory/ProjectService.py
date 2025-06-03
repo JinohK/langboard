@@ -360,7 +360,7 @@ class ProjectService(BaseService):
         if not project:
             return None
 
-        assigned_bot_ids = [SnowflakeID.from_short_code(uid) if isinstance(uid, str) else uid for uid in assign_bots]
+        assigned_bot_ids = [ServiceHelper.convert_id(uid) for uid in assign_bots]
         old_assigned_bots = await self.get_assigned_bots(project, as_api=False)
         old_assigned_bot_ids: list[int] = [bot.id for bot, _ in old_assigned_bots]
 

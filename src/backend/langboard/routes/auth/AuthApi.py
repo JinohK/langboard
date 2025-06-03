@@ -1,10 +1,9 @@
 from typing import Annotated
 from fastapi import Header, status
 from jwt import ExpiredSignatureError
-from ...core.ai import Bot
 from ...core.db import User
 from ...core.filter import AuthFilter
-from ...core.routing import AppRouter, JsonResponse
+from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
 from ...core.utils.Encryptor import Encryptor
@@ -19,7 +18,7 @@ from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInFor
     "/auth/email",
     response_model=AuthEmailResponse,
     tags=["Auth"],
-    responses=OpenApiSchema(use_success=False).err(406, "Subemail is not verified.").err(404, "User not found.").get(),
+    responses=OpenApiSchema(None).err(406, ApiErrorCode.AU1001).err(404, ApiErrorCode.NF1004).get(),
 )
 async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) -> JsonResponse | AuthEmailResponse:
     if form.is_token:
@@ -28,10 +27,10 @@ async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) ->
         user, subemail = await service.user.get_by_email(form.email)
 
     if subemail and not subemail.verified_at:
-        return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+        return JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     if not user:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF1004, status_code=status.HTTP_404_NOT_FOUND)
 
     token = Encryptor.encrypt(user.email, form.sign_token)
     return AuthEmailResponse(token=token, email=user.email)
@@ -42,10 +41,10 @@ async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) ->
     response_model=SignInResponse,
     tags=["Auth"],
     responses=(
-        OpenApiSchema(use_success=False)
-        .err(404, "User not found or passwords don't match.")
-        .err(406, "Subemail is not verified.")
-        .err(423, "User is not activated.")
+        OpenApiSchema(None)
+        .err(404, ApiErrorCode.AU1001)
+        .err(406, ApiErrorCode.AU1002)
+        .err(423, ApiErrorCode.AU1003)
         .get()
     ),
 )
@@ -53,16 +52,16 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
     user, subemail = await service.user.get_by_token(form.email_token, form.sign_token)
 
     if not user:
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_404_NOT_FOUND)
 
     if subemail and not subemail.verified_at:
-        return JsonResponse(content={}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+        return JsonResponse(content=ApiErrorCode.AU1002, status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     if not user.check_password(form.password):
-        return JsonResponse(content={}, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.VA1002, status_code=status.HTTP_404_NOT_FOUND)
 
     if not user.activated_at:
-        return JsonResponse(content={}, status_code=status.HTTP_423_LOCKED)
+        return JsonResponse(content=ApiErrorCode.AU1003, status_code=status.HTTP_423_LOCKED)
 
     access_token, refresh_token = Auth.authenticate(user.id)
 
@@ -73,9 +72,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
     "/auth/refresh",
     response_model=RefreshResponse,
     tags=["Auth"],
-    responses=(
-        OpenApiSchema(use_success=False).err(422, "Refresh token is expired.").err(401, "Token is invalid.").get()
-    ),
+    responses=OpenApiSchema(None).err(422, ApiErrorCode.AU1004).err(401, ApiErrorCode.AU1004).get(),
 )
 async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | RefreshResponse:
     try:
@@ -85,9 +82,9 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
         if not user:
             raise Exception()
     except ExpiredSignatureError:
-        return JsonResponse(content={}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return JsonResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
     except Exception:
-        return JsonResponse(content={}, status_code=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse(status_code=status.HTTP_401_UNAUTHORIZED)
 
     return RefreshResponse(access_token=new_access_token)
 
@@ -127,26 +124,23 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
             }
         )
         .auth()
-        .no_bot()
+        .forbidden()
         .get()
     ),
 )
-@AuthFilter.add
-async def about_me(user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()) -> JsonResponse:
-    if not isinstance(user_or_bot, User):
-        return JsonResponse(content={}, status_code=status.HTTP_403_FORBIDDEN)
-
-    profile = await service.user.get_profile(user_or_bot)
+@AuthFilter.add("user")
+async def about_me(user: User = Auth.scope("api_user"), service: Service = Service.scope()) -> JsonResponse:
+    profile = await service.user.get_profile(user)
     response = {
-        **user_or_bot.api_response(),
+        **user.api_response(),
         **profile.api_response(),
-        "preferred_lang": user_or_bot.preferred_lang,
+        "preferred_lang": user.preferred_lang,
     }
-    response["user_groups"] = await service.user_group.get_all_by_user(user_or_bot, as_api=True)
-    response["subemails"] = await service.user.get_subemails(user_or_bot)
-    notifications = await service.notification.get_list(user_or_bot)
+    response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
+    response["subemails"] = await service.user.get_subemails(user)
+    notifications = await service.notification.get_list(user)
 
-    notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user_or_bot).all()
+    notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user).all()
     unsubs = {}
     for unsub in notification_unsubs:
         if unsub.scope_type.value not in unsubs:
@@ -168,7 +162,7 @@ async def about_me(user_or_bot: User | Bot = Auth.scope("api"), service: Service
 
     response["notification_unsubs"] = unsubs
 
-    if user_or_bot.is_admin:
+    if user.is_admin:
         response["is_admin"] = True
 
     return JsonResponse(content={"user": response, "notifications": notifications})

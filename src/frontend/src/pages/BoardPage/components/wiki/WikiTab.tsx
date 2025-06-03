@@ -1,6 +1,5 @@
 import { Box, Button, IconComponent, Skeleton, Tabs, Toast, Tooltip } from "@/components/base";
 import useDeleteWiki from "@/controllers/api/wiki/useDeleteWiki";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
@@ -60,12 +59,7 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
                 loading: t("common.Deleting..."),
                 error: (error) => {
                     const messageRef = { message: "" };
-                    const { handle } = setupApiErrorHandler(
-                        {
-                            [EHttpStatus.HTTP_403_FORBIDDEN]: () => t("wiki.errors.Can't access this wiki."),
-                        },
-                        messageRef
-                    );
+                    const { handle } = setupApiErrorHandler({}, messageRef);
 
                     handle(error);
                     return messageRef.message;

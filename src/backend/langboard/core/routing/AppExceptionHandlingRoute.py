@@ -3,6 +3,7 @@ from fastapi import Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from ..logger import Logger
+from .ApiErrorCode import ApiErrorCode
 from .JsonResponse import JsonResponse
 
 
@@ -32,13 +33,15 @@ class AppExceptionHandlingRoute(APIRoute):
                     if where not in errors[error_type]:
                         errors[error_type][where] = []
                     errors[error_type][where].extend(fields)
-                return JsonResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"errors": errors})
+                return JsonResponse(
+                    content={**ApiErrorCode.VA0000.to_dict(), "errors": errors}, status_code=status.HTTP_400_BAD_REQUEST
+                )
             except Exception as e:
                 self._logger.exception(e)
 
                 return JsonResponse(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    content={"status": False, "message": "Internal Server Error"},
+                    content={**ApiErrorCode.OP0000.to_dict(), "status": False},
                 )
 
         return route_handler

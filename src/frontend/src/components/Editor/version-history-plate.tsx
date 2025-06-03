@@ -15,7 +15,7 @@ import { EditorDataProvider, TEditorDataProviderProps } from "@/core/providers/E
 function VersionHistory(props: Omit<PlateProps, "children">) {
     return (
         <Plate {...props}>
-            <PlateContent />
+            <PlateContent className="[&_table]:w-full [&_table]:max-w-full [&_table_td]:w-auto" />
         </Plate>
     );
 }

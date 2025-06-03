@@ -29,12 +29,7 @@
     "Preferred language updated successfully.": "Preferred language updated successfully."
   },
   "errors": {
-    "Cannot delete primary email.": "Cannot delete primary email..",
-    "The email is not verified yet.": "The email is not verified yet.",
     "You must sign in before verifying your email.": "You must sign in before verifying your email.",
-    "The email is already verified.": "The email is already verified.",
-    "The email is already primary.": "The email is already primary.",
-    "The email is probably deleted.": "The email is probably deleted.",
     "missing": {
       "firstname": "Enter your first name.",
       "lastname": "Enter your last name.",
