@@ -5,7 +5,7 @@ services:
     container_name: ${PROJECT_NAME}_zookeeper0
     environment:
       - ZOO_PORT_NUMBER=2181
-      - ZOO_TICK_TIME=2000
+      - ZOO_TICK_TIME={ZOOKEEPER_TICK_TIME:-2000}
       - ZOO_SERVER_ID=1
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
@@ -20,7 +20,7 @@ services:
     container_name: ${PROJECT_NAME}_zookeeper1
     environment:
       - ZOO_PORT_NUMBER=2181
-      - ZOO_TICK_TIME=2000
+      - ZOO_TICK_TIME={ZOOKEEPER_TICK_TIME:-2000}
       - ZOO_SERVER_ID=2
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
@@ -35,7 +35,7 @@ services:
     container_name: ${PROJECT_NAME}_zookeeper2
     environment:
       - ZOO_PORT_NUMBER=2181
-      - ZOO_TICK_TIME=2000
+      - ZOO_TICK_TIME={ZOOKEEPER_TICK_TIME:-2000}
       - ZOO_SERVER_ID=3
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
