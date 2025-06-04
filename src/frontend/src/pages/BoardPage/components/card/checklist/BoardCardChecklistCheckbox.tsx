@@ -1,12 +1,15 @@
 import { Checkbox, Toast } from "@/components/base";
 import useToggleCardChecklistChecked from "@/controllers/api/card/checklist/useToggleCardChecklistChecked";
-import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { IBoardCardCheckRelatedContextParams } from "@/pages/BoardPage/components/card/checklist/types";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistCheckbox() {
     const { projectUID, card } = useBoardCard();
-    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
+    const { model: checklist, params } = ModelRegistry.ProjectChecklist.useContext<IBoardCardCheckRelatedContextParams>();
+    const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const isChecked = checklist.useField("is_checked");
     const { mutateAsync: toggleChecklistMutateAsync } = useToggleCardChecklistChecked();
@@ -26,7 +29,13 @@ function BoardCardChecklistCheckbox() {
 
         Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
-            error: sharedErrorHandler,
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
             success: () => {
                 return t("card.successes.Toggled checklist successfully.");
             },

@@ -1,15 +1,18 @@
 import { Button, IconComponent, Toast } from "@/components/base";
 import useCreateCardCheckitem from "@/controllers/api/card/checkitem/useCreateCardCheckitem";
 import useCardCheckitemCreatedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCreatedHandlers";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { IBoardCardCheckRelatedContextParams } from "@/pages/BoardPage/components/card/checklist/types";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistAddItem(): JSX.Element {
     const { socket, projectUID, card } = useBoardCard();
-    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
+    const { model: checklist, params } = ModelRegistry.ProjectChecklist.useContext<IBoardCardCheckRelatedContextParams>();
+    const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const { mutateAsync: createCheckitemMutateAsync } = useCreateCardCheckitem();
     const isAddedRef = useRef(false);
@@ -45,7 +48,13 @@ function BoardCardChecklistAddItem(): JSX.Element {
 
         Toast.Add.promise(promise, {
             loading: t("common.Creating..."),
-            error: sharedErrorHandler,
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
             success: () => {
                 return t("card.successes.Checkitem added successfully.");
             },

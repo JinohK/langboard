@@ -1,8 +1,4 @@
-import { ProjectCardAttachment } from "@/core/models";
-
-export interface IBaseBoardCardAttachmentMoreProps {
-    attachment: ProjectCardAttachment.TModel;
+export interface IBoardCardAttachmentContextParams {
     isValidating: bool;
-    setIsValidating: (value: bool) => void;
-    setIsMoreMenuOpened: (value: bool) => void;
+    setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }

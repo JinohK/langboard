@@ -1,19 +1,19 @@
 import { Button, IconComponent } from "@/components/base";
 import useToggleStarProject from "@/controllers/api/dashboard/useToggleStarProject";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IProjectCardStarButtonProps {
-    project: Project.TModel;
     isUpdating: bool;
     setIsUpdating: React.Dispatch<React.SetStateAction<bool>>;
     updateStarredProjects: React.DispatchWithoutAction;
 }
 
-const ProjectCardStarButton = memo(({ project, isUpdating, setIsUpdating, updateStarredProjects }: IProjectCardStarButtonProps) => {
+const ProjectCardStarButton = memo(({ isUpdating, setIsUpdating, updateStarredProjects }: IProjectCardStarButtonProps) => {
     const [t] = useTranslation();
+    const { model: project } = ModelRegistry.Project.useContext();
     const { mutate } = useToggleStarProject();
     const starred = project.useField("starred");
     const toggleStar = (event: React.MouseEvent<HTMLButtonElement>) => {

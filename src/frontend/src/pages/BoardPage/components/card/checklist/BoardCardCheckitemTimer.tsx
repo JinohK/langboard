@@ -1,4 +1,3 @@
-import { useBoardCardCheckitem } from "@/core/providers/BoardCardCheckitemProvider";
 import { memo, useEffect, useMemo, useReducer } from "react";
 import { add as addDate, intervalToDuration, differenceInSeconds } from "date-fns";
 import { Box, Button, Flex, IconComponent, Popover, Toast } from "@/components/base";
@@ -7,9 +6,12 @@ import { useTranslation } from "react-i18next";
 import { formatTimerDuration } from "@/core/utils/StringUtils";
 import useChangeCardCheckitemStatus from "@/controllers/api/card/checkitem/useChangeCardCheckitemStatus";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { IBoardCardCheckRelatedContextParams } from "@/pages/BoardPage/components/card/checklist/types";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 
 const BoardCardCheckitemTimer = memo(() => {
-    const { checkitem } = useBoardCardCheckitem();
+    const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const [t] = useTranslation();
     const status = checkitem.useField("status");
     const accumulatedSeconds = checkitem.useField("accumulated_seconds");
@@ -74,7 +76,8 @@ const BoardCardCheckitemTimer = memo(() => {
 
 function BoardCardCheckitemTimerManager() {
     const { projectUID, card } = useBoardCard();
-    const { checkitem, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardCheckitem();
+    const { model: checkitem, params } = ModelRegistry.ProjectCheckitem.useContext<IBoardCardCheckRelatedContextParams>();
+    const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const status = checkitem.useField("status");
     const { mutateAsync: changeCheckitemStatusMutateAsync } = useChangeCardCheckitemStatus();
@@ -110,7 +113,13 @@ function BoardCardCheckitemTimerManager() {
 
         Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
-            error: sharedErrorHandler,
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
             success: () => {
                 return t(`card.successes.Timer ${timerStatus} successfully.`);
             },

@@ -1,22 +1,22 @@
 import { Button } from "@/components/base";
-import { ProjectCard, ProjectCardRelationship } from "@/core/models";
+import { ProjectCardRelationship } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase } from "@/core/utils/StringUtils";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardColumnCardRelationshipProps {
-    card: ProjectCard.TModel;
-    setFilters: (type: ProjectCardRelationship.TRelationship) => void;
     attributes: Record<string, unknown>;
 }
 
-const BoardColumnCardRelationship = memo(({ card, setFilters, attributes }: IBoardColumnCardRelationshipProps) => {
+const BoardColumnCardRelationship = memo(({ attributes }: IBoardColumnCardRelationshipProps) => {
     return (
         <>
-            <BoardColumnCardRelationshipButton type="parents" card={card} setFilters={setFilters} attributes={attributes} />
-            <BoardColumnCardRelationshipButton type="children" card={card} setFilters={setFilters} attributes={attributes} />
+            <BoardColumnCardRelationshipButton type="parents" attributes={attributes} />
+            <BoardColumnCardRelationshipButton type="children" attributes={attributes} />
         </>
     );
 });
@@ -24,13 +24,13 @@ BoardColumnCardRelationship.displayName = "Board.ColumnCardRelationship";
 
 export interface IBoardColumnCardRelationshipButtonProps {
     type: ProjectCardRelationship.TRelationship;
-    card: ProjectCard.TModel;
-    setFilters: (type: ProjectCardRelationship.TRelationship) => void;
     attributes: Record<string, unknown>;
 }
 
-const BoardColumnCardRelationshipButton = memo(({ type, card, setFilters, attributes }: IBoardColumnCardRelationshipButtonProps) => {
+const BoardColumnCardRelationshipButton = memo(({ type, attributes }: IBoardColumnCardRelationshipButtonProps) => {
     const [t] = useTranslation();
+    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
+    const { setFilters } = params;
     const isParent = type === "parents";
     const { filterRelationships } = useBoardRelationshipController();
     const flatRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");

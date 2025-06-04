@@ -5,10 +5,10 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
-import BoardSettingsLabelMore from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelMore";
+import BoardSettingsLabelMoreMenu from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelMoreMenu";
 import BoardSettingsLabelColor from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelColor";
-import { BoardSettingsLabelProvider } from "@/core/providers/BoardSettingsLabelProvider";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 
 export interface IBoardSettingsLabelProps {
     label: ProjectLabel.TModel;
@@ -58,7 +58,7 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
     };
 
     return (
-        <BoardSettingsLabelProvider label={label} isValidating={isValidating} setIsValidating={setIsValidating}>
+        <ModelRegistry.ProjectLabel.Provider model={label} params={{ isValidating, setIsValidating }}>
             <Flex items="center" justify="between" {...props}>
                 <Flex items="center" gap={{ initial: "1.5", sm: "2.5" }} className="truncate">
                     <Button
@@ -93,9 +93,9 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
                         </Tooltip.Root>
                     </Flex>
                 </Flex>
-                <BoardSettingsLabelMore />
+                <BoardSettingsLabelMoreMenu />
             </Flex>
-        </BoardSettingsLabelProvider>
+        </ModelRegistry.ProjectLabel.Provider>
     );
 });
 

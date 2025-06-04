@@ -1,6 +1,6 @@
 import { Flex } from "@/components/base";
 import { ChatTemplateModel } from "@/core/models";
-import BoardSettingsChatTemplateMore from "@/pages/BoardPage/components/settings/chat/BoardSettingsChatTemplateMore";
+import BoardSettingsChatTemplateMoreMenu from "@/pages/BoardPage/components/settings/chat/BoardSettingsChatTemplateMoreMenu";
 import { memo } from "react";
 
 interface IBoardSettingsChatTemplatetProps {
@@ -13,7 +13,7 @@ const BoardSettingsChatTemplate = memo(({ chatTemplate }: IBoardSettingsChatTemp
     return (
         <Flex items="center" justify="between" gap="3">
             <span className="truncate">{name}</span>
-            <BoardSettingsChatTemplateMore chatTemplate={chatTemplate} />
+            <BoardSettingsChatTemplateMoreMenu chatTemplate={chatTemplate} />
         </Flex>
     );
 });

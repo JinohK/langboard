@@ -1,13 +1,16 @@
 import { ColorPicker, Toast } from "@/components/base";
 import useChangeProjectLabelDetails from "@/controllers/api/board/settings/useChangeProjectLabelDetails";
-import { useBoardSettingsLabel } from "@/core/providers/BoardSettingsLabelProvider";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
+import { IBoardSettingsLabelContextParams } from "@/pages/BoardPage/components/settings/label/types";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardSettingsLabelColor = memo(() => {
     const { project } = useBoardSettings();
-    const { label, isValidating, setIsValidating, sharedErrorHandler } = useBoardSettingsLabel();
+    const { model: label, params } = ModelRegistry.ProjectLabel.useContext<IBoardSettingsLabelContextParams>();
+    const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const labelColor = label.useField("color");
     const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("color");
@@ -33,7 +36,13 @@ const BoardSettingsLabelColor = memo(() => {
 
         Toast.Add.promise(promise, {
             loading: t("common.Changing..."),
-            error: sharedErrorHandler,
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
             success: () => {
                 return t("project.settings.successes.Color changed successfully.");
             },

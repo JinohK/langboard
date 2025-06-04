@@ -2,13 +2,12 @@ import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { useNavigate } from "react-router-dom";
 import { Project, ProjectCard, ProjectCheckitem, User } from "@/core/models";
-import { BoardCardCheckitemProvider } from "@/core/providers/BoardCardCheckitemProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCardCheckitemAssignedMember from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemAssignedMember";
 import BoardCardCheckitemCheckbox from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemCheckbox";
-import BoardCardCheckitemMore from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMore";
+import BoardCardCheckitemMoreMenu from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMoreMenu";
 import BoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemTimer";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
@@ -17,6 +16,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 
 export interface IBoardCardCheckitemProps {
     checkitem: ProjectCheckitem.TModel;
@@ -112,12 +112,7 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
     };
 
     return (
-        <BoardCardCheckitemProvider
-            checkitem={checkitem}
-            canEditCheckitem={canEditCheckitem}
-            isValidating={isValidating}
-            setIsValidating={setIsValidating}
-        >
+        <ModelRegistry.ProjectCheckitem.Provider model={checkitem} params={{ canEdit: canEditCheckitem, isValidating, setIsValidating }}>
             <Flex
                 items="center"
                 justify="between"
@@ -198,10 +193,10 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
                     <Box display={{ initial: "hidden", md: "block" }}>
                         <BoardCardCheckitemTimer key={`board-card-checkitem-timer-${checkitem.uid}`} />
                     </Box>
-                    {canEditCheckitem && <BoardCardCheckitemMore key={`board-card-checkitem-more-${checkitem.uid}`} />}
+                    {canEditCheckitem && <BoardCardCheckitemMoreMenu key={`board-card-checkitem-more-${checkitem.uid}`} />}
                 </Flex>
             </Flex>
-        </BoardCardCheckitemProvider>
+        </ModelRegistry.ProjectCheckitem.Provider>
     );
 });
 

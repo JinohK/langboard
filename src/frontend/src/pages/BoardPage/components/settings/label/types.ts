@@ -1,3 +1,4 @@
-export interface IBoardSettingsLabelRelatedProps {
-    setIsMoreMenuOpened: (value: bool) => void;
+export interface IBoardSettingsLabelContextParams {
+    isValidating: bool;
+    setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }

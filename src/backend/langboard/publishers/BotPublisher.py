@@ -29,6 +29,9 @@ class BotPublisher:
 
     @staticmethod
     def bot_updated(uid: str, model: dict[str, Any]):
+        if not model:
+            return
+
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
@@ -40,6 +43,9 @@ class BotPublisher:
 
     @staticmethod
     def bot_setting_updated(uid: str, model: dict[str, Any]):
+        if not model:
+            return
+
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,

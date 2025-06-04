@@ -4,18 +4,16 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotUniqueNameProps {
-    bot: BotModel.TModel;
-}
-
-const BotUniqueName = memo(({ bot }: IBotUniqueNameProps) => {
+const BotUniqueName = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const uname = bot.useField("bot_uname");
     const { mutateAsync } = useUpdateBot(bot);

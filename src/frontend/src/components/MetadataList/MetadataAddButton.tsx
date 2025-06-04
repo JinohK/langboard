@@ -37,7 +37,7 @@ function MetadataAddButton({ form, errorsMap }: IMetadataAddButtonProps): JSX.El
 
         Toast.Add.promise(promise, {
             loading: t("common.Adding..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler(errorsMap(messageRef));
 

@@ -3,20 +3,16 @@ import useUpdateGlobalRelationship from "@/controllers/api/settings/relationship
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { GlobalRelationshipType } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IGlobalRelationshipParentNameProps {
-    globalRelationship: GlobalRelationshipType.TModel;
-}
-
-const GlobalRelationshipParentName = memo(({ globalRelationship }: IGlobalRelationshipParentNameProps) => {
+function GlobalRelationshipParentName() {
     const [t] = useTranslation();
     const { navigateRef } = useAppSetting();
+    const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const parentName = globalRelationship.useField("parent_name");
     const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
 
@@ -86,6 +82,6 @@ const GlobalRelationshipParentName = memo(({ globalRelationship }: IGlobalRelati
             )}
         </Table.Cell>
     );
-});
+}
 
 export default GlobalRelationshipParentName;

@@ -15,7 +15,7 @@ const useCardDeletedHandlers = ({ callback, projectUID, cardUID }: IUseCardDelet
         eventKey: `card-deleted-${projectUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.DELETED,
-            params: { uid: projectUID },
+            params: { uid: cardUID },
             callback,
             responseConverter: () => {
                 deleteCardModel(cardUID, true);

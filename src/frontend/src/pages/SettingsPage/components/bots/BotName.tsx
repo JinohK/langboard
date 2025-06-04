@@ -3,19 +3,16 @@ import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotNameProps {
-    bot: BotModel.TModel;
-}
-
-const BotName = memo(({ bot }: IBotNameProps) => {
+const BotName = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const name = bot.useField("name");
     const { mutateAsync } = useUpdateBot(bot);

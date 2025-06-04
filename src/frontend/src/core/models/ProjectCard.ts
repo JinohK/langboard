@@ -52,7 +52,7 @@ export interface IStore extends Interface {
     checklists: ProjectChecklist.IStore[];
 
     // variable set from the client side
-    isOpenedInBoardColumn: bool;
+    isHoverCardOpened: bool;
 }
 
 class ProjectCard extends BaseModel<IStore> {
@@ -157,8 +157,8 @@ class ProjectCard extends BaseModel<IStore> {
         if (TypeUtils.isString(model.archived_at)) {
             model.archived_at = new Date(model.archived_at);
         }
-        if (TypeUtils.isNullOrUndefined(model.isOpenedInBoardColumn)) {
-            model.isOpenedInBoardColumn = false;
+        if (TypeUtils.isNullOrUndefined(model.isHoverCardOpened)) {
+            model.isHoverCardOpened = false;
         }
         return model;
     }
@@ -289,11 +289,11 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ checklists: value });
     }
 
-    public get isOpenedInBoardColumn() {
-        return this.getValue("isOpenedInBoardColumn");
+    public get isHoverCardOpened() {
+        return this.getValue("isHoverCardOpened");
     }
-    public set isOpenedInBoardColumn(value: bool) {
-        this.update({ isOpenedInBoardColumn: value });
+    public set isHoverCardOpened(value: bool) {
+        this.update({ isHoverCardOpened: value });
     }
 }
 

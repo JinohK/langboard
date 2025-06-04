@@ -34,7 +34,7 @@ const BoardSettingsBots = memo(() => {
 
         Toast.Add.promise(promise, {
             loading: t("common.Updating..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler({}, messageRef);
 

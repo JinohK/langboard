@@ -32,8 +32,8 @@ const WebhookRow = memo(({ url, selectedWebhooks, setSelectedWebhooks }: IWebhoo
             <Table.Cell className="w-12 p-0 text-center">
                 <Checkbox checked={selectedWebhooks.some((value) => value === url.uid)} onClick={toggleSelect} />
             </Table.Cell>
-            <WebhookName url={url} />
-            <WebhookURL url={url} />
+            <WebhookName />
+            <WebhookURL />
             <Table.Cell className="w-1/6 max-w-0 truncate text-center">{createdAt}</Table.Cell>
             <Table.Cell className="w-1/6 max-w-0 truncate text-center">{lastUsedAt}</Table.Cell>
         </Table.Row>

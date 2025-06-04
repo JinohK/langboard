@@ -11,7 +11,18 @@ import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const SpecificScopedPopover = memo(
-    ({ type, form, currentUser, specificUID, triggerProps, iconProps, showTriggerText, onlyFlex, onlyPopover }: TSpecificScopedPopoverProps) => {
+    ({
+        modal,
+        type,
+        form,
+        currentUser,
+        specificUID,
+        triggerProps,
+        iconProps,
+        showTriggerText,
+        onlyFlex,
+        onlyPopover,
+    }: TSpecificScopedPopoverProps) => {
         const [t] = useTranslation();
         const { mutateAsync } = useToggleSpecificScopedNotificationSettings(type, currentUser);
         const unsubscriptions = currentUser.useField("notification_unsubs");
@@ -64,7 +75,7 @@ const SpecificScopedPopover = memo(
                     ))}
                 </Box>
                 <Box display={onlyFlex ? "hidden" : onlyPopover ? "block" : { sm: "hidden" }}>
-                    <Popover.Root>
+                    <Popover.Root modal={modal}>
                         <Popover.Trigger asChild>
                             <Button {...triggerProps}>
                                 <IconComponent icon="bell-ring" {...iconProps} />

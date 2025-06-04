@@ -85,7 +85,7 @@ function BoardSettingsCronBotScheduleEdit({
 
         Toast.Add.promise(promise, {
             loading: t("project.settings.Rescheduling..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler({}, messageRef);
 

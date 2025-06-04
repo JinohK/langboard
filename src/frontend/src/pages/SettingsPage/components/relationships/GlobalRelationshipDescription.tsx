@@ -3,19 +3,15 @@ import useUpdateGlobalRelationship from "@/controllers/api/settings/relationship
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { GlobalRelationshipType } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IGlobalRelationshipDescriptionProps {
-    globalRelationship: GlobalRelationshipType.TModel;
-}
-
-const GlobalRelationshipDescription = memo(({ globalRelationship }: IGlobalRelationshipDescriptionProps) => {
+function GlobalRelationshipDescription() {
     const [t] = useTranslation();
+    const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const { navigateRef } = useAppSetting();
     const description = globalRelationship.useField("description");
     const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
@@ -87,6 +83,6 @@ const GlobalRelationshipDescription = memo(({ globalRelationship }: IGlobalRelat
             )}
         </Table.Cell>
     );
-});
+}
 
 export default GlobalRelationshipDescription;

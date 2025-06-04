@@ -3,17 +3,15 @@ import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotApiAuthTypeProps {
-    bot: BotModel.TModel;
-}
-
-const BotApiAuthType = memo(({ bot }: IBotApiAuthTypeProps) => {
+const BotApiAuthType = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const apiAuthType = bot.useField("api_auth_type");
     const [isValidating, setIsValidating] = useState(false);

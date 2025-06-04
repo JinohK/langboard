@@ -1,16 +1,19 @@
 import { Toast } from "@/components/base";
 import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import useNotifyCardChecklist from "@/controllers/api/card/checklist/useNotifyCardChecklist";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, User, UserGroup } from "@/core/models";
-import { useBoardCardChecklist } from "@/core/providers/BoardCardChecklistProvider";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
+import { IBoardCardCheckRelatedContextParams } from "@/pages/BoardPage/components/card/checklist/types";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 function BoardCardChecklistNotify() {
     const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
-    const { checklist, isValidating, setIsValidating, sharedErrorHandler } = useBoardCardChecklist();
+    const { model: checklist, params } = ModelRegistry.ProjectChecklist.useContext<IBoardCardCheckRelatedContextParams>();
+    const { isValidating, setIsValidating } = params;
     const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist();
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
@@ -34,7 +37,13 @@ function BoardCardChecklistNotify() {
 
             Toast.Add.promise(promise, {
                 loading: t("common.Deleting..."),
-                error: sharedErrorHandler,
+                error: (error) => {
+                    const messageRef = { message: "" };
+                    const { handle } = setupApiErrorHandler({}, messageRef);
+
+                    handle(error);
+                    return messageRef.message;
+                },
                 success: () => {
                     return t("card.successes.Notified members successfully.");
                 },

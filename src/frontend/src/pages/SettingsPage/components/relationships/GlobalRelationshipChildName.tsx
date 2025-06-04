@@ -3,18 +3,14 @@ import useUpdateGlobalRelationship from "@/controllers/api/settings/relationship
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { GlobalRelationshipType } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IGlobalRelationshipChildNameProps {
-    globalRelationship: GlobalRelationshipType.TModel;
-}
-
-const GlobalRelationshipChildName = memo(({ globalRelationship }: IGlobalRelationshipChildNameProps) => {
+function GlobalRelationshipChildName() {
+    const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const [t] = useTranslation();
     const { navigateRef } = useAppSetting();
     const childName = globalRelationship.useField("child_name");
@@ -86,6 +82,6 @@ const GlobalRelationshipChildName = memo(({ globalRelationship }: IGlobalRelatio
             )}
         </Table.Cell>
     );
-});
+}
 
 export default GlobalRelationshipChildName;

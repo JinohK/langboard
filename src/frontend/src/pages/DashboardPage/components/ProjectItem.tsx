@@ -5,10 +5,11 @@ import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { Project, ProjectColumn } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
-import ProjectCardColumn from "@/pages/DashboardPage/components/ProjectCardColumn";
-import ProjectCardStarButton from "@/pages/DashboardPage/components/ProjectCardStarButton";
+import ProjectItemColumn from "@/pages/DashboardPage/components/ProjectItemColumn";
+import ProjectItemStarButton from "@/pages/DashboardPage/components/ProjectItemStarButton";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 
-export const SkeletonProjectCard = memo(() => {
+export const SkeletonProjectItem = memo(() => {
     const cards = [];
     for (let i = 0; i < 6; ++i) {
         cards.push({
@@ -42,12 +43,12 @@ export const SkeletonProjectCard = memo(() => {
     );
 });
 
-export interface IProjectCardProps {
+export interface IProjectItemProps {
     project: Project.TModel;
     updateStarredProjects: React.DispatchWithoutAction;
 }
 
-const ProjectCard = memo(({ project, updateStarredProjects }: IProjectCardProps): JSX.Element => {
+const ProjectItem = memo(({ project, updateStarredProjects }: IProjectItemProps): JSX.Element => {
     const [t] = useTranslation();
     const { navigate } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
@@ -65,27 +66,24 @@ const ProjectCard = memo(({ project, updateStarredProjects }: IProjectCardProps)
     };
 
     return (
-        <Card.Root className="cursor-pointer" onClick={toBoard}>
-            <Card.Header className="relative block pt-5">
-                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
-                    {t(projectType === "Other" ? "common.Other" : `project.types.${projectType}`)}
-                </Card.Title>
-                <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
-                <ProjectCardStarButton
-                    project={project}
-                    isUpdating={isUpdating}
-                    setIsUpdating={setIsUpdating}
-                    updateStarredProjects={updateStarredProjects}
-                />
-            </Card.Header>
-            <Card.Content></Card.Content>
-            <Card.Footer className="flex items-center gap-1.5">
-                {columns.map((column) => (
-                    <ProjectCardColumn key={createShortUUID()} column={column} setColumns={setColumns} />
-                ))}
-            </Card.Footer>
-        </Card.Root>
+        <ModelRegistry.Project.Provider model={project}>
+            <Card.Root className="cursor-pointer" onClick={toBoard}>
+                <Card.Header className="relative block pt-5">
+                    <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
+                        {t(projectType === "Other" ? "common.Other" : `project.types.${projectType}`)}
+                    </Card.Title>
+                    <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">{title}</Card.Title>
+                    <ProjectItemStarButton isUpdating={isUpdating} setIsUpdating={setIsUpdating} updateStarredProjects={updateStarredProjects} />
+                </Card.Header>
+                <Card.Content></Card.Content>
+                <Card.Footer className="flex items-center gap-1.5">
+                    {columns.map((column) => (
+                        <ProjectItemColumn key={createShortUUID()} column={column} setColumns={setColumns} />
+                    ))}
+                </Card.Footer>
+            </Card.Root>
+        </ModelRegistry.Project.Provider>
     );
 });
 
-export default ProjectCard;
+export default ProjectItem;

@@ -81,7 +81,7 @@ function BoardSettingsCronBotScheduleAddButton({
 
         Toast.Add.promise(promise, {
             loading: t("project.settings.Scheduling..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler({}, messageRef);
 

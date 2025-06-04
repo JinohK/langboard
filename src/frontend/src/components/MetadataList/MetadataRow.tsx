@@ -49,7 +49,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
 
         Toast.Add.promise(promise, {
             loading: t("common.Saving..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler(errorsMap(messageRef));
 
@@ -77,7 +77,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
 
         Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler(errorsMap(messageRef));
 

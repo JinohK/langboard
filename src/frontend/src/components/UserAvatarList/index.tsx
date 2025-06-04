@@ -41,41 +41,43 @@ export interface IUserAvatarListProps extends Omit<React.ComponentProps<typeof F
     spacing?: "1" | "2" | "3" | "4" | "5" | "none";
     listAlign?: TUserAvatarProps["listAlign"];
     projectUID?: string;
+    avatarHoverProps?: TUserAvatarProps["hoverProps"];
 }
 
 export const UserAvatarList = memo(
-    forwardRef<HTMLDivElement, IUserAvatarListProps>(
-        ({ maxVisible, className, users, size = "default", spacing = "2", listAlign, projectUID, ...props }: IUserAvatarListProps, ref) => {
-            const moreUsersCount = users.length - maxVisible;
+    forwardRef<HTMLDivElement, IUserAvatarListProps>((props: IUserAvatarListProps, ref) => {
+        const { maxVisible, className, users, size = "default", spacing = "2", listAlign, projectUID, avatarHoverProps, ...flexProps } = props;
+        const moreUsersCount = users.length - maxVisible;
 
-            return (
-                <Flex position="relative" className={cn("rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...props}>
-                    {users.slice(0, maxVisible).map((user) => (
-                        <UserAvatar.Root
-                            key={`user-avatar-${user.username}-${createShortUUID()}`}
-                            user={user}
-                            avatarSize={size}
-                            listAlign={listAlign}
-                            className="hover:z-50"
-                        >
-                            <UserAvatarDefaultList user={user} projectUID={projectUID} />
-                        </UserAvatar.Root>
-                    ))}
-                    {moreUsersCount > 0 && <UserAvatarMoreList users={users} maxVisible={maxVisible} size={size} listAlign={listAlign} />}
-                </Flex>
-            );
-        }
-    )
+        return (
+            <Flex position="relative" className={cn("rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...flexProps}>
+                {users.slice(0, maxVisible).map((user) => (
+                    <UserAvatar.Root
+                        key={`user-avatar-${user.username}-${createShortUUID()}`}
+                        user={user}
+                        avatarSize={size}
+                        listAlign={listAlign}
+                        className="hover:z-50"
+                        hoverProps={avatarHoverProps}
+                    >
+                        <UserAvatarDefaultList user={user} projectUID={projectUID} />
+                    </UserAvatar.Root>
+                ))}
+                {moreUsersCount > 0 && <UserAvatarMoreList {...props} />}
+            </Flex>
+        );
+    })
 );
 
 export interface IUserAvatarBadgeListProps extends Omit<IUserAvatarListProps, "size" | "spacing"> {}
 
 export const UserAvatarBadgeList = memo(
-    forwardRef<HTMLDivElement, IUserAvatarBadgeListProps>(({ maxVisible, className, users, listAlign, projectUID, ...props }, ref) => {
+    forwardRef<HTMLDivElement, IUserAvatarBadgeListProps>((props, ref) => {
+        const { maxVisible, className, users, listAlign, projectUID, avatarHoverProps, ...flexProps } = props;
         const moreUsersCount = users.length - maxVisible;
 
         return (
-            <Flex items="center" gap="1.5" position="relative" className={className} ref={ref} {...props}>
+            <Flex items="center" gap="1.5" position="relative" className={className} ref={ref} {...flexProps}>
                 {users.slice(0, maxVisible).map((user) => (
                     <UserAvatar.Root
                         key={`user-avatar-${user.username}-${createShortUUID()}`}
@@ -89,32 +91,28 @@ export const UserAvatarBadgeList = memo(
                             "after:rounded-xl after:size-full"
                         )}
                         nameClassName="relative z-10"
+                        hoverProps={avatarHoverProps}
                     >
                         <UserAvatarDefaultList user={user} projectUID={projectUID} />
                     </UserAvatar.Root>
                 ))}
-                {moreUsersCount > 0 && <UserAvatarMoreList users={users} maxVisible={maxVisible} size="sm" listAlign={listAlign} isBadge />}
+                {moreUsersCount > 0 && <UserAvatarMoreList {...props} isBadge size="sm" />}
             </Flex>
         );
     })
 );
 
-interface IUserAvatarMoreList {
-    users: User.TModel[];
-    maxVisible: number;
-    size?: TUserAvatarProps["avatarSize"];
-    listAlign?: TUserAvatarProps["listAlign"];
+interface IUserAvatarMoreList extends IUserAvatarListProps {
     isBadge?: bool;
-    projectUID?: string;
 }
 
-const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign, isBadge, projectUID }: IUserAvatarMoreList) => {
+const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlign, isBadge, projectUID, avatarHoverProps }: IUserAvatarMoreList) => {
     const [isOpened, setIsOpened] = useState(false);
     const moreUsersCount = users.length - maxVisible;
     const moreUsersCountText = moreUsersCount > 99 ? "99" : moreUsersCount;
 
     return (
-        <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
+        <HoverCard.Root open={isOpened} onOpenChange={setIsOpened} {...avatarHoverProps}>
             <HoverCard.Trigger asChild>
                 {isBadge ? (
                     <Box cursor="pointer" onClick={() => setIsOpened(!isOpened)}>
@@ -135,7 +133,7 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
                     </Button>
                 )}
             </HoverCard.Trigger>
-            <HoverCard.Content className="z-50 w-auto p-0" align="end">
+            <HoverCard.Content className="z-50 w-auto p-0" align="end" {...avatarHoverProps}>
                 <ScrollArea.Root>
                     <Box maxH="52" minW="40" py="1">
                         {users.slice(maxVisible).map((user, i) => (
@@ -147,6 +145,7 @@ const UserAvatarMoreList = memo(({ maxVisible, users, size = "default", listAlig
                                     listAlign={listAlign}
                                     withName
                                     labelClassName="justify-start gap-2 px-3 py-1 hover:bg-accent/70 cursor-pointer"
+                                    hoverProps={avatarHoverProps}
                                 >
                                     <UserAvatarDefaultList user={user} projectUID={projectUID} />
                                 </UserAvatar.Root>

@@ -8,7 +8,7 @@ function BotList() {
     return (
         <Flex direction="col" gap="3">
             {bots.map((bot) => (
-                <Bot key={bot.uid} bot={bot} />
+                <Bot key={bot.uid} data-id={bot.uid} bot={bot} />
             ))}
         </Flex>
     );

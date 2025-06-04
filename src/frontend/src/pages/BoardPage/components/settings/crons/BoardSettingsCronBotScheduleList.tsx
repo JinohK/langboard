@@ -11,11 +11,11 @@ import BoardSettingsCronBotScheduleAddButton from "@/pages/BoardPage/components/
 import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
 import { useCallback, useEffect, useState } from "react";
 
-export interface IBOardSettingsCronBotScheduleListProps {
+export interface IBoardSettingsCronBotScheduleListProps {
     bot: BotModel.TModel;
 }
 
-function BoardSettingsCronBotScheduleList({ bot }: IBOardSettingsCronBotScheduleListProps): JSX.Element {
+function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotScheduleListProps): JSX.Element {
     const { socket, project } = useBoardSettings();
     const { mutateAsync, isLastPage, isFetchingRef } = useGetProjectBotSchedules(project.uid, bot.uid);
     const [copiedForm, setCopiedForm] = useState<IBotScheduleFormMap | undefined>(undefined);

@@ -1,5 +1,6 @@
 import { Checkbox, Table } from "@/components/base";
 import { GlobalRelationshipType } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import GlobalRelationshipChildName from "@/pages/SettingsPage/components/relationships/GlobalRelationshipChildName";
 import GlobalRelationshipDescription from "@/pages/SettingsPage/components/relationships/GlobalRelationshipDescription";
 import GlobalRelationshipParentName from "@/pages/SettingsPage/components/relationships/GlobalRelationshipParentName";
@@ -24,14 +25,16 @@ const GlobalRelationshipRow = memo(
         };
 
         return (
-            <Table.Row>
-                <Table.Cell className="w-12 p-0 text-center">
-                    <Checkbox checked={selectedGlobalRelationships.some((value) => value === globalRelationship.uid)} onClick={toggleSelect} />
-                </Table.Cell>
-                <GlobalRelationshipParentName globalRelationship={globalRelationship} />
-                <GlobalRelationshipChildName globalRelationship={globalRelationship} />
-                <GlobalRelationshipDescription globalRelationship={globalRelationship} />
-            </Table.Row>
+            <ModelRegistry.GlobalRelationshipType.Provider model={globalRelationship}>
+                <Table.Row>
+                    <Table.Cell className="w-12 p-0 text-center">
+                        <Checkbox checked={selectedGlobalRelationships.some((value) => value === globalRelationship.uid)} onClick={toggleSelect} />
+                    </Table.Cell>
+                    <GlobalRelationshipParentName />
+                    <GlobalRelationshipChildName />
+                    <GlobalRelationshipDescription />
+                </Table.Row>
+            </ModelRegistry.GlobalRelationshipType.Provider>
         );
     }
 );

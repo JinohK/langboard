@@ -5,6 +5,7 @@ import { AuthUser } from "@/core/models";
 import { TNotificationSpecificType } from "@/core/models/notification.type";
 
 export interface IBaseNotificationSettingPopoverProps {
+    modal?: bool;
     triggerProps?: React.ComponentProps<typeof Button>;
     iconProps?: Omit<ILucideIconProps, "icon">;
     showTriggerText?: bool;

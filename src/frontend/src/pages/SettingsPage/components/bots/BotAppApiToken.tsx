@@ -3,18 +3,15 @@ import CopyInput from "@/components/CopyInput";
 import useGenerateNewBotApiToken from "@/controllers/api/settings/bots/useGenerateNewBotApiToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotAppApiTokenProps {
-    bot: BotModel.TModel;
-}
-
-const BotAppApiToken = memo(({ bot }: IBotAppApiTokenProps) => {
+const BotAppApiToken = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const appApiToken = bot.useField("app_api_token");
     const { mutateAsync } = useGenerateNewBotApiToken(bot);

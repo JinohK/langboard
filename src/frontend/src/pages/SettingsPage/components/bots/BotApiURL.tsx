@@ -2,19 +2,16 @@ import { Box, Floating, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { isValidURL } from "@/core/utils/StringUtils";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotApiURLProps {
-    bot: BotModel.TModel;
-}
-
-const BotApiURL = memo(({ bot }: IBotApiURLProps) => {
+const BotApiURL = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const apiURL = bot.useField("api_url");
     const { mutateAsync } = useUpdateBot(bot);

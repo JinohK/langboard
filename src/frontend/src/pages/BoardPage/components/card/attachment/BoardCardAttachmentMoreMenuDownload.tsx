@@ -1,12 +1,14 @@
 import { DropdownMenu, Toast } from "@/components/base";
+import { useMoreMenu } from "@/components/MoreMenu/Provider";
 import useDownloadFile from "@/core/hooks/useDownloadFile";
-import { IBaseBoardCardAttachmentMoreProps } from "@/pages/BoardPage/components/card/attachment/types";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { IBoardCardAttachmentContextParams } from "@/pages/BoardPage/components/card/attachment/types";
 import { useTranslation } from "react-i18next";
 
-export interface IBoardCardAttachmentMoreDownloadProps extends Pick<IBaseBoardCardAttachmentMoreProps, "attachment" | "setIsMoreMenuOpened"> {}
-
-function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IBoardCardAttachmentMoreDownloadProps): JSX.Element {
+function BoardCardAttachmentMoreMenuDownload(): JSX.Element {
     const [t] = useTranslation();
+    const { model: attachment } = ModelRegistry.ProjectCardAttachment.useContext<IBoardCardAttachmentContextParams>();
+    const { setIsOpened } = useMoreMenu();
     const name = attachment.useField("name");
     const url = attachment.useField("url");
     const { download, isDownloading } = useDownloadFile(
@@ -17,10 +19,10 @@ function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IB
                 Toast.Add.error(t("errors.Download failed."));
             },
             onFinally: () => {
-                setIsMoreMenuOpened(false);
+                setIsOpened(false);
             },
         },
-        [setIsMoreMenuOpened]
+        [setIsOpened]
     );
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -40,4 +42,4 @@ function BoardCardAttachmentMoreDownload({ attachment, setIsMoreMenuOpened }: IB
     );
 }
 
-export default BoardCardAttachmentMoreDownload;
+export default BoardCardAttachmentMoreMenuDownload;

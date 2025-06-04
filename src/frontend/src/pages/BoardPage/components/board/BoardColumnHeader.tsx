@@ -1,7 +1,7 @@
 import { Card } from "@/components/base";
 import { ProjectColumn } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
-import BoardColumnMore from "@/pages/BoardPage/components/board/BoardColumnMore";
+import BoardColumnMoreMenu from "@/pages/BoardPage/components/board/BoardColumnMoreMenu";
 import BoardColumnTitle from "@/pages/BoardPage/components/board/BoardColumnTitle";
 import { memo, useState } from "react";
 
@@ -21,7 +21,7 @@ const BoardColumnHeader = memo(({ isDragging, column, headerProps }: IBoardColum
             {...headerProps}
         >
             <BoardColumnTitle isDragging={isDragging} column={column} isEditingState={isEditingState} />
-            <BoardColumnMore column={column} isEditingState={isEditingState} />
+            <BoardColumnMoreMenu column={column} isEditingState={isEditingState} />
         </Card.Header>
     );
 });

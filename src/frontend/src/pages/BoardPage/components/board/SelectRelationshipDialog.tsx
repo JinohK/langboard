@@ -1,19 +1,21 @@
 import { Box, Button, Dialog, Flex, ScrollArea } from "@/components/base";
-import { ProjectCard } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface ISelectRelationshipDialogProps {
-    card: ProjectCard.TModel;
     isOpened: bool;
     setIsOpened: (isOpened: bool) => void;
 }
 
-const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
+const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
+    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
+    const { setIsCollapseOpened } = params;
     const { selectCardViewType, selectedRelationshipUIDs, setCardSelection } = useBoardRelationshipController();
     const { globalRelationshipTypes } = useBoard();
     const [t] = useTranslation();
@@ -32,7 +34,7 @@ const SelectRelationshipDialog = memo(({ card, isOpened, setIsOpened }: ISelectR
 
     const changeIsOpened = (isOpened: bool) => {
         if (selectedRelationshipUID && !isOpened) {
-            card.isOpenedInBoardColumn = true;
+            setIsCollapseOpened(true);
         }
         setCardSelection(card.uid, selectedRelationshipUID);
         setIsOpened(isOpened);

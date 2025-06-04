@@ -20,7 +20,7 @@ export interface IAllScopedSwitchListProps extends IBaseNotificationSettingPopov
     type?: TNotificationSpecificType;
 }
 
-const AllScopedSwitchList = memo(({ currentUser, type, triggerProps, iconProps, onlyFlex, onlyPopover }: IAllScopedSwitchListProps) => {
+const AllScopedSwitchList = memo(({ modal, currentUser, type, triggerProps, iconProps, onlyFlex, onlyPopover }: IAllScopedSwitchListProps) => {
     const [t] = useTranslation();
     const unsubscriptions = currentUser.useField("notification_unsubs");
     const subscribedChannelMap = useMemo(
@@ -71,7 +71,7 @@ const AllScopedSwitchList = memo(({ currentUser, type, triggerProps, iconProps, 
                 ))}
             </Box>
             <Box display={onlyFlex ? "hidden" : onlyPopover ? "block" : { sm: "hidden" }}>
-                <Popover.Root>
+                <Popover.Root modal={modal}>
                     <Popover.Trigger asChild>
                         <Button {...triggerProps}>
                             <IconComponent icon="bell-ring" {...iconProps} />

@@ -1,6 +1,6 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { forwardRef, memo, useState } from "react";
 import { Avatar, Box, Card, Flex, IconComponent, Popover, Separator } from "@/components/base";
 import { IAvatarProps } from "@/components/base/Avatar";
 import { User } from "@/core/models";
@@ -9,7 +9,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
-import TypeUtils from "@/core/utils/TypeUtils";
+import useHoverEffect from "@/core/hooks/useHoverEffect";
 
 interface IBaseUserAvatarProps {
     user: User.TModel;
@@ -23,6 +23,7 @@ interface IBaseUserAvatarProps {
     noAvatar?: bool;
     customName?: React.ReactNode;
     customTrigger?: React.ReactNode;
+    hoverProps?: Record<string, string>;
 }
 
 interface IUserAvatarPropsWithName extends IBaseUserAvatarProps {
@@ -54,14 +55,16 @@ interface IUserAvatarPropsWithCustomTrigger extends IBaseUserAvatarProps {
 
 export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithoutName | IUserAvatarPropsWithCustomTrigger;
 
+const HOVER_DELAY = 500;
+const HOVER_USER_UID_ATTR = "data-avatar-user";
 export const getAvatarHoverCardAttrs = (user: User.TModel): Record<string, string> => {
     return {
-        "data-avatar-user": user.uid,
+        [HOVER_USER_UID_ATTR]: user.uid,
     };
 };
 
 const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
-    const { user, children, listAlign, customTrigger } = props;
+    const { user, children, listAlign, customTrigger, hoverProps = {} } = props;
     const [isOpened, setIsOpened] = useState(false);
     const userType = user.useField("type");
     const firstname = user.useField("firstname");
@@ -73,62 +76,18 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
     const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
     const isDeletedUser = user.isDeletedUser(userType);
     const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
-    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const changeOpenedByHover = useCallback(() => {
-        if (isOpened) {
-            return;
-        }
+    const { onPointerEnter, onPointerLeave } = useHoverEffect({
+        isOpened,
+        setIsOpened,
+        scopeAttr: HOVER_USER_UID_ATTR,
+        expectedScopeValue: user.uid,
+        delay: HOVER_DELAY,
+    });
 
-        hoverTimeoutRef.current = setTimeout(() => {
-            setIsOpened(true);
-            if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
-                clearTimeout(hoverTimeoutRef.current);
-                hoverTimeoutRef.current = null;
-            }
-        }, 500);
-    }, [isOpened]);
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,
         "--avatar-text-color": textColor,
     };
-
-    useEffect(() => {
-        if (!isOpened) {
-            return;
-        }
-
-        let outTimeout: NodeJS.Timeout;
-        const mouseOutHandler = (e: MouseEvent) => {
-            const elementInScope = (e.target as Element)?.closest?.("[data-avatar-user]");
-            const attrValue = elementInScope?.getAttribute("data-avatar-user");
-            if (e.target !== document.documentElement && (!elementInScope || attrValue !== user.uid)) {
-                if (!outTimeout) {
-                    outTimeout = setTimeout(() => {
-                        setIsOpened(() => false);
-                        if (!TypeUtils.isNullOrUndefined(outTimeout)) {
-                            clearTimeout(outTimeout);
-                            outTimeout = undefined!;
-                        }
-                    }, 500);
-                }
-                return;
-            }
-
-            if (outTimeout) {
-                clearTimeout(outTimeout);
-                outTimeout = undefined!;
-            }
-        };
-
-        window.addEventListener("mouseover", mouseOutHandler);
-        return () => {
-            window.removeEventListener("mouseover", mouseOutHandler);
-            if (!TypeUtils.isNullOrUndefined(outTimeout)) {
-                clearTimeout(outTimeout);
-                outTimeout = undefined!;
-            }
-        };
-    }, [isOpened]);
 
     let trigger;
     if (customTrigger) {
@@ -141,21 +100,17 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
         return <>{trigger}</>;
     }
 
+    const hoverAttrs = {
+        ...getAvatarHoverCardAttrs(user),
+        ...hoverProps,
+    };
+
     return (
-        <Popover.Root open={isOpened} onOpenChange={setIsOpened} {...getAvatarHoverCardAttrs(user)}>
-            <Popover.Trigger
-                onPointerEnter={changeOpenedByHover}
-                onPointerLeave={() => {
-                    if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
-                        clearTimeout(hoverTimeoutRef.current);
-                        hoverTimeoutRef.current = null;
-                    }
-                }}
-                asChild
-            >
+        <Popover.Root open={isOpened} onOpenChange={setIsOpened} {...hoverAttrs}>
+            <Popover.Trigger onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} asChild>
                 <span>{trigger}</span>
             </Popover.Trigger>
-            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign} {...getAvatarHoverCardAttrs(user)}>
+            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign} {...hoverAttrs}>
                 <Card.Root className="relative">
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">

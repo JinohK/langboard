@@ -3,19 +3,16 @@ import MultiSelect from "@/components/MultiSelect";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { isValidIpv4OrRnage } from "@/core/utils/StringUtils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotIpWhitelistProps {
-    bot: BotModel.TModel;
-}
-
-const BotIpWhitelist = memo(({ bot }: IBotIpWhitelistProps) => {
+const BotIpWhitelist = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const ipWhitelist = bot.useField("ip_whitelist");
     const [isValidating, setIsValidating] = useState(false);

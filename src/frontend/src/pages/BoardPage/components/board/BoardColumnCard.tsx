@@ -1,27 +1,28 @@
-import { Box, Button, Card, Checkbox, Collapsible, Flex, HoverCard, IconComponent, ScrollArea, Separator, Skeleton } from "@/components/base";
-import { PlateEditor } from "@/components/Editor/plate-editor";
-import { UserAvatarList, SkeletonUserAvatarList, UserAvatarBadgeList } from "@/components/UserAvatarList";
+import { Box, Button, Card, Collapsible, Flex, IconComponent, Popover, Skeleton } from "@/components/base";
+import { UserAvatarList, SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import { BotModel, Project, ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
+import { Project, ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
 import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
-import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
+import { LabelModelBadge } from "@/components/LabelBadge";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
+import useHoverEffect from "@/core/hooks/useHoverEffect";
+import BoardColumnCardPreview from "@/pages/BoardPage/components/board/BoardColumnCardPreview";
 
 export interface IBoardColumnCardProps {
     card: ProjectCard.TModel;
-    closeHoverCardRef?: React.RefObject<(() => void) | null>;
     isOverlay?: bool;
 }
 
@@ -47,15 +48,37 @@ export function SkeletonBoardColumnCard() {
     );
 }
 
-function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCardProps) {
+const HOVER_DELAY = 500;
+const HOVER_CARD_UID_ATTR = "data-card-uid";
+
+const BoardColumnCardVariants = tv({
+    base: "cursor-pointer hover:ring-2 ring-primary touch-none",
+    variants: {
+        dragging: {
+            over: "ring-2 opacity-30",
+            overlay: "ring-2",
+        },
+    },
+});
+
+function BoardColumnCard({ card, isOverlay }: IBoardColumnCardProps) {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
-    const { hasRoleAction } = useBoard();
-    const [isHoverCardOpened, setIsHoverCardOpened] = useState(false);
-    const [isHoverCardHidden, setIsHoverCardHidden] = useState(false);
+    const { filters, hasRoleAction, navigateWithFilters } = useBoard();
     const description = card.useField("description");
     const cardMembers = card.useForeignField<User.TModel>("members");
+    const [isCollapseOpened, setIsCollapseOpened] = useState(false);
+    const isHoverCardOpened = card.useField("isHoverCardOpened");
     const labels = card.useForeignField<ProjectLabel.TModel>("labels");
     const checklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const { onPointerEnter: onCardPointerEnter, onPointerLeave: onCardPointerLeave } = useHoverEffect({
+        isOpened: isHoverCardOpened,
+        setIsOpened: (opened) => {
+            card.isHoverCardOpened = opened;
+        },
+        scopeAttr: HOVER_CARD_UID_ATTR,
+        expectedScopeValue: card.uid,
+        delay: HOVER_DELAY,
+    });
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: card.uid,
         data: {
@@ -88,31 +111,19 @@ function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCar
         },
         [listeners]
     );
-    const style = useMemo(() => {
-        return {
-            transition,
-            transform: CSS.Translate.toString(transform),
-        };
-    }, [transition, transform]);
-
-    const variants = tv({
-        base: "cursor-pointer hover:ring-2 ring-primary",
-        variants: {
-            dragging: {
-                over: "ring-2 opacity-30",
-                overlay: "ring-2",
-            },
-        },
-    });
     const props = useMemo<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>>(() => {
-        let newProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> = {};
+        let newProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> = {
+            onPointerEnter: onCardPointerEnter,
+            onPointerLeave: onCardPointerLeave,
+        };
         if (hasRoleAction(Project.ERoleAction.CardUpdate) && !selectCardViewType) {
             newProps = {
+                ...newProps,
                 style: {
-                    ...(style ?? {}),
-                    touchAction: "none",
+                    transition,
+                    transform: CSS.Translate.toString(transform),
                 },
-                className: variants({
+                className: BoardColumnCardVariants({
                     dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
                 }),
                 onMouseDown: onPointerStart("mouse"),
@@ -123,6 +134,7 @@ function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCar
             };
         } else {
             newProps = {
+                ...newProps,
                 className: cn(
                     !selectCardViewType || !isDisabledCard(card.uid) ? "cursor-pointer hover:ring-2 ring-primary" : "cursor-not-allowed",
                     !!selectCardViewType && currentCardUIDRef.current === card.uid && "hidden",
@@ -133,7 +145,8 @@ function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCar
         }
         return newProps;
     }, [
-        style,
+        transition,
+        transform,
         onPointerStart,
         onKeyDown,
         attributes,
@@ -146,80 +159,65 @@ function BoardColumnCard({ card, closeHoverCardRef, isOverlay }: IBoardColumnCar
         isOverlay,
     ]);
 
-    useEffect(() => {
-        card.isOpenedInBoardColumn = false;
-    }, []);
+    const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {
+        if (!filters[relationshipType]) {
+            filters[relationshipType] = [];
+        }
 
-    let cardInner = <BoardColumnCardCollapsible isDragging={isDragging} card={card} labels={labels} setIsHoverCardHidden={setIsHoverCardHidden} />;
+        if (filters[relationshipType].includes(card.uid)) {
+            filters[relationshipType] = filters[relationshipType].filter((id) => id !== card.uid);
+        } else {
+            filters[relationshipType].push(card.uid);
+        }
 
-    if (!isOverlay && !isDragging && (description.content.trim().length || cardMembers.length || labels.length || checklists.length)) {
-        cardInner = (
-            <HoverCard.Root
-                open={isHoverCardOpened}
-                onOpenChange={(opened) => {
-                    setIsHoverCardOpened(opened);
-                    if (closeHoverCardRef) {
-                        closeHoverCardRef.current = opened ? () => setIsHoverCardOpened(false) : null;
-                    }
-                }}
-            >
-                <HoverCard.Trigger asChild>
-                    <Box>{cardInner}</Box>
-                </HoverCard.Trigger>
-                <HoverCard.Content
-                    side="right"
-                    align="end"
-                    className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
-                    {...{ [DISABLE_DRAGGING_ATTR]: "" }}
-                    hidden={isHoverCardHidden}
-                >
-                    <BoardColumnCardPreview card={card} labels={labels} cardMembers={cardMembers} checklists={checklists} />
-                </HoverCard.Content>
-            </HoverCard.Root>
-        );
-    }
+        navigateWithFilters();
+    };
 
-    return <Box {...props}>{cardInner}</Box>;
+    const canViewPreview =
+        !isOverlay && !isDragging && (!!description.content.trim().length || !!cardMembers.length || !!labels.length || !!checklists.length);
+
+    return (
+        <ModelRegistry.ProjectCard.Provider model={card} params={{ HOVER_CARD_UID_ATTR, isCollapseOpened, setIsCollapseOpened, setFilters }}>
+            <Box {...props} {...{ [HOVER_CARD_UID_ATTR]: card.uid }}>
+                <Popover.Root open={isHoverCardOpened && canViewPreview}>
+                    <Popover.Trigger asChild>
+                        <Box>
+                            <BoardColumnCardCollapsible isDragging={isDragging} labels={labels} />
+                        </Box>
+                    </Popover.Trigger>
+                    <Popover.Content
+                        side="right"
+                        align="start"
+                        className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
+                        {...{ [DISABLE_DRAGGING_ATTR]: "", [HOVER_CARD_UID_ATTR]: card.uid }}
+                    >
+                        <BoardColumnCardPreview labels={labels} cardMembers={cardMembers} checklists={checklists} />
+                    </Popover.Content>
+                </Popover.Root>
+            </Box>
+        </ModelRegistry.ProjectCard.Provider>
+    );
 }
 BoardColumnCard.displayName = "Board.ColumnCard";
 
 interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;
-    card: IBoardColumnCardProps["card"];
     labels: ProjectLabel.TModel[];
-    setIsHoverCardHidden: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHidden }: IBoardColumnCardCollapsibleProps) {
+function BoardColumnCardCollapsible({ isDragging, labels }: IBoardColumnCardCollapsibleProps) {
     const { selectCardViewType, selectedRelationshipUIDs, currentCardUIDRef, isDisabledCard } = useBoardRelationshipController();
     const { project, filters, cardsMap, globalRelationshipTypes, navigateWithFilters } = useBoard();
     const [t] = useTranslation();
+    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
+    const { isCollapseOpened, setIsCollapseOpened } = params;
     const title = card.useField("title");
     const commentCount = card.useField("count_comment");
-    const isOpenedInBoardColumn = card.useField("isOpenedInBoardColumn");
     const cardRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
         [selectCardViewType, selectedRelationshipUIDs]
-    );
-    const onCardPointerOut = useCallback(
-        (e: React.PointerEvent<HTMLDivElement>) => {
-            const target = e.target as HTMLElement;
-            if (!target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                setIsHoverCardHidden(false);
-            }
-        },
-        [setIsHoverCardHidden]
-    );
-    const onCollapsiablePointerEnter = useCallback(
-        (e: React.PointerEvent) => {
-            const target = e.target as HTMLElement;
-            if (target.closest(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                setIsHoverCardHidden(true);
-            }
-        },
-        [setIsHoverCardHidden]
     );
     const openCard = useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
@@ -285,36 +283,28 @@ function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHi
     }, [globalRelationshipTypes, filters, cardRelationships, selectedRelationship]);
 
     useEffect(() => {
-        if (selectCardViewType) {
-            if (selectedRelationship) {
-                card.isOpenedInBoardColumn = true;
-            }
+        if (selectCardViewType && selectedRelationship) {
+            setIsCollapseOpened(true);
         }
     }, [selectCardViewType]);
 
     useEffect(() => {
         if (presentableRelationships.length) {
-            card.isOpenedInBoardColumn = true;
+            setIsCollapseOpened(true);
         }
     }, [filters]);
 
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
-        onPointerEnter: onCollapsiablePointerEnter,
     };
 
-    const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {
-        if (!filters[relationshipType]) {
-            filters[relationshipType] = [];
-        }
-
-        if (filters[relationshipType].includes(card.uid)) {
-            filters[relationshipType] = filters[relationshipType].filter((id) => id !== card.uid);
-        } else {
-            filters[relationshipType].push(card.uid);
-        }
-
-        navigateWithFilters();
+    const handleOpenCollapsible = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsCollapseOpened(!isCollapseOpened);
+        setTimeout(() => {
+            card.isHoverCardOpened = true;
+        }, 0);
     };
 
     return (
@@ -322,17 +312,11 @@ function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHi
             <Card.Root
                 id={`board-card-${card.uid}`}
                 className={cn("relative", !!selectCardViewType && isDisabledCard(card.uid) ? "cursor-not-allowed" : "cursor-pointer")}
-                onPointerOut={onCardPointerOut}
                 onClick={openCard}
             >
-                <Collapsible.Root
-                    open={isOpenedInBoardColumn}
-                    onOpenChange={(opened) => {
-                        card.isOpenedInBoardColumn = opened;
-                    }}
-                >
+                <Collapsible.Root open={isCollapseOpened} onOpenChange={setIsCollapseOpened}>
                     <Card.Header className="relative block space-y-0 py-4">
-                        {isOpenedInBoardColumn && !!labels.length && (
+                        {isCollapseOpened && !!labels.length && (
                             <Flex items="center" gap="1" mb="1.5" wrap>
                                 {labels.map((label) => (
                                     <LabelModelBadge key={`board-card-label-${label.uid}`} model={label} />
@@ -340,18 +324,17 @@ function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHi
                             </Flex>
                         )}
                         <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] break-all leading-tight">{title}</Card.Title>
-                        <Collapsible.Trigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="absolute right-2.5 top-2.5 mt-0 transition-all [&[data-state=open]>svg]:rotate-180"
-                                size="icon-sm"
-                                title={t(`common.${isOpenedInBoardColumn ? "Collapse" : "Expand"}`)}
-                                titleSide="top"
-                                {...attributes}
-                            >
-                                <IconComponent icon="chevron-down" size="4" />
-                            </Button>
-                        </Collapsible.Trigger>
+                        <Button
+                            variant="ghost"
+                            className="absolute right-2.5 top-2.5 mt-0"
+                            size="icon-sm"
+                            title={t(`common.${isCollapseOpened ? "Collapse" : "Expand"}`)}
+                            titleSide="top"
+                            onClick={handleOpenCollapsible}
+                            {...attributes}
+                        >
+                            <IconComponent icon="chevron-down" size="4" className={cn("transition-all", isCollapseOpened && "rotate-180")} />
+                        </Button>
                     </Card.Header>
                     <Collapsible.Content
                         className={cn(
@@ -370,117 +353,28 @@ function BoardColumnCardCollapsible({ isDragging, card, labels, setIsHoverCardHi
                                 ))}
                             </Card.Content>
                         )}
-                        <BoardColumnCardRelationship card={card} setFilters={setFilters} attributes={attributes} />
+                        <BoardColumnCardRelationship attributes={attributes} />
                         <Card.Footer className="flex items-end justify-between gap-1.5 pb-4">
                             <Flex items="center" gap="2">
                                 <IconComponent icon="message-square" size="4" className="text-secondary" strokeWidth="4" />
                                 <span>{commentCount}</span>
                             </Flex>
-                            <UserAvatarList maxVisible={3} users={card.members} size="sm" {...attributes} className="cursor-default" />
+                            <UserAvatarList
+                                maxVisible={3}
+                                users={card.members}
+                                projectUID={project.uid}
+                                size="sm"
+                                {...attributes}
+                                className="cursor-default"
+                            />
                         </Card.Footer>
                     </Collapsible.Content>
                 </Collapsible.Root>
             </Card.Root>
-            <SelectRelationshipDialog card={card} isOpened={isSelectRelationshipDialogOpened} setIsOpened={setIsSelectRelationshipDialogOpened} />
+            <SelectRelationshipDialog isOpened={isSelectRelationshipDialogOpened} setIsOpened={setIsSelectRelationshipDialogOpened} />
         </>
     );
 }
 BoardColumnCardCollapsible.displayName = "Board.ColumnCard.Collapsible";
-
-interface IBoardColumnCardPreviewProps {
-    card: ProjectCard.TModel;
-    labels: ProjectLabel.TModel[];
-    cardMembers: User.TModel[];
-    checklists: ProjectChecklist.TModel[];
-}
-
-function BoardColumnCardPreview({ card, labels, cardMembers, checklists: flatChecklists }: IBoardColumnCardPreviewProps) {
-    const { project, currentUser } = useBoard();
-    const projectMembers = project.useForeignField<User.TModel>("members");
-    const projectBots = project.useForeignField<BotModel.TModel>("bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
-    const description = card.useField("description");
-    const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
-    const [isOpened, setIsOpened] = useState(false);
-
-    return (
-        <Flex direction="col" gap="1.5">
-            {!!labels.length && (
-                <Flex items="center" gap="1.5">
-                    {labels.slice(0, 2).map((label) => (
-                        <LabelModelBadge key={`board-card-preview-label-${label.uid}`} model={label} />
-                    ))}
-                    {labels.length > 2 && (
-                        <HoverCard.Root open={isOpened} onOpenChange={setIsOpened}>
-                            <HoverCard.Trigger asChild>
-                                <Box cursor="pointer" onClick={() => setIsOpened(!isOpened)}>
-                                    <LabelBadge
-                                        name={`+${labels.length - 2}`}
-                                        color="hsl(var(--secondary))"
-                                        textColor="hsl(var(--secondary-foreground))"
-                                        noTooltip
-                                    />
-                                </Box>
-                            </HoverCard.Trigger>
-                            <HoverCard.Content className="z-50 w-auto p-0" align="end">
-                                <ScrollArea.Root>
-                                    <Box maxH="52" minW="40" py="1">
-                                        {labels.slice(2).map((label, i) => (
-                                            <Fragment key={`board-card-preview-label-${label.uid}`}>
-                                                {i !== 0 && <Separator className="my-1 h-px bg-muted" />}
-                                                <BoardLabelListItem label={label} />
-                                            </Fragment>
-                                        ))}
-                                    </Box>
-                                </ScrollArea.Root>
-                            </HoverCard.Content>
-                        </HoverCard.Root>
-                    )}
-                </Flex>
-            )}
-            {!!cardMembers.length && <UserAvatarBadgeList users={cardMembers} maxVisible={2} listAlign="start" />}
-            {!!description.content.trim().length && (
-                <ScrollArea.Root>
-                    <Box p="4" className="max-h-48 break-all [&_img]:max-w-full">
-                        <PlateEditor
-                            value={description}
-                            mentionables={mentionables}
-                            currentUser={currentUser}
-                            readOnly
-                            editorType="view"
-                            form={{ project_uid: project.uid }}
-                        />
-                    </Box>
-                </ScrollArea.Root>
-            )}
-            {!!checklists.length && (
-                <Box>
-                    {checklists.map((checklist) => (
-                        <Flex key={`board-card-preview-checklist-${checklist.uid}`} items="center" gap="1.5">
-                            <BoardColumnCardPreviewChecklist checklist={checklist} />
-                        </Flex>
-                    ))}
-                    {flatChecklists.length > 1 && (
-                        <Box mt="-2" ml="0.5">
-                            ...
-                        </Box>
-                    )}
-                </Box>
-            )}
-        </Flex>
-    );
-}
-BoardColumnCardPreview.displayName = "Board.ColumnCard.Preview";
-
-const BoardColumnCardPreviewChecklist = memo(({ checklist }: { checklist: ProjectChecklist.TModel }) => {
-    const isChecked = checklist.useField("is_checked");
-
-    return (
-        <Flex items="center" gap="1.5">
-            <Checkbox checked={isChecked} disabled />
-            <span className="text-sm">{checklist.title}</span>
-        </Flex>
-    );
-});
 
 export default BoardColumnCard;

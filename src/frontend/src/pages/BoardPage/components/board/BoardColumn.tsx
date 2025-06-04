@@ -15,7 +15,7 @@ import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardCo
 import BoardColumnCard, { IBoardColumnCardProps, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useCallback, useMemo, useReducer, useRef } from "react";
+import { memo, useCallback, useMemo, useReducer } from "react";
 import { tv } from "tailwind-variants";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
@@ -74,7 +74,6 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
     const sortedCards = columnCards.sort((a, b) => a.order - b.order);
     const cardUIDs = useMemo(() => sortedCards.map((card) => card.uid), [sortedCards]);
     const { items: cards, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: sortedCards, size: PAGE_SIZE, updater });
-    const closeHoverCardRef = useRef<() => void>(null);
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
     const columnId = `board-column-${column.uid}`;
     const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
@@ -226,7 +225,15 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
         <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={toLastPage}>
             <Card.Root {...rootProps}>
                 <BoardColumnHeader isDragging={isDragging} column={column} headerProps={headerProps} />
-                <ScrollArea.Root viewportId={columnId} mutable={updated} onScroll={() => closeHoverCardRef.current?.()}>
+                <ScrollArea.Root
+                    viewportId={columnId}
+                    mutable={updated}
+                    onScroll={() => {
+                        ProjectCard.Model.getModels((model) => model.isHoverCardOpened).forEach((model) => {
+                            model.isHoverCardOpened = false;
+                        });
+                    }}
+                >
                     <Card.Content
                         className={cn(
                             "flex flex-grow flex-col gap-2 p-3",
@@ -253,9 +260,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                             return null;
                                         }
 
-                                        return (
-                                            <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} closeHoverCardRef={closeHoverCardRef} />
-                                        );
+                                        return <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} />;
                                     })}
                                 </Flex>
                             </SortableContext>

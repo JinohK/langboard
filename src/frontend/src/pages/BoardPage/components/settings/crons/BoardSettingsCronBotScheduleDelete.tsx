@@ -40,7 +40,7 @@ function BoardSettingsCronBotScheduleDelete({
 
         Toast.Add.promise(promise, {
             loading: t("common.Deleting..."),
-            error: (error: unknown) => {
+            error: (error) => {
                 const messageRef = { message: "" };
                 const { handle } = setupApiErrorHandler({}, messageRef);
 

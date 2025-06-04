@@ -4,7 +4,7 @@ import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { formatDateDistance } from "@/core/utils/StringUtils";
-import BoardCardAttachmentMore from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMore";
+import BoardCardAttachmentMoreMenu from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMoreMenu";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
@@ -130,7 +130,7 @@ function BoardCardAttachment({ attachment, openPreview, isOverlay }: IBoardCardA
                     </Box>
                 </Box>
             </Flex>
-            {canEdit && <BoardCardAttachmentMore attachment={attachment} isValidating={isValidating} setIsValidating={setIsValidating} />}
+            {canEdit && <BoardCardAttachmentMoreMenu attachment={attachment} isValidating={isValidating} setIsValidating={setIsValidating} />}
         </Flex>
     );
 }

@@ -3,19 +3,15 @@ import useUpdateSetting from "@/controllers/api/settings/useUpdateSetting";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
-import { AppSettingModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IWebhookURLProps {
-    url: AppSettingModel.TModel;
-}
-
-const WebhookURL = memo(({ url }: IWebhookURLProps) => {
+function WebhookURL() {
     const [t] = useTranslation();
+    const { model: url } = ModelRegistry.AppSettingModel.useContext();
     const { navigateRef } = useAppSetting();
     const urlValue = url.useField("setting_value");
     const { mutateAsync } = useUpdateSetting(url);
@@ -86,6 +82,6 @@ const WebhookURL = memo(({ url }: IWebhookURLProps) => {
             )}
         </Table.Cell>
     );
-});
+}
 
 export default WebhookURL;

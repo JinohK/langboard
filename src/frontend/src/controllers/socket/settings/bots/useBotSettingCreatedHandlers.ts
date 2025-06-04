@@ -4,7 +4,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { BotModel } from "@/core/models";
 
 export interface IBotSettingCreatedRawResponse {
-    bot: BotModel.Interface;
+    setting_bot: BotModel.Interface;
 }
 
 const useBotSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) => {
@@ -16,7 +16,7 @@ const useBotSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<
             name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.CREATED,
             callback,
             responseConverter: (data) => {
-                BotModel.Model.fromObject(data.bot, true);
+                BotModel.Model.fromObject(data.setting_bot, true);
                 return {};
             },
         },

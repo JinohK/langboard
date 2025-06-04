@@ -1,6 +1,7 @@
 import { Button, Table } from "@/components/base";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ProjectCard } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -21,36 +22,39 @@ function CardRow({ card }: ICardRowProps): JSX.Element | null {
     const createdAt = useUpdateDateDistance(rawCreatedAt);
 
     return (
-        <Table.Row
-            className={cn(
-                "relative",
-                !!archivedAt &&
-                    cn(
-                        "text-muted-foreground [&_button]:text-primary/70",
-                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
-                        "after:h-px after:w-full after:bg-border"
-                    )
-            )}
-        >
-            <Table.Cell className="w-1/4 text-center">
-                <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
-                    {title}
-                </Button>
-            </Table.Cell>
-            <Table.Cell className="w-1/6 text-center">
-                <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
-                    {columnName}
-                </Button>
-            </Table.Cell>
-            <Table.Cell className="w-1/6 text-center">{createdAt}</Table.Cell>
-            <Table.Cell className="w-1/6 text-center">
-                <CardRowTimeTaken card={card} />
-            </Table.Cell>
-        </Table.Row>
+        <ModelRegistry.ProjectCard.Provider model={card}>
+            <Table.Row
+                className={cn(
+                    "relative",
+                    !!archivedAt &&
+                        cn(
+                            "text-muted-foreground [&_button]:text-primary/70",
+                            "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                            "after:h-px after:w-full after:bg-border"
+                        )
+                )}
+            >
+                <Table.Cell className="w-1/4 text-center">
+                    <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
+                        {title}
+                    </Button>
+                </Table.Cell>
+                <Table.Cell className="w-1/6 text-center">
+                    <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
+                        {columnName}
+                    </Button>
+                </Table.Cell>
+                <Table.Cell className="w-1/6 text-center">{createdAt}</Table.Cell>
+                <Table.Cell className="w-1/6 text-center">
+                    <CardRowTimeTaken />
+                </Table.Cell>
+            </Table.Row>
+        </ModelRegistry.ProjectCard.Provider>
     );
 }
 
-function CardRowTimeTaken({ card }: ICardRowProps) {
+function CardRowTimeTaken() {
+    const { model: card } = ModelRegistry.ProjectCard.useContext();
     const createdAt = card.useField("created_at");
     const archivedAt = card.useField("archived_at");
     const duration = useMemo(() => {

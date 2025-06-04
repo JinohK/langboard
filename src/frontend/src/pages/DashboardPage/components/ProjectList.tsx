@@ -1,6 +1,6 @@
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import ProjectCard, { SkeletonProjectCard } from "@/pages/DashboardPage/components/ProjectCard";
+import ProjectItem, { SkeletonProjectItem } from "@/pages/DashboardPage/components/ProjectItem";
 import { Box } from "@/components/base";
 import { Project } from "@/core/models";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
@@ -10,7 +10,7 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 export function SkeletonProjectList() {
     const skeletonCards = [];
     for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<SkeletonProjectCard key={createShortUUID()} />);
+        skeletonCards.push(<SkeletonProjectItem key={createShortUUID()} />);
     }
 
     return (
@@ -40,7 +40,7 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
     const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: projects, size: PAGE_SIZE, updater: scrollAreaUpdater });
     const skeletonCards = [];
     for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<SkeletonProjectCard key={createShortUUID()} />);
+        skeletonCards.push(<SkeletonProjectItem key={createShortUUID()} />);
     }
 
     return (
@@ -55,7 +55,7 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
             <Box mt="4">
                 <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
                     {items.map((project) => (
-                        <ProjectCard key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
+                        <ProjectItem key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
                     ))}
                 </Box>
             </Box>

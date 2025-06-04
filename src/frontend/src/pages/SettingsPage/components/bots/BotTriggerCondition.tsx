@@ -2,22 +2,22 @@ import { Box, Checkbox, Flex, Label, Toast } from "@/components/base";
 import useToggleBotTriggerCondition from "@/controllers/api/settings/bots/useToggleBotTriggerCondition";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel } from "@/core/models";
 import { CATEGORIZED_BOT_TRIGGER_CONDITIONS, EBotTriggerCondition } from "@/core/models/bot.type";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBotTriggerConditionProps {
-    bot: BotModel.TModel;
     category: keyof typeof CATEGORIZED_BOT_TRIGGER_CONDITIONS;
     conditionType: EBotTriggerCondition;
 }
 
-const BotTriggerCondition = memo(({ bot, category, conditionType }: IBotTriggerConditionProps) => {
+function BotTriggerCondition({ category, conditionType }: IBotTriggerConditionProps) {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const conditions = bot.useField("conditions");
     const condition = useMemo(() => conditions?.[conditionType], [conditions]);
@@ -80,6 +80,6 @@ const BotTriggerCondition = memo(({ bot, category, conditionType }: IBotTriggerC
             <Box>{t(`botTriggerCondition.${category}.conditions.${conditionType}`)}</Box>
         </Label>
     );
-});
+}
 
 export default BotTriggerCondition;

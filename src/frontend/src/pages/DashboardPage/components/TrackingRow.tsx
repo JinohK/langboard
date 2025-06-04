@@ -1,6 +1,7 @@
 import { Button, Table } from "@/components/base";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -36,44 +37,47 @@ function TrackingRow({ checkitem }: ITrackingRowProps): JSX.Element | null {
     }
 
     return (
-        <Table.Row
-            className={cn(
-                "relative",
-                isChecked &&
-                    cn(
-                        "text-muted-foreground [&_button]:text-primary/70",
-                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
-                        "after:h-px after:w-full after:bg-border"
-                    )
-            )}
-        >
-            <Table.Cell className="w-1/4 text-center">
-                <Button
-                    variant="link"
-                    className="size-auto p-0"
-                    onClick={() => navigate(ROUTES.BOARD.CARD(projectUIDRef.current, checkitem.card_uid))}
-                >
-                    {title}
-                </Button>
-            </Table.Cell>
-            <Table.Cell className="w-1/4 text-center">
-                <TrackingRowCardTitle checkitem={checkitem} projectUIDRef={projectUIDRef} />
-            </Table.Cell>
-            <Table.Cell className="w-1/6 text-center">{status}</Table.Cell>
-            <Table.Cell className="w-1/6 text-center">{startedAt}</Table.Cell>
-            <Table.Cell className="w-1/6 text-center">
-                <TrackingRowTimeTaken checkitem={checkitem} />
-            </Table.Cell>
-        </Table.Row>
+        <ModelRegistry.ProjectCheckitem.Provider model={checkitem}>
+            <Table.Row
+                className={cn(
+                    "relative",
+                    isChecked &&
+                        cn(
+                            "text-muted-foreground [&_button]:text-primary/70",
+                            "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                            "after:h-px after:w-full after:bg-border"
+                        )
+                )}
+            >
+                <Table.Cell className="w-1/4 text-center">
+                    <Button
+                        variant="link"
+                        className="size-auto p-0"
+                        onClick={() => navigate(ROUTES.BOARD.CARD(projectUIDRef.current, checkitem.card_uid))}
+                    >
+                        {title}
+                    </Button>
+                </Table.Cell>
+                <Table.Cell className="w-1/4 text-center">
+                    <TrackingRowCardTitle projectUIDRef={projectUIDRef} />
+                </Table.Cell>
+                <Table.Cell className="w-1/6 text-center">{status}</Table.Cell>
+                <Table.Cell className="w-1/6 text-center">{startedAt}</Table.Cell>
+                <Table.Cell className="w-1/6 text-center">
+                    <TrackingRowTimeTaken />
+                </Table.Cell>
+            </Table.Row>
+        </ModelRegistry.ProjectCheckitem.Provider>
     );
 }
 
-interface ITrackingRowCardTitleProps extends ITrackingRowProps {
+interface ITrackingRowCardTitleProps {
     projectUIDRef: React.RefObject<string>;
 }
 
-function TrackingRowCardTitle({ checkitem, projectUIDRef }: ITrackingRowCardTitleProps) {
+function TrackingRowCardTitle({ projectUIDRef }: ITrackingRowCardTitleProps) {
     const { navigate } = useDashboard();
+    const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const card = ProjectCard.Model.getModel(checkitem.card_uid)!;
     const title = card.useField("title");
 
@@ -86,7 +90,8 @@ function TrackingRowCardTitle({ checkitem, projectUIDRef }: ITrackingRowCardTitl
     );
 }
 
-function TrackingRowTimeTaken({ checkitem }: ITrackingRowProps) {
+function TrackingRowTimeTaken() {
+    const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const status = checkitem.useField("status");
     const accumulatedSeconds = checkitem.useField("accumulated_seconds");
     const timerStartedAt = checkitem.useField("timer_started_at");

@@ -4,12 +4,11 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useReorderRow from "@/core/hooks/useReorderRow";
 import { Project, ProjectChecklist, ProjectCheckitem } from "@/core/models";
-import { BoardCardChecklistProvider } from "@/core/providers/BoardCardChecklistProvider";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCardChecklistAddItem from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistAddItem";
 import BoardCardChecklistCheckbox from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistCheckbox";
-import BoardCardChecklistMore from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMore";
+import BoardCardChecklistMoreMenu from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMoreMenu";
 import BoardCardChecklistNotify from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistNotify";
 import BoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitem";
 import { DraggableAttributes } from "@dnd-kit/core";
@@ -19,6 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { memo, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 
 export interface IBoardCardChecklistProps {
     checklist: ProjectChecklist.TModel;
@@ -197,7 +197,7 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
 
     return (
-        <BoardCardChecklistProvider checklist={checklist} isValidating={isValidating} setIsValidating={setIsValidating}>
+        <ModelRegistry.ProjectChecklist.Provider model={checklist} params={{ canEdit, isValidating, setIsValidating }}>
             <Flex
                 items="center"
                 justify="between"
@@ -206,7 +206,9 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
                     initial: "16",
                     md: "12",
                 }}
-                className="w-full truncate"
+                w="full"
+                mr="1"
+                className="truncate"
             >
                 <Flex items="center" gap="2" w="full" className="truncate">
                     <Flex items="center" gap="1">
@@ -264,12 +266,12 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
                     {canEdit && (
                         <>
                             <BoardCardChecklistAddItem key={`board-card-checklist-add-item-${checklist.uid}`} />
-                            <BoardCardChecklistMore key={`board-card-checklist-more-${checklist.uid}`} />
+                            <BoardCardChecklistMoreMenu key={`board-card-checklist-more-${checklist.uid}`} />
                         </>
                     )}
                 </Flex>
             </Flex>
-        </BoardCardChecklistProvider>
+        </ModelRegistry.ProjectChecklist.Provider>
     );
 });
 

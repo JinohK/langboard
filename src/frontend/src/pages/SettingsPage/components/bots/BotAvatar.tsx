@@ -3,18 +3,15 @@ import { Flex, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IBotAvatarProps {
-    bot: BotModel.TModel;
-}
-
-const BotAvatar = memo(({ bot }: IBotAvatarProps) => {
+const BotAvatar = memo(() => {
     const [t] = useTranslation();
+    const { model: bot } = ModelRegistry.BotModel.useContext();
     const avatar = bot.useField("avatar");
     const { navigateRef } = useAppSetting();
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());

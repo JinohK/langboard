@@ -10,7 +10,7 @@ import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { createUUID } from "@/core/utils/StringUtils";
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
-import { MODEL_REGISTRIES, IModelMap } from "@/core/models/ModelRegistry";
+import { ModelRegistry, IModelMap } from "@/core/models/ModelRegistry";
 
 export const ROLE_ALL_GRANTED = "*";
 
@@ -706,7 +706,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                     continue;
                 }
 
-                MODEL_REGISTRIES[modelName].fromObject(subModel);
+                ModelRegistry[modelName].Model.fromObject(subModel);
                 if (!uids.includes(subModel.uid)) {
                     uids.push(subModel.uid);
                 }
@@ -751,5 +751,5 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 }
 
 export const cleanModels = () => {
-    Object.values(MODEL_REGISTRIES).forEach((model) => model.cleanUp());
+    Object.values(ModelRegistry).forEach((registry) => registry.Model.cleanUp());
 };

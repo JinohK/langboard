@@ -107,7 +107,7 @@ class CheckitemService(BaseService):
         self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
     ) -> Checkitem | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
-            (Project, project), (Card, Card), (Checklist, checklist)
+            (Project, project), (Card, card), (Checklist, checklist)
         )
         if not params:
             return None

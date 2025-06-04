@@ -3,11 +3,11 @@ import { BotModel } from "@/core/models";
 import BoardSettingsCronBotScheduleList from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleList";
 import { useTranslation } from "react-i18next";
 
-export interface IBOardSettingsCronBotScheduleListDialogProps {
+export interface IBoardSettingsCronBotScheduleListDialogProps {
     bot: BotModel.TModel;
 }
 
-function BoardSettingsCronBotScheduleListDialog({ bot }: IBOardSettingsCronBotScheduleListDialogProps): JSX.Element {
+function BoardSettingsCronBotScheduleListDialog({ bot }: IBoardSettingsCronBotScheduleListDialogProps): JSX.Element {
     const [t] = useTranslation();
 
     return (
