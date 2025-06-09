@@ -24,6 +24,8 @@ PROJECT_VERSION = version(PROJECT_NAME)
 BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
 ROOT_DIR = BASE_DIR / ".." / ".." / ".."
 DATA_DIR = ROOT_DIR / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
+SCHEMA_DIR = DATA_DIR / "schemas"
+SCHEMA_DIR.mkdir(exist_ok=True)
 
 # URL
 HOST = _get_env("BACKEND_HOST", "localhost")

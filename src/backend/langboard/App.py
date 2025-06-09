@@ -21,6 +21,7 @@ class App:
 
         AppRouter.set_openapi_schema(self.api)
         Auth.set_openapi_schema(self.api)
+        AppRouter.set_app(self.api)
 
     def create(self):
         AppRouter.set_app(self.api)

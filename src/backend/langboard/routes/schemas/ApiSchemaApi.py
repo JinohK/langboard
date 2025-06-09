@@ -2,12 +2,20 @@ from json import dumps as json_dumps
 from re import findall as re_findall
 from typing import Any, Literal, cast
 from fastapi import Query, status
+from ...Constants import SCHEMA_DIR
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.utils.datamodel.parser.jsonschema import JsonSchemaParser
 
 
 PATH_PARAM_PATTERN = r"\{([^}]+)\}"
+
+
+@AppRouter.api.get("/openapi.json")
+async def openapi_json():
+    with open(SCHEMA_DIR / "openapi.json", "r") as f:
+        content = f.read()
+    return JsonResponse(content=content)
 
 
 @AppRouter.api.get(

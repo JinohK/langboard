@@ -7,7 +7,7 @@ from celery.app.task import Task
 from celery.apps import worker
 from celery.apps.worker import Worker
 from celery.signals import celeryd_after_setup, setup_logging
-from ...Constants import CACHE_TYPE, CACHE_URL, DATA_DIR, PROJECT_NAME
+from ...Constants import CACHE_TYPE, CACHE_URL, PROJECT_NAME, SCHEMA_DIR
 from ..logger import Logger
 from ..utils.decorators import class_instance
 from .TaskParameters import TaskParameters
@@ -20,9 +20,6 @@ _TReturn = TypeVar("_TReturn", covariant=True)
 class _Task(Protocol, Generic[_TParams, _TReturn]):
     def __call__(self, *args: _TParams.args, **kwargs: _TParams.kwargs) -> _TReturn: ...  # type: ignore
 
-
-_schema_dir = DATA_DIR / "schemas"
-_schema_dir.mkdir(exist_ok=True)
 
 logger = Logger.use("Broker")
 
@@ -106,6 +103,7 @@ class Broker:
     def start(self, argv: list[str] | None = None):
         if argv is None:
             argv = ["worker", "--loglevel=info", "--pool=solo"]
+        self._schemas.clear()
 
         try:
             if self.is_in_memory():
@@ -117,7 +115,7 @@ class Broker:
             self.celery.close()
 
     def schema(self, group: str, schema: dict):
-        schema_file = _schema_dir / f"{group}.json"
+        schema_file = SCHEMA_DIR / f"{group}.json"
         if group not in self._schemas:
             if schema_file.exists():
                 try:
@@ -130,7 +128,7 @@ class Broker:
         else:
             schema_json = self._schemas[group]
 
-        with open(_schema_dir / f"{group}.json", "w") as f:
+        with open(schema_file, "w") as f:
             schema_json.update(schema)
             f.write(json_dumps(schema_json))
 
@@ -140,7 +138,7 @@ class Broker:
         return decorator
 
     def get_schema(self, group: str):
-        schema_file = _schema_dir / f"{group}.json"
+        schema_file = SCHEMA_DIR / f"{group}.json"
         if schema_file.exists():
             return json_loads(schema_file.read_text())
         else:

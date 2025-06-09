@@ -53,6 +53,7 @@ class LogFileHandler(RichHandler):
 
         self._stream.write(f"[{datetime.fromtimestamp(int(record.created))}] {message}")
         self._stream.flush()
+        self._stream.close()
 
     def _get_log_file_name(self):
         if self._is_terminal:

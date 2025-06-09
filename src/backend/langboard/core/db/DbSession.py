@@ -83,6 +83,7 @@ class DbSession:
                     session.close()
                     db = None
                     session = None
+                break
             except Exception as e:
                 if db:
                     db.close()
