@@ -86,8 +86,10 @@ class DbSession:
             except Exception as e:
                 if db:
                     db.close()
+                    db = None
                 if session:
                     session.close()
+                    session = None
                 if isinstance(e, OperationalError) and isinstance(e.orig, psycopg.errors.OperationalError):
                     if str(e.orig).count("max_client_conn") > 0:
                         sleep(1)
@@ -96,7 +98,12 @@ class DbSession:
                 _logger.exception(e)
                 raise e
             finally:
-                break
+                if db:
+                    db.close()
+                    db = None
+                if session:
+                    session.close()
+                    session = None
 
     def close(self):
         self.__session = cast(Session, None)

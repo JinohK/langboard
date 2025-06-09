@@ -1,5 +1,4 @@
-from fastapi import Depends, File, UploadFile, status
-from ...core.ai import BotRunner, InternalBotType
+from fastapi import Depends, status
 from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
@@ -43,24 +42,6 @@ async def clear_project_chat(
     await service.chat.clear(user, Project.__tablename__, project_uid)
 
     return JsonResponse()
-
-
-@AppRouter.api.post(
-    "/board/{project_uid}/chat/upload",
-    tags=["Board.Chat"],
-    responses=(OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2001).err(406, ApiErrorCode.OP1002).get()),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
-@AuthFilter.add("user")
-async def upload_board_chat_file(project_uid: str, attachment: UploadFile = File(), service: Service = Service.scope()):
-    if not await service.project.get_by_uid(project_uid):
-        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
-
-    file_path = await BotRunner.upload_file(InternalBotType.ProjectChat, attachment)
-    if not file_path:
-        return JsonResponse(content=ApiErrorCode.OP1002, status_code=status.HTTP_406_NOT_ACCEPTABLE)
-
-    return JsonResponse(content={"file_path": file_path}, status_code=status.HTTP_201_CREATED)
 
 
 @AppRouter.api.get(

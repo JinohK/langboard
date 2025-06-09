@@ -21,7 +21,6 @@ from ...Constants import (
     REFRESH_TOKEN_NAME,
 )
 from ..ai import Bot
-from ..ai.BotOneTimeToken import BotOneTimeToken
 from ..caching import Cache
 from ..db import DbSession, SnowflakeID, SqlBuilder, User
 from ..filter import AuthFilter
@@ -291,8 +290,12 @@ class Auth:
         if not api_token:
             return status.HTTP_401_UNAUTHORIZED
 
-        user_uid = await BotOneTimeToken.get_user_uid(api_token)
-        if not user_uid:
+        try:
+            payload = Auth.__decode_access_token(api_token)
+            if "sub" not in payload or "chat" not in payload or not payload["sub"] or not payload["chat"]:
+                return status.HTTP_401_UNAUTHORIZED
+            user_uid = payload["sub"]
+        except Exception:
             return status.HTTP_401_UNAUTHORIZED
 
         try:
@@ -369,9 +372,6 @@ class Auth:
             return False
         try:
             access_payload = Auth.__decode_access_token(access_token)
-            if "chat" in access_payload and access_payload["chat"]:
-                return True
-
             refresh_payload = Auth.__decode_refresh_token(refresh_token)
             return access_payload["sub"] == refresh_payload["sub"]
         except Exception:

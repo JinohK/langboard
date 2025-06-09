@@ -16,7 +16,6 @@ class App:
     def __init__(self):
         self.config = AppConfig.load()
         self.api = FastAPI(debug=True)
-        load_modules("bots", "Bot", log=not self.config.is_restarting)
         self._init_api_middlewares()
         self._init_api_routes()
 
