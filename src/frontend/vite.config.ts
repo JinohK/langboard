@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
     const PORT = Number(process.env.FRONTEND_PORT) || 5173;
 
     const BACKEND_SERVER = `http://localhost:${process.env.BACKEND_PORT}`;
+    const SOCKET_SERVER = `http://localhost:${process.env.SOCKET_PORT}`;
 
     let watchOptions = null;
     if (process.argv.includes("--watch") || process.argv.includes("-w")) {
@@ -57,7 +58,8 @@ export default defineConfig(({ mode }) => {
         define: {
             "process.env.IS_PRODUCTION": JSON.stringify(mode === "production"),
             "process.env.PROJECT_NAME": JSON.stringify(process.env.PROJECT_NAME),
-            "process.env.SOCKET_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.SOCKET_URL),
+            "process.env.PROJECT_SHORT_NAME": JSON.stringify(process.env.PROJECT_SHORT_NAME),
+            "process.env.SOCKET_URL": JSON.stringify(isLocal ? SOCKET_SERVER : process.env.SOCKET_URL),
             "process.env.API_URL": JSON.stringify(isLocal ? BACKEND_SERVER : process.env.API_URL),
             "process.env.PUBLIC_FRONTEND_URL": JSON.stringify(process.env.PUBLIC_FRONTEND_URL),
         },

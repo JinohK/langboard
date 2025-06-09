@@ -11,7 +11,7 @@ services:
     networks:
       - net
     volumes:
-      - ./volumes/zookeeper/1:/bitnami/zookeeper
+      - zoodata0:/bitnami/zookeeper
     restart: always
 
   zookeeper1:
@@ -26,7 +26,7 @@ services:
     networks:
       - net
     volumes:
-      - ./volumes/zookeeper/2:/bitnami/zookeeper
+      - zoodata1:/bitnami/zookeeper
     restart: always
 
   zookeeper2:
@@ -41,7 +41,7 @@ services:
     networks:
       - net
     volumes:
-      - ./volumes/zookeeper/3:/bitnami/zookeeper
+      - zoodata2:/bitnami/zookeeper
     restart: always
 
   kafka0:
@@ -49,7 +49,7 @@ services:
     image: bitnami/kafka:3.9
     container_name: ${PROJECT_NAME}_kafka0
     environment:
-      - KAFKA_BROKER_ID=0
+      - KAFKA_BROKER_ID=1
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       - KAFKA_ZOOKEEPER_CONNECT=${PROJECT_NAME}_zookeeper0:2181,${PROJECT_NAME}_zookeeper1:2181,${PROJECT_NAME}_zookeeper2:2181
       - KAFKA_ZOOKEEPER_PROTOCOL=PLAINTEXT
@@ -65,7 +65,7 @@ services:
       - zookeeper1
       - zookeeper2
     volumes:
-      - ./volumes/kafka/0:/bitnami/kafka/data
+      - kfdata0:/bitnami/kafka/data
     restart: always
 
   kafka1:
@@ -73,13 +73,13 @@ services:
     image: bitnami/kafka:3.9
     container_name: ${PROJECT_NAME}_kafka1
     environment:
-      - KAFKA_BROKER_ID=1
+      - KAFKA_BROKER_ID=2
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       - KAFKA_ZOOKEEPER_CONNECT=${PROJECT_NAME}_zookeeper0:2181,${PROJECT_NAME}_zookeeper1:2181,${PROJECT_NAME}_zookeeper2:2181
       - KAFKA_ZOOKEEPER_PROTOCOL=PLAINTEXT
       - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka1:29092,PLAINTEXT_HOST://localhost:9092
-      - KAFKA_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka1:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka1:29092,PLAINTEXT_HOST://localhost:9093
+      - KAFKA_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka1:29092,PLAINTEXT_HOST://localhost:9093
       - KAFKA_LISTENER_NAME=PLAINTEXT
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     networks:
@@ -89,7 +89,7 @@ services:
       - zookeeper1
       - zookeeper2
     volumes:
-      - ./volumes/kafka/1:/bitnami/kafka/data
+      - kfdata1:/bitnami/kafka/data
     restart: always
 
   kafka2:
@@ -97,13 +97,13 @@ services:
     image: bitnami/kafka:3.9
     container_name: ${PROJECT_NAME}_kafka2
     environment:
-      - KAFKA_BROKER_ID=2
+      - KAFKA_BROKER_ID=3
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       - KAFKA_ZOOKEEPER_CONNECT=${PROJECT_NAME}_zookeeper0:2181,${PROJECT_NAME}_zookeeper1:2181,${PROJECT_NAME}_zookeeper2:2181
       - KAFKA_ZOOKEEPER_PROTOCOL=PLAINTEXT
       - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka2:29092,PLAINTEXT_HOST://localhost:9092
-      - KAFKA_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka2:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka2:29092,PLAINTEXT_HOST://localhost:9094
+      - KAFKA_LISTENERS=PLAINTEXT://${PROJECT_NAME}_kafka2:29092,PLAINTEXT_HOST://localhost:9094
       - KAFKA_LISTENER_NAME=PLAINTEXT
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     networks:
@@ -113,5 +113,19 @@ services:
       - zookeeper1
       - zookeeper2
     volumes:
-      - ./volumes/kafka/2:/bitnami/kafka/data
+      - kfdata2:/bitnami/kafka/data
     restart: always
+
+volumes:
+  zoodata0:
+    driver: local
+  zoodata1:
+    driver: local
+  zoodata2:
+    driver: local
+  kfdata0:
+    driver: local
+  kfdata1:
+    driver: local
+  kfdata2:
+    driver: local

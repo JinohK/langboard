@@ -14,9 +14,9 @@ class KafkaDispatcherQueue(BaseDispatcherQueue):
 
     def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
         data_file_name = record_model(event, data)
-        self.producer.send(event if isinstance(event, str) else event.event, {"file": data_file_name})
+        self.producer.send(event if isinstance(event, str) else event.event, {"cache_key": data_file_name})
 
-    def start(self, _):
+    def start(self):
         self.is_closed = False
 
     def close(self):

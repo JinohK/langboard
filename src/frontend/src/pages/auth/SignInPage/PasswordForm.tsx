@@ -35,7 +35,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
         predefineValues: { sign_token: signToken, email_token: emailToken },
         mutate,
         mutateOnSuccess: (data) => {
-            if (!data.access_token || !data.refresh_token) {
+            if (!data.access_token) {
                 setErrors({ password: "errors.requests.VA1001" });
                 setTimeout(() => {
                     formRef.current!.password.focus();
@@ -45,8 +45,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
 
             const searchParams = new URLSearchParams(location.search);
             const redirectUrl = searchParams.get(QUERY_NAMES.REDIRECT) ?? ROUTES.AFTER_SIGN_IN;
-            signIn(data.access_token, data.refresh_token);
-            navigate(decodeURIComponent(redirectUrl));
+            signIn(data.access_token, () => navigate(decodeURIComponent(redirectUrl)));
         },
         apiErrorHandlers: {
             [EHttpStatus.HTTP_404_NOT_FOUND]: {

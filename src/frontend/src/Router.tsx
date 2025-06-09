@@ -4,6 +4,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import useAuthStore from "@/core/stores/AuthStore";
 
 const modules = import.meta.glob<{ default: () => JSX.Element }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);
@@ -22,6 +23,10 @@ const loadRoutes = async () => {
     );
 
     routes.push(<Route key="route-notfound" path="*" element={<Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} />} />);
+
+    useAuthStore.setState(() => ({
+        pageLoaded: true,
+    }));
 
     return routes;
 };

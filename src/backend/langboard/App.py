@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from .AppConfig import AppConfig
-from .core.bootstrap import SocketApp
+from .Constants import PUBLIC_FRONTEND_URL
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
 from .core.security import Auth
 from .core.service import BotScheduleService
@@ -12,12 +12,10 @@ from .middlewares import AuthMiddleware, RoleMiddleware
 
 class App:
     api: FastAPI
-    ws: SocketApp
 
     def __init__(self):
         self.config = AppConfig.load()
         self.api = FastAPI(debug=True)
-        self.ws = SocketApp()
         load_modules("bots", "Bot", log=not self.config.is_restarting)
         self._init_api_middlewares()
         self._init_api_routes()
@@ -32,7 +30,7 @@ class App:
         return self.api
 
     def _init_api_middlewares(self):
-        origins = ["*"]
+        origins = [PUBLIC_FRONTEND_URL]
         self.api.add_middleware(RoleMiddleware, routes=self.api.routes)
         self.api.add_middleware(AuthMiddleware, routes=self.api.routes)
         self.api.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
@@ -40,8 +38,22 @@ class App:
             CORSMiddleware,
             allow_origins=origins,
             allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allow_headers=[
+                "Accept",
+                "Referer",
+                "Accept-Encoding",
+                "Accept-Language",
+                "Content-Language",
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "User-Agent",
+                "X-Forwarded-Proto",
+                "X-Forwarded-Host",
+                "X-Real-IP",
+                Auth.IP_HEADER,
+            ],
         )
         middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware, not self.config.is_restarting)
         for module in middleware_modules.values():
@@ -54,4 +66,3 @@ class App:
         load_modules("routes", "Api", log=not self.config.is_restarting)
         load_modules("routes", "Socket", log=not self.config.is_restarting)
         self.api.include_router(AppRouter.api)
-        self.api.websocket_route("/")(self.ws.route)

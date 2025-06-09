@@ -11,6 +11,7 @@ services:
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
+      - SOCKET_HOST=${PROJECT_NAME}_socket:${SOCKET_PORT}
       - DOCS_HOST=${PROJECT_NAME}_docs:3000
     volumes:
       - ./server/conf.template:/etc/nginx/templates/default.conf.template
@@ -56,6 +57,7 @@ services:
       context: ../
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
+      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend
       - BACKEND_PORT=${BACKEND_PORT}
       - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
@@ -95,6 +97,7 @@ services:
     command: ${PROJECT_NAME} run --workers ${BACKEND_WORKERS_COUNT:-1}
     volumes:
       - ../src/backend/${PROJECT_NAME}:/app/src/backend/${PROJECT_NAME}
+      - ../src/resources:/app/src/resources
       - ../pyproject.toml:/app/pyproject.toml
       - ../poetry.lock:/app/poetry.lock
       - ../README.md:/app/README.md
@@ -102,6 +105,53 @@ services:
       - ../alembic.ini:/app/alembic.ini
       - ../local:/app/local
       - ../scripts/run_bot_cron.sh:/app/scripts/run_bot_cron.sh:x
+    depends_on:
+      - db-bouncer
+      - kafka0
+      - kafka1
+      - kafka2
+    networks:
+      - net
+    restart: always
+
+  socket:
+    init: true
+    container_name: ${PROJECT_NAME}_socket
+    build:
+      context: ../src/socket
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
+      - SERVER_HOST=${PROJECT_NAME}_socket
+      - SOCKET_PORT=${SOCKET_PORT}
+      - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
+      - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
+      - LOGGING_DIR=${LOGGING_DIR}
+      - MAIN_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
+      - READONLY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
+      - DB_TIMEOUT=${DB_TIMEOUT}
+      - DB_TCP_USER_TIMEOUT=${DB_TCP_USER_TIMEOUT}
+      - CACHE_TYPE=redis
+      - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
+      - BROADCAST_TYPE=kafka
+      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:29092,${PROJECT_NAME}_kafka1:29092,${PROJECT_NAME}_kafka2:29092
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_SSL_TLS=${MAIL_SSL_TLS}
+    working_dir: /app
+    volumes:
+      - ../src/socket/dist:/app/dist
+      - ../src/socket/src:/app/src
+      - ../src/socket/package.json:/app/package.json
+      - ../src/socket/yarn.lock:/app/yarn.lock
+      - ../src/resources:/app/resources
+      - ../.env:/app/.env
     depends_on:
       - db-bouncer
       - kafka0

@@ -2,7 +2,6 @@ from typing import Any, Optional
 from pydantic import BaseModel
 from uvicorn.config import LifespanType
 from .Constants import DATA_DIR
-from .core.bootstrap import WebSocketOptions
 from .core.utils.decorators import staticclass
 
 
@@ -12,7 +11,6 @@ class AppConfigModel(BaseModel):
     uds: Optional[str] = None
     lifespan: LifespanType
     ssl_options: dict[str, Any] = {}
-    ws_options: Optional[WebSocketOptions]
     workers: int
     is_restarting: bool = False
     watch: bool = False
@@ -29,7 +27,6 @@ class AppConfig:
         uds: Optional[str] = None,
         lifespan: LifespanType = "auto",
         ssl_options: Any = None,
-        ws_options: Optional[WebSocketOptions] = None,
         workers: int = 1,
         watch: bool = False,
     ):
@@ -43,7 +40,6 @@ class AppConfig:
                 "uds": uds,
                 "lifespan": lifespan,
                 "ssl_options": ssl_options or {},
-                "ws_options": ws_options.model_dump() if ws_options else None,
                 "workers": workers,
                 "is_restarting": False,
                 "watch": watch,

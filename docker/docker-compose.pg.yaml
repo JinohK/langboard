@@ -48,7 +48,7 @@ services:
       - POSTGRESQL_LOG_TIMEZONE=UTC
       - POSTGRESQL_TIMEZONE=UTC
     volumes:
-      - ./volumes/db:/bitnami/postgresql
+      - pgdata:/bitnami/postgresql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - net
@@ -98,3 +98,7 @@ services:
     depends_on:
       - db
     restart: always
+
+volumes:
+  pgdata:
+    driver: local

@@ -34,7 +34,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
 
             setEmail(formRef.current!.email.value);
 
-            const searchParams = new URLSearchParams();
+            const searchParams = new URLSearchParams(location.search);
             searchParams.append(QUERY_NAMES.SIGN_IN_TOKEN, signToken);
             searchParams.append(QUERY_NAMES.EMAIL_TOKEN, data.token);
 

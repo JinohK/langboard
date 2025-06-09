@@ -4,7 +4,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { AuthUser, ProjectWiki } from "@/core/models";
 
 export interface IBoardWikiPublicChangedRawResponse {
-    wiki: ProjectWiki.Interface;
+    wiki: ProjectWiki.IStore;
 }
 
 export interface IUseBoardWikiPublicChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {

@@ -9,7 +9,6 @@ import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoa
 import useBoardWikiAssigneesUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssigneesUpdatedHandlers";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import useBoardWikiGetDetailsHandlers from "@/controllers/socket/wiki/useBoardWikiGetDetailsHandlers";
 import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
 import useMetadataDeletedHandlers from "@/controllers/socket/metadata/useMetadataDeletedHandlers";
 
@@ -20,6 +19,9 @@ export interface Interface extends IBaseModel {
     order: number;
     is_public: bool;
     forbidden: bool;
+}
+
+export interface IStore extends Interface {
     assigned_bots: BotModel.Interface[];
     assigned_members: User.Interface[];
 
@@ -27,7 +29,7 @@ export interface Interface extends IBaseModel {
     isInBin: bool;
 }
 
-class ProjectWiki extends BaseModel<Interface> {
+class ProjectWiki extends BaseModel<IStore> {
     static get FOREIGN_MODELS() {
         return {
             assigned_bots: BotModel.Model.MODEL_NAME,
@@ -50,7 +52,7 @@ class ProjectWiki extends BaseModel<Interface> {
         });
     }
 
-    public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
+    public static createFakeMethodsMap<TMethodMap>(model: IStore): TMethodMap {
         const map = {
             changeToPrivate: () => {
                 model.title = "";
@@ -65,7 +67,7 @@ class ProjectWiki extends BaseModel<Interface> {
 
     public subscribePrivateSocketHandlers(currentUser: AuthUser.TModel) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const handlers: any = [useBoardWikiDetailsChangedHandlers, useBoardWikiGetDetailsHandlers];
+        const handlers: any = [useBoardWikiDetailsChangedHandlers];
         if (!this.#isSubscribedOnce) {
             handlers.push(useBoardWikiPublicChangedHandlers, useBoardWikiAssigneesUpdatedHandlers);
             this.#isSubscribedOnce = true;

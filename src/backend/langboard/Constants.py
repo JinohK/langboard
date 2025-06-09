@@ -14,6 +14,12 @@ def _get_env(name: str, default: Any = None) -> Any | str:
 
 IS_EXECUTABLE = _get_env("IS_EXECUTABLE", "false") == "true"
 
+# Environment
+ENVIRONMENT: Literal["local", "development", "production"] = cast(Any, _get_env("ENVIRONMENT", "local"))
+PROJECT_NAME = _get_env("PROJECT_NAME")
+PROJECT_SHORT_NAME = _get_env("PROJECT_SHORT_NAME", PROJECT_NAME)
+PROJECT_VERSION = version(PROJECT_NAME)
+
 # Directory
 BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
 ROOT_DIR = BASE_DIR / ".." / ".." / ".."
@@ -23,13 +29,12 @@ DATA_DIR = ROOT_DIR / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
 HOST = _get_env("BACKEND_HOST", "localhost")
 PORT = int(_get_env("BACKEND_PORT", "5381"))
 FRONTEND_PORT = int(_get_env("FRONTEND_PORT", "5173"))
-PUBLIC_FRONTEND_URL = _get_env("PUBLIC_FRONTEND_URL", f"http://{HOST}:{FRONTEND_PORT}")
+PUBLIC_FRONTEND_URL = (
+    _get_env("PUBLIC_FRONTEND_URL", f"http://{HOST}:{FRONTEND_PORT}")
+    if ENVIRONMENT != "local"
+    else f"http://{HOST}:{FRONTEND_PORT}"
+)
 FRONTEND_REDIRECT_URL = f"{PUBLIC_FRONTEND_URL}/redirect"
-
-# Environment
-ENVIRONMENT = _get_env("ENVIRONMENT", "local")
-PROJECT_NAME = _get_env("PROJECT_NAME")
-PROJECT_VERSION = version(PROJECT_NAME)
 
 # Database
 MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
@@ -65,6 +70,8 @@ JWT_SECRET_KEY = _get_env("JWT_SECRET_KEY", f"{PROJECT_NAME}_secret_key")
 JWT_ALGORITHM = _get_env("JWT_ALGORITHM", "HS256")
 JWT_AT_EXPIRATION = int(_get_env("JWT_AT_EXPIRATION", 60 * 60 * 3))  # 3 hours for default
 JWT_RT_EXPIRATION = int(_get_env("JWT_RT_EXPIRATION", 30))  # 30 days for default
+ACCESS_TOKEN_NAME = f"access_token_{PROJECT_SHORT_NAME}"
+REFRESH_TOKEN_NAME = f"refresh_token_{PROJECT_SHORT_NAME}"
 
 # Storage
 LOCAL_STORAGE_DIR = Path(_get_env("LOCAL_STORAGE_DIR", DATA_DIR / "uploads"))

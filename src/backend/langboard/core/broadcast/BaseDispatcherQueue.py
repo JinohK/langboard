@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from multiprocessing import Queue
 from typing import Any
 from .DispatcherModel import DispatcherModel
 
@@ -9,7 +8,7 @@ class BaseDispatcherQueue(ABC):
         self.is_closed = True
 
     @abstractmethod
-    def start(self, worker_queues: list[Queue]): ...
+    def start(self): ...
 
     @abstractmethod
     def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None): ...

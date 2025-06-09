@@ -25,7 +25,6 @@ def execute():
 
 def _run_app(options: RunCommandOptions):
     ssl_options = options.create_ssl_options() if options.ssl_keyfile else None
-    websocket_options = options.create_websocket_options()
 
     if options.watch or "in-memory" in {BROADCAST_TYPE, CACHE_TYPE}:
         options.workers = 1
@@ -38,7 +37,6 @@ def _run_app(options: RunCommandOptions):
         uds=options.uds,
         lifespan=options.lifespan,
         ssl_options=ssl_options,
-        ws_options=websocket_options,
         workers=options.workers,
         watch=options.watch,
     )

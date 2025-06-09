@@ -1,25 +1,13 @@
 from typing import Any
 from sqlmodel.sql.expression import SelectOfScalar
 from ....core.db import SnowflakeID
-from ....core.routing import SocketTopic
 from ....models import Project, ProjectAssignedBot, ProjectRole
 
 
 def project_role_finder(
     query: SelectOfScalar[ProjectRole], path_params: dict[str, Any], user_or_bot_id: int, is_bot: bool
 ) -> SelectOfScalar[ProjectRole]:
-    key_prefixes = [
-        SocketTopic.Dashboard.value,
-        SocketTopic.Board.value,
-        SocketTopic.BoardWiki.value,
-        SocketTopic.BoardSettings.value,
-    ]
     project_uid: str | set | list | None = path_params.get("project_uid", None)
-    if not project_uid:
-        for key in key_prefixes:
-            project_uid = path_params.get(f"{key}_id", None)
-            if project_uid:
-                break
 
     query = query.join(
         Project,

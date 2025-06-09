@@ -89,7 +89,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     static readonly #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
     readonly #mForeignModelUIDs: Record<string, string[]> = {};
     readonly #mForeignModelVersions: Record<string, number> = {};
-    #mStore: TStateStore<TModel>;
+    #store: TStateStore<TModel>;
 
     static get FOREIGN_MODELS(): Partial<Record<string, string>> {
         return {};
@@ -102,7 +102,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     constructor(model: Record<string, any>) {
         this.#upsertForeignModel(model);
 
-        this.#mStore = create(
+        this.#store = create(
             immer(() => ({
                 ...model,
             }))
@@ -489,7 +489,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     public asFake<TDerived extends TBaseModelInstance<any>>(this: TDerived): TDerived {
         const constructor = this.#getConstructor();
         const model = {
-            ...this.#mStore.getState(),
+            ...this.#store.getState(),
         };
         Object.keys(constructor.FOREIGN_MODELS).forEach((key) => {
             model[key] = this.getForeignModels<BaseModel<any>>(key as keyof IModelMap);
@@ -504,7 +504,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         const [fieldValue, setFieldValue] = useState<TModel[TKey]>(this.getValue(field));
 
         useEffect(() => {
-            const unsub = this.#mStore.subscribe((newValue) => {
+            const unsub = this.#store.subscribe((newValue) => {
                 if (newValue[field] === fieldValue) {
                     return;
                 }
@@ -533,7 +533,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         useEffect(() => {
             setFieldValue(this.getForeignModels<TForeignModel>(field));
 
-            const unsub = this.#mStore.subscribe((newValue) => {
+            const unsub = this.#store.subscribe((newValue) => {
                 if (newValue[field] === currentVersionRef.current) {
                     return;
                 }
@@ -552,7 +552,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     }
 
     protected getValue<TKey extends keyof TModel>(field: TKey): TModel[TKey] {
-        return this.#mStore.getState()[field];
+        return this.#store.getState()[field];
     }
 
     protected getForeignModels<TForeignModel>(field: keyof TModel): TForeignModel[] {
@@ -578,7 +578,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         this.#upsertForeignModel(model);
         model = this.#getConstructor().convertModel(model);
 
-        this.#mStore.setState(
+        this.#store.setState(
             produce((draft: any) => {
                 Object.keys(model).forEach((field) => {
                     const value = model[field as keyof TUpdateModel];

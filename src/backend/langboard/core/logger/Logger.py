@@ -1,4 +1,4 @@
-from logging import ERROR, INFO, NOTSET, Handler, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
+from logging import CRITICAL, ERROR, INFO, NOTSET, Handler, basicConfig, getLevelNamesMapping, getLogger, setLoggerClass
 from logging import Logger as LoggingLogger
 from typing import Any
 from rich.logging import RichHandler
@@ -70,6 +70,7 @@ class Logger:
         getLogger("urllib3.connectionpool").setLevel(ERROR)
         getLogger("httpcore.connection").setLevel(ERROR)
         getLogger("httpcore.http11").setLevel(ERROR)
+        getLogger("strawberry.execution").setLevel(CRITICAL)
 
         if SENTRY_DSN:
             sentry_init(

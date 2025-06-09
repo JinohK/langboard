@@ -26,7 +26,7 @@ class ProjectPublisher:
         model = {"assigned_bots": [bot.api_response() for bot in bots]}
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
+        for topic in [SocketTopic.Board, SocketTopic.BoardWiki]:
             publish_models.append(
                 SocketPublishModel(
                     topic=topic,
@@ -42,7 +42,7 @@ class ProjectPublisher:
     def assigned_users_updated(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.Dashboard, SocketTopic.BoardCard, SocketTopic.BoardWiki]:
+        for topic in [SocketTopic.Board, SocketTopic.Dashboard, SocketTopic.BoardWiki]:
             event_prefix = "board" if topic != SocketTopic.Dashboard else "dashboard:project"
             data_keys = "assigned_members" if topic != SocketTopic.Board else ["assigned_members", "invited_members"]
             publish_models.append(

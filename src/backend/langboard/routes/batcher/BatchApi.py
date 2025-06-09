@@ -3,8 +3,11 @@ from json import loads as json_loads
 from typing import cast
 from fastapi import Request, status
 from starlette.types import Message
+from ...core.ai import Bot
+from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
+from ...core.security import Auth
 from .BatchForm import BatchForm
 
 
@@ -18,7 +21,7 @@ _cached_apis: dict[str, str] = {}
     description="Batch API for processing multiple requests in a single call. The response will be a list of responses corresponding to each request schema provided in the form.",
 )
 @AuthFilter.add()
-async def batch_apis(request: Request, form: BatchForm):
+async def batch_apis(request: Request, form: BatchForm, user_or_bot: User | Bot = Auth.scope("api")):
     if not _cached_apis:
         _set_cache_apis()
 
@@ -38,6 +41,10 @@ async def batch_apis(request: Request, form: BatchForm):
             except Exception:
                 pass
 
+        from ...core.logger import Logger
+
+        Logger.main.error(f"{request_schema.path_or_api_name}, {request_schema.query}, {request_schema.form}")
+
         query_string = _query_dict_to_bytes(request_schema.query or {})
         scope = {
             "type": "http",
@@ -45,6 +52,8 @@ async def batch_apis(request: Request, form: BatchForm):
             "path": request_schema.path_or_api_name,
             "query_string": query_string,
             "headers": request.headers.raw,
+            "auth": user_or_bot,
+            "is_batch": True,
         }
 
         response = {}

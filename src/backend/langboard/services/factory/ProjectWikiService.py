@@ -379,6 +379,13 @@ class ProjectWikiService(BaseService):
         update_query = SqlBuilder.update.table(ProjectWiki).where((ProjectWiki.column("project_id") == project.id))
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectWiki, original_order, order)
         with DbSession.use(readonly=False) as db:
+            # Lock
+            db.exec(
+                SqlBuilder.select.table(ProjectWiki)
+                .where(ProjectWiki.column("project_id") == project.id)
+                .with_for_update()
+            ).all()
+
             db.exec(update_query)
             wiki.order = order
             db.update(wiki)

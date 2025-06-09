@@ -14,7 +14,7 @@ export interface IUseCardProjectUsersUpdatedHandlersProps extends IBaseUseSocket
 
 const useCardProjectUsersUpdatedHandlers = ({ callback, projectUID, card }: IUseCardProjectUsersUpdatedHandlersProps) => {
     return useSocketHandler<{}, ICardProjectUsersUpdatedRawResponse>({
-        topic: ESocketTopic.BoardCard,
+        topic: ESocketTopic.Board,
         topicId: projectUID,
         eventKey: `board-card-project-users-updated-${projectUID}`,
         onProps: {

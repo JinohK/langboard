@@ -33,15 +33,16 @@ export interface Interface extends IBaseModel {
     column_uid: string;
     title: string;
     description: IEditorContent;
+    ai_description?: string;
     order: number;
     created_at: Date;
+    deadline_at?: Date;
     archived_at?: Date;
 }
 
 export interface IStore extends Interface {
     count_comment: number;
     members: User.Interface[];
-    deadline_at?: Date;
     column_name: string;
     current_auth_role_actions: Project.TRoleActions[];
     project_members: User.Interface[];

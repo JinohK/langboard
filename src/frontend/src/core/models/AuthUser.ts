@@ -47,7 +47,6 @@ class AuthUser extends User.Model<Interface> {
         super(model);
 
         const socket = useSocketOutsideProvider();
-        socket.subscribe(ESocketTopic.UserPrivate, [this.uid]);
 
         this.subscribeSocketEvents([useUserNotifiedHandlers, useUserNotificationDeletedHandlers, useUserProjectRolesUpdatedHandlers], {
             currentUser: this,

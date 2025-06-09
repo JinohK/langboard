@@ -155,7 +155,7 @@ class ServiceHelper:
         model_class: type[_TBaseModel], column: str, value: Any, where_clauses: dict[str, Any] | None = None
     ) -> int:
         query = (
-            SqlBuilder.select.columns(func.max(model_class.column("order")), func.count(model_class.column("id")))
+            SqlBuilder.select.columns(func.sum(model_class.column("order")), func.count(model_class.column("id")))
             .where(model_class.column(column) == value)
             .group_by(model_class.column(column))
             .limit(1)
@@ -164,37 +164,35 @@ class ServiceHelper:
             query = query.where(model_class.column("deleted_at") == None)  # noqa
         if where_clauses:
             query = ServiceHelper.where_recursive(query, model_class, **where_clauses)
-        max_order, count_all = None, None
+        sum_all, count_all = None, None
         with DbSession.use(readonly=True) as target_db:
             result = target_db.exec(query)
-            max_order, count_all = result.first() or (None, None)
+            sum_all, count_all = result.first() or (None, None)
 
-        if max_order is None or count_all is None:
-            max_order = -1
+        if sum_all is None or count_all is None:
+            sum_all = 0
             count_all = 0
 
-        if max_order + 1 != count_all:
-            max_order = count_all - 1
-            query = (
-                SqlBuilder.select.table(model_class)
-                .where(model_class.column(column) == value)
-                .order_by(model_class.column("order").asc(), model_class.column("id").asc())
-                .group_by(model_class.column("id"), model_class.column("order"))
-            )
+        expected_sum = (count_all * (count_all - 1)) // 2
+        if sum_all != expected_sum:
+            new_order_cte = SqlBuilder.select.columns(
+                model_class.column("id"),
+                (func.row_number().over(order_by=model_class.column("order")) - 1).label("new_order"),
+            ).where(model_class.column(column) == value)
             if where_clauses:
-                query = ServiceHelper.where_recursive(query, model_class, **where_clauses)
-            rows = []
-            with DbSession.use(readonly=True) as target_db:
-                result = target_db.exec(query)
-                rows = result.all()
-            i = 0
-            for row in rows:
-                with DbSession.use(readonly=False) as target_db:
-                    row.order = i
-                    target_db.update(row)
-                i += 1
+                new_order_cte = ServiceHelper.where_recursive(new_order_cte, model_class, **where_clauses)
+            new_order_cte = new_order_cte.cte("new_order_cte")
 
-        return max_order
+            update_query = (
+                SqlBuilder.update.table(model_class)
+                .filter(model_class.column("id") == new_order_cte.c.id)
+                .values({model_class.column("order"): new_order_cte.c.new_order})
+            )
+
+            with DbSession.use(readonly=False) as target_db:
+                target_db.exec(update_query)
+
+        return count_all
 
     @staticmethod
     def get_by(

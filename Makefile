@@ -70,7 +70,6 @@ init: check_tools clean_python_cache clean_yarn_cache ## initialize the project
 	@printf "$(GREEN)All requirements are installed.$(NC)"
 
 start_docker_dev: ## run the development environment in Docker
-	sudo chown -R 1001:root ./docker/volumes/db
 	mkdir -p ./docker/volumes
 	docker compose -f $(COMPOSE_PREFIX).dev.yaml $(COMPOSE_ARGS) up -d --build
 
@@ -78,7 +77,6 @@ stop_docker_dev: ## stop the development environment in Docker
 	docker compose -f $(COMPOSE_PREFIX).dev.yaml $(COMPOSE_ARGS) down --rmi all --volumes
 
 start_docker_prod: ## run the production environment in Docker
-	sudo chown -R 1001:root ./docker/volumes/db
 	mkdir -p ./docker/volumes
 	docker compose -f $(COMPOSE_PREFIX).prod.yaml $(COMPOSE_ARGS) up -d --build
 

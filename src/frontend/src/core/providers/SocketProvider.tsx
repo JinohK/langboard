@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useEffect } from "react";
 import { refresh } from "@/core/helpers/Api";
-import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import ESocketStatus from "@/core/helpers/ESocketStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
 import useSocketStore, {
@@ -14,8 +13,7 @@ import useSocketStore, {
     TSocketRemoveEventProps,
 } from "@/core/stores/SocketStore";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { getCookieStore } from "@/core/stores/CookieStore";
-import { APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+import useAuthStore from "@/core/stores/AuthStore";
 
 interface IBaseRunEventsProps {
     topic?: ESocketTopic;
@@ -230,30 +228,43 @@ const createSharedSocketHandlers = () => {
 };
 
 export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactNode => {
-    const { getAccessToken, getRefreshToken, signIn, isAuthenticated } = useAuth();
+    const { currentUser } = useAuth();
     const { getSocket, createSocket, getStore, close } = useSocketStore.getState();
-    const cookieStore = getCookieStore();
-
-    useEffect(() => {
-        if (isAuthenticated()) {
-            if (!isConnected()) {
-                connect();
-            }
-        }
-    }, [isAuthenticated]);
-
-    if (!getAccessToken()) {
-        return children;
-    }
+    const authStore = useAuthStore();
 
     const isConnected = () => {
         const socket = getSocket();
         return !!socket && socket.readyState !== WebSocket.CLOSING && socket.readyState !== WebSocket.CLOSED;
     };
 
+    useEffect(() => {
+        if (currentUser) {
+            if (!isConnected()) {
+                connect();
+            }
+        }
+    }, [currentUser]);
+
+    if (!currentUser) {
+        return children;
+    }
+
+    const runErrorCallbacks = async (event: Event) => {
+        const errorCallbacks = Object.entries(streamErrorCallbacks);
+        for (let i = 0; i < errorCallbacks.length; ++i) {
+            const [topic, callbacks] = errorCallbacks[i];
+            const events = Object.entries(callbacks!);
+            for (let j = 0; j < events.length; ++j) {
+                const callback = callbacks![events[j][0]];
+                await callback(event);
+            }
+            delete streamErrorCallbacks[topic];
+        }
+    };
+
     const connect = () => {
         createSocket<Record<string, any>>({
-            accessToken: getAccessToken()!,
+            accessToken: authStore.getToken()!,
             onOpen: async (event) => {
                 await runEvents({
                     eventName: "open",
@@ -278,16 +289,7 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                 });
             },
             onError: async (event) => {
-                const errorCallbacks = Object.entries(streamErrorCallbacks);
-                for (let i = 0; i < errorCallbacks.length; ++i) {
-                    const [topic, callbacks] = errorCallbacks[i];
-                    const events = Object.entries(callbacks!);
-                    for (let j = 0; j < events.length; ++j) {
-                        const callback = callbacks![events[j][0]];
-                        await callback(event);
-                    }
-                    delete streamErrorCallbacks[topic];
-                }
+                await runErrorCallbacks(event);
 
                 await runEvents({
                     eventName: "error",
@@ -295,22 +297,26 @@ export const SocketProvider = ({ children }: ISocketProviderProps): React.ReactN
                 });
             },
             onClose: async (event) => {
+                await runErrorCallbacks(event);
                 switch (event.code) {
                     case ESocketStatus.WS_3001_EXPIRED_TOKEN: {
-                        const token = await refresh();
+                        const isRefreshed = await refresh();
 
-                        signIn(token, getRefreshToken()!);
+                        if (!isRefreshed) {
+                            return;
+                        }
+
                         reconnect();
                         return;
                     }
                     case ESocketStatus.WS_3000_UNAUTHORIZED:
                         close();
-                        cookieStore.remove(APP_ACCESS_TOKEN);
-                        cookieStore.remove(APP_REFRESH_TOKEN);
-                        return redirectToSignIn();
+                        authStore.removeToken();
+                        return;
                     case ESocketStatus.WS_1006_ABNORMAL_CLOSURE:
+                    case ESocketStatus.WS_1012_SERVICE_RESTART:
                         setTimeout(() => {
-                            if (isAuthenticated()) {
+                            if (currentUser) {
                                 reconnect();
                             }
                         }, 5000);

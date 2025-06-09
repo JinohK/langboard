@@ -70,12 +70,12 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
             return;
         }
 
-        socket.subscribe(ESocketTopic.BoardCard, [projectUID, cardUID], () => {
+        socket.subscribe(ESocketTopic.BoardCard, [cardUID], () => {
             onCardDeletedHandlers();
         });
 
         return () => {
-            socket.unsubscribe(ESocketTopic.BoardCard, [projectUID, cardUID]);
+            socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);
         };
     }, [isFetching]);
 

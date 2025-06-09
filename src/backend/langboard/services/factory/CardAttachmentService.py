@@ -79,6 +79,13 @@ class CardAttachmentService(BaseService):
         update_query = SqlBuilder.update.table(CardAttachment).where(CardAttachment.column("card_id") == card.id)
         update_query = ServiceHelper.set_order_in_column(update_query, CardAttachment, original_order, order)
         with DbSession.use(readonly=False) as db:
+            # Lock
+            db.exec(
+                SqlBuilder.select.table(CardAttachment)
+                .where(CardAttachment.column("card_id") == card.id)
+                .with_for_update()
+            ).all()
+
             db.exec(update_query)
             card_attachment.order = order
             db.update(card_attachment)

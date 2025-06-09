@@ -59,7 +59,7 @@ export const createCopilotPlugins = ({ socket, eventKey, events, commonEventData
                                     socket.send({
                                         topic: ESocketTopic.None,
                                         eventName: events.abort,
-                                        data: { key },
+                                        data: { task_id: key },
                                     });
                                     receive({ text: "0" });
                                 };
@@ -78,7 +78,7 @@ export const createCopilotPlugins = ({ socket, eventKey, events, commonEventData
                                     data: {
                                         ...body,
                                         ...(commonEventData ?? {}),
-                                        key,
+                                        task_id: key,
                                     },
                                 });
                             }

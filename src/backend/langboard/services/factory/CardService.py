@@ -408,16 +408,33 @@ class CardService(BaseService):
             )
 
             if new_column:
-                update_query = shared_update_query.values({Card.order: Card.order - 1}).where(
-                    (Card.column("order") >= original_order) & (Card.column("project_column_id") == original_column.id)
-                )
-                db.exec(update_query)
+                # Lock
+                db.exec(
+                    SqlBuilder.select.table(Card)
+                    .where(Card.column("project_column_id").in_([original_column.id, new_column.id]))
+                    .with_for_update()
+                ).all()
 
-                update_query = shared_update_query.values({Card.order: Card.order + 1}).where(
-                    (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
+                db.exec(
+                    shared_update_query.values({Card.order: Card.order - 1}).where(
+                        (Card.column("order") >= original_order)
+                        & (Card.column("project_column_id") == original_column.id)
+                    )
                 )
-                db.exec(update_query)
+
+                db.exec(
+                    shared_update_query.values({Card.order: Card.order + 1}).where(
+                        (Card.column("order") >= order) & (Card.column("project_column_id") == new_column.id)
+                    )
+                )
             else:
+                # Lock only the original column
+                db.exec(
+                    SqlBuilder.select.table(Card)
+                    .where(Card.column("project_column_id") == original_column.id)
+                    .with_for_update()
+                ).all()
+
                 update_query = ServiceHelper.set_order_in_column(shared_update_query, Card, original_order, order)
                 update_query = update_query.where(Card.column("project_column_id") == original_column.id)
                 db.exec(update_query)

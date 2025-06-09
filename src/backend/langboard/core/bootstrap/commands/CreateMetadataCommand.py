@@ -1,4 +1,4 @@
-from ...utils.String import pascal_to_snake
+from ...utils.StringCase import StringCase
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from .CommandUtils import create_py, format_template, make_name
 
@@ -38,7 +38,7 @@ class CreateMetadataCommand(BaseCommand):
 
     def execute(self, metadata_name: str, _: CreateMetadataCommandOptions) -> None:
         name = make_name(metadata_name, "Metadata")
-        snake_name = pascal_to_snake(name)
+        snake_name = StringCase(name).to_snake()
 
         formats = {
             "class_name": name,

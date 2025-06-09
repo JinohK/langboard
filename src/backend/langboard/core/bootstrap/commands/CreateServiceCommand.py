@@ -1,4 +1,4 @@
-from ...utils.String import pascal_to_snake
+from ...utils.StringCase import StringCase
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from .CommandUtils import create_service_py, format_template, make_name
 
@@ -41,7 +41,7 @@ class CreateServiceCommand(BaseCommand):
 
         formats = {
             "class_name": name,
-            "snake_name": pascal_to_snake(name),
+            "snake_name": StringCase(name).to_snake(),
         }
 
         code = format_template("service", formats)

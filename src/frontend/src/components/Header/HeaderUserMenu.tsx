@@ -43,9 +43,9 @@ const HeaderUserMenu = memo(({ currentUser, navigateRef }: IHeaderUserMenuProps)
                 <UserAvatar.ListSeparator />
                 <UserAvatar.ListItem
                     className="cursor-pointer"
-                    onClick={() => {
+                    onClick={async () => {
                         closeSocket();
-                        signOut();
+                        await signOut();
                     }}
                 >
                     {t("myAccount.Sign out")}

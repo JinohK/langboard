@@ -207,6 +207,9 @@ uploads
 **/backend/**/bots/*
 !**/backend/**/bots/.gitkeep
 
+**/socket/**/bots/*
+!**/socket/**/bots/index.ts
+
 **/tests/**
 !**/tests/**/.gitkeep
 

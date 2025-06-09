@@ -1,6 +1,6 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.db import DbSession, SqlBuilder, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
 from ...models import Card, Project, ProjectColumn
@@ -23,15 +23,23 @@ class ProjectColumnService(BaseService):
     async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
     @overload
     async def get_all_by_project(
+        self, project: TProjectParam, as_api: Literal[False], with_count: Literal[False]
+    ) -> list[ProjectColumn]: ...
+    @overload
+    async def get_all_by_project(
+        self, project: TProjectParam, as_api: Literal[False], with_count: Literal[True]
+    ) -> tuple[list[ProjectColumn], dict[SnowflakeID, int]]: ...
+    @overload
+    async def get_all_by_project(
         self, project: TProjectParam, as_api: Literal[True], with_count: bool = False
     ) -> list[dict[str, Any]]: ...
     async def get_all_by_project(
         self, project: TProjectParam, as_api: bool, with_count: bool = False
-    ) -> list[ProjectColumn] | list[dict[str, Any]]:
+    ) -> list[ProjectColumn] | tuple[list[ProjectColumn], dict[SnowflakeID, int]] | list[dict[str, Any]]:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
-        if as_api and with_count:
+        if with_count:
             sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
                 Card,
                 (Card.column("project_column_id") == ProjectColumn.column("id")) & (Card.column("deleted_at") == None),  # noqa
@@ -50,15 +58,18 @@ class ProjectColumnService(BaseService):
             result = db.exec(sql_query)
             raw_columns = result.all()
         columns = []
+        count_dict = {}
         has_archive_column = False
         for raw_column in raw_columns:
-            if as_api and with_count:
+            if with_count:
                 raw_column, count = cast(tuple[ProjectColumn, int], raw_column)
             else:
                 raw_column = cast(ProjectColumn, raw_column)
                 count = None
 
             columns.append({**raw_column.api_response(), "count": count} if as_api else raw_column)
+            if not as_api:
+                count_dict[raw_column.id] = count
             if raw_column.is_archive:
                 has_archive_column = True
 
@@ -67,8 +78,12 @@ class ProjectColumnService(BaseService):
             if as_api:
                 archive_column = archive_column.api_response()
                 archive_column["count"] = 0 if as_api and with_count else None
+            elif with_count:
+                count_dict[archive_column.id] = 0
             columns.append(archive_column)
 
+        if not as_api and with_count:
+            return columns, count_dict
         return columns
 
     async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:
@@ -163,6 +178,13 @@ class ProjectColumnService(BaseService):
         update_query = SqlBuilder.update.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectColumn, original_order, order)
         with DbSession.use(readonly=False) as db:
+            # Lock
+            db.exec(
+                SqlBuilder.select.table(ProjectColumn)
+                .where(ProjectColumn.column("project_id") == project.id)
+                .with_for_update()
+            ).all()
+
             db.exec(update_query)
             column.order = order
             db.update(column)

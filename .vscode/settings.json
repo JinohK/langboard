@@ -1,8 +1,5 @@
 {
-  "eslint.workingDirectories": [
-    "./src/frontend",
-    "./docs"
-  ],
+  "eslint.workingDirectories": ["./src/frontend", "./src/socket", "./docs"],
   "eslint.options": {
     "overrideConfigFile": "./eslint.config.js"
   },

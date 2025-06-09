@@ -25,8 +25,3 @@ class SocketPublishService:
         model = SocketPublishQueueModel(data=data, publish_models=publish_models)
         dispatacher_model = DispatcherModel(event="socket_publish", data=model.model_dump())
         DispatcherQueue.put(dispatacher_model)
-
-    @staticmethod
-    def parse(dispatcher_data: dict[str, Any]):
-        model = SocketPublishQueueModel(**dispatcher_data)
-        return model

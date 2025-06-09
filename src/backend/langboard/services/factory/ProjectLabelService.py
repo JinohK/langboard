@@ -204,6 +204,13 @@ class ProjectLabelService(BaseService):
         )
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectLabel, original_order, order)
         with DbSession.use(readonly=False) as db:
+            # Lock
+            db.exec(
+                SqlBuilder.select.table(ProjectLabel)
+                .where(ProjectLabel.column("project_id") == project.id)
+                .with_for_update()
+            ).all()
+
             db.exec(update_query)
             label.order = order
             db.update(label)

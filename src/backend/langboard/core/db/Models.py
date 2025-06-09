@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, ClassVar, Literal, TypeVar, overload
+import strawberry
 from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
 from ..utils.DateTime import now
-from ..utils.String import pascal_to_snake
+from ..utils.StringCase import StringCase
 from .ColumnTypes import DateTimeField, SnowflakeIDField
 from .SnowflakeID import SnowflakeID
 
@@ -55,7 +56,7 @@ class BaseSqlModel(ABC, SQLModel):
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
-        return pascal_to_snake(cls.__name__)
+        return StringCase(cls.__name__).to_snake()
 
     def __str__(self) -> str:
         return self._repr(self._get_repr_keys())
@@ -255,6 +256,10 @@ class EditorContentModel(BaseModel):
     @staticmethod
     def api_schema() -> dict[str, Any]:
         return {"content": "string"}
+
+    @strawberry.type
+    class GQL:
+        content: str
 
 
 class ChatContentModel(BaseModel):

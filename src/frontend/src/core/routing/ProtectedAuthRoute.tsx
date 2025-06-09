@@ -8,17 +8,17 @@ export interface IProtectedAuthRouteProps {
 }
 
 export const ProtectedAuthRoute = ({ children }: IProtectedAuthRouteProps): React.ReactNode => {
-    const { isAuthenticated } = useAuth();
+    const { currentUser } = useAuth();
     const [searchParams] = useSearchParams();
     const redirectUrl = searchParams.get(QUERY_NAMES.REDIRECT);
 
-    if (isAuthenticated()) {
+    if (currentUser) {
         if (redirectUrl) {
-            location.href = redirectUrl;
+            return <Navigate to={redirectUrl} />;
         } else {
             return <Navigate to={ROUTES.AFTER_SIGN_IN} />;
         }
-    } else {
-        return children;
     }
+
+    return children;
 };

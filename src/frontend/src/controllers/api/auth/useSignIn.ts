@@ -10,7 +10,6 @@ export interface ISignInForm {
 
 interface ISignInResponse {
     access_token: string;
-    refresh_token: string;
 }
 
 const useSignIn = (options?: TMutationOptions<ISignInForm, ISignInResponse>) => {

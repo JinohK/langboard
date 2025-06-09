@@ -37,12 +37,11 @@ import logging
 import os
 import signal
 import threading
-from multiprocessing import Pipe, Queue
+from multiprocessing import Pipe
 from socket import socket
 from typing import Any, Callable
 import click
 from uvicorn.config import Config
-from .....Constants import BROADCAST_TYPE
 from ....broadcast import DispatcherQueue
 from .._subprocess import get_subprocess, run_broker
 
@@ -62,14 +61,11 @@ class Process:
         config: Config,
         target: Callable[[list[socket] | None], None],
         sockets: list[socket],
-        queues: tuple[list[Queue], Queue | None],
-        idx: int,
     ) -> None:
         self.real_target = target
-        self.idx = idx
 
         self.parent_conn, self.child_conn = Pipe()
-        self.process = get_subprocess(config, self.target, sockets, queues, idx)
+        self.process = get_subprocess(config, self.target, sockets)
 
     def ping(self, timeout: float = 5) -> bool:
         self.parent_conn.send(b"ping")
@@ -156,18 +152,11 @@ class Multiprocess:
         for sig in SIGNALS:
             signal.signal(sig, lambda sig, frame: self.signal_queue.append(sig))
 
-        if BROADCAST_TYPE == "in-memory":
-            self.worker_queues = [Queue() for _ in range(self.processes_num)]
-            self.file_reader_queue = Queue()
-        else:
-            self.worker_queues = []
-            self.file_reader_queue = None
-
-        DispatcherQueue.start(self.worker_queues)
+        DispatcherQueue.start()
 
     def init_processes(self) -> None:
         for idx in range(self.processes_num):
-            process = Process(self.config, self.target, self.sockets, (self.worker_queues, self.file_reader_queue), idx)
+            process = Process(self.config, self.target, self.sockets)
             process.start()
             self.processes.append(process)
         self.broker_process = run_broker(is_restarting=False)
@@ -187,9 +176,7 @@ class Multiprocess:
         for idx, process in enumerate(self.processes):
             process.terminate()
             process.join()
-            new_process = Process(
-                self.config, self.target, self.sockets, (self.worker_queues, self.file_reader_queue), idx
-            )
+            new_process = Process(self.config, self.target, self.sockets)
             new_process.start()
             self.processes[idx] = new_process
         self.broker_process.terminate()
@@ -207,13 +194,6 @@ class Multiprocess:
         while not self.should_exit.wait(0.5):
             self.handle_signals()
             self.keep_subprocess_alive()
-
-        for queue in self.worker_queues:
-            queue.put("EOF")
-        if self.file_reader_queue:
-            self.file_reader_queue.put("EOF")
-        self.worker_queues.clear()
-        self.file_reader_queue = None
 
         self.terminate_all()
         self.join_all()
@@ -237,14 +217,15 @@ class Multiprocess:
                 return  # pragma: full coverage
 
             logger.info(f"Child process [{process.pid}] died")
-            process = Process(self.config, self.target, self.sockets, (self.worker_queues, self.file_reader_queue), idx)
+            process = Process(self.config, self.target, self.sockets)
             process.start()
             self.processes[idx] = process
 
-        self.broker_process.terminate()
-        self.broker_process.kill()
-        self.broker_process.join()
-        self.broker_process = run_broker(is_restarting=True)
+        if not self.broker_process.is_alive():
+            self.broker_process.terminate()
+            self.broker_process.kill()
+            self.broker_process.join()
+            self.broker_process = run_broker(is_restarting=True)
 
     def handle_signals(self) -> None:
         for sig in tuple(self.signal_queue):
@@ -275,10 +256,7 @@ class Multiprocess:
     def handle_ttin(self) -> None:  # pragma: py-win32
         logger.info("Received SIGTTIN, increasing the number of processes.")
         self.processes_num += 1
-        self.worker_queues.append(Queue())
-        process = Process(
-            self.config, self.target, self.sockets, (self.worker_queues, self.file_reader_queue), self.processes_num - 1
-        )
+        process = Process(self.config, self.target, self.sockets)
         process.start()
         self.processes.append(process)
 

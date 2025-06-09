@@ -13,16 +13,16 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <PageHeaderProvider>
-                <AuthProvider>
-                    <SocketProvider>
-                        <GlobalSocketHandlersSubscriber>
-                            <BrowserRouter>
+                <BrowserRouter>
+                    <AuthProvider>
+                        <SocketProvider>
+                            <GlobalSocketHandlersSubscriber>
                                 <Router />
-                            </BrowserRouter>
-                            <Toast.Area richColors />
-                        </GlobalSocketHandlersSubscriber>
-                    </SocketProvider>
-                </AuthProvider>
+                                <Toast.Area richColors />
+                            </GlobalSocketHandlersSubscriber>
+                        </SocketProvider>
+                    </AuthProvider>
+                </BrowserRouter>
             </PageHeaderProvider>
         </QueryClientProvider>
     );

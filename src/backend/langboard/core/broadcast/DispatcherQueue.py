@@ -1,4 +1,3 @@
-from multiprocessing import Queue
 from typing import Any, overload
 from ...Constants import BROADCAST_TYPE
 from ..utils.decorators import class_instance, thread_safe_singleton
@@ -25,8 +24,8 @@ class DispatcherQueue(BaseDispatcherQueue):
         else:
             raise ValueError(f"Unsupported BROADCAST_TYPE: {BROADCAST_TYPE}")
 
-    def start(self, worker_queues: list[Queue]):
-        self.__instance.start(worker_queues)
+    def start(self):
+        self.__instance.start()
 
     @overload
     def put(self, event: str, data: dict[str, Any]): ...

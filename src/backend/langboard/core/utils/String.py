@@ -73,16 +73,3 @@ def get_random_filename(file_name: str | None) -> str:
     extension = file_name.split(".")[-1] if file_name else ""
 
     return concat(str(int(now().timestamp())), urandom(10).hex(), ".", extension)
-
-
-def pascal_to_snake(pascal_str: str):
-    snake_chars: list[str] = []
-    for char in pascal_str:
-        if char.isupper() and snake_chars:
-            snake_chars.append("_")
-        snake_chars.append(char.lower())
-    return concat(*snake_chars)
-
-
-def snake_to_pascal(snake_str: str):
-    return "".join(word.capitalize() for word in snake_str.split("_"))

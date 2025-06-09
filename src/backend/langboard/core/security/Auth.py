@@ -2,20 +2,23 @@ from calendar import timegm
 from datetime import timedelta
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Literal, overload
+from typing import Any, Literal, cast, overload
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.openapi.utils import get_openapi
 from jwt import ExpiredSignatureError, InvalidTokenError
 from jwt import decode as jwt_decode
 from jwt import encode as jwt_encode
 from starlette.datastructures import Headers
+from starlette.requests import cookie_parser
 from ...Constants import (
+    ENVIRONMENT,
     JWT_ALGORITHM,
     JWT_AT_EXPIRATION,
     JWT_RT_EXPIRATION,
     JWT_SECRET_KEY,
     PROJECT_NAME,
     PROJECT_VERSION,
+    REFRESH_TOKEN_NAME,
 )
 from ..ai import Bot
 from ..ai.BotOneTimeToken import BotOneTimeToken
@@ -23,7 +26,6 @@ from ..caching import Cache
 from ..db import DbSession, SnowflakeID, SqlBuilder, User
 from ..filter import AuthFilter
 from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
-from ..routing.SocketRequest import SocketRequest
 from ..utils.DateTime import now
 from ..utils.decorators import staticclass
 from ..utils.Encryptor import Encryptor
@@ -42,8 +44,8 @@ class Auth:
 
         :param user_id: The user ID.
         """
-        access_token = Auth._create_access_token(user_id)
-        refresh_token = Auth._create_refresh_token(user_id)
+        access_token = Auth.__create_access_token(user_id)
+        refresh_token = Auth.__create_refresh_token(user_id)
 
         return access_token, refresh_token
 
@@ -57,7 +59,7 @@ class Auth:
         :raises ExpiredSignatureError: If the signature has expired.
         """
         try:
-            payload = json_loads(Encryptor.decrypt(token, JWT_SECRET_KEY))
+            payload = Auth.__decode_refresh_token(token)
             expiry = int(payload["exp"])
         except Exception:
             raise InvalidTokenError("Invalid token")
@@ -66,7 +68,7 @@ class Auth:
         if expiry <= current:
             raise ExpiredSignatureError("Signature has expired")
 
-        access_token = Auth._create_access_token(payload["sub"])
+        access_token = Auth.__create_access_token(payload["sub"])
         return access_token
 
     @staticmethod
@@ -79,20 +81,12 @@ class Auth:
     @overload
     def scope(where: Literal["api_bot"]) -> Bot: ...
     @staticmethod
-    @overload
-    def scope(where: Literal["socket"]) -> User: ...
-    @staticmethod
-    def scope(where: Literal["api", "api_user", "api_bot", "socket"]) -> User | Bot:
+    def scope(where: Literal["api", "api_user", "api_bot"]) -> User | Bot:
         """Creates a scope for the user to be used in :class:`fastapi.FastAPI` endpoints."""
         if where in {"api", "api_user", "api_bot"}:
 
             def get_user_or_bot(req: Request) -> User | Bot | None:  # type: ignore
                 return req.auth
-
-        elif where == "socket":
-
-            async def get_user_or_bot(req: SocketRequest) -> User | None:
-                return req.socket.get_user()
 
         else:
             raise ValueError("Auth.scope must be called with either 'api' or 'socket'")
@@ -111,7 +105,7 @@ class Auth:
         :return None: If the user could not be found.
         """
         try:
-            payload = jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            payload = Auth.__decode_access_token(token)
             if int(payload["exp"]) <= timegm(now().utctimetuple()):
                 raise ExpiredSignatureError("Signature has expired")
         except ExpiredSignatureError as e:
@@ -223,20 +217,30 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
         if isinstance(queries_headers, Headers):
-            access_token_scheme, access_token = authorization.split(" ", maxsplit=1)
+            authorization_schemas = authorization.split(" ", maxsplit=1)
+            if len(authorization_schemas) != 2:
+                return status.HTTP_401_UNAUTHORIZED
+            access_token_scheme, access_token = authorization_schemas
             if access_token_scheme.lower() != "bearer":
                 return status.HTTP_401_UNAUTHORIZED
-        elif isinstance(authorization, list):
-            if len(authorization) < 1:
+
+            cookie = cookie_parser(queries_headers.get("cookie", ""))
+            refresh_token = cookie.get(REFRESH_TOKEN_NAME)
+            if not Auth.__compare_tokens(access_token, refresh_token):
                 return status.HTTP_401_UNAUTHORIZED
-            access_token = authorization[0]
         else:
+            if not authorization:
+                return status.HTTP_401_UNAUTHORIZED
+
             if authorization.startswith("Bearer "):
                 access_token = authorization.split("Bearer ", maxsplit=1)[1]
             elif authorization.startswith("bearer "):
                 access_token = authorization.split("bearer ", maxsplit=1)[1]
             else:
                 access_token = authorization
+
+        if not access_token:
+            return status.HTTP_401_UNAUTHORIZED
 
         user = await Auth.get_user_by_token(access_token)
         if isinstance(user, User):
@@ -250,19 +254,27 @@ class Auth:
     async def validate_bot(headers: Headers) -> Bot | Literal[401]:
         ip = headers.get(Auth.IP_HEADER, headers.get(Auth.IP_HEADER.lower(), None))
         api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
-        if not ip or not api_token:
+        if not api_token:
             return status.HTTP_401_UNAUTHORIZED
 
-        if "," in ip:
-            ip = ip.split(",", maxsplit=1)[0]
+        if ENVIRONMENT != "local":
+            if not ip:
+                return status.HTTP_401_UNAUTHORIZED
 
-        if not is_valid_ipv4_address_or_range(ip):
-            return status.HTTP_401_UNAUTHORIZED
+            if "," in ip:
+                ip = ip.split(",", maxsplit=1)[0]
+
+            if not is_valid_ipv4_address_or_range(ip):
+                return status.HTTP_401_UNAUTHORIZED
 
         bot = await Auth.get_bot_by_api_token(api_token)
         if not bot:
             return status.HTTP_401_UNAUTHORIZED
 
+        if ENVIRONMENT == "local":
+            return bot
+
+        ip = cast(str, ip)
         for ip_range in bot.ip_whitelist:
             if ip_range.endswith(".0/24"):
                 if is_ipv4_in_range(ip, ip_range):
@@ -340,13 +352,35 @@ class Auth:
         app.openapi_schema = openapi_schema
 
     @staticmethod
-    def _create_access_token(user_id: int) -> str:
+    def __create_access_token(user_id: int) -> str:
         expiry = now() + timedelta(seconds=JWT_AT_EXPIRATION)
         payload = {"sub": str(user_id), "exp": expiry}
         return jwt_encode(payload=payload, key=JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     @staticmethod
-    def _create_refresh_token(user_id: int) -> str:
+    def __create_refresh_token(user_id: int) -> str:
         expiry = now() + timedelta(days=JWT_RT_EXPIRATION)
         payload = {"sub": str(user_id), "exp": timegm(expiry.utctimetuple())}
         return Encryptor.encrypt(json_dumps(payload), JWT_SECRET_KEY)
+
+    @staticmethod
+    def __compare_tokens(access_token: str | None, refresh_token: str | None) -> bool:
+        if not access_token or not refresh_token:
+            return False
+        try:
+            access_payload = Auth.__decode_access_token(access_token)
+            if "chat" in access_payload and access_payload["chat"]:
+                return True
+
+            refresh_payload = Auth.__decode_refresh_token(refresh_token)
+            return access_payload["sub"] == refresh_payload["sub"]
+        except Exception:
+            return False
+
+    @staticmethod
+    def __decode_access_token(token: str) -> dict[str, Any]:
+        return jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+    @staticmethod
+    def __decode_refresh_token(token: str) -> dict[str, Any]:
+        return json_loads(Encryptor.decrypt(token, JWT_SECRET_KEY))

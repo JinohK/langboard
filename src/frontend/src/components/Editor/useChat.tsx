@@ -55,7 +55,7 @@ export const useChat = (props: IUseChat) => {
                         data: {
                             ...body,
                             ...(commonEventData ?? {}),
-                            key,
+                            task_id: key,
                         },
                     });
                 },

@@ -5,7 +5,7 @@ from alembic.config import Config as AlembicConfig
 from pydantic import BaseModel
 from ....Constants import BASE_DIR, ROOT_DIR
 from ...logger import Logger
-from ...utils.String import concat, pascal_to_snake, snake_to_pascal
+from ...utils.StringCase import StringCase
 
 
 logger = Logger.use("cli")
@@ -56,11 +56,7 @@ def _get_py_config(config_type: _TPyConfigType):
 
 
 def make_name(name: str, remove_ends: str | None = None) -> str:
-    if "_" in name:
-        name = snake_to_pascal(name)
-    elif name[0].islower():
-        name = concat(name[0].upper(), *name[1:])
-
+    name = StringCase(name).to_pascal()
     if remove_ends and (name.endswith(remove_ends) or name.endswith(remove_ends.lower())):
         name = name[: -len(remove_ends)]
 
@@ -127,7 +123,7 @@ def create_service_py(name: str, code: str, factory: tuple[str, str] | None = No
     main_service_code = main_service.read_text()
     codes = [main_service_code]
     codes.append("    @property")
-    codes.append(f"    def {pascal_to_snake(name)}(self):")
+    codes.append(f"    def {StringCase(name).to_snake()}(self):")
     codes.append(f"        return self._create_or_get_service(factory.{class_name})\n")
 
     with open(main_service, "w") as f:

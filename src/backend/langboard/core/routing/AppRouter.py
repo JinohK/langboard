@@ -6,7 +6,6 @@ from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .ApiErrorCode import ApiErrorCode
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute
-from .SocketManager import SocketManager
 
 
 _TRoute = TypeVar("_TRoute", bound=Callable[..., Any])
@@ -23,12 +22,10 @@ class AppRouter:
     """
 
     api: APIRouter
-    socket: SocketManager
     __app: FastAPI
 
     def __init__(self):
         self.api = APIRouter(route_class=AppExceptionHandlingRoute)
-        self.socket = SocketManager()
 
     def schema(
         self,

@@ -2,6 +2,7 @@ export const API_ROUTES = {
     AUTH: {
         EMAIL: "/auth/email",
         SIGN_IN: "/auth/signin",
+        SIGN_OUT: "/auth/signout",
         REFRESH: "/auth/refresh",
         ABOUT_ME: "/auth/me",
         RECOVERY: {
@@ -70,7 +71,6 @@ export const API_ROUTES = {
         IS_AVAILABLE: "/board/{uid}/available",
         IS_PROJECT_ASSIGNEE: "/board/{uid}/is-assigned/{assignee_uid}",
         GET_CARDS: "/board/{uid}/cards",
-        GET_COLUMN_CARDS: "/board/{uid}/column/{column_uid}/cards",
         UPDATE_ASSIGNED_USERS: "/board/{uid}/assigned-users",
         UNASSIGN_ASSIGNEE: "/board/{uid}/unassign/{assignee_uid}",
         ACCEPT_INVITATION: "/project/invite/accept",
@@ -139,6 +139,7 @@ export const API_ROUTES = {
         },
         WIKI: {
             GET_ALL: "/board/{uid}/wikis",
+            GET_DETAILS: "/board/{uid}/wiki/{wiki_uid}",
             CREATE: "/board/{uid}/wiki",
             UPLOAD: "/board/{uid}/wiki/{wiki_uid}/attachment",
             CHANGE_DETAILS: "/board/{uid}/wiki/{wiki_uid}/details",
@@ -292,7 +293,6 @@ export const SOCKET_SERVER_EVENTS = {
         },
         WIKI: {
             CREATED: "board:wiki:created:{uid}",
-            GOT_DETAILS: "board:wiki:details:{uid}",
             EDITOR_USERS: "board:wiki:editor:users:{uid}",
             EDITOR_START_EDITING: "board:wiki:editor:start:{uid}",
             EDITOR_STOP_EDITING: "board:wiki:editor:stop:{uid}",

@@ -42,7 +42,7 @@ class Card(SoftDeleteModel, table=True):
             "description": self.description.model_dump(),
             "ai_description": self.ai_description,
             "order": self.order,
-            "deadline_at": self.deadline_at if self.deadline_at else None,
+            "deadline_at": self.deadline_at,
             "created_at": self.created_at,
             "archived_at": self.archived_at,
         }

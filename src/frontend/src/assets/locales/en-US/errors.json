@@ -64,8 +64,9 @@
     "VA3001": "Invalid crontab format.",
     "VA3002": "Invalid running time or missing required fields.",
     "VA3003": "Invalid target table or UID.",
-    "VA3004": "Invalid request format.",
+    "VA3004": "Invalid request form.",
 
+    "OP0000": "Internal server error.",
     "OP1001": "We couldn't send the email. Please try again later.",
     "OP1002": "Upload failed. Please try again."
   }

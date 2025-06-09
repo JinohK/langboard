@@ -1,9 +1,10 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import useBoardWikiGetDetailsHandlers from "@/controllers/socket/wiki/useBoardWikiGetDetailsHandlers";
+import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { api } from "@/core/helpers/Api";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import { format } from "@/core/utils/StringUtils";
 
 export interface IBoardWikiAssigneesUpdatedRawResponse {
     assigned_bots: BotModel.Interface[];
@@ -18,7 +19,6 @@ export interface IUseBoardWikiAssigneesUpdatedHandlersProps extends IBaseUseSock
 
 const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, currentUser }: IUseBoardWikiAssigneesUpdatedHandlersProps) => {
     const socket = useSocketOutsideProvider();
-    const { send: sendGetDetails } = useBoardWikiGetDetailsHandlers({ wiki });
 
     return useSocketHandler<{}, IBoardWikiAssigneesUpdatedRawResponse>({
         topic: ESocketTopic.BoardWiki,
@@ -40,7 +40,14 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
 
                 if (!socket.isSubscribed(ESocketTopic.BoardWikiPrivate, wiki.uid)) {
                     socket.subscribe(ESocketTopic.BoardWikiPrivate, [wiki.uid], () => {
-                        sendGetDetails({});
+                        api.get(
+                            format(API_ROUTES.BOARD.WIKI.GET_DETAILS, {
+                                uid: projectUID,
+                                wiki_uid: wiki.uid,
+                            })
+                        ).then((response) => {
+                            ProjectWiki.Model.fromObject(response.data.wiki, true);
+                        });
                     });
                 } else {
                     wiki.assigned_bots = data.assigned_bots;

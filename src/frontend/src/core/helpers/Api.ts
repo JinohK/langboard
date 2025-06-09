@@ -1,15 +1,15 @@
 import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
-import { API_URL, APP_ACCESS_TOKEN, APP_REFRESH_TOKEN } from "@/constants";
+import { API_URL } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
-import { redirectToSignIn } from "@/core/helpers/AuthHelper";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { getCookieStore } from "@/core/stores/CookieStore";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { getAuthStore } from "@/core/stores/AuthStore";
 
 export const api = axios.create({
     baseURL: API_URL,
+    withCredentials: true,
     transformRequest: (axios.defaults.transformRequest
         ? Array.isArray(axios.defaults.transformRequest)
             ? axios.defaults.transformRequest
@@ -26,40 +26,29 @@ export const api = axios.create({
     }),
 });
 
-export const refresh = async (): Promise<string | never> => {
-    const cookieStore = getCookieStore();
-    try {
-        const refreshToken = cookieStore.get(APP_REFRESH_TOKEN);
+export const refresh = async (): Promise<bool> => {
+    const authStore = getAuthStore();
 
-        const response = await api.post(API_ROUTES.AUTH.REFRESH, undefined, {
-            headers: {
-                "Refresh-Token": refreshToken,
-            },
-        });
+    try {
+        const response = await api.post(API_ROUTES.AUTH.REFRESH);
 
         if (response.status !== EHttpStatus.HTTP_200_OK) {
-            const cookieStore = getCookieStore();
-            cookieStore.remove(APP_ACCESS_TOKEN);
-            cookieStore.remove(APP_REFRESH_TOKEN);
-            redirectToSignIn();
+            authStore.removeToken();
             throw new Error("Failed to refresh token");
         }
 
-        cookieStore.set(APP_ACCESS_TOKEN, response.data.access_token);
-        return response.data.access_token;
+        authStore.updateToken(response.data.access_token, api);
+        return true;
     } catch (e) {
-        const cookieStore = getCookieStore();
-        cookieStore.remove(APP_ACCESS_TOKEN);
-        cookieStore.remove(APP_REFRESH_TOKEN);
-        redirectToSignIn();
-        return Promise.reject();
+        authStore.removeToken();
+        return false;
     }
 };
 
 api.interceptors.request.use(
     async (config) => {
-        const cookieStore = getCookieStore();
-        const accessToken = cookieStore.get(APP_ACCESS_TOKEN);
+        const authStore = getAuthStore();
+        const accessToken = authStore.getToken();
 
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
@@ -91,18 +80,20 @@ api.interceptors.response.use(
             },
             [EHttpStatus.HTTP_401_UNAUTHORIZED]: {
                 message: (e) => {
-                    const cookieStore = getCookieStore();
-                    cookieStore.remove(APP_ACCESS_TOKEN);
-                    cookieStore.remove(APP_REFRESH_TOKEN);
-                    redirectToSignIn();
+                    const authStore = getAuthStore();
+                    authStore.removeToken();
                     throw e;
                 },
             },
             [EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY]: {
                 message: async (e) => {
+                    const authStore = getAuthStore();
                     const originalConfig: AxiosRequestConfig = e.config!;
-                    const token = await refresh();
-                    originalConfig.headers!.Authorization = `Bearer ${token}`;
+                    const isRefreshed = await refresh();
+                    if (!isRefreshed) {
+                        return;
+                    }
+                    originalConfig.headers!.Authorization = `Bearer ${authStore.getToken()}`;
                     return await api(originalConfig);
                 },
             },

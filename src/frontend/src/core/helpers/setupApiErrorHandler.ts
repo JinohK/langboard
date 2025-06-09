@@ -41,7 +41,6 @@ const DEFAULT_CONFIGS: IApiErrorHandlerMap = {
         toast: true,
     },
     nonApi: {
-        message: () => t("errors.Unknown error"),
         toast: true,
     },
     network: {

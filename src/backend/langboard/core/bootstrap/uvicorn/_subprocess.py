@@ -43,10 +43,8 @@ import os
 import sys
 from multiprocessing.context import SpawnProcess
 from socket import socket
-from threading import Thread
 from typing import Callable
 from uvicorn.config import Config
-from ....Constants import BROADCAST_TYPE
 from ....Loader import load_modules
 
 
@@ -58,9 +56,6 @@ def get_subprocess(
     config: Config,
     target: Callable[..., None],
     sockets: list[socket],
-    queues: tuple[list[multiprocessing.Queue], multiprocessing.Queue | None],
-    idx: int,
-    is_restarting: bool = False,
 ) -> SpawnProcess:
     """
     Called in the parent process, to instantiate a new child process instance.
@@ -85,9 +80,6 @@ def get_subprocess(
         "target": target,
         "sockets": sockets,
         "stdin_fileno": stdin_fileno,
-        "queues": queues,
-        "idx": idx,
-        "is_restarting": is_restarting,
     }
 
     return spawn.Process(target=subprocess_started, kwargs=kwargs)
@@ -98,9 +90,6 @@ def subprocess_started(
     target: Callable[..., None],
     sockets: list[socket],
     stdin_fileno: int | None,
-    queues: tuple[list[multiprocessing.Queue], multiprocessing.Queue | None],
-    idx: int,
-    is_restarting: bool = False,
 ) -> None:
     """
     Called when the child process starts.
@@ -113,7 +102,7 @@ def subprocess_started(
     * stdin_fileno - The file number of sys.stdin, so that it can be reattached
                      to the child process.
     """
-    from ...broadcast import DispatcherQueue, FileReaderQueue, WorkerQueue
+    from ...broadcast import DispatcherQueue
 
     # Re-open stdin.
     if stdin_fileno is not None:
@@ -122,16 +111,7 @@ def subprocess_started(
     # Logging needs to be setup again for each child.
     config.configure_logging()
 
-    worker_queues, file_reader_queue = queues
-
-    DispatcherQueue.start(worker_queues)
-    if BROADCAST_TYPE == "in-memory":
-        WorkerQueue.set_queue(worker_queues[idx])
-        if file_reader_queue:
-            FileReaderQueue.set_queue(file_reader_queue)
-
-    Thread(target=start_worker_queue, args=(is_restarting,)).start()
-    Thread(target=start_file_reader_queue, args=(is_restarting,)).start()
+    DispatcherQueue.start()
 
     try:
         # Now we can call into `Server.run(sockets=sockets)`
@@ -140,22 +120,6 @@ def subprocess_started(
         # supress the exception to avoid a traceback from subprocess.Popen
         # the parent already expects us to end, so no vital information is lost
         pass
-
-
-def start_worker_queue(is_restarting: bool) -> None:
-    from ...broadcast import WorkerQueue
-
-    load_modules("consumers", "Consumer", log=not is_restarting)
-
-    WorkerQueue.start()
-
-
-def start_file_reader_queue(is_restarting: bool) -> None:
-    from ...broadcast import FileReaderQueue
-
-    load_modules("consumers", "Consumer", log=not is_restarting)
-
-    FileReaderQueue.start()
 
 
 def run_broker(is_restarting: bool) -> multiprocessing.Process:

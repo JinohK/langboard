@@ -106,23 +106,30 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
             scrollToBottomRef.current();
         }
     }, []);
-    const errorCallback = useCallback(() => {
-        ChatMessageModel.Model.getModels(() => true).forEach((message) => {
+    const errorCallback = useCallback((fromServer: bool = true) => {
+        ChatMessageModel.Model.getModels((model) => model.isPending ?? false).forEach((message) => {
             if (message.isPending) {
                 message.isPending = undefined;
             }
         });
         setIsSending(false);
-        Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
+        if (fromServer) {
+            Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
+        }
     }, []);
 
     const sentHandlers = useBoardChatSentHandlers({ projectUID, callback: () => scrollToBottomRef.current() });
-    const cancelledHandlers = useBoardChatCancelHandlers({ projectUID });
+    const cancelledHandlers = useBoardChatCancelHandlers({
+        projectUID,
+        callback: () => {
+            errorCallback(false);
+        },
+    });
     const streamHandlers = useMemo(
         () =>
             useBoardChatStreamHandlers({
                 projectUID,
-                callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback, error: errorCallback },
+                callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback, error: errorCallback as () => void },
             }),
         [startCallback, bufferCallback, endCallback]
     );

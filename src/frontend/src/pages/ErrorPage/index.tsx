@@ -7,11 +7,13 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 function ErrorPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { isAuthenticated } = useAuth();
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const code = window.location.pathname.split("/").pop();
     let errorCode = EHttpStatus[code as keyof typeof EHttpStatus];
     if (!errorCode) {
@@ -29,10 +31,10 @@ function ErrorPage(): JSX.Element {
     }, []);
 
     const handleBack = () => {
-        if (isAuthenticated()) {
-            location.href = ROUTES.DASHBOARD.PROJECTS.ALL;
+        if (currentUser) {
+            navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
         } else {
-            location.href = ROUTES.SIGN_IN.EMAIL;
+            navigate(ROUTES.SIGN_IN.EMAIL);
         }
     };
 
@@ -43,7 +45,7 @@ function ErrorPage(): JSX.Element {
                 <Separator className="mt-1 h-8 w-0.5" orientation="vertical" />
                 {message.toUpperCase()}
             </h1>
-            <Button onClick={handleBack}>{t(isAuthenticated() ? "common.Go to Dashboard" : "common.Go to Sign In")}</Button>
+            <Button onClick={handleBack}>{t(currentUser ? "common.Go to Dashboard" : "common.Go to Sign In")}</Button>
         </Flex>
     );
 }

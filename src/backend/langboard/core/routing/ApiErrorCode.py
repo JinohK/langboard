@@ -40,7 +40,7 @@ class ApiErrorCode(Enum):
     NF2008 = "Project or user not found."
     NF2009 = "Project or label not found."
     NF2010 = "Project or wiki not found."
-    NF2011 = "Project, card, or attachment not found.."
+    NF2011 = "Project, card, or attachment not found."
     NF2012 = "Project, card, or checklist not found."
     NF2013 = "Project, card, or checkitem not found."
     NF2014 = "Project, card, or comment not found."

@@ -27,6 +27,9 @@ class UserService(BaseService):
     def create_cache_name(self, cache_type: str, email: str) -> str:
         return f"{cache_type}:{email}"
 
+    def get_by_id(self, user_id: SnowflakeID) -> User | None:
+        return ServiceHelper.get_by_param(User, user_id)
+
     async def get_by_uid(self, uid: str) -> User | None:
         return ServiceHelper.get_by_param(User, uid)
 

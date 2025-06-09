@@ -23,8 +23,8 @@ const DashboardProxy = memo((): JSX.Element => {
     const scrollAreaUpdater = useReducer((x) => x + 1, 0);
     const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [scrollAreaMutable] = scrollAreaUpdater;
-    const { currentUser, updated } = useAuth();
-    const starredProjects = Project.Model.useModels((model) => model.starred, [data, isFetching, updated, updatedStarredProjects]);
+    const { currentUser } = useAuth();
+    const starredProjects = Project.Model.useModels((model) => model.starred, [data, isFetching, updatedStarredProjects]);
 
     const headerNavs: Record<string, IHeaderNavItem> = {
         projects: {

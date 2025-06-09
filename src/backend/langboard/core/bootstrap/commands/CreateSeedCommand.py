@@ -1,4 +1,4 @@
-from ...utils.String import pascal_to_snake
+from ...utils.StringCase import StringCase
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from .CommandUtils import create_py, format_template, make_name
 
@@ -38,7 +38,7 @@ class CreateSeedCommand(BaseCommand):
 
     def execute(self, seed_name: str, _: CreateSeedCommandOptions) -> None:
         name = make_name(seed_name, "Seed")
-        snake_name = pascal_to_snake(name)
+        snake_name = StringCase(name).to_snake()
 
         formats = {
             "class_name": name,

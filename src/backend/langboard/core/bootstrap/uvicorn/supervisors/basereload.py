@@ -39,14 +39,12 @@ import signal
 import sys
 import threading
 from collections.abc import Iterator
-from multiprocessing import Queue
 from pathlib import Path
 from socket import socket
 from types import FrameType
 from typing import Callable
 import click
 from uvicorn.config import Config
-from .....Constants import BROADCAST_TYPE
 from ....broadcast import DispatcherQueue
 from .._subprocess import get_subprocess, run_broker
 
@@ -74,10 +72,7 @@ class BaseReload:
         self.is_restarting = False
         self.reloader_name: str | None = None
 
-        self.worker_queues: list[Queue] = [Queue()]
-        self.file_reader_queue: Queue | None = Queue() if BROADCAST_TYPE == "in-memory" else None
-
-        DispatcherQueue.start(self.worker_queues)
+        DispatcherQueue.start()
 
     def signal_handler(self, sig: int, frame: FrameType | None) -> None:  # pragma: full coverage
         """
@@ -124,26 +119,16 @@ class BaseReload:
             config=self.config,
             target=self.target,
             sockets=self.sockets,
-            queues=(self.worker_queues, self.file_reader_queue),
-            idx=0,
         )
         self.process.start()
 
     def restart(self) -> None:
-        for queue in self.worker_queues:
-            queue.put("EOF")
-        if self.file_reader_queue:
-            self.file_reader_queue.put("EOF")
-
         if self.broker_process.pid:
             os.kill(self.broker_process.pid, signal.SIGTERM)
         else:
             self.broker_process.terminate()
             self.broker_process.kill()
         self.broker_process.join()
-
-        self.worker_queues = [Queue()]
-        self.file_reader_queue = Queue() if BROADCAST_TYPE == "in-memory" else None
 
         if sys.platform == "win32":  # pragma: py-not-win32
             self.is_restarting = True
@@ -163,19 +148,10 @@ class BaseReload:
             config=self.config,
             target=self.target,
             sockets=self.sockets,
-            queues=(self.worker_queues, self.file_reader_queue),
-            idx=0,
         )
         self.process.start()
 
     def shutdown(self) -> None:
-        for queue in self.worker_queues:
-            queue.put("EOF")
-        if self.file_reader_queue:
-            self.file_reader_queue.put("EOF")
-        self.worker_queues.clear()
-        self.file_reader_queue = None
-
         if self.broker_process.pid:
             os.kill(self.broker_process.pid, signal.SIGTERM)
         else:

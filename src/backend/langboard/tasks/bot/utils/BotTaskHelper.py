@@ -105,28 +105,26 @@ class BotTaskHelper:
             json_data = response
         elif bot.api_auth_type == BotAPIAuthType.Langflow:
             headers[LangflowConstants.ApiKey.value] = bot.api_key
-            tweaks = {
-                **LangboardCalledVariablesComponent(
-                    event=event,
-                    app_api_token=bot.app_api_token,
-                    project_uid=project.get_uid() if project else None,
-                    bot_labels_for_project=[label.api_response() for label in labels] if labels else None,
-                    current_runner_type="bot",
-                    current_runner_data={
-                        **BotTaskDataHelper.create_user_or_bot(bot),
-                        "prompt": bot.prompt,
-                    },
-                ).to_tweaks()
-            }
+            tweaks = LangboardCalledVariablesComponent(
+                event=event,
+                app_api_token=bot.app_api_token,
+                project_uid=project.get_uid() if project else None,
+                bot_labels_for_project=[label.api_response() for label in labels] if labels else [],
+                current_runner_type="bot",
+                current_runner_data={
+                    **BotTaskDataHelper.create_user_or_bot(bot),
+                    "prompt": bot.prompt,
+                },
+                rest_data=json_loads(json_dumps(data, default=str)),
+            ).to_data()
 
             if bot.api_url.count("v1/webhook") > 0:
                 json_data = {
-                    "input": json_loads(json_dumps(response, default=str)),
                     "tweaks": tweaks,
                 }
             else:
                 json_data = {
-                    "input_value": json_dumps(response, default=str),
+                    "input_value": "",
                     "input_type": "chat",
                     "output_type": "chat",
                     "tweaks": tweaks,

@@ -97,23 +97,41 @@ class NotificationService(BaseService):
 
         return notifications
 
-    async def convert_to_api_response(self, notification: UserNotification) -> dict[str, Any]:
+    async def convert_to_api_response(
+        self,
+        notification: UserNotification,
+        record_list: list[_TModel] | None = None,
+        notifier: TUserOrBot | None = None,
+    ) -> dict[str, Any]:
         api_notification = notification.api_response()
         table_ids_dict = ServiceHelper.combine_table_with_ids(notification.record_list)
 
         records: dict[str, Any] = {}
-        for table_name, record_ids in table_ids_dict.items():
-            results = ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids)
-            if not results:
-                continue
-            for record in results:
+        if record_list:
+            for record in record_list:
+                table_name = type(record).__tablename__
                 if table_name not in records:
                     records[table_name] = {}
                 records[table_name] = record.notification_data()
+        else:
+            for table_name, record_ids in table_ids_dict.items():
+                results = ServiceHelper.get_records_by_table_name_with_ids(table_name, record_ids)
+                if not results:
+                    continue
+                for record in results:
+                    if table_name not in records:
+                        records[table_name] = {}
+                    records[table_name] = record.notification_data()
 
         api_notification["records"] = records
-        notifier_key, notifier = await self.get_notifier(notification, as_api=True)
-        api_notification[notifier_key] = notifier
+        if notifier:
+            notifier_key, api_notifier = (
+                "notifier_user" if isinstance(notifier, User) else "notifier_bot",
+                notifier.api_response(),
+            )
+        else:
+            notifier_key, api_notifier = await self.get_notifier(notification, as_api=True)
+        api_notification[notifier_key] = api_notifier
         return api_notification
 
     @overload
@@ -346,8 +364,7 @@ class NotificationService(BaseService):
             return False
 
         raw_record_list = self.create_record_list(references)
-        record_list = [(table_name, int(record_id)) for table_name, record_id in raw_record_list]
-        self.create_record_list(references)
+        record_list = [(table_name, SnowflakeID(record_id)) for table_name, record_id in raw_record_list]
 
         scope_model_tuples = (
             [(type(scope_model).__tablename__, int(scope_model.id)) for scope_model in scope_models]
@@ -359,15 +376,20 @@ class NotificationService(BaseService):
             email_formats["recipient"] = target_user.firstname
             email_formats["sender"] = notifier.get_fullname()
 
-        model = NotificationPublishModel(
-            notifier=notifier,
-            target_user=target_user,
+        notification = UserNotification(
+            notifier_type="user" if isinstance(notifier, User) else "bot",
+            notifier_id=notifier.id,
+            receiver_id=target_user.id,
             notification_type=notification_type,
-            scope_models=scope_model_tuples,
-            # web
-            record_list=record_list,
             message_vars=message_vars or {},
-            # email
+            record_list=record_list,
+        )
+
+        model = NotificationPublishModel(
+            notification=notification,
+            api_notification=await self.convert_to_api_response(notification, references, notifier),
+            target_user=target_user,
+            scope_models=scope_model_tuples,
             email_template_name=email_template_name,
             email_formats=email_formats,
         )

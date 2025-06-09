@@ -2,7 +2,7 @@ from asyncio import run as run_async
 from typing import cast
 from ....migrations import seeds
 from ...db import BaseSeed
-from ...utils.String import pascal_to_snake
+from ...utils.StringCase import StringCase
 from ..BaseCommand import BaseCommand, BaseCommandOptions
 from .CommandUtils import logger, make_name
 
@@ -42,7 +42,7 @@ class DbSeedCommand(BaseCommand):
 
     def execute(self, name: str, _: DbSeedCommandOptions) -> None:
         name = make_name(name, "Seed")
-        name = pascal_to_snake(name)
+        name = StringCase(name).to_snake()
 
         seeder = None
         for seed_model_name in seeds.__all__:

@@ -6,6 +6,7 @@ import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
+import { createUUID } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTemplateListDialog";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -25,6 +26,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
     const chatAttachmentRef = useRef<HTMLInputElement>(null);
     const chatInputRef = useRef<HTMLTextAreaElement>(null);
+    const chatTaskIdRef = useRef<string | null>(null);
     const [previewElement, setPreviewElement] = useState<React.ReactNode | null>(null);
     const updateHeight = useCallback(() => {
         if (!TypeUtils.isElement(chatInputRef.current, "textarea")) {
@@ -44,7 +46,9 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
         }
 
         if (!isUploading && isSending) {
-            cancelChat({});
+            cancelChat({
+                task_id: chatTaskIdRef.current,
+            });
             return;
         }
 
@@ -90,16 +94,18 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             if (tried >= 5) {
                 Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
                 setIsSending(false);
-                return;
+                return null;
             }
 
             ++tried;
+
+            chatTaskIdRef.current = createUUID();
 
             return socket.send({
                 topic: ESocketTopic.Board,
                 topicId: projectUID,
                 eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT.SEND,
-                data: { message: chatMessage, file_path: filePath },
+                data: { message: chatMessage, file_path: filePath, task_id: chatTaskIdRef.current },
             }).isConnected;
         };
 
@@ -110,7 +116,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             }
 
             const isSent = trySendChat();
-            if (!isSent) {
+            if (TypeUtils.isBool(isSent) && !isSent) {
                 triedTimeout = setTimeout(trySendChatWrapper, 1000);
             }
         };

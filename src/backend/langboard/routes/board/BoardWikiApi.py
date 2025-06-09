@@ -6,9 +6,10 @@ from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.routing.Exception import MissingException
 from ...core.schema import OpenApiSchema
 from ...core.security import Auth
+from ...core.service import ServiceHelper
 from ...core.storage import Storage, StorageName
 from ...core.utils.Converter import convert_python_data
-from ...models import ProjectRole, ProjectWiki, ProjectWikiAttachment
+from ...models import Project, ProjectRole, ProjectWiki, ProjectWikiAttachment
 from ...models.ProjectRole import ProjectRoleAction
 from ...services import Service
 from .scopes import (
@@ -63,6 +64,52 @@ async def get_project_wikis(
     project_members = await service.project.get_assigned_users(project, as_api=True)
     project_bots = await service.project.get_assigned_bots(project, as_api=True)
     return JsonResponse(content={"wikis": wikis, "project_members": project_members, "project_bots": project_bots})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/board/{project_uid}/wiki/{wiki_uid}",
+    tags=["Board.Wiki"],
+    description="Get project wiki details.",
+    responses=(
+        OpenApiSchema()
+        .suc(
+            {
+                "wiki": (
+                    ProjectWiki,
+                    {
+                        "schema": {
+                            "assigned_bots": [Bot],
+                            "assigned_members": [User],
+                        }
+                    },
+                )
+            }
+        )
+        .auth()
+        .forbidden()
+        .err(404, ApiErrorCode.NF2010)
+        .get()
+    ),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@AuthFilter.add()
+async def get_project_wiki_details(
+    project_uid: str,
+    wiki_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (ProjectWiki, wiki_uid))
+    if not params:
+        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+    _, project_wiki = params
+
+    api_wiki = await service.project_wiki.convert_to_api_response(user_or_bot, project_wiki)
+    if not api_wiki:
+        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(content={"wiki": api_wiki})
 
 
 @AppRouter.schema(form=WikiForm)

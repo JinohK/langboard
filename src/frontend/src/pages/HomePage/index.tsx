@@ -5,10 +5,10 @@ import { useEffect } from "react";
 
 function HomePage(): JSX.Element {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { currentUser } = useAuth();
 
     useEffect(() => {
-        if (isAuthenticated()) {
+        if (currentUser) {
             navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
         } else {
             navigate(ROUTES.SIGN_IN.EMAIL);

@@ -2,7 +2,6 @@ import { useLocation } from "react-router-dom";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
-import { RedirectToSignIn } from "@/core/helpers/AuthHelper";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider";
@@ -16,13 +15,9 @@ import { useTranslation } from "react-i18next";
 
 function AccountPage(): JSX.Element {
     const [t] = useTranslation();
-    const { isAuthenticated, currentUser } = useAuth();
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-
-    if (!isAuthenticated()) {
-        return <RedirectToSignIn />;
-    }
 
     const headerNavs: Record<string, IHeaderNavItem> = {};
 

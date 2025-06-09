@@ -91,15 +91,19 @@ class Bot(SoftDeleteModel, table=True):
             "name": self.name,
             "bot_uname": self.bot_uname,
             "avatar": None,
-            "as_user": {
-                "type": User.UNKNOWN_USER_TYPE,
-                "uid": self.get_uid(),
-                "firstname": "",
-                "lastname": "",
-                "email": "",
-                "username": "",
-                "avatar": None,
-            },
+            "as_user": Bot.create_unknown_as_user_api_response(self.get_uid()),
+        }
+
+    @staticmethod
+    def create_unknown_as_user_api_response(uid: str) -> dict[str, Any]:
+        return {
+            "type": User.UNKNOWN_USER_TYPE,
+            "uid": uid,
+            "firstname": "",
+            "lastname": "",
+            "email": "",
+            "username": "",
+            "avatar": None,
         }
 
     def notification_data(self) -> dict[str, Any]:

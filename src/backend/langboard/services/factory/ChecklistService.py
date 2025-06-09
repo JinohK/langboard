@@ -140,6 +140,11 @@ class ChecklistService(BaseService):
         update_query = SqlBuilder.update.table(Checklist).where(Checklist.column("card_id") == card.id)
         update_query = ServiceHelper.set_order_in_column(update_query, Checklist, original_order, order)
         with DbSession.use(readonly=False) as db:
+            # Lock
+            db.exec(
+                SqlBuilder.select.table(Checklist).where(Checklist.column("card_id") == card.id).with_for_update()
+            ).all()
+
             db.exec(update_query)
             checklist.order = order
             db.update(checklist)

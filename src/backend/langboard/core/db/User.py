@@ -48,7 +48,7 @@ class User(SoftDeleteModel, table=True):
 
     def api_response(self) -> dict[str, Any]:
         if self.deleted_at is not None:
-            return self.create_unknown_user_api_response()
+            return User.create_unknown_user_api_response(self.get_uid())
 
         return {
             "type": User.USER_TYPE,
@@ -63,10 +63,11 @@ class User(SoftDeleteModel, table=True):
     def notification_data(self) -> dict[str, Any]:
         return self.api_response()
 
-    def create_unknown_user_api_response(self) -> dict[str, Any]:
+    @staticmethod
+    def create_unknown_user_api_response(uid: str) -> dict[str, Any]:
         return {
             "type": User.UNKNOWN_USER_TYPE,
-            "uid": self.get_uid(),
+            "uid": uid,
             "firstname": "",
             "lastname": "",
             "email": "",

@@ -12,8 +12,13 @@ class SnowflakeID(int):
     _sequence = 0
     _last_timestamp = -1
 
-    def __new__(cls, value: int | None = None):
+    def __new__(cls, value: int | str | None = None):
         if value is not None:
+            if isinstance(value, str):
+                try:
+                    value = int(value)
+                except Exception:
+                    value = 0
             return super().__new__(cls, value)
 
         machine_id = SnowflakeID.__get_machine_id()
@@ -65,6 +70,13 @@ class SnowflakeID(int):
             return value
         if isinstance(value, int):
             return cls(value)
+        if isinstance(value, str):
+            if len(value) == cls.FIXED_SHORT_CODE_LENGTH:
+                return cls.from_short_code(value)
+            try:
+                return cls(int(value))
+            except ValueError:
+                pass
         raise TypeError("SnowflakeID must be an integer or None")
 
     def __str__(self):

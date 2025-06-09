@@ -189,7 +189,7 @@ class UserNotificationSettingService(BaseService):
         query = (
             self.get_unsubscriptions_query_builder(model.target_user)
             .where_channel(channel)
-            .where_notification_type(model.notification_type)
+            .where_notification_type(model.notification.notification_type)
         )
         unsubscription = await query.where_scope(NotificationScope.All).first()
         if unsubscription:

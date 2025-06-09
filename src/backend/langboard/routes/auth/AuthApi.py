@@ -1,6 +1,6 @@
-from typing import Annotated
-from fastapi import Header, status
+from fastapi import Request, status
 from jwt import ExpiredSignatureError
+from ...Constants import JWT_RT_EXPIRATION, REFRESH_TOKEN_NAME
 from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
@@ -11,7 +11,7 @@ from ...models import UserEmail, UserGroup, UserNotification, UserProfile
 from ...models.UserNotification import NotificationType
 from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from ...services import Service
-from .scopes import AuthEmailForm, AuthEmailResponse, RefreshResponse, SignInForm, SignInResponse
+from .scopes import AuthEmailForm, AuthEmailResponse, SignInForm
 
 
 @AppRouter.api.post(
@@ -38,17 +38,17 @@ async def auth_email(form: AuthEmailForm, service: Service = Service.scope()) ->
 
 @AppRouter.api.post(
     "/auth/signin",
-    response_model=SignInResponse,
     tags=["Auth"],
     responses=(
         OpenApiSchema(None)
+        .suc({"access_token": "string"})
         .err(404, ApiErrorCode.AU1001)
         .err(406, ApiErrorCode.AU1002)
         .err(423, ApiErrorCode.AU1003)
         .get()
     ),
 )
-async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonResponse | SignInResponse:
+async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonResponse:
     user, subemail = await service.user.get_by_token(form.email_token, form.sign_token)
 
     if not user:
@@ -65,17 +65,35 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
 
     access_token, refresh_token = Auth.authenticate(user.id)
 
-    return SignInResponse(access_token=access_token, refresh_token=refresh_token)
+    response = JsonResponse({"access_token": access_token}, status_code=status.HTTP_200_OK)
+    response.set_cookie(
+        REFRESH_TOKEN_NAME,
+        refresh_token,
+        max_age=JWT_RT_EXPIRATION * 60 * 60 * 24,
+        httponly=True,
+        secure=True,
+    )
+
+    return response
 
 
 @AppRouter.api.post(
     "/auth/refresh",
-    response_model=RefreshResponse,
     tags=["Auth"],
-    responses=OpenApiSchema(None).err(422, ApiErrorCode.AU1004).err(401, ApiErrorCode.AU1004).get(),
+    responses=(
+        OpenApiSchema(None)
+        .suc({"access_token": "string"})
+        .err(422, ApiErrorCode.AU1004)
+        .err(401, ApiErrorCode.AU1004)
+        .get()
+    ),
 )
-async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | RefreshResponse:
+async def refresh(request: Request) -> JsonResponse:
     try:
+        refresh_token = request.cookies.get(REFRESH_TOKEN_NAME, None)
+        if not refresh_token:
+            raise Exception()
+
         new_access_token = Auth.refresh(refresh_token)
         user = await Auth.get_user_by_token(new_access_token)
 
@@ -86,7 +104,7 @@ async def refresh(refresh_token: Annotated[str, Header()]) -> JsonResponse | Ref
     except Exception:
         return JsonResponse(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    return RefreshResponse(access_token=new_access_token)
+    return JsonResponse({"access_token": new_access_token})
 
 
 @AppRouter.api.get(
@@ -166,3 +184,11 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
         response["is_admin"] = True
 
     return JsonResponse(content={"user": response, "notifications": notifications})
+
+
+@AppRouter.api.post("/auth/signout", tags=["Auth"], responses=OpenApiSchema(202).suc({}).get())
+async def sign_out():
+    response = JsonResponse(status_code=status.HTTP_202_ACCEPTED)
+    response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+
+    return response

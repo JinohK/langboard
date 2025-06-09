@@ -190,6 +190,13 @@ class CheckitemService(BaseService):
         with DbSession.use(readonly=False) as db:
             shared_update_query = SqlBuilder.update.table(Checkitem)
             if original_checklist and new_checklist:
+                # Lock
+                db.exec(
+                    SqlBuilder.select.table(Checkitem)
+                    .where(Checkitem.column("checklist_id").in_([original_checklist.id, new_checklist.id]))
+                    .with_for_update()
+                ).all()
+
                 update_query = shared_update_query.values({Checkitem.order: Checkitem.order - 1}).where(
                     (Checkitem.column("order") >= original_order)
                     & (Checkitem.column("checklist_id") == original_checklist.id)
@@ -203,6 +210,13 @@ class CheckitemService(BaseService):
 
                 checkitem.checklist_id = new_checklist.id
             else:
+                # Lock
+                db.exec(
+                    SqlBuilder.select.table(Checkitem)
+                    .where(Checkitem.column("checklist_id") == checkitem.checklist_id)
+                    .with_for_update()
+                ).all()
+
                 update_query = shared_update_query.where(Checkitem.column("checklist_id") == checkitem.checklist_id)
                 update_query = ServiceHelper.set_order_in_column(update_query, Checkitem, original_order, order)
                 db.exec(update_query)
