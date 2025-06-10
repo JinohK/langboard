@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBot } from "@/core/ai/BaseBot";
 import EInternalBotType from "@/core/ai/EInternalBotType";
-import { TSocketSendParams } from "@/core/socket/ISocketClient";
-import SocketClient from "@/core/socket/SocketClient";
+import { TSocketSendParams } from "@/core/server/ISocketClient";
+import SocketClient from "@/core/server/SocketClient";
+import formidable from "formidable";
 
 class BotRunner {
     public static async run(botType: EInternalBotType, data: Record<string, any>) {
@@ -35,6 +36,14 @@ class BotRunner {
             return false;
         }
         return await bot.isAvailable();
+    }
+
+    public static async uploadFile(botType: EInternalBotType, file: formidable.File): Promise<string | null> {
+        const bot = getBot(botType);
+        if (!bot) {
+            return null;
+        }
+        return await bot.uploadFile(file);
     }
 
     public static isAborted(botType: EInternalBotType, task_id: string): bool {

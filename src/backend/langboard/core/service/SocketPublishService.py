@@ -21,7 +21,7 @@ class SocketPublishQueueModel(BaseModel):
 @staticclass
 class SocketPublishService:
     @staticmethod
-    def put_dispather(data: dict[str, Any], publish_models: list[SocketPublishModel] | SocketPublishModel):
+    async def put_dispather(data: dict[str, Any], publish_models: list[SocketPublishModel] | SocketPublishModel):
         model = SocketPublishQueueModel(data=data, publish_models=publish_models)
         dispatacher_model = DispatcherModel(event="socket_publish", data=model.model_dump())
-        DispatcherQueue.put(dispatacher_model)
+        await DispatcherQueue.put(dispatacher_model)

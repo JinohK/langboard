@@ -9,7 +9,7 @@ from ..models import Card, CardComment, Project
 @staticclass
 class CardCommentPublisher:
     @staticmethod
-    def created(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
+    async def created(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
         api_comment = comment.api_response()
         author_key = "user" if isinstance(user_or_bot, User) else "bot"
         api_comment[author_key] = user_or_bot.api_response()
@@ -23,10 +23,10 @@ class CardCommentPublisher:
             data_keys="comment",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def updated(project: Project, card: Card, comment: CardComment):
+    async def updated(project: Project, card: Card, comment: CardComment):
         model = {
             "content": comment.content.model_dump() if comment.content else {"content": ""},
             "card_uid": card.get_uid(),
@@ -40,10 +40,10 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(project: Project, card: Card, comment: CardComment):
+    async def deleted(project: Project, card: Card, comment: CardComment):
         model = {"card_uid": card.get_uid(), "comment_uid": comment.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -52,10 +52,10 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def reacted(
+    async def reacted(
         user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str, is_reacted: bool
     ):
         author_key = "user_uid" if isinstance(user_or_bot, User) else "bot_uid"
@@ -73,4 +73,4 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

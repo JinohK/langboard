@@ -252,3 +252,7 @@ export const isJsonString = (str: string): bool => {
 
     return false;
 };
+
+export const convertSafeEnum = <T extends Record<string, string>>(EnumType: T, value: T[keyof T] | string) => {
+    return EnumType[new StringCase(value).toPascal() as keyof typeof EnumType];
+};

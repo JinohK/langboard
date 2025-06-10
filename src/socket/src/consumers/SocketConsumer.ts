@@ -1,5 +1,7 @@
 import Consumer from "@/core/broadcast/Consumer";
-import Subscription from "@/core/socket/Subscription";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import Subscription from "@/core/server/Subscription";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 type TSocketPublishQueueData = {
@@ -15,7 +17,7 @@ type TSocketPublishData = {
     custom_data?: Record<string, unknown>;
 };
 
-const SocketConsumer = async (data: unknown) => {
+Consumer.register("socket_publish", async (data: unknown) => {
     if (!TypeUtils.isObject<TSocketPublishQueueData>(data) || !data.data || !data.publish_models) {
         return;
     }
@@ -49,10 +51,6 @@ const SocketConsumer = async (data: unknown) => {
             Object.assign(publishData, publishModel.custom_data);
         }
 
-        await Subscription.publish(publishModel.topic, publishModel.topic_id, publishModel.event, publishData);
+        await Subscription.publish(convertSafeEnum(ESocketTopic, publishModel.topic), publishModel.topic_id, publishModel.event, publishData);
     }
-};
-
-Consumer.register("socket_publish", SocketConsumer);
-
-export default SocketConsumer;
+});

@@ -85,7 +85,7 @@ async def _check_bot_schedule_runnable(interval_str: str):
                     project = result.first()
 
             if project:
-                ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
+                await ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
 
         await _run_scheduler(bot, bot_schedule)
 
@@ -139,7 +139,7 @@ async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
             await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Stopped)
 
     if project and bot_schedule.status != old_status:
-        ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
+        await ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
 
 
 def _get_target_model(target_table: str, target_id: SnowflakeID | int):

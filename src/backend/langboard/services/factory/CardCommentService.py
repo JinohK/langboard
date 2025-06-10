@@ -84,7 +84,7 @@ class CardCommentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(comment)
 
-        CardCommentPublisher.created(user_or_bot, project, card, comment)
+        await CardCommentPublisher.created(user_or_bot, project, card, comment)
 
         notification_service = self._get_service(NotificationService)
         await notification_service.notify_mentioned_in_comment(user_or_bot, project, card, comment)
@@ -117,7 +117,7 @@ class CardCommentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(comment)
 
-        CardCommentPublisher.updated(project, card, comment)
+        await CardCommentPublisher.updated(project, card, comment)
 
         notification_service = self._get_service(NotificationService)
         await notification_service.notify_mentioned_in_comment(user_or_bot, project, card, comment)
@@ -144,7 +144,7 @@ class CardCommentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(comment)
 
-        CardCommentPublisher.deleted(project, card, comment)
+        await CardCommentPublisher.deleted(project, card, comment)
         CardCommentActivityTask.card_comment_deleted(user_or_bot, project, card, comment)
         CardCommentBotTask.card_comment_deleted(user_or_bot, project, card, comment)
 
@@ -168,7 +168,7 @@ class CardCommentService(BaseService):
         reaction_service = self._get_service(ReactionService)
         is_reacted = await reaction_service.toggle(user_or_bot, CardCommentReaction, comment.id, reaction)
 
-        CardCommentPublisher.reacted(user_or_bot, project, card, comment, reaction, is_reacted)
+        await CardCommentPublisher.reacted(user_or_bot, project, card, comment, reaction, is_reacted)
 
         if is_reacted and comment.user_id:
             notification_service = self._get_service(NotificationService)

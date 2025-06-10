@@ -1,11 +1,11 @@
 import { WebSocket } from "ws";
 import { IncomingMessage } from "http";
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import Subscription from "@/core/socket/Subscription";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import Subscription from "@/core/server/Subscription";
 import User from "@/models/User";
-import ISocketClient, { TSocketSendParams } from "@/core/socket/ISocketClient";
-import Hocus from "@/core/socket/Hocus";
-import ESocketStatus from "@/core/socket/ESocketStatus";
+import ISocketClient, { TSocketSendParams } from "@/core/server/ISocketClient";
+import Hocus from "@/core/server/Hocus";
+import ESocketStatus from "@/core/server/ESocketStatus";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
 
 class SocketClient implements ISocketClient {

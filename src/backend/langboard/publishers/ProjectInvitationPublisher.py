@@ -9,7 +9,7 @@ from ..models import Project, UserNotification
 @staticclass
 class ProjectInvitationPublisher:
     @staticmethod
-    def accepted(project: Project, model: dict[str, Any]):
+    async def accepted(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -17,10 +17,10 @@ class ProjectInvitationPublisher:
             event=f"board:assigned-users:updated:{topic_id}",
             data_keys=list(model.keys()),
         )
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def notification_deleted(user: User, notification: UserNotification):
+    async def notification_deleted(user: User, notification: UserNotification):
         model = {"notification_uid": notification.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.UserPrivate,
@@ -28,4 +28,4 @@ class ProjectInvitationPublisher:
             event="user:notification:deleted",
             data_keys="notification_uid",
         )
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

@@ -195,7 +195,7 @@ class CardRelationshipService(BaseService):
 
         new_relationships = await self.get_all_by_card(card, as_api=True)
 
-        CardRelationshipPublisher.updated(project, card, new_relationships)
+        await CardRelationshipPublisher.updated(project, card, new_relationships)
         CardRelationshipActivityTask.card_relationship_updated(
             user_or_bot, project, card, list(original_relationship_ids), list(new_relationships_dict.keys()), is_parent
         )

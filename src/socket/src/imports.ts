@@ -4,3 +4,4 @@ import "@/consumers";
 import "@/validators";
 import "@/bots";
 import "@/events";
+import "@/routes";

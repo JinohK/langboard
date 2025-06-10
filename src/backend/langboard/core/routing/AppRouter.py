@@ -1,7 +1,8 @@
+from json import dumps as json_dumps
 from typing import Any, Callable, TypeVar
 from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
-from ...Constants import PROJECT_NAME, PROJECT_VERSION
+from ...Constants import PROJECT_NAME, PROJECT_VERSION, SCHEMA_DIR
 from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .ApiErrorCode import ApiErrorCode
@@ -109,6 +110,12 @@ class AppRouter:
         }
 
         app.openapi_schema = openapi_schema
+
+    def create_schema_file(self, app: FastAPI):
+        schema_file = SCHEMA_DIR / "openapi.json"
+        with schema_file.open("w", encoding="utf-8") as f:
+            f.write(json_dumps(app.openapi_schema))
+        app.openapi_schema = None
 
     def set_app(self, app: FastAPI):
         self.__app = app

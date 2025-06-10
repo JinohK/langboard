@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Avatar, Box, Flex, IconComponent, Skeleton, Tooltip } from "@/components/base";
-import VersionHistoryPlate from "@/components/Editor/version-history-plate";
+import { CollapsibleVersionHistoryPlate } from "@/components/Editor/version-history-plate";
 import UserAvatar from "@/components/UserAvatar";
 import { useNavigate } from "react-router-dom";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
@@ -263,7 +263,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 );
 
                 elements.push(
-                    <VersionHistoryPlate
+                    <CollapsibleVersionHistoryPlate
                         mentionables={mentionables}
                         currentUser={currentUser}
                         form={{

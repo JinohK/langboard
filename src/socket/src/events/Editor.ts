@@ -1,8 +1,8 @@
 import BotRunner from "@/core/ai/BotRunner";
 import EInternalBotType from "@/core/ai/EInternalBotType";
-import ESocketStatus from "@/core/socket/ESocketStatus";
-import ESocketTopic, { NONE_TOPIC_ID } from "@/core/socket/ESocketTopic";
-import EventManager from "@/core/socket/EventManager";
+import ESocketStatus from "@/core/server/ESocketStatus";
+import ESocketTopic, { NONE_TOPIC_ID } from "@/core/server/ESocketTopic";
+import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 interface IEditorEventRegistryParams {
@@ -17,8 +17,6 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
         if (!context.data || !TypeUtils.isString(task_id)) {
             return;
         }
-
-        console.log(`Running editor chat for task ID: ${task_id}`);
 
         const response = await BotRunner.runAbortable(chatType, task_id, {
             ...context.data,

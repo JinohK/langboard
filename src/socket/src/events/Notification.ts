@@ -1,10 +1,9 @@
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import EventManager from "@/core/socket/EventManager";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
 import UserNotification from "@/models/UserNotification";
 
 EventManager.on(ESocketTopic.None, "user:notification:read", async (context) => {
-    console.log(context);
     if (!context.data || !TypeUtils.isString(context.data.uid)) {
         return;
     }

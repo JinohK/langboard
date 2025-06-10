@@ -2,7 +2,7 @@ import * as ProjectCard from "@/core/models/ProjectCard";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { StringCase } from "@/core/utils/StringUtils";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
 import useCardCheckitemCheckedChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCheckedChangedHandlers";
@@ -66,7 +66,7 @@ class ProjectCheckitem extends BaseModel<Interface> {
 
     public static convertModel(model: Interface): Interface {
         if (TypeUtils.isString(model.status)) {
-            model.status = ECheckitemStatus[new StringCase(model.status).toPascal() as keyof typeof ECheckitemStatus];
+            model.status = convertSafeEnum(ECheckitemStatus, model.status);
         }
         if (TypeUtils.isString(model.initial_timer_started_at)) {
             model.initial_timer_started_at = new Date(model.initial_timer_started_at);

@@ -12,12 +12,6 @@ services:
     environment:
       - ENVIRONMENT=development
 
-  docs:
-    build:
-      target: dev
-    environment:
-      - NODE_ENV=development
-
 networks:
   net:
     name: ${PROJECT_NAME}_network

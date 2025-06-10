@@ -19,7 +19,7 @@ class KafkaConsumer extends BaseConsumer {
     }
 
     public async start() {
-        this.#consumer = this.#client.consumer({ groupId: PROJECT_NAME });
+        this.#consumer = this.#client.consumer({ groupId: PROJECT_NAME, allowAutoTopicCreation: true, readUncommitted: true });
         await this.#consumer.connect();
 
         this.#redisClient = await createClient({
@@ -35,6 +35,7 @@ class KafkaConsumer extends BaseConsumer {
         }
 
         await this.#consumer.run({
+            autoCommit: true,
             eachMessage: async ({ topic, message }) => {
                 if (!message.value) {
                     return;
@@ -47,7 +48,7 @@ class KafkaConsumer extends BaseConsumer {
                         return;
                     }
 
-                    const cacheKey = model.cacheKey;
+                    const cacheKey = model.cache_key;
                     if (!cacheKey) {
                         return;
                     }

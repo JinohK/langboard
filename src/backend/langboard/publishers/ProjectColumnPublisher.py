@@ -8,7 +8,7 @@ from ..models import Project, ProjectColumn
 @staticclass
 class ProjectColumnPublisher:
     @staticmethod
-    def created(project: Project, column: ProjectColumn):
+    async def created(project: Project, column: ProjectColumn):
         model = {
             "column": {
                 **column.api_response(),
@@ -32,10 +32,10 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def name_changed(project: Project, column: ProjectColumn, name: str):
+    async def name_changed(project: Project, column: ProjectColumn, name: str):
         model = {
             "uid": column.get_uid(),
             "name": name,
@@ -57,10 +57,10 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def order_changed(project: Project, column: ProjectColumn):
+    async def order_changed(project: Project, column: ProjectColumn):
         model = {
             "uid": column.get_uid(),
             "order": column.order,
@@ -82,10 +82,10 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def deleted(
+    async def deleted(
         project: Project,
         column: ProjectColumn,
         archive_column: ProjectColumn,
@@ -115,4 +115,4 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)

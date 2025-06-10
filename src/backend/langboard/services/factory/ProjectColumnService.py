@@ -143,7 +143,7 @@ class ProjectColumnService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(column)
 
-        ProjectColumnPublisher.created(project, column)
+        await ProjectColumnPublisher.created(project, column)
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
         ProjectColumnBotTask.project_column_created(user_or_bot, project, column)
 
@@ -162,7 +162,7 @@ class ProjectColumnService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(column)
 
-        ProjectColumnPublisher.name_changed(project, column, name)
+        await ProjectColumnPublisher.name_changed(project, column, name)
         ProjectColumnActivityTask.project_column_name_changed(user_or_bot, project, old_name, column)
         ProjectColumnBotTask.project_column_name_changed(user_or_bot, project, column)
 
@@ -189,7 +189,7 @@ class ProjectColumnService(BaseService):
             column.order = order
             db.update(column)
 
-        ProjectColumnPublisher.order_changed(project, column)
+        await ProjectColumnPublisher.order_changed(project, column)
 
         return True
 
@@ -234,7 +234,7 @@ class ProjectColumnService(BaseService):
                 )
             )
 
-        ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
+        await ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
         ProjectColumnActivityTask.project_column_deleted(user_or_bot, project, column)
         ProjectColumnBotTask.project_column_deleted(user_or_bot, project, column)
 

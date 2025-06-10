@@ -10,7 +10,7 @@ from ..models import Project, ProjectWiki
 @staticclass
 class ProjectWikiPublisher:
     @staticmethod
-    def created(project: Project, wiki: ProjectWiki):
+    async def created(project: Project, wiki: ProjectWiki):
         model = {"wiki": {**wiki.api_response(), "assigned_members": []}}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
@@ -19,10 +19,10 @@ class ProjectWikiPublisher:
             data_keys="wiki",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def updated(project: Project, wiki: ProjectWiki, model: dict[str, Any]):
+    async def updated(project: Project, wiki: ProjectWiki, model: dict[str, Any]):
         wiki_uid = wiki.get_uid()
         topic = SocketTopic.BoardWiki if wiki.is_public else SocketTopic.BoardWikiPrivate
         topic_id = project.get_uid() if wiki.is_public else wiki_uid
@@ -33,10 +33,10 @@ class ProjectWikiPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def publicity_changed(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
+    async def publicity_changed(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
         assigned_users = [user_or_bot] if not wiki.is_public and isinstance(user_or_bot, User) else []
 
         model = {
@@ -55,10 +55,10 @@ class ProjectWikiPublisher:
             data_keys="wiki",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def assignees_updated(project: Project, wiki: ProjectWiki, bots: list[Bot], users: list[User]):
+    async def assignees_updated(project: Project, wiki: ProjectWiki, bots: list[Bot], users: list[User]):
         model = {
             "assigned_bots": [bot.api_response() for bot in bots],
             "assigned_members": [user.api_response() for user in users],
@@ -70,10 +70,10 @@ class ProjectWikiPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def order_changed(project: Project, wiki: ProjectWiki):
+    async def order_changed(project: Project, wiki: ProjectWiki):
         model = {
             "uid": wiki.get_uid(),
             "order": wiki.order,
@@ -85,10 +85,10 @@ class ProjectWikiPublisher:
             data_keys=["uid", "order"],
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(project: Project, wiki: ProjectWiki):
+    async def deleted(project: Project, wiki: ProjectWiki):
         model = {"uid": wiki.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardWiki,
@@ -97,4 +97,4 @@ class ProjectWikiPublisher:
             data_keys=["uid"],
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

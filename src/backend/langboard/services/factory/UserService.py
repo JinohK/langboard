@@ -203,7 +203,7 @@ class UserService(BaseService):
             else:
                 model[key] = convert_python_data(getattr(user, key))
 
-        UserPublisher.updated(user, model)
+        await UserPublisher.updated(user, model)
 
         return True
 
@@ -233,7 +233,7 @@ class UserService(BaseService):
         await Auth.reset_user(user)
 
         model = {"email": user.email}
-        UserPublisher.updated(user, model)
+        await UserPublisher.updated(user, model)
 
         return True
 

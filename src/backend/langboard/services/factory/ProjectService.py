@@ -347,7 +347,7 @@ class ProjectService(BaseService):
                 continue
             model[key] = convert_python_data(getattr(project, key))
 
-        ProjectPublisher.updated(project, model)
+        await ProjectPublisher.updated(project, model)
         ProjectActivityTask.project_updated(user_or_bot, old_project_record, project)
         ProjectBotTask.project_updated(user_or_bot, project)
 
@@ -396,7 +396,7 @@ class ProjectService(BaseService):
 
         new_bot_ids: list[int] = [bot.id for bot in bots]
 
-        ProjectPublisher.assigned_bots_updated(project, bots)
+        await ProjectPublisher.assigned_bots_updated(project, bots)
         ProjectActivityTask.project_assigned_bots_updated(user, project, old_assigned_bot_ids, new_bot_ids)
         BotDefaultTask.bot_project_assigned(user, project, old_assigned_bot_ids, new_bot_ids)
 
@@ -439,7 +439,7 @@ class ProjectService(BaseService):
             "invited_members": await invitation_service.get_invited_users(project, as_api=True),
         }
 
-        ProjectPublisher.assigned_users_updated(project, model)
+        await ProjectPublisher.assigned_users_updated(project, model)
         ProjectActivityTask.project_assigned_users_updated(
             user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
         )
@@ -498,7 +498,7 @@ class ProjectService(BaseService):
         else:
             await role_service.project.grant(actions=role_strs, bot_id=target_bot.id, project_id=project.id)
 
-        ProjectPublisher.bot_roles_updated(project, target_bot, role_strs)
+        await ProjectPublisher.bot_roles_updated(project, target_bot, role_strs)
 
         return True
 
@@ -523,7 +523,7 @@ class ProjectService(BaseService):
         else:
             await role_service.project.grant(actions=role_strs, user_id=target_user.id, project_id=project.id)
 
-        ProjectPublisher.user_roles_updated(project, target_user, role_strs)
+        await ProjectPublisher.user_roles_updated(project, target_user, role_strs)
 
         return True
 
@@ -545,7 +545,7 @@ class ProjectService(BaseService):
             assigned_bot.is_disabled = is_disabled
             db.update(assigned_bot)
 
-        ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
+        await ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
         ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, is_disabled)
 
         return True
@@ -577,7 +577,7 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(project)
 
-        ProjectPublisher.deleted(project)
+        await ProjectPublisher.deleted(project)
         ProjectActivityTask.project_deleted(user, project)
         ProjectBotTask.project_deleted(user, project)
 

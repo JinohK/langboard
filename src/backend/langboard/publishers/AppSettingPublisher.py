@@ -7,7 +7,7 @@ from ..core.utils.decorators import staticclass
 @staticclass
 class AppSettingPublisher:
     @staticmethod
-    def setting_created(model: dict[str, Any]):
+    async def setting_created(model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
@@ -15,10 +15,10 @@ class AppSettingPublisher:
             data_keys="setting",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def setting_updated(uid: str, model: dict[str, Any]):
+    async def setting_updated(uid: str, model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
@@ -26,20 +26,20 @@ class AppSettingPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def setting_deleted(uid: str):
+    async def setting_deleted(uid: str):
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
             event=f"settings:deleted:{uid}",
         )
 
-        SocketPublishService.put_dispather({}, publish_model)
+        await SocketPublishService.put_dispather({}, publish_model)
 
     @staticmethod
-    def selected_setting_deleted(uids: list[str]):
+    async def selected_setting_deleted(uids: list[str]):
         model = {"uids": uids}
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
@@ -48,10 +48,10 @@ class AppSettingPublisher:
             data_keys="uids",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def global_relationship_created(model: dict[str, Any]):
+    async def global_relationship_created(model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
@@ -59,10 +59,10 @@ class AppSettingPublisher:
             data_keys="global_relationships",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def global_relationship_updated(uid: str, model: dict[str, Any]):
+    async def global_relationship_updated(uid: str, model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
@@ -70,20 +70,20 @@ class AppSettingPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def global_relationship_deleted(uid: str):
+    async def global_relationship_deleted(uid: str):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
             event=f"settings:global-relationship:deleted:{uid}",
         )
 
-        SocketPublishService.put_dispather({}, publish_model)
+        await SocketPublishService.put_dispather({}, publish_model)
 
     @staticmethod
-    def selected_global_relationships_deleted(uids: list[str]):
+    async def selected_global_relationships_deleted(uids: list[str]):
         model = {"uids": uids}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
@@ -92,4 +92,4 @@ class AppSettingPublisher:
             data_keys="uids",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

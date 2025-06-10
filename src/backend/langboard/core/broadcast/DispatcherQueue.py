@@ -28,11 +28,11 @@ class DispatcherQueue(BaseDispatcherQueue):
         self.__instance.start()
 
     @overload
-    def put(self, event: str, data: dict[str, Any]): ...
+    async def put(self, event: str, data: dict[str, Any]): ...
     @overload
-    def put(self, event: DispatcherModel): ...
-    def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
-        self.__instance.put(event, data)
+    async def put(self, event: DispatcherModel): ...
+    async def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
+        await self.__instance.put(event, data)
 
     def close(self):
         self.__instance.close()

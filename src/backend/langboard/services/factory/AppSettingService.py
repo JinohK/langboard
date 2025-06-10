@@ -77,7 +77,7 @@ class AppSettingService(BaseService):
             db.insert(setting)
 
         model = {"setting": setting.api_response()}
-        AppSettingPublisher.setting_created(model)
+        await AppSettingPublisher.setting_created(model)
 
         return setting
 
@@ -116,7 +116,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(setting)
 
-        AppSettingPublisher.setting_updated(setting.get_uid(), model)
+        await AppSettingPublisher.setting_updated(setting.get_uid(), model)
 
         return setting
 
@@ -128,7 +128,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(setting)
 
-        AppSettingPublisher.setting_deleted(setting.get_uid())
+        await AppSettingPublisher.setting_deleted(setting.get_uid())
 
         return True
 
@@ -138,7 +138,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.exec(SqlBuilder.delete.table(AppSetting).where(AppSetting.column("id").in_(ids)))
 
-        AppSettingPublisher.selected_setting_deleted(uids)
+        await AppSettingPublisher.selected_setting_deleted(uids)
 
         return True
 
@@ -155,7 +155,7 @@ class AppSettingService(BaseService):
             db.insert(global_relationship)
 
         model = {"global_relationships": global_relationship.api_response()}
-        AppSettingPublisher.global_relationship_created(model)
+        await AppSettingPublisher.global_relationship_created(model)
 
         return global_relationship
 
@@ -191,7 +191,7 @@ class AppSettingService(BaseService):
                 continue
             model[key] = convert_python_data(getattr(global_relationship, key))
 
-        AppSettingPublisher.global_relationship_updated(global_relationship.get_uid(), model)
+        await AppSettingPublisher.global_relationship_updated(global_relationship.get_uid(), model)
 
         return global_relationship, model
 
@@ -203,7 +203,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(global_relationship)
 
-        AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
+        await AppSettingPublisher.global_relationship_deleted(global_relationship.get_uid())
 
         return True
 
@@ -217,6 +217,6 @@ class AppSettingService(BaseService):
                 )
             )
 
-        AppSettingPublisher.selected_global_relationships_deleted(uids)
+        await AppSettingPublisher.selected_global_relationships_deleted(uids)
 
         return True

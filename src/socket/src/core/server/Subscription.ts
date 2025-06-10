@@ -1,5 +1,5 @@
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import ISocketClient from "@/core/socket/ISocketClient";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import ISocketClient from "@/core/server/ISocketClient";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 

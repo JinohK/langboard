@@ -7,7 +7,7 @@ from ..models import Card, Checklist
 @staticclass
 class ChecklistPublisher:
     @staticmethod
-    def created(card: Card, checklist: Checklist):
+    async def created(card: Card, checklist: Checklist):
         model = {"checklist": {**checklist.api_response(), "checkitems": []}}
         topic_id = card.project_id.to_short_code()
         publish_model = SocketPublishModel(
@@ -17,10 +17,10 @@ class ChecklistPublisher:
             data_keys="checklist",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def title_changed(card: Card, checklist: Checklist):
+    async def title_changed(card: Card, checklist: Checklist):
         model = {"uid": checklist.get_uid(), "title": checklist.title}
         topic_id = card.project_id.to_short_code()
         publish_model = SocketPublishModel(
@@ -30,10 +30,10 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def order_changed(card: Card, checklist: Checklist):
+    async def order_changed(card: Card, checklist: Checklist):
         model = {"uid": checklist.get_uid(), "order": checklist.order}
         topic_id = card.project_id.to_short_code()
         publish_model = SocketPublishModel(
@@ -43,10 +43,10 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def checked_changed(card: Card, checklist: Checklist):
+    async def checked_changed(card: Card, checklist: Checklist):
         model = {"uid": checklist.get_uid(), "is_checked": checklist.is_checked}
         topic_id = card.project_id.to_short_code()
         publish_model = SocketPublishModel(
@@ -56,10 +56,10 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(card: Card, checklist: Checklist):
+    async def deleted(card: Card, checklist: Checklist):
         model = {"uid": checklist.get_uid()}
         topic_id = card.project_id.to_short_code()
         publish_model = SocketPublishModel(
@@ -69,4 +69,4 @@ class ChecklistPublisher:
             data_keys="uid",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

@@ -1,6 +1,6 @@
 import Consumer from "@/core/broadcast/Consumer";
 import DB from "@/core/db/DB";
-import Server from "@/core/socket/Server";
+import Server from "@/core/server/Server";
 import Terminal from "@/core/utils/Terminal";
 import TypeUtils from "@/core/utils/TypeUtils";
 

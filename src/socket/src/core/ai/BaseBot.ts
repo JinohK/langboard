@@ -9,6 +9,7 @@ import JsonUtils from "@/core/utils/JsonUtils";
 import { convertSafeEnum, generateToken } from "@/core/utils/StringUtils";
 import AppSetting, { EAppSettingType } from "@/models/AppSetting";
 import axios from "axios";
+import formidable from "formidable";
 import { In } from "typeorm";
 
 export interface ILangflowRequestModel {
@@ -38,6 +39,7 @@ abstract class BaseBot {
     public abstract run(data: Record<string, any>): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
     public abstract runAbortable(data: Record<string, any>, taskID: string): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
     public abstract isAvailable(): Promise<bool>;
+    public abstract uploadFile(file: formidable.File): Promise<string | null>;
 
     public async abort(taskID: string): Promise<void> {
         const task = this.#abortableTasks.get(taskID);
@@ -86,8 +88,6 @@ abstract class BaseBot {
         const apiRequestModel = new LangflowRequestModel(settings, requestModel, useStream);
 
         if (useStream) {
-            console.log(useStream);
-
             return langflowStreamResponse({
                 url: apiRequestModel.url,
                 headers: apiRequestModel.headers,
@@ -154,6 +154,44 @@ abstract class BaseBot {
         }
 
         return result;
+    }
+
+    protected async uploadFileToLangflow(file: formidable.File): Promise<string | null> {
+        const filename = file.originalFilename || file.newFilename;
+        if (!filename || !file.size) {
+            return null;
+        }
+
+        const settings = await this.#getLangflowSettings();
+        if (!settings) {
+            return null;
+        }
+
+        const url = `${settings[EAppSettingType.LangflowUrl]}/api/v2/files`;
+        const headers = {
+            "Content-Type": "multipart/form-data",
+            "x-api-key": settings[EAppSettingType.LangflowApiKey],
+        };
+
+        const formData = new FormData();
+        formData.append("file", file, filename);
+
+        try {
+            const response = await axios.post(url, formData, {
+                headers: {
+                    ...headers,
+                },
+                data: formData,
+            });
+
+            if (response.status !== 200) {
+                throw new Error("Langflow file upload failed");
+            }
+
+            return response.data.path ?? null;
+        } catch (error) {
+            return null;
+        }
     }
 
     async #getLangflowSettings() {

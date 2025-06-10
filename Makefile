@@ -2,6 +2,8 @@
 
 COMPOSE_PREFIX := ./docker/docker-compose
 COMPOSE_ARGS := -f $(COMPOSE_PREFIX).kafka.yaml -f $(COMPOSE_PREFIX).pg.yaml -f $(COMPOSE_PREFIX).redis.yaml -f $(COMPOSE_PREFIX).server.yaml --env-file ./.env
+DOCS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).docs.yaml
+FRONTEND_WATCHER_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).frontend-watcher.yaml
 FRONTEND_DIR := src/frontend
 BACKEND_DIR := src/backend
 GREEN := \033[0;32m
@@ -10,6 +12,16 @@ CYAN := \033[0;36m
 DIM := \033[2m
 BOLD := \033[1m
 NC := \033[0m
+
+COMPOSE_ARGS := $(COMPOSE_ARGS)
+WITH_DOCS ?= false
+WITH_FRONTEND_WATCHER ?= false
+ifeq ($(WITH_DOCS), true)
+	COMPOSE_ARGS += $(DOCS_COMPOSE_ARGS)
+endif
+ifeq ($(WITH_FRONTEND_WATCHER), true)
+	COMPOSE_ARGS += $(FRONTEND_WATCHER_COMPOSE_ARGS)
+endif
 
 check_tools:
 	@command -v poetry >/dev/null 2>&1 || { echo >&2 "$(RED)Poetry is not installed. Aborting.$(NC)"; exit 1; }

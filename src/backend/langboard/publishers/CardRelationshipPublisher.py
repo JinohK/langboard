@@ -8,7 +8,7 @@ from ..models import Card, Project
 @staticclass
 class CardRelationshipPublisher:
     @staticmethod
-    def updated(project: Project, card: Card, relationships: list[dict[str, Any]]):
+    async def updated(project: Project, card: Card, relationships: list[dict[str, Any]]):
         model = {
             "card_uid": card.get_uid(),
             "relationships": relationships,
@@ -20,4 +20,4 @@ class CardRelationshipPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

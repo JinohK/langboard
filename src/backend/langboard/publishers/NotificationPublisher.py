@@ -9,7 +9,7 @@ from ..core.utils.decorators import staticclass
 @staticclass
 class NotificationPublisher:
     @staticmethod
-    def notified(target_user_or_bot: User | Bot, notification: dict[str, Any]):
+    async def notified(target_user_or_bot: User | Bot, notification: dict[str, Any]):
         model = {"notification": notification}
         topic_id = target_user_or_bot.get_uid()
         publish_model = SocketPublishModel(
@@ -19,4 +19,4 @@ class NotificationPublisher:
             data_keys="notification",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

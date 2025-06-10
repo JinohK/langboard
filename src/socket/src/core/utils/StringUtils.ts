@@ -1,3 +1,5 @@
+import TypeUtils from "@/core/utils/TypeUtils";
+
 type TStringCase = "flat" | "upper" | "camel" | "pascal" | "snake" | "upperSnake" | "kebab";
 
 export const BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -136,6 +138,19 @@ export const format = (str: string, map: Record<string, string>): string => {
     });
 };
 
+export const isValidURL = (str: unknown): bool => {
+    if (!TypeUtils.isString(str)) {
+        return false;
+    }
+
+    try {
+        new URL(str);
+        return true;
+    } catch (err) {
+        return false;
+    }
+};
+
 export const isJsonString = (str: string): bool => {
     if (str.length > 0 && ((str[0] === "{" && str[str.length - 1] === "}") || (str[0] === "[" && str[str.length - 1] === "]"))) {
         try {
@@ -150,5 +165,8 @@ export const isJsonString = (str: string): bool => {
 };
 
 export const convertSafeEnum = <T extends Record<string, string>>(EnumType: T, value: T[keyof T] | string) => {
+    if (value.includes(".")) {
+        value = value.split(".").pop() || value;
+    }
     return EnumType[new StringCase(value).toPascal() as keyof typeof EnumType];
 };

@@ -44,6 +44,7 @@ class App:
                 "Referer",
                 "Accept-Encoding",
                 "Accept-Language",
+                "Content-Encoding",
                 "Content-Language",
                 "Authorization",
                 "Content-Type",

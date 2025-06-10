@@ -39,19 +39,20 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
                 await response(scope, receive, send)
                 return
 
-            accessible_type = AuthFilter.get_filtered(child_scope["endpoint"])
-            if (
-                (accessible_type == "bot" and not isinstance(validation_result, Bot))
-                or (accessible_type == "user" and not isinstance(validation_result, User))
-                or (
-                    accessible_type == "admin"
-                    and (not isinstance(validation_result, User) or not validation_result.is_admin)
-                )
-            ):
-                response = JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_403_FORBIDDEN)
-                response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
-                await response(scope, receive, send)
-                return
+            if scope.get("path") != "/graphql":
+                accessible_type = AuthFilter.get_filtered(child_scope["endpoint"])
+                if (
+                    (accessible_type == "bot" and not isinstance(validation_result, Bot))
+                    or (accessible_type == "user" and not isinstance(validation_result, User))
+                    or (
+                        accessible_type == "admin"
+                        and (not isinstance(validation_result, User) or not validation_result.is_admin)
+                    )
+                ):
+                    response = JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_403_FORBIDDEN)
+                    response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+                    await response(scope, receive, send)
+                    return
 
             scope["auth"] = validation_result
 

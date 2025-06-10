@@ -88,7 +88,7 @@ async def save_card_metadata(
     if metadata is None:
         return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
 
-    MetadataPublisher.updated_metadata(SocketTopic.BoardCard, card.get_uid(), form.key, form.value, form.old_key)
+    await MetadataPublisher.updated_metadata(SocketTopic.BoardCard, card.get_uid(), form.key, form.value, form.old_key)
     return JsonResponse()
 
 
@@ -111,7 +111,7 @@ async def delete_card_metadata(
 
     await service.metadata.delete(CardMetadata, card, form.keys)
 
-    MetadataPublisher.deleted_metadata(SocketTopic.BoardCard, card.get_uid(), form.keys)
+    await MetadataPublisher.deleted_metadata(SocketTopic.BoardCard, card.get_uid(), form.keys)
     return JsonResponse()
 
 
@@ -197,7 +197,7 @@ async def save_wiki_metadata(
     if metadata is None:
         return JsonResponse(content=ApiErrorCode.NF2019, status_code=status.HTTP_404_NOT_FOUND)
 
-    MetadataPublisher.updated_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.key, form.value, form.old_key)
+    await MetadataPublisher.updated_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.key, form.value, form.old_key)
     return JsonResponse()
 
 
@@ -227,5 +227,5 @@ async def delete_wiki_metadata(
 
     await service.metadata.delete(ProjectWikiMetadata, wiki, form.keys)
 
-    MetadataPublisher.deleted_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.keys)
+    await MetadataPublisher.deleted_metadata(SocketTopic.BoardWikiPrivate, wiki_uid, form.keys)
     return JsonResponse()

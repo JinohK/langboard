@@ -21,6 +21,6 @@ class NotificationPublishModel(BaseModel):
 @staticclass
 class NotificationPublishService:
     @staticmethod
-    def put_dispather(model: NotificationPublishModel):
+    async def put_dispather(model: NotificationPublishModel):
         dispatacher_model = DispatcherModel(event="notification_publish", data=model.model_dump())
-        DispatcherQueue.put(dispatacher_model)
+        await DispatcherQueue.put(dispatacher_model)

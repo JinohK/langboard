@@ -8,7 +8,7 @@ from ..core.utils.decorators import staticclass
 @staticclass
 class BotPublisher:
     @staticmethod
-    def bot_created(bot: Bot):
+    async def bot_created(bot: Bot):
         model = {"bot": bot.api_response(), "setting_bot": bot.api_response(is_setting=True)}
         publish_models = [
             SocketPublishModel(
@@ -25,10 +25,10 @@ class BotPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def bot_updated(uid: str, model: dict[str, Any]):
+    async def bot_updated(uid: str, model: dict[str, Any]):
         if not model:
             return
 
@@ -39,10 +39,10 @@ class BotPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def bot_setting_updated(uid: str, model: dict[str, Any]):
+    async def bot_setting_updated(uid: str, model: dict[str, Any]):
         if not model:
             return
 
@@ -53,20 +53,20 @@ class BotPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def bot_deleted(uid: str):
+    async def bot_deleted(uid: str):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
             event=f"bot:deleted:{uid}",
         )
 
-        SocketPublishService.put_dispather({}, publish_model)
+        await SocketPublishService.put_dispather({}, publish_model)
 
     @staticmethod
-    def bot_condition_predefined(uid: str, model: dict[str, Any]):
+    async def bot_condition_predefined(uid: str, model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
@@ -74,10 +74,10 @@ class BotPublisher:
             data_keys="conditions",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def bot_condition_toggled(uid: str, model: dict[str, Any]):
+    async def bot_condition_toggled(uid: str, model: dict[str, Any]):
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
@@ -85,4 +85,4 @@ class BotPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

@@ -96,7 +96,7 @@ class ChecklistService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(checklist)
 
-        ChecklistPublisher.created(card, checklist)
+        await ChecklistPublisher.created(card, checklist)
         CardChecklistActivityTask.card_checklist_created(user_or_bot, project, card, checklist)
         CardChecklistBotTask.card_checklist_created(user_or_bot, project, card, checklist)
 
@@ -120,7 +120,7 @@ class ChecklistService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(checklist)
 
-        ChecklistPublisher.title_changed(card, checklist)
+        await ChecklistPublisher.title_changed(card, checklist)
         CardChecklistActivityTask.card_checklist_title_changed(user_or_bot, project, card, old_title, checklist)
         CardChecklistBotTask.card_checklist_title_changed(user_or_bot, project, card, checklist)
 
@@ -149,7 +149,7 @@ class ChecklistService(BaseService):
             checklist.order = order
             db.update(checklist)
 
-        ChecklistPublisher.order_changed(card, checklist)
+        await ChecklistPublisher.order_changed(card, checklist)
 
         return True
 
@@ -167,7 +167,7 @@ class ChecklistService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(checklist)
 
-        ChecklistPublisher.checked_changed(card, checklist)
+        await ChecklistPublisher.checked_changed(card, checklist)
 
         if checklist.is_checked:
             CardChecklistActivityTask.card_checklist_checked(user_or_bot, project, card, checklist)
@@ -225,7 +225,7 @@ class ChecklistService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(checklist)
 
-        ChecklistPublisher.deleted(card, checklist)
+        await ChecklistPublisher.deleted(card, checklist)
         CardChecklistActivityTask.card_checklist_deleted(user_or_bot, project, card, checklist)
         CardChecklistBotTask.card_checklist_deleted(user_or_bot, project, card, checklist)
 

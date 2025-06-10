@@ -119,7 +119,7 @@ class CheckitemService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(checkitem)
 
-        CheckitemPublisher.created(card, checklist, checkitem)
+        await CheckitemPublisher.created(card, checklist, checkitem)
         CardCheckitemActivityTask.card_checkitem_created(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_created(user_or_bot, project, card, checkitem)
 
@@ -153,7 +153,7 @@ class CheckitemService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(checkitem)
 
-        CheckitemPublisher.title_changed(project, card, checkitem, cardified_card)
+        await CheckitemPublisher.title_changed(project, card, checkitem, cardified_card)
         CardCheckitemActivityTask.card_checkitem_title_changed(user_or_bot, project, card, old_title, checkitem)
         CardCheckitemBotTask.card_checkitem_title_changed(user_or_bot, project, card, checkitem)
 
@@ -224,7 +224,7 @@ class CheckitemService(BaseService):
             checkitem.order = order
             db.update(checkitem)
 
-        CheckitemPublisher.order_changed(card, checkitem, original_checklist, new_checklist)
+        await CheckitemPublisher.order_changed(card, checkitem, original_checklist, new_checklist)
 
         return True
 
@@ -292,7 +292,7 @@ class CheckitemService(BaseService):
             target_user = ServiceHelper.get_by(User, "id", checkitem.user_id)
 
         if should_publish:
-            CheckitemPublisher.status_changed(project, card, checkitem, timer_record, target_user)
+            await CheckitemPublisher.status_changed(project, card, checkitem, timer_record, target_user)
 
         if status == CheckitemStatus.Started:
             CardCheckitemActivityTask.card_checkitem_timer_started(user_or_bot, project, card, checkitem)
@@ -326,7 +326,7 @@ class CheckitemService(BaseService):
             with DbSession.use(readonly=False) as db:
                 db.update(checkitem)
 
-            CheckitemPublisher.checked_changed(project, card, checkitem)
+            await CheckitemPublisher.checked_changed(project, card, checkitem)
 
         if checkitem.is_checked:
             CardCheckitemActivityTask.card_checkitem_checked(user_or_bot, project, card, checkitem)
@@ -377,7 +377,7 @@ class CheckitemService(BaseService):
             db.update(checkitem)
 
         api_card = new_card.board_api_response(0, [], [], [], [])
-        CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
+        await CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem, new_card)
         CardBotTask.card_created(user_or_bot, project, new_card)
@@ -402,7 +402,7 @@ class CheckitemService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(checkitem)
 
-        CheckitemPublisher.deleted(project, card, checkitem)
+        await CheckitemPublisher.deleted(project, card, checkitem)
         CardCheckitemActivityTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_deleted(user_or_bot, project, card, checkitem)
 

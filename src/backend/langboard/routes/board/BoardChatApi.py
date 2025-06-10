@@ -73,7 +73,7 @@ async def create_chat_template(
 
     template = await service.chat.create_template(project, form.name, form.template)
 
-    ProjectPublisher.chat_template_created(project, {"template": template.api_response()})
+    await ProjectPublisher.chat_template_created(project, {"template": template.api_response()})
 
     return JsonResponse(status_code=status.HTTP_201_CREATED)
 
@@ -100,7 +100,7 @@ async def update_chat_template(
         return JsonResponse()
 
     template, model = result
-    ProjectPublisher.chat_template_updated(project, template, model)
+    await ProjectPublisher.chat_template_updated(project, template, model)
 
     return JsonResponse()
 
@@ -121,6 +121,6 @@ async def delete_chat_template(project_uid: str, template_uid: str, service: Ser
     if not result:
         return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
 
-    ProjectPublisher.chat_template_deleted(project, template_uid)
+    await ProjectPublisher.chat_template_deleted(project, template_uid)
 
     return JsonResponse()

@@ -1,4 +1,4 @@
-import ESocketTopic from "@/core/socket/ESocketTopic";
+import ESocketTopic from "@/core/server/ESocketTopic";
 import User from "@/models/User";
 
 export type TSocketSendParams<TData = unknown> = { event: string; topic: ESocketTopic | string; topic_id?: string | string[]; data?: TData };

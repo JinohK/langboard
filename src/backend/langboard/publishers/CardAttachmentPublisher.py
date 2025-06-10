@@ -8,7 +8,7 @@ from ..models import Card, CardAttachment
 @staticclass
 class CardAttachmentPublisher:
     @staticmethod
-    def uploaded(user: User, card: Card, card_attachment: CardAttachment):
+    async def uploaded(user: User, card: Card, card_attachment: CardAttachment):
         model = {
             "attachment": {
                 **card_attachment.api_response(),
@@ -24,10 +24,10 @@ class CardAttachmentPublisher:
             data_keys="attachment",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def order_changed(card: Card, card_attachment: CardAttachment):
+    async def order_changed(card: Card, card_attachment: CardAttachment):
         model = {"uid": card_attachment.get_uid(), "order": card_attachment.order}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
@@ -36,10 +36,10 @@ class CardAttachmentPublisher:
             data_keys=["uid", "order"],
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def name_changed(card: Card, card_attachment: CardAttachment):
+    async def name_changed(card: Card, card_attachment: CardAttachment):
         model = {"name": card_attachment.filename}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
@@ -48,10 +48,10 @@ class CardAttachmentPublisher:
             data_keys="name",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(card: Card, card_attachment: CardAttachment):
+    async def deleted(card: Card, card_attachment: CardAttachment):
         model = {"uid": card_attachment.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
@@ -60,4 +60,4 @@ class CardAttachmentPublisher:
             data_keys="uid",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

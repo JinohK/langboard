@@ -1,9 +1,9 @@
 import BotRunner from "@/core/ai/BotRunner";
 import EInternalBotType from "@/core/ai/EInternalBotType";
 import SnowflakeID from "@/core/db/SnowflakeID";
-import ESocketStatus from "@/core/socket/ESocketStatus";
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import EventManager from "@/core/socket/EventManager";
+import ESocketStatus from "@/core/server/ESocketStatus";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
 import ChatHistory from "@/models/ChatHistory";
 

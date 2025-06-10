@@ -179,7 +179,7 @@ async def schedule_bot_crons(
     if not bot_schedule:
         return JsonResponse(content=ApiErrorCode.VA3004, status_code=status.HTTP_400_BAD_REQUEST)
 
-    ProjectBotPublisher.scheduled(project, bot, bot_schedule)
+    await ProjectBotPublisher.scheduled(project, bot, bot_schedule)
 
     return JsonResponse()
 
@@ -226,7 +226,7 @@ async def reschedule_bot_crons(
         return JsonResponse(content=ApiErrorCode.VA3004, status_code=status.HTTP_400_BAD_REQUEST)
     bot_schedule, model = result
 
-    ProjectBotPublisher.rescheduled(project, bot_schedule, model)
+    await ProjectBotPublisher.rescheduled(project, bot_schedule, model)
 
     return JsonResponse()
 
@@ -252,7 +252,7 @@ async def unschedule_bot_crons(
     if not bot_schedule:
         return JsonResponse(content=ApiErrorCode.NF2017, status_code=status.HTTP_404_NOT_FOUND)
 
-    ProjectBotPublisher.deleted(project, bot_schedule)
+    await ProjectBotPublisher.deleted(project, bot_schedule)
 
     return JsonResponse()
 

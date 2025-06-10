@@ -38,6 +38,7 @@ export const ROOT_DIR = path.join(BASE_DIR, "..", "..", "..");
 export const DATA_DIR = IS_EXECUTABLE ? path.join(BASE_DIR, "data") : path.join(ROOT_DIR, "local");
 
 export const PORT = parseInt(getEnv<string>({ key: "SOCKET_PORT", defaultValue: "5690" }));
+export const FRONTEND_PORT = parseInt(getEnv<string>({ key: "FRONTEND_PORT", defaultValue: "5173" }));
 
 export const BROADCAST_TYPE = getEnv({ key: "BROADCAST_TYPE", defaultValue: "in-memory", availableValues: ["in-memory", "kafka"] });
 export const BROADCAST_URLS = getEnv<string>({ key: "BROADCAST_URLS", defaultValue: "" }).split(",");
@@ -48,6 +49,11 @@ export const CACHE_URL = getEnv<string>({ key: "CACHE_URL" });
 if (BROADCAST_TYPE === "kafka" && CACHE_TYPE === "in-memory") {
     throw new Error("Cannot use in-memory cache with Kafka broadcast. Please set CACHE_TYPE to 'redis' or another supported type.");
 }
+
+export const PUBLIC_FRONTEND_URL =
+    ENVIRONMENT !== "local"
+        ? getEnv<string>({ key: "PUBLIC_FRONTEND_URL", defaultValue: `http://localhost:${FRONTEND_PORT}` })
+        : `http://localhost:${FRONTEND_PORT}`;
 
 const SUPPORTED_JWT_ALTORITHMES: jwt.Algorithm[] = [
     "RS256",

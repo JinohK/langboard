@@ -141,7 +141,7 @@ class ProjectLabelService(BaseService):
             db.insert(label)
 
         if not is_bot:
-            ProjectLabelPublisher.created(project, label)
+            await ProjectLabelPublisher.created(project, label)
             ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
             ProjectLabelBotTask.project_label_created(user_or_bot, project, label)
 
@@ -183,7 +183,7 @@ class ProjectLabelService(BaseService):
                 continue
             model[key] = convert_python_data(getattr(label, key))
 
-        ProjectLabelPublisher.updated(project, label, model)
+        await ProjectLabelPublisher.updated(project, label, model)
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
         ProjectLabelBotTask.project_label_updated(user_or_bot, project, label)
 
@@ -215,7 +215,7 @@ class ProjectLabelService(BaseService):
             label.order = order
             db.update(label)
 
-        ProjectLabelPublisher.order_changed(project, label)
+        await ProjectLabelPublisher.order_changed(project, label)
 
         return True
 
@@ -231,7 +231,7 @@ class ProjectLabelService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(label)
 
-        ProjectLabelPublisher.deleted(project, label)
+        await ProjectLabelPublisher.deleted(project, label)
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
         ProjectLabelBotTask.project_label_deleted(user_or_bot, project, label)
 

@@ -1,7 +1,7 @@
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertServerFileURL, StringCase } from "@/core/utils/StringUtils";
+import { convertSafeEnum, convertServerFileURL } from "@/core/utils/StringUtils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
@@ -69,7 +69,7 @@ class BotModel extends BaseModel<Interface> {
 
         if (model.api_auth_type) {
             if (TypeUtils.isString(model.api_auth_type)) {
-                model.api_auth_type = EAPIAuthType[new StringCase(model.api_auth_type).toPascal() as keyof typeof EAPIAuthType];
+                model.api_auth_type = convertSafeEnum(EAPIAuthType, model.api_auth_type);
             }
         }
 

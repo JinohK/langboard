@@ -9,12 +9,6 @@ services:
     environment:
       - ENVIRONMENT=production
 
-  docs:
-    build:
-      target: prod
-    environment:
-      - NODE_ENV=production
-
 networks:
   net:
     name: ${PROJECT_NAME}_network

@@ -36,7 +36,7 @@ const initialContext = {
 
 const ActivityContext = createContext<IActivityContext>(initialContext);
 
-const PAGE_LIMIT = 20;
+const PAGE_LIMIT = 10;
 
 export const ActivityProvider = ({ form, children }: IActivityProps): React.ReactNode => {
     const activityFilter = useMemo(() => {

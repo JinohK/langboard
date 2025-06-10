@@ -2,7 +2,7 @@ import useBoardBotCronDeletedHandlers from "@/controllers/socket/board/settings/
 import useBoardBotCronRescheduledHandlers from "@/controllers/socket/board/settings/useBoardBotCronRescheduledHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { StringCase } from "@/core/utils/StringUtils";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 export type TTargetTable = "project_column" | "card";
@@ -57,10 +57,10 @@ class BotSchedule extends BaseModel<Interface> {
 
     public static convertModel(model: Interface): Interface {
         if (TypeUtils.isString(model.running_type)) {
-            model.running_type = ERunningType[new StringCase(model.running_type).toPascal() as keyof typeof ERunningType];
+            model.running_type = convertSafeEnum(ERunningType, model.running_type);
         }
         if (TypeUtils.isString(model.status)) {
-            model.status = EStatus[new StringCase(model.status).toPascal() as keyof typeof EStatus];
+            model.status = convertSafeEnum(EStatus, model.status);
         }
         if (TypeUtils.isString(model.start_at)) {
             model.start_at = new Date(model.start_at);

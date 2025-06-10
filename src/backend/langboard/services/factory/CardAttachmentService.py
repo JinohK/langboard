@@ -59,7 +59,7 @@ class CardAttachmentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(card_attachment)
 
-        CardAttachmentPublisher.uploaded(user, card, card_attachment)
+        await CardAttachmentPublisher.uploaded(user, card, card_attachment)
         CardAttachmentActivityTask.card_attachment_uploaded(user, project, card, card_attachment)
         CardAttachmentBotTask.card_attachment_uploaded(user, project, card, card_attachment)
 
@@ -90,7 +90,7 @@ class CardAttachmentService(BaseService):
             card_attachment.order = order
             db.update(card_attachment)
 
-        CardAttachmentPublisher.order_changed(card, card_attachment)
+        await CardAttachmentPublisher.order_changed(card, card_attachment)
 
         return True
 
@@ -110,7 +110,7 @@ class CardAttachmentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(card_attachment)
 
-        CardAttachmentPublisher.name_changed(card, card_attachment)
+        await CardAttachmentPublisher.name_changed(card, card_attachment)
         CardAttachmentActivityTask.card_attachment_name_changed(user, project, card, old_name, card_attachment)
         CardAttachmentBotTask.card_attachment_name_changed(user, project, card, card_attachment)
 
@@ -139,7 +139,7 @@ class CardAttachmentService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(card_attachment)
 
-        CardAttachmentPublisher.deleted(card, card_attachment)
+        await CardAttachmentPublisher.deleted(card, card_attachment)
         CardAttachmentActivityTask.card_attachment_deleted(user, project, card, card_attachment)
         CardAttachmentBotTask.card_attachment_deleted(user, project, card, card_attachment)
 

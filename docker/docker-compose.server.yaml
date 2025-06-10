@@ -12,7 +12,6 @@ services:
       - PROJECT_NAME=${PROJECT_NAME}
       - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
       - SOCKET_HOST=${PROJECT_NAME}_socket:${SOCKET_PORT}
-      - DOCS_HOST=${PROJECT_NAME}_docs:3000
     volumes:
       - ./server/conf.template:/etc/nginx/templates/default.conf.template
       - ./server/nginx.conf:/etc/nginx/nginx.conf
@@ -21,7 +20,6 @@ services:
     depends_on:
       - frontend
       - backend
-      - docs
     networks:
       - net
     restart: always
@@ -38,7 +36,7 @@ services:
       - API_URL=${API_URL}
       - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
     working_dir: /app
-    command: yarn build -w
+    command: yarn build
     volumes:
       - ../src/frontend/src:/app/src
       - ../src/frontend/dist:/app/dist:rw
@@ -48,9 +46,8 @@ services:
       - ../.env:/app/.env
     networks:
       - net
-    restart: always
 
-  backend:
+  backend: &backend
     init: true
     container_name: ${PROJECT_NAME}_backend
     build:
@@ -114,6 +111,12 @@ services:
       - net
     restart: always
 
+  celeryworker:
+    <<: *backend
+    init: true
+    container_name: ${PROJECT_NAME}_celeryworker
+    command: langboard run:broker
+
   socket:
     init: true
     container_name: ${PROJECT_NAME}_socket
@@ -137,6 +140,7 @@ services:
       - BROADCAST_URLS=${PROJECT_NAME}_kafka0:29092,${PROJECT_NAME}_kafka1:29092,${PROJECT_NAME}_kafka2:29092
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
       - MAIL_FROM=${MAIL_FROM}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME}
       - MAIL_USERNAME=${MAIL_USERNAME}
@@ -157,28 +161,6 @@ services:
       - kafka0
       - kafka1
       - kafka2
-    networks:
-      - net
-    restart: always
-
-  docs:
-    init: true
-    container_name: ${PROJECT_NAME}_docs
-    build:
-      context: ../docs
-    working_dir: /opt/docusaurus
-    volumes:
-      - ../docs/src:/opt/docusaurus/src
-      - ../docs/docs:/opt/docusaurus/docs
-      - ../docs/static:/opt/docusaurus/static
-      - ../docs/docusaurus.config.ts:/opt/docusaurus/docusaurus.config.ts
-      - ../docs/sidebars.ts:/opt/docusaurus/sidebars.ts
-      - ../docs/tsconfig.json:/opt/docusaurus/tsconfig.json
-      - ../docs/package.json:/opt/docusaurus/package.json
-      - ../docs/yarn.lock:/opt/docusaurus/yarn.lock
-      - ../.env:/opt/.env
-    depends_on:
-      - backend
     networks:
       - net
     restart: always

@@ -12,9 +12,10 @@ class KafkaDispatcherQueue(BaseDispatcherQueue):
             bootstrap_servers=BROADCAST_URLS, value_serializer=lambda v: json.dumps(v).encode("utf-8")
         )
 
-    def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
-        data_file_name = record_model(event, data)
-        self.producer.send(event if isinstance(event, str) else event.event, {"cache_key": data_file_name})
+    async def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
+        cache_key = await record_model(event, data)
+        self.producer.send(event if isinstance(event, str) else event.event, {"cache_key": cache_key})
+        self.producer.flush()
 
     def start(self):
         self.is_closed = False

@@ -1,3 +1,4 @@
+import { SOCKET_URL } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -24,6 +25,7 @@ const useUploadProjectChatAttachment = (options?: TMutationOptions<IUploadProjec
         const formData = new FormData();
         formData.append("attachment", params.attachment);
         const res = await api.post(url, formData, {
+            baseURL: SOCKET_URL,
             onUploadProgress: params.onUploadProgress,
         });
 

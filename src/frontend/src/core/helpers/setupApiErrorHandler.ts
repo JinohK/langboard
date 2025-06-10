@@ -61,7 +61,7 @@ const setupApiErrorHandler = (configs: IApiErrorHandlerMap, messageRef?: { messa
 
         if (messageRef) {
             messageRef.message = result;
-        } else if (isToast) {
+        } else if (isToast && TypeUtils.isString(result) && result.length > 0) {
             Toast.Add.error(result);
         } else {
             return result;

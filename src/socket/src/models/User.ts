@@ -1,8 +1,5 @@
 import { Entity, Column, DeleteDateColumn } from "typeorm";
-import jwt from "jsonwebtoken";
-import { JWT_ALGORITHM, JWT_SECRET_KEY } from "@/Constants";
-import TypeUtils from "@/core/utils/TypeUtils";
-import BaseModel from "@/core/db/BaseModel";
+import BaseModel, { TBigIntString } from "@/core/db/BaseModel";
 import { getDatetimeType } from "@/core/db/DbType";
 
 @Entity({ name: "user" })
@@ -77,45 +74,34 @@ class User extends BaseModel {
         };
     }
 
-    public static async findByAccessToken(accessToken: string): Promise<User | null> {
-        try {
-            const decoded = jwt.verify(accessToken, JWT_SECRET_KEY, {
-                algorithms: [JWT_ALGORITHM],
-                ignoreExpiration: true,
-            }) as { sub: string; exp: number };
+    public static async findById(id: TBigIntString): Promise<User | null> {
+        const user = await User.createQueryBuilder("User")
+            .select([
+                "cast(User.id as text) as converted_id",
+                "User.firstname",
+                "User.lastname",
+                "User.email",
+                "User.username",
+                "User.avatar",
+                "User.is_admin",
+                "User.preferred_lang",
+                "User.activated_at",
+                "User.deleted_at",
+                "User.created_at",
+                "User.updated_at",
+            ])
+            .where("User.id = :id", { id })
+            .getRawOne();
 
-            if (!decoded || TypeUtils.isString(decoded) || !decoded.exp || new Date(decoded.exp * 1000).getTime() < new Date().getTime()) {
-                return null;
-            }
-
-            const converted = await User.createQueryBuilder()
-                .select([
-                    "cast(User.id as text) as converted_id",
-                    "User.firstname",
-                    "User.lastname",
-                    "User.email",
-                    "User.username",
-                    "User.avatar",
-                    "User.is_admin",
-                    "User.preferred_lang",
-                    "User.activated_at",
-                    "User.deleted_at",
-                    "User.created_at",
-                    "User.updated_at",
-                ])
-                .where("User.id = :id", { id: decoded.sub })
-                .getRawOne();
-
-            converted.id = converted.converted_id;
-
-            const user = await User.create({
-                ...converted,
-            });
-
-            return user;
-        } catch {
+        if (!user) {
             return null;
         }
+
+        user.id = user.converted_id;
+
+        return User.create({
+            ...user,
+        });
     }
 }
 

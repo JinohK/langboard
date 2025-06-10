@@ -393,7 +393,7 @@ class NotificationService(BaseService):
             email_template_name=email_template_name,
             email_formats=email_formats,
         )
-        NotificationPublishService.put_dispather(model)
+        await NotificationPublishService.put_dispather(model)
         return True
 
     def __create_redirect_url(self, project: Project, card_or_wiki: ProjectWiki | Card | None = None):

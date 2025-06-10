@@ -3,7 +3,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { StringCase } from "@/core/utils/StringUtils";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { ENotificationType } from "@/core/models/notification.type";
 
@@ -41,7 +41,7 @@ class UserNotification extends BaseModel<Interface> {
             model.created_at = new Date(model.created_at);
         }
         if (TypeUtils.isString(model.type)) {
-            model.type = ENotificationType[new StringCase(model.type).toPascal() as keyof typeof ENotificationType];
+            model.type = convertSafeEnum(ENotificationType, model.type);
         }
         if (model.notifier_bot) {
             const botAsUser = { ...model.notifier_bot } as unknown as User.Interface;

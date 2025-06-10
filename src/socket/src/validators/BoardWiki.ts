@@ -1,5 +1,5 @@
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import Subscription from "@/core/socket/Subscription";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import Subscription from "@/core/server/Subscription";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 
 Subscription.registerValidator(ESocketTopic.User, async (context) => {

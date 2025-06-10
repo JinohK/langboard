@@ -3,16 +3,12 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
-upstream api {
+upstream api_server {
     server ${BACKEND_HOST};
 }
 
-upstream socket {
+upstream socket_server {
     server ${SOCKET_HOST};
-}
-
-upstream docs {
-    server ${DOCS_HOST};
 }
 
 server {
@@ -32,6 +28,8 @@ server {
 server {
     listen 8010;
 
+    client_max_body_size 50M;
+
     location / {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -39,7 +37,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header Host $host;
 
-        proxy_pass http://socket;
+        proxy_pass http://socket_server;
 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -50,8 +48,6 @@ server {
 server {
     listen 8020;
 
-    client_max_body_size 50M;
-
     location / {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -59,20 +55,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header Host $host;
 
-        proxy_pass http://api;
-    }
-}
-
-server {
-    listen 8030;
-
-    location / {
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-
-        proxy_pass http://docs;
+        proxy_pass http://api_server;
     }
 }

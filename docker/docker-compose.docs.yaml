@@ -1,0 +1,33 @@
+services:
+  server:
+    environment:
+      - DOCS_HOST=${PROJECT_NAME}_docs:3000
+    volumes:
+      - ./server/conf-docs.template:/etc/nginx/templates/default-docs.conf.template
+    depends_on:
+      - docs
+
+  docs:
+    init: true
+    container_name: ${PROJECT_NAME}_docs
+    build:
+      context: ../docs
+      target: prod
+    working_dir: /opt/docusaurus
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ../docs/src:/opt/docusaurus/src
+      - ../docs/docs:/opt/docusaurus/docs
+      - ../docs/static:/opt/docusaurus/static
+      - ../docs/docusaurus.config.ts:/opt/docusaurus/docusaurus.config.ts
+      - ../docs/sidebars.ts:/opt/docusaurus/sidebars.ts
+      - ../docs/tsconfig.json:/opt/docusaurus/tsconfig.json
+      - ../docs/package.json:/opt/docusaurus/package.json
+      - ../docs/yarn.lock:/opt/docusaurus/yarn.lock
+      - ../.env:/opt/.env
+    depends_on:
+      - backend
+    networks:
+      - net
+    restart: always

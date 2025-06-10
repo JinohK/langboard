@@ -1,5 +1,5 @@
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import SocketClient from "@/core/socket/SocketClient";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import SocketClient from "@/core/server/SocketClient";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
 
 type TEventContext = {

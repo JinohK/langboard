@@ -184,7 +184,7 @@ class ProjectWikiService(BaseService):
         api_wiki = wiki.api_response()
         api_wiki["assigned_bots"] = []
         api_wiki["assigned_members"] = []
-        ProjectWikiPublisher.created(project, wiki)
+        await ProjectWikiPublisher.created(project, wiki)
         ProjectWikiActivityTask.project_wiki_created(user_or_bot, project, wiki)
         ProjectWikiBotTask.project_wiki_created(user_or_bot, project, wiki)
 
@@ -223,7 +223,7 @@ class ProjectWikiService(BaseService):
                 continue
             model[key] = convert_python_data(getattr(wiki, key))
 
-        ProjectWikiPublisher.updated(project, wiki, model)
+        await ProjectWikiPublisher.updated(project, wiki, model)
 
         notification_service = self._get_service(NotificationService)
         if "content" in model:
@@ -292,7 +292,7 @@ class ProjectWikiService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(wiki)
 
-        ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
+        await ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
         ProjectWikiActivityTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
         ProjectWikiBotTask.project_wiki_publicity_changed(user_or_bot, project, wiki)
 
@@ -354,7 +354,7 @@ class ProjectWikiService(BaseService):
                     )
                 target_users.append(target_user)
 
-        ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
+        await ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
         ProjectWikiActivityTask.project_wiki_assignees_updated(
             user,
             project,
@@ -390,7 +390,7 @@ class ProjectWikiService(BaseService):
             wiki.order = order
             db.update(wiki)
 
-        ProjectWikiPublisher.order_changed(project, wiki)
+        await ProjectWikiPublisher.order_changed(project, wiki)
 
         return project, wiki
 
@@ -426,7 +426,7 @@ class ProjectWikiService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(wiki)
 
-        ProjectWikiPublisher.deleted(project, wiki)
+        await ProjectWikiPublisher.deleted(project, wiki)
         ProjectWikiActivityTask.project_wiki_deleted(user_or_bot, project, wiki)
         ProjectWikiBotTask.project_wiki_deleted(user_or_bot, project, wiki)
 

@@ -9,7 +9,7 @@ from ..models import Project
 @staticclass
 class ProjectBotPublisher:
     @staticmethod
-    def scheduled(project: Project, bot: Bot, schedule: BotSchedule):
+    async def scheduled(project: Project, bot: Bot, schedule: BotSchedule):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardSettings,
@@ -19,10 +19,10 @@ class ProjectBotPublisher:
         )
 
         model = {"schedule": schedule.api_response()}
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def rescheduled(project: Project, schedule: BotSchedule, model: dict[str, Any]):
+    async def rescheduled(project: Project, schedule: BotSchedule, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardSettings,
@@ -31,10 +31,10 @@ class ProjectBotPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(project: Project, schedule: BotSchedule):
+    async def deleted(project: Project, schedule: BotSchedule):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardSettings,
@@ -44,4 +44,4 @@ class ProjectBotPublisher:
         )
 
         model = {"uid": schedule.get_uid()}
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

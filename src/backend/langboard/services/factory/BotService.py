@@ -72,7 +72,7 @@ class BotService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(bot)
 
-        BotPublisher.bot_created(bot)
+        await BotPublisher.bot_created(bot)
         BotDefaultTask.bot_created(bot)
 
         return bot
@@ -129,8 +129,8 @@ class BotService(BaseService):
             else:
                 model[key] = convert_python_data(getattr(bot, key))
 
-        BotPublisher.bot_updated(bot.get_uid(), model)
-        BotPublisher.bot_setting_updated(bot.get_uid(), unpublishable_model)
+        await BotPublisher.bot_updated(bot.get_uid(), model)
+        await BotPublisher.bot_setting_updated(bot.get_uid(), unpublishable_model)
 
         model = {**model}
         for key in unpublishable_keys:
@@ -158,7 +158,7 @@ class BotService(BaseService):
                 db.insert(trigger)
 
         model = {"conditions": [condition.value for condition in conditions]}
-        BotPublisher.bot_condition_predefined(bot.get_uid(), model)
+        await BotPublisher.bot_condition_predefined(bot.get_uid(), model)
 
         return True
 
@@ -187,7 +187,7 @@ class BotService(BaseService):
                 db.insert(trigger)
 
         model = {"condition": condition.value, "is_enabled": should_enable}
-        BotPublisher.bot_condition_toggled(bot.get_uid(), model)
+        await BotPublisher.bot_condition_toggled(bot.get_uid(), model)
 
         return True
 
@@ -208,7 +208,7 @@ class BotService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(bot)
 
-        BotPublisher.bot_setting_updated(bot.get_uid(), {"ip_whitelist": valid_ip_whitelist})
+        await BotPublisher.bot_setting_updated(bot.get_uid(), {"ip_whitelist": valid_ip_whitelist})
 
         return bot, {"ip_whitelist": valid_ip_whitelist}
 
@@ -221,7 +221,7 @@ class BotService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(bot)
 
-        BotPublisher.bot_setting_updated(bot.get_uid(), {"app_api_token": bot.app_api_token})
+        await BotPublisher.bot_setting_updated(bot.get_uid(), {"app_api_token": bot.app_api_token})
 
         return bot
 
@@ -234,7 +234,7 @@ class BotService(BaseService):
             db.exec(SqlBuilder.delete.table(ProjectAssignedBot).where(ProjectAssignedBot.column("bot_id") == bot.id))
             db.delete(bot)
 
-        BotPublisher.bot_deleted(bot.get_uid())
+        await BotPublisher.bot_deleted(bot.get_uid())
 
         return True
 

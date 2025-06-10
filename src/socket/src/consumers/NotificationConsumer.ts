@@ -2,8 +2,8 @@
 import * as nodemailer from "nodemailer";
 import * as fs from "fs";
 import Consumer from "@/core/broadcast/Consumer";
-import ESocketTopic from "@/core/socket/ESocketTopic";
-import Subscription from "@/core/socket/Subscription";
+import ESocketTopic from "@/core/server/ESocketTopic";
+import Subscription from "@/core/server/Subscription";
 import TypeUtils from "@/core/utils/TypeUtils";
 import UserNotification from "@/models/UserNotification";
 import UserNotificationUnsubscription, { ENotificationChannel, TSocketPublishData } from "@/models/UserNotificationUnsubscription";
@@ -13,7 +13,7 @@ import { format, StringCase } from "@/core/utils/StringUtils";
 import JsonUtils from "@/core/utils/JsonUtils";
 import SnowflakeID from "@/core/db/SnowflakeID";
 
-const NotificationConsumer = async (data: unknown) => {
+Consumer.register("notification_publish", async (data: unknown) => {
     const webNotification = async (model: TSocketPublishData) => {
         const hasUnsubscription = await UserNotificationUnsubscription.hasUnsubscription(model, ENotificationChannel.Web);
 
@@ -117,8 +117,4 @@ const NotificationConsumer = async (data: unknown) => {
     await emailNotification(data);
     await mobileNotification(data);
     await iotNotification(data);
-};
-
-Consumer.register("notification_publish", NotificationConsumer);
-
-export default NotificationConsumer;
+});

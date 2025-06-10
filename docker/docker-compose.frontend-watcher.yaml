@@ -1,0 +1,4 @@
+services:
+  frontend:
+    command: yarn build -w
+    restart: always

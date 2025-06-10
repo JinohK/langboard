@@ -10,7 +10,7 @@ from ..models import ChatTemplate, Project
 @staticclass
 class ProjectPublisher:
     @staticmethod
-    def updated(project: Project, model: dict[str, Any]):
+    async def updated(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -19,10 +19,10 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def assigned_bots_updated(project: Project, bots: Sequence[Bot]):
+    async def assigned_bots_updated(project: Project, bots: Sequence[Bot]):
         model = {"assigned_bots": [bot.api_response() for bot in bots]}
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []
@@ -36,10 +36,10 @@ class ProjectPublisher:
                 )
             )
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def assigned_users_updated(project: Project, model: dict[str, Any]):
+    async def assigned_users_updated(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []
         for topic in [SocketTopic.Board, SocketTopic.Dashboard, SocketTopic.BoardWiki]:
@@ -54,10 +54,10 @@ class ProjectPublisher:
                 )
             )
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def bot_roles_updated(project: Project, target_bot: Bot, roles: list[str]):
+    async def bot_roles_updated(project: Project, target_bot: Bot, roles: list[str]):
         topic_id = project.get_uid()
         model = {"bot_uid": target_bot.get_uid(), "roles": roles}
         publish_model = SocketPublishModel(
@@ -67,10 +67,10 @@ class ProjectPublisher:
             data_keys=["bot_uid", "roles"],
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def user_roles_updated(project: Project, target_user: User, roles: list[str]):
+    async def user_roles_updated(project: Project, target_user: User, roles: list[str]):
         topic_id = project.get_uid()
         model = {"user_uid": target_user.get_uid(), "roles": roles}
         publish_models = [
@@ -89,10 +89,10 @@ class ProjectPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def bot_activation_toggled(project: Project, target_bot: Bot, is_disabled: bool):
+    async def bot_activation_toggled(project: Project, target_bot: Bot, is_disabled: bool):
         project_uid = project.get_uid()
         bot_uid = target_bot.get_uid()
         model = {"bot_uid": bot_uid, "is_disabled": is_disabled}
@@ -111,10 +111,10 @@ class ProjectPublisher:
             ),
         ]
 
-        SocketPublishService.put_dispather(model, publish_models)
+        await SocketPublishService.put_dispather(model, publish_models)
 
     @staticmethod
-    def deleted(project: Project):
+    async def deleted(project: Project):
         topic_id = project.get_uid()
         publish_models: list[SocketPublishModel] = []
         for topic in [SocketTopic.Board, SocketTopic.Dashboard]:
@@ -127,10 +127,10 @@ class ProjectPublisher:
                 )
             )
 
-        SocketPublishService.put_dispather({}, publish_models)
+        await SocketPublishService.put_dispather({}, publish_models)
 
     @staticmethod
-    def chat_template_created(project: Project, model: dict[str, Any]):
+    async def chat_template_created(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -139,10 +139,10 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def chat_template_updated(project: Project, template: ChatTemplate, model: dict[str, Any]):
+    async def chat_template_updated(project: Project, template: ChatTemplate, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -151,10 +151,10 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def chat_template_deleted(project: Project, template_uid: str):
+    async def chat_template_deleted(project: Project, template_uid: str):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -162,4 +162,4 @@ class ProjectPublisher:
             event=f"board:chat:template:deleted:{template_uid}",
         )
 
-        SocketPublishService.put_dispather({}, publish_model)
+        await SocketPublishService.put_dispather({}, publish_model)

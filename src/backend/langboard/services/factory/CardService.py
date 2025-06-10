@@ -312,7 +312,7 @@ class CardService(BaseService):
         api_card = card.board_api_response(0, [user.api_response() for user in users], [], [], [])
         model = {"card": api_card}
 
-        CardPublisher.created(project, column, model)
+        await CardPublisher.created(project, column, model)
         CardActivityTask.card_created(user_or_bot, project, card)
         CardBotTask.card_created(user_or_bot, project, card)
 
@@ -363,7 +363,7 @@ class CardService(BaseService):
                 continue
             model[key] = convert_python_data(getattr(card, key))
 
-        CardPublisher.updated(project, card, checkitem_cardified_from, model)
+        await CardPublisher.updated(project, card, checkitem_cardified_from, model)
 
         if "description" in model and card.description:
             notification_service = self._get_service(NotificationService)
@@ -442,7 +442,7 @@ class CardService(BaseService):
             card.order = order
             db.update(card)
 
-        CardPublisher.order_changed(project, card, original_column, cast(ProjectColumn, new_column))
+        await CardPublisher.order_changed(project, card, original_column, cast(ProjectColumn, new_column))
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
@@ -490,7 +490,7 @@ class CardService(BaseService):
                     )
                     users.append(user)
 
-        CardPublisher.assigned_users_updated(project, card, users)
+        await CardPublisher.assigned_users_updated(project, card, users)
 
         notification_service = self._get_service(NotificationService)
         for user in users:
@@ -540,7 +540,7 @@ class CardService(BaseService):
 
         labels = await project_label_service.get_all_by_card(card, as_api=False)
 
-        CardPublisher.labels_updated(project, card, labels)
+        await CardPublisher.labels_updated(project, card, labels)
         CardActivityTask.card_labels_updated(
             user_or_bot,
             project,
@@ -612,7 +612,7 @@ class CardService(BaseService):
                 )
             )
 
-        CardPublisher.deleted(project, card)
+        await CardPublisher.deleted(project, card)
         CardActivityTask.card_deleted(user_or_bot, project, card)
         CardBotTask.card_deleted(user_or_bot, project, card)
 

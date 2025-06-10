@@ -2,7 +2,7 @@
 import useAppSettingDeletedHandlers from "@/controllers/socket/settings/useAppSettingDeletedHandlers";
 import useAppSettingUpdatedHandlers from "@/controllers/socket/settings/useAppSettingUpdatedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
-import { StringCase } from "@/core/utils/StringUtils";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import { registerModel } from "@/core/models/ModelRegistry";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -38,7 +38,7 @@ class AppSettingModel extends BaseModel<Interface> {
     public static convertModel(model: Interface): Interface {
         if (model.setting_type) {
             if (TypeUtils.isString(model.setting_type)) {
-                model.setting_type = ESettingType[new StringCase(model.setting_type).toPascal() as keyof typeof ESettingType];
+                model.setting_type = convertSafeEnum(ESettingType, model.setting_type);
             }
         }
         if (TypeUtils.isString(model.created_at)) {

@@ -234,7 +234,7 @@ class ProjectInvitationService(BaseService):
             "invitation_uid": invitation.get_uid(),
         }
 
-        ProjectInvitationPublisher.accepted(project, model)
+        await ProjectInvitationPublisher.accepted(project, model)
 
         ProjectActivityTask.project_invited_user_accepted(user, project)
 
@@ -317,4 +317,4 @@ class ProjectInvitationService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.delete(notification)
 
-        ProjectInvitationPublisher.notification_deleted(user, notification)
+        await ProjectInvitationPublisher.notification_deleted(user, notification)

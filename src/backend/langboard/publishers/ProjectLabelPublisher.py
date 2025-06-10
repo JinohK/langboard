@@ -8,7 +8,7 @@ from ..models import Project, ProjectLabel
 @staticclass
 class ProjectLabelPublisher:
     @staticmethod
-    def created(project: Project, label: ProjectLabel):
+    async def created(project: Project, label: ProjectLabel):
         model = {"label": label.api_response()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -17,10 +17,10 @@ class ProjectLabelPublisher:
             data_keys="label",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def updated(project: Project, label: ProjectLabel, model: dict[str, Any]):
+    async def updated(project: Project, label: ProjectLabel, model: dict[str, Any]):
         topic_id = project.get_uid()
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
@@ -29,10 +29,10 @@ class ProjectLabelPublisher:
             data_keys=list(model.keys()),
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def order_changed(project: Project, label: ProjectLabel):
+    async def order_changed(project: Project, label: ProjectLabel):
         topic_id = project.get_uid()
         model = {"uid": label.get_uid(), "order": label.order}
         publish_model = SocketPublishModel(
@@ -42,10 +42,10 @@ class ProjectLabelPublisher:
             data_keys=["uid", "order"],
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)
 
     @staticmethod
-    def deleted(project: Project, label: ProjectLabel):
+    async def deleted(project: Project, label: ProjectLabel):
         topic_id = project.get_uid()
         model = {"uid": label.get_uid()}
         publish_model = SocketPublishModel(
@@ -55,4 +55,4 @@ class ProjectLabelPublisher:
             data_keys="uid",
         )
 
-        SocketPublishService.put_dispather(model, publish_model)
+        await SocketPublishService.put_dispather(model, publish_model)

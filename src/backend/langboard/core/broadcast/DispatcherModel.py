@@ -1,4 +1,3 @@
-from asyncio import run as run_async
 from typing import Any
 from pydantic import BaseModel
 from ...Constants import CACHE_TYPE, DATA_DIR
@@ -34,7 +33,9 @@ BROADCAST_DIR = DATA_DIR / "broadcast"
 BROADCAST_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def record_model(event: str | DispatcherModel, data: dict[str, Any] | None = None, file_only: bool = False) -> str:
+async def record_model(
+    event: str | DispatcherModel, data: dict[str, Any] | None = None, file_only: bool = False
+) -> str:
     now_str = str(now().timestamp()).replace(".", "_")
     random_str = create_short_unique_id(10)
 
@@ -42,7 +43,7 @@ def record_model(event: str | DispatcherModel, data: dict[str, Any] | None = Non
 
     if CACHE_TYPE == "redis":
         cache_key = f"broadcast-{now_str}-{random_str}"
-        run_async(Cache.set(cache_key, model.model_dump_json(), 3 * 60))
+        await Cache.set(cache_key, model.model_dump()["data"], 3 * 60)
         return cache_key
 
     name = f"{now_str}-{random_str}.json" if not file_only else f"{now_str}-{random_str}-fileonly.json"
