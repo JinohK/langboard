@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, ClassVar, Literal, TypeVar, overload
-import strawberry
 from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -256,10 +255,6 @@ class EditorContentModel(BaseModel):
     @staticmethod
     def api_schema() -> dict[str, Any]:
         return {"content": "string"}
-
-    @strawberry.type
-    class GQL:
-        content: str
 
 
 class ChatContentModel(BaseModel):
