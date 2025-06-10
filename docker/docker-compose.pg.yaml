@@ -83,10 +83,10 @@ services:
       context: ./db_backup
     container_name: ${PROJECT_NAME}_db_backup
     environment:
-      - PG_MASTER_HOST=${PROJECT_NAME}_db
+      - PG_MASTER_HOST=${PROJECT_NAME}_db_readonly
       - PG_MASTER_PORT=5432
-      - PG_USER=${POSTGRES_REPLICATION_USER}
-      - PG_PASS=${POSTGRES_REPLICATION_PASSWORD}
+      - PG_USER=${POSTGRES_USER}
+      - PG_PASS=${POSTGRES_PASSWORD}
       - PG_DB=${POSTGRES_DB}
     volumes:
       - ./volumes/db_backup:/backup

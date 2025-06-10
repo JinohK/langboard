@@ -16,7 +16,7 @@ FILENAME=${PG_DB}"_$(date +%Y%m%d_%H%M)"
 FILE_PATH_PREFIX="$BACKUP_DIR/$FILENAME"
 
 record_log "Starting backup for \"$PG_DB\" database..."
-OUTPUT=$(PGPASSWORD=${PG_PASS} pg_dump -h ${PG_MASTER_HOST} -U ${PG_USER} -p ${PG_MASTER_PORT} -F c -b -v -f $FILE_PATH_PREFIX.dump ${PG_DB} 2>&1)
+OUTPUT=$(PGPASSWORD=${PG_PASS} pg_dump -h ${PG_MASTER_HOST} -U ${PG_USER} -p ${PG_MASTER_PORT} -T public.alembic_version -a -b -v -f $FILE_PATH_PREFIX.dump ${PG_DB} 2>&1)
 record_log "$OUTPUT"
 
 record_log "Compressing backup file..."
