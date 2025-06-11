@@ -242,7 +242,7 @@ class Auth:
             payload = AuthSecurity.decode_access_token(api_token)
             if "sub" not in payload or "chat" not in payload or not payload["sub"] or not payload["chat"]:
                 return status.HTTP_401_UNAUTHORIZED
-            user_id = payload["sub"]
+            user_id = int(payload["sub"])
         except Exception:
             return status.HTTP_401_UNAUTHORIZED
 

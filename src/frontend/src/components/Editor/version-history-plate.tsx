@@ -116,7 +116,9 @@ export const CollapsibleVersionHistoryPlate = React.memo(
                 );
             }
 
-            scrollableMutate();
+            setTimeout(() => {
+                scrollableMutate();
+            }, 0);
         }, [isExpanded]);
 
         return (
