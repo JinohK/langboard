@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any
 from sqlmodel import Field
-from ..core.db import DateTimeField, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import DateTimeField, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from .User import User
 
 
 class UserEmail(SoftDeleteModel, table=True):

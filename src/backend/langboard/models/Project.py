@@ -1,7 +1,8 @@
 from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from .User import User
 
 
 class Project(SoftDeleteModel, table=True):

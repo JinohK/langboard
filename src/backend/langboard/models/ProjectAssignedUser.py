@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Any
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, DateTimeField, SnowflakeID, SnowflakeIDField
 from ..core.utils.DateTime import now
 from .Project import Project
+from .User import User
 
 
 class ProjectAssignedUser(BaseSqlModel, table=True):

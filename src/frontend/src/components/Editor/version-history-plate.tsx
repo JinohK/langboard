@@ -83,10 +83,11 @@ export function VersionHistoryPlate({ oldValue, newValue, ...props }: IDefaultVe
 
 export interface ICollapsibleVersionHistoryPlateProps extends IBaseVersionHistoryPlateProps {
     maxShowLines?: number;
+    scrollableMutate: React.DispatchWithoutAction;
 }
 
 export const CollapsibleVersionHistoryPlate = React.memo(
-    ({ oldValue, newValue, maxShowLines = 5, ...props }: ICollapsibleVersionHistoryPlateProps) => {
+    ({ oldValue, newValue, maxShowLines = 5, scrollableMutate, ...props }: ICollapsibleVersionHistoryPlateProps) => {
         const [t] = useTranslation();
         const revision = usePlateEditor({
             override: {
@@ -114,6 +115,8 @@ export const CollapsibleVersionHistoryPlate = React.memo(
                     </EditorDataProvider>
                 );
             }
+
+            scrollableMutate();
         }, [isExpanded]);
 
         return (

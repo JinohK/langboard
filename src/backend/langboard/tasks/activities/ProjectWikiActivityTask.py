@@ -1,8 +1,6 @@
 from typing import Any
-from ...core.ai import Bot
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Project, ProjectWiki, ProjectWikiActivity
+from ...models import Bot, Project, ProjectWiki, ProjectWikiActivity, User
 from ...models.ProjectWikiActivity import ProjectWikiActivityType
 from .UserActivityTask import record_wiki_activity
 from .utils import ActivityHistoryHelper, ActivityTaskHelper

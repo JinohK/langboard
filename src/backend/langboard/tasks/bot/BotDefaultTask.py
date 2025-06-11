@@ -1,9 +1,9 @@
 from typing import Literal
-from ...core.ai import Bot, BotDefaultTrigger
+from ...ai import BotDefaultTrigger
 from ...core.broker import Broker
-from ...core.db import BaseSqlModel, User
+from ...core.db import BaseSqlModel
 from ...core.utils.ModelUtils import get_model_by_table_name
-from ...models import Project
+from ...models import Bot, Project, User
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 

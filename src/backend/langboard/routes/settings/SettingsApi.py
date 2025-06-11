@@ -1,12 +1,11 @@
 from fastapi import File, UploadFile, status
-from ...core.ai import Bot
 from ...core.filter import AuthFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
-from ...core.setting import AppSetting, AppSettingType
 from ...core.storage import Storage, StorageName
-from ...models import GlobalCardRelationshipType
+from ...models import AppSetting, Bot, GlobalCardRelationshipType
+from ...models.AppSetting import AppSettingType
+from ...security import Auth
 from ...services import Service
 from .Form import (
     CreateBotForm,

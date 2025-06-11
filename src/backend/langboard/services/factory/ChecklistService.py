@@ -1,8 +1,8 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
-from ...models import Card, Checkitem, Checklist, Project
+from ...models import Card, Checkitem, Checklist, Project, User
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import ChecklistPublisher
 from ...tasks.activities import CardChecklistActivityTask

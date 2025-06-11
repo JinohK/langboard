@@ -1,9 +1,8 @@
 from typing import Any
 from pydantic import BaseModel
-from ...models import UserNotification
+from ...models import User, UserNotification
 from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ..broadcast import DispatcherModel, DispatcherQueue
-from ..db import User
 from ..utils.decorators import staticclass
 
 
@@ -19,7 +18,7 @@ class NotificationPublishModel(BaseModel):
 
 
 @staticclass
-class NotificationPublishService:
+class NotificationPublisher:
     @staticmethod
     async def put_dispather(model: NotificationPublishModel):
         dispatacher_model = DispatcherModel(event="notification_publish", data=model.model_dump())

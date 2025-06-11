@@ -1,75 +1,19 @@
-from calendar import timegm
-from datetime import timedelta
-from json import dumps as json_dumps
-from json import loads as json_loads
 from typing import Any, Literal, cast, overload
-from fastapi import Depends, FastAPI, Request, status
-from fastapi.openapi.utils import get_openapi
+from fastapi import Depends, Request, status
 from jwt import ExpiredSignatureError, InvalidTokenError
-from jwt import decode as jwt_decode
-from jwt import encode as jwt_encode
 from starlette.datastructures import Headers
 from starlette.requests import cookie_parser
-from ...Constants import (
-    ENVIRONMENT,
-    JWT_ALGORITHM,
-    JWT_AT_EXPIRATION,
-    JWT_RT_EXPIRATION,
-    JWT_SECRET_KEY,
-    PROJECT_NAME,
-    PROJECT_VERSION,
-    REFRESH_TOKEN_NAME,
-)
-from ..ai import Bot
-from ..caching import Cache
-from ..db import DbSession, SnowflakeID, SqlBuilder, User
-from ..filter import AuthFilter
-from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
-from ..utils.DateTime import now
-from ..utils.decorators import staticclass
-from ..utils.Encryptor import Encryptor
-from ..utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_range
+from ..Constants import ENVIRONMENT, REFRESH_TOKEN_NAME
+from ..core.caching import Cache
+from ..core.db import DbSession, SqlBuilder
+from ..core.security import AuthSecurity
+from ..core.utils.decorators import staticclass
+from ..core.utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_range
+from ..models import Bot, User
 
 
 @staticclass
 class Auth:
-    AUTHORIZATION_HEADER = "Authorization"
-    IP_HEADER = "X-Forwarded-For"
-    API_TOKEN_HEADER = "X-Api-Token"
-
-    @staticmethod
-    def authenticate(user_id: SnowflakeID) -> tuple[str, str]:
-        """Authenticates the user and returns the access and refresh tokens.
-
-        :param user_id: The user ID.
-        """
-        access_token = Auth.__create_access_token(user_id)
-        refresh_token = Auth.__create_refresh_token(user_id)
-
-        return access_token, refresh_token
-
-    @staticmethod
-    def refresh(token: str) -> str:
-        """Refreshes the access token using the refresh token.
-
-        :param token: The refresh token.
-
-        :raises InvalidTokenError: If the token is invalid.
-        :raises ExpiredSignatureError: If the signature has expired.
-        """
-        try:
-            payload = Auth.__decode_refresh_token(token)
-            expiry = int(payload["exp"])
-        except Exception:
-            raise InvalidTokenError("Invalid token")
-        current = now().timestamp()
-
-        if expiry <= current:
-            raise ExpiredSignatureError("Signature has expired")
-
-        access_token = Auth.__create_access_token(payload["sub"])
-        return access_token
-
     @staticmethod
     @overload
     def scope(where: Literal["api"]) -> User | Bot: ...
@@ -104,9 +48,7 @@ class Auth:
         :return None: If the user could not be found.
         """
         try:
-            payload = Auth.__decode_access_token(token)
-            if int(payload["exp"]) <= timegm(now().utctimetuple()):
-                raise ExpiredSignatureError("Signature has expired")
+            payload = AuthSecurity.decode_access_token(token)
         except ExpiredSignatureError as e:
             return e
         except Exception:
@@ -135,9 +77,12 @@ class Auth:
         :return None: If the user does not exist.
         """
         cache_key = f"auth-user-{user_id}"
-        cached_user = await Cache.get(cache_key, User.model_validate)
-        if cached_user:
-            return cached_user
+        try:
+            cached_user = await Cache.get(cache_key, User.model_validate)
+            if cached_user:
+                return cached_user
+        except Exception:
+            pass
 
         try:
             user = None
@@ -167,9 +112,12 @@ class Auth:
         :return None: If the bot does not exist.
         """
         cache_key = f"auth-bot-{api_token}"
-        cached_bot = await Cache.get(cache_key, Bot.model_validate)
-        if cached_bot:
-            return cached_bot
+        try:
+            cached_bot = await Cache.get(cache_key, Bot.model_validate)
+            if cached_bot:
+                return cached_bot
+        except Exception:
+            pass
 
         try:
             bot = None
@@ -210,7 +158,7 @@ class Auth:
         :return 422: If the signature has expired. :class:`fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY`
         """
         authorization = queries_headers.get(
-            Auth.AUTHORIZATION_HEADER, queries_headers.get(Auth.AUTHORIZATION_HEADER.lower(), None)
+            AuthSecurity.AUTHORIZATION_HEADER, queries_headers.get(AuthSecurity.AUTHORIZATION_HEADER.lower(), None)
         )
         if not authorization:
             return status.HTTP_401_UNAUTHORIZED
@@ -225,7 +173,7 @@ class Auth:
 
             cookie = cookie_parser(queries_headers.get("cookie", ""))
             refresh_token = cookie.get(REFRESH_TOKEN_NAME)
-            if not Auth.__compare_tokens(access_token, refresh_token):
+            if not AuthSecurity.compare_tokens(access_token, refresh_token):
                 return status.HTTP_401_UNAUTHORIZED
         else:
             if not authorization:
@@ -251,8 +199,8 @@ class Auth:
 
     @staticmethod
     async def validate_bot(headers: Headers) -> Bot | Literal[401]:
-        ip = headers.get(Auth.IP_HEADER, headers.get(Auth.IP_HEADER.lower(), None))
-        api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
+        ip = headers.get(AuthSecurity.IP_HEADER, headers.get(AuthSecurity.IP_HEADER.lower(), None))
+        api_token = headers.get(AuthSecurity.API_TOKEN_HEADER, headers.get(AuthSecurity.API_TOKEN_HEADER.lower(), None))
         if not api_token:
             return status.HTTP_401_UNAUTHORIZED
 
@@ -286,20 +234,19 @@ class Auth:
 
     @staticmethod
     async def validate_user_by_api_token(headers: Headers) -> User | Literal[401]:
-        api_token = headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower(), None))
+        api_token = headers.get(AuthSecurity.API_TOKEN_HEADER, headers.get(AuthSecurity.API_TOKEN_HEADER.lower(), None))
         if not api_token:
             return status.HTTP_401_UNAUTHORIZED
 
         try:
-            payload = Auth.__decode_access_token(api_token)
+            payload = AuthSecurity.decode_access_token(api_token)
             if "sub" not in payload or "chat" not in payload or not payload["sub"] or not payload["chat"]:
                 return status.HTTP_401_UNAUTHORIZED
-            user_uid = payload["sub"]
+            user_id = payload["sub"]
         except Exception:
             return status.HTTP_401_UNAUTHORIZED
 
         try:
-            user_id = SnowflakeID.from_short_code(user_uid)
             user = None
             with DbSession.use(readonly=True) as db:
                 result = db.exec(SqlBuilder.select.table(User).where(User.column("id") == user_id).limit(1))
@@ -310,77 +257,3 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
         return user
-
-    @staticmethod
-    def set_openapi_schema(app: FastAPI):
-        if app.openapi_schema:
-            openapi_schema = app.openapi_schema
-        else:
-            openapi_schema = get_openapi(
-                title=PROJECT_NAME.capitalize(),
-                version=PROJECT_VERSION,
-                routes=app.routes,
-            )
-
-        if "components" not in openapi_schema:
-            openapi_schema["components"] = {}
-
-        if "securitySchemes" not in openapi_schema["components"]:
-            openapi_schema["components"]["securitySchemes"] = {}
-
-        auth_schema = {
-            "type": "http",
-            "scheme": "bearer",
-        }
-
-        openapi_schema["components"]["securitySchemes"]["BearerAuth"] = auth_schema
-
-        for route in app.routes:
-            if not isinstance(route, AppExceptionHandlingRoute):
-                continue
-            if AuthFilter.exists(route.endpoint):
-                if route.path.count(":") > 0:
-                    route_path = route.path.split("/")
-                    for i, part in enumerate(route_path):
-                        if part.count(":") > 0:
-                            route_path[i] = part.split(":", maxsplit=1)[0] + "}"
-                    route_path = "/".join(route_path)
-                else:
-                    route_path = route.path
-                path = openapi_schema["paths"][route_path]
-                for method in route.methods:
-                    path_method = path[method.lower()]
-                    path_method["security"] = [{"BearerAuth": []}]
-
-        app.openapi_schema = openapi_schema
-
-    @staticmethod
-    def __create_access_token(user_id: int) -> str:
-        expiry = now() + timedelta(seconds=JWT_AT_EXPIRATION)
-        payload = {"sub": str(user_id), "exp": expiry}
-        return jwt_encode(payload=payload, key=JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-    @staticmethod
-    def __create_refresh_token(user_id: int) -> str:
-        expiry = now() + timedelta(days=JWT_RT_EXPIRATION)
-        payload = {"sub": str(user_id), "exp": timegm(expiry.utctimetuple())}
-        return Encryptor.encrypt(json_dumps(payload), JWT_SECRET_KEY)
-
-    @staticmethod
-    def __compare_tokens(access_token: str | None, refresh_token: str | None) -> bool:
-        if not access_token or not refresh_token:
-            return False
-        try:
-            access_payload = Auth.__decode_access_token(access_token)
-            refresh_payload = Auth.__decode_refresh_token(refresh_token)
-            return access_payload["sub"] == refresh_payload["sub"]
-        except Exception:
-            return False
-
-    @staticmethod
-    def __decode_access_token(token: str) -> dict[str, Any]:
-        return jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-
-    @staticmethod
-    def __decode_refresh_token(token: str) -> dict[str, Any]:
-        return json_loads(Encryptor.decrypt(token, JWT_SECRET_KEY))

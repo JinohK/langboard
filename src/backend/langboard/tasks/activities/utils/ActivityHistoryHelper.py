@@ -1,10 +1,10 @@
 from typing import Any
-from ....core.ai import Bot
-from ....core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
+from ....core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder
 from ....core.utils.Converter import convert_python_data
 from ....core.utils.decorators import staticclass
 from ....core.utils.EditorContentParser import find_mentioned
 from ....models import (
+    Bot,
     Card,
     CardAttachment,
     CardComment,
@@ -15,6 +15,7 @@ from ....models import (
     ProjectColumn,
     ProjectLabel,
     ProjectWiki,
+    User,
 )
 
 

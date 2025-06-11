@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from .ai import BotScheduleHelper
 from .AppConfig import AppConfig
 from .Constants import PUBLIC_FRONTEND_URL
 from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
-from .core.security import Auth
-from .core.service import BotScheduleService
+from .core.security import AuthSecurity
 from .Loader import load_modules
 from .middlewares import AuthMiddleware, RoleMiddleware
 
@@ -20,12 +20,12 @@ class App:
         self._init_api_routes()
 
         AppRouter.set_openapi_schema(self.api)
-        Auth.set_openapi_schema(self.api)
+        AuthSecurity.set_openapi_schema(self.api)
         AppRouter.set_app(self.api)
 
     def create(self):
         AppRouter.set_app(self.api)
-        BotScheduleService.reload_cron()
+        BotScheduleHelper.reload_cron()
         AppConfig.set_restarting(True)
         return self.api
 
@@ -53,7 +53,7 @@ class App:
                 "X-Forwarded-Proto",
                 "X-Forwarded-Host",
                 "X-Real-IP",
-                Auth.IP_HEADER,
+                AuthSecurity.IP_HEADER,
             ],
         )
         middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware, not self.config.is_restarting)

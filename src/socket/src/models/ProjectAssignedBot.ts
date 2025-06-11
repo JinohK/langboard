@@ -14,8 +14,8 @@ class ProjectAssignedBot extends BaseModel {
     public is_disabled: bool = false;
 
     public static async isAssigned(botUID: string, projectUID: string): Promise<boolean> {
-        const botId = new SnowflakeID(botUID).toString();
-        const projectId = new SnowflakeID(projectUID).toString();
+        const botId = SnowflakeID.fromShortCode(botUID).toString();
+        const projectId = SnowflakeID.fromShortCode(projectUID).toString();
         const result = await ProjectAssignedBot.createQueryBuilder("pa")
             .where("pa.project_id = :projectId", { projectId })
             .andWhere("pa.bot_id = :botId", { botId })

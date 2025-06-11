@@ -1,6 +1,6 @@
 from typing import Any
-from ..core.ai import Bot
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from .Bot import Bot
 from .ProjectAssignedBot import ProjectAssignedBot
 from .ProjectWiki import ProjectWiki
 

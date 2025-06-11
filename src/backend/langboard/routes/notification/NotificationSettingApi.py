@@ -1,11 +1,10 @@
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
-from ...models import ProjectRole
+from ...models import ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...models.UserNotification import NotificationType
+from ...security import Auth
 from ...services import Service
 from ..board.scopes import project_role_finder
 from .NotificationSettingForm import NotificationSettingForm, NotificationSettingTypeForm

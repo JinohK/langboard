@@ -1,7 +1,8 @@
 from typing import Any
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
 from .Card import Card
 from .ProjectAssignedUser import ProjectAssignedUser
+from .User import User
 
 
 class CardAssignedUser(BaseSqlModel, table=True):

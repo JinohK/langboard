@@ -1,12 +1,12 @@
 from typing import Any
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
 from ..models import Card, Project
 
 
 @staticclass
-class CardRelationshipPublisher:
+class CardRelationshipPublisher(BaseSocketPublisher):
     @staticmethod
     async def updated(project: Project, card: Card, relationships: list[dict[str, Any]]):
         model = {
@@ -20,4 +20,4 @@ class CardRelationshipPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardRelationshipPublisher.put_dispather(model, publish_model)

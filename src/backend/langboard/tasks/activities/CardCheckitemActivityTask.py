@@ -1,7 +1,5 @@
-from ...core.ai import Bot
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Card, Checkitem, Project, ProjectActivity
+from ...models import Bot, Card, Checkitem, Project, ProjectActivity, User
 from ...models.ProjectActivity import ProjectActivityType
 from .UserActivityTask import record_project_activity
 from .utils import ActivityHistoryHelper, ActivityTaskHelper

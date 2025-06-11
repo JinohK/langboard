@@ -1,10 +1,10 @@
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
 
 
 @staticclass
-class MetadataPublisher:
+class MetadataPublisher(BaseSocketPublisher):
     @staticmethod
     async def updated_metadata(topic: SocketTopic, topic_uid: str, key: str, value: str, old_key: str | None = None):
         model = {"key": key, "value": value, "old_key": old_key}
@@ -15,7 +15,7 @@ class MetadataPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await MetadataPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted_metadata(topic: SocketTopic, topic_uid: str, keys: list[str]):
@@ -27,4 +27,4 @@ class MetadataPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await MetadataPublisher.put_dispather(model, publish_model)

@@ -1,12 +1,12 @@
 from typing import Any
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
+from ..models import User
 
 
 @staticclass
-class UserPublisher:
+class UserPublisher(BaseSocketPublisher):
     @staticmethod
     async def updated(user: User, model: dict[str, Any]):
         topic_id = user.get_uid()
@@ -17,4 +17,4 @@ class UserPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await UserPublisher.put_dispather(model, publish_model)

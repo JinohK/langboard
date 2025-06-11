@@ -1,8 +1,8 @@
-from .Auth import Auth
-from .Role import Role
+from .AuthSecurity import AuthSecurity
+from .RoleSecurity import RoleSecurity
 
 
 __all__ = [
-    "Auth",
-    "Role",
+    "AuthSecurity",
+    "RoleSecurity",
 ]

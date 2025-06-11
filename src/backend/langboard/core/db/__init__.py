@@ -13,7 +13,6 @@ from .DbSession import DbSession
 from .Models import BaseSqlModel, ChatContentModel, EditorContentModel, SoftDeleteModel
 from .SnowflakeID import SnowflakeID
 from .SqlBuilder import SqlBuilder
-from .User import User
 
 
 __all__ = [
@@ -33,5 +32,4 @@ __all__ = [
     "EnumLikeType",
     "CSVType",
     "SqlBuilder",
-    "User",
 ]

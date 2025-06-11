@@ -1,14 +1,13 @@
 from typing import Any
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn
+from ..models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
 from ..models.Checkitem import CheckitemStatus
 
 
 @staticclass
-class CheckitemPublisher:
+class CheckitemPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(card: Card, checklist: Checklist, checkitem: Checkitem):
         topic_id = card.get_uid()
@@ -25,7 +24,7 @@ class CheckitemPublisher:
             data_keys="checkitem",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CheckitemPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def title_changed(project: Project, card: Card, checkitem: Checkitem, cardified_card: Card | None = None):
@@ -69,7 +68,7 @@ class CheckitemPublisher:
                 ]
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def order_changed(
@@ -108,7 +107,7 @@ class CheckitemPublisher:
                 )
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def status_changed(
@@ -140,7 +139,7 @@ class CheckitemPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def checked_changed(project: Project, card: Card, checkitem: Checkitem):
@@ -163,7 +162,7 @@ class CheckitemPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def cardified(card: Card, checkitem: Checkitem, target_column: ProjectColumn, api_card: dict[str, Any]):
@@ -190,7 +189,7 @@ class CheckitemPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def deleted(project: Project, card: Card, checkitem: Checkitem):
@@ -212,4 +211,4 @@ class CheckitemPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CheckitemPublisher.put_dispather(model, publish_models)

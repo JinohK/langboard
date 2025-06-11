@@ -1,14 +1,14 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, overload
-from ...core.ai import Bot, BotAPIAuthType, BotTrigger, BotTriggerCondition
 from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
-from ...core.setting import AppSetting
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
 from ...core.utils.String import generate_random_string
-from ...models import ProjectAssignedBot
+from ...models import AppSetting, Bot, BotTrigger, ProjectAssignedBot
+from ...models.Bot import BotAPIAuthType
+from ...models.BotTrigger import BotTriggerCondition
 from ...publishers import BotPublisher
 from ...tasks.bot import BotDefaultTask
 from .Types import TBotParam

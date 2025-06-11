@@ -1,16 +1,15 @@
 from fastapi import File, UploadFile, status
-from ...core.ai import Bot
-from ...core.db import EditorContentModel, User
+from ...core.db import EditorContentModel
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.routing.Exception import MissingException
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
 from ...core.service import ServiceHelper
 from ...core.storage import Storage, StorageName
 from ...core.utils.Converter import convert_python_data
-from ...models import Project, ProjectRole, ProjectWiki, ProjectWikiAttachment
+from ...models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiAttachment, User
 from ...models.ProjectRole import ProjectRoleAction
+from ...security import Auth
 from ...services import Service
 from .scopes import (
     AssigneesForm,

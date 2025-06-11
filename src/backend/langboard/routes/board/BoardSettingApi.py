@@ -1,14 +1,12 @@
 from fastapi import status
-from ...core.ai import Bot
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
 from ...core.utils.Converter import convert_python_data
-from ...models import Card, ChatTemplate, Project, ProjectColumn, ProjectLabel, ProjectRole
+from ...models import Bot, Card, ChatTemplate, Project, ProjectColumn, ProjectLabel, ProjectRole, User
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
+from ...security import Auth
 from ...services import Service
 from .scopes import (
     AssignBotsForm,

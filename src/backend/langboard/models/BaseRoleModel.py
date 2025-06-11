@@ -2,8 +2,9 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.ai import Bot
-from ..core.db import BaseSqlModel, CSVType, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, CSVType, SnowflakeID, SnowflakeIDField
+from .Bot import Bot
+from .User import User
 
 
 ALL_GRANTED = "*"

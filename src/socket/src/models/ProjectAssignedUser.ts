@@ -19,7 +19,7 @@ class ProjectAssignedUser extends BaseModel {
     public last_viewed_at!: Date;
 
     public static async isUserRelatedToOtherUser(userId: TBigIntString, otherUserUID: string): Promise<boolean> {
-        const otherUserId = new SnowflakeID(otherUserUID).toString();
+        const otherUserId = SnowflakeID.fromShortCode(otherUserUID).toString();
         const result = await ProjectAssignedUser.createQueryBuilder("ua")
             .innerJoin(ProjectAssignedUser, "ub", "ua.project_id = ub.project_id")
             .where("ua.user_id = :userId", { userId })
@@ -31,7 +31,7 @@ class ProjectAssignedUser extends BaseModel {
     }
 
     public static async isAssigned(userId: TBigIntString, projectUID: string): Promise<boolean> {
-        const projectId = new SnowflakeID(projectUID).toString();
+        const projectId = SnowflakeID.fromShortCode(projectUID).toString();
         const result = await ProjectAssignedUser.createQueryBuilder("pa")
             .where("pa.project_id = :projectId", { projectId })
             .andWhere("pa.user_id = :userId", { userId })
@@ -42,7 +42,7 @@ class ProjectAssignedUser extends BaseModel {
     }
 
     public static async isAssignedByCard(userId: TBigIntString, cardUID: string): Promise<boolean> {
-        const cardId = new SnowflakeID(cardUID).toString();
+        const cardId = SnowflakeID.fromShortCode(cardUID).toString();
         const result = await ProjectAssignedUser.createQueryBuilder("pa")
             .innerJoin(Card, "c", "c.project_id = pa.project_id")
             .where("pa.user_id = :userId", { userId })

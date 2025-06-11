@@ -1,14 +1,12 @@
 from typing import Any, Sequence
-from ..core.ai import Bot
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import ChatTemplate, Project
+from ..models import Bot, ChatTemplate, Project, User
 
 
 @staticclass
-class ProjectPublisher:
+class ProjectPublisher(BaseSocketPublisher):
     @staticmethod
     async def updated(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
@@ -19,7 +17,7 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def assigned_bots_updated(project: Project, bots: Sequence[Bot]):
@@ -36,7 +34,7 @@ class ProjectPublisher:
                 )
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def assigned_users_updated(project: Project, model: dict[str, Any]):
@@ -54,7 +52,7 @@ class ProjectPublisher:
                 )
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def bot_roles_updated(project: Project, target_bot: Bot, roles: list[str]):
@@ -67,7 +65,7 @@ class ProjectPublisher:
             data_keys=["bot_uid", "roles"],
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def user_roles_updated(project: Project, target_user: User, roles: list[str]):
@@ -89,7 +87,7 @@ class ProjectPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def bot_activation_toggled(project: Project, target_bot: Bot, is_disabled: bool):
@@ -111,7 +109,7 @@ class ProjectPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def deleted(project: Project):
@@ -127,7 +125,7 @@ class ProjectPublisher:
                 )
             )
 
-        await SocketPublishService.put_dispather({}, publish_models)
+        await ProjectPublisher.put_dispather({}, publish_models)
 
     @staticmethod
     async def chat_template_created(project: Project, model: dict[str, Any]):
@@ -139,7 +137,7 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def chat_template_updated(project: Project, template: ChatTemplate, model: dict[str, Any]):
@@ -151,7 +149,7 @@ class ProjectPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def chat_template_deleted(project: Project, template_uid: str):
@@ -162,4 +160,4 @@ class ProjectPublisher:
             event=f"board:chat:template:deleted:{template_uid}",
         )
 
-        await SocketPublishService.put_dispather({}, publish_model)
+        await ProjectPublisher.put_dispather({}, publish_model)

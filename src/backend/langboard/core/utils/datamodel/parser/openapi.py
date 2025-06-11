@@ -541,7 +541,7 @@ class OpenAPIParser(JsonSchemaParser):
                 )
 
                 try:
-                    from prance import BaseParser  # noqa: PLC0415
+                    from prance import BaseParser  # type: ignore # noqa: PLC0415
 
                     BaseParser(
                         spec_string=source.text,

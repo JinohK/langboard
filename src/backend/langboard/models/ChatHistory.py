@@ -1,6 +1,7 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import ChatContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import ChatContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from .User import User
 
 
 class ChatHistory(SoftDeleteModel, table=True):

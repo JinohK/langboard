@@ -43,7 +43,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
         message,
         file_path,
         project_uid: topicId,
-        user_id: client.user.uid,
+        user_id: client.user.id,
     });
 
     if (!response) {
@@ -69,10 +69,9 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
     const userMessage = await ChatHistory.create({
         filterable_table: "project",
         filterable_id: SnowflakeID.fromShortCode(topicId).toString(),
-        sender_id: client.user.uid,
+        sender_id: client.user.id,
         message: { content: message },
-    });
-    await ChatHistory.insert(userMessage);
+    }).save();
 
     if (isAborted()) {
         return;
@@ -93,7 +92,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
     const aiMessage = await ChatHistory.create({
         filterable_table: userMessage.filterable_table,
         filterable_id: userMessage.filterable_id,
-        receiver_id: client.user.uid,
+        receiver_id: client.user.id,
         message: { content: "" },
     }).save();
     const aiMessageUID = new SnowflakeID(aiMessage.id).toShortCode();

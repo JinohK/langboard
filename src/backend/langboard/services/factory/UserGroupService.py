@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import DbSession, SqlBuilder, User
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
-from ...models import UserEmail, UserGroup, UserGroupAssignedEmail
+from ...models import User, UserEmail, UserGroup, UserGroupAssignedEmail
 from .Types import TUserGroupParam
 
 

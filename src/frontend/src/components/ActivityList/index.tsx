@@ -5,7 +5,7 @@ import useCreateActivityTimeline from "@/core/hooks/activity/useCreateActivityTi
 import { AuthUser } from "@/core/models";
 import { ActivityProvider, useActivity } from "@/core/providers/ActivityProvider";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import React, { useCallback } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IActivityListProps extends Pick<IInfiniteScrollerProps, "as"> {
@@ -47,7 +47,7 @@ function ActivityListInner({
         checkOutdated,
     } = useActivity();
     const { SkeletonActivity, ActivityTimeline } = useCreateActivityTimeline(currentUser, isUserView);
-    const checkOutdatedOnScroll = useCallback(
+    const checkOutdatedOnScroll = React.useCallback(
         async (e: React.UIEvent<HTMLDivElement>) => {
             const target = e.target as HTMLElement;
             if (isFetchingRef.current || isDelayingCheckOutdated.current || target.scrollTop < target.scrollHeight * 0.3) {
@@ -65,12 +65,14 @@ function ActivityListInner({
         },
         [checkOutdated]
     );
+    const [scrollMutate, updateScrollbar] = React.useReducer((x) => x + 1, 0);
+    const scrollMutable = React.useMemo(() => activities.length + scrollMutate, [activities.length, scrollMutate]);
 
     return (
         <Box position="relative">
             <ScrollArea.Root
                 viewportId={activityListIdRef.current}
-                mutable={activities}
+                mutable={scrollMutable}
                 className={scrollAreaClassName}
                 onScroll={checkOutdatedOnScroll}
             >
@@ -91,7 +93,12 @@ function ActivityListInner({
                     )}
                     <Flex direction="col" gap="2">
                         {activities.map((activity) => (
-                            <ActivityTimeline activity={activity} references={activity.references} key={createShortUUID()} />
+                            <ActivityTimeline
+                                activity={activity}
+                                references={activity.references}
+                                updateScrollbar={updateScrollbar}
+                                key={createShortUUID()}
+                            />
                         ))}
                     </Flex>
                     {!!activities.length && <Box h="3" />}

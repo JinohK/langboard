@@ -1,8 +1,9 @@
 from typing import Literal, Self, overload
 from sqlmodel.sql.expression import SelectOfScalar
-from ...core.db import BaseSqlModel, DbSession, SqlBuilder, User
-from ...core.service import BaseService, NotificationPublishModel, ServiceHelper
-from ...models import Card, Project, ProjectColumn, ProjectWiki, UserNotificationUnsubscription
+from ...core.db import BaseSqlModel, DbSession, SqlBuilder
+from ...core.publisher import NotificationPublishModel
+from ...core.service import BaseService, ServiceHelper
+from ...models import Card, Project, ProjectColumn, ProjectWiki, User, UserNotificationUnsubscription
 from ...models.UserNotification import NotificationType
 from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from .Types import TCardParam, TColumnParam, TProjectParam, TWikiParam

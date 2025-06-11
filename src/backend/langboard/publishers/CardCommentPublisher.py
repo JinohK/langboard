@@ -1,13 +1,11 @@
-from ..core.ai import Bot
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Card, CardComment, Project
+from ..models import Bot, Card, CardComment, Project, User
 
 
 @staticclass
-class CardCommentPublisher:
+class CardCommentPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
         api_comment = comment.api_response()
@@ -23,7 +21,7 @@ class CardCommentPublisher:
             data_keys="comment",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardCommentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def updated(project: Project, card: Card, comment: CardComment):
@@ -40,7 +38,7 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardCommentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(project: Project, card: Card, comment: CardComment):
@@ -52,7 +50,7 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardCommentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def reacted(
@@ -73,4 +71,4 @@ class CardCommentPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardCommentPublisher.put_dispather(model, publish_model)

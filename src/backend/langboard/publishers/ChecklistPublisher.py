@@ -1,11 +1,11 @@
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
 from ..models import Card, Checklist
 
 
 @staticclass
-class ChecklistPublisher:
+class ChecklistPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(card: Card, checklist: Checklist):
         model = {"checklist": {**checklist.api_response(), "checkitems": []}}
@@ -17,7 +17,7 @@ class ChecklistPublisher:
             data_keys="checklist",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ChecklistPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def title_changed(card: Card, checklist: Checklist):
@@ -30,7 +30,7 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ChecklistPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def order_changed(card: Card, checklist: Checklist):
@@ -43,7 +43,7 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ChecklistPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def checked_changed(card: Card, checklist: Checklist):
@@ -56,7 +56,7 @@ class ChecklistPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ChecklistPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(card: Card, checklist: Checklist):
@@ -69,4 +69,4 @@ class ChecklistPublisher:
             data_keys="uid",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ChecklistPublisher.put_dispather(model, publish_model)

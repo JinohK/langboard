@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, Literal
-from ...core.db import BaseSqlModel, ChatContentModel, DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import BaseSqlModel, ChatContentModel, DbSession, SnowflakeID, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
-from ...models import ChatHistory, ChatTemplate
+from ...models import ChatHistory, ChatTemplate, User
 from .Types import TChatTemplateParam, TUserParam
 
 

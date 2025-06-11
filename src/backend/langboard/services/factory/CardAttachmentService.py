@@ -1,8 +1,8 @@
 from typing import Any
-from ...core.db import DbSession, SqlBuilder, User
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
-from ...models import Card, CardAttachment, Project
+from ...models import Card, CardAttachment, Project, User
 from ...publishers import CardAttachmentPublisher
 from ...tasks.activities import CardAttachmentActivityTask
 from ...tasks.bot import CardAttachmentBotTask

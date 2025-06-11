@@ -1,12 +1,21 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from ...core.ai import Bot
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
-from ...models import Card, Checkitem, Checklist, Project, ProjectAssignedBot, ProjectAssignedUser, ProjectRole
+from ...models import (
+    Bot,
+    Card,
+    Checkitem,
+    Checklist,
+    Project,
+    ProjectAssignedBot,
+    ProjectAssignedUser,
+    ProjectRole,
+    User,
+)
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.Checkitem import CheckitemStatus
 from ...models.ProjectRole import ProjectRoleAction

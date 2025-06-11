@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Text
+from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
 
@@ -8,7 +8,7 @@ class ChatTemplate(BaseSqlModel, table=True):
     filterable_table: str | None = Field(None, nullable=True)
     filterable_id: SnowflakeID | None = SnowflakeIDField(nullable=True)
     name: str = Field(nullable=False)
-    template: str = Field(default="", sa_type=Text)
+    template: str = Field(default="", sa_type=TEXT)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

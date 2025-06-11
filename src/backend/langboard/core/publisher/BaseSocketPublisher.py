@@ -19,7 +19,7 @@ class SocketPublishQueueModel(BaseModel):
 
 
 @staticclass
-class SocketPublishService:
+class BaseSocketPublisher:
     @staticmethod
     async def put_dispather(data: dict[str, Any], publish_models: list[SocketPublishModel] | SocketPublishModel):
         model = SocketPublishQueueModel(data=data, publish_models=publish_models)

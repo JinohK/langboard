@@ -3,7 +3,8 @@ from enum import Enum
 from typing import Any
 from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField
+from .User import User
 
 
 class NotificationType(Enum):

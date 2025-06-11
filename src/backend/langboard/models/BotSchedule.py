@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField
 from .Bot import Bot
 
 

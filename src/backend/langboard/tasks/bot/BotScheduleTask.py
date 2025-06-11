@@ -1,10 +1,10 @@
-from ...core.ai import Bot, BotDefaultTrigger, BotSchedule, BotScheduleRunningType, BotScheduleStatus
+from ...ai import BotDefaultTrigger, BotScheduleHelper
 from ...core.broker import Broker
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
-from ...core.service import BotScheduleService
 from ...core.utils.DateTime import now
 from ...core.utils.ModelUtils import get_model_by_table_name
-from ...models import Card, Project, ProjectColumn
+from ...models import Bot, BotSchedule, Card, Project, ProjectColumn
+from ...models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from ...publishers import ProjectBotPublisher
 from .utils import BotTaskDataHelper, BotTaskHelper
 from .utils.BotTaskHelper import logger
@@ -29,7 +29,7 @@ async def run_scheduled_bots_cron(interval_str: str):
         await _check_bot_schedule_runnable(interval_str.removeprefix("scheduled "))
         return
 
-    if not BotScheduleService.is_valid_interval_str(interval_str):
+    if not BotScheduleHelper.is_valid_interval_str(interval_str):
         logger.error(f"Invalid interval string: {interval_str}")
         return
 
@@ -74,7 +74,7 @@ async def _check_bot_schedule_runnable(interval_str: str):
             ):
                 continue
 
-        await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Started)
+        await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Started)
 
         model = _get_target_model(bot_schedule.target_table, bot_schedule.target_id)
         if model:
@@ -133,10 +133,10 @@ async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
 
     old_status = bot_schedule.status
     if bot_schedule.running_type == BotScheduleRunningType.Onetime:
-        await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Stopped)
+        await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
     elif bot_schedule.running_type == BotScheduleRunningType.Duration:
         if bot_schedule.end_at and bot_schedule.end_at < now():
-            await BotScheduleService.change_status(bot_schedule, BotScheduleStatus.Stopped)
+            await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
 
     if project and bot_schedule.status != old_status:
         await ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})

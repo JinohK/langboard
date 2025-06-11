@@ -1,8 +1,7 @@
 from typing import Any
-from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Project, ProjectLabel
+from ...models import Bot, Project, ProjectLabel, User
+from ...models.BotTrigger import BotTriggerCondition
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 

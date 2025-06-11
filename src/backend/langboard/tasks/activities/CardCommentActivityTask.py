@@ -1,8 +1,7 @@
 from typing import cast
-from ...core.ai import Bot
 from ...core.broker import Broker
-from ...core.db import DbSession, EditorContentModel, SqlBuilder, User
-from ...models import Card, CardComment, Project, ProjectActivity
+from ...core.db import DbSession, EditorContentModel, SqlBuilder
+from ...models import Bot, Card, CardComment, Project, ProjectActivity, User
 from ...models.ProjectActivity import ProjectActivityType
 from .UserActivityTask import record_project_activity
 from .utils import ActivityHistoryHelper, ActivityTaskHelper

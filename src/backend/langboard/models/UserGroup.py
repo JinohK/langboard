@@ -1,6 +1,7 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from .User import User
 
 
 class UserGroup(BaseSqlModel, table=True):

@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.ai import Bot, BotSchedule
-from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
 from ...models import (
+    Bot,
+    BotSchedule,
     Card,
     CardAssignedProjectLabel,
     CardAssignedUser,
@@ -19,6 +20,7 @@ from ...models import (
     ProjectColumn,
     ProjectLabel,
     ProjectRole,
+    User,
 )
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CardPublisher

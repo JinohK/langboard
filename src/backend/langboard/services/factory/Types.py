@@ -1,7 +1,7 @@
-from ...core.ai import Bot, BotSchedule
-from ...core.db import User
-from ...core.setting import AppSetting
 from ...models import (
+    AppSetting,
+    Bot,
+    BotSchedule,
     Card,
     CardAttachment,
     CardComment,
@@ -13,6 +13,7 @@ from ...models import (
     ProjectColumn,
     ProjectLabel,
     ProjectWiki,
+    User,
     UserGroup,
     UserNotification,
 )

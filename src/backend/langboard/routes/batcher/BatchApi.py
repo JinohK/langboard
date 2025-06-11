@@ -3,11 +3,10 @@ from json import loads as json_loads
 from typing import cast
 from fastapi import Request, status
 from starlette.types import Message
-from ...core.ai import Bot
-from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
-from ...core.security import Auth
+from ...models import Bot, User
+from ...security import Auth
 from .BatchForm import BatchForm
 
 

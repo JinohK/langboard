@@ -2,10 +2,10 @@ from typing import Any
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from ...Constants import PROJECT_NAME, PROJECT_VERSION
-from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
 from ...core.routing import AppRouter, JsonResponse
-from ...models import ProjectLabel
+from ...models import Bot, ProjectLabel
+from ...models.BotTrigger import BotTriggerCondition
 
 
 @AppRouter.api.get("/schema/bot", tags=["Schema"], response_class=HTMLResponse)

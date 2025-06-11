@@ -1,13 +1,12 @@
 from typing import Any
-from ..core.ai import Bot, BotSchedule
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Project
+from ..models import Bot, BotSchedule, Project
 
 
 @staticclass
-class ProjectBotPublisher:
+class ProjectBotPublisher(BaseSocketPublisher):
     @staticmethod
     async def scheduled(project: Project, bot: Bot, schedule: BotSchedule):
         topic_id = project.get_uid()
@@ -19,7 +18,7 @@ class ProjectBotPublisher:
         )
 
         model = {"schedule": schedule.api_response()}
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectBotPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def rescheduled(project: Project, schedule: BotSchedule, model: dict[str, Any]):
@@ -31,7 +30,7 @@ class ProjectBotPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectBotPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(project: Project, schedule: BotSchedule):
@@ -44,4 +43,4 @@ class ProjectBotPublisher:
         )
 
         model = {"uid": schedule.get_uid()}
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectBotPublisher.put_dispather(model, publish_model)

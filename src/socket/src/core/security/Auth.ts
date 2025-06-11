@@ -2,7 +2,7 @@ import User from "@/models/User";
 import http from "http";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
-import { JWT_ALGORITHM, JWT_SECRET_KEY } from "@/Constants";
+import { JWT_ALGORITHM, JWT_SECRET_KEY, PROJECT_NAME } from "@/Constants";
 import Encryptor from "@/core/security/Encryptor";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -62,9 +62,16 @@ class Auth {
             const decoded = jwt.verify(accessToken, JWT_SECRET_KEY, {
                 algorithms: [JWT_ALGORITHM],
                 ignoreExpiration: true,
-            }) as { sub: string; exp: number };
+                issuer: PROJECT_NAME,
+            }) as { sub: string; exp: number; iss: string };
 
-            if (!decoded || TypeUtils.isString(decoded) || !decoded.exp || new Date(decoded.exp * 1000).getTime() < new Date().getTime()) {
+            if (
+                !decoded ||
+                TypeUtils.isString(decoded) ||
+                decoded.iss !== PROJECT_NAME ||
+                !decoded.exp ||
+                new Date(decoded.exp * 1000).getTime() < new Date().getTime()
+            ) {
                 return null;
             }
 
@@ -76,8 +83,15 @@ class Auth {
 
     static #decodeRefreshToken(refreshToken: string) {
         try {
-            const decoded = JSON.parse(Encryptor.decrypt(refreshToken, JWT_SECRET_KEY));
-            if (!decoded || TypeUtils.isString(decoded) || !decoded.exp || new Date(decoded.exp * 1000).getTime() < new Date().getTime()) {
+            const decoded = JSON.parse(Encryptor.decrypt(refreshToken, JWT_SECRET_KEY)) as { sub: string; exp: number; iss: string };
+
+            if (
+                !decoded ||
+                TypeUtils.isString(decoded) ||
+                decoded.iss !== PROJECT_NAME ||
+                !decoded.exp ||
+                new Date(decoded.exp * 1000).getTime() < new Date().getTime()
+            ) {
                 return null;
             }
 

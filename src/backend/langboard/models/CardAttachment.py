@@ -1,8 +1,9 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
 from ..core.storage import FileModel
 from .Card import Card
+from .User import User
 
 
 class CardAttachment(SoftDeleteModel, table=True):

@@ -1,11 +1,10 @@
 from fastapi import status
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
-from ..core.ai import Bot
-from ..core.db import User
 from ..core.filter import FilterMiddleware, RoleFilter
 from ..core.routing import ApiErrorCode, JsonResponse
-from ..core.security import Role
+from ..core.security import RoleSecurity
+from ..models import Bot, User
 
 
 class RoleMiddleware(FilterMiddleware):
@@ -41,7 +40,7 @@ class RoleMiddleware(FilterMiddleware):
 
             if isinstance(user_or_bot, User) and not user_or_bot.is_admin:
                 role_model, actions, role_finder = RoleFilter.get_filtered(child_scope["endpoint"])
-                role = Role(role_model)
+                role = RoleSecurity(role_model)
 
                 is_authorized = await role.is_authorized(
                     user_or_bot.id,

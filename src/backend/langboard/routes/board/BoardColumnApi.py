@@ -1,12 +1,10 @@
 from fastapi import status
-from ...core.ai import Bot
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
-from ...models import ProjectColumn, ProjectRole
+from ...models import Bot, ProjectColumn, ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
+from ...security import Auth
 from ...services import Service
 from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
 

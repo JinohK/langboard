@@ -23,6 +23,7 @@ import { Trans, useTranslation } from "react-i18next";
 
 export interface IActivityTimelineProps {
     activity: ActivityModel.TModel | ActivityModel.TActivity;
+    updateScrollbar: React.DispatchWithoutAction;
     references?: ActivityModel.TModel["references"];
 }
 
@@ -46,7 +47,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         </Flex>
     ));
 
-    const ActivityTimeline = memo(({ activity, references }: IActivityTimelineProps) => {
+    const ActivityTimeline = memo(({ activity, references, updateScrollbar }: IActivityTimelineProps) => {
         const activityType = activity.activity_type;
         const activityHistory = activity.activity_history;
         const activityCreatedAt = useUpdateDateDistance(activity.created_at);
@@ -55,7 +56,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         const refer = activity.refer;
 
         if (refer) {
-            return <ActivityTimeline activity={refer} references={activity.references} />;
+            return <ActivityTimeline activity={refer} references={activity.references} updateScrollbar={updateScrollbar} />;
         }
 
         const activityReferences = { ...(references ?? {}) };
@@ -89,7 +90,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         <Trans i18nKey={i18nKey} values={activityHistory} components={createComponents(activityHistory, activityReferences)} />
                     </Box>
                 </Flex>
-                <DiffView history={activityHistory} />
+                <DiffView history={activityHistory} updateScrollbar={updateScrollbar} />
                 <Box textSize="sm" className="text-right text-muted-foreground">
                     {activityCreatedAt}
                 </Box>
@@ -230,7 +231,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         );
     };
 
-    const DiffView = ({ history }: { history: any }) => {
+    const DiffView = ({ history, updateScrollbar }: { history: any; updateScrollbar: React.DispatchWithoutAction }) => {
         if (!history.changes) {
             return null;
         }
@@ -271,6 +272,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         }}
                         oldValue={before}
                         newValue={after}
+                        scrollableMutate={updateScrollbar}
                         key={createShortUUID()}
                     />
                 );

@@ -1,13 +1,12 @@
 from typing import Any
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Project, UserNotification
+from ..models import Project, User, UserNotification
 
 
 @staticclass
-class ProjectInvitationPublisher:
+class ProjectInvitationPublisher(BaseSocketPublisher):
     @staticmethod
     async def accepted(project: Project, model: dict[str, Any]):
         topic_id = project.get_uid()
@@ -17,7 +16,7 @@ class ProjectInvitationPublisher:
             event=f"board:assigned-users:updated:{topic_id}",
             data_keys=list(model.keys()),
         )
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectInvitationPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def notification_deleted(user: User, notification: UserNotification):
@@ -28,4 +27,4 @@ class ProjectInvitationPublisher:
             event="user:notification:deleted",
             data_keys="notification_uid",
         )
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectInvitationPublisher.put_dispather(model, publish_model)

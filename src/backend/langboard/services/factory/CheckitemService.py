@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Any, Literal, cast, overload
-from ...core.db import DbSession, SqlBuilder, User
+from ...core.db import DbSession, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
-from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn
+from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CheckitemPublisher
 from ...tasks.activities import CardCheckitemActivityTask

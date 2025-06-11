@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, EnumLikeType, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, EnumLikeType, SnowflakeID, SnowflakeIDField
+from .User import User
 from .UserNotification import NotificationType
 
 

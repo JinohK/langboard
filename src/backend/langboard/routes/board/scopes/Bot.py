@@ -1,10 +1,10 @@
 from datetime import datetime
 from pydantic import AwareDatetime, Field
-from ....core.ai import BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
 from ....core.utils.DateTime import now
-from ....models import Card, ProjectColumn
+from ....models import BotSchedule, Card, ProjectColumn
+from ....models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 
 
 class BotSchedulePagination(Pagination):

@@ -1,7 +1,15 @@
 from typing import Any, Callable, Generic, TypeVar, cast
-from ....core.ai import Bot
-from ....core.db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder, User
-from ....models import Card, CardRelationship, GlobalCardRelationshipType, Project, ProjectColumn, ProjectLabel
+from ....core.db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder
+from ....models import (
+    Bot,
+    Card,
+    CardRelationship,
+    GlobalCardRelationshipType,
+    Project,
+    ProjectColumn,
+    ProjectLabel,
+    User,
+)
 from ....models.BaseActivityModel import BaseActivityModel
 from .ActivityHistoryHelper import ActivityHistoryHelper
 

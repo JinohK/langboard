@@ -1,10 +1,9 @@
 from fastapi import Depends, status
-from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
-from ...models import Card, Checkitem, Project, ProjectColumn
+from ...models import Card, Checkitem, Project, ProjectColumn, User
+from ...security import Auth
 from ...services import Service
 from .DashboardForm import DashboardPagination, DashboardProjectCreateForm
 

@@ -7,7 +7,7 @@ from ..filter.RoleFilter import _RoleFinderFunc
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
 
 
-class Role:
+class RoleSecurity:
     def __init__(self, model_class: type[_TRoleModel]):
         self._model_class = model_class
 

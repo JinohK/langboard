@@ -11,13 +11,13 @@ import sqlalchemy as sa
 import sqlmodel
 import sqlmodel.sql.sqltypes
 from alembic import op
-from langboard.core.ai.Bot import BotAPIAuthType
-from langboard.core.ai.BotSchedule import BotScheduleRunningType, BotScheduleStatus
-from langboard.core.ai.BotTriggerCondition import BotTriggerCondition
 from langboard.core.db.ColumnTypes import CSVType, EnumLikeType, ModelColumnType, SecretStrType, SnowflakeIDType
 from langboard.core.db.Models import ChatContentModel, EditorContentModel
-from langboard.core.setting.AppSetting import AppSettingType
 from langboard.core.storage.FileModel import FileModel
+from langboard.models.AppSetting import AppSettingType
+from langboard.models.Bot import BotAPIAuthType
+from langboard.models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
+from langboard.models.BotTrigger import BotTriggerCondition
 from langboard.models.ProjectActivity import ProjectActivityType
 from langboard.models.ProjectWikiActivity import ProjectWikiActivityType
 from langboard.models.UserActivity import UserActivityType
@@ -41,7 +41,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("setting_type", EnumLikeType(AppSettingType), nullable=False),
         sa.Column("setting_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("setting_value", sa.Text(), nullable=False),
+        sa.Column("setting_value", sa.TEXT(), nullable=False),
         sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("total_used_count", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -71,7 +71,7 @@ def upgrade() -> None:
         sa.Column("filterable_table", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("filterable_id", SnowflakeIDType, nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("template", sa.Text(), nullable=False),
+        sa.Column("template", sa.TEXT(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

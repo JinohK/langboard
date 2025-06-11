@@ -2,7 +2,9 @@ from typing import Any
 from httpx import post
 from ..core.broker import Broker
 from ..core.db import DbSession, SqlBuilder
-from ..core.setting import AppSetting, AppSettingType
+from ..core.utils.DateTime import now
+from ..models import AppSetting
+from ..models.AppSetting import AppSettingType
 from .models import WebhookModel
 
 
@@ -12,11 +14,15 @@ async def webhook_task(model: WebhookModel):
 
 
 def run_webhook(event: str, data: dict[str, Any]):
-    urls = _get_webhook_url()
-    if not urls:
+    settings = _get_webhook_settings()
+    if not settings:
         return
 
-    for url in urls:
+    for setting in settings:
+        url = setting.get_value()
+        if not isinstance(url, str) or not url.strip():
+            continue
+
         res = None
         try:
             res = post(
@@ -30,17 +36,21 @@ def run_webhook(event: str, data: dict[str, Any]):
             else:
                 Broker.logger.error("Failed to request webhook: \nURL: %s", url)
 
+        setting.last_used_at = now()
+        setting.total_used_count += 1
+        with DbSession.use(readonly=False) as db:
+            db.update(setting)
 
-def _get_webhook_url() -> list[str]:
-    raw_setting = None
+
+def _get_webhook_settings() -> list[AppSetting]:
+    urls = None
     with DbSession.use(readonly=True) as db:
         result = db.exec(
             SqlBuilder.select.table(AppSetting).where(AppSetting.setting_type == AppSettingType.WebhookUrl)
         )
-        raw_setting = result.first()
-    if not raw_setting:
+        urls = result.all()
+    if not urls:
         return []
-    urls = raw_setting.get_value()
     if not isinstance(urls, list):
         return []
 

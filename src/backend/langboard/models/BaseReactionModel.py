@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from typing import Any
 from sqlmodel import Field
-from ..core.ai import Bot
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField, User
+from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from .Bot import Bot
+from .User import User
 
 
 REACTION_TYPES = [

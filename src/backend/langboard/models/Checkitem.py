@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel
 from .Card import Card
 from .Checklist import Checklist
+from .User import User
 
 
 class CheckitemStatus(Enum):

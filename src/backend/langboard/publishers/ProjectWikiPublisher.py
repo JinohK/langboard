@@ -1,14 +1,12 @@
 from typing import Any
-from ..core.ai import Bot
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Project, ProjectWiki
+from ..models import Bot, Project, ProjectWiki, User
 
 
 @staticclass
-class ProjectWikiPublisher:
+class ProjectWikiPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(project: Project, wiki: ProjectWiki):
         model = {"wiki": {**wiki.api_response(), "assigned_members": []}}
@@ -19,7 +17,7 @@ class ProjectWikiPublisher:
             data_keys="wiki",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def updated(project: Project, wiki: ProjectWiki, model: dict[str, Any]):
@@ -33,7 +31,7 @@ class ProjectWikiPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def publicity_changed(user_or_bot: User | Bot, project: Project, wiki: ProjectWiki):
@@ -55,7 +53,7 @@ class ProjectWikiPublisher:
             data_keys="wiki",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def assignees_updated(project: Project, wiki: ProjectWiki, bots: list[Bot], users: list[User]):
@@ -70,7 +68,7 @@ class ProjectWikiPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def order_changed(project: Project, wiki: ProjectWiki):
@@ -85,7 +83,7 @@ class ProjectWikiPublisher:
             data_keys=["uid", "order"],
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(project: Project, wiki: ProjectWiki):
@@ -97,4 +95,4 @@ class ProjectWikiPublisher:
             data_keys=["uid"],
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectWikiPublisher.put_dispather(model, publish_model)

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Literal
 from pydantic import BaseModel
-from ..utils.EditorContentParser import DATA_TEXT_FORMAT_DESCRIPTIONS
+from ..core.utils.EditorContentParser import DATA_TEXT_FORMAT_DESCRIPTIONS
 
 
 class LangflowConstants(Enum):

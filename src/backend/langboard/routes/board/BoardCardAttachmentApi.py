@@ -1,13 +1,13 @@
 from fastapi import File, UploadFile, status
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.routing.Exception import MissingException
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth, Role
+from ...core.security import RoleSecurity
 from ...core.storage import Storage, StorageName
-from ...models import CardAttachment, ProjectRole
+from ...models import CardAttachment, ProjectRole, User
 from ...models.ProjectRole import ProjectRoleAction
+from ...security import Auth
 from ...services import Service
 from .scopes import ChangeAttachmentNameForm, ChangeChildOrderForm, project_role_finder
 
@@ -91,7 +91,7 @@ async def change_card_attachment_name(
         return JsonResponse(content=ApiErrorCode.NF2011, status_code=status.HTTP_404_NOT_FOUND)
 
     if card_attachment.user_id != user.id and not user.is_admin:
-        role_filter = Role(ProjectRole)
+        role_filter = RoleSecurity(ProjectRole)
         if not await role_filter.is_authorized(
             user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):
@@ -125,7 +125,7 @@ async def delete_card_attachment(
         return JsonResponse(content=ApiErrorCode.NF2011, status_code=status.HTTP_404_NOT_FOUND)
 
     if card_attachment.user_id != user.id and not user.is_admin:
-        role_filter = Role(ProjectRole)
+        role_filter = RoleSecurity(ProjectRole)
         if not await role_filter.is_authorized(
             user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
         ):

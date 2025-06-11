@@ -1,12 +1,12 @@
 from datetime import datetime
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
 from ..models import Project, ProjectColumn
 
 
 @staticclass
-class ProjectColumnPublisher:
+class ProjectColumnPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(project: Project, column: ProjectColumn):
         model = {
@@ -32,7 +32,7 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectColumnPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def name_changed(project: Project, column: ProjectColumn, name: str):
@@ -57,7 +57,7 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectColumnPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def order_changed(project: Project, column: ProjectColumn):
@@ -82,7 +82,7 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectColumnPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def deleted(
@@ -115,4 +115,4 @@ class ProjectColumnPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await ProjectColumnPublisher.put_dispather(model, publish_models)

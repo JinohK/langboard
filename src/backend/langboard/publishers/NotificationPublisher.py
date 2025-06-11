@@ -1,13 +1,12 @@
 from typing import Any
-from ..core.ai import Bot
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
+from ..models import Bot, User
 
 
 @staticclass
-class NotificationPublisher:
+class NotificationPublisher(BaseSocketPublisher):
     @staticmethod
     async def notified(target_user_or_bot: User | Bot, notification: dict[str, Any]):
         model = {"notification": notification}
@@ -19,4 +18,4 @@ class NotificationPublisher:
             data_keys="notification",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await NotificationPublisher.put_dispather(model, publish_model)

@@ -4,17 +4,17 @@ from typing import Any, cast
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.caching import Cache
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
-from ...core.security import Auth
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
-from ...models import UserEmail, UserProfile
+from ...models import User, UserEmail, UserProfile
 from ...publishers import UserPublisher
 from ...resources.locales.LangEnum import LangEnum
+from ...security import Auth
 from ...tasks.activities import UserActivityTask
 
 

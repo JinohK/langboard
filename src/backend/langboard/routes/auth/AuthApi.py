@@ -1,15 +1,15 @@
 from fastapi import Request, status
 from jwt import ExpiredSignatureError
 from ...Constants import JWT_RT_EXPIRATION, REFRESH_TOKEN_NAME
-from ...core.db import User
 from ...core.filter import AuthFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
+from ...core.security import AuthSecurity
 from ...core.utils.Encryptor import Encryptor
-from ...models import UserEmail, UserGroup, UserNotification, UserProfile
+from ...models import User, UserEmail, UserGroup, UserNotification, UserProfile
 from ...models.UserNotification import NotificationType
 from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
+from ...security import Auth
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, SignInForm
 
@@ -63,7 +63,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
     if not user.activated_at:
         return JsonResponse(content=ApiErrorCode.AU1003, status_code=status.HTTP_423_LOCKED)
 
-    access_token, refresh_token = Auth.authenticate(user.id)
+    access_token, refresh_token = AuthSecurity.authenticate(user.id)
 
     response = JsonResponse({"access_token": access_token}, status_code=status.HTTP_200_OK)
     response.set_cookie(
@@ -94,7 +94,7 @@ async def refresh(request: Request) -> JsonResponse:
         if not refresh_token:
             raise Exception()
 
-        new_access_token = Auth.refresh(refresh_token)
+        new_access_token = AuthSecurity.refresh(refresh_token)
         user = await Auth.get_user_by_token(new_access_token)
 
         if not user:

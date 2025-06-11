@@ -1,11 +1,12 @@
 from typing import Any
+from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import BaseSqlModel
 
 
 class BaseMetadataModel(BaseSqlModel):
     key: str = Field(nullable=False, index=True)
-    value: str = Field(default="", nullable=False)
+    value: str = Field(default="", nullable=False, sa_type=TEXT)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

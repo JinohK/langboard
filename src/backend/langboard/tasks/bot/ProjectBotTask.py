@@ -1,7 +1,6 @@
-from ...core.ai import Bot, BotTriggerCondition
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Project
+from ...models import Bot, Project, User
+from ...models.BotTrigger import BotTriggerCondition
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 

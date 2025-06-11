@@ -1,9 +1,9 @@
 from json import dumps as json_dumps
 from typing import Any, Callable, TypeVar
 from fastapi import APIRouter, FastAPI
+from fastapi.openapi.utils import get_openapi
 from pydantic import BaseModel
 from ...Constants import PROJECT_NAME, PROJECT_VERSION, SCHEMA_DIR
-from ..security.Auth import get_openapi
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .ApiErrorCode import ApiErrorCode
 from .AppExceptionHandlingRoute import AppExceptionHandlingRoute

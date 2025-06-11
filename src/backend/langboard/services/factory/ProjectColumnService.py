@@ -1,9 +1,9 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
-from ...models import Card, Project, ProjectColumn
+from ...models import Card, Project, ProjectColumn, User
 from ...publishers import ProjectColumnPublisher
 from ...tasks.activities import ProjectColumnActivityTask
 from ...tasks.bot import ProjectColumnBotTask

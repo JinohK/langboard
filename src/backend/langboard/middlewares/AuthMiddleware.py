@@ -4,11 +4,11 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
 from ..Constants import REFRESH_TOKEN_NAME
-from ..core.ai import Bot
-from ..core.db import User
 from ..core.filter import AuthFilter, FilterMiddleware
 from ..core.routing import ApiErrorCode, JsonResponse
-from ..core.security import Auth
+from ..core.security import AuthSecurity
+from ..models import Bot, User
+from ..security import Auth
 
 
 class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
@@ -39,27 +39,26 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
                 await response(scope, receive, send)
                 return
 
-            if scope.get("path") != "/graphql":
-                accessible_type = AuthFilter.get_filtered(child_scope["endpoint"])
-                if (
-                    (accessible_type == "bot" and not isinstance(validation_result, Bot))
-                    or (accessible_type == "user" and not isinstance(validation_result, User))
-                    or (
-                        accessible_type == "admin"
-                        and (not isinstance(validation_result, User) or not validation_result.is_admin)
-                    )
-                ):
-                    response = JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_403_FORBIDDEN)
-                    response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
-                    await response(scope, receive, send)
-                    return
+            accessible_type = AuthFilter.get_filtered(child_scope["endpoint"])
+            if (
+                (accessible_type == "bot" and not isinstance(validation_result, Bot))
+                or (accessible_type == "user" and not isinstance(validation_result, User))
+                or (
+                    accessible_type == "admin"
+                    and (not isinstance(validation_result, User) or not validation_result.is_admin)
+                )
+            ):
+                response = JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_403_FORBIDDEN)
+                response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+                await response(scope, receive, send)
+                return
 
             scope["auth"] = validation_result
 
         await self.app(scope, receive, send)
 
     async def _validate(self, headers: Headers) -> User | Bot | int:
-        if headers.get(Auth.API_TOKEN_HEADER, headers.get(Auth.API_TOKEN_HEADER.lower())):
+        if headers.get(AuthSecurity.API_TOKEN_HEADER, headers.get(AuthSecurity.API_TOKEN_HEADER.lower())):
             validation_result = await Auth.validate_user_by_api_token(headers)
             if isinstance(validation_result, User):
                 return validation_result

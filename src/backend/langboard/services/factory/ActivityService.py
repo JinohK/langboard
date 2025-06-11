@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...core.ai import Bot
-from ...core.db import DbSession, SqlBuilder, User
+from ...core.db import DbSession, SqlBuilder
 from ...core.db.Models import BaseSqlModel
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
-from ...models import Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, UserActivity
+from ...models import Bot, Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, User, UserActivity
 from ...models.BaseActivityModel import BaseActivityModel
 from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam
 

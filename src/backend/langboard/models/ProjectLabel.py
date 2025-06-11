@@ -1,7 +1,7 @@
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..core.ai import Bot
 from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from .Bot import Bot
 from .Project import Project
 
 

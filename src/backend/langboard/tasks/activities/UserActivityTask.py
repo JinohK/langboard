@@ -1,7 +1,5 @@
-from ...core.ai import Bot
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Project, ProjectActivity, ProjectWikiActivity, UserActivity
+from ...models import Bot, Project, ProjectActivity, ProjectWikiActivity, User, UserActivity
 from ...models.BaseActivityModel import BaseActivityModel
 from ...models.UserActivity import UserActivityType
 from .utils import ActivityHistoryHelper, ActivityTaskHelper

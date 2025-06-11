@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as nodemailer from "nodemailer";
 import * as fs from "fs";
 import Consumer from "@/core/broadcast/Consumer";
@@ -28,12 +27,11 @@ Consumer.register("notification_publish", async (data: unknown) => {
             model.notification.record_list![i] = [record, id.toString()];
         }
 
-        const notification = await UserNotification.create({
+        await UserNotification.create({
             ...model.notification,
             notifier_id: model.notification.notifier_id!.toString(),
             receiver_id: model.notification.receiver_id!.toString(),
-        });
-        await UserNotification.insert(notification as any);
+        }).save();
 
         await Subscription.publish(ESocketTopic.UserPrivate, new SnowflakeID(model.notification.receiver_id!).toShortCode(), "user:notified", {
             notification: model.api_notification,

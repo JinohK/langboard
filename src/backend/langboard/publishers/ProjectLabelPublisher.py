@@ -1,12 +1,12 @@
 from typing import Any
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
 from ..models import Project, ProjectLabel
 
 
 @staticclass
-class ProjectLabelPublisher:
+class ProjectLabelPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(project: Project, label: ProjectLabel):
         model = {"label": label.api_response()}
@@ -17,7 +17,7 @@ class ProjectLabelPublisher:
             data_keys="label",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectLabelPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def updated(project: Project, label: ProjectLabel, model: dict[str, Any]):
@@ -29,7 +29,7 @@ class ProjectLabelPublisher:
             data_keys=list(model.keys()),
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectLabelPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def order_changed(project: Project, label: ProjectLabel):
@@ -42,7 +42,7 @@ class ProjectLabelPublisher:
             data_keys=["uid", "order"],
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectLabelPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(project: Project, label: ProjectLabel):
@@ -55,4 +55,4 @@ class ProjectLabelPublisher:
             data_keys="uid",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await ProjectLabelPublisher.put_dispather(model, publish_model)

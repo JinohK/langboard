@@ -1,6 +1,6 @@
-from ...core.ai import Bot
-from ...core.db import DbSession, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService
+from ...models import Bot, User
 from ...models.BaseReactionModel import BaseReactionModel
 from .Types import TUserOrBot
 

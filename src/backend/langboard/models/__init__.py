@@ -1,3 +1,7 @@
+from .AppSetting import AppSetting
+from .Bot import Bot
+from .BotSchedule import BotSchedule
+from .BotTrigger import BotTrigger
 from .Card import Card
 from .CardAssignedProjectLabel import CardAssignedProjectLabel
 from .CardAssignedUser import CardAssignedUser
@@ -26,6 +30,7 @@ from .ProjectWikiAssignedBot import ProjectWikiAssignedBot
 from .ProjectWikiAssignedUser import ProjectWikiAssignedUser
 from .ProjectWikiAttachment import ProjectWikiAttachment
 from .ProjectWikiMetadata import ProjectWikiMetadata
+from .User import User
 from .UserActivity import UserActivity
 from .UserEmail import UserEmail
 from .UserGroup import UserGroup
@@ -36,6 +41,10 @@ from .UserProfile import UserProfile
 
 
 __all__ = [
+    "AppSetting",
+    "Bot",
+    "BotSchedule",
+    "BotTrigger",
     "Card",
     "CardAssignedProjectLabel",
     "CardAssignedUser",
@@ -64,6 +73,7 @@ __all__ = [
     "ProjectWikiAssignedUser",
     "ProjectWikiAttachment",
     "ProjectWikiMetadata",
+    "User",
     "UserActivity",
     "UserEmail",
     "UserGroup",

@@ -1,10 +1,10 @@
 from typing import Any, Literal, overload
-from ...core.ai import Bot
-from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
+from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
 from ...core.utils.Converter import convert_python_data
 from ...models import (
+    Bot,
     Project,
     ProjectAssignedBot,
     ProjectAssignedUser,
@@ -12,6 +12,7 @@ from ...models import (
     ProjectWikiAssignedBot,
     ProjectWikiAssignedUser,
     ProjectWikiAttachment,
+    User,
 )
 from ...publishers import ProjectWikiPublisher
 from ...tasks.activities import ProjectWikiActivityTask
@@ -339,7 +340,9 @@ class ProjectWikiService(BaseService):
                 with DbSession.use(readonly=False) as db:
                     db.insert(
                         ProjectWikiAssignedBot(
-                            project_assigned_id=project_assigned_bot.id, project_wiki_id=wiki.id, bot_id=target_bot.id
+                            project_assigned_id=project_assigned_bot.id,
+                            project_wiki_id=wiki.id,
+                            bot_id=target_bot.id,
                         )
                     )
                 bots.append(target_bot)

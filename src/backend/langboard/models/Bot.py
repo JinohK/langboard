@@ -2,8 +2,9 @@ from enum import Enum
 from typing import Any, ClassVar
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel, User
-from ..storage import FileModel
+from ..core.db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel
+from ..core.storage import FileModel
+from .User import User
 
 
 class BotAPIAuthType(Enum):

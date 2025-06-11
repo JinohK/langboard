@@ -1,8 +1,6 @@
 from typing import Any
-from ...core.ai import Bot
 from ...core.broker import Broker
-from ...core.db import User
-from ...models import Project, ProjectActivity, ProjectLabel
+from ...models import Bot, Project, ProjectActivity, ProjectLabel, User
 from ...models.ProjectActivity import ProjectActivityType
 from .UserActivityTask import record_project_activity
 from .utils import ActivityHistoryHelper, ActivityTaskHelper

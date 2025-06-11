@@ -1,8 +1,9 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.ai import Bot
-from ..core.db import EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel, User
+from ..core.db import EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from .Bot import Bot
 from .Card import Card
+from .User import User
 
 
 class CardComment(SoftDeleteModel, table=True):

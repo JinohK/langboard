@@ -2,10 +2,10 @@ from json import dumps as json_dumps
 from typing import Any, Literal, overload
 from ...core.db import DbSession, SnowflakeID, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
-from ...core.setting import AppSetting, AppSettingType
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.String import generate_random_string
-from ...models import GlobalCardRelationshipType
+from ...models import AppSetting, GlobalCardRelationshipType
+from ...models.AppSetting import AppSettingType
 from ...publishers import AppSettingPublisher
 from .Types import TGlobalCardRelationshipTypeParam, TSettingParam
 

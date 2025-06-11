@@ -1,8 +1,6 @@
 from typing import Any
-from ..core.ai import Bot
 from ..core.broker import Broker
-from ..core.db import User
-from ..models import {class_name}Activity
+from ..models import {class_name}Activity, Bot, User
 from ..models.{class_name}Activity import {class_name}ActivityType
 from .ActivityTaskHelper import ActivityTaskHelper
 from .UserActivityTask import record_project_activity

@@ -1,13 +1,12 @@
 from typing import Any
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Card, Checkitem, Project, ProjectColumn, ProjectLabel
+from ..models import Card, Checkitem, Project, ProjectColumn, ProjectLabel, User
 
 
 @staticclass
-class CardPublisher:
+class CardPublisher(BaseSocketPublisher):
     @staticmethod
     async def created(project: Project, column: ProjectColumn, model: dict[str, Any]):
         topic_id = project.get_uid()
@@ -26,7 +25,7 @@ class CardPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CardPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def updated(project: Project, card: Card, checkitem_cardified_from: Checkitem | None, model: dict[str, Any]):
@@ -67,7 +66,7 @@ class CardPublisher:
                 ]
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CardPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def order_changed(project: Project, card: Card, old_column: ProjectColumn, new_column: ProjectColumn | None):
@@ -133,7 +132,7 @@ class CardPublisher:
                 )
             )
 
-        await SocketPublishService.put_dispather(model, publish_models)
+        await CardPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def assigned_users_updated(project: Project, card: Card, users: list[User]):
@@ -145,7 +144,7 @@ class CardPublisher:
             data_keys="assigned_members",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def labels_updated(project: Project, card: Card, labels: list[ProjectLabel]):
@@ -157,7 +156,7 @@ class CardPublisher:
             data_keys="labels",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(project: Project, card: Card):
@@ -181,4 +180,4 @@ class CardPublisher:
             ),
         ]
 
-        await SocketPublishService.put_dispather({}, publish_models)
+        await CardPublisher.put_dispather({}, publish_models)

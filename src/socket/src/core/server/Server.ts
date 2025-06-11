@@ -88,6 +88,11 @@ class _Server {
                     return;
                 }
 
+                if (!message.toString()) {
+                    await ws.send("");
+                    return;
+                }
+
                 const decoder = new TextDecoder("utf-8");
                 let parsedMessage;
                 try {

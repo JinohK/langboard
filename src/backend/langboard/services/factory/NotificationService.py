@@ -2,13 +2,14 @@ from datetime import timedelta
 from typing import Any, Literal, TypeVar, cast, overload
 from urllib.parse import urlparse
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
-from ...core.ai import Bot
-from ...core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder, User
-from ...core.service import BaseService, NotificationPublishModel, NotificationPublishService, ServiceHelper
+from ...core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder
+from ...core.publisher import NotificationPublisher, NotificationPublishModel
+from ...core.service import BaseService, ServiceHelper
 from ...core.utils.DateTime import now
 from ...core.utils.EditorContentParser import change_date_element, find_mentioned
 from ...core.utils.String import concat
 from ...models import (
+    Bot,
     Card,
     CardComment,
     Checklist,
@@ -16,6 +17,7 @@ from ...models import (
     ProjectColumn,
     ProjectInvitation,
     ProjectWiki,
+    User,
     UserNotification,
 )
 from ...models.UserNotification import NotificationType
@@ -393,7 +395,7 @@ class NotificationService(BaseService):
             email_template_name=email_template_name,
             email_formats=email_formats,
         )
-        await NotificationPublishService.put_dispather(model)
+        await NotificationPublisher.put_dispather(model)
         return True
 
     def __create_redirect_url(self, project: Project, card_or_wiki: ProjectWiki | Card | None = None):

@@ -1,12 +1,11 @@
-from ..core.db import User
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
-from ..core.service import SocketPublishModel, SocketPublishService
 from ..core.utils.decorators import staticclass
-from ..models import Card, CardAttachment
+from ..models import Card, CardAttachment, User
 
 
 @staticclass
-class CardAttachmentPublisher:
+class CardAttachmentPublisher(BaseSocketPublisher):
     @staticmethod
     async def uploaded(user: User, card: Card, card_attachment: CardAttachment):
         model = {
@@ -24,7 +23,7 @@ class CardAttachmentPublisher:
             data_keys="attachment",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardAttachmentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def order_changed(card: Card, card_attachment: CardAttachment):
@@ -36,7 +35,7 @@ class CardAttachmentPublisher:
             data_keys=["uid", "order"],
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardAttachmentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def name_changed(card: Card, card_attachment: CardAttachment):
@@ -48,7 +47,7 @@ class CardAttachmentPublisher:
             data_keys="name",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardAttachmentPublisher.put_dispather(model, publish_model)
 
     @staticmethod
     async def deleted(card: Card, card_attachment: CardAttachment):
@@ -60,4 +59,4 @@ class CardAttachmentPublisher:
             data_keys="uid",
         )
 
-        await SocketPublishService.put_dispather(model, publish_model)
+        await CardAttachmentPublisher.put_dispather(model, publish_model)

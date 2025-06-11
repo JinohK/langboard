@@ -1,14 +1,13 @@
 from datetime import datetime
 from fastapi import status
-from ...core.ai import Bot
-from ...core.db import EditorContentModel, User
+from ...core.db import EditorContentModel
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
 from ...core.service import ServiceHelper
 from ...core.utils.Converter import convert_python_data
 from ...models import (
+    Bot,
     Card,
     CardAttachment,
     CardComment,
@@ -20,9 +19,11 @@ from ...models import (
     ProjectColumn,
     ProjectLabel,
     ProjectRole,
+    User,
 )
 from ...models.BaseRoleModel import ALL_GRANTED
 from ...models.ProjectRole import ProjectRoleAction
+from ...security import Auth
 from ...services import Service
 from .scopes import (
     AssignUsersForm,

@@ -1,15 +1,13 @@
 from typing import Literal
 from fastapi import Depends, status
-from ...core.ai import Bot
-from ...core.db import User
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse, SocketTopic
 from ...core.schema import OpenApiSchema
-from ...core.security import Auth
 from ...core.service import ServiceHelper
-from ...models import Card, CardMetadata, Project, ProjectRole, ProjectWiki, ProjectWikiMetadata
+from ...models import Bot, Card, CardMetadata, Project, ProjectRole, ProjectWiki, ProjectWikiMetadata, User
 from ...models.ProjectRole import ProjectRoleAction
 from ...publishers.MetadataPublisher import MetadataPublisher
+from ...security import Auth
 from ...services import Service
 from ..board.scopes import project_role_finder
 from .MetadataForm import MetadataDeleteForm, MetadataForm, MetadataGetModel
