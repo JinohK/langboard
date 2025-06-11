@@ -30,6 +30,7 @@
   },
   "errors": {
     "Project closed.": "Project closed.",
+    "You are not a member of this project.": "You are not a member of this project.",
     "missing": {
       "title": "Enter a title."
     }
