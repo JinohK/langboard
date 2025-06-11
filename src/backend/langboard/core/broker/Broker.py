@@ -1,13 +1,14 @@
-from asyncio import run as async_run
+from asyncio import run as run_async
 from json import dumps as json_dumps
 from json import loads as json_loads
+from threading import Thread
 from typing import Any, Callable, Concatenate, Coroutine, Generic, ParamSpec, Protocol, TypeVar, cast
 from celery import Celery
 from celery.app.task import Task
 from celery.apps import worker
 from celery.apps.worker import Worker
 from celery.signals import celeryd_after_setup, setup_logging
-from ...Constants import CACHE_TYPE, CACHE_URL, PROJECT_NAME, SCHEMA_DIR
+from ...Constants import CACHE_TYPE, CACHE_URL, ENVIRONMENT, PROJECT_NAME, SCHEMA_DIR
 from ..logger import Logger
 from ..utils.decorators import class_instance
 from .TaskParameters import TaskParameters
@@ -75,14 +76,21 @@ class Broker:
         DO NOT use *args or **kwargs in async task.
         """
 
+        if ENVIRONMENT == "local":
+
+            def local_task(*args: _TParams.args, **kwargs: _TParams.kwargs):
+                return Thread(target=run_async, args=(func(*args, **kwargs),)).start()
+
+            return local_task
+
         def task(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:
             new_args, new_kwargs = self.__unpack_task_parameters(func, *args, **kwargs)
-            return async_run(func(*new_args, **new_kwargs))
+            return run_async(func(*new_args, **new_kwargs))
 
         task.__module__ = func.__module__
         task.__name__ = func.__name__
 
-        return self.__run_async_task(cast(Any, self.celery.task(task)))
+        return self.__create_async_task(cast(Any, self.celery.task(task)))
 
     def wrap_sync_task_decorator(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
         """Wrap sync celery task decorator.
@@ -92,13 +100,20 @@ class Broker:
         DO NOT use *args or **kwargs in sync task.
         """
 
+        if ENVIRONMENT == "local":
+
+            def local_task(*args: _TParams.args, **kwargs: _TParams.kwargs):
+                return func(*args, **kwargs)
+
+            return local_task
+
         def task(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:
             new_args, new_kwargs = self.__unpack_task_parameters(func, *args, **kwargs)
             return func(*new_args, **new_kwargs)
 
         task.__name__ = func.__name__
 
-        return self.__run_sync_task(cast(Any, self.celery.task(task)))
+        return self.__create_sync_task(cast(Any, self.celery.task(task)))
 
     def start(self, argv: list[str] | None = None):
         if argv is None:
@@ -144,14 +159,14 @@ class Broker:
         else:
             return {}
 
-    def __run_async_task(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
+    def __create_async_task(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
         def inner(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:
             new_args, new_kwargs = self.__pack_task_parameters(*args, **kwargs)
             return cast(Task, func).apply_async(args=new_args, kwargs=new_kwargs)
 
         return inner
 
-    def __run_sync_task(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
+    def __create_sync_task(self, func: Callable[Concatenate[_TParams], Any]) -> _Task[_TParams, Any]:
         def inner(*args: _TParams.args, **kwargs: _TParams.kwargs) -> Any:
             new_args, new_kwargs = self.__pack_task_parameters(*args, **kwargs)
             return cast(Task, func).apply(args=new_args, kwargs=new_kwargs)

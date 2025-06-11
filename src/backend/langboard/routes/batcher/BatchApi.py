@@ -40,10 +40,6 @@ async def batch_apis(request: Request, form: BatchForm, user_or_bot: User | Bot 
             except Exception:
                 pass
 
-        from ...core.logger import Logger
-
-        Logger.main.error(f"{request_schema.path_or_api_name}, {request_schema.query}, {request_schema.form}")
-
         query_string = _query_dict_to_bytes(request_schema.query or {})
         scope = {
             "type": "http",

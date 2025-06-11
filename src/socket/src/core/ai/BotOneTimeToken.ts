@@ -12,11 +12,11 @@ export const createOneTimeToken = (userId: number | SnowflakeID) => {
             sub: userId.toString(),
             chat: "bot",
             exp: expiry,
-            issuer: PROJECT_NAME,
         },
         JWT_SECRET_KEY,
         {
             algorithm: JWT_ALGORITHM,
+            issuer: PROJECT_NAME,
         }
     );
 

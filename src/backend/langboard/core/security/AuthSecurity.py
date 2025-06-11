@@ -105,14 +105,12 @@ class AuthSecurity:
 
     @staticmethod
     def create_access_token(user_id: int) -> str:
-        expiry = now() + timedelta(seconds=JWT_AT_EXPIRATION)
-        payload = {"sub": str(user_id), "exp": expiry, "iss": PROJECT_NAME}
+        payload = AuthSecurity.__create_payload(user_id, timedelta(seconds=JWT_AT_EXPIRATION))
         return jwt_encode(payload=payload, key=JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     @staticmethod
     def create_refresh_token(user_id: int) -> str:
-        expiry = now() + timedelta(days=JWT_RT_EXPIRATION)
-        payload = {"sub": str(user_id), "exp": timegm(expiry.utctimetuple()), "iss": PROJECT_NAME}
+        payload = AuthSecurity.__create_payload(user_id, timedelta(days=JWT_RT_EXPIRATION))
         return Encryptor.encrypt(json_dumps(payload), JWT_SECRET_KEY)
 
     @staticmethod
@@ -129,19 +127,22 @@ class AuthSecurity:
     @staticmethod
     def decode_access_token(token: str) -> dict[str, Any]:
         payload = jwt_decode(jwt=token, key=JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], issuer=PROJECT_NAME)
-        if not isinstance(payload, dict):
-            raise InvalidTokenError("Invalid token")
-        if "sub" not in payload or "iss" not in payload or "exp" not in payload:
-            raise InvalidTokenError("Invalid token structure")
-        if payload["iss"] != PROJECT_NAME or not isinstance(payload["sub"], str) or not isinstance(payload["exp"], int):
-            raise InvalidTokenError("Invalid token structure")
-        if int(payload["exp"]) <= timegm(now().utctimetuple()):
-            raise ExpiredSignatureError("Signature has expired")
+        AuthSecurity.__validate_payload(payload)
         return payload
 
     @staticmethod
     def decode_refresh_token(token: str) -> dict[str, Any]:
         payload = json_loads(Encryptor.decrypt(token, JWT_SECRET_KEY))
+        AuthSecurity.__validate_payload(payload)
+        return payload
+
+    @staticmethod
+    def __create_payload(user_id: int, expiration: timedelta) -> dict[str, Any]:
+        expiry = now() + expiration
+        return {"sub": str(user_id), "exp": timegm(expiry.utctimetuple()), "iss": PROJECT_NAME}
+
+    @staticmethod
+    def __validate_payload(payload: dict[str, Any]):
         if not isinstance(payload, dict):
             raise InvalidTokenError("Invalid token")
         if "sub" not in payload or "iss" not in payload or "exp" not in payload:
@@ -150,4 +151,3 @@ class AuthSecurity:
             raise InvalidTokenError("Invalid token structure")
         if payload["exp"] <= timegm(now().utctimetuple()):
             raise ExpiredSignatureError("Signature has expired")
-        return payload

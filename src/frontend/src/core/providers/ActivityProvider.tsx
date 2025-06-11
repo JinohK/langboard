@@ -11,8 +11,9 @@ export interface IActivityContext {
     delayCheckOutdatedTimeoutRef: React.RefObject<NodeJS.Timeout | null>;
     isLastPage: bool;
     countNewRecords: number;
+    isRefreshing: bool;
     nextPage: () => Promise<bool>;
-    refreshList: () => Promise<void>;
+    refreshList: () => void;
     checkOutdated: () => Promise<void>;
 }
 
@@ -29,6 +30,7 @@ const initialContext = {
     delayCheckOutdatedTimeoutRef: { current: null },
     isLastPage: true,
     countNewRecords: 0,
+    isRefreshing: false,
     nextPage: async () => false,
     refreshList: async () => {},
     checkOutdated: async () => {},
@@ -36,7 +38,7 @@ const initialContext = {
 
 const ActivityContext = createContext<IActivityContext>(initialContext);
 
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 15;
 
 export const ActivityProvider = ({ form, children }: IActivityProps): React.ReactNode => {
     const activityFilter = useMemo(() => {
@@ -66,6 +68,7 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
     const flatActivities = ActivityModel.Model.useModels(activityFilter, [activityFilter]);
     const [page, setPage] = useState(0);
     const [isLastPage, setIsLastPage] = useState(!flatActivities.length);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const activities = useMemo(
         () => flatActivities.sort((a, b) => b.created_at.getTime() - a.created_at.getTime()).slice(0, PAGE_LIMIT * (page + 1)),
         [flatActivities, page]
@@ -107,11 +110,12 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
             }, 500);
         });
     }, [page, setPage, isLastPage, mutateAsync, flatActivities]);
-    const refreshList = useCallback(async () => {
-        if (isFetchingRef.current) {
+    const refreshList = useCallback(() => {
+        if (isFetchingRef.current || isRefreshing) {
             return;
         }
 
+        setIsRefreshing(true);
         const curIsDelayingCheckOutdated = isDelayingCheckOutdated.current;
         isDelayingCheckOutdated.current = false;
         const list = document.getElementById(activityListIdRef.current)!;
@@ -120,20 +124,21 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
             top: 0,
             behavior: "smooth",
         });
+
         setTimeout(() => {
-            if (!delayCheckOutdatedTimeoutRef.current && curIsDelayingCheckOutdated) {
-                isDelayingCheckOutdated.current = false;
-            } else {
-                isDelayingCheckOutdated.current = curIsDelayingCheckOutdated;
-            }
-        }, 0);
-        isFetchingRef.current = true;
-        await refresh();
-        isFetchingRef.current = false;
-        setTimeout(() => {
-            list.scrollTop = 0;
-        }, 0);
-    }, [refresh]);
+            isFetchingRef.current = true;
+            refresh().finally(() => {
+                isFetchingRef.current = false;
+                if (!delayCheckOutdatedTimeoutRef.current && curIsDelayingCheckOutdated) {
+                    isDelayingCheckOutdated.current = false;
+                } else {
+                    isDelayingCheckOutdated.current = curIsDelayingCheckOutdated;
+                }
+                setIsRefreshing(false);
+                list.scrollTop = 0;
+            });
+        }, 2000);
+    }, [refresh, isRefreshing]);
     const checkOutdated = useCallback(async () => {
         await originalCheckOutdated(lastCurrentDateRef.current);
     }, [originalCheckOutdated]);
@@ -171,6 +176,7 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
                 activities,
                 nextPage,
                 refreshList,
+                isRefreshing,
                 activityListIdRef,
                 isLastPage,
                 countNewRecords,

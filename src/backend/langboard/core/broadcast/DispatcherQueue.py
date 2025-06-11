@@ -24,15 +24,15 @@ class DispatcherQueue(BaseDispatcherQueue):
         else:
             raise ValueError(f"Unsupported BROADCAST_TYPE: {BROADCAST_TYPE}")
 
-    def start(self):
-        self.__instance.start()
-
     @overload
     async def put(self, event: str, data: dict[str, Any]): ...
     @overload
     async def put(self, event: DispatcherModel): ...
     async def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):
         await self.__instance.put(event, data)
+
+    def start(self):
+        self.__instance.start()
 
     def close(self):
         self.__instance.close()

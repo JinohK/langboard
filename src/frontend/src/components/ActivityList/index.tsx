@@ -1,9 +1,10 @@
-import { Box, Button, Flex, ScrollArea } from "@/components/base";
+import { Box, Button, Flex, Loading } from "@/components/base";
 import InfiniteScroller, { IInfiniteScrollerProps } from "@/components/InfiniteScroller";
 import { TGetActivitiesForm } from "@/controllers/api/activity/useGetActivities";
 import useCreateActivityTimeline from "@/core/hooks/activity/useCreateActivityTimeline";
 import { AuthUser } from "@/core/models";
 import { ActivityProvider, useActivity } from "@/core/providers/ActivityProvider";
+import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -42,6 +43,7 @@ function ActivityListInner({
         delayCheckOutdatedTimeoutRef,
         isLastPage,
         countNewRecords,
+        isRefreshing,
         nextPage,
         refreshList,
         checkOutdated,
@@ -65,47 +67,39 @@ function ActivityListInner({
         },
         [checkOutdated]
     );
-    const [scrollMutate, updateScrollbar] = React.useReducer((x) => x + 1, 0);
-    const scrollMutable = React.useMemo(() => activities.length + scrollMutate, [activities.length, scrollMutate]);
 
     return (
-        <Box position="relative">
-            <ScrollArea.Root
-                viewportId={activityListIdRef.current}
-                mutable={scrollMutable}
-                className={scrollAreaClassName}
-                onScroll={checkOutdatedOnScroll}
+        <Box
+            id={activityListIdRef.current}
+            position="relative"
+            className={cn("overflow-y-auto", scrollAreaClassName)}
+            onScroll={checkOutdatedOnScroll}
+        >
+            {isRefreshing && <Loading variant="secondary" size="4" mt="4" />}
+            <InfiniteScroller
+                as={as}
+                scrollable={() => document.getElementById(activityListIdRef.current)}
+                loadMore={nextPage}
+                loader={<SkeletonActivity key={createShortUUID()} />}
+                hasMore={!isLastPage}
+                threshold={140}
+                className={infiniteScrollerClassName}
+                style={style}
             >
-                <InfiniteScroller
-                    as={as}
-                    scrollable={() => document.getElementById(activityListIdRef.current)}
-                    loadMore={nextPage}
-                    loader={<SkeletonActivity key={createShortUUID()} />}
-                    hasMore={!isLastPage}
-                    threshold={140}
-                    className={infiniteScrollerClassName}
-                    style={style}
-                >
-                    {!activities.length && (
-                        <Flex justify="center" items="center" h="full">
-                            {t("activity.No Activities")}
-                        </Flex>
-                    )}
-                    <Flex direction="col" gap="2">
-                        {activities.map((activity) => (
-                            <ActivityTimeline
-                                activity={activity}
-                                references={activity.references}
-                                updateScrollbar={updateScrollbar}
-                                key={createShortUUID()}
-                            />
-                        ))}
+                {!activities.length && (
+                    <Flex justify="center" items="center" h="full">
+                        {t("activity.No Activities")}
                     </Flex>
-                    {!!activities.length && <Box h="3" />}
-                </InfiniteScroller>
-            </ScrollArea.Root>
-            {countNewRecords > 0 && (
-                <Button onClick={refreshList} size="sm" className="absolute left-1/2 top-1 z-50 -translate-x-1/2">
+                )}
+                <Flex direction="col" gap="2">
+                    {activities.map((activity) => (
+                        <ActivityTimeline activity={activity} references={activity.references} key={createShortUUID()} />
+                    ))}
+                </Flex>
+                {!!activities.length && <Box h="3" />}
+            </InfiniteScroller>
+            {countNewRecords > 0 && !isRefreshing && (
+                <Button onClick={refreshList} size="sm" className="fixed left-1/2 top-1 z-50 -translate-x-1/2">
                     {t("activity.{count} New Activities", { count: countNewRecords })}
                 </Button>
             )}

@@ -18,12 +18,11 @@ import { ROUTES } from "@/core/routing/constants";
 import { ColorGenerator, getTextColorFromHex } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials, createShortUUID } from "@/core/utils/StringUtils";
-import React, { memo, useRef } from "react";
+import React from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 export interface IActivityTimelineProps {
     activity: ActivityModel.TModel | ActivityModel.TActivity;
-    updateScrollbar: React.DispatchWithoutAction;
     references?: ActivityModel.TModel["references"];
 }
 
@@ -33,9 +32,9 @@ interface IBaseActivityComponentProps {
 
 const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bool) => {
     const [t] = useTranslation();
-    const navigateRef = useRef(useNavigate());
+    const navigateRef = React.useRef(useNavigate());
 
-    const SkeletonActivity = memo(() => (
+    const SkeletonActivity = React.memo(() => (
         <Flex direction="col" gap="1" p="2">
             <Flex items="start" gap="1">
                 {!isUserView && <Skeleton size="8" rounded="full" />}
@@ -47,7 +46,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         </Flex>
     ));
 
-    const ActivityTimeline = memo(({ activity, references, updateScrollbar }: IActivityTimelineProps) => {
+    const ActivityTimeline = React.memo(({ activity, references }: IActivityTimelineProps) => {
         const activityType = activity.activity_type;
         const activityHistory = activity.activity_history;
         const activityCreatedAt = useUpdateDateDistance(activity.created_at);
@@ -56,7 +55,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         const refer = activity.refer;
 
         if (refer) {
-            return <ActivityTimeline activity={refer} references={activity.references} updateScrollbar={updateScrollbar} />;
+            return <ActivityTimeline activity={refer} references={activity.references} />;
         }
 
         const activityReferences = { ...(references ?? {}) };
@@ -90,7 +89,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         <Trans i18nKey={i18nKey} values={activityHistory} components={createComponents(activityHistory, activityReferences)} />
                     </Box>
                 </Flex>
-                <DiffView history={activityHistory} updateScrollbar={updateScrollbar} />
+                <DiffView history={activityHistory} />
                 <Box textSize="sm" className="text-right text-muted-foreground">
                     {activityCreatedAt}
                 </Box>
@@ -231,109 +230,110 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         );
     };
 
-    const DiffView = ({ history, updateScrollbar }: { history: any; updateScrollbar: React.DispatchWithoutAction }) => {
-        if (!history.changes) {
-            return null;
-        }
-
-        const changes: IChangesInActivityHistory["changes"] = history.changes;
-        const elements: React.ReactNode[] = [];
-
-        Object.entries(changes.before).forEach(([key, value]) => {
-            const before = value;
-            const after = changes.after[key];
-
-            if (before === after) {
-                return;
+    const DiffView = ({ history }: { history: any }) => {
+        const elements = React.useMemo(() => {
+            if (!history.changes) {
+                return [];
             }
 
-            if (before?.type === "editor" || after?.type === "editor") {
-                const mentionables = [...(before?.mentionables ?? []), ...(after?.mentionables ?? [])].map(
-                    (mentionable: IBotInActivityHistory | IUserInActivityHistory) => {
-                        const isBot = mentionable.type === "bot";
-                        return User.Model.createFakeUser({
-                            type: mentionable.type,
-                            uid: "0",
-                            firstname: isBot ? mentionable.name : mentionable.firstname,
-                            lastname: isBot ? "" : mentionable.lastname,
-                            username: "",
-                            email: "",
-                            avatar: mentionable.avatar,
-                        });
-                    }
-                );
+            const newElements: React.ReactNode[] = [];
+            const changes: IChangesInActivityHistory["changes"] = history.changes;
+            Object.entries(changes.before).forEach(([key, value]) => {
+                const before = value;
+                const after = changes.after[key];
 
-                elements.push(
-                    <CollapsibleVersionHistoryPlate
-                        mentionables={mentionables}
-                        currentUser={currentUser}
-                        form={{
-                            project_uid: history?.project?.uid,
-                        }}
-                        oldValue={before}
-                        newValue={after}
-                        scrollableMutate={updateScrollbar}
-                        key={createShortUUID()}
-                    />
-                );
-                return;
-            }
-
-            const i18nKey = `activity.changes.${key}`;
-            let beforeElement;
-            let afterElement;
-            switch (key) {
-                case "title":
-                case "name":
-                case "project_type":
-                    beforeElement = <>{before}</>;
-                    afterElement = <>{after}</>;
-                    break;
-                case "description":
-                    beforeElement = <>{before ?? t("activity.changes.No description")}</>;
-                    afterElement = <>{after ?? t("activity.changes.No description")}</>;
-                    break;
-                case "ai_description":
-                    beforeElement = <>{before ?? t("activity.changes.No AI summary")}</>;
-                    afterElement = <>{after ?? t("activity.changes.No AI summary")}</>;
-                    break;
-                case "content":
-                    beforeElement = <>{before ?? t("activity.changes.No content")}</>;
-                    afterElement = <>{after ?? t("activity.changes.No content")}</>;
-                    break;
-                case "deadline_at":
-                    beforeElement = <>{before ?? t("activity.changes.No deadline")}</>;
-                    afterElement = <>{after ?? t("activity.changes.No deadline")}</>;
-                    break;
-                case "color":
-                    beforeElement = (
-                        <ActivityBadge style={{ backgroundColor: before ?? "#000", color: getTextColorFromHex(before ?? "#000") }}>
-                            {changes.before?.name ?? history.label?.name ?? "color"}
-                        </ActivityBadge>
-                    );
-                    afterElement = (
-                        <ActivityBadge style={{ backgroundColor: after ?? "#000", color: getTextColorFromHex(after ?? "#000") }}>
-                            {changes.after?.name ?? history.label?.name ?? "color"}
-                        </ActivityBadge>
-                    );
-                    break;
-                default:
+                if (before === after) {
                     return;
-            }
+                }
 
-            elements.push(
-                <Flex items="center" gap="3" key={createShortUUID()}>
-                    <Box>{t(i18nKey)}</Box>
-                    <Flex items="center" gap="1.5">
-                        {beforeElement}
-                        <IconComponent icon="arrow-right" />
-                        {afterElement}
+                if (before?.type === "editor" || after?.type === "editor") {
+                    const mentionables = [...(before?.mentionables ?? []), ...(after?.mentionables ?? [])].map(
+                        (mentionable: IBotInActivityHistory | IUserInActivityHistory) => {
+                            const isBot = mentionable.type === "bot";
+                            return User.Model.createFakeUser({
+                                type: mentionable.type,
+                                uid: "0",
+                                firstname: isBot ? mentionable.name : mentionable.firstname,
+                                lastname: isBot ? "" : mentionable.lastname,
+                                username: "",
+                                email: "",
+                                avatar: mentionable.avatar,
+                            });
+                        }
+                    );
+
+                    newElements.push(
+                        <CollapsibleVersionHistoryPlate
+                            mentionables={mentionables}
+                            currentUser={currentUser}
+                            form={{
+                                project_uid: history?.project?.uid,
+                            }}
+                            oldValue={before}
+                            newValue={after}
+                            key={createShortUUID()}
+                        />
+                    );
+                    return;
+                }
+
+                const i18nKey = `activity.changes.${key}`;
+                let beforeElement;
+                let afterElement;
+                switch (key) {
+                    case "title":
+                    case "name":
+                    case "project_type":
+                        beforeElement = <>{before}</>;
+                        afterElement = <>{after}</>;
+                        break;
+                    case "description":
+                        beforeElement = <>{before ?? t("activity.changes.No description")}</>;
+                        afterElement = <>{after ?? t("activity.changes.No description")}</>;
+                        break;
+                    case "ai_description":
+                        beforeElement = <>{before ?? t("activity.changes.No AI summary")}</>;
+                        afterElement = <>{after ?? t("activity.changes.No AI summary")}</>;
+                        break;
+                    case "content":
+                        beforeElement = <>{before ?? t("activity.changes.No content")}</>;
+                        afterElement = <>{after ?? t("activity.changes.No content")}</>;
+                        break;
+                    case "deadline_at":
+                        beforeElement = <>{before ?? t("activity.changes.No deadline")}</>;
+                        afterElement = <>{after ?? t("activity.changes.No deadline")}</>;
+                        break;
+                    case "color":
+                        beforeElement = (
+                            <ActivityBadge style={{ backgroundColor: before ?? "#000", color: getTextColorFromHex(before ?? "#000") }}>
+                                {changes.before?.name ?? history.label?.name ?? "color"}
+                            </ActivityBadge>
+                        );
+                        afterElement = (
+                            <ActivityBadge style={{ backgroundColor: after ?? "#000", color: getTextColorFromHex(after ?? "#000") }}>
+                                {changes.after?.name ?? history.label?.name ?? "color"}
+                            </ActivityBadge>
+                        );
+                        break;
+                    default:
+                        return;
+                }
+
+                newElements.push(
+                    <Flex items="center" gap="3" key={createShortUUID()}>
+                        <Box>{t(i18nKey)}</Box>
+                        <Flex items="center" gap="1.5">
+                            {beforeElement}
+                            <IconComponent icon="arrow-right" />
+                            {afterElement}
+                        </Flex>
                     </Flex>
-                </Flex>
-            );
-        });
+                );
+            });
+            return newElements;
+        }, []);
 
-        if (!elements.length) {
+        if (!history.changes || !elements.length) {
             return null;
         }
 

@@ -96,7 +96,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
     const globalRelationshipTypes = GlobalRelationshipType.Model.useModels(() => true, [selectCardViewType, filters]);
 
     useEffect(() => {
-        if (members.some((member) => member.uid === currentUser.uid) || forbiddenMessageIdRef.current) {
+        if (currentUser.is_admin || members.some((member) => member.uid === currentUser.uid) || forbiddenMessageIdRef.current) {
             return;
         }
 

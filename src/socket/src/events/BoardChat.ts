@@ -105,7 +105,9 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
 
     if (TypeUtils.isString(response)) {
         aiMessage.message = { content: response };
-        await stream.buffer((data = { uid: aiMessageUID, message: aiMessage.message }));
+        await stream.buffer({ uid: aiMessageUID, message: aiMessage.message });
+        await aiMessage.save();
+        await stream.end({ uid: aiMessageUID, status: "success" });
     } else {
         const newContent = { content: "" };
         let isReceived = false;
@@ -127,7 +129,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
                 }
 
                 if (lastContent !== newContent.content) {
-                    await stream.buffer((data = { uid: aiMessageUID, chunk: updatedContent }));
+                    await stream.buffer({ uid: aiMessageUID, chunk: updatedContent });
                     lastContent = newContent.content;
                 }
             },
@@ -135,21 +137,22 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
                 if (isAborted()) {
                     return;
                 }
-                await stream.end((data = { uid: aiMessageUID, status: "failed", error: error.message }));
-                aiMessage.remove();
+                await stream.end({ uid: aiMessageUID, status: "failed", error: error.message });
+                await aiMessage.remove();
             },
             onEnd: async () => {
                 aiMessage.message = newContent;
                 if (!isReceived) {
                     if (!isAborted()) {
                         await aiMessage.remove();
-                        await stream.end((data = { uid: aiMessageUID, status: "failed" }));
+                        await stream.end({ uid: aiMessageUID, status: "failed" });
                         return;
                     }
                 }
 
-                await ChatHistory.update(aiMessage.id, { message: newContent });
-                await stream.end((data = { uid: aiMessageUID, status: "success" }));
+                aiMessage.message.content = newContent.content;
+                await aiMessage.save();
+                await stream.end({ uid: aiMessageUID, status: "success" });
             },
         });
     }

@@ -161,7 +161,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     };
 
     return (
-        <Form.Root className="sticky bottom-0 -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
+        <Form.Root className="sticky bottom-0 z-[100] -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
             <Drawer.Root
                 modal={false}
                 handleOnly

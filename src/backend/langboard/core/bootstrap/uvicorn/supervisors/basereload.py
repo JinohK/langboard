@@ -45,9 +45,8 @@ from types import FrameType
 from typing import Callable
 import click
 from uvicorn.config import Config
-from .....Constants import ENVIRONMENT
 from ....broadcast import DispatcherQueue
-from .._subprocess import get_subprocess, run_broker
+from .._subprocess import get_subprocess
 
 
 HANDLED_SIGNALS = (
@@ -114,9 +113,6 @@ class BaseReload:
         for sig in HANDLED_SIGNALS:
             signal.signal(sig, self.signal_handler)
 
-        if ENVIRONMENT == "local":
-            self.broker_process = run_broker(is_restarting=False)
-
         self.process = get_subprocess(
             config=self.config,
             target=self.target,
@@ -125,14 +121,6 @@ class BaseReload:
         self.process.start()
 
     def restart(self) -> None:
-        if ENVIRONMENT == "local":
-            if self.broker_process.pid:
-                os.kill(self.broker_process.pid, signal.SIGTERM)
-            else:
-                self.broker_process.terminate()
-                self.broker_process.kill()
-            self.broker_process.join()
-
         if sys.platform == "win32":  # pragma: py-not-win32
             self.is_restarting = True
             assert self.process.pid is not None
@@ -145,9 +133,6 @@ class BaseReload:
             self.process.terminate()
         self.process.join()
 
-        if ENVIRONMENT == "local":
-            self.broker_process = run_broker(is_restarting=True)
-
         self.process = get_subprocess(
             config=self.config,
             target=self.target,
@@ -156,14 +141,6 @@ class BaseReload:
         self.process.start()
 
     def shutdown(self) -> None:
-        if ENVIRONMENT == "local":
-            if self.broker_process.pid:
-                os.kill(self.broker_process.pid, signal.SIGTERM)
-            else:
-                self.broker_process.terminate()
-                self.broker_process.kill()
-            self.broker_process.join()
-
         if sys.platform == "win32":
             self.should_exit.set()  # pragma: py-not-win32
         else:
