@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ILangflowRequestModel } from "@/core/ai/BaseBot";
+import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
+import SnowflakeID from "@/core/db/SnowflakeID";
 import { DATA_TEXT_FORMAT_DESCRIPTIONS } from "@/core/utils/EditorUtils";
+import { generateToken } from "@/core/utils/StringUtils";
+import { EAppSettingType } from "@/models/AppSetting";
 
 export enum ELangflowConstants {
     ApiKey = "x-api-key",
@@ -44,3 +49,39 @@ export class LangboardCalledVariablesComponent extends BaseLangflowComponent {
         return { ...this.#model };
     }
 }
+
+export const createLangflowRequestModel = (
+    settings: Record<EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey, string>,
+    requestModel: ILangflowRequestModel,
+    useStream: bool = false
+) => {
+    const sessionId = requestModel.sessionId ?? generateToken(32);
+    const oneTimeToken = createOneTimeToken(new SnowflakeID(requestModel.userId));
+
+    return {
+        url: `${settings[EAppSettingType.LangflowUrl]}/api/v1/run/${requestModel.flowId}?stream=${useStream}`,
+        sessionId,
+        headers: {
+            "Content-Type": "application/json",
+            [ELangflowConstants.ApiKey]: settings[EAppSettingType.LangflowApiKey],
+        },
+        oneTimeToken,
+        reqData: {
+            input_value: requestModel.message,
+            input_type: requestModel.inputType,
+            output_type: requestModel.outputType,
+            session: sessionId,
+            session_id: sessionId,
+            tweaks: {
+                ...(requestModel.tweaks ?? {}),
+                ...new LangboardCalledVariablesComponent(
+                    "chat",
+                    oneTimeToken,
+                    "user",
+                    { uid: new SnowflakeID(requestModel.userId).toShortCode() },
+                    requestModel.projectUID
+                ).toTweaks(),
+            },
+        },
+    };
+};

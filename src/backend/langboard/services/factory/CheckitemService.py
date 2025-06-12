@@ -72,7 +72,7 @@ class CheckitemService(BaseService):
             .join(Project, Project.column("id") == Card.column("project_id"))
             .where((Checkitem.column("user_id") == user.id) & (Checkitem.column("created_at") <= refer_time))
             .order_by(Checkitem.column("created_at").desc())
-            .group_by(Checkitem.column("id"), Checkitem.column("created_at"))
+            .group_by(Checkitem.column("id"), Checkitem.column("created_at"), Card.column("id"), Project.column("id"))
         )
         query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
 

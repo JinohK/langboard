@@ -105,57 +105,62 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
 
     if (TypeUtils.isString(response)) {
         aiMessage.message = { content: response };
-        await stream.buffer({ uid: aiMessageUID, message: aiMessage.message });
+        stream.buffer({ uid: aiMessageUID, message: aiMessage.message });
+        stream.end({ uid: aiMessageUID, status: "success" });
         await aiMessage.save();
-        await stream.end({ uid: aiMessageUID, status: "success" });
-    } else {
-        const newContent = { content: "" };
-        let isReceived = false;
-        let lastContent: string | undefined = undefined;
+        return;
+    }
 
-        await response({
-            onMessage: async (chunk) => {
-                isReceived = true;
-                const oldContent = newContent.content;
-                let updatedContent = "";
-                if (chunk) {
-                    if (oldContent) {
-                        newContent.content = chunk.startsWith(oldContent) ? chunk : `${oldContent}${chunk}`;
-                        updatedContent = chunk.split(oldContent, 2).pop() || chunk;
-                    } else {
-                        newContent.content = chunk;
-                        updatedContent = chunk;
-                    }
-                }
+    const newContent = { content: "" };
+    let isReceived = false;
+    let lastContent: string | undefined = undefined;
 
-                if (lastContent !== newContent.content) {
-                    await stream.buffer({ uid: aiMessageUID, chunk: updatedContent });
-                    lastContent = newContent.content;
+    await response({
+        onMessage: async (chunk) => {
+            if (isAborted()) {
+                return;
+            }
+
+            isReceived = true;
+            const oldContent = newContent.content;
+            let updatedContent = "";
+            if (chunk) {
+                if (oldContent) {
+                    newContent.content = chunk.startsWith(oldContent) ? chunk : `${oldContent}${chunk}`;
+                    updatedContent = chunk.split(oldContent, 2).pop() || chunk;
+                } else {
+                    newContent.content = chunk;
+                    updatedContent = chunk;
                 }
-            },
-            onError: async (error) => {
-                if (isAborted()) {
+            }
+
+            if (lastContent !== newContent.content) {
+                stream.buffer({ uid: aiMessageUID, chunk: updatedContent });
+                lastContent = newContent.content;
+            }
+        },
+        onError: async (error) => {
+            if (isAborted()) {
+                return;
+            }
+            stream.end({ uid: aiMessageUID, status: "failed", error: error.message });
+            await aiMessage.remove();
+        },
+        onEnd: async () => {
+            aiMessage.message = newContent;
+            if (!isReceived) {
+                if (!isAborted()) {
+                    stream.end({ uid: aiMessageUID, status: "failed" });
+                    await aiMessage.remove();
                     return;
                 }
-                await stream.end({ uid: aiMessageUID, status: "failed", error: error.message });
-                await aiMessage.remove();
-            },
-            onEnd: async () => {
-                aiMessage.message = newContent;
-                if (!isReceived) {
-                    if (!isAborted()) {
-                        await aiMessage.remove();
-                        await stream.end({ uid: aiMessageUID, status: "failed" });
-                        return;
-                    }
-                }
+            }
 
-                aiMessage.message.content = newContent.content;
-                await aiMessage.save();
-                await stream.end({ uid: aiMessageUID, status: "success" });
-            },
-        });
-    }
+            aiMessage.message = newContent;
+            stream.end({ uid: aiMessageUID, status: "success" });
+            await aiMessage.save();
+        },
+    });
 });
 
 EventManager.on(ESocketTopic.Board, "board:chat:cancel", async ({ client, data }) => {

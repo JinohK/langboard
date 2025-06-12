@@ -19,7 +19,17 @@ class KafkaConsumer extends BaseConsumer {
     }
 
     public async start() {
-        this.#consumer = this.#client.consumer({ groupId: PROJECT_NAME, allowAutoTopicCreation: true, readUncommitted: true });
+        this.#consumer = this.#client.consumer({
+            groupId: PROJECT_NAME,
+            allowAutoTopicCreation: true,
+            sessionTimeout: 30000,
+            retry: {
+                restartOnFailure: async (error) => {
+                    Terminal.red("Kafka Consumer Error", error, "\n");
+                    return true;
+                },
+            },
+        });
         await this.#consumer.connect();
 
         this.#redisClient = await createClient({
@@ -35,7 +45,6 @@ class KafkaConsumer extends BaseConsumer {
         }
 
         await this.#consumer.run({
-            autoCommit: true,
             eachMessage: async ({ topic, message }) => {
                 if (!message.value) {
                     return;
@@ -67,7 +76,8 @@ class KafkaConsumer extends BaseConsumer {
                     }
 
                     await this.emit(topic, data);
-                } catch {
+                } catch (error) {
+                    Terminal.red(`Kafka Consumer: Error processing message on topic ${topic}`, error, "\n");
                     return;
                 }
             },

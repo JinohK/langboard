@@ -7,6 +7,7 @@ import ISocketClient, { TSocketSendParams } from "@/core/server/ISocketClient";
 import Hocus from "@/core/server/Hocus";
 import ESocketStatus from "@/core/server/ESocketStatus";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
+import Terminal from "@/core/utils/Terminal";
 
 class SocketClient implements ISocketClient {
     #ws: WebSocket;
@@ -43,9 +44,17 @@ class SocketClient implements ISocketClient {
     public send<TData = unknown>(event: TSocketSendParams<TData>): void {
         event.topic = convertSafeEnum(ESocketTopic, event.topic);
 
-        this.#ws.send(JSON.stringify(event), {
-            fin: true,
-        });
+        this.#ws.send(
+            JSON.stringify(event),
+            {
+                fin: true,
+            },
+            (error) => {
+                if (error) {
+                    Terminal.red("WebSocket send error", error, "\n");
+                }
+            }
+        );
     }
 
     public sendError(errorCode: ESocketStatus | number, message: string, shouldClose: bool = false) {

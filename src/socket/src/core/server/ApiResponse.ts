@@ -7,7 +7,7 @@ export const JsonResponse = (content: any, statusCode: EHttpStatus = EHttpStatus
         type: "json",
         statusCode: statusCode,
         body: JSON.stringify(content),
-    };
+    } as const;
 };
 
 export const ApiErrorResponse = (errorCode: EApiErrorCode, statusCode: EHttpStatus) => {
@@ -28,5 +28,5 @@ export const ApiErrorResponse = (errorCode: EApiErrorCode, statusCode: EHttpStat
             code,
             message,
         }),
-    };
+    } as const;
 };

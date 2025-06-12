@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
 import EInternalBotType from "@/core/ai/EInternalBotType";
-import { ELangflowConstants, LangboardCalledVariablesComponent } from "@/core/ai/LangflowHelper";
+import { createLangflowRequestModel } from "@/core/ai/LangflowHelper";
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
 import { TBigIntString } from "@/core/db/BaseModel";
-import SnowflakeID from "@/core/db/SnowflakeID";
 import JsonUtils from "@/core/utils/JsonUtils";
-import { convertSafeEnum, generateToken } from "@/core/utils/StringUtils";
+import { convertSafeEnum } from "@/core/utils/StringUtils";
 import AppSetting, { EAppSettingType } from "@/models/AppSetting";
 import axios from "axios";
 import formidable from "formidable";
@@ -85,7 +83,7 @@ abstract class BaseBot {
             return null;
         }
 
-        const apiRequestModel = new LangflowRequestModel(settings, requestModel, useStream);
+        const apiRequestModel = createLangflowRequestModel(settings, requestModel, useStream);
 
         if (useStream) {
             return langflowStreamResponse({
@@ -120,7 +118,7 @@ abstract class BaseBot {
             return null;
         }
 
-        const apiRequestModel = new LangflowRequestModel(settings, requestModel, useStream);
+        const apiRequestModel = createLangflowRequestModel(settings, requestModel, useStream);
         const abortController = new AbortController();
         this.#abortableTasks.set(taskID, abortController);
 
@@ -140,6 +138,8 @@ abstract class BaseBot {
         try {
             const response = await axios.post(apiRequestModel.url, apiRequestModel.reqData, {
                 headers: apiRequestModel.headers,
+                timeout: 120000,
+                signal: abortController.signal,
             });
 
             if (response.status !== 200) {
@@ -232,49 +232,5 @@ export const getBot = (botType: EInternalBotType): BaseBot | undefined => {
     botType = convertSafeEnum(EInternalBotType, botType);
     return BOTS.get(botType);
 };
-
-class LangflowRequestModel {
-    url: string;
-    sessionId: string;
-    headers: Record<string, string>;
-    oneTimeToken: string;
-    reqData: Record<string, any>;
-
-    constructor(
-        settings: Record<EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey, string>,
-        requestModel: ILangflowRequestModel,
-        useStream: bool = false
-    ) {
-        this.url = `${settings[EAppSettingType.LangflowUrl]}/api/v1/run/${requestModel.flowId}?stream=${useStream}`;
-        this.sessionId = requestModel.sessionId ?? generateToken(32);
-        this.headers = {
-            "Content-Type": "application/json",
-            [ELangflowConstants.ApiKey]: settings[EAppSettingType.LangflowApiKey],
-        };
-        this.oneTimeToken = createOneTimeToken(new SnowflakeID(requestModel.userId));
-        const reqData: Record<string, any> = {
-            input_value: requestModel.message,
-            session: this.sessionId,
-            session_id: this.sessionId,
-        };
-        if (requestModel.inputType) {
-            reqData.input_type = requestModel.inputType;
-        }
-        if (requestModel.outputType) {
-            reqData.output_type = requestModel.outputType;
-        }
-        reqData.tweaks = {
-            ...(requestModel.tweaks ?? {}),
-            ...new LangboardCalledVariablesComponent(
-                "chat",
-                this.oneTimeToken,
-                "user",
-                { uid: new SnowflakeID(requestModel.userId).toShortCode() },
-                requestModel.projectUID
-            ).toTweaks(),
-        };
-        this.reqData = reqData;
-    }
-}
 
 export default BaseBot;

@@ -1,25 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PUBLIC_FRONTEND_URL } from "@/Constants";
 import Auth from "@/core/security/Auth";
-import { JsonResponse } from "@/core/server/ApiResponse";
+import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
 import EHttpStatus from "@/core/server/EHttpStatus";
 import { isValidURL, StringCase } from "@/core/utils/StringUtils";
 import User from "@/models/User";
 import { IncomingMessage, ServerResponse } from "http";
 
-export interface IRouteResponse {
-    type: string;
-    statusCode: number;
-    headers?: Record<string, string>;
-    body?: string;
-}
+export type TRouteResponse = ReturnType<typeof JsonResponse> | ReturnType<typeof ApiErrorResponse>;
 
 export type TRouteHandler = (context: {
     req: IncomingMessage;
     res: ServerResponse<InstanceType<typeof IncomingMessage>>;
     user: User;
     params: Record<string, any>;
-}) => Promise<IRouteResponse>;
+}) => Promise<TRouteResponse>;
 export type TMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
 
 class _Routes {
@@ -134,24 +129,20 @@ class _Routes {
         };
     }
 
-    #respond(res: ServerResponse, response: IRouteResponse) {
-        const { type, statusCode, headers, body } = response;
-        const convertedHeaders = {
+    #respond(res: ServerResponse, response: TRouteResponse) {
+        const { type, statusCode, body } = response;
+        const convertedHeaders: Record<string, any> = {
             "Content-Type": "application/json",
             ...this.#getCorsHeaders(),
-            ...(headers ?? {}),
         };
 
         switch (type) {
             case "json":
-                res.writeHead(statusCode, convertedHeaders);
-                break;
             default:
                 res.writeHead(statusCode, convertedHeaders);
+                res.end(body ?? "{}");
                 break;
         }
-
-        res.end(body ?? "{}");
     }
 }
 

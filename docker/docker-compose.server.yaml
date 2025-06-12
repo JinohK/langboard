@@ -69,7 +69,7 @@ services:
       - CACHE_TYPE=redis
       - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
       - BROADCAST_TYPE=kafka
-      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:29092,${PROJECT_NAME}_kafka1:29092,${PROJECT_NAME}_kafka2:29092
+      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
       - COMMON_SECRET_KEY=${COMMON_SECRET_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
@@ -137,7 +137,7 @@ services:
       - CACHE_TYPE=redis
       - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
       - BROADCAST_TYPE=kafka
-      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:29092,${PROJECT_NAME}_kafka1:29092,${PROJECT_NAME}_kafka2:29092
+      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
       - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
@@ -150,6 +150,7 @@ services:
       - MAIL_SSL_TLS=${MAIL_SSL_TLS}
     working_dir: /app
     volumes:
+      - ../src/socket/dist:/app/dist:rw
       - ../src/socket/package.json:/app/package.json
       - ../src/socket/yarn.lock:/app/yarn.lock
       - ../src/resources:/app/resources
