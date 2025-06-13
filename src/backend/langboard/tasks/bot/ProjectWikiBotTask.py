@@ -48,12 +48,12 @@ async def _run_wiki_task(
 ):
     bots = BotTaskHelper.get_project_assigned_bots(project, condition)
     if wiki.is_public:
-        BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki, other_data), project)
+        await BotTaskHelper.run(bots, condition, create_wiki_data(user_or_bot, project, wiki, other_data), project)
         return
     for bot in bots:
         data = BotTaskDataHelper.create_private_wiki(bot, user_or_bot, project, wiki, other_data)
         if data is not None:
-            BotTaskHelper.run(bot, condition, data, project)
+            await BotTaskHelper.run(bot, condition, data, project)
 
 
 def create_wiki_data(

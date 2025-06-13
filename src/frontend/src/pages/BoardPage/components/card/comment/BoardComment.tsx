@@ -12,9 +12,9 @@ import BoardCommentFooter from "@/pages/BoardPage/components/card/comment/BoardC
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export function SkeletonBoardComment(): JSX.Element {
+export function SkeletonBoardComment({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     return (
-        <Box mt="4" display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
+        <Box mt="4" display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]" ref={ref}>
             <Skeleton size="8" rounded="full" />
             <Flex direction="col" gap="1">
                 <Flex gap="1" items="center">

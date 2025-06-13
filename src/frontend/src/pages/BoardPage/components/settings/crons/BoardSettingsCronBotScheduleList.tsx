@@ -31,7 +31,7 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
             setTimeout(async () => {
                 await mutateAsync({});
                 resolve(true);
-            }, 2500);
+            }, 1000);
         });
     }, [isLastPage, mutateAsync]);
     const botCronScheduledHandlers = useBoardBotCronScheduledHandlers({
@@ -51,11 +51,10 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
     return (
         <Flex direction="col" gap="2">
             <ScrollArea.Root viewportId={listId} mutable={schedules}>
-                <InfiniteScroller
+                <InfiniteScroller.NoVirtual
                     scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={!isLastPage}
-                    threshold={18}
                     loader={
                         <Flex justify="center" mt="6" key={createShortUUID()}>
                             <Loading size="3" variant="secondary" />
@@ -74,7 +73,7 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
                             />
                         ))}
                     </Box>
-                </InfiniteScroller>
+                </InfiniteScroller.NoVirtual>
             </ScrollArea.Root>
             <BoardSettingsCronBotScheduleAddButton botUID={bot.uid} copiedForm={copiedForm} isAddMode={isAddMode} setIsAddMode={setIsAddMode} />
         </Flex>

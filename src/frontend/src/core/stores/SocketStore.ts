@@ -181,26 +181,6 @@ const useSocketStore = create<ISocketStore>(() => {
             subscribe(topic, Object.keys(subscriptions));
         });
 
-        const ping = () => {
-            if (!socket) {
-                return;
-            }
-
-            if (socket.readyState === WebSocket.CONNECTING) {
-                setTimeout(ping, 3000);
-                return;
-            }
-
-            if (socket.readyState !== WebSocket.OPEN) {
-                return;
-            }
-
-            socket.send("");
-            setTimeout(ping, 20000);
-        };
-
-        ping();
-
         socket.onopen = async (event) => {
             await onOpen(event);
         };

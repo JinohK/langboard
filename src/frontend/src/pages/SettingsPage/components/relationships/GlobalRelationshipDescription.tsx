@@ -55,7 +55,7 @@ function GlobalRelationshipDescription() {
     return (
         <Table.Cell className={cn("max-w-0 truncate text-center", isEditing && "py-0")}>
             {!isEditing ? (
-                <Box cursor="text" className={cn(!description.length && "text-muted-foreground/70")} onClick={() => changeMode("edit")}>
+                <Box cursor="text" className={cn("truncate", !description.length && "text-muted-foreground/70")} onClick={() => changeMode("edit")}>
                     {description.length ? description : t("settings.No description")}
                 </Box>
             ) : (

@@ -36,7 +36,7 @@ class RunBrokerCommand(BaseCommand):
     def store_type(self) -> type[bool] | type[str]:
         return bool
 
-    def execute(self, options: RunBrokerCommandOptions) -> None:
+    def execute(self, _: RunBrokerCommandOptions) -> None:
         load_modules("tasks", "Task")
 
         Broker.start()

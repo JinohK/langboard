@@ -9,11 +9,11 @@ import { formatTimerDuration } from "@/core/utils/StringUtils";
 import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fns";
 import { useMemo } from "react";
 
-export interface ICardRowProps {
+export interface ICardRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
     card: ProjectCard.TModel;
 }
 
-function CardRow({ card }: ICardRowProps): JSX.Element | null {
+function CardRow({ card, ...props }: ICardRowProps): JSX.Element | null {
     const { navigate } = useDashboard();
     const title = card.useField("title");
     const columnName = card.useField("column_name");
@@ -22,34 +22,35 @@ function CardRow({ card }: ICardRowProps): JSX.Element | null {
     const createdAt = useUpdateDateDistance(rawCreatedAt);
 
     return (
-        <ModelRegistry.ProjectCard.Provider model={card}>
-            <Table.Row
-                className={cn(
-                    "relative",
-                    !!archivedAt &&
-                        cn(
-                            "text-muted-foreground [&_button]:text-primary/70",
-                            "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
-                            "after:h-px after:w-full after:bg-border"
-                        )
-                )}
-            >
-                <Table.Cell className="w-1/4 text-center">
+        <Table.FlexRow
+            {...props}
+            className={cn(
+                !!archivedAt &&
+                    cn(
+                        "text-muted-foreground [&_button]:text-primary/70",
+                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                        "after:h-px after:w-full after:bg-border"
+                    ),
+                props.className
+            )}
+        >
+            <ModelRegistry.ProjectCard.Provider model={card}>
+                <Table.FlexCell className="w-1/3 text-center">
                     <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
                         {title}
                     </Button>
-                </Table.Cell>
-                <Table.Cell className="w-1/6 text-center">
+                </Table.FlexCell>
+                <Table.FlexCell className="w-1/3 text-center">
                     <Button variant="link" className="size-auto p-0" onClick={() => navigate(ROUTES.BOARD.CARD(card.project_uid, card.uid))}>
                         {columnName}
                     </Button>
-                </Table.Cell>
-                <Table.Cell className="w-1/6 text-center">{createdAt}</Table.Cell>
-                <Table.Cell className="w-1/6 text-center">
+                </Table.FlexCell>
+                <Table.FlexCell className="w-1/6 text-center">{createdAt}</Table.FlexCell>
+                <Table.FlexCell className="w-1/6 text-center">
                     <CardRowTimeTaken />
-                </Table.Cell>
-            </Table.Row>
-        </ModelRegistry.ProjectCard.Provider>
+                </Table.FlexCell>
+            </ModelRegistry.ProjectCard.Provider>
+        </Table.FlexRow>
     );
 }
 

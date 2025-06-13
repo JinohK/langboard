@@ -18,7 +18,7 @@ interface IBasePlateEditorProps extends Omit<TUseCreateEditor, "plugins"> {
     variant?: React.ComponentProps<typeof Editor>["variant"];
     className?: string;
     editorRef?: React.RefObject<TEditor | null>;
-    editorComponentRef?: React.RefObject<HTMLDivElement | null>;
+    editorComponentRef?: React.Ref<HTMLDivElement>;
     placeholder?: string;
 }
 

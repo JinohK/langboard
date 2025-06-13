@@ -16,7 +16,7 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @Broker.wrap_async_task_decorator
 async def card_comment_added(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentAdded)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentAdded, _create_data(user_or_bot, project, card, comment), project
     )
 
@@ -25,7 +25,7 @@ async def card_comment_added(user_or_bot: User | Bot, project: Project, card: Ca
 @Broker.wrap_async_task_decorator
 async def card_comment_updated(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentUpdated)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentUpdated, _create_data(user_or_bot, project, card, comment), project
     )
 
@@ -34,7 +34,7 @@ async def card_comment_updated(user_or_bot: User | Bot, project: Project, card: 
 @Broker.wrap_async_task_decorator
 async def card_comment_deleted(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentDeleted)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentDeleted, _create_data(user_or_bot, project, card, comment), project
     )
 
@@ -45,7 +45,7 @@ async def card_comment_reacted(
     user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str
 ):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentReacted)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCommentReacted,
         _create_data(user_or_bot, project, card, comment, {"reaction_type": reaction}),
@@ -59,7 +59,7 @@ async def card_comment_unreacted(
     user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str
 ):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentUnreacted)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCommentUnreacted,
         _create_data(user_or_bot, project, card, comment, {"reaction_type": reaction}),

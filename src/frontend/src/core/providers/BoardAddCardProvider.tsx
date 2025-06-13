@@ -13,7 +13,7 @@ export interface IBoardAddCardContext {
     isValidating: bool;
     changeMode: (mode: "edit" | "view") => void;
     scrollToBottom: () => void;
-    textareaRef: React.RefObject<HTMLTextAreaElement>;
+    textareaRef: React.Ref<HTMLTextAreaElement>;
     disableChangeModeAttr: string;
     canWrite: bool;
 }

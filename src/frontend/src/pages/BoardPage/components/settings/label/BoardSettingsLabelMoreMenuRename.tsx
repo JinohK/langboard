@@ -61,7 +61,7 @@ function BoardSettingsLabelMoreMenuRename(): JSX.Element {
 }
 
 interface IBoardSettingsLabelMoreMenuRenameFormProps {
-    nameInputRef: React.RefObject<HTMLInputElement | null>;
+    nameInputRef: React.Ref<HTMLInputElement>;
 }
 
 function BoardSettingsLabelMoreMenuRenameForm({ nameInputRef }: IBoardSettingsLabelMoreMenuRenameFormProps): JSX.Element {

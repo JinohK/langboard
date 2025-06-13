@@ -117,7 +117,7 @@ const useChangeEditMode = <
                 oldValue = trimValue((originalValue as unknown as IEditorContent)?.content);
             }
 
-            if ((!canEmpty && !value) || (oldValue && oldValue === value)) {
+            if ((!canEmpty && !value) || ((canEmpty || !!oldValue) && oldValue === value)) {
                 setIsEditing(() => false);
                 return;
             }

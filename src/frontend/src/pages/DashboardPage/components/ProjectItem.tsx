@@ -8,6 +8,7 @@ import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectItemColumn from "@/pages/DashboardPage/components/ProjectItemColumn";
 import ProjectItemStarButton from "@/pages/DashboardPage/components/ProjectItemStarButton";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export const SkeletonProjectItem = memo(() => {
     const cards = [];
@@ -43,12 +44,12 @@ export const SkeletonProjectItem = memo(() => {
     );
 });
 
-export interface IProjectItemProps {
+export interface IProjectItemProps extends React.ComponentPropsWithoutRef<typeof Card.Root> {
     project: Project.TModel;
     updateStarredProjects: React.DispatchWithoutAction;
 }
 
-const ProjectItem = memo(({ project, updateStarredProjects }: IProjectItemProps): JSX.Element => {
+const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProjectItemProps): JSX.Element => {
     const [t] = useTranslation();
     const { navigate } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
@@ -66,8 +67,8 @@ const ProjectItem = memo(({ project, updateStarredProjects }: IProjectItemProps)
     };
 
     return (
-        <ModelRegistry.Project.Provider model={project}>
-            <Card.Root className="cursor-pointer" onClick={toBoard}>
+        <Card.Root {...props} className={cn(props.className, "cursor-pointer")} onClick={toBoard}>
+            <ModelRegistry.Project.Provider model={project}>
                 <Card.Header className="relative block pt-5">
                     <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] text-sm leading-tight text-gray-500">
                         {t(projectType === "Other" ? "common.Other" : `project.types.${projectType}`)}
@@ -81,8 +82,8 @@ const ProjectItem = memo(({ project, updateStarredProjects }: IProjectItemProps)
                         <ProjectItemColumn key={createShortUUID()} column={column} setColumns={setColumns} />
                     ))}
                 </Card.Footer>
-            </Card.Root>
-        </ModelRegistry.Project.Provider>
+            </ModelRegistry.Project.Provider>
+        </Card.Root>
     );
 });
 

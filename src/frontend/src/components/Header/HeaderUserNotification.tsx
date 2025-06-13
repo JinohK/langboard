@@ -156,11 +156,10 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
                     {t("notification.No notifications received.")}
                 </Flex>
             )}
-            <InfiniteScroller
+            <InfiniteScroller.NoVirtual
                 scrollable={() => document.getElementById(listId)}
                 loadMore={nextPage}
                 hasMore={hasMore}
-                threshold={30}
                 loader={
                     <Flex justify="center" py="6" key={createShortUUID()}>
                         <Loading variant="secondary" size={{ initial: "2", sm: "3" }} />
@@ -179,7 +178,7 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
                         </AnimatedList.Item>
                     ))}
                 </AnimatedList.Root>
-            </InfiniteScroller>
+            </InfiniteScroller.NoVirtual>
         </ScrollArea.Root>
     );
 }

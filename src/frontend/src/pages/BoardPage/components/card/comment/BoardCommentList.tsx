@@ -77,12 +77,11 @@ function BoardCommentListResult({ viewportId }: IBoardCommentListResultProps): J
     };
 
     return (
-        <InfiniteScroller
+        <InfiniteScroller.NoVirtual
             scrollable={() => document.getElementById(viewportId)}
             loadMore={nextPage}
             loader={<SkeletonBoardComment key={createShortUUID()} />}
             hasMore={hasMore}
-            threshold={36}
             className="pb-2.5"
         >
             {comments.length === 0 && (
@@ -95,7 +94,7 @@ function BoardCommentListResult({ viewportId }: IBoardCommentListResultProps): J
                     return <BoardComment key={`${card.uid}-${comment.uid}`} comment={comment} deletedComment={deletedComment} />;
                 })}
             </Flex>
-        </InfiniteScroller>
+        </InfiniteScroller.NoVirtual>
     );
 }
 

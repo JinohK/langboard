@@ -49,6 +49,10 @@
       "default": "<Recorder/> accepted the project invitation.",
       "user_view": "You accepted the project invitation."
     },
+    "project_deleted": {
+      "default": "<Recorder/> deleted the project <Project/>.",
+      "user_view": "You deleted the project <Project/>."
+    },
     "project_column_created": {
       "default": "<Recorder/> created a column <Column/>.",
       "user_view": "You created a column <Column/> in the project <Project/>."
@@ -56,6 +60,10 @@
     "project_column_name_changed": {
       "default": "<Recorder/> changed the name of the column <Column/>.",
       "user_view": "You changed the name of the column <Column/> in the project <Project/>."
+    },
+    "project_column_deleted": {
+      "default": "<Recorder/> deleted the column <Column/>.",
+      "user_view": "You deleted the column <Column/> in the project <Project/>."
     },
     "project_label_created": {
       "default": "<Recorder/> created a label <Label/>.",
@@ -78,10 +86,6 @@
         "default": "<Recorder/> updated the card <Card/>.",
         "user_view": "You updated the card <Card/> in the project <Project/>."
       },
-      "card_deleted": {
-        "default": "<Recorder/> deleted the card <Card/>.",
-        "user_view": "You deleted the card <Card/> in the project <Project/>."
-      },
       "card_moved": {
         "default": "<Recorder/> moved the card <Card/> from the column <FromColumn/> to the column <Column/>.",
         "user_view": "You moved the card <Card/> from the column <FromColumn/> to the column <Column/> in the project <Project/>."
@@ -93,6 +97,10 @@
       "card_labels_updated": {
         "default": "<Recorder/> updated the labels of the card <Card/>.",
         "user_view": "You updated the labels of the card <Card/> in the project <Project/>."
+      },
+      "card_deleted": {
+        "default": "<Recorder/> deleted the card <Card/>.",
+        "user_view": "You deleted the card <Card/> in the project <Project/>."
       },
       "card_attachment_uploaded": {
         "default": "<Recorder/> uploaded an attachment <Attachment/> to the card <Card/>.",

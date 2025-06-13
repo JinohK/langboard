@@ -14,7 +14,15 @@ class KafkaConsumer extends BaseConsumer {
         super();
 
         this.#client = new Kafka({
+            clientId: `${PROJECT_NAME}-socket`,
             brokers: BROADCAST_URLS,
+            retry: {
+                retries: Number.MAX_SAFE_INTEGER,
+                restartOnFailure: async (error) => {
+                    Terminal.red("Kafka Client Error", error, "\n");
+                    return true;
+                },
+            },
         });
     }
 
@@ -22,66 +30,68 @@ class KafkaConsumer extends BaseConsumer {
         this.#consumer = this.#client.consumer({
             groupId: PROJECT_NAME,
             allowAutoTopicCreation: true,
-            sessionTimeout: 30000,
-            retry: {
-                restartOnFailure: async (error) => {
-                    Terminal.red("Kafka Consumer Error", error, "\n");
-                    return true;
-                },
-            },
         });
-        await this.#consumer.connect();
 
-        this.#redisClient = await createClient({
-            url: CACHE_URL,
-        })
-            .on("error", (err) => Terminal.red("Redis Client Error", err, "\n"))
-            .connect();
-
-        const topics = this.getEmitterNames();
-        for (let i = 0; i < topics.length; ++i) {
-            const topic = topics[i];
-            await this.#consumer.subscribe({ topic, fromBeginning: true });
-        }
-
-        await this.#consumer.run({
-            eachMessage: async ({ topic, message }) => {
-                if (!message.value) {
-                    return;
+        while (true) {
+            try {
+                if (!this.#redisClient?.isOpen || !this.#redisClient?.isReady || this.#redisClient?.isClosed) {
+                    this.#redisClient = await createClient({
+                        url: CACHE_URL,
+                        pingInterval: 10000,
+                    })
+                        .on("error", (err) => Terminal.red("Redis Client Error", err, "\n"))
+                        .connect();
                 }
 
-                try {
-                    const decoder = new TextDecoder("utf-8");
-                    const model = JsonUtils.Parse(decoder.decode(message.value));
-                    if (!model) {
-                        return;
-                    }
+                await this.#consumer.connect();
 
-                    const cacheKey = model.cache_key;
-                    if (!cacheKey) {
-                        return;
-                    }
+                const topics = this.getEmitterNames();
+                await this.#consumer.subscribe({ topics, fromBeginning: true });
 
-                    const cachedData = await this.#redisClient.get(cacheKey);
-                    let data;
-                    if (cachedData) {
-                        const cachedModel = JsonUtils.Parse(cachedData);
-                        if (cachedModel) {
-                            data = cachedModel;
+                await this.#consumer.run({
+                    eachMessage: async ({ topic, message }) => {
+                        if (!message.value) {
+                            return;
                         }
-                    }
 
-                    if (!data) {
-                        return;
-                    }
+                        try {
+                            const decoder = new TextDecoder("utf-8");
+                            const model = JsonUtils.Parse(decoder.decode(message.value));
+                            if (!model) {
+                                return;
+                            }
 
-                    await this.emit(topic, data);
-                } catch (error) {
-                    Terminal.red(`Kafka Consumer: Error processing message on topic ${topic}`, error, "\n");
-                    return;
-                }
-            },
-        });
+                            const cacheKey = model.cache_key;
+                            if (!cacheKey) {
+                                return;
+                            }
+
+                            const cachedData = await this.#redisClient.get(cacheKey);
+                            let data;
+                            if (cachedData) {
+                                const cachedModel = JsonUtils.Parse(cachedData);
+                                if (cachedModel) {
+                                    data = cachedModel;
+                                }
+                            }
+
+                            if (!data) {
+                                return;
+                            }
+
+                            await this.emit(topic, data);
+                        } catch (error) {
+                            Terminal.red(`Kafka Consumer: Error processing message on topic ${topic}`, error, "\n");
+                            return;
+                        }
+                    },
+                });
+
+                break;
+            } catch (error) {
+                Terminal.red("Error starting consumer", error, "\n");
+            }
+        }
     }
 
     public async stop() {

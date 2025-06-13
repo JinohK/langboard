@@ -7,14 +7,14 @@ import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { memo } from "react";
 import InfiniteScroller from "@/components/InfiniteScroller";
 
-export function SkeletonProjectList() {
+export function SkeletonProjectList({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     const skeletonCards = [];
     for (let i = 0; i < 4; ++i) {
         skeletonCards.push(<SkeletonProjectItem key={createShortUUID()} />);
     }
 
     return (
-        <Box mt="4">
+        <Box mt="4" ref={ref}>
             <Box display={{ initial: "hidden", md: "grid" }} gap="4" className="md:grid-cols-2 lg:grid-cols-4">
                 {skeletonCards}
             </Box>
@@ -38,28 +38,24 @@ export interface IProjectListProps {
 const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, className }: IProjectListProps): JSX.Element | null => {
     const PAGE_SIZE = 16;
     const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: projects, size: PAGE_SIZE, updater: scrollAreaUpdater });
-    const skeletonCards = [];
-    for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<SkeletonProjectItem key={createShortUUID()} />);
-    }
 
     return (
-        <InfiniteScroller
-            scrollable={() => document.getElementById("main")}
-            loadMore={nextPage}
-            hasMore={hasMore}
-            threshold={78}
-            loader={<SkeletonProjectList key={createShortUUID()} />}
-            className={cn("!overflow-y-hidden", className)}
-        >
-            <Box mt="4">
-                <Box display="grid" gap="4" className="sm:grid-cols-2 lg:grid-cols-4">
-                    {items.map((project) => (
-                        <ProjectItem key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
-                    ))}
-                </Box>
-            </Box>
-        </InfiniteScroller>
+        <>
+            <InfiniteScroller.Grid
+                as={Box}
+                row={Box}
+                className={cn("mt-4", className)}
+                rowClassName="md:grid-cols-2 lg:grid-cols-4"
+                scrollable={() => document.getElementById("main")}
+                loadMore={nextPage}
+                hasMore={hasMore}
+                loader={<SkeletonProjectList key={createShortUUID()} />}
+            >
+                {items.map((project) => (
+                    <ProjectItem key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
+                ))}
+            </InfiniteScroller.Grid>
+        </>
     );
 });
 

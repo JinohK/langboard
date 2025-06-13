@@ -55,11 +55,10 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                 </Table.Header>
             </Table.Root>
             <ScrollArea.Root viewportId={listId} mutable={relationships}>
-                <InfiniteScroller
+                <InfiniteScroller.NoVirtual
                     scrollable={() => document.getElementById(listId)}
                     loadMore={nextPage}
                     hasMore={hasMore}
-                    threshold={30}
                     loader={
                         <Flex justify="center" py="6" key={createShortUUID()}>
                             <Loading variant="secondary" />
@@ -83,7 +82,7 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                             ))}
                         </Table.Body>
                     </Table.Root>
-                </InfiniteScroller>
+                </InfiniteScroller.NoVirtual>
             </ScrollArea.Root>
         </>
     );

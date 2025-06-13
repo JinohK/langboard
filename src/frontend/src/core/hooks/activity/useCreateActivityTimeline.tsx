@@ -34,8 +34,8 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
     const [t] = useTranslation();
     const navigateRef = React.useRef(useNavigate());
 
-    const SkeletonActivity = React.memo(() => (
-        <Flex direction="col" gap="1" p="2">
+    const SkeletonActivity = React.memo(({ ref }: { ref?: React.Ref<HTMLDivElement> }) => (
+        <Flex direction="col" gap="1" p="2" ref={ref}>
             <Flex items="start" gap="1">
                 {!isUserView && <Skeleton size="8" rounded="full" />}
                 <Skeleton h="6" mt="1" className="w-3/5 md:w-2/5" />

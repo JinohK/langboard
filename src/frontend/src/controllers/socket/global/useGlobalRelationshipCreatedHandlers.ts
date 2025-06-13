@@ -4,7 +4,7 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { GlobalRelationshipType } from "@/core/models";
 
 export interface IGlobalRelationshipCreatedRawResponse {
-    global_relationship: GlobalRelationshipType.Interface;
+    global_relationships: GlobalRelationshipType.Interface;
 }
 
 const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) => {
@@ -15,7 +15,7 @@ const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandle
             name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.CREATED,
             callback,
             responseConverter: (data) => {
-                GlobalRelationshipType.Model.fromObject(data.global_relationship, true);
+                GlobalRelationshipType.Model.fromObject(data.global_relationships, true);
                 return {};
             },
         },

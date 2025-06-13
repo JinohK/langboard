@@ -77,15 +77,17 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                 bufferedChunks.splice(0);
 
                 const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
-                if (parsedMessage) {
-                    if (parsedMessage === true) {
-                        await onEnd();
-                        onEndCallback?.();
-                        return;
-                    }
-
-                    await onMessage(parsedMessage);
+                if (!parsedMessage) {
+                    continue;
                 }
+
+                if (parsedMessage === true) {
+                    await onEnd();
+                    onEndCallback?.();
+                    return;
+                }
+
+                await onMessage(parsedMessage);
             }
         });
 

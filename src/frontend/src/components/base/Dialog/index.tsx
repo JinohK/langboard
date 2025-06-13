@@ -77,7 +77,7 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
         return (
             <Portal>
                 <Overlay onPointerDown={onOverlayClick} className={overlayClassName}>
-                    <ScrollArea.Root className="size-full" viewportClassName="max-h-screen sm:py-2" viewportId={viewportId}>
+                    <ScrollArea.Root className="size-full" viewportClassName="max-h-screen sm:py-2 [&>div]:h-full" viewportId={viewportId}>
                         <Flex justify="center" items="center" size="full">
                             <DialogPrimitive.Content
                                 ref={ref}

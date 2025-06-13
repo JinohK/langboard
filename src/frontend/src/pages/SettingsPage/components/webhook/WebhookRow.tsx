@@ -1,6 +1,7 @@
 import { Checkbox, Table } from "@/components/base";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { AppSettingModel } from "@/core/models";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import WebhookName from "@/pages/SettingsPage/components/webhook/WebhookName";
 import WebhookURL from "@/pages/SettingsPage/components/webhook/WebhookURL";
 import { memo } from "react";
@@ -28,15 +29,17 @@ const WebhookRow = memo(({ url, selectedWebhooks, setSelectedWebhooks }: IWebhoo
     };
 
     return (
-        <Table.Row>
-            <Table.Cell className="w-12 p-0 text-center">
-                <Checkbox checked={selectedWebhooks.some((value) => value === url.uid)} onClick={toggleSelect} />
-            </Table.Cell>
-            <WebhookName />
-            <WebhookURL />
-            <Table.Cell className="w-1/6 max-w-0 truncate text-center">{createdAt}</Table.Cell>
-            <Table.Cell className="w-1/6 max-w-0 truncate text-center">{lastUsedAt}</Table.Cell>
-        </Table.Row>
+        <ModelRegistry.AppSettingModel.Provider model={url}>
+            <Table.Row>
+                <Table.Cell className="w-12 p-0 text-center">
+                    <Checkbox checked={selectedWebhooks.some((value) => value === url.uid)} onClick={toggleSelect} />
+                </Table.Cell>
+                <WebhookName />
+                <WebhookURL />
+                <Table.Cell className="w-1/6 max-w-0 truncate text-center">{createdAt}</Table.Cell>
+                <Table.Cell className="w-1/6 max-w-0 truncate text-center">{lastUsedAt}</Table.Cell>
+            </Table.Row>
+        </ModelRegistry.AppSettingModel.Provider>
     );
 });
 

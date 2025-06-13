@@ -113,7 +113,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
             }
         });
         setIsSending(false);
-        if (fromServer) {
+        if ((isSending || isUploading) && fromServer) {
             Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
         }
     }, []);

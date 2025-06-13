@@ -101,7 +101,7 @@ function LangflowPage() {
             success: () => {
                 langflowUrl.setting_value = newUrlValue;
                 langflowApiKey.setting_value = newApiKeyValue;
-                return t("settings.successes.API key name changed successfully.");
+                return t("settings.successes.Langflow information changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

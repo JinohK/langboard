@@ -94,7 +94,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             if (tried >= 5) {
                 Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
                 setIsSending(false);
-                return null;
+                return true;
             }
 
             ++tried;
@@ -116,7 +116,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             }
 
             const isSent = trySendChat();
-            if (TypeUtils.isBool(isSent) && !isSent) {
+            if (!isSent) {
                 triedTimeout = setTimeout(trySendChatWrapper, 1000);
             }
         };

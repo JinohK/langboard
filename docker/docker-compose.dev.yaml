@@ -12,6 +12,10 @@ services:
     environment:
       - ENVIRONMENT=development
 
+  celeryworker:
+    environment:
+      - ENVIRONMENT=development
+
 networks:
   net:
     name: ${PROJECT_NAME}_network

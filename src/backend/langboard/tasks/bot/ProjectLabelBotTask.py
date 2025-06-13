@@ -16,7 +16,7 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @Broker.wrap_async_task_decorator
 async def project_label_created(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectLabelCreated)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectLabelCreated, create_label_data(user_or_bot, project, label), project
     )
 
@@ -25,7 +25,7 @@ async def project_label_created(user_or_bot: User | Bot, project: Project, label
 @Broker.wrap_async_task_decorator
 async def project_label_updated(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectLabelUpdated)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectLabelUpdated, create_label_data(user_or_bot, project, label), project
     )
 
@@ -34,7 +34,7 @@ async def project_label_updated(user_or_bot: User | Bot, project: Project, label
 @Broker.wrap_async_task_decorator
 async def project_label_deleted(user_or_bot: User | Bot, project: Project, label: ProjectLabel):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectLabelDeleted)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectLabelDeleted, create_label_data(user_or_bot, project, label), project
     )
 

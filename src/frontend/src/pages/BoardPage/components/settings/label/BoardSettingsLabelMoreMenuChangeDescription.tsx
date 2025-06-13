@@ -61,7 +61,7 @@ function BoardSettingsLabelMoreChangeDescription(): JSX.Element {
 }
 
 interface IBoardSettingsLabelMoreChangeDescriptionFormProps {
-    descriptionInputRef: React.RefObject<HTMLInputElement | null>;
+    descriptionInputRef: React.Ref<HTMLInputElement>;
 }
 
 function BoardSettingsLabelMoreChangeDescriptionForm({ descriptionInputRef }: IBoardSettingsLabelMoreChangeDescriptionFormProps): JSX.Element {

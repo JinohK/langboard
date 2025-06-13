@@ -245,12 +245,11 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                             e.stopPropagation();
                         }}
                     >
-                        <InfiniteScroller
+                        <InfiniteScroller.NoVirtual
                             scrollable={() => document.getElementById(columnId)}
                             loadMore={nextPage}
                             loader={<SkeletonBoardColumnCard key={createShortUUID()} />}
                             hasMore={hasMore}
-                            threshold={63}
                             className="pb-2.5"
                         >
                             <SortableContext id={columnId} items={cardUIDs}>
@@ -265,7 +264,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                 </Flex>
                             </SortableContext>
                             <BoardColumnAddCard />
-                        </InfiniteScroller>
+                        </InfiniteScroller.NoVirtual>
                     </Card.Content>
                 </ScrollArea.Root>
                 <Card.Footer className="px-3 py-2">

@@ -9,6 +9,10 @@ services:
     environment:
       - ENVIRONMENT=production
 
+  celeryworker:
+    environment:
+      - ENVIRONMENT=production
+
 networks:
   net:
     name: ${PROJECT_NAME}_network

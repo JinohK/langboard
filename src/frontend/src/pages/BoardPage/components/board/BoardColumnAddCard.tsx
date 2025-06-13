@@ -15,7 +15,7 @@ const BoardColumnAddCard = memo(() => {
                 <></>
             ) : (
                 <Box
-                    mt="3"
+                    mt="1.5"
                     maxH="28"
                     py="1"
                     pl="2"

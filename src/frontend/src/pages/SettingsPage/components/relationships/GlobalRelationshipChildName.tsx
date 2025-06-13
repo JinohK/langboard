@@ -54,7 +54,7 @@ function GlobalRelationshipChildName() {
     return (
         <Table.Cell className={cn("w-1/6 max-w-0 truncate text-center", isEditing && "py-0")}>
             {!isEditing ? (
-                <Box cursor="text" onClick={() => changeMode("edit")}>
+                <Box cursor="text" className="truncate" onClick={() => changeMode("edit")}>
                     {childName}
                 </Box>
             ) : (

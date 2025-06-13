@@ -129,7 +129,7 @@ async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
         else:
             return
 
-    BotTaskHelper.run(bot, BotDefaultTrigger.BotCronScheduled, data, project)
+    await BotTaskHelper.run(bot, BotDefaultTrigger.BotCronScheduled, data, project)
 
     old_status = bot_schedule.status
     if bot_schedule.running_type == BotScheduleRunningType.Onetime:

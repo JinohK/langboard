@@ -30,9 +30,9 @@ export interface IBoardColumnCardDragData extends ISortableDragData<ProjectCard.
     type: "Card";
 }
 
-export function SkeletonBoardColumnCard() {
+export function SkeletonBoardColumnCard({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     return (
-        <Card.Root className="border-transparent shadow-transparent">
+        <Card.Root className="border-transparent shadow-transparent" ref={ref}>
             <Card.Header className="relative block py-4">
                 <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] leading-tight">
                     <Skeleton display="inline-block" h="4" className="w-3/4" />

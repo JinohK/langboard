@@ -1,5 +1,5 @@
 {
-  "name": "langboard",
+  "name": "langboard-ui",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -42,6 +42,7 @@
     "@radix-ui/react-toolbar": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.6",
     "@tanstack/react-query": "^5.76.1",
+    "@tanstack/react-virtual": "^3.13.10",
     "@udecode/cmdk": "^0.2.1",
     "@udecode/cn": "^48.0.3",
     "@udecode/plate": "^48.0.5",

@@ -10,7 +10,7 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 @BotTaskDataHelper.schema(BotDefaultTrigger.BotCreated)
 @Broker.wrap_async_task_decorator
 async def bot_created(bot: Bot):
-    BotTaskHelper.run(bot, BotDefaultTrigger.BotCreated, {})
+    await BotTaskHelper.run(bot, BotDefaultTrigger.BotCreated, {})
 
 
 @BotTaskDataHelper.project_schema(BotDefaultTrigger.BotProjectAssigned)
@@ -18,7 +18,7 @@ async def bot_created(bot: Bot):
 async def bot_project_assigned(user: User, project: Project, old_bot_ids: list[int], new_bot_ids: list[int]):
     first_time_assigned_bots = BotTaskDataHelper.get_updated_assigned_bots(old_bot_ids, new_bot_ids)
 
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         first_time_assigned_bots,
         BotDefaultTrigger.BotProjectAssigned,
         BotTaskDataHelper.create_project(user, project),
@@ -63,4 +63,4 @@ async def bot_mentioned(
     if not project:
         return
 
-    BotTaskHelper.run(bot, BotDefaultTrigger.BotMentioned, {"mentioned_in": mentioned_in, **data}, project)
+    await BotTaskHelper.run(bot, BotDefaultTrigger.BotMentioned, {"mentioned_in": mentioned_in, **data}, project)

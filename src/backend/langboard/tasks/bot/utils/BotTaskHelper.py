@@ -38,7 +38,7 @@ class BotTaskHelper:
         return records
 
     @staticmethod
-    def run(
+    async def run(
         bots: Bot | list[Bot],
         event: BotTriggerCondition | BotDefaultTrigger,
         data: dict[str, Any],
@@ -47,7 +47,7 @@ class BotTaskHelper:
         if not isinstance(bots, list):
             bots = [bots]
 
-        run_webhook(event.value, data)
+        await run_webhook(event.value, data)
 
         for bot in bots:
             if project:

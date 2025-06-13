@@ -10,11 +10,11 @@ import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fn
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface ITrackingRowProps {
+export interface ITrackingRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
     checkitem: ProjectCheckitem.TModel;
 }
 
-function TrackingRow({ checkitem }: ITrackingRowProps): JSX.Element | null {
+function TrackingRow({ checkitem, className, ...props }: ITrackingRowProps): JSX.Element | null {
     const [t] = useTranslation();
     const { navigate } = useDashboard();
     const projectUIDRef = useRef<string>("");
@@ -37,19 +37,20 @@ function TrackingRow({ checkitem }: ITrackingRowProps): JSX.Element | null {
     }
 
     return (
-        <ModelRegistry.ProjectCheckitem.Provider model={checkitem}>
-            <Table.Row
-                className={cn(
-                    "relative",
-                    isChecked &&
-                        cn(
-                            "text-muted-foreground [&_button]:text-primary/70",
-                            "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
-                            "after:h-px after:w-full after:bg-border"
-                        )
-                )}
-            >
-                <Table.Cell className="w-1/4 text-center">
+        <Table.FlexRow
+            {...props}
+            className={cn(
+                isChecked &&
+                    cn(
+                        "text-muted-foreground [&_button]:text-primary/70",
+                        "after:absolute after:left-0 after:top-1/2 after:z-50 after:-translate-y-1/2",
+                        "after:h-px after:w-full after:bg-border"
+                    ),
+                className
+            )}
+        >
+            <ModelRegistry.ProjectCheckitem.Provider model={checkitem}>
+                <Table.FlexCell className="w-1/4 text-center">
                     <Button
                         variant="link"
                         className="size-auto p-0"
@@ -57,17 +58,17 @@ function TrackingRow({ checkitem }: ITrackingRowProps): JSX.Element | null {
                     >
                         {title}
                     </Button>
-                </Table.Cell>
-                <Table.Cell className="w-1/4 text-center">
+                </Table.FlexCell>
+                <Table.FlexCell className="w-1/4 text-center">
                     <TrackingRowCardTitle projectUIDRef={projectUIDRef} />
-                </Table.Cell>
-                <Table.Cell className="w-1/6 text-center">{status}</Table.Cell>
-                <Table.Cell className="w-1/6 text-center">{startedAt}</Table.Cell>
-                <Table.Cell className="w-1/6 text-center">
+                </Table.FlexCell>
+                <Table.FlexCell className="w-1/6 text-center">{status}</Table.FlexCell>
+                <Table.FlexCell className="w-1/6 text-center">{startedAt}</Table.FlexCell>
+                <Table.FlexCell className="w-1/6 text-center">
                     <TrackingRowTimeTaken />
-                </Table.Cell>
-            </Table.Row>
-        </ModelRegistry.ProjectCheckitem.Provider>
+                </Table.FlexCell>
+            </ModelRegistry.ProjectCheckitem.Provider>
+        </Table.FlexRow>
     );
 }
 

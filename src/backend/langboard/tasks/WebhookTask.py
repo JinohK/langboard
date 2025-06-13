@@ -5,15 +5,16 @@ from ..core.db import DbSession, SqlBuilder
 from ..core.utils.DateTime import now
 from ..models import AppSetting
 from ..models.AppSetting import AppSettingType
+from ..publishers import AppSettingPublisher
 from .models import WebhookModel
 
 
 @Broker.wrap_async_task_decorator
 async def webhook_task(model: WebhookModel):
-    run_webhook(model.event, model.data)
+    await run_webhook(model.event, model.data)
 
 
-def run_webhook(event: str, data: dict[str, Any]):
+async def run_webhook(event: str, data: dict[str, Any]):
     settings = _get_webhook_settings()
     if not settings:
         return
@@ -40,6 +41,13 @@ def run_webhook(event: str, data: dict[str, Any]):
         setting.total_used_count += 1
         with DbSession.use(readonly=False) as db:
             db.update(setting)
+        await AppSettingPublisher.setting_updated(
+            setting.get_uid(),
+            {
+                "last_used_at": setting.last_used_at,
+                "total_used_count": setting.total_used_count,
+            },
+        )
 
 
 def _get_webhook_settings() -> list[AppSetting]:

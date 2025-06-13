@@ -73,7 +73,7 @@ function BoardCardChecklistMoreMenuEdit(): JSX.Element {
 }
 
 interface IBoardCardChecklistMoreMenuEditFormProps {
-    titleInputRef: React.RefObject<HTMLInputElement | null>;
+    titleInputRef: React.Ref<HTMLInputElement>;
 }
 
 function BoardCardChecklistMoreMenuEditForm({ titleInputRef }: IBoardCardChecklistMoreMenuEditFormProps): JSX.Element {

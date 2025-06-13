@@ -22,7 +22,10 @@
     "Aceept": "Aceept",
     "Decline": "Decline"
   },
-  "types": { },
+  "types": {
+    "SI": "SI",
+    "SW": "SW"
+  },
   "successes": {
     "Assigned members updated and invited new users successfully.": "Assigned members updated and invited new users successfully.",
     "Column name changed successfully.": "Column name changed successfully.",
@@ -32,7 +35,8 @@
     "Project closed.": "Project closed.",
     "You are not a member of this project.": "You are not a member of this project.",
     "missing": {
-      "title": "Enter a title."
+      "title": "Enter a title.",
+      "project_type": "Select a project type."
     }
   },
   "settings": {

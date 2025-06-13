@@ -37,8 +37,8 @@ const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
                         scrollRef.current = el;
                         if (TypeUtils.isFunction(ref)) {
                             ref(el);
-                        } else if (TypeUtils.isObject(ref)) {
-                            (ref as React.RefObject<HTMLDivElement | null>).current = el;
+                        } else if (TypeUtils.isObject<React.RefObject<HTMLDivElement | null>>(ref)) {
+                            ref.current = el;
                         }
                     }}
                     onWheel={disableAutoScroll}

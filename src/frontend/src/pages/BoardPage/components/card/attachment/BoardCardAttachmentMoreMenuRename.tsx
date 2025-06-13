@@ -67,7 +67,7 @@ function BoardCardAttachmentMoreMenuRename(): JSX.Element {
 }
 
 interface IBoardCardAtthcmentMoreMenuRenameFormProps {
-    nameInputRef: React.RefObject<HTMLInputElement | null>;
+    nameInputRef: React.Ref<HTMLInputElement>;
 }
 
 function BoardCardAtthcmentMoreMenuRenameForm({ nameInputRef }: IBoardCardAtthcmentMoreMenuRenameFormProps): JSX.Element {

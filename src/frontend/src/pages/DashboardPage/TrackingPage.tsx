@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Box, Flex, Loading, Skeleton, Table } from "@/components/base";
+import { Box, Flex, Loading, Skeleton } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetTrackingList from "@/controllers/api/dashboard/useGetTrackingList";
@@ -48,7 +48,7 @@ function TrackingPage(): JSX.Element {
             setTimeout(async () => {
                 await mutateAsync({});
                 resolve(true);
-            }, 2500);
+            }, 1000);
         });
     }, [isLastPage, mutateAsync]);
 
@@ -57,45 +57,29 @@ function TrackingPage(): JSX.Element {
     }, [mutateAsync, checkitems]);
 
     return (
-        <InfiniteScroller
-            scrollable={() => document.getElementById("main")}
-            loadMore={nextPage}
-            hasMore={!isLastPage}
-            threshold={18}
-            loader={
-                <Flex justify="center" mt="6" key={createShortUUID()}>
-                    <Loading size="3" variant="secondary" />
-                </Flex>
-            }
-            className="!overflow-y-hidden"
-        >
-            <Table.Root>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.Head className="w-1/4 text-center" title={t("dashboard.Checkitem")}>
-                            {t("dashboard.Checkitem")}
-                        </Table.Head>
-                        <Table.Head className="w-1/4 text-center" title={t("dashboard.Card")}>
-                            {t("dashboard.Card")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Status")}>
-                            {t("dashboard.Status")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Started at")}>
-                            {t("dashboard.Started at")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Time taken")}>
-                            {t("dashboard.Time taken")}
-                        </Table.Head>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {checkitems.map((checkitem) => (
-                        <TrackingRow checkitem={checkitem} key={`tracking-list-${checkitem.uid}`} />
-                    ))}
-                </Table.Body>
-            </Table.Root>
-        </InfiniteScroller>
+        <>
+            <InfiniteScroller.Table.Default
+                columns={[
+                    { name: t("dashboard.Checkitem"), className: "w-1/4 text-center" },
+                    { name: t("dashboard.Card"), className: "w-1/4 text-center" },
+                    { name: t("dashboard.Status"), className: "w-1/6 text-center" },
+                    { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
+                    { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
+                ]}
+                scrollable={() => document.getElementById("main")}
+                loadMore={nextPage}
+                hasMore={!isLastPage}
+                loader={
+                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
+                        <Loading size="3" variant="secondary" />
+                    </Flex>
+                }
+            >
+                {checkitems.map((checkitem) => (
+                    <TrackingRow checkitem={checkitem} key={`tracking-list-${checkitem.uid}`} />
+                ))}
+            </InfiniteScroller.Table.Default>
+        </>
     );
 }
 

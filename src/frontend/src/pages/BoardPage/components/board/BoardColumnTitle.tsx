@@ -87,7 +87,7 @@ export interface IBoardColumnTitleInput {
     columnName: string;
     isArchive?: bool;
     disabled?: bool;
-    inputRef: React.RefObject<HTMLInputElement>;
+    inputRef: React.Ref<HTMLInputElement>;
 }
 
 export const BoardColumnTitleInput = memo(

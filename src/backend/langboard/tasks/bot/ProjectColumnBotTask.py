@@ -16,7 +16,7 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @Broker.wrap_async_task_decorator
 async def project_column_created(user_or_bot: User | Bot, project: Project, column: ProjectColumn):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectColumnCreated)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectColumnCreated, create_column_data(user_or_bot, project, column), project
     )
 
@@ -25,7 +25,7 @@ async def project_column_created(user_or_bot: User | Bot, project: Project, colu
 @Broker.wrap_async_task_decorator
 async def project_column_name_changed(user_or_bot: User | Bot, project: Project, column: ProjectColumn):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectColumnNameChanged)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectColumnNameChanged, create_column_data(user_or_bot, project, column), project
     )
 
@@ -34,7 +34,7 @@ async def project_column_name_changed(user_or_bot: User | Bot, project: Project,
 @Broker.wrap_async_task_decorator
 async def project_column_deleted(user_or_bot: User | Bot, project: Project, column: ProjectColumn):
     bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.ProjectColumnDeleted)
-    BotTaskHelper.run(
+    await BotTaskHelper.run(
         bots, BotTriggerCondition.ProjectColumnDeleted, create_column_data(user_or_bot, project, column), project
     )
 

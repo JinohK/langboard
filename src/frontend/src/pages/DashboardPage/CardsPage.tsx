@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Box, Flex, Loading, Skeleton, Table } from "@/components/base";
+import { Box, Flex, Loading, Skeleton } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetDashboardCards from "@/controllers/api/dashboard/useGetDashboardCards";
@@ -54,42 +54,28 @@ function CardsPage(): JSX.Element {
     }, [mutateAsync, cards]);
 
     return (
-        <InfiniteScroller
-            scrollable={() => document.getElementById("main")}
-            loadMore={nextPage}
-            hasMore={!isLastPage}
-            threshold={18}
-            loader={
-                <Flex justify="center" mt="6" key={createShortUUID()}>
-                    <Loading size="3" variant="secondary" />
-                </Flex>
-            }
-            className="!overflow-y-hidden"
-        >
-            <Table.Root>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.Head className="w-1/3 text-center" title={t("dashboard.Title")}>
-                            {t("dashboard.Title")}
-                        </Table.Head>
-                        <Table.Head className="w-1/3 text-center" title={t("dashboard.Column")}>
-                            {t("dashboard.Column")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Started at")}>
-                            {t("dashboard.Started at")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("dashboard.Time taken")}>
-                            {t("dashboard.Time taken")}
-                        </Table.Head>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {cards.map((card) => (
-                        <CardRow card={card} key={`cards-list-${card.uid}`} />
-                    ))}
-                </Table.Body>
-            </Table.Root>
-        </InfiniteScroller>
+        <>
+            <InfiniteScroller.Table.Default
+                columns={[
+                    { name: t("dashboard.Title"), className: "w-1/3 text-center" },
+                    { name: t("dashboard.Column"), className: "w-1/3 text-center" },
+                    { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
+                    { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
+                ]}
+                scrollable={() => document.getElementById("main")}
+                loadMore={nextPage}
+                hasMore={!isLastPage}
+                loader={
+                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
+                        <Loading size="3" variant="secondary" />
+                    </Flex>
+                }
+            >
+                {cards.map((card) => (
+                    <CardRow card={card} key={`cards-list-${card.uid}`} />
+                ))}
+            </InfiniteScroller.Table.Default>
+        </>
     );
 }
 
