@@ -150,7 +150,6 @@ services:
       - MAIL_SSL_TLS=${MAIL_SSL_TLS}
     working_dir: /app
     volumes:
-      - ../src/socket/dist:/app/dist:rw
       - ../src/socket/package.json:/app/package.json
       - ../src/socket/yarn.lock:/app/yarn.lock
       - ../src/resources:/app/resources
