@@ -1,7 +1,7 @@
 import { PORT } from "@/Constants";
 import * as http from "http";
 import { WebSocketServer } from "ws";
-import Terminal from "@/core/utils/Terminal";
+import Logger from "@/core/utils/Logger";
 import Routes from "@/core/server/Routes";
 import SocketManager from "@/core/server/SocketManager";
 
@@ -25,7 +25,7 @@ class _Server {
 
         this.#callbackMap.before().then(() => {
             this.#httpServer.listen(PORT, () => {
-                Terminal.cyan(`WebSocket server is running on ws://127.0.0.1:${PORT}\n`);
+                Logger.cyan(`WebSocket server is running on ws://127.0.0.1:${PORT}\n`);
                 this.#callbackMap.after?.();
             });
         });

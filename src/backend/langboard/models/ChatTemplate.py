@@ -1,7 +1,8 @@
 from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 
 
 class ChatTemplate(BaseSqlModel, table=True):

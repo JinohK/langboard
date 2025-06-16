@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Any, Literal, TypeVar, cast, overload
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.db import DbSession, SqlBuilder
 from ...core.db.Models import BaseSqlModel
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SafeDateTime
 from ...models import Bot, Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, User, UserActivity
 from ...models.BaseActivityModel import BaseActivityModel
 from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam
@@ -22,14 +22,14 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_user(
-        self, user: TUserParam, pagination: Pagination, refer_time: datetime
+        self, user: TUserParam, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], int, User] | None: ...
     @overload
     async def get_list_by_user(
-        self, user: TUserParam, pagination: Pagination, refer_time: datetime, only_count: Literal[True]
+        self, user: TUserParam, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]
     ) -> int | None: ...
     async def get_list_by_user(
-        self, user: TUserParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
+        self, user: TUserParam, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False
     ) -> tuple[list[dict[str, Any]], int, User] | int | None:
         user = ServiceHelper.get_by_param(User, user)
         if not user:
@@ -60,7 +60,7 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_project_assignee(
-        self, project: TProjectParam, assignee: TUserParam | TBotParam, pagination: Pagination, refer_time: datetime
+        self, project: TProjectParam, assignee: TUserParam | TBotParam, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], int, User | Bot] | None: ...
     @overload
     async def get_list_by_project_assignee(
@@ -68,7 +68,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         assignee: TUserParam | TBotParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: Literal[True],
     ) -> int | None: ...
     async def get_list_by_project_assignee(
@@ -76,7 +76,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         assignee: TUserParam | TBotParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, User | Bot] | int | None:
         project = ServiceHelper.get_by_param(Project, project)
@@ -123,14 +123,14 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: datetime
+        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], int, Project] | None: ...
     @overload
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: datetime, only_count: Literal[True]
+        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]
     ) -> int | None: ...
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: datetime, only_count: bool = False
+        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False
     ) -> tuple[list[dict[str, Any]], int, Project] | int | None:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
@@ -146,7 +146,7 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_card(
-        self, project: TProjectParam, card: TCardParam, pagination: Pagination, refer_time: datetime
+        self, project: TProjectParam, card: TCardParam, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | None: ...
     @overload
     async def get_list_by_card(
@@ -154,7 +154,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         card: TCardParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: Literal[True],
     ) -> int: ...
     async def get_list_by_card(
@@ -162,7 +162,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         card: TCardParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | int | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
@@ -180,7 +180,7 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_wiki(
-        self, project: TProjectParam, wiki: TWikiParam, pagination: Pagination, refer_time: datetime
+        self, project: TProjectParam, wiki: TWikiParam, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | None: ...
     @overload
     async def get_list_by_wiki(
@@ -188,7 +188,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         wiki: TWikiParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: Literal[True],
     ) -> int | None: ...
     async def get_list_by_wiki(
@@ -196,7 +196,7 @@ class ActivityService(BaseService):
         project: TProjectParam,
         wiki: TWikiParam,
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | int | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
@@ -218,7 +218,7 @@ class ActivityService(BaseService):
         self,
         activity_class: type[_TActivityModel],
         pagination: Pagination,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         list_query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | None = None,
         outdated_query: SelectOfScalar[int] | None = None,
         **where_clauses,
@@ -240,7 +240,7 @@ class ActivityService(BaseService):
     async def __count_new_records(
         self,
         activity_class: type[_TActivityModel],
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         outdated_query: SelectOfScalar[int] | None = None,
         **where_clauses,
     ) -> int:

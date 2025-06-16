@@ -1,4 +1,3 @@
-from datetime import datetime
 from os import environ
 from subprocess import run as subprocess_run
 from typing import Any, Literal, overload
@@ -8,6 +7,7 @@ from ..Constants import CRON_TAB_FILE
 from ..core.db import BaseSqlModel, DbSession, SqlBuilder
 from ..core.schema import Pagination
 from ..core.service import ServiceHelper
+from ..core.types import SafeDateTime
 from ..core.utils.decorators import staticclass
 from ..models import Bot, BotSchedule
 from ..models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
@@ -25,7 +25,7 @@ class BotScheduleHelper:
         filterable_model: BaseSqlModel,
         as_api: Literal[False],
         pagination: Pagination | None = None,
-        refer_time: datetime | None = None,
+        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
     ) -> list[BotSchedule]: ...
     @staticmethod
@@ -35,7 +35,7 @@ class BotScheduleHelper:
         filterable_model: BaseSqlModel,
         as_api: Literal[True],
         pagination: Pagination | None = None,
-        refer_time: datetime | None = None,
+        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
     ) -> list[dict[str, Any]]: ...
     @staticmethod
@@ -44,7 +44,7 @@ class BotScheduleHelper:
         filterable_model: BaseSqlModel,
         as_api: bool,
         pagination: Pagination | None = None,
-        refer_time: datetime | None = None,
+        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
     ) -> list[BotSchedule] | list[dict[str, Any]]:
         query = SqlBuilder.select.table(BotSchedule).where(
@@ -162,8 +162,8 @@ class BotScheduleHelper:
 
     @staticmethod
     def get_default_status_with_dates(
-        running_type: BotScheduleRunningType | None, start_at: datetime | None, end_at: datetime | None
-    ) -> tuple[BotScheduleStatus, datetime | None, datetime | None] | None:
+        running_type: BotScheduleRunningType | None, start_at: SafeDateTime | None, end_at: SafeDateTime | None
+    ) -> tuple[BotScheduleStatus, SafeDateTime | None, SafeDateTime | None] | None:
         if not running_type or running_type == BotScheduleRunningType.Infinite:
             return BotScheduleStatus.Started, None, None
 
@@ -188,8 +188,8 @@ class BotScheduleHelper:
         target_model: BaseSqlModel,
         filterable_model: BaseSqlModel | None = None,
         running_type: BotScheduleRunningType | None = None,
-        start_at: datetime | None = None,
-        end_at: datetime | None = None,
+        start_at: SafeDateTime | None = None,
+        end_at: SafeDateTime | None = None,
     ) -> BotSchedule | None:
         if not BotScheduleHelper.is_valid_interval_str(interval_str):
             return None
@@ -236,8 +236,8 @@ class BotScheduleHelper:
         target_model: BaseSqlModel | None = None,
         filterable_model: BaseSqlModel | None = None,
         running_type: BotScheduleRunningType | None = None,
-        start_at: datetime | None = None,
-        end_at: datetime | None = None,
+        start_at: SafeDateTime | None = None,
+        end_at: SafeDateTime | None = None,
     ) -> tuple[BotSchedule, dict[str, Any]] | None:
         bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
         if not bot_schedule:

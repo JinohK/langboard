@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Any, Literal
-from ...core.db import BaseSqlModel, ChatContentModel, DbSession, SnowflakeID, SqlBuilder
+from ...core.db import BaseSqlModel, ChatContentModel, DbSession, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SafeDateTime, SnowflakeID
 from ...models import ChatHistory, ChatTemplate, User
 from .Types import TChatTemplateParam, TUserParam
 
@@ -18,7 +18,7 @@ class ChatService(BaseService):
         user: User,
         filterable_table: str,
         filterable_id: SnowflakeID | str,
-        refer_time: datetime,
+        refer_time: SafeDateTime,
         pagination: Pagination,
     ) -> list[dict[str, Any]]:
         filterable_id = ServiceHelper.convert_id(filterable_id)

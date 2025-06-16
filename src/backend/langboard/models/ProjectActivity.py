@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.db import EnumLikeType, SnowflakeID, SnowflakeIDField
+from ..core.db import EnumLikeType, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .BaseActivityModel import BaseActivityModel
 from .Card import Card
 from .Project import Project

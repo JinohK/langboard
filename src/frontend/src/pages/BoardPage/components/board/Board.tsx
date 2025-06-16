@@ -5,7 +5,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
 import { ROUTES } from "@/core/routing/constants";
-import BoardColumnCard, { IBoardColumnCardProps } from "@/pages/BoardPage/components/board/BoardColumnCard";
+import { BoardColumnCardOverlay, IBoardColumnCardProps } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import BoardColumn, { IBoardColumnProps, SkeletonBoardColumn } from "@/pages/BoardPage/components/board/BoardColumn";
 import BoardFilter, { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
@@ -226,7 +226,7 @@ const BoardResult = memo(() => {
 
             <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragMove={onDragOverOrMove}>
                 <ScrollArea.Root viewportId={viewportId} className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
-                    <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" onPointerDown={onPointerDown}>
+                    <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max" onPointerDown={onPointerDown}>
                         <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
@@ -241,7 +241,7 @@ const BoardResult = memo(() => {
                     createPortal(
                         <DragOverlay>
                             {activeColumn && <BoardColumn column={activeColumn} callbacksRef={callbacksRef} isOverlay />}
-                            {activeCard && <BoardColumnCard card={activeCard} isOverlay />}
+                            {activeCard && <BoardColumnCardOverlay card={activeCard} />}
                         </DragOverlay>,
                         document.body
                     )}

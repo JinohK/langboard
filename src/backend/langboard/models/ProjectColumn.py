@@ -1,6 +1,7 @@
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from ..core.db import SnowflakeIDField, SoftDeleteModel
+from ..core.types import SnowflakeID
 from .Project import Project
 
 

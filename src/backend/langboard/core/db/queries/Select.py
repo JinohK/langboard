@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Literal, Mapping, Optional, Sequence, TypeGuard, TypeVar, cast, overload
 from sqlalchemy import Column, func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -6,8 +5,8 @@ from sqlalchemy.sql._typing import _DMLTableArgument
 from sqlmodel import select
 from sqlmodel.sql._expression_select_gen import _TCCA
 from sqlmodel.sql.expression import Select, SelectOfScalar
+from ...types import SafeDateTime, SnowflakeID
 from ..Models import SoftDeleteModel
-from ..SnowflakeID import SnowflakeID
 
 
 _T0 = TypeVar("_T0")
@@ -22,34 +21,34 @@ _T8 = TypeVar("_T8")
 _T9 = TypeVar("_T9")
 
 _TScalar_0 = TypeVar(
-    "_TScalar_0", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_0", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_1 = TypeVar(
-    "_TScalar_1", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_1", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_2 = TypeVar(
-    "_TScalar_2", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_2", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_3 = TypeVar(
-    "_TScalar_3", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_3", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_4 = TypeVar(
-    "_TScalar_4", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_4", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_5 = TypeVar(
-    "_TScalar_5", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_5", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_6 = TypeVar(
-    "_TScalar_6", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_6", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_7 = TypeVar(
-    "_TScalar_7", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_7", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_8 = TypeVar(
-    "_TScalar_8", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_8", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 _TScalar_9 = TypeVar(
-    "_TScalar_9", Column, Sequence, Mapping, SnowflakeID, Optional[Any], datetime, float, int, bool, bytes, str
+    "_TScalar_9", Column, Sequence, Mapping, SnowflakeID, Optional[Any], SafeDateTime, float, int, bool, bytes, str
 )
 
 

@@ -1,7 +1,7 @@
 from ...ai import BotDefaultTrigger, BotScheduleHelper
 from ...core.broker import Broker
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
-from ...core.utils.DateTime import now
+from ...core.db import DbSession, SqlBuilder
+from ...core.types import SafeDateTime, SnowflakeID
 from ...core.utils.ModelUtils import get_model_by_table_name
 from ...models import Bot, BotSchedule, Card, Project, ProjectColumn
 from ...models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
@@ -50,7 +50,7 @@ async def run_scheduled_bots_cron(interval_str: str):
 
 
 async def _check_bot_schedule_runnable(interval_str: str):
-    current_time = now()
+    current_time = SafeDateTime.now()
     records = []
     with DbSession.use(readonly=True) as db:
         result = db.exec(
@@ -135,7 +135,7 @@ async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
     if bot_schedule.running_type == BotScheduleRunningType.Onetime:
         await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
     elif bot_schedule.running_type == BotScheduleRunningType.Duration:
-        if bot_schedule.end_at and bot_schedule.end_at < now():
+        if bot_schedule.end_at and bot_schedule.end_at < SafeDateTime.now():
             await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
 
     if project and bot_schedule.status != old_status:

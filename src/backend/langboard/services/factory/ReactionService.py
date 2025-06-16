@@ -1,5 +1,6 @@
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService
+from ...core.types import SnowflakeID
 from ...models import Bot, User
 from ...models.BaseReactionModel import BaseReactionModel
 from .Types import TUserOrBot

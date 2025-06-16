@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from ..core.db import DateTimeField, EditorContentModel, ModelColumnType, SnowflakeIDField, SoftDeleteModel
+from ..core.types import SafeDateTime, SnowflakeID
 from .Project import Project
 from .ProjectColumn import ProjectColumn
 
@@ -13,9 +13,9 @@ class Card(SoftDeleteModel, table=True):
     title: str = Field(nullable=False)
     description: EditorContentModel = Field(default=EditorContentModel(), sa_type=ModelColumnType(EditorContentModel))
     ai_description: str | None = Field(default=None, sa_type=TEXT)
-    deadline_at: datetime | None = DateTimeField(default=None, nullable=True)
+    deadline_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
     order: int = Field(default=0, nullable=False)
-    archived_at: datetime | None = DateTimeField(default=None, nullable=True)
+    archived_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

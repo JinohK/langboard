@@ -1,8 +1,8 @@
-from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeIDField
+from ..core.types import SafeDateTime, SnowflakeID
 from .Bot import Bot
 
 
@@ -36,8 +36,8 @@ class BotSchedule(BaseSqlModel, table=True):
     filterable_table: str | None = Field(None, nullable=True)
     filterable_id: SnowflakeID | None = SnowflakeIDField(nullable=True)
     interval_str: str = Field(nullable=False)
-    start_at: datetime | None = DateTimeField(default=None, nullable=True)
-    end_at: datetime | None = DateTimeField(default=None, nullable=True)
+    start_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
+    end_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

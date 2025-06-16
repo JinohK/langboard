@@ -1,5 +1,6 @@
 from enum import Enum
-from .BaseRoleModel import BaseRoleModel, SnowflakeID, SnowflakeIDField
+from ..core.types import SnowflakeID
+from .BaseRoleModel import BaseRoleModel, SnowflakeIDField
 from .Project import Project
 
 

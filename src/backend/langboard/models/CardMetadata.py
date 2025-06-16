@@ -1,5 +1,6 @@
 from typing import Any
-from ..core.db import SnowflakeID, SnowflakeIDField
+from ..core.db import SnowflakeIDField
+from ..core.types import SnowflakeID
 from .BaseMetadataModel import BaseMetadataModel
 from .Card import Card
 

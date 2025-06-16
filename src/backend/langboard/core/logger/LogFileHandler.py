@@ -1,4 +1,3 @@
-from datetime import datetime
 from logging import NOTSET, LogRecord
 from pathlib import Path
 from typing import Optional, TextIO
@@ -7,7 +6,7 @@ from rich.segment import Segment
 from rich.text import Text
 from rich.traceback import Traceback
 from ...Constants import LOGGING_DIR
-from ..utils.DateTime import now
+from ..types import SafeDateTime
 from ..utils.String import concat
 
 
@@ -51,7 +50,7 @@ class LogFileHandler(RichHandler):
                 message = concat(message, "\n")
             message = Text.from_markup(message).plain
 
-        self._stream.write(f"[{datetime.fromtimestamp(int(record.created))}] {message}")
+        self._stream.write(f"[{SafeDateTime.fromtimestamp(int(record.created))}] {message}")
         self._stream.flush()
         self._stream.close()
         self._stream = None
@@ -59,7 +58,7 @@ class LogFileHandler(RichHandler):
     def _get_log_file_name(self):
         if self._is_terminal:
             return "terminal.log"
-        return "{:%Y-%m-%d}.log".format(now())
+        return "{:%Y-%m-%d}.log".format(SafeDateTime.now())
 
     def _markup(self, record: LogRecord):
         original_width = self.console._width

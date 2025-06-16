@@ -149,7 +149,7 @@ const PopoverInner = memo((props: IPopoverProps) => {
 });
 
 export interface IFormProps {
-    TagContent?: React.ComponentType<TAssigneeSelecItem & { assignee: TAssignee; readOnly: bool } & Record<string, unknown>>;
+    TagContent?: React.ComponentType<TAssigneeSelecItem & { assignee: TAssignee; label?: string; readOnly: bool } & Record<string, unknown>>;
     tagContentProps?: Record<string, unknown>;
     allSelectables: TAssignee[];
     originalAssignees: TAssignee[];
@@ -225,7 +225,7 @@ const Form = memo(
                         onValueChange={handleValueChange}
                         items={selectables}
                         createTagContent={
-                            ((props: TAssigneeSelecItem & { readOnly: bool }) => <TagContent {...props} {...tagContentProps} />) as (
+                            ((props: TAssigneeSelecItem & { readOnly: bool; label?: string }) => <TagContent {...props} {...tagContentProps} />) as (
                                 props: TSelectItem & { readOnly: bool }
                             ) => JSX.Element
                         }
@@ -272,7 +272,7 @@ const Form = memo(
     }
 );
 
-function FormTagContent({ assignee, ...props }: TAssigneeSelecItem & { readOnly: bool } & Record<string, unknown>) {
+function FormTagContent({ assignee, ...props }: TAssigneeSelecItem & { readOnly: bool; label?: string } & Record<string, unknown>) {
     const Comp = assignee?.MODEL_NAME === BotModel.Model.MODEL_NAME ? MultiSelectBotTagContent : MultiSelectUserTagContent;
 
     if (props.isNew) {
@@ -284,22 +284,16 @@ function FormTagContent({ assignee, ...props }: TAssigneeSelecItem & { readOnly:
 
 function MultiSelectBotTagContent({
     assignee,
+    label,
     readOnly,
     ...props
-}: TAssigneeSelecItem & { assignee: BotModel.TModel; readOnly: bool } & Record<string, unknown>) {
+}: TAssigneeSelecItem & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
     const name = assignee.useField("name");
     const botUname = assignee.useField("bot_uname");
     const botAsUser = assignee.useForeignField<User.TModel>("as_user")[0];
 
     return (
-        <UserAvatar.Root
-            user={botAsUser}
-            customTrigger={
-                <>
-                    {name} ({botUname})
-                </>
-            }
-        >
+        <UserAvatar.Root user={botAsUser} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>
             <UserAvatarDefaultList user={botAsUser} {...props} />
         </UserAvatar.Root>
     );
@@ -307,14 +301,15 @@ function MultiSelectBotTagContent({
 
 function MultiSelectUserTagContent({
     assignee,
+    label,
     readOnly,
     ...props
-}: TAssigneeSelecItem & { assignee: User.TModel; readOnly: bool } & Record<string, unknown>) {
+}: TAssigneeSelecItem & { assignee: User.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
     const firstname = assignee.useField("firstname");
     const lastname = assignee.useField("lastname");
 
     return (
-        <UserAvatar.Root user={assignee} customTrigger={`${firstname} ${lastname}`}>
+        <UserAvatar.Root user={assignee} customTrigger={label ?? `${firstname} ${lastname}`}>
             <UserAvatarDefaultList user={assignee} {...props} />
         </UserAvatar.Root>
     );

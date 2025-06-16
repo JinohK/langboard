@@ -12,7 +12,11 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
 import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardColumnAddCardButton";
-import BoardColumnCard, { IBoardColumnCardProps, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
+import BoardColumnCard, {
+    BoardColumnCardOverlay,
+    IBoardColumnCardProps,
+    SkeletonBoardColumnCard,
+} from "@/pages/BoardPage/components/board/BoardColumnCard";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { memo, useCallback, useMemo, useReducer } from "react";
@@ -229,7 +233,7 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                     viewportId={columnId}
                     mutable={updated}
                     onScroll={() => {
-                        ProjectCard.Model.getModels((model) => model.isHoverCardOpened).forEach((model) => {
+                        ProjectCard.Model.getModels((model) => !!model.isHoverCardOpened).forEach((model) => {
                             model.isHoverCardOpened = false;
                         });
                     }}
@@ -259,7 +263,11 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                             return null;
                                         }
 
-                                        return <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} />;
+                                        return isOverlay ? (
+                                            <BoardColumnCardOverlay key={`${column.uid}-${card.uid}-overlay`} card={card} isColumnDragging />
+                                        ) : (
+                                            <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} />
+                                        );
                                     })}
                                 </Flex>
                             </SortableContext>

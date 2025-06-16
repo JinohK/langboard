@@ -2,8 +2,7 @@ from typing import Any
 from pydantic import BaseModel
 from ...Constants import CACHE_TYPE, DATA_DIR
 from ..caching import Cache
-from ..db import SnowflakeID
-from ..utils.DateTime import now
+from ..types import SafeDateTime, SnowflakeID
 from ..utils.String import create_short_unique_id
 
 
@@ -36,7 +35,7 @@ BROADCAST_DIR.mkdir(parents=True, exist_ok=True)
 async def record_model(
     event: str | DispatcherModel, data: dict[str, Any] | None = None, file_only: bool = False
 ) -> str:
-    now_str = str(now().timestamp()).replace(".", "_")
+    now_str = str(SafeDateTime.now().timestamp()).replace(".", "_")
     random_str = create_short_unique_id(10)
 
     model = DispatcherModel(event=event, data=data or {}) if isinstance(event, str) else event

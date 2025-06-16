@@ -16,10 +16,9 @@ from ...Constants import (
     PROJECT_NAME,
     PROJECT_VERSION,
 )
-from ..db import SnowflakeID
 from ..filter import AuthFilter
 from ..routing.AppExceptionHandlingRoute import AppExceptionHandlingRoute
-from ..utils.DateTime import now
+from ..types import SafeDateTime, SnowflakeID
 from ..utils.decorators import staticclass
 from ..utils.Encryptor import Encryptor
 
@@ -138,7 +137,7 @@ class AuthSecurity:
 
     @staticmethod
     def __create_payload(user_id: int, expiration: timedelta) -> dict[str, Any]:
-        expiry = now() + expiration
+        expiry = SafeDateTime.now() + expiration
         return {"sub": str(user_id), "exp": timegm(expiry.utctimetuple()), "iss": PROJECT_NAME}
 
     @staticmethod
@@ -149,5 +148,5 @@ class AuthSecurity:
             raise InvalidTokenError("Invalid token structure")
         if payload["iss"] != PROJECT_NAME or not isinstance(payload["sub"], str) or not isinstance(payload["exp"], int):
             raise InvalidTokenError("Invalid token structure")
-        if payload["exp"] <= timegm(now().utctimetuple()):
+        if payload["exp"] <= timegm(SafeDateTime.now().utctimetuple()):
             raise ExpiredSignatureError("Signature has expired")

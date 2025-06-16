@@ -1,7 +1,8 @@
 from abc import abstractmethod
 from typing import Any
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .Bot import Bot
 from .User import User
 

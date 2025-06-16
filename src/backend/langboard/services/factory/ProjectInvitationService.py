@@ -4,8 +4,9 @@ from urllib.parse import urlparse
 from sqlalchemy import String
 from sqlalchemy import cast as sql_cast
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SnowflakeID
 from ...core.utils.String import concat, generate_random_string
 from ...models import Project, ProjectAssignedUser, ProjectInvitation, User, UserEmail, UserNotification
 from ...models.UserNotification import NotificationType

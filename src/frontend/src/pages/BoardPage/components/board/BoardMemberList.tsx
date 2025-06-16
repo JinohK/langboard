@@ -108,13 +108,15 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
                     item = item as BotModel.TModel;
                     return `${item.name} (${item.bot_uname})`;
+                }
+
+                item = item as User.TModel;
+                const isInvited = invitedMembers.some((invited) => invited.uid === (item as User.TModel).uid);
+                const invitedText = isInvited ? ` (${t("project.invited")})` : "";
+                if (item.isValidUser()) {
+                    return `${item.firstname} ${item.lastname}${invitedText}`.trim();
                 } else {
-                    item = item as User.TModel;
-                    if (item.isValidUser()) {
-                        return `${item.firstname} ${item.lastname}`.trim();
-                    } else {
-                        return item.email;
-                    }
+                    return `${item.email} ${invitedText}`;
                 }
             }}
             placeholder={t("myAccount.Add an email...")}

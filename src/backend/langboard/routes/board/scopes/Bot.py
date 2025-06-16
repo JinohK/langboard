@@ -1,8 +1,7 @@
-from datetime import datetime
-from pydantic import AwareDatetime, Field
+from pydantic import Field
 from ....core.routing import BaseFormModel, form_model
 from ....core.schema import Pagination
-from ....core.utils.DateTime import now
+from ....core.types import SafeDateTime
 from ....models import BotSchedule, Card, ProjectColumn
 from ....models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 
@@ -11,7 +10,7 @@ class BotSchedulePagination(Pagination):
     status: BotScheduleStatus | None = Field(
         default=None, title=f"Status: {', '.join(BotScheduleStatus.__members__.keys())} (Default: None)"
     )
-    refer_time: datetime = now()
+    refer_time: SafeDateTime = SafeDateTime.now()
 
 
 class BotScheduleSearchForm(Pagination):
@@ -29,11 +28,11 @@ class CreateBotCronTimeForm(BaseFormModel):
     )
     target_table: str = Field(..., title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})")
     target_uid: str = Field(..., title="Target UID")
-    start_at: AwareDatetime | None = Field(
+    start_at: SafeDateTime | None = Field(
         default=None,
         title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
     )
-    end_at: AwareDatetime | None = Field(
+    end_at: SafeDateTime | None = Field(
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )
@@ -51,11 +50,11 @@ class UpdateBotCronTimeForm(BaseFormModel):
         title=f"Target table name ({ProjectColumn.__tablename__}, {Card.__tablename__})",
     )
     target_uid: str | None = Field(default=None, title="Target UID")
-    start_at: AwareDatetime | None = Field(
+    start_at: SafeDateTime | None = Field(
         default=None,
         title=f"Start time (Required if running_type is one of {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_START_AT])})",
     )
-    end_at: AwareDatetime | None = Field(
+    end_at: SafeDateTime | None = Field(
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )

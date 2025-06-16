@@ -1,7 +1,8 @@
 from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from ..core.db import SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from ..core.db import SnowflakeIDField, SoftDeleteModel
+from ..core.types import SnowflakeID
 from .User import User
 
 

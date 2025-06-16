@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import Enum
 from json import dumps as json_dumps
 from json import loads as json_loads
@@ -6,6 +5,7 @@ from typing import Any
 from sqlalchemy import TEXT
 from sqlmodel import Field
 from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType
+from ..core.types import SafeDateTime
 
 
 class AppSettingType(Enum):
@@ -19,7 +19,7 @@ class AppSetting(BaseSqlModel, table=True):
     setting_type: AppSettingType = Field(nullable=False, sa_type=EnumLikeType(AppSettingType))
     setting_name: str = Field(nullable=False)
     setting_value: str = Field(default="", sa_type=TEXT)
-    last_used_at: datetime | None = DateTimeField(default=None, nullable=True)
+    last_used_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
     total_used_count: int = Field(default=0, nullable=False)
 
     @staticmethod

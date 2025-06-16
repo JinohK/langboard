@@ -11,10 +11,9 @@ from sqlmodel import Session, update
 from sqlmodel.sql.base import Executable
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ..logger import Logger
-from ..utils.DateTime import now
+from ..types import SafeDateTime, SnowflakeID
 from .DbEngine import DbEngine
 from .Models import BaseSqlModel, SoftDeleteModel
-from .SnowflakeID import SnowflakeID
 
 
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
@@ -189,7 +188,7 @@ class DbSession:
                 return
             if obj.deleted_at is not None:
                 return
-            obj.deleted_at = now()
+            obj.deleted_at = SafeDateTime.now()
             self.__session.add(obj)
         except Exception:
             pass
@@ -287,7 +286,7 @@ class DbSession:
             )
             and not purge
         ):
-            statement = update(statement.table).values(deleted_at=now()).where(statement.whereclause)  # type: ignore
+            statement = update(statement.table).values(deleted_at=SafeDateTime.now()).where(statement.whereclause)  # type: ignore
 
         should_return_count = not isinstance(statement, Select) and not isinstance(statement, SelectOfScalar)
 

@@ -1,5 +1,6 @@
 from typing import Any
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .Card import Card
 from .ProjectLabel import ProjectLabel
 

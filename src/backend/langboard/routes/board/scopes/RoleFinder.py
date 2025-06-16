@@ -1,6 +1,6 @@
 from typing import Any
 from sqlmodel.sql.expression import SelectOfScalar
-from ....core.db import SnowflakeID
+from ....core.types import SnowflakeID
 from ....models import Project, ProjectAssignedBot, ProjectRole
 
 

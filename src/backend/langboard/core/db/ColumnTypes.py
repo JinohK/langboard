@@ -5,8 +5,7 @@ from pydantic_core import PydanticUndefined as Undefined
 from sqlalchemy import JSON, DateTime
 from sqlalchemy.types import TEXT, VARCHAR, BigInteger, TypeDecorator
 from sqlmodel import Field, SQLModel
-from ..utils.DateTime import now
-from .SnowflakeID import SnowflakeID
+from ..types import SafeDateTime, SnowflakeID
 
 
 TModelColumn = TypeVar("TModelColumn", bound=BaseModel)
@@ -98,7 +97,7 @@ class SecretStrType(TypeDecorator):
 def DateTimeField(default: Callable | None, nullable: bool, onupdate: bool = False):
     kwargs = {"nullable": nullable, "sa_type": DateTime(timezone=True)}
     if onupdate:
-        kwargs["sa_column_kwargs"] = {"onupdate": now}
+        kwargs["sa_column_kwargs"] = {"onupdate": SafeDateTime.now}
 
     if default is None:
         return Field(default=None, **kwargs)

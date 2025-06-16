@@ -5,10 +5,9 @@ from pydantic import BaseModel, SecretStr, model_serializer
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
-from ..utils.DateTime import now
+from ..types import SafeDateTime, SnowflakeID
 from ..utils.StringCase import StringCase
 from .ColumnTypes import DateTimeField, SnowflakeIDField
-from .SnowflakeID import SnowflakeID
 
 
 _TColumnType = TypeVar("_TColumnType")
@@ -21,8 +20,8 @@ class BaseSqlModel(ABC, SQLModel):
     __pydantic_post_init__ = "model_post_init"
 
     id: SnowflakeID = SnowflakeIDField(primary_key=True)
-    created_at: datetime = DateTimeField(default=now, nullable=False)
-    updated_at: datetime = DateTimeField(default=now, nullable=False, onupdate=True)
+    created_at: SafeDateTime = DateTimeField(default=SafeDateTime.now, nullable=False)
+    updated_at: SafeDateTime = DateTimeField(default=SafeDateTime.now, nullable=False, onupdate=True)
 
     @property
     def __change_key(self) -> str:
@@ -246,7 +245,7 @@ class BaseSqlModel(ABC, SQLModel):
 class SoftDeleteModel(BaseSqlModel):
     """Base model for soft-deleting objects in the database inherited from :class:`BaseSqlModel`."""
 
-    deleted_at: datetime | None = DateTimeField(default=None, nullable=True)
+    deleted_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
 
 class EditorContentModel(BaseModel):

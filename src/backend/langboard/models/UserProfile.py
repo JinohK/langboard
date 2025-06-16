@@ -1,6 +1,7 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .User import User
 
 

@@ -1,6 +1,7 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import DateTimeField, EnumLikeType, ModelColumnType, SecretStr, SecretStrType, SnowflakeID, SnowflakeIDField, {base_class}
+from ..core.db import DateTimeField, EnumLikeType, ModelColumnType, SecretStr, SecretStrType, SnowflakeIDField, {base_class}
+from ..core.types import SafeDateTime, SnowflakeID
 
 
 class {class_name}({base_class}, table=True):

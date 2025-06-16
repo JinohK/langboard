@@ -1,11 +1,10 @@
-from datetime import datetime
 from typing import Any, ClassVar
 from bcrypt import checkpw, gensalt, hashpw
 from sqlmodel import Field
 from ..core.db.ColumnTypes import DateTimeField, ModelColumnType, SecretStr, SecretStrType
 from ..core.db.Models import SoftDeleteModel
-from ..core.db.SnowflakeID import SnowflakeID
 from ..core.storage import FileModel
+from ..core.types import SafeDateTime, SnowflakeID
 from ..core.utils.String import generate_random_string
 
 
@@ -22,7 +21,7 @@ class User(SoftDeleteModel, table=True):
     is_admin: bool = Field(default=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
     preferred_lang: str = Field(default="en-US", nullable=False)
-    activated_at: datetime | None = DateTimeField(default=None, nullable=True)
+    activated_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

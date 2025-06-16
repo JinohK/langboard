@@ -1,9 +1,8 @@
-from datetime import datetime
 from typing import Any, Literal, cast, overload
 from ...core.db import DbSession, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
-from ...core.utils.DateTime import calculate_time_diff_in_seconds, now
+from ...core.types import SafeDateTime
 from ...models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import CheckitemPublisher
@@ -63,7 +62,7 @@ class CheckitemService(BaseService):
         return checkitems
 
     async def get_track_list(
-        self, user: User, pagination: Pagination, refer_time: datetime
+        self, user: User, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         query = (
             SqlBuilder.select.tables(Checkitem, Card, Project)
@@ -235,7 +234,7 @@ class CheckitemService(BaseService):
         card: TCardParam,
         checkitem: TCheckitemParam,
         status: CheckitemStatus,
-        current_time: datetime | None = None,
+        current_time: SafeDateTime | None = None,
         should_publish: bool = True,
         from_api: bool = False,
     ) -> bool | None:
@@ -250,7 +249,7 @@ class CheckitemService(BaseService):
             return True
 
         if not current_time:
-            current_time = now()
+            current_time = SafeDateTime.now()
 
         if status != CheckitemStatus.Started:
             if not checkitem.user_id:
@@ -258,7 +257,7 @@ class CheckitemService(BaseService):
 
             if checkitem.status == CheckitemStatus.Started:
                 last_timer_record = cast(CheckitemTimerRecord, await self.__get_timer_record(checkitem, "last"))
-                accumulated_seconds = calculate_time_diff_in_seconds(current_time, last_timer_record.created_at)
+                accumulated_seconds = int((current_time - last_timer_record.created_at).total_seconds())
                 checkitem.accumulated_seconds += accumulated_seconds
                 with DbSession.use(readonly=False) as db:
                     db.update(checkitem)

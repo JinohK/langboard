@@ -42,11 +42,23 @@ export interface IUserAvatarListProps extends Omit<React.ComponentProps<typeof F
     listAlign?: TUserAvatarProps["listAlign"];
     projectUID?: string;
     avatarHoverProps?: TUserAvatarProps["hoverProps"];
+    onlyList?: bool;
 }
 
 export const UserAvatarList = memo(
     forwardRef<HTMLDivElement, IUserAvatarListProps>((props: IUserAvatarListProps, ref) => {
-        const { maxVisible, className, users, size = "default", spacing = "2", listAlign, projectUID, avatarHoverProps, ...flexProps } = props;
+        const {
+            maxVisible,
+            className,
+            users,
+            size = "default",
+            spacing = "2",
+            listAlign,
+            projectUID,
+            avatarHoverProps,
+            onlyList,
+            ...flexProps
+        } = props;
         const moreUsersCount = users.length - maxVisible;
 
         return (
@@ -59,6 +71,7 @@ export const UserAvatarList = memo(
                         listAlign={listAlign}
                         className="hover:z-50"
                         hoverProps={avatarHoverProps}
+                        onlyAvatar={onlyList}
                     >
                         <UserAvatarDefaultList user={user} projectUID={projectUID} />
                     </UserAvatar.Root>

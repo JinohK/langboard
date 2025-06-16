@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.12 AS base
 
 WORKDIR /app
 
@@ -15,15 +15,17 @@ RUN python -m venv $VIRTUAL_ENV
 
 RUN apt-get update && apt-get install -y
 RUN apt update && apt install -y
-RUN apt install libuv1-dev libssl-dev cron systemd -y
+RUN apt install libuv1-dev libssl-dev systemd -y
 
 RUN curl -sSL https://install.python-poetry.org | python3 - --git https://github.com/python-poetry/poetry.git@master
 RUN poetry --version
-
-RUN cron
 
 COPY ./src/backend ./src/backend
 COPY pyproject.toml poetry.lock README.md alembic.ini ./
 
 RUN poetry lock --no-update
 RUN poetry install
+
+FROM base AS with-cron
+RUN apt-get update && apt-get install -y cron
+RUN cron

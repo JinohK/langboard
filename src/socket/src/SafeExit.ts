@@ -1,7 +1,7 @@
 import Consumer from "@/core/broadcast/Consumer";
 import DB from "@/core/db/DB";
 import Server from "@/core/server/Server";
-import Terminal from "@/core/utils/Terminal";
+import Logger from "@/core/utils/Logger";
 import TypeUtils from "@/core/utils/TypeUtils";
 
 const EXIT_SIGNALS = [
@@ -49,7 +49,7 @@ for (let i = 0; i < EXIT_SIGNALS.length; ++i) {
     const signal = EXIT_SIGNALS[i];
     try {
         process.on(signal, async () => {
-            Terminal.green("Shutting down gracefully...\n");
+            Logger.green("Shutting down gracefully...\n");
 
             await Consumer.stop();
             try {
@@ -77,12 +77,12 @@ for (let i = 0; i < ERROR_SIGNALS.length; ++i) {
     process.on(signal, (error) => {
         if (TypeUtils.isError(error)) {
             if (error.message.includes("address already in use")) {
-                Terminal.red("Port is already in use. Please stop the server before restarting.\n");
+                Logger.red("Port is already in use. Please stop the server before restarting.\n");
                 return;
             }
         }
-        Terminal.red(`Error occurred: ${error}\n`);
-        Terminal.cyan("Restarting the server...\n");
+        Logger.red(`Error occurred: ${error}\n`);
+        Logger.cyan("Restarting the server...\n");
 
         Server.restart();
     });

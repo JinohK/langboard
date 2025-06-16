@@ -1,7 +1,8 @@
 from typing import Any
 from sqlmodel import Field
-from ..core.db import ModelColumnType, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from ..core.db import ModelColumnType, SnowflakeIDField, SoftDeleteModel
 from ..core.storage import FileModel
+from ..core.types import SnowflakeID
 from .Card import Card
 from .User import User
 

@@ -3,7 +3,8 @@ from json import loads as json_loads
 from typing import Any
 from sqlmodel import Field
 from ..Constants import COMMON_SECRET_KEY
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 from ..core.utils.Encryptor import Encryptor
 from .Project import Project
 

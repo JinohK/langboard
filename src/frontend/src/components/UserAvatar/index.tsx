@@ -24,6 +24,7 @@ interface IBaseUserAvatarProps {
     customName?: React.ReactNode;
     customTrigger?: React.ReactNode;
     hoverProps?: Record<string, string>;
+    onlyAvatar?: bool;
 }
 
 interface IUserAvatarPropsWithName extends IBaseUserAvatarProps {
@@ -63,8 +64,8 @@ export const getAvatarHoverCardAttrs = (user: User.TModel): Record<string, strin
     };
 };
 
-const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
-    const { user, children, listAlign, customTrigger, hoverProps = {} } = props;
+const Root = memo((props: TUserAvatarProps): JSX.Element => {
+    const { user, children, listAlign, customTrigger, hoverProps = {}, onlyAvatar } = props;
     const [isOpened, setIsOpened] = useState(false);
     const userType = user.useField("type");
     const firstname = user.useField("firstname");
@@ -96,7 +97,7 @@ const Root = memo(({ ...props }: TUserAvatarProps): JSX.Element => {
         trigger = <Trigger {...props} isOpened={isOpened} setIsOpened={setIsOpened} />;
     }
 
-    if (!children || isDeletedUser) {
+    if (onlyAvatar || !children || isDeletedUser) {
         return <>{trigger}</>;
     }
 

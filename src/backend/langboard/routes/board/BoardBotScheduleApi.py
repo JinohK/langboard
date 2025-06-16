@@ -4,7 +4,7 @@ from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.service import ServiceHelper
-from ...core.utils.DateTime import now
+from ...core.types import SafeDateTime
 from ...models import Bot, BotSchedule, Card, Project, ProjectColumn, ProjectRole
 from ...models.BotSchedule import BotScheduleRunningType
 from ...models.ProjectRole import ProjectRoleAction
@@ -158,7 +158,7 @@ async def schedule_bot_crons(
         return JsonResponse(content=ApiErrorCode.VA3001, status_code=status.HTTP_400_BAD_REQUEST)
 
     if form.running_type == BotScheduleRunningType.Duration and not form.start_at:
-        form.start_at = now()
+        form.start_at = SafeDateTime.now()
 
     if not BotScheduleHelper.get_default_status_with_dates(
         running_type=form.running_type, start_at=form.start_at, end_at=form.end_at

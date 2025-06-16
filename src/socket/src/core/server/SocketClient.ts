@@ -7,7 +7,7 @@ import ISocketClient, { TSocketSendParams } from "@/core/server/ISocketClient";
 import Hocus from "@/core/server/Hocus";
 import ESocketStatus from "@/core/server/ESocketStatus";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
-import Terminal from "@/core/utils/Terminal";
+import Logger from "@/core/utils/Logger";
 
 class SocketClient implements ISocketClient {
     #ws: WebSocket;
@@ -51,7 +51,7 @@ class SocketClient implements ISocketClient {
             },
             (error) => {
                 if (error) {
-                    Terminal.red("WebSocket send error", error, "\n");
+                    Logger.red("WebSocket send error", error, "\n");
                 }
             }
         );

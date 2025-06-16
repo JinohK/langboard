@@ -1,10 +1,10 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SafeDateTime, SnowflakeID
 from ...core.utils.Converter import convert_python_data
-from ...core.utils.DateTime import now
 from ...models import (
     Bot,
     Card,
@@ -294,7 +294,7 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.exec(
                 SqlBuilder.update.table(ProjectAssignedUser)
-                .values(last_viewed_at=now())
+                .values(last_viewed_at=SafeDateTime.now())
                 .where(
                     (ProjectAssignedUser.column("project_id") == project.id)
                     & (ProjectAssignedUser.column("user_id") == user.id)
@@ -577,7 +577,7 @@ class ProjectService(BaseService):
             started_checkitems = result.all()
 
         checkitem_service = self._get_service_by_name("checkitem")
-        current_time = now()
+        current_time = SafeDateTime.now()
         for checkitem, card in started_checkitems:
             await checkitem_service.change_status(
                 user, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False

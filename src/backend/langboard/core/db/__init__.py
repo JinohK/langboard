@@ -11,7 +11,6 @@ from .ColumnTypes import (
 )
 from .DbSession import DbSession
 from .Models import BaseSqlModel, ChatContentModel, EditorContentModel, SoftDeleteModel
-from .SnowflakeID import SnowflakeID
 from .SqlBuilder import SqlBuilder
 
 
@@ -26,7 +25,6 @@ __all__ = [
     "ChatContentModel",
     "SecretStr",
     "SecretStrType",
-    "SnowflakeID",
     "SnowflakeIDType",
     "SnowflakeIDField",
     "EnumLikeType",

@@ -1,6 +1,6 @@
-from datetime import datetime
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 from ..core.routing import SocketTopic
+from ..core.types import SafeDateTime
 from ..core.utils.decorators import staticclass
 from ..models import Project, ProjectColumn
 
@@ -89,7 +89,7 @@ class ProjectColumnPublisher(BaseSocketPublisher):
         project: Project,
         column: ProjectColumn,
         archive_column: ProjectColumn,
-        archived_at: datetime,
+        archived_at: SafeDateTime,
         count_all_cards_in_column: int,
     ):
         model = {

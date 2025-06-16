@@ -1,6 +1,7 @@
 from typing import Any, Literal, Sequence, cast, overload
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SnowflakeID
 from ...models import Card, CardRelationship, GlobalCardRelationshipType, Project
 from ...publishers import CardRelationshipPublisher
 from ...tasks.activities import CardRelationshipActivityTask

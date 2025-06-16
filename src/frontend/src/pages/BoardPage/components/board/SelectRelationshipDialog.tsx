@@ -14,8 +14,7 @@ export interface ISelectRelationshipDialogProps {
 }
 
 const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
-    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const { setIsCollapseOpened } = params;
+    const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const { selectCardViewType, selectedRelationshipUIDs, setCardSelection } = useBoardRelationshipController();
     const { globalRelationshipTypes } = useBoard();
     const [t] = useTranslation();
@@ -34,7 +33,7 @@ const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelatio
 
     const changeIsOpened = (isOpened: bool) => {
         if (selectedRelationshipUID && !isOpened) {
-            setIsCollapseOpened(true);
+            card.isCollapseOpened = true;
         }
         setCardSelection(card.uid, selectedRelationshipUID);
         setIsOpened(isOpened);

@@ -48,7 +48,6 @@ def render_item(type_: str, obj: Any, autogen_context: AutogenContext):
             return f"ModelColumnType({model_type_class.__name__})"
         elif obj.__class__.__name__ == "SnowflakeIDType":
             autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeIDType")
-            autogen_context.imports.add(f"from {obj.__class__.__module__} import SnowflakeID")
             return "SnowflakeIDType"
         elif obj.__class__.__name__ == "CSVType":
             autogen_context.imports.add(f"from {obj.__class__.__module__} import CSVType")

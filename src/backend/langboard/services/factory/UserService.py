@@ -4,11 +4,11 @@ from typing import Any, cast
 from urllib.parse import urlparse
 from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
 from ...core.caching import Cache
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
 from ...core.storage import FileModel
+from ...core.types import SafeDateTime, SnowflakeID
 from ...core.utils.Converter import convert_python_data
-from ...core.utils.DateTime import now
 from ...core.utils.Encryptor import Encryptor
 from ...core.utils.String import concat, generate_random_string
 from ...models import User, UserEmail, UserProfile
@@ -143,14 +143,14 @@ class UserService(BaseService):
         return user, cache_key, cached_token_info.get("extra")
 
     async def activate(self, user: User) -> None:
-        user.activated_at = now()
+        user.activated_at = SafeDateTime.now()
         with DbSession.use(readonly=False) as db:
             db.update(user)
 
         UserActivityTask.activated(user)
 
     async def verify_subemail(self, subemail: UserEmail) -> None:
-        subemail.verified_at = now()
+        subemail.verified_at = SafeDateTime.now()
         with DbSession.use(readonly=False) as db:
             db.update(subemail)
 

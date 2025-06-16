@@ -1,11 +1,10 @@
-from datetime import datetime
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.db import DbSession, EditorContentModel, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, EditorContentModel, SqlBuilder
 from ...core.schema import Pagination
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SafeDateTime, SnowflakeID
 from ...core.utils.Converter import convert_python_data
-from ...core.utils.DateTime import now
 from ...models import (
     Bot,
     BotSchedule,
@@ -147,7 +146,7 @@ class CardService(BaseService):
         return cards
 
     async def get_dashboard_list(
-        self, user: User, pagination: Pagination, refer_time: datetime
+        self, user: User, pagination: Pagination, refer_time: SafeDateTime
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         query = (
             SqlBuilder.select.tables(Card, Project, ProjectColumn)
@@ -400,7 +399,7 @@ class CardService(BaseService):
                 return None
 
             card.project_column_id = new_column.id
-            card.archived_at = now() if new_column.is_archive else None
+            card.archived_at = SafeDateTime.now() if new_column.is_archive else None
 
         original_order = card.order
 
@@ -575,7 +574,7 @@ class CardService(BaseService):
             started_checkitems = result.all()
 
         checkitem_service = self._get_service(CheckitemService)
-        current_time = now()
+        current_time = SafeDateTime.now()
         for checkitem in started_checkitems:
             await checkitem_service.change_status(
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False

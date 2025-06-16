@@ -1,3 +1,35 @@
+x-server-common-env: &server-common-env
+  PROJECT_NAME: ${PROJECT_NAME}
+  PROJECT_SHORT_NAME: ${PROJECT_SHORT_NAME}
+  PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
+
+x-server-env: &server-env
+  <<: *server-common-env
+  TERMINAL_LOGGING_LEVEL: ${TERMINAL_LOGGING_LEVEL}
+  FILE_LOGGING_LEVEL: ${FILE_LOGGING_LEVEL}
+  LOGGING_DIR: ${LOGGING_DIR}
+  MAIN_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
+  READONLY_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
+  DB_TIMEOUT: ${DB_TIMEOUT}
+  DB_TCP_USER_TIMEOUT: ${DB_TCP_USER_TIMEOUT}
+  CACHE_TYPE: redis
+  CACHE_URL: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
+  BROADCAST_TYPE: kafka
+  BROADCAST_URLS: ${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
+  COMMON_SECRET_KEY: ${COMMON_SECRET_KEY}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+  JWT_ALGORITHM: ${JWT_ALGORITHM}
+  JWT_AT_EXPIRATION: ${JWT_AT_EXPIRATION}
+  JWT_RT_EXPIRATION: ${JWT_RT_EXPIRATION}
+  MAIL_FROM: ${MAIL_FROM}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_SERVER: ${MAIL_SERVER}
+  MAIL_PORT: ${MAIL_PORT}
+  MAIL_STARTTLS: ${MAIL_STARTTLS}
+  MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+
 services:
   server:
     init: true
@@ -20,6 +52,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - socket
     networks:
       - net
     restart: always
@@ -30,11 +63,9 @@ services:
     build:
       context: ../src/frontend
     environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
-      - SOCKET_URL=${SOCKET_URL}
-      - API_URL=${API_URL}
-      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
+      <<: *server-common-env
+      SOCKET_URL: ${SOCKET_URL}
+      API_URL: ${API_URL}
     working_dir: /app
     command: yarn build
     volumes:
@@ -52,44 +83,21 @@ services:
     container_name: ${PROJECT_NAME}_backend
     build:
       context: ../
+      target: with-cron
     environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
-      - BACKEND_HOST=${PROJECT_NAME}_backend
-      - BACKEND_PORT=${BACKEND_PORT}
-      - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
-      - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
-      - LOGGING_DIR=${LOGGING_DIR}
-      - CRON_TAB_FILE=${CRON_TAB_FILE}
-      - SENTRY_DSN=${SENTRY_DSN}
-      - MAIN_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
-      - READONLY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
-      - DB_TIMEOUT=${DB_TIMEOUT}
-      - DB_TCP_USER_TIMEOUT=${DB_TCP_USER_TIMEOUT}
-      - CACHE_TYPE=redis
-      - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
-      - BROADCAST_TYPE=kafka
-      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
-      - COMMON_SECRET_KEY=${COMMON_SECRET_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ALGORITHM=${JWT_ALGORITHM}
-      - JWT_AT_EXPIRATION=${JWT_AT_EXPIRATION}
-      - JWT_RT_EXPIRATION=${JWT_RT_EXPIRATION}
-      - LOCAL_STORAGE_DIR=${LOCAL_STORAGE_DIR}
-      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
-      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
-      - S3_REGION_NAME=${S3_REGION_NAME}
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - FRONTEND_PORT=${NGINX_FRONTEND_EXPOSE_PORT}
-      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
-      - MAIL_FROM=${MAIL_FROM}
-      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_SERVER=${MAIL_SERVER}
-      - MAIL_PORT=${MAIL_PORT}
-      - MAIL_STARTTLS=${MAIL_STARTTLS}
-      - MAIL_SSL_TLS=${MAIL_SSL_TLS}
+      <<: *server-env
+      BACKEND_HOST: ${PROJECT_NAME}_backend
+      BACKEND_PORT: ${BACKEND_PORT}
+      CRON_TAB_FILE: ${CRON_TAB_FILE}
+      SENTRY_DSN: ${SENTRY_DSN}
+      JWT_AT_EXPIRATION: ${JWT_AT_EXPIRATION}
+      JWT_RT_EXPIRATION: ${JWT_RT_EXPIRATION}
+      LOCAL_STORAGE_DIR: ${LOCAL_STORAGE_DIR}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_REGION_NAME: ${S3_REGION_NAME}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      FRONTEND_PORT: ${NGINX_FRONTEND_EXPOSE_PORT}
     working_dir: /app
     command: ${PROJECT_NAME} run --workers ${BACKEND_WORKERS_COUNT:-1}
     volumes:
@@ -115,6 +123,9 @@ services:
     <<: *backend
     init: true
     container_name: ${PROJECT_NAME}_celeryworker
+    build:
+      context: ../
+      target: base
     command: langboard run:broker
 
   socket:
@@ -123,31 +134,10 @@ services:
     build:
       context: ../src/socket
     environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-      - PROJECT_SHORT_NAME=${PROJECT_SHORT_NAME}
-      - SERVER_HOST=${PROJECT_NAME}_socket
-      - SOCKET_PORT=${SOCKET_PORT}
-      - TERMINAL_LOGGING_LEVEL=${TERMINAL_LOGGING_LEVEL}
-      - FILE_LOGGING_LEVEL=${FILE_LOGGING_LEVEL}
-      - LOGGING_DIR=${LOGGING_DIR}
-      - MAIN_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
-      - READONLY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
-      - DB_TIMEOUT=${DB_TIMEOUT}
-      - DB_TCP_USER_TIMEOUT=${DB_TCP_USER_TIMEOUT}
-      - CACHE_TYPE=redis
-      - CACHE_URL=redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
-      - BROADCAST_TYPE=kafka
-      - BROADCAST_URLS=${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ALGORITHM=${JWT_ALGORITHM}
-      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
-      - MAIL_FROM=${MAIL_FROM}
-      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_SERVER=${MAIL_SERVER}
-      - MAIL_PORT=${MAIL_PORT}
-      - MAIL_SSL_TLS=${MAIL_SSL_TLS}
+      <<:
+        - *server-common-env
+        - *server-env
+      SOCKET_PORT: ${SOCKET_PORT}
     working_dir: /app
     volumes:
       - ../src/socket/package.json:/app/package.json

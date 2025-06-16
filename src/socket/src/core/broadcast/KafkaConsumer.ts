@@ -1,7 +1,7 @@
 import { BROADCAST_URLS, CACHE_URL, PROJECT_NAME } from "@/Constants";
 import BaseConsumer from "@/core/broadcast/BaseConsumer";
 import JsonUtils from "@/core/utils/JsonUtils";
-import Terminal from "@/core/utils/Terminal";
+import Logger from "@/core/utils/Logger";
 import { Consumer, Kafka } from "kafkajs";
 import { createClient } from "redis";
 
@@ -19,7 +19,7 @@ class KafkaConsumer extends BaseConsumer {
             retry: {
                 retries: Number.MAX_SAFE_INTEGER,
                 restartOnFailure: async (error) => {
-                    Terminal.red("Kafka Client Error", error, "\n");
+                    Logger.red("Kafka Client Error", error, "\n");
                     return true;
                 },
             },
@@ -39,7 +39,7 @@ class KafkaConsumer extends BaseConsumer {
                         url: CACHE_URL,
                         pingInterval: 10000,
                     })
-                        .on("error", (err) => Terminal.red("Redis Client Error", err, "\n"))
+                        .on("error", (err) => Logger.red("Redis Client Error", err, "\n"))
                         .connect();
                 }
 
@@ -81,7 +81,7 @@ class KafkaConsumer extends BaseConsumer {
 
                             await this.emit(topic, data);
                         } catch (error) {
-                            Terminal.red(`Kafka Consumer: Error processing message on topic ${topic}`, error, "\n");
+                            Logger.red(`Kafka Consumer: Error processing message on topic ${topic}`, error, "\n");
                             return;
                         }
                     },
@@ -89,7 +89,7 @@ class KafkaConsumer extends BaseConsumer {
 
                 break;
             } catch (error) {
-                Terminal.red("Error starting consumer", error, "\n");
+                Logger.red("Error starting consumer", error, "\n");
             }
         }
     }

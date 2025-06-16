@@ -1,7 +1,8 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, overload
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
+from ...core.types import SnowflakeID
 from ...core.utils.Converter import convert_python_data
 from ...core.utils.String import generate_random_string
 from ...models import AppSetting, GlobalCardRelationshipType

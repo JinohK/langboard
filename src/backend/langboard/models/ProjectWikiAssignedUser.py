@@ -1,5 +1,6 @@
 from typing import Any
-from ..core.db import BaseSqlModel, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectWiki import ProjectWiki
 from .User import User

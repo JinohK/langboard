@@ -9,13 +9,7 @@ import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelLis
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
 
-interface IBoardColumnCardPreviewProps {
-    labels: ProjectLabel.TModel[];
-    cardMembers: User.TModel[];
-    checklists: ProjectChecklist.TModel[];
-}
-
-function BoardColumnCardPreview({ labels, cardMembers, checklists: flatChecklists }: IBoardColumnCardPreviewProps) {
+function BoardColumnCardPreview() {
     const { project, currentUser } = useBoard();
     const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const { HOVER_CARD_UID_ATTR } = params;
@@ -23,6 +17,9 @@ function BoardColumnCardPreview({ labels, cardMembers, checklists: flatChecklist
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
+    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
+    const cardMembers = card.useForeignField<User.TModel>("members");
+    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
 
     return (

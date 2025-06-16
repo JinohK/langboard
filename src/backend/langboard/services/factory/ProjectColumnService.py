@@ -1,8 +1,8 @@
 from typing import Any, Literal, cast, overload
 from sqlalchemy import func
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
-from ...core.utils.DateTime import now
+from ...core.types import SafeDateTime, SnowflakeID
 from ...models import Card, Project, ProjectColumn, User
 from ...publishers import ProjectColumnPublisher
 from ...tasks.activities import ProjectColumnActivityTask
@@ -205,7 +205,7 @@ class ProjectColumnService(BaseService):
         all_cards_in_column = ServiceHelper.get_all_by(Card, "project_column_id", column.id)
         count_cards_in_column = len(all_cards_in_column)
 
-        current_time = now()
+        current_time = SafeDateTime.now()
 
         query = (
             SqlBuilder.update.table(Card)

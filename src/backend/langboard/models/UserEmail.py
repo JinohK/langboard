@@ -1,14 +1,14 @@
-from datetime import datetime
 from typing import Any
 from sqlmodel import Field
-from ..core.db import DateTimeField, SnowflakeID, SnowflakeIDField, SoftDeleteModel
+from ..core.db import DateTimeField, SnowflakeIDField, SoftDeleteModel
+from ..core.types import SafeDateTime, SnowflakeID
 from .User import User
 
 
 class UserEmail(SoftDeleteModel, table=True):
     user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     email: str = Field(nullable=False)
-    verified_at: datetime | None = DateTimeField(default=None, nullable=True)
+    verified_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

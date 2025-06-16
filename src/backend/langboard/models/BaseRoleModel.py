@@ -2,7 +2,8 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, CSVType, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, CSVType, SnowflakeIDField
+from ..core.types import SnowflakeID
 from .Bot import Bot
 from .User import User
 

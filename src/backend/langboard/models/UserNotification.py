@@ -1,9 +1,9 @@
-from datetime import datetime
 from enum import Enum
 from typing import Any
 from sqlalchemy import JSON
 from sqlmodel import Field
-from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeID, SnowflakeIDField
+from ..core.db import BaseSqlModel, DateTimeField, EnumLikeType, SnowflakeIDField
+from ..core.types import SafeDateTime, SnowflakeID
 from .User import User
 
 
@@ -24,7 +24,7 @@ class UserNotification(BaseSqlModel, table=True):
     notification_type: NotificationType = Field(nullable=False, sa_type=EnumLikeType(NotificationType))
     message_vars: dict[str, Any] = Field(default={}, sa_type=JSON)
     record_list: list[tuple[str, SnowflakeID]] = Field(default=[], sa_type=JSON)
-    read_at: datetime | None = DateTimeField(default=None, nullable=True)
+    read_at: SafeDateTime | None = DateTimeField(default=None, nullable=True)
 
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:

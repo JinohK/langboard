@@ -1,5 +1,6 @@
 from typing import Any, Callable, Generic, TypeVar, cast
-from ....core.db import BaseSqlModel, DbSession, SnowflakeID, SqlBuilder
+from ....core.db import BaseSqlModel, DbSession, SqlBuilder
+from ....core.types import SnowflakeID
 from ....models import (
     Bot,
     Card,

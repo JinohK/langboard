@@ -2,10 +2,10 @@ from datetime import timedelta
 from typing import Any, Literal, TypeVar, cast, overload
 from urllib.parse import urlparse
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
-from ...core.db import BaseSqlModel, DbSession, EditorContentModel, SnowflakeID, SqlBuilder
+from ...core.db import BaseSqlModel, DbSession, EditorContentModel, SqlBuilder
 from ...core.publisher import NotificationPublisher, NotificationPublishModel
 from ...core.service import BaseService, ServiceHelper
-from ...core.utils.DateTime import now
+from ...core.types import SafeDateTime, SnowflakeID
 from ...core.utils.EditorContentParser import change_date_element, find_mentioned
 from ...core.utils.String import concat
 from ...models import (
@@ -46,7 +46,7 @@ class NotificationService(BaseService):
                     (UserNotification.column("receiver_id") == user.id)
                     & (
                         (UserNotification.column("read_at") == None)  # noqa
-                        | (UserNotification.column("read_at") >= now() - timedelta(days=3))
+                        | (UserNotification.column("read_at") >= SafeDateTime.now() - timedelta(days=3))
                     )
                 )
                 .order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
@@ -162,7 +162,7 @@ class NotificationService(BaseService):
         if not notification or notification.receiver_id != user.id:
             return False
 
-        notification.read_at = now()
+        notification.read_at = SafeDateTime.now()
         with DbSession.use(readonly=False) as db:
             db.update(notification)
 
@@ -171,7 +171,7 @@ class NotificationService(BaseService):
     async def read_all(self, user: User):
         sql_query = (
             SqlBuilder.update.table(UserNotification)
-            .values({UserNotification.column("read_at"): now()})
+            .values({UserNotification.column("read_at"): SafeDateTime.now()})
             .where(
                 (UserNotification.column("receiver_id") == user.id) & (UserNotification.column("read_at") == None)  # noqa
             )

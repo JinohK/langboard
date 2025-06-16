@@ -1,10 +1,10 @@
-from datetime import datetime
 from fastapi import status
 from ...core.db import EditorContentModel
 from ...core.filter import AuthFilter, RoleFilter
 from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
 from ...core.schema import OpenApiSchema
 from ...core.service import ServiceHelper
+from ...core.types import SafeDateTime
 from ...core.utils.Converter import convert_python_data
 from ...models import (
     Bot,
@@ -234,9 +234,9 @@ async def change_card_details(
             continue
         elif key == "deadline_at":
             if value:
-                value = datetime.fromisoformat(value)
+                value = SafeDateTime.fromisoformat(value)
                 if value.tzinfo is None:
-                    value = value.replace(tzinfo=datetime.now().astimezone().tzinfo)
+                    value = value.replace(tzinfo=SafeDateTime.now().astimezone().tzinfo)
             else:
                 value = None
         form_dict[key] = value

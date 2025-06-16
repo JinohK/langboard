@@ -2,7 +2,7 @@ from typing import Any
 from httpx import post
 from ..core.broker import Broker
 from ..core.db import DbSession, SqlBuilder
-from ..core.utils.DateTime import now
+from ..core.types import SafeDateTime
 from ..models import AppSetting
 from ..models.AppSetting import AppSettingType
 from ..publishers import AppSettingPublisher
@@ -37,7 +37,7 @@ async def run_webhook(event: str, data: dict[str, Any]):
             else:
                 Broker.logger.error("Failed to request webhook: \nURL: %s", url)
 
-        setting.last_used_at = now()
+        setting.last_used_at = SafeDateTime.now()
         setting.total_used_count += 1
         with DbSession.use(readonly=False) as db:
             db.update(setting)

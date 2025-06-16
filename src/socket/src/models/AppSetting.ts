@@ -10,7 +10,7 @@ export enum EAppSettingType {
 
 @Entity({ name: "app_setting" })
 class AppSetting extends BaseModel {
-    @Column({ type: "varchar" })
+    @Column({ type: "varchar", enum: EAppSettingType })
     public setting_type!: EAppSettingType;
 
     @Column({ type: "text" })

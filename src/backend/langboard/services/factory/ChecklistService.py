@@ -1,7 +1,7 @@
 from typing import Any, Literal, cast, overload
-from ...core.db import DbSession, SnowflakeID, SqlBuilder
+from ...core.db import DbSession, SqlBuilder
 from ...core.service import BaseService, ServiceHelper
-from ...core.utils.DateTime import now
+from ...core.types import SafeDateTime, SnowflakeID
 from ...models import Card, Checkitem, Checklist, Project, User
 from ...models.Checkitem import CheckitemStatus
 from ...publishers import ChecklistPublisher
@@ -216,7 +216,7 @@ class ChecklistService(BaseService):
 
         checkitem_service = self._get_service(CheckitemService)
         checkitems = await checkitem_service.get_list(card, checklist, as_api=False)
-        current_time = now()
+        current_time = SafeDateTime.now()
         for checkitem, _, _ in checkitems:
             await checkitem_service.change_status(
                 user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
