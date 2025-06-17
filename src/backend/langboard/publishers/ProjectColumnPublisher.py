@@ -72,13 +72,13 @@ class ProjectColumnPublisher(BaseSocketPublisher):
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
                 event=f"board:column:order:changed:{topic_id}",
-                data_keys=["uid", "order"],
+                data_keys=list(model.keys()),
             ),
             SocketPublishModel(
                 topic=SocketTopic.Dashboard,
                 topic_id=topic_id,
                 event=f"dashboard:project:column:order:changed:{topic_id}",
-                data_keys=["uid", "order"],
+                data_keys=list(model.keys()),
             ),
         ]
 

@@ -25,11 +25,13 @@ const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDel
             callback,
             responseConverter: (data) => {
                 const column = ProjectColumn.Model.getModel(data.uid);
-                ProjectColumn.Model.deleteModel(data.uid);
-
                 if (column) {
                     const restColumns = ProjectColumn.Model.getModels((model) => model.project_uid === project.uid);
                     for (let i = 0; i < restColumns.length; ++i) {
+                        if (restColumns[i].uid === data.archive_column_uid) {
+                            continue;
+                        }
+
                         const restColumn = restColumns[i];
                         if (restColumn.order > column.order) {
                             restColumn.order -= 1;
@@ -38,6 +40,7 @@ const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDel
                 }
 
                 const cards = ProjectCard.Model.getModels((model) => model.column_uid === data.uid || model.column_uid === data.archive_column_uid);
+                let archivedCardsCount = 0;
                 for (let i = 0; i < cards.length; ++i) {
                     const card = cards[i];
                     if (card.column_uid === data.archive_column_uid) {
@@ -47,11 +50,16 @@ const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDel
 
                     card.column_uid = data.archive_column_uid;
                     card.archived_at = data.archived_at;
+                    card.order = archivedCardsCount;
+                    archivedCardsCount += 1;
                 }
 
                 if (project.columns) {
                     project.columns = project.columns.filter((column) => column.uid !== data.uid);
                 }
+
+                ProjectColumn.Model.deleteModel(data.uid);
+
                 return {};
             },
         },

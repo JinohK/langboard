@@ -10,7 +10,7 @@ export interface ISignUpForm extends Omit<User.Interface, "uid" | "username" | "
     purpose: string;
     affiliation?: string;
     position?: string;
-    avatar?: File;
+    avatar?: FileList;
 }
 
 const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
@@ -23,8 +23,14 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
                 return;
             }
 
-            if (key === "avatar") {
-                formData.append(key, (value as unknown as File[])[0], (value as unknown as File[])[0].name);
+            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is FileList => targetKey === "avatar";
+
+            if (isAvatar(key, value)) {
+                if (!value.length) {
+                    return;
+                }
+
+                formData.append(key, value[0], value[0].name);
             } else {
                 formData.append(key, value);
             }

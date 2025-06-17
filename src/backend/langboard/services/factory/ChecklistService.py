@@ -92,7 +92,7 @@ class ChecklistService(BaseService):
 
         max_order = ServiceHelper.get_max_order(Checklist, "card_id", card.id)
 
-        checklist = Checklist(card_id=card.id, title=title, order=max_order + 1)
+        checklist = Checklist(card_id=card.id, title=title, order=max_order)
         with DbSession.use(readonly=False) as db:
             db.insert(checklist)
 

@@ -287,7 +287,7 @@ class CardService(BaseService):
             project_column_id=column.id,
             title=title,
             description=description or EditorContentModel(),
-            order=max_order + 1,
+            order=max_order,
         )
         with DbSession.use(readonly=False) as db:
             db.insert(card)

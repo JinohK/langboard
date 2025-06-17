@@ -8,11 +8,11 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import { useEffect, useState } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type THandler = ReturnType<typeof useSocketHandler<any, any>> | ReturnType<typeof useSocketStreamHandler>;
+export type TSocketHandler = ReturnType<typeof useSocketHandler<any, any>> | ReturnType<typeof useSocketStreamHandler>;
 
 export interface IUseSwitchSocketHandlersProps {
     socket: ISocketContext;
-    handlers: THandler | THandler[];
+    handlers: TSocketHandler | TSocketHandler[];
     dependencies?: unknown[];
 }
 

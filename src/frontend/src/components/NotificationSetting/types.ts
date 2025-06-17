@@ -6,7 +6,7 @@ import { TNotificationSpecificType } from "@/core/models/notification.type";
 
 export interface IBaseNotificationSettingPopoverProps {
     modal?: bool;
-    triggerProps?: React.ComponentProps<typeof Button>;
+    triggerProps?: Omit<React.ComponentProps<typeof Button>, "children">;
     iconProps?: Omit<ILucideIconProps, "icon">;
     showTriggerText?: bool;
     onlyFlex?: bool;

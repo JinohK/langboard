@@ -37,6 +37,7 @@ const BoardColumnMoreMenu = memo(({ column, isEditingState }: IBoardColumnMoreMe
                 triggerProps={{
                     variant: "ghost",
                     className: "w-full justify-start rounded-none px-2 py-1.5 font-normal",
+                    role: "menuitem",
                 }}
                 iconProps={{
                     className: "hidden",

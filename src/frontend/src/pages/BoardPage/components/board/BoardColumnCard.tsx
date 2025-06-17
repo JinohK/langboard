@@ -1,14 +1,9 @@
 "use client";
 
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
-import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
-import { type Edge, attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { getCardData, getCardDropTargetData, HOVER_CARD_UID_ATTR, isCardData, isDraggingACard } from "@/pages/BoardPage/components/board/BoardData";
+import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
 import { ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
 import { Box, Card, Popover, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
@@ -19,8 +14,10 @@ import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import BoardColumnCardPreview from "@/pages/BoardPage/components/board/BoardColumnCardPreview";
 import BoardColumnCardCollapsible from "@/pages/BoardPage/components/board/BoardColumnCardCollapsible";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { TRowState } from "@/core/helpers/dnd/types";
+import { ROW_IDLE } from "@/core/helpers/dnd/createDndRowEvents";
+import { dndHelpers } from "@/core/helpers/dnd";
 
 export function SkeletonBoardColumnCard({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     return (
@@ -40,30 +37,7 @@ export function SkeletonBoardColumnCard({ ref }: { ref?: React.Ref<HTMLDivElemen
     );
 }
 
-type TCardState =
-    | {
-          type: "idle";
-      }
-    | {
-          type: "is-dragging";
-      }
-    | {
-          type: "is-dragging-and-left-self";
-      }
-    | {
-          type: "is-over";
-          dragging: DOMRect;
-          closestEdge: Edge;
-      }
-    | {
-          type: "preview";
-          container: HTMLElement;
-          dragging: DOMRect;
-      };
-
-const idle: TCardState = { type: "idle" };
-
-const outerStyles: { [Key in TCardState["type"]]?: string } = {
+const outerStyles: { [Key in TRowState["type"]]?: string } = {
     // We no longer render the draggable item after we have left it
     // as it's space will be taken up by a shadow on adjacent items.
     // Using `display:none` rather than returning `null` so we can always
@@ -78,7 +52,7 @@ function BoardColumnCard({ card }: { card: ProjectCard.TModel }) {
     const { canDragAndDrop } = useBoard();
     const outerRef = useRef<HTMLDivElement | null>(null);
     const innerRef = useRef<HTMLDivElement | null>(null);
-    const [state, setState] = useState<TCardState>(idle);
+    const [state, setState] = useState<TRowState>(ROW_IDLE);
     const order = card.useField("order");
     const columnUID = card.useField("column_uid");
 
@@ -91,92 +65,23 @@ function BoardColumnCard({ card }: { card: ProjectCard.TModel }) {
         const inner = innerRef.current;
         invariant(outer && inner);
 
-        return combine(
-            draggable({
-                element: inner,
-                getInitialData: ({ element }) => getCardData({ card, rect: element.getBoundingClientRect() }),
-                onGenerateDragPreview({ nativeSetDragImage, location, source }) {
-                    const data = source.data;
-                    invariant(isCardData(data));
-                    setCustomNativeDragPreview({
-                        nativeSetDragImage,
-                        getOffset: preserveOffsetOnSource({ element: inner, input: location.current.input }),
-                        render({ container }) {
-                            // Demonstrating using a react portal to generate a preview
-                            const rect = inner.getBoundingClientRect();
-                            container.style.width = `${rect.width}px`;
-                            setState({
-                                type: "preview",
-                                container,
-                                dragging: rect,
-                            });
-                        },
-                    });
-                },
-                onDragStart() {
-                    setState({ type: "is-dragging" });
-                },
-                onDrop() {
-                    setState(idle);
-                },
-            }),
-            dropTargetForElements({
-                element: outer,
-                getIsSticky: () => true,
-                canDrop: isDraggingACard,
-                getData: ({ element, input }) => {
-                    const data = getCardDropTargetData({ card });
-                    return attachClosestEdge(data, { element, input, allowedEdges: ["top", "bottom"] });
-                },
-                onDragEnter({ source, self }) {
-                    if (!isCardData(source.data)) {
-                        return;
-                    }
-                    if (source.data.card.uid === card.uid) {
-                        return;
-                    }
-                    const closestEdge = extractClosestEdge(self.data);
-                    if (!closestEdge) {
-                        return;
-                    }
-
-                    setState({ type: "is-over", dragging: source.data.rect, closestEdge });
-                },
-                onDrag({ source, self }) {
-                    if (!isCardData(source.data)) {
-                        return;
-                    }
-                    if (source.data.card.uid === card.uid) {
-                        return;
-                    }
-                    const closestEdge = extractClosestEdge(self.data);
-                    if (!closestEdge) {
-                        return;
-                    }
-                    // optimization - Don't update react state if we don't need to.
-                    const proposed: TCardState = { type: "is-over", dragging: source.data.rect, closestEdge };
-                    setState((current) => {
-                        if (TypeUtils.isShallowEqual(proposed, current)) {
-                            return current;
-                        }
-                        return proposed;
-                    });
-                },
-                onDragLeave({ source }) {
-                    if (!isCardData(source.data)) {
-                        return;
-                    }
-                    if (source.data.card.uid === card.uid) {
-                        setState({ type: "is-dragging-and-left-self" });
-                        return;
-                    }
-                    setState(idle);
-                },
-                onDrop() {
-                    setState(idle);
-                },
-            })
-        );
+        return dndHelpers.row({
+            row: card,
+            symbolSet: BOARD_DND_SYMBOL_SET,
+            draggable: inner,
+            dropTarget: outer,
+            setState,
+            renderPreview: ({ container }) => {
+                // Demonstrating using a react portal to generate a preview
+                const rect = inner.getBoundingClientRect();
+                container.style.width = `${rect.width}px`;
+                setState({
+                    type: "preview",
+                    container,
+                    dragging: rect,
+                });
+            },
+        });
     }, [card, order, columnUID]);
 
     return (
@@ -194,7 +99,7 @@ function BoardColumnCardDisplay({
     innerRef,
 }: {
     card: ProjectCard.TModel;
-    state: TCardState;
+    state: TRowState;
     outerRef?: React.Ref<HTMLDivElement | null>;
     innerRef?: React.Ref<HTMLDivElement | null>;
 }) {

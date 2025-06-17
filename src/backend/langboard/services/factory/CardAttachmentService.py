@@ -53,7 +53,7 @@ class CardAttachmentService(BaseService):
             card_id=card.id,
             filename=attachment.original_filename,
             file=attachment,
-            order=max_order + 1,
+            order=max_order,
         )
 
         with DbSession.use(readonly=False) as db:

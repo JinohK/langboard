@@ -6,7 +6,7 @@ import { User } from "@/core/models";
 export interface IUpdateProfileForm extends Pick<User.Interface, "firstname" | "lastname"> {
     affiliation?: string;
     position?: string;
-    avatar?: File;
+    avatar?: FileList;
 }
 
 const useUpdateProfile = (options?: TMutationOptions<IUpdateProfileForm>) => {
@@ -19,8 +19,14 @@ const useUpdateProfile = (options?: TMutationOptions<IUpdateProfileForm>) => {
                 return;
             }
 
-            if (key === "avatar") {
-                formData.append(key, (value as unknown as File[])[0], (value as unknown as File[])[0].name);
+            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is FileList => targetKey === "avatar";
+
+            if (isAvatar(key, value)) {
+                if (!value.length) {
+                    return;
+                }
+
+                formData.append(key, value[0], value[0].name);
             } else {
                 formData.append(key, value);
             }

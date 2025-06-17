@@ -85,7 +85,7 @@ class UserGroupService(BaseService):
     async def create(self, user: User, name: str, emails: list[str] | None = None) -> UserGroup:
         max_order = ServiceHelper.get_max_order(UserGroup, "user_id", user.id)
         emails = emails or []
-        user_group = UserGroup(user_id=user.id, name=name, order=max_order + 1)
+        user_group = UserGroup(user_id=user.id, name=name, order=max_order)
 
         with DbSession.use(readonly=False) as db:
             db.insert(user_group)

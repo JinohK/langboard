@@ -124,7 +124,7 @@ class ProjectLabelService(BaseService):
 
         is_bot = isinstance(user_or_bot, Bot)
         if is_bot:
-            max_order = -2  # -1 is for the bot label
+            max_order = -1  # -1 is for the bot label
         else:
             max_order = ServiceHelper.get_max_order(ProjectLabel, "project_id", project.id)
 
@@ -134,7 +134,7 @@ class ProjectLabelService(BaseService):
             name=name,
             color=color,
             description=description,
-            order=max_order + 1,
+            order=max_order,
         )
         with DbSession.use(readonly=False) as db:
             db.insert(label)

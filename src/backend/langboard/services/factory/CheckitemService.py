@@ -114,7 +114,7 @@ class CheckitemService(BaseService):
 
         max_order = ServiceHelper.get_max_order(Checkitem, "checklist_id", checklist.id)
 
-        checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order + 1)
+        checkitem = Checkitem(checklist_id=checklist.id, title=title, order=max_order)
         with DbSession.use(readonly=False) as db:
             db.insert(checkitem)
 
@@ -366,7 +366,7 @@ class CheckitemService(BaseService):
             project_id=card.project_id,
             project_column_id=target_column.id,
             title=checkitem.title,
-            order=max_order + 1,
+            order=max_order,
         )
         with DbSession.use(readonly=False) as db:
             db.insert(new_card)

@@ -1,4 +1,5 @@
-import { WebSocket } from "ws";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { WebSocket, WebSocketEventMap } from "ws";
 import { IncomingMessage } from "http";
 import ESocketTopic from "@/core/server/ESocketTopic";
 import Subscription from "@/core/server/Subscription";
@@ -14,7 +15,8 @@ class SocketClient implements ISocketClient {
     #request: IncomingMessage;
     #user: User;
     #subscriptions: Map<string, string[]>;
-    #hocusDocNames: Set<string> = new Set();
+    #hocusDocNames: Set<string>;
+    #eventListeners: Partial<Record<keyof WebSocketEventMap, ((...args: any[]) => void)[]>>;
 
     public get user(): User {
         return this.#user;
@@ -25,8 +27,19 @@ class SocketClient implements ISocketClient {
         this.#request = request;
         this.#user = user;
         this.#subscriptions = new Map();
+        this.#hocusDocNames = new Set();
+        this.#eventListeners = {
+            close: [() => this.onClose()],
+        };
 
-        this.#ws.addEventListener("close", () => this.onClose());
+        Object.entries(this.#eventListeners).forEach(([event, listeners]) => {
+            if (!listeners || !Array.isArray(listeners)) {
+                return;
+            }
+            listeners.forEach((listener) => {
+                this.#ws.addEventListener(event, listener);
+            });
+        });
     }
 
     public get getSubscriptions(): Map<string, string[]> {
@@ -137,7 +150,12 @@ class SocketClient implements ISocketClient {
     }
 
     public async onClose() {
-        this.#ws.removeEventListener("close", this.onClose);
+        const listeners = this.#eventListeners.close;
+        if (listeners) {
+            listeners.forEach((listener) => {
+                this.#ws.removeEventListener("close", listener);
+            });
+        }
 
         await Subscription.unsubscribeAll(this);
 

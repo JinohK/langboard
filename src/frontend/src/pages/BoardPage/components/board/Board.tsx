@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import invariant from "tiny-invariant";
 import BoardColumn, { SkeletonBoardColumn } from "@/pages/BoardPage/components/board/BoardColumn";
 import { bindAll } from "bind-event-listener";
 import { CleanupFn } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
 import { useBoard } from "@/core/providers/BoardProvider";
-import useReorderColumn from "@/core/hooks/useReorderColumn";
 import { Box, Flex, ScrollArea } from "@/components/base";
 import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
 import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
-import createBoardEvents from "@/pages/BoardPage/components/board/BoardEvents";
 import useChangeCardOrder from "@/controllers/api/board/useChangeCardOrder";
-import { BLOCK_BOARD_PANNING_ATTR } from "@/pages/BoardPage/components/board/BoardData";
+import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
 import { createShortUUID } from "@/core/utils/StringUtils";
+import { dndHelpers } from "@/core/helpers/dnd";
+import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { ProjectCard, ProjectColumn } from "@/core/models";
+import useColumnReordered from "@/core/hooks/useColumnReordered";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -71,28 +73,59 @@ export function SkeletonBoard() {
 
 export function Board() {
     const { project, columns: flatColumns, cardsMap, socket, canDragAndDrop } = useBoard();
-    const { columns } = useReorderColumn({
+    const updater = useReducer((x) => x + 1, 0);
+    const { columns } = useColumnReordered({
         type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
         columns: flatColumns,
         socket,
+        updater,
     });
     const scrollableRef = useRef<HTMLDivElement | null>(null);
     const { mutate: changeColumnOrderMutate } = useChangeProjectColumnOrder();
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
 
     useEffect(() => {
-        const element = scrollableRef.current;
-        invariant(element);
+        const scrollable = scrollableRef.current;
+        invariant(scrollable);
 
-        return createBoardEvents({
-            project,
+        const setupApiErrors = (error: unknown, undo: () => void) => {
+            const { handle } = setupApiErrorHandler({
+                code: {
+                    after: undo,
+                },
+                wildcard: {
+                    after: undo,
+                },
+            });
+
+            handle(error);
+        };
+
+        return dndHelpers.root<ProjectColumn.TModel, ProjectCard.TModel>({
             columns,
-            cardsMap,
-            scrollable: element,
-            changeColumnOrderMutate,
-            changeCardOrderMutate,
+            rowsMap: cardsMap,
+            columnKeyInRow: "column_uid",
+            symbolSet: BOARD_DND_SYMBOL_SET,
+            scrollable,
+            settings: BOARD_DND_SETTINGS,
+            changeColumnOrder: ({ columnUID, order, undo }) => {
+                changeColumnOrderMutate(
+                    { project_uid: project.uid, column_uid: columnUID, order },
+                    {
+                        onError: (error) => setupApiErrors(error, undo),
+                    }
+                );
+            },
+            changeRowOrder: ({ rowUID, order, parentUID, undo }) => {
+                changeCardOrderMutate(
+                    { project_uid: project.uid, parent_uid: parentUID, card_uid: rowUID, order },
+                    {
+                        onError: (error) => setupApiErrors(error, undo),
+                    }
+                );
+            },
         });
     }, [flatColumns, cardsMap]);
 

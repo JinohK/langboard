@@ -13,7 +13,7 @@ import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/Boar
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { LabelModelBadge } from "@/components/LabelBadge";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardData";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 
 export interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;

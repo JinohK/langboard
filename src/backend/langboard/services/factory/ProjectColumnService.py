@@ -103,7 +103,7 @@ class ProjectColumnService(BaseService):
         column = ProjectColumn(
             project_id=project.id,
             name=ProjectColumn.DEFAULT_ARCHIVE_COLUMN_NAME,
-            order=max_order + 1,
+            order=max_order,
             is_archive=True,
         )
 
@@ -137,7 +137,7 @@ class ProjectColumnService(BaseService):
         column = ProjectColumn(
             project_id=project.id,
             name=name,
-            order=max_order + 1,
+            order=max_order,
         )
 
         with DbSession.use(readonly=False) as db:
@@ -202,25 +202,36 @@ class ProjectColumnService(BaseService):
             return False
 
         archive_column = await self.get_or_create_archive_if_not_exists(project)
-        all_cards_in_column = ServiceHelper.get_all_by(Card, "project_column_id", column.id)
-        count_cards_in_column = len(all_cards_in_column)
+        count_cards_in_archive = len(ServiceHelper.get_all_by(Card, "project_column_id", column.id))
 
         current_time = SafeDateTime.now()
 
-        query = (
-            SqlBuilder.update.table(Card)
-            .values({Card.order: Card.order + count_cards_in_column})
-            .where(Card.column("project_column_id") == archive_column.id)
-        )
+        cards_to_archive_query = (
+            SqlBuilder.select.column(Card.column("id")).where(Card.column("project_column_id") == column.id)
+        ).cte("cards_to_archive")
         with DbSession.use(readonly=False) as db:
-            db.exec(query)
+            db.exec(
+                SqlBuilder.update.table(Card)
+                .values({Card.order: Card.order + count_cards_in_archive})
+                .where(Card.column("project_column_id") == archive_column.id)
+            )
 
-            for i in range(count_cards_in_column):
-                card = all_cards_in_column[i]
-                card.project_column_id = archive_column.id
-                card.archived_at = current_time
-                with DbSession.use(readonly=False) as db:
-                    db.update(card)
+            cards_to_archive_query = (
+                SqlBuilder.select.column(Card.column("id")).where(Card.column("project_column_id") == column.id)
+            ).cte("cards_to_archive")
+
+            db.exec(
+                SqlBuilder.update.table(Card)
+                .filter(Card.column("id") == cards_to_archive_query.c.id)
+                .values(
+                    {
+                        Card.column("project_column_id"): archive_column.id,
+                        Card.column("archived_at"): current_time,
+                        Card.column("order"): func.row_number().over(order_by=Card.column("order")).label("new_order")
+                        - 1,
+                    }
+                )
+            )
 
         with DbSession.use(readonly=False) as db:
             db.delete(column)
@@ -234,7 +245,7 @@ class ProjectColumnService(BaseService):
                 )
             )
 
-        await ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_column)
+        await ProjectColumnPublisher.deleted(project, column, archive_column, current_time, count_cards_in_archive)
         ProjectColumnActivityTask.project_column_deleted(user_or_bot, project, column)
         ProjectColumnBotTask.project_column_deleted(user_or_bot, project, column)
 

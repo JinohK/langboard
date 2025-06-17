@@ -41,7 +41,7 @@ Consumer.register("socket_publish", async (data: unknown) => {
 
             for (let i = 0; i < publishModel.data_keys.length; ++i) {
                 const key = publishModel.data_keys[i];
-                if (model[key]) {
+                if (!TypeUtils.isNullOrUndefined(model[key])) {
                     publishData[key] = model[key];
                 }
             }

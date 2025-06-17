@@ -7,7 +7,7 @@ import { Fragment, memo, useMemo, useState } from "react";
 import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
 import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { HOVER_CARD_UID_ATTR, IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardData";
+import { HOVER_CARD_UID_ATTR, IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 
 function BoardColumnCardPreview() {
     const { project, currentUser } = useBoard();

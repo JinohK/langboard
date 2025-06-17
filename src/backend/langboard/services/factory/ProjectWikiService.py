@@ -178,7 +178,7 @@ class ProjectWikiService(BaseService):
             project_id=project.id,
             title=title,
             content=content or EditorContentModel(),
-            order=max_order + 1,
+            order=max_order,
         )
         with DbSession.use(readonly=False) as db:
             db.insert(wiki)
@@ -413,7 +413,7 @@ class ProjectWikiService(BaseService):
             wiki_id=wiki.id,
             filename=attachment.original_filename,
             file=attachment,
-            order=max_order + 1,
+            order=max_order,
         )
 
         with DbSession.use(readonly=False) as db:

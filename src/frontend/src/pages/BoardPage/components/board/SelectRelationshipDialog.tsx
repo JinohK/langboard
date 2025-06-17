@@ -4,7 +4,7 @@ import { useBoard } from "@/core/providers/BoardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardData";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 

@@ -27,8 +27,14 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
                 return;
             }
 
-            if (key === "avatar") {
-                formData.append(key, value as unknown as File, (value as unknown as File).name);
+            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is FileList => targetKey === "avatar";
+
+            if (isAvatar(key, value)) {
+                if (!value.length) {
+                    return;
+                }
+
+                formData.append(key, value[0], value[0].name);
             } else {
                 formData.append(key, value.toString());
             }
