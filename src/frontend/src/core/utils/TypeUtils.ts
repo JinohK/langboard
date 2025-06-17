@@ -77,6 +77,16 @@ const isDocumentType: (value: unknown) => value is DocumentType = isDomType(ENod
 const isDocumentFragment: (value: unknown) => value is DocumentFragment = isDomType(ENodeTypeMap.DOCUMENT_FRAGMENT);
 const isNotation: (value: unknown) => value is Node = isDomType(ENodeTypeMap.NOTATION);
 
+const isShallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): bool => {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+    return keys1.every((key1) => Object.is(obj1[key1], obj2[key1]));
+};
+
 const TypeUtils = {
     isArray,
     isNumber,
@@ -101,6 +111,7 @@ const TypeUtils = {
     isDocumentType,
     isDocumentFragment,
     isNotation,
+    isShallowEqual,
 };
 
 export default TypeUtils;

@@ -101,6 +101,7 @@ export const BoardColumnTitleInput = memo(
 
                 e.preventDefault();
                 e.stopPropagation();
+
                 changeMode("edit");
             },
             [canEdit, changeMode]
@@ -131,7 +132,7 @@ export const BoardColumnTitleInput = memo(
                     <span
                         {...{ [DISABLE_DRAGGING_ATTR]: "" }}
                         className={cn("h-7 truncate", isArchive && "text-secondary-foreground/70", viewClassName)}
-                        onClick={handleStartEditing}
+                        onPointerDown={handleStartEditing}
                     >
                         {columnName}
                     </span>

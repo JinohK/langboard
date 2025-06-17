@@ -7,12 +7,11 @@ import { Fragment, memo, useMemo, useState } from "react";
 import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
 import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
+import { HOVER_CARD_UID_ATTR, IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardData";
 
 function BoardColumnCardPreview() {
     const { project, currentUser } = useBoard();
-    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const { HOVER_CARD_UID_ATTR } = params;
+    const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const projectMembers = project.useForeignField<User.TModel>("members");
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
@@ -69,8 +68,7 @@ BoardColumnCardPreview.displayName = "Board.ColumnCard.Preview";
 
 const BoardColumnCardPreviewLabelList = memo(({ labels }: { labels: ProjectLabel.TModel[] }) => {
     const [isOpened, setIsOpened] = useState(false);
-    const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const { HOVER_CARD_UID_ATTR } = params;
+    const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
 
     return (
         <Flex items="center" gap="1.5">

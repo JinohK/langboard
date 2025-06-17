@@ -4,7 +4,7 @@ import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { StringCase } from "@/core/utils/StringUtils";
-import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/types";
+import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardData";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 

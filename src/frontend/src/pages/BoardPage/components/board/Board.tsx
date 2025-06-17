@@ -1,29 +1,21 @@
-import { Box, Button, Flex, ScrollArea } from "@/components/base";
-import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
-import useGetCards from "@/controllers/api/board/useGetCards";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import { ROUTES } from "@/core/routing/constants";
-import { BoardColumnCardOverlay, IBoardColumnCardProps } from "@/pages/BoardPage/components/board/BoardColumnCard";
-import BoardColumn, { IBoardColumnProps, SkeletonBoardColumn } from "@/pages/BoardPage/components/board/BoardColumn";
-import BoardFilter, { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { memo, useEffect, useId, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
-import { NavigateFunction } from "react-router-dom";
-import { BoardProvider, useBoard } from "@/core/providers/BoardProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import invariant from "tiny-invariant";
+import BoardColumn, { SkeletonBoardColumn } from "@/pages/BoardPage/components/board/BoardColumn";
+import { bindAll } from "bind-event-listener";
+import { CleanupFn } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
+import { useBoard } from "@/core/providers/BoardProvider";
 import useReorderColumn from "@/core/hooks/useReorderColumn";
-import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
-import { AuthUser, Project } from "@/core/models";
-import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Box, Flex, ScrollArea } from "@/components/base";
 import BoardColumnAdd from "@/pages/BoardPage/components/board/BoardColumnAdd";
-import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import useChangeProjectColumnOrder from "@/controllers/api/board/useChangeProjectColumnOrder";
+import createBoardEvents from "@/pages/BoardPage/components/board/BoardEvents";
+import useChangeCardOrder from "@/controllers/api/board/useChangeCardOrder";
+import { BLOCK_BOARD_PANNING_ATTR } from "@/pages/BoardPage/components/board/BoardData";
+import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
+import { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
+import { createShortUUID } from "@/core/utils/StringUtils";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -77,178 +69,104 @@ export function SkeletonBoard() {
     );
 }
 
-export interface IBoardProps {
-    navigate: NavigateFunction;
-    project: Project.TModel;
-    currentUser: AuthUser.TModel;
-}
-
-const Board = memo(({ navigate, project, currentUser }: IBoardProps) => {
-    const { data, error } = useGetCards({ project_uid: project.uid });
-
-    useEffect(() => {
-        if (!error) {
-            return;
-        }
-
-        const { handle } = setupApiErrorHandler({
-            [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
-            },
-            [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
-            },
-        });
-
-        handle(error);
-    }, [error]);
-
-    return (
-        <>
-            {!data ? (
-                <SkeletonBoard />
-            ) : (
-                <BoardProvider navigate={navigate} project={project} currentUser={currentUser}>
-                    <BoardResult />
-                </BoardProvider>
-            )}
-        </>
-    );
-});
-Board.displayName = "Board";
-
-const BoardResult = memo(() => {
-    const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
-    const { project, columns: flatColumns, cardsMap, socket, hasRoleAction } = useBoard();
-    const [t] = useTranslation();
-    const { columns, reorder: reorderColumns } = useReorderColumn({
+export function Board() {
+    const { project, columns: flatColumns, cardsMap, socket, canDragAndDrop } = useBoard();
+    const { columns } = useReorderColumn({
         type: "ProjectColumn",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
         columns: flatColumns,
         socket,
     });
-    const columnUIDs = useMemo(() => columns.map((col) => col.uid), [columns]);
-    const dndContextId = useId();
-    const viewportId = `board-viewport-${project.uid}`;
-    const { onPointerDown } = useGrabbingScrollHorizontal(viewportId);
-    const { mutate: changeProjectColumnOrderMutate } = useChangeProjectColumnOrder();
-    const {
-        activeColumn,
-        activeRow: activeCard,
-        containerIdRowDragCallbacksRef: callbacksRef,
-        sensors,
-        onDragStart,
-        onDragEnd,
-        onDragOverOrMove,
-        onDragCancel,
-    } = useColumnRowSortable<IBoardColumnProps["column"], IBoardColumnCardProps["card"]>({
-        columnDragDataType: "Column",
-        rowDragDataType: "Card",
-        columnCallbacks: {
-            onDragEnd: (originalColumn, index) => {
-                const originalColumnOrder = originalColumn.order;
-                if (!reorderColumns(originalColumn, index)) {
-                    return;
-                }
-
-                changeProjectColumnOrderMutate(
-                    { project_uid: project.uid, column_uid: originalColumn.uid, order: index },
-                    {
-                        onError: (error) => {
-                            const { handle } = setupApiErrorHandler({
-                                code: {
-                                    after: () => {
-                                        reorderColumns(originalColumn, originalColumnOrder);
-                                    },
-                                },
-                                wildcard: {
-                                    after: () => {
-                                        reorderColumns(originalColumn, originalColumnOrder);
-                                    },
-                                },
-                            });
-
-                            handle(error);
-                        },
-                    }
-                );
-            },
-        },
-        transformContainerId: (columnOrCard) => {
-            return `board-column-${(columnOrCard as IBoardColumnCardProps["card"]).column_uid ?? columnOrCard.uid}`;
-        },
-    });
+    const scrollableRef = useRef<HTMLDivElement | null>(null);
+    const { mutate: changeColumnOrderMutate } = useChangeProjectColumnOrder();
+    const { mutate: changeCardOrderMutate } = useChangeCardOrder();
 
     useEffect(() => {
-        if (!activeCard) {
-            return;
+        const element = scrollableRef.current;
+        invariant(element);
+
+        return createBoardEvents({
+            project,
+            columns,
+            cardsMap,
+            scrollable: element,
+            changeColumnOrderMutate,
+            changeCardOrderMutate,
+        });
+    }, [flatColumns, cardsMap]);
+
+    // Panning the board
+    useEffect(() => {
+        let cleanupActive: CleanupFn | null = null;
+        const scrollable = scrollableRef.current;
+        invariant(scrollable);
+
+        function begin({ startX }: { startX: number }) {
+            let lastX = startX;
+
+            const cleanupEvents = bindAll(
+                window,
+                [
+                    {
+                        type: "pointermove",
+                        listener(event) {
+                            const currentX = event.clientX;
+                            const diffX = lastX - currentX;
+
+                            lastX = currentX;
+                            scrollable?.scrollBy({ left: diffX });
+                        },
+                    },
+                    // stop panning if we see any of these events
+                    ...(["pointercancel", "pointerup", "pointerdown", "keydown", "resize", "click", "visibilitychange"] as const).map(
+                        (eventName) => ({ type: eventName, listener: () => cleanupEvents() })
+                    ),
+                ],
+                // need to make sure we are not after the "pointerdown" on the scrollable
+                // Also this is helpful to make sure we always hear about events from this point
+                { capture: true }
+            );
+
+            cleanupActive = cleanupEvents;
         }
 
-        if (!cardsMap[activeCard.uid]) {
-            onDragCancel();
-        }
-    }, [cardsMap]);
+        const cleanupStart = bindAll(scrollable, [
+            {
+                type: "pointerdown",
+                listener(event) {
+                    if (!(event.target instanceof HTMLElement)) {
+                        return;
+                    }
+                    // ignore interactive elements
+                    if (event.target.closest(`[${BLOCK_BOARD_PANNING_ATTR}]`)) {
+                        return;
+                    }
+
+                    begin({ startX: event.clientX });
+                },
+            },
+        ]);
+
+        return function cleanupAll() {
+            cleanupStart();
+            cleanupActive?.();
+        };
+    }, []);
 
     return (
-        <>
-            {selectCardViewType && (
-                <Flex justify="center" items="center" position="fixed" top="-2" left="0" h="20" w="full" z="50" gap="3" px="1">
-                    <Box position="absolute" top="0" left="0" size="full" className="bg-secondary/70 bg-cover blur-md backdrop-blur-sm" />
-                    <Flex wrap position="relative" z="50" textSize={{ initial: "base", sm: "lg" }} weight="semibold" className="text-primary">
-                        <Box mr="2">{t(`board.Select ${selectCardViewType === "parents" ? "parent" : "child"} cards`)}</Box>
-                        {selectedRelationshipUIDs.length > 0 && (
-                            <Box>({t("board.{count} selected", { count: selectedRelationshipUIDs.length })})</Box>
-                        )}
-                    </Flex>
-                    <Flex wrap position="relative" justify="end" z="50" className="text-right">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            className="mb-1 mr-2 h-6 px-2 py-0 sm:mb-0 sm:h-8 sm:px-4"
-                            onClick={cancelCardSelection}
-                        >
-                            {t("common.Cancel")}
-                        </Button>
-                        <Button type="button" className="mr-2 h-6 px-2 py-0 sm:h-8 sm:px-4" onClick={saveCardSelection}>
-                            {t("common.Save")}
-                        </Button>
-                    </Flex>
-                </Flex>
-            )}
-
-            <Flex justify="between" px="4" pt="4" wrap>
-                <BoardMemberList isSelectCardView={!!selectCardViewType} />
-                <Flex items="center" gap="1">
-                    <BoardFilter />
-                </Flex>
+        <ScrollArea.Root
+            className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]"
+            viewportClassName="!overflow-y-auto"
+            viewportRef={scrollableRef}
+        >
+            <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max">
+                {columns.map((column) => (
+                    <BoardColumn key={column.uid} column={column} />
+                ))}
+                {canDragAndDrop && <BoardColumnAdd />}
             </Flex>
-
-            <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragMove={onDragOverOrMove}>
-                <ScrollArea.Root viewportId={viewportId} className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]">
-                    <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max" onPointerDown={onPointerDown}>
-                        <SortableContext items={columnUIDs} strategy={horizontalListSortingStrategy}>
-                            {columns.map((col) => (
-                                <BoardColumn key={col.uid} column={col} callbacksRef={callbacksRef} />
-                            ))}
-                        </SortableContext>
-                        {hasRoleAction(Project.ERoleAction.Update) && !selectCardViewType && <BoardColumnAdd />}
-                    </Flex>
-                    <ScrollArea.Bar orientation="horizontal" />
-                </ScrollArea.Root>
-
-                {!TypeUtils.isUndefined(window) &&
-                    createPortal(
-                        <DragOverlay>
-                            {activeColumn && <BoardColumn column={activeColumn} callbacksRef={callbacksRef} isOverlay />}
-                            {activeCard && <BoardColumnCardOverlay card={activeCard} />}
-                        </DragOverlay>,
-                        document.body
-                    )}
-            </DndContext>
-        </>
+            <ScrollArea.Bar orientation="horizontal" />
+        </ScrollArea.Root>
     );
-});
-BoardResult.displayName = "Board.Result";
-
-export default Board;
+}

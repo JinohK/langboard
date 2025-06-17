@@ -1,31 +1,40 @@
-import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
-import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import useChangeCardOrder, { IChangeCardOrderForm } from "@/controllers/api/board/useChangeCardOrder";
-import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
-import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
-import useReorderRow from "@/core/hooks/useReorderRow";
+"use client";
+
+import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { memo, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import invariant from "tiny-invariant";
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
+import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
+import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
+import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import BoardColumnCard, { BoardColumnCardShadow, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
+import {
+    BLOCK_BOARD_PANNING_ATTR,
+    BOARD_SETTINGS,
+    getColumnData,
+    isCardData,
+    isCardDropTargetData,
+    isColumnData,
+    isDraggingACard,
+    isDraggingAColumn,
+    TCardData,
+} from "@/pages/BoardPage/components/board/BoardData";
+import { useBoard } from "@/core/providers/BoardProvider";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
-import { useBoard } from "@/core/providers/BoardProvider";
+import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
+import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
 import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardColumnAddCardButton";
-import BoardColumnCard, {
-    BoardColumnCardOverlay,
-    IBoardColumnCardProps,
-    SkeletonBoardColumnCard,
-} from "@/pages/BoardPage/components/board/BoardColumnCard";
-import { SortableContext, useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { memo, useCallback, useMemo, useReducer } from "react";
-import { tv } from "tailwind-variants";
-import InfiniteScroller from "@/components/InfiniteScroller";
-import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import useBoardUIColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardUIColumnDeletedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
+import useRowOrderChangedHandlers from "@/controllers/socket/shared/useRowOrderChangedHandlers";
+import { createShortUUID } from "@/core/utils/StringUtils";
 
 export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
@@ -46,192 +55,186 @@ export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     );
 }
 
-export interface IBoardColumnProps {
-    column: ProjectColumn.TModel;
-    callbacksRef: React.RefObject<Record<string, IRowDragCallback<IBoardColumnCardProps["card"]>>>;
-    isOverlay?: bool;
-}
+type TColumnState =
+    | {
+          type: "is-card-over";
+          isOverChildCard: boolean;
+          dragging: DOMRect;
+      }
+    | {
+          type: "is-column-over";
+      }
+    | {
+          type: "idle";
+      }
+    | {
+          type: "is-dragging";
+      };
 
-interface IBoardColumnDragData extends ISortableDragData<ProjectColumn.TModel> {
-    type: "Column";
-}
+const stateStyles: { [Key in TColumnState["type"]]: string } = {
+    idle: "cursor-grab",
+    "is-card-over": "ring-2 ring-primary",
+    "is-dragging": "opacity-40 ring-2 ring-primary",
+    "is-column-over": "bg-secondary",
+};
 
-const PAGE_SIZE = 20;
+const idle = { type: "idle" } satisfies TColumnState;
 
-const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps) => {
-    const { selectCardViewType } = useBoardRelationshipController();
-    const { project, filters, socket, cardsMap, hasRoleAction, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
-    const updater = useReducer((x) => x + 1, 0);
-    const [updated, forceUpdate] = updater;
-    const columnCards = ProjectCard.Model.useModels(
-        (model) => {
-            return (
-                model.column_uid === column.uid &&
-                filterCard(model) &&
-                filterCardMember(model) &&
-                filterCardLabels(model) &&
-                filterCardRelationships(model)
-            );
-        },
-        [column, updated, filters]
-    );
-    const sortedCards = columnCards.sort((a, b) => a.order - b.order);
-    const cardUIDs = useMemo(() => sortedCards.map((card) => card.uid), [sortedCards]);
-    const { items: cards, nextPage, hasMore, toLastPage } = useInfiniteScrollPager({ allItems: sortedCards, size: PAGE_SIZE, updater });
-    const { mutate: changeCardOrderMutate } = useChangeCardOrder();
+function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
+    const { hasRoleAction } = useBoard();
+    const scrollableRef = useRef<HTMLDivElement | null>(null);
+    const outerFullHeightRef = useRef<HTMLDivElement | null>(null);
+    const headerRef = useRef<HTMLDivElement | null>(null);
+    const innerRef = useRef<HTMLDivElement | null>(null);
+    const [state, setState] = useState<TColumnState>(idle);
+    const order = column.useField("order");
     const columnId = `board-column-${column.uid}`;
-    const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
-        type: "ProjectCard",
-        eventNameParams: { uid: column.uid },
-        topicId: project.uid,
-        allRowsMap: cardsMap,
-        rows: cards,
-        columnKey: "column_uid",
-        currentColumnId: column.uid,
-        socket,
-        updater,
-    });
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: column.uid,
-        data: {
-            type: "Column",
-            data: column,
-        } satisfies IBoardColumnDragData,
-        attributes: {
-            roleDescription: `Column: ${column.name}`,
-        },
-    });
-    const onPointerStart = useCallback(
-        (type: "mouse" | "touch") => (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
-            if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
-                return;
-            }
 
-            const targetListener = type === "mouse" ? "onMouseDown" : "onTouchStart";
+    useEffect(() => {
+        const outer = outerFullHeightRef.current;
+        const scrollable = scrollableRef.current;
+        const header = headerRef.current;
+        const inner = innerRef.current;
+        invariant(outer);
+        invariant(scrollable);
+        invariant(header);
+        invariant(inner);
 
-            listeners?.[targetListener]?.(e);
-        },
-        []
-    );
-    const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-        if ((e.target as HTMLElement)?.closest?.(`[${DISABLE_DRAGGING_ATTR}]`)) {
-            return;
+        const columnData = getColumnData({ column });
+
+        function setIsCardOver({ data, location }: { data: TCardData; location: DragLocationHistory }) {
+            const innerMost = location.current.dropTargets[0];
+            const isOverChildCard = Boolean(innerMost && isCardDropTargetData(innerMost.data));
+
+            const proposed: TColumnState = {
+                type: "is-card-over",
+                dragging: data.rect,
+                isOverChildCard,
+            };
+            // optimization - don't update state if we don't need to.
+            setState((current) => {
+                if (TypeUtils.isShallowEqual(proposed, current)) {
+                    return current;
+                }
+                return proposed;
+            });
         }
 
-        listeners?.onKeyDown?.(e);
-    }, []);
-    const cardCreatedHandlers = useMemo(
-        () =>
-            useBoardCardCreatedHandlers({
-                projectUID: project.uid,
-                columnUID: column.uid,
-                callback: () => {
-                    forceUpdate();
+        return combine(
+            draggable({
+                element: header,
+                getInitialData: () => columnData,
+                onGenerateDragPreview({ source, location, nativeSetDragImage }) {
+                    const data = source.data;
+                    invariant(isColumnData(data));
+                    setCustomNativeDragPreview({
+                        nativeSetDragImage,
+                        getOffset: preserveOffsetOnSource({ element: header, input: location.current.input }),
+                        render({ container }) {
+                            // Simple drag preview generation: just cloning the current element.
+                            // Not using react for this.
+                            const rect = outer.getBoundingClientRect();
+                            const preview = outer.cloneNode(true);
+                            invariant(TypeUtils.isElement(preview, "div"));
+                            preview.classList.add("ring-2", "ring-primary");
+                            preview.style.width = `${rect.width}px`;
+                            preview.style.height = `${rect.height}px`;
+
+                            container.appendChild(preview);
+                        },
+                    });
+                },
+                onDragStart() {
+                    setState({ type: "is-dragging" });
+                },
+                onDrop() {
+                    setState(idle);
                 },
             }),
-        []
-    );
-    const columnDeletedHandlers = useMemo(
-        () =>
-            useBoardUIColumnDeletedHandlers({
-                project,
-                callback: () => {
-                    if (!column.is_archive) {
+            dropTargetForElements({
+                element: outer,
+                getData: () => columnData,
+                canDrop({ source }) {
+                    return isDraggingACard({ source }) || isDraggingAColumn({ source });
+                },
+                getIsSticky: () => true,
+                onDragStart({ source, location }) {
+                    if (isCardData(source.data)) {
+                        setIsCardOver({ data: source.data, location });
+                    }
+                },
+                onDragEnter({ source, location }) {
+                    if (isCardData(source.data)) {
+                        setIsCardOver({ data: source.data, location });
                         return;
                     }
-
-                    forceUpdate();
+                    if (isColumnData(source.data) && source.data.column.uid !== column.uid) {
+                        setState({ type: "is-column-over" });
+                    }
+                },
+                onDropTargetChange({ source, location }) {
+                    if (isCardData(source.data)) {
+                        setIsCardOver({ data: source.data, location });
+                        return;
+                    }
+                },
+                onDragLeave({ source }) {
+                    if (isColumnData(source.data) && source.data.column.uid === column.uid) {
+                        return;
+                    }
+                    setState(idle);
+                },
+                onDrop() {
+                    setState(idle);
                 },
             }),
-        []
-    );
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [cardCreatedHandlers, columnDeletedHandlers],
-        dependencies: [cardCreatedHandlers, columnDeletedHandlers],
-    });
+            autoScrollForElements({
+                canScroll({ source }) {
+                    if (!BOARD_SETTINGS.isOverElementAutoScrollEnabled) {
+                        return false;
+                    }
 
-    callbacksRef.current[columnId] = {
-        onDragEnd: (originalCard, index) => {
-            const isOrderUpdated = originalCard.column_uid !== column.uid || originalCard.order !== index;
-            reorderInColumn(originalCard.uid, index);
-            if (!isOrderUpdated) {
-                forceUpdate();
-                return;
-            }
-
-            const form: IChangeCardOrderForm = { project_uid: project.uid, card_uid: originalCard.uid, order: index };
-            if (originalCard.column_uid !== column.uid) {
-                form.parent_uid = column.uid;
-            }
-
-            cardsMap[originalCard.uid].order = index;
-            cardsMap[originalCard.uid].column_uid = column.uid;
-            forceUpdate();
-
-            setTimeout(() => {
-                changeCardOrderMutate(form);
-            }, 300);
-        },
-        onDragOverOrMove: (activeCard, index, isForeign) => {
-            if (!isForeign) {
-                return;
-            }
-
-            const shouldRemove = index === -1;
-            if (shouldRemove) {
-                removeFromColumn(activeCard.uid);
-            } else {
-                moveToColumn(activeCard.uid, index, column.uid);
-            }
-        },
-    };
-
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
-
-    const variants = tv({
-        base: "my-1 w-72 sm:w-80 flex-shrink-0 snap-center ring-primary",
-        variants: {
-            dragging: {
-                over: "ring-2 opacity-30",
-                overlay: "ring-2",
-            },
-        },
-    });
-
-    let rootProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    let headerProps: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (hasRoleAction(Project.ERoleAction.Update) || !selectCardViewType) {
-        rootProps = {
-            style,
-            className: variants({
-                dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
+                    return isDraggingACard({ source });
+                },
+                getConfiguration: () => ({ maxScrollSpeed: BOARD_SETTINGS.columnScrollSpeed }),
+                element: scrollable,
             }),
-            ref: setNodeRef,
-        };
-        headerProps = {
-            ...attributes,
-            onMouseDown: onPointerStart("mouse"),
-            onTouchStart: onPointerStart("touch"),
-            onKeyDown,
-        };
-    } else {
-        rootProps = {
-            className: variants(),
-        };
-        headerProps = {};
-    }
+            unsafeOverflowAutoScrollForElements({
+                element: scrollable,
+                getConfiguration: () => ({ maxScrollSpeed: BOARD_SETTINGS.columnScrollSpeed }),
+                canScroll({ source }) {
+                    if (!BOARD_SETTINGS.isOverElementAutoScrollEnabled) {
+                        return false;
+                    }
+
+                    if (!BOARD_SETTINGS.isOverflowScrollingEnabled) {
+                        return false;
+                    }
+
+                    return isDraggingACard({ source });
+                },
+                getOverflow() {
+                    return {
+                        forTopEdge: {
+                            top: 1000,
+                        },
+                        forBottomEdge: {
+                            bottom: 1000,
+                        },
+                    };
+                },
+            })
+        );
+    }, [column, order]);
 
     return (
-        <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={toLastPage}>
-            <Card.Root {...rootProps}>
-                <BoardColumnHeader isDragging={isDragging} column={column} headerProps={headerProps} />
+        <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={() => {}}>
+            <Card.Root ref={outerFullHeightRef} className={cn("my-1 w-72 flex-shrink-0 snap-center ring-primary sm:w-80", stateStyles[state.type])}>
+                <BoardColumnHeader isDragging={state.type !== "idle"} column={column} headerProps={{ ref: headerRef }} />
                 <ScrollArea.Root
                     viewportId={columnId}
-                    mutable={updated}
+                    viewportRef={scrollableRef}
+                    viewportClassName="!overflow-y-auto"
                     onScroll={() => {
                         ProjectCard.Model.getModels((model) => !!model.isHoverCardOpened).forEach((model) => {
                             model.isHoverCardOpened = false;
@@ -245,35 +248,18 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
                                 ? "max-h-[calc(100vh_-_theme(spacing.64)_-_theme(spacing.2))]"
                                 : "max-h-[calc(100vh_-_theme(spacing.56)_-_theme(spacing.1))]"
                         )}
-                        onWheel={(e) => {
-                            e.stopPropagation();
-                        }}
+                        {...{ [BLOCK_BOARD_PANNING_ATTR]: true }}
+                        ref={innerRef}
                     >
-                        <InfiniteScroller.NoVirtual
-                            scrollable={() => document.getElementById(columnId)}
-                            loadMore={nextPage}
-                            loader={<SkeletonBoardColumnCard key={createShortUUID()} />}
-                            hasMore={hasMore}
-                            className="pb-2.5"
-                        >
-                            <SortableContext id={columnId} items={cardUIDs}>
-                                <Flex direction="col" gap="3">
-                                    {cards.map((card) => {
-                                        if (!card) {
-                                            return null;
-                                        }
-
-                                        return isOverlay ? (
-                                            <BoardColumnCardOverlay key={`${column.uid}-${card.uid}-overlay`} card={card} isColumnDragging />
-                                        ) : (
-                                            <BoardColumnCard key={`${column.uid}-${card.uid}`} card={card} />
-                                        );
-                                    })}
-                                </Flex>
-                            </SortableContext>
-                            <BoardColumnAddCard />
-                        </InfiniteScroller.NoVirtual>
+                        <BoardColumnCardList column={column} />
+                        {state.type === "is-card-over" && !state.isOverChildCard ? (
+                            <div className="flex-shrink-0 px-3 py-1">
+                                <BoardColumnCardShadow dragging={state.dragging} />
+                            </div>
+                        ) : null}
+                        <BoardColumnAddCard />
                     </Card.Content>
+                    <ScrollArea.Bar />
                 </ScrollArea.Root>
                 <Card.Footer className="px-3 py-2">
                     <BoardColumnAddCardButton />
@@ -281,7 +267,73 @@ const BoardColumn = memo(({ column, callbacksRef, isOverlay }: IBoardColumnProps
             </Card.Root>
         </BoardAddCardProvider>
     );
+}
+
+/**
+ * A memoized component for rendering out the card.
+ *
+ * Created so that state changes to the column don't require all cards to be rendered
+ */
+const BoardColumnCardList = memo(({ column }: { column: ProjectColumn.TModel }) => {
+    const { project, socket, filters, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
+    const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
+    const cards = ProjectCard.Model.useModels(
+        (model) => {
+            return (
+                model.column_uid === column.uid &&
+                filterCard(model) &&
+                filterCardMember(model) &&
+                filterCardLabels(model) &&
+                filterCardRelationships(model)
+            );
+        },
+        [column, updated, filters]
+    );
+    const columnCards = useMemo(() => cards.sort((a, b) => a.order - b.order), [cards]);
+    const cardCreatedHandlers = useMemo(
+        () =>
+            useBoardCardCreatedHandlers({
+                projectUID: project.uid,
+                columnUID: column.uid,
+                callback: () => {
+                    forceUpdate();
+                },
+            }),
+        [forceUpdate]
+    );
+    const cardOrderChangedHandlers = useMemo(
+        () =>
+            useRowOrderChangedHandlers({
+                type: "ProjectCard",
+                topicId: project.uid,
+                params: { uid: column.uid },
+                callback: () => {
+                    forceUpdate();
+                },
+            }),
+        [forceUpdate]
+    );
+    const columnDeletedHandlers = useMemo(
+        () =>
+            useBoardUIColumnDeletedHandlers({
+                project,
+                callback: () => {
+                    if (!column.is_archive) {
+                        return;
+                    }
+
+                    forceUpdate();
+                },
+            }),
+        [forceUpdate]
+    );
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [cardCreatedHandlers, cardOrderChangedHandlers, columnDeletedHandlers],
+        dependencies: [cardCreatedHandlers, cardOrderChangedHandlers, columnDeletedHandlers],
+    });
+
+    return columnCards.map((card) => <BoardColumnCard key={card.uid} card={card} />);
 });
-BoardColumn.displayName = "Board.Column";
 
 export default BoardColumn;

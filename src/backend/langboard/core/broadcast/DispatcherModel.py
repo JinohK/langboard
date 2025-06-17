@@ -1,3 +1,4 @@
+from json import loads as json_loads
 from typing import Any
 from pydantic import BaseModel
 from ...Constants import CACHE_TYPE, DATA_DIR
@@ -42,7 +43,8 @@ async def record_model(
 
     if CACHE_TYPE == "redis":
         cache_key = f"broadcast-{now_str}-{random_str}"
-        await Cache.set(cache_key, model.model_dump()["data"], 3 * 60)
+        # Prevent enums from being Enum.Name
+        await Cache.set(cache_key, json_loads(model.model_dump_json())["data"], 3 * 60)
         return cache_key
 
     name = f"{now_str}-{random_str}.json" if not file_only else f"{now_str}-{random_str}-fileonly.json"

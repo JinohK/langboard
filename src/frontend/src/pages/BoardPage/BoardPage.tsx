@@ -1,10 +1,11 @@
 import { memo, useEffect } from "react";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
-import Board, { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
+import BoardProject from "@/pages/BoardPage/components/board/BoardProject";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
 import useGetProject from "@/controllers/api/board/useGetProject";
+import { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 
 const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps): JSX.Element => {
     const { data, error, isFetching } = useGetProject({ uid: projectUID });
@@ -26,7 +27,7 @@ const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPage
         handle(error);
     }, [error]);
 
-    return <>{!data || isFetching ? <SkeletonBoard /> : <Board navigate={navigate} project={data.project} currentUser={currentUser} />}</>;
+    return <>{!data || isFetching ? <SkeletonBoard /> : <BoardProject navigate={navigate} project={data.project} currentUser={currentUser} />}</>;
 });
 
 export default BoardPage;

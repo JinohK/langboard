@@ -37,6 +37,7 @@ export interface IBoardContext {
     filterCardMember: (card: ProjectCard.TModel) => bool;
     filterCardLabels: (card: ProjectCard.TModel) => bool;
     filterCardRelationships: (card: ProjectCard.TModel) => bool;
+    canDragAndDrop: bool;
 }
 
 interface IBoardProviderProps {
@@ -63,6 +64,7 @@ const initialContext = {
     filterCardMember: () => true,
     filterCardLabels: () => true,
     filterCardRelationships: () => true,
+    canDragAndDrop: false,
 };
 
 const BoardContext = createContext<IBoardContext>(initialContext);
@@ -94,6 +96,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         return map;
     }, [cards]);
     const globalRelationshipTypes = GlobalRelationshipType.Model.useModels(() => true, [selectCardViewType, filters]);
+    const canDragAndDrop = useMemo(() => hasRoleAction(Project.ERoleAction.Update) && !selectCardViewType, [hasRoleAction, selectCardViewType]);
 
     useEffect(() => {
         if (currentUser.is_admin || members.some((member) => member.uid === currentUser.uid) || forbiddenMessageIdRef.current) {
@@ -249,6 +252,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
                 filterCardMember,
                 filterCardLabels,
                 filterCardRelationships,
+                canDragAndDrop,
             }}
         >
             {children}
