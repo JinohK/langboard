@@ -8,16 +8,18 @@ export interface IScrollAreaProps extends React.ComponentPropsWithoutRef<typeof 
     viewportId?: string;
     viewportClassName?: string;
     viewportRef?: React.Ref<HTMLDivElement>;
+    viewportAsTable?: bool;
     mutable?: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>["mutable"];
 }
 
 const Root = React.forwardRef<React.ComponentRef<typeof ScrollAreaPrimitive.Root>, IScrollAreaProps>(
-    ({ className, children, viewportId, viewportClassName, viewportRef, mutable, onScroll, ...props }, ref) => (
+    ({ className, children, viewportId, viewportClassName, viewportRef, viewportAsTable, mutable, onScroll, ...props }, ref) => (
         <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
             <ScrollAreaPrimitive.Viewport
                 className={cn("h-full w-full rounded-[inherit]", viewportClassName)}
                 id={viewportId}
                 onScroll={onScroll}
+                asTable={viewportAsTable}
                 ref={viewportRef}
             >
                 {children}

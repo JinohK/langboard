@@ -48,13 +48,27 @@ const CloseButton = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.C
 
 interface IContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
     viewportId?: string;
+    viewportRef?: React.RefObject<HTMLDivElement | null>;
     withCloseButton?: bool;
     overlayClassName?: string;
     disableOverlayClick?: bool;
 }
 
 const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Content>, IContentProps>(
-    ({ className, children, viewportId, withCloseButton = true, overlayClassName, disableOverlayClick, onPointerDownOutside, ...props }, ref) => {
+    (
+        {
+            className,
+            children,
+            viewportId,
+            viewportRef,
+            withCloseButton = true,
+            overlayClassName,
+            disableOverlayClick,
+            onPointerDownOutside,
+            ...props
+        },
+        ref
+    ) => {
         const onOverlayClick = (
             event:
                 | React.PointerEvent<HTMLDivElement>
@@ -77,7 +91,13 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
         return (
             <Portal>
                 <Overlay onPointerDown={onOverlayClick} className={overlayClassName}>
-                    <ScrollArea.Root className="size-full" viewportClassName="max-h-screen sm:py-2 [&>div]:h-full" viewportId={viewportId}>
+                    <ScrollArea.Root
+                        className="size-full"
+                        viewportClassName="max-h-screen sm:py-2 [&>div]:h-full"
+                        viewportId={viewportId}
+                        viewportRef={viewportRef}
+                        viewportAsTable
+                    >
                         <Flex justify="center" items="center" size="full">
                             <DialogPrimitive.Content
                                 ref={ref}

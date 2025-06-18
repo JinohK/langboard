@@ -126,12 +126,13 @@ const VIEWPORT_NAME = "ScrollAreaViewport";
 
 type ScrollAreaViewportElement = React.ComponentRef<typeof Primitive.div>;
 interface ScrollAreaViewportProps extends PrimitiveDivProps {
+    asTable?: bool;
     nonce?: string;
 }
 
 const ScrollAreaViewport = React.forwardRef<ScrollAreaViewportElement, ScrollAreaViewportProps>(
     (props: ScopedProps<ScrollAreaViewportProps>, forwardedRef) => {
-        const { __scopeScrollArea, children, nonce, ...viewportProps } = props;
+        const { __scopeScrollArea, children, asTable, nonce, ...viewportProps } = props;
         const context = useScrollAreaContext(VIEWPORT_NAME, __scopeScrollArea);
         const ref = React.useRef<ScrollAreaViewportElement>(null);
         const composedRefs = useComposedRefs(forwardedRef, ref, context.onViewportChange);
@@ -172,7 +173,13 @@ const ScrollAreaViewport = React.forwardRef<ScrollAreaViewportElement, ScrollAre
                      * widths that change. We'll wait to see what use-cases consumers come up with there
                      * before trying to resolve it.
                      */}
-                    <div ref={context.onContentChange}>{children}</div>
+                    {asTable ? (
+                        <div ref={context.onContentChange} style={{ display: "table", minWidth: "100%" }}>
+                            {children}
+                        </div>
+                    ) : (
+                        <div ref={context.onContentChange}>{children}</div>
+                    )}
                 </Primitive.div>
             </>
         );
