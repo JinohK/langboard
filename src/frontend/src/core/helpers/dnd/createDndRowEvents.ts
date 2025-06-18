@@ -5,12 +5,12 @@ import invariant from "tiny-invariant";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { TDroppableTargetData, TRowData, TRowModelWithKey, TRowState, TSortableData, TSymbolSet } from "@/core/helpers/dnd/types";
-import createDndDataHelper from "@/core/helpers/dnd/createDndDataHelper";
+import { TRowDroppableTargetData, TRowData, TRowModelWithKey, TRowState, TSortableData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
+import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 
 export interface ICreateDndRowEventsProps<TRowModel extends TSortableData> {
     row: TRowModelWithKey<TRowModel>;
-    symbolSet: TSymbolSet;
+    symbolSet: TColumnRowSymbolSet;
     draggable: HTMLElement;
     dropTarget: HTMLElement;
     setState: React.Dispatch<React.SetStateAction<TRowState>>;
@@ -21,7 +21,7 @@ export const ROW_IDLE = { type: "idle" } satisfies TRowState;
 
 const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRowEventsProps<TRowModel>) => {
     type TRowModelData = TRowData<TRowModel, TRowModelWithKey<TRowModel>>;
-    type TDroppableModelData = TDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
+    type TRowDroppableModelData = TRowDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
 
     const { row, symbolSet, draggable, dropTarget, setState, renderPreview } = props;
 
@@ -33,14 +33,14 @@ const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRo
         };
     };
 
-    const getDroppableTargetData = (context: TDroppableModelData): TDroppableModelData => {
+    const getRowDroppableTargetData = (context: TRowDroppableModelData): TRowDroppableModelData => {
         return {
-            [symbolSet.droppable]: true,
+            [symbolSet.rowDroppable]: true,
             row: context.row,
         };
     };
 
-    const { isRowData, isDraggingARow } = createDndDataHelper<TSortableData, TRowModel>({
+    const { isRowData, isDraggingARow, shouldHideIndicator } = createDndColumnRowDataHelper<TSortableData, TRowModel>({
         symbolSet,
     });
 
@@ -54,9 +54,7 @@ const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRo
                 setCustomNativeDragPreview({
                     nativeSetDragImage,
                     getOffset: preserveOffsetOnSource({ element: draggable, input: location.current.input }),
-                    render(context) {
-                        renderPreview(context);
-                    },
+                    render: renderPreview,
                 });
             },
             onDragStart() {
@@ -71,7 +69,7 @@ const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRo
             getIsSticky: () => true,
             canDrop: isDraggingARow,
             getData: ({ element, input }) => {
-                const data = getDroppableTargetData({ row });
+                const data = getRowDroppableTargetData({ row });
                 return attachClosestEdge(data, { element, input, allowedEdges: ["top", "bottom"] });
             },
             onDragEnter({ source, self }) {
@@ -86,19 +84,30 @@ const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRo
                     return;
                 }
 
+                if (shouldHideIndicator(row.order, source.data.row.order, closestEdge)) {
+                    // If the row is before or after the source, we don't want to show the "is-over" state.
+                    setState(ROW_IDLE);
+                    return;
+                }
+
                 setState({ type: "is-over", dragging: source.data.rect, closestEdge });
             },
             onDrag({ source, self }) {
-                if (!isRowData(source.data)) {
+                if (!isRowData(source.data) || source.data.row.uid === row.uid) {
                     return;
                 }
-                if (source.data.row.uid === row.uid) {
-                    return;
-                }
+
                 const closestEdge = extractClosestEdge(self.data);
                 if (!closestEdge) {
                     return;
                 }
+
+                if (shouldHideIndicator(row.order, source.data.row.order, closestEdge)) {
+                    // If the row is before or after the source, we don't want to show the "is-over" state.
+                    setState(ROW_IDLE);
+                    return;
+                }
+
                 // optimization - Don't update react state if we don't need to.
                 const proposed: TRowState = { type: "is-over", dragging: source.data.rect, closestEdge };
                 setState((current) => {

@@ -1,21 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { TColumnData, TColumnState, TDroppableTargetData, TRowData, TRowModelWithKey, TSortableData, TSymbolSet } from "@/core/helpers/dnd/types";
+import {
+    TColumnData,
+    TColumnState,
+    TRowDroppableTargetData,
+    TRowData,
+    TRowModelWithKey,
+    TSortableData,
+    TColumnRowSymbolSet,
+} from "@/core/helpers/dnd/types";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
+import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 
-export interface ICreateHelperProps {
-    symbolSet: TSymbolSet;
+export interface ICreateDndColumnRowHelperProps {
+    symbolSet: TColumnRowSymbolSet;
     setColumnState?: React.Dispatch<React.SetStateAction<TColumnState>>;
 }
 
-const createDndDataHelper = <TColumnModel extends TSortableData, TRowModel extends TSortableData>(props: ICreateHelperProps) => {
+const createDndColumnRowDataHelper = <TColumnModel extends TSortableData, TRowModel extends TSortableData>(props: ICreateDndColumnRowHelperProps) => {
     type TColumn = TColumnData<TColumnModel>;
     type TRow = TRowData<TRowModel, TRowModelWithKey<TRowModel>>;
-    type TDroppableTarget = TDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
+    type TRowDroppableTarget = TRowDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
 
     const { symbolSet, setColumnState } = props;
-    const { column, row, droppable } = symbolSet;
+    const { column, columnDroppable, row, rowDroppable } = symbolSet;
 
     const isColumnData = (value: any): value is TColumn => {
         return Boolean(value[column]);
@@ -23,6 +32,10 @@ const createDndDataHelper = <TColumnModel extends TSortableData, TRowModel exten
 
     const isDraggingAColumn = ({ source }: { source: { data: Record<string | symbol, unknown> } }): boolean => {
         return isColumnData(source.data);
+    };
+
+    const isColumnDroppableTargetData = (value: any): value is TColumnData<TColumnModel> => {
+        return Boolean(value[columnDroppable]);
     };
 
     const isRowData = (value: any): value is TRow => {
@@ -33,13 +46,13 @@ const createDndDataHelper = <TColumnModel extends TSortableData, TRowModel exten
         return isRowData(source.data);
     };
 
-    const isDroppableTargetData = (value: any): value is TDroppableTarget => {
-        return Boolean(value[droppable]);
+    const isRowDroppableTargetData = (value: any): value is TRowDroppableTarget => {
+        return Boolean(value[rowDroppable]);
     };
 
     const setIsRowOver = ({ data, location }: { data: TRow; location: DragLocationHistory }) => {
         const innerMost = location.current.dropTargets[0];
-        const isOverChildRow = Boolean(innerMost && isDroppableTargetData(innerMost.data));
+        const isOverChildRow = Boolean(innerMost && isRowDroppableTargetData(innerMost.data));
 
         const proposed: TColumnState = {
             type: "is-row-over",
@@ -55,14 +68,25 @@ const createDndDataHelper = <TColumnModel extends TSortableData, TRowModel exten
         });
     };
 
+    const shouldHideIndicator = (originalOrder: number, newOrder: number, closestEdge: Edge): bool => {
+        const isItemBeforeSource = originalOrder === newOrder - 1;
+        const isItemAfterSource = originalOrder === newOrder + 1;
+
+        const isDropIndicatorHidden = (isItemBeforeSource && closestEdge === "bottom") || (isItemAfterSource && closestEdge === "top");
+
+        return isDropIndicatorHidden;
+    };
+
     return {
         isColumnData,
         isDraggingAColumn,
+        isColumnDroppableTargetData,
         isRowData,
         isDraggingARow,
-        isDroppableTargetData,
+        isRowDroppableTargetData,
         setIsRowOver,
+        shouldHideIndicator,
     };
 };
 
-export default createDndDataHelper;
+export default createDndColumnRowDataHelper;

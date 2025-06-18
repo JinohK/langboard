@@ -14,6 +14,7 @@ const BoardCardPage = memo(() => {
     const { projectUID, cardUID } = useParams();
     const { selectCardViewType } = useBoardRelationshipController();
     const viewportId = "board-card-dialog";
+    const viewportRef = useRef<HTMLDivElement | null>(null);
 
     if (!projectUID || !cardUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
@@ -32,10 +33,17 @@ const BoardCardPage = memo(() => {
                         aria-describedby=""
                         withCloseButton={false}
                         viewportId={viewportId}
+                        viewportRef={viewportRef}
                         overlayClassName={selectCardViewType ? "hidden" : ""}
                         disableOverlayClick={!!selectCardViewType}
                     >
-                        <BoardCard projectUID={projectUID} cardUID={cardUID} currentUser={currentUser} viewportId={viewportId} />
+                        <BoardCard
+                            projectUID={projectUID}
+                            cardUID={cardUID}
+                            currentUser={currentUser}
+                            viewportId={viewportId}
+                            viewportRef={viewportRef}
+                        />
                     </Dialog.Content>
                 </Dialog.Root>
             )}

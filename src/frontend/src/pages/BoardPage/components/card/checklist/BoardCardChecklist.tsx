@@ -1,8 +1,4 @@
 import { Box, Button, Collapsible, Flex, IconComponent, Tooltip } from "@/components/base";
-import useChangeCardCheckitemOrder, { IChangeCardCheckitemOrderForm } from "@/controllers/api/card/checkitem/useChangeCardCheckitemOrder";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { IRowDragCallback, ISortableDragData } from "@/core/hooks/useColumnRowSortable";
-import useReorderRow from "@/core/hooks/useReorderRow";
 import { Project, ProjectChecklist, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -11,193 +7,107 @@ import BoardCardChecklistCheckbox from "@/pages/BoardPage/components/card/checkl
 import BoardCardChecklistMoreMenu from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistMoreMenu";
 import BoardCardChecklistNotify from "@/pages/BoardPage/components/card/checklist/BoardCardChecklistNotify";
 import BoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitem";
-import { DraggableAttributes } from "@dnd-kit/core";
-import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { memo, useMemo, useReducer, useState } from "react";
+import { memo, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tv } from "tailwind-variants";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
+import invariant from "tiny-invariant";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
+import { BOARD_CARD_CHECK_DND_SETTINGS, BOARD_CARD_CHECK_DND_SYMBOL_SET } from "@/pages/BoardPage/components/card/checklist/BoardCardCheckConstants";
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import { TColumnState } from "@/core/helpers/dnd/types";
+import { COLUMN_IDLE } from "@/core/helpers/dnd/createDndColumnEvents";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useRowReordered from "@/core/hooks/useRowReordered";
 
 export interface IBoardCardChecklistProps {
     checklist: ProjectChecklist.TModel;
-    callbacksRef: React.RefObject<Record<string, IRowDragCallback<ProjectCheckitem.TModel>>>;
     checkitemsMap: Record<string, ProjectCheckitem.TModel>;
-    isOverlay?: bool;
 }
 
-interface IBoardCardChecklistDragData extends ISortableDragData<ProjectChecklist.TModel> {
-    type: "Checklist";
-}
+const stateStyles: { [Key in TColumnState["type"]]: string } = {
+    idle: "cursor-grab ",
+    "is-row-over": "ring-2 ring-primary",
+    "is-dragging": "opacity-40",
+    "is-column-over": "",
+};
 
-const BoardCardChecklist = memo(({ checklist, checkitemsMap, callbacksRef, isOverlay }: IBoardCardChecklistProps): JSX.Element => {
-    const { projectUID, card, socket, hasRoleAction } = useBoardCard();
+const BoardCardChecklist = memo(({ checklist, checkitemsMap }: IBoardCardChecklistProps): JSX.Element => {
+    const { viewportRef, hasRoleAction } = useBoardCard();
+    const outerFullHeightRef = useRef<HTMLDivElement | null>(null);
+    const draggableRef = useRef<HTMLButtonElement | null>(null);
+    const [state, setState] = useState<TColumnState>(COLUMN_IDLE);
     const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
-    const checklistId = `board-checklist-${checklist.uid}`;
-    const updater = useReducer((x) => x + 1, 0);
-    const [updated] = updater;
-    const groupCheckitems = ProjectCheckitem.Model.useModels(
-        (model) => {
-            if (!checkitemsMap[model.uid]) {
-                checkitemsMap[model.uid] = model;
-            }
-            return model.checklist_uid === checklist.uid;
-        },
-        [checklist, updated]
-    );
-    const checkitems = groupCheckitems.sort((a, b) => a.order - b.order);
-    const checkitemsUIDs = useMemo(() => checkitems.map((checkitem) => checkitem.uid), [checkitems]);
-    const { mutate: changeCheckitemOrderMutate } = useChangeCardCheckitemOrder();
-    const { moveToColumn, removeFromColumn, reorderInColumn } = useReorderRow({
-        type: "ProjectCardCheckitem",
-        topicId: card.uid,
-        eventNameParams: { uid: checklist.uid },
-        allRowsMap: checkitemsMap,
-        rows: checkitems,
-        columnKey: "checklist_uid",
-        currentColumnId: checklist.uid,
-        socket,
-        updater,
-    });
+    const order = checklist.useField("order");
     const canReorder = hasRoleAction(Project.ERoleAction.CardUpdate);
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: checklist.uid,
-        data: {
-            type: "Checklist",
-            data: checklist,
-        } satisfies IBoardCardChecklistDragData,
-        attributes: {
-            roleDescription: `Checklist: ${checklist.title}`,
-        },
-    });
 
-    callbacksRef.current[checklistId] = {
-        onDragEnd: (originalCheckitem, index) => {
-            const isOrderUpdated = originalCheckitem.checklist_uid !== checklist.uid || originalCheckitem.order !== index;
-            reorderInColumn(originalCheckitem.uid, index);
-            if (!isOrderUpdated) {
-                return;
-            }
+    useEffect(() => {
+        if (!canReorder) {
+            return;
+        }
 
-            const form: IChangeCardCheckitemOrderForm = {
-                project_uid: projectUID,
-                card_uid: card.uid,
-                checkitem_uid: originalCheckitem.uid,
-                order: index,
-            };
-            if (originalCheckitem.checklist_uid !== checklist.uid) {
-                form.parent_uid = checklist.uid;
-            }
+        const outer = outerFullHeightRef.current;
+        const scrollable = viewportRef.current;
+        const draggable = draggableRef.current;
+        invariant(outer);
+        invariant(scrollable);
+        invariant(draggable);
 
-            checkitemsMap[originalCheckitem.uid].order = index;
-            checkitemsMap[originalCheckitem.uid].checklist_uid = checklist.uid;
+        return columnRowDndHelpers.column<ProjectChecklist.TModel>({
+            column: checklist,
+            symbolSet: BOARD_CARD_CHECK_DND_SYMBOL_SET,
+            draggable,
+            dropTarget: outer,
+            scrollable,
+            settings: BOARD_CARD_CHECK_DND_SETTINGS,
+            isIndicator: true,
+            setState,
+            renderPreview: ({ container }) => {
+                // Simple drag preview generation: just cloning the current element.
+                // Not using react for this.
+                const rect = outer.getBoundingClientRect();
+                const preview = outer.cloneNode(true);
+                invariant(TypeUtils.isElement(preview, "div"));
+                preview.style.width = `${rect.width}px`;
+                preview.style.height = `${rect.height}px`;
 
-            changeCheckitemOrderMutate(form, {
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        code: {
-                            after: () => {
-                                reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
-                                checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
-                                checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
-                            },
-                        },
-                        wildcard: {
-                            after: () => {
-                                reorderInColumn(originalCheckitem.uid, originalCheckitem.order);
-                                checkitemsMap[originalCheckitem.uid].order = originalCheckitem.order;
-                                checkitemsMap[originalCheckitem.uid].checklist_uid = originalCheckitem.checklist_uid;
-                            },
-                        },
-                    });
-
-                    handle(error);
-                },
-            });
-        },
-        onDragOverOrMove: (activeCheckitem, index, isForeign) => {
-            if (!isForeign) {
-                return;
-            }
-
-            if (!isOpenedInBoardCard) {
-                checklist.isOpenedInBoardCard = true;
-            }
-
-            const shouldRemove = index === -1;
-            if (shouldRemove) {
-                removeFromColumn(activeCheckitem.uid);
-            } else {
-                moveToColumn(activeCheckitem.uid, index, checklist.uid);
-            }
-        },
-    };
-
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
-
-    const variants = tv({
-        base: "my-2 snap-center",
-        variants: {
-            dragging: {
-                default: "border-2 border-transparent",
-                over: "border-b-2 border-primary/50 opacity-30",
-                overlay: "",
+                container.appendChild(preview);
             },
-        },
-    });
-
-    let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (canReorder) {
-        props = {
-            style,
-            className: variants({
-                dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
-            }),
-            ref: setNodeRef,
-        };
-    } else {
-        props = {
-            className: variants(),
-        };
-    }
+        });
+    }, [checklist, order]);
 
     return (
-        <Box id={checklistId} {...props}>
+        <Box my="2" position="relative" className={cn("snap-center", stateStyles[state.type])} ref={outerFullHeightRef}>
+            {state.type === "is-column-over" && <DropIndicator edge={state.closestEdge} />}
             <Collapsible.Root
-                open={isOpenedInBoardCard}
+                open={isOpenedInBoardCard || state.type === "is-row-over"}
                 onOpenChange={(opened) => {
                     checklist.isOpenedInBoardCard = opened;
                 }}
             >
-                <BoardCardChecklistInner checklist={checklist} attributes={attributes} listeners={listeners} />
-                <BoardCardCheckitemList checklist={checklist} checklistId={checklistId} checkitemsUIDs={checkitemsUIDs} checkitems={checkitems} />
+                <BoardCardChecklistDisplay checklist={checklist} draggableRef={draggableRef} canReorder={canReorder} />
+                <BoardCardCheckitemList checklist={checklist} checkitemsMap={checkitemsMap} />
             </Collapsible.Root>
         </Box>
     );
 });
 
-interface IBaordCardChecklistInnerProps {
+interface IBaordCardChecklistDisplayProps {
     checklist: ProjectChecklist.TModel;
-    attributes?: DraggableAttributes;
-    listeners?: SyntheticListenerMap;
+    draggableRef: React.RefObject<HTMLButtonElement | null>;
+    canReorder: bool;
 }
 
-const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBaordCardChecklistInnerProps) => {
-    const { hasRoleAction, sharedClassNames } = useBoardCard();
+const BoardCardChecklistDisplay = memo(({ checklist, draggableRef, canReorder }: IBaordCardChecklistDisplayProps) => {
+    const { sharedClassNames } = useBoardCard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isTitleOpened, setIsTitleOpened] = useState(false);
     const title = checklist.useField("title");
     const isChecked = checklist.useField("is_checked");
     const isOpenedInBoardCard = checklist.useField("isOpenedInBoardCard");
-    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
 
     return (
-        <ModelRegistry.ProjectChecklist.Provider model={checklist} params={{ canEdit, isValidating, setIsValidating }}>
+        <ModelRegistry.ProjectChecklist.Provider model={checklist} params={{ canEdit: canReorder, isValidating, setIsValidating }}>
             <Flex
                 items="center"
                 justify="between"
@@ -212,7 +122,7 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
             >
                 <Flex items="center" gap="2" w="full" className="truncate">
                     <Flex items="center" gap="1">
-                        {canEdit && (
+                        {canReorder && (
                             <>
                                 <Button
                                     type="button"
@@ -221,8 +131,7 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
                                     className="h-8 w-5 sm:size-8"
                                     title={t("common.Drag to reorder")}
                                     disabled={isValidating}
-                                    {...attributes}
-                                    {...listeners}
+                                    ref={draggableRef}
                                 >
                                     <IconComponent icon="grip-vertical" size="4" />
                                 </Button>
@@ -263,7 +172,7 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
                     </Flex>
                 </Flex>
                 <Flex items="center" gap="1.5">
-                    {canEdit && (
+                    {canReorder && (
                         <>
                             <BoardCardChecklistAddItem key={`board-card-checklist-add-item-${checklist.uid}`} />
                             <BoardCardChecklistMoreMenu key={`board-card-checklist-more-${checklist.uid}`} />
@@ -277,24 +186,36 @@ const BoardCardChecklistInner = memo(({ checklist, attributes, listeners }: IBao
 
 interface IBoardCardCheckitemListProps {
     checklist: ProjectChecklist.TModel;
-    checklistId: string;
-    checkitemsUIDs: string[];
-    checkitems: ProjectCheckitem.TModel[];
+    checkitemsMap: Record<string, ProjectCheckitem.TModel>;
 }
 
-const BoardCardCheckitemList = memo(({ checklist, checklistId, checkitemsUIDs, checkitems }: IBoardCardCheckitemListProps) => {
+const BoardCardCheckitemList = memo(({ checklist, checkitemsMap }: IBoardCardCheckitemListProps) => {
+    const { card, socket } = useBoardCard();
+    const updater = useReducer((x) => x + 1, 0);
+    const [updated] = updater;
+    const groupCheckitems = ProjectCheckitem.Model.useModels(
+        (model) => {
+            if (!checkitemsMap[model.uid]) {
+                checkitemsMap[model.uid] = model;
+            }
+            return model.checklist_uid === checklist.uid;
+        },
+        [updated, checklist]
+    );
+    const { rows: checkitems } = useRowReordered<ProjectCheckitem.TModel>({
+        type: "ProjectCardCheckitem",
+        topicId: card.uid,
+        eventNameParams: { uid: checklist.uid },
+        rows: groupCheckitems,
+        socket,
+        updater,
+    });
+
     return (
-        <Collapsible.Content
-            className={cn(
-                "overflow-hidden text-sm transition-all",
-                "data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down"
-            )}
-        >
-            <SortableContext id={checklistId} items={checkitemsUIDs} strategy={verticalListSortingStrategy}>
-                {checkitems.map((checkitem) => (
-                    <BoardCardCheckitem key={`board-checklist-${checklist.uid}-${checkitem.uid}`} checkitem={checkitem} />
-                ))}
-            </SortableContext>
+        <Collapsible.Content className="text-sm transition-all data-[state=closed]:animate-collapse-up data-[state=open]:animate-collapse-down">
+            {checkitems.map((checkitem) => (
+                <BoardCardCheckitem key={`board-checklist-${checklist.uid}-${checkitem.uid}`} checkitem={checkitem} />
+            ))}
         </Collapsible.Content>
     );
 });

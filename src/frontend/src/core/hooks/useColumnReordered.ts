@@ -16,10 +16,7 @@ export interface IUseColumnReorderedProps<TColumn extends TBaseModelInstance<ICo
     columns: TColumn[];
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
-    otherHandlers?: {
-        handlers: TSocketHandler[];
-        dependencies?: unknown[];
-    };
+    otherHandlers?: TSocketHandler[];
 }
 
 function useColumnReordered<TColumn extends TBaseModelInstance<IColumn>>({
@@ -39,16 +36,17 @@ function useColumnReordered<TColumn extends TBaseModelInstance<IColumn>>({
                 type,
                 topicId,
                 params: eventNameParams,
+                sortedModels: columns,
                 callback: () => {
                     forceUpdate();
                 },
             }),
-        [type, topicId, eventNameParams, forceUpdate]
+        [type, topicId, eventNameParams, columns, forceUpdate]
     );
     useSwitchSocketHandlers({
         socket,
-        handlers: [handlers, ...(otherHandlers?.handlers ?? [])],
-        dependencies: [handlers, ...(otherHandlers?.dependencies ?? [])],
+        handlers: [handlers, ...(otherHandlers ?? [])],
+        dependencies: [handlers, ...(otherHandlers ?? [])],
     });
 
     return { columns, sendColumnOrderChanged: handlers.send };

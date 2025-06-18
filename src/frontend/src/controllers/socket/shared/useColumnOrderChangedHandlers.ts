@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, ProjectChecklist, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
+import { TBaseModelInstance } from "@/core/models/Base";
 import { StringCase } from "@/core/utils/StringUtils";
+import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 
 export interface IColumnOrderChangedResponse {
     uid: string;
@@ -13,9 +16,10 @@ export interface IUseColumnOrderChangedHandlersProps extends IBaseUseSocketHandl
     type: "ProjectColumn" | "ProjectCardAttachment" | "ProjectChecklist" | "ProjectWiki" | "ProjectLabel";
     params?: Record<string, string>;
     topicId: string;
+    sortedModels: TBaseModelInstance<any>[];
 }
 
-const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUseColumnOrderChangedHandlersProps) => {
+const useColumnOrderChangedHandlers = ({ callback, type, params, topicId, sortedModels }: IUseColumnOrderChangedHandlersProps) => {
     let onEventName = "";
     const sendEventName = "";
     let targetModel;
@@ -58,8 +62,12 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId }: IUse
             callback,
             responseConverter: (data) => {
                 const model = targetModel.getModel(data.uid);
-                if (model) {
-                    model.order = data.order;
+                if (model && model.order !== data.order) {
+                    sortedModels = sortedModels as unknown as (typeof targetModel)[] as any[];
+                    const reordered = reorder({ list: sortedModels, startIndex: model.order, finishIndex: data.order });
+                    reordered.forEach((item, index) => {
+                        item.order = index;
+                    });
                 }
                 return data;
             },

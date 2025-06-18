@@ -12,19 +12,20 @@ interface ITableColumn {
     className?: string;
 }
 
-export interface ITableInfiniteScrollerProps extends TSharedInfiniteScrollerProps<HTMLTableElement> {
+export interface ITableInfiniteScrollerProps extends Omit<TSharedInfiniteScrollerProps<HTMLDivElement>, "loaderClassName"> {
     columns: ITableColumn[];
 }
 
 const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
-    ({ hasMore, initialLoad, loadMore, pageStart, loader, scrollable, columns, children, ...props }, ref) => {
-        const { loaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
+    ({ hasMore, initialLoad, loadMore, pageStart, loader, scrollable, gap, columns, children, ...props }, ref) => {
+        const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
             initialLoad,
             loadMore,
             pageStart,
             loader,
             scrollable,
+            gap,
             children,
         });
 
@@ -54,14 +55,14 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
                         )}
                         <Table.FlexRow
                             key={createShortUUID()}
-                            className={cn("absolute left-0 top-0 w-full", "items-center justify-center", !hasMore && "hidden")}
+                            className={cn("absolute left-0 top-0 w-full items-center justify-center border-none", !hasMore && "hidden")}
                             data-index={loaderIndex}
                             style={{
                                 transform: `translateY(${loaderY}px)`,
                             }}
-                            ref={composeRefs(loaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement>)}
+                            ref={composeRefs(setLoaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement>)}
                         >
-                            {children}
+                            {loader}
                         </Table.FlexRow>
                     </Table.FlexBody>
                 </Table.FlexRoot>
@@ -78,15 +79,16 @@ export interface IWithBodyScrollerProps
 }
 
 const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
-    ({ hasMore, initialLoad, loadMore, pageStart, loader, columns, mutable, headerClassName, innerClassName, children, ...props }, ref) => {
+    ({ hasMore, initialLoad, loadMore, pageStart, loader, columns, mutable, headerClassName, innerClassName, gap, children, ...props }, ref) => {
         const viewportRef = React.useRef<HTMLDivElement>(null);
-        const { loaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
+        const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
             initialLoad,
             loadMore,
             pageStart,
             loader,
             scrollable: () => viewportRef.current,
+            gap,
             children,
         });
 
@@ -120,14 +122,14 @@ const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
                                 )}
                                 <Table.FlexRow
                                     key={createShortUUID()}
-                                    className={cn("absolute left-0 top-0 w-full", "items-center justify-center", !hasMore && "hidden")}
+                                    className={cn("absolute left-0 top-0 w-full items-center justify-center border-none", !hasMore && "hidden")}
                                     data-index={loaderIndex}
                                     style={{
                                         transform: `translateY(${loaderY}px)`,
                                     }}
-                                    ref={composeRefs(loaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement>)}
+                                    ref={composeRefs(setLoaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement>)}
                                 >
-                                    {children}
+                                    {loader}
                                 </Table.FlexRow>
                             </Table.FlexBody>
                         </Table.FlexRoot>
@@ -173,7 +175,9 @@ const Row = ({ virtualizer, virtualRow, children, ...props }: ITableRowInfiniteS
     );
 };
 
-export default {
+const TableInfiniteScroller = {
     Default,
     WithBodyScroller,
 };
+
+export default TableInfiniteScroller;

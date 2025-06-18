@@ -1,5 +1,6 @@
 import { IUseInfiniteScrollerLoaderObserverProps } from "@/components/InfiniteScroller/types";
 import useInfiniteScrollerLoaderObserver from "@/components/InfiniteScroller/useInfiniteScrollerLoaderObserver";
+import TypeUtils from "@/core/utils/TypeUtils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 export interface IUseInfiniteScrollerVirtualizerProps extends IUseInfiniteScrollerLoaderObserverProps {
@@ -8,8 +9,8 @@ export interface IUseInfiniteScrollerVirtualizerProps extends IUseInfiniteScroll
     children: React.ReactNode;
 }
 
-const useInfiniteScrollerVirtualizer = ({ scrollable, loader, children, hasMore, ...props }: IUseInfiniteScrollerVirtualizerProps) => {
-    const { loaderRef, items } = useInfiniteScrollerLoaderObserver({
+const useInfiniteScrollerVirtualizer = ({ scrollable, loader, children, hasMore, gap, ...props }: IUseInfiniteScrollerVirtualizerProps) => {
+    const { setLoaderRef, items } = useInfiniteScrollerLoaderObserver({
         scrollable,
         loader,
         hasMore,
@@ -22,11 +23,12 @@ const useInfiniteScrollerVirtualizer = ({ scrollable, loader, children, hasMore,
         getScrollElement: scrollable,
         estimateSize: () => 0,
         measureElement: (el: HTMLElement) => el.getBoundingClientRect().height,
+        gap: TypeUtils.isString(gap) ? parseInt(gap) : gap,
         overscan: 5,
     });
 
     return {
-        loaderRef,
+        setLoaderRef,
         virtualizer,
         items,
     };

@@ -1,5 +1,4 @@
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
-import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { useNavigate } from "react-router-dom";
 import { Project, ProjectCard, ProjectCheckitem, User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -9,86 +8,80 @@ import BoardCardCheckitemAssignedMember from "@/pages/BoardPage/components/card/
 import BoardCardCheckitemCheckbox from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemCheckbox";
 import BoardCardCheckitemMoreMenu from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemMoreMenu";
 import BoardCardCheckitemTimer from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitemTimer";
-import { DraggableAttributes } from "@dnd-kit/core";
-import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { memo, useRef, useState } from "react";
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tv } from "tailwind-variants";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
+import invariant from "tiny-invariant";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
+import { BOARD_CARD_CHECK_DND_SYMBOL_SET } from "@/pages/BoardPage/components/card/checklist/BoardCardCheckConstants";
+import { TRowState } from "@/core/helpers/dnd/types";
+import { ROW_IDLE } from "@/core/helpers/dnd/createDndRowEvents";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface IBoardCardCheckitemProps {
     checkitem: ProjectCheckitem.TModel;
-    isOverlay?: bool;
 }
 
-interface IBoardCardCheckitemDragData extends ISortableDragData<ProjectCheckitem.TModel> {
-    type: "Checkitem";
-}
-
-function BoardCardCheckitem({ checkitem, isOverlay }: IBoardCardCheckitemProps): JSX.Element {
+function BoardCardCheckitem({ checkitem }: IBoardCardCheckitemProps): JSX.Element {
     const { hasRoleAction } = useBoardCard();
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: checkitem.uid,
-        data: {
-            type: "Checkitem",
-            data: checkitem,
-        } satisfies IBoardCardCheckitemDragData,
-        attributes: {
-            roleDescription: "Checkitem",
-        },
-    });
+    const outerRef = useRef<HTMLDivElement | null>(null);
+    const draggableRef = useRef<HTMLButtonElement | null>(null);
+    const [state, setState] = useState<TRowState>(ROW_IDLE);
     const canReorder = hasRoleAction(Project.ERoleAction.CardUpdate);
+    const order = checkitem.useField("order");
+    const checklistUID = checkitem.useField("checklist_uid");
 
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
+    useEffect(() => {
+        if (!canReorder) {
+            return;
+        }
 
-    const variants = tv({
-        base: cn(
-            "ml-3 relative border-accent border-b-2 border-transparent",
-            "after:content-[''] after:absolute after:-top-[calc(50%_+_2px)] after:left-0",
-            "after:border-l after:border-b after:border-accent after:h-[calc(100%_+_2px)] after:w-3"
-        ),
-        variants: {
-            dragging: {
-                over: "border-primary/50 [&>div]:opacity-30",
-                overlay: "ml-0 after:hidden",
+        const outer = outerRef.current;
+        const draggable = draggableRef.current;
+        invariant(outer && draggable);
+
+        return columnRowDndHelpers.row({
+            row: checkitem,
+            symbolSet: BOARD_CARD_CHECK_DND_SYMBOL_SET,
+            draggable: draggable,
+            dropTarget: outer,
+            setState,
+            renderPreview({ container }) {
+                // Simple drag preview generation: just cloning the current element.
+                // Not using react for this.
+                const rect = outer.getBoundingClientRect();
+                const preview = outer.cloneNode(true);
+                invariant(TypeUtils.isElement(preview, "div"));
+                preview.style.width = `${rect.width}px`;
+                preview.style.height = `${rect.height}px`;
+
+                container.appendChild(preview);
             },
-        },
-    });
+        });
+    }, [checkitem, order, checklistUID]);
 
-    let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-    if (canReorder) {
-        props = {
-            style,
-            className: variants({
-                dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
-            }),
-            ref: setNodeRef,
-        };
-    } else {
-        props = {
-            className: variants(),
-        };
-    }
+    const checkitemClassName = cn(
+        "ml-3 relative border-accent border-b-2 border-transparent",
+        "after:content-[''] after:absolute after:-top-[calc(50%_+_2px)] after:left-0",
+        "after:border-l after:border-b after:border-accent after:h-[calc(100%_+_2px)] after:w-3"
+    );
 
     return (
-        <Box {...props}>
-            <BoardCardCheckitemInner checkitem={checkitem} attributes={attributes} listeners={listeners} />
+        <Box className={checkitemClassName} ref={outerRef}>
+            {state.type === "is-over" && <DropIndicator edge={state.closestEdge} gap="2px" />}
+            <BoardCardCheckitemDisplay checkitem={checkitem} canReorder={canReorder} draggableRef={draggableRef} />
         </Box>
     );
 }
 
-interface IBoardCardSubCheckitemListProps {
+interface IBoardCardSubCheckitemDisplayProps {
     checkitem: ProjectCheckitem.TModel;
-    attributes?: DraggableAttributes;
-    listeners?: SyntheticListenerMap;
+    canReorder: bool;
+    draggableRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoardCardSubCheckitemListProps) => {
+const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }: IBoardCardSubCheckitemDisplayProps) => {
     const { projectUID, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
     const navigateRef = useRef(useNavigate());
     const [t] = useTranslation();
@@ -100,7 +93,6 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
     const cardifiedCard = cardifiedCards[0];
     const assignedUsers = checkitem.useForeignField<User.TModel>("user");
     const assignedUser = assignedUsers[0];
-    const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const canEditCheckitem = (!assignedUser && hasRoleAction(Project.ERoleAction.CardUpdate)) || assignedUser.uid === currentUser.uid;
 
     const toCardifiedCard = () => {
@@ -125,7 +117,7 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
             >
                 <Flex items="center" gap="2" w="full" className="truncate">
                     <Flex items="center" gap="1">
-                        {canEdit && (
+                        {canReorder && (
                             <Button
                                 type="button"
                                 variant="ghost"
@@ -133,8 +125,7 @@ const BoardCardCheckitemInner = memo(({ checkitem, attributes, listeners }: IBoa
                                 className="h-8 w-5 sm:size-8"
                                 title={t("common.Drag to reorder")}
                                 disabled={isValidating}
-                                {...attributes}
-                                {...listeners}
+                                ref={draggableRef}
                             >
                                 <IconComponent icon="grip-vertical" size="4" />
                             </Button>

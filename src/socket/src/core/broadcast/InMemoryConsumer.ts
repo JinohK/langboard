@@ -33,10 +33,10 @@ class InMemoryConsumer extends BaseConsumer {
 
                 await this.emit(model.event, model.data);
             } catch {
-                return;
-            } finally {
-                fs.unlinkSync(filename);
+                // Ignore invalid JSON files
             }
+
+            fs.unlinkSync(filename);
         });
     }
 

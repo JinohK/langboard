@@ -1,19 +1,17 @@
 import { Box, Button, Collapsible, Flex } from "@/components/base";
 import useChangeCardChecklistOrder from "@/controllers/api/card/checklist/useChangeCardChecklistOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import useReorderColumn from "@/core/hooks/useReorderColumn";
 import { ProjectChecklist, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardChecklist from "@/pages/BoardPage/components/card/checklist/BoardCardChecklist";
-import BoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/BoardCardCheckitem";
 import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/SkeletonBoardCardCheckitem";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useId, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import useColumnReordered from "@/core/hooks/useColumnReordered";
+import useChangeCardCheckitemOrder from "@/controllers/api/card/checkitem/useChangeCardCheckitemOrder";
+import invariant from "tiny-invariant";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
+import { BOARD_CARD_CHECK_DND_SETTINGS, BOARD_CARD_CHECK_DND_SYMBOL_SET } from "@/pages/BoardPage/components/card/checklist/BoardCardCheckConstants";
 
 export function SkeletonBoardCardChecklistGroup() {
     return (
@@ -27,134 +25,100 @@ export function SkeletonBoardCardChecklistGroup() {
 
 function BoardCardChecklistGroup(): JSX.Element {
     const [t] = useTranslation();
-    const { projectUID, card, socket } = useBoardCard();
+    const { projectUID, card, socket, viewportRef } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
     const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
-    const { mutate: changeOrderMutate } = useChangeCardChecklistOrder();
-    const { columns: checklists, reorder: reorderCheckitems } = useReorderColumn({
-        type: "ProjectChecklist",
-        eventNameParams: { uid: card.uid },
-        topicId: projectUID,
-        columns: flatChecklists,
-        socket,
-    });
-    const checklistUIDs = useMemo(() => checklists.map((checklist) => checklist.uid), [checklists]);
     const checkitemsMap = useMemo<Record<string, ProjectCheckitem.TModel>>(() => {
         const map: Record<string, ProjectCheckitem.TModel> = {};
-        checklists.forEach((checklist) => {
+        flatChecklists.forEach((checklist) => {
             checklist.checkitems.forEach((checkitem) => {
                 map[checkitem.uid] = checkitem;
             });
         });
         return map;
-    }, [checklists]);
-    const dndContextId = useId();
-    const {
-        activeColumn: activeChecklist,
-        activeRow: activeCheckitem,
-        containerIdRowDragCallbacksRef: callbacksRef,
-        sensors,
-        onDragStart,
-        onDragEnd,
-        onDragOverOrMove,
-    } = useColumnRowSortable<ProjectChecklist.TModel, ProjectCheckitem.TModel>({
-        columnDragDataType: "Checklist",
-        rowDragDataType: "Checkitem",
-        columnCallbacks: {
-            onDragEnd: (originalChecklist, index) => {
-                const originalCheckitemOrder = originalChecklist.order;
-                if (!reorderCheckitems(originalChecklist, index)) {
-                    return;
-                }
+    }, [flatChecklists]);
+    const { mutate: changeChecklistOrderMutate } = useChangeCardChecklistOrder();
+    const { mutate: changeCheckitemOrderMutate } = useChangeCardCheckitemOrder();
+    const updater = useReducer((x) => x + 1, 0);
+    const { columns: checklists } = useColumnReordered({
+        type: "ProjectChecklist",
+        eventNameParams: { uid: card.uid },
+        topicId: projectUID,
+        columns: flatChecklists,
+        socket,
+        updater,
+    });
 
-                changeOrderMutate(
-                    {
-                        project_uid: card.project_uid,
-                        card_uid: card.uid,
-                        checklist_uid: originalChecklist.uid,
-                        order: index,
-                    },
-                    {
-                        onError: (error) => {
-                            const { handle } = setupApiErrorHandler({
-                                code: {
-                                    after: () => {
-                                        reorderCheckitems(originalChecklist, originalCheckitemOrder);
-                                    },
-                                },
-                                wildcard: {
-                                    after: () => {
-                                        reorderCheckitems(originalChecklist, originalCheckitemOrder);
-                                    },
-                                },
-                            });
+    useEffect(() => {
+        const scrollable = viewportRef.current;
+        invariant(scrollable);
 
-                            handle(error);
-                        },
+        const setupApiErrors = (error: unknown, undo: () => void) => {
+            const { handle } = setupApiErrorHandler({
+                code: {
+                    after: undo,
+                },
+                wildcard: {
+                    after: undo,
+                },
+            });
+
+            handle(error);
+        };
+
+        return columnRowDndHelpers.root<ProjectChecklist.TModel, ProjectCheckitem.TModel>({
+            columns: checklists,
+            rowsMap: checkitemsMap,
+            columnKeyInRow: "checklist_uid",
+            symbolSet: BOARD_CARD_CHECK_DND_SYMBOL_SET,
+            scrollable,
+            settings: BOARD_CARD_CHECK_DND_SETTINGS,
+            isIndicator: true,
+            changeColumnOrder: ({ columnUID, order, undo }) => {
+                changeChecklistOrderMutate(
+                    { project_uid: projectUID, card_uid: card.uid, checklist_uid: columnUID, order },
+                    {
+                        onError: (error) => setupApiErrors(error, undo),
                     }
                 );
             },
-        },
-        transformContainerId: (item) => {
-            return `board-checklist-${(item as ProjectCheckitem.TModel).checklist_uid ?? item.uid}`;
-        },
-    });
+            changeRowOrder: ({ rowUID, order, parentUID, undo }) => {
+                changeCheckitemOrderMutate(
+                    { project_uid: projectUID, card_uid: card.uid, checkitem_uid: rowUID, parent_uid: parentUID, order },
+                    {
+                        onError: (error) => setupApiErrors(error, undo),
+                    }
+                );
+            },
+        });
+    }, [flatChecklists, checkitemsMap]);
 
     return (
-        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
-            <SortableContext items={checklistUIDs} strategy={verticalListSortingStrategy}>
-                {checklists.slice(0, 5).map((checklist) => (
-                    <BoardCardChecklist
-                        key={`board-checklist-${checklist.uid}`}
-                        checklist={checklist}
-                        checkitemsMap={checkitemsMap}
-                        callbacksRef={callbacksRef}
-                    />
-                ))}
-                {checklists.length > 5 && (
-                    <Collapsible.Root open={isOpened} onOpenChange={setIsOpened}>
-                        <Collapsible.Content asChild>
-                            <Box>
-                                {checklists.slice(5).map((checklist) => (
-                                    <BoardCardChecklist
-                                        key={`board-checklist-${checklist.uid}`}
-                                        checklist={checklist}
-                                        checkitemsMap={checkitemsMap}
-                                        callbacksRef={callbacksRef}
-                                    />
-                                ))}
-                            </Box>
-                        </Collapsible.Content>
-                        <Collapsible.Trigger asChild>
-                            <Flex justify="start" mt="2">
-                                <Button size="sm" variant="secondary">
-                                    {t(`card.${isOpened ? "Show fewer checklists" : "Show all checklists ({checklists} hidden)"}`, {
-                                        checklists: checklists.length - 5,
-                                    })}
-                                </Button>
-                            </Flex>
-                        </Collapsible.Trigger>
-                    </Collapsible.Root>
-                )}
-            </SortableContext>
-
-            {!TypeUtils.isUndefined(window) &&
-                createPortal(
-                    <DragOverlay>
-                        {activeChecklist && (
-                            <BoardCardChecklist
-                                key={`board-checklist-${activeChecklist.uid}`}
-                                checklist={activeChecklist}
-                                checkitemsMap={checkitemsMap}
-                                callbacksRef={callbacksRef}
-                                isOverlay
-                            />
-                        )}
-                        {activeCheckitem && <BoardCardCheckitem checkitem={activeCheckitem} isOverlay />}
-                    </DragOverlay>,
-                    document.body
-                )}
-        </DndContext>
+        <>
+            {checklists.slice(0, 5).map((checklist) => (
+                <BoardCardChecklist key={`board-checklist-${checklist.uid}`} checklist={checklist} checkitemsMap={checkitemsMap} />
+            ))}
+            {checklists.length > 5 && (
+                <Collapsible.Root open={isOpened} onOpenChange={setIsOpened}>
+                    <Collapsible.Content asChild>
+                        <Box>
+                            {checklists.slice(5).map((checklist) => (
+                                <BoardCardChecklist key={`board-checklist-${checklist.uid}`} checklist={checklist} checkitemsMap={checkitemsMap} />
+                            ))}
+                        </Box>
+                    </Collapsible.Content>
+                    <Collapsible.Trigger asChild>
+                        <Flex justify="start" mt="2">
+                            <Button size="sm" variant="secondary">
+                                {t(`card.${isOpened ? "Show fewer checklists" : "Show all checklists ({checklists} hidden)"}`, {
+                                    checklists: checklists.length - 5,
+                                })}
+                            </Button>
+                        </Flex>
+                    </Collapsible.Trigger>
+                </Collapsible.Root>
+            )}
+        </>
     );
 }
 

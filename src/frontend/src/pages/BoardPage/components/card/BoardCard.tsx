@@ -30,9 +30,10 @@ export interface IBoardCardProps {
     cardUID: string;
     currentUser: AuthUser.TModel;
     viewportId: string;
+    viewportRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoardCardProps): JSX.Element => {
+const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId, viewportRef }: IBoardCardProps): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
     const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
@@ -84,7 +85,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId }: IBoard
             {!cardData || isFetching ? (
                 <SkeletonBoardCard />
             ) : (
-                <BoardCardProvider projectUID={projectUID} card={cardData.card} currentUser={currentUser}>
+                <BoardCardProvider projectUID={projectUID} card={cardData.card} currentUser={currentUser} viewportRef={viewportRef}>
                     <BoardCardResult viewportId={viewportId} />
                 </BoardCardProvider>
             )}

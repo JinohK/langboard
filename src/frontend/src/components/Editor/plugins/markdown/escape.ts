@@ -1,6 +1,53 @@
 import { SlateEditor } from "@udecode/plate";
 import { deserializeInlineMd, deserializeMd, DeserializeMdOptions } from "@udecode/plate-markdown";
 
+const escapeNonHtmlAngles = (str: string): string => {
+    const htmlTagRegex = /^<\/?[a-zA-Z][\w:-]*(\s+[a-zA-Z_:][\w:.-]*(\s*=\s*(".*?"|'.*?'|[^'"<>\s]+))?)*\s*\/?>/;
+    let result = "";
+    let i = 0;
+
+    while (i < str.length) {
+        const char = str[i];
+
+        if (char === "<") {
+            let slashCount = 0;
+            for (let j = i - 1; j >= 0 && str[j] === "\\"; j--) slashCount++;
+            const isEscaped = slashCount % 2 === 1;
+
+            const remaining = str.slice(i);
+            const match = remaining.match(htmlTagRegex);
+
+            if (!isEscaped && match) {
+                const tagMatch = match[0];
+                result += tagMatch;
+                i += tagMatch.length;
+            } else if (!isEscaped) {
+                result += "&lt;";
+                i++;
+            } else {
+                result += char;
+                i++;
+            }
+        } else if (char === ">") {
+            let slashCount = 0;
+            for (let j = i - 1; j >= 0 && str[j] === "\\"; j--) slashCount++;
+            const isEscaped = slashCount % 2 === 1;
+
+            if (!isEscaped) {
+                result += "&gt;";
+            } else {
+                result += char;
+            }
+            i++;
+        } else {
+            result += char;
+            i++;
+        }
+    }
+
+    return result;
+};
+
 export const deserialize = (isInline: bool) => (editor: SlateEditor, text: string, options?: DeserializeMdOptions) => {
     // remove invalid html tags without valid html tags
 
@@ -104,5 +151,6 @@ export const deserialize = (isInline: bool) => (editor: SlateEditor, text: strin
     }
 
     newText = newText + text.slice(lastIndex);
+    newText = escapeNonHtmlAngles(newText);
     return isInline ? deserializeInlineMd(editor, newText, options) : deserializeMd(editor, newText, options);
 };

@@ -36,9 +36,7 @@ function useRowReordered<TRow extends TBaseModelInstance<IRow>>({
                 type,
                 topicId,
                 params: eventNameParams,
-                callback: () => {
-                    forceUpdate();
-                },
+                callback: forceUpdate,
             }),
         [type, topicId, eventNameParams, forceUpdate]
     );

@@ -1,87 +1,73 @@
 import { Flex } from "@/components/base";
 import useChangeProjectLabelOrder from "@/controllers/api/board/settings/useChangeProjectLabelOrder";
+import { singleDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import useReorderColumn from "@/core/hooks/useReorderColumn";
+import useColumnReordered from "@/core/hooks/useColumnReordered";
 import { ProjectLabel } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
 import BoardSettingsLabel from "@/pages/BoardPage/components/settings/label/BoardSettingsLabel";
 import BoardSettingsLabelAddButton from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelAddButton";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { memo, useId, useMemo } from "react";
-import { createPortal } from "react-dom";
+import { BOARD_SETTINGS_LABEL_DND_SYMBOL_SET } from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelConstants";
+import { memo, useEffect, useMemo, useReducer } from "react";
 
 const BoardSettingsLabelList = memo(() => {
     const { project, socket } = useBoardSettings();
     const { mutate: changeProjectLabelOrderMutate } = useChangeProjectLabelOrder();
+    const updater = useReducer((x) => x + 1, 0);
     const flatLabels = project.useForeignField<ProjectLabel.TModel>("labels");
-    const { columns: labels, reorder: reorderLabels } = useReorderColumn({
+    const labelsMap = useMemo<Record<string, ProjectLabel.TModel>>(() => {
+        const map: Record<string, ProjectLabel.TModel> = {};
+        flatLabels.forEach((label) => {
+            map[label.uid] = label;
+        });
+        return map;
+    }, [flatLabels]);
+    const { columns: labels } = useColumnReordered({
         type: "ProjectLabel",
         topicId: project.uid,
         eventNameParams: { uid: project.uid },
         columns: flatLabels,
         socket,
+        updater,
     });
-    const labelUIDs = useMemo(() => labels.map((label) => label.uid), [labels]);
-    const dndContextId = useId();
-    const {
-        activeColumn: activeLabel,
-        sensors,
-        onDragStart,
-        onDragEnd,
-        onDragOverOrMove,
-    } = useColumnRowSortable<ProjectLabel.TModel, ProjectLabel.TModel>({
-        columnDragDataType: "Label",
-        rowDragDataType: "FakeLabel",
-        columnCallbacks: {
-            onDragEnd: (originalLabel, index) => {
-                const originalLabelOrder = originalLabel.order;
-                if (!reorderLabels(originalLabel, index)) {
-                    return;
-                }
 
+    useEffect(() => {
+        const setupApiErrors = (error: unknown, undo: () => void) => {
+            const { handle } = setupApiErrorHandler({
+                code: {
+                    after: undo,
+                },
+                wildcard: {
+                    after: undo,
+                },
+            });
+
+            handle(error);
+        };
+
+        return singleDndHelpers.root<ProjectLabel.TModel>({
+            rowsMap: labelsMap,
+            symbolSet: BOARD_SETTINGS_LABEL_DND_SYMBOL_SET,
+            changeOrder: ({ rowUID, order, undo }) => {
                 changeProjectLabelOrderMutate(
-                    { project_uid: project.uid, label_uid: originalLabel.uid, order: index },
+                    { project_uid: project.uid, label_uid: rowUID, order },
                     {
-                        onError: (error) => {
-                            const { handle } = setupApiErrorHandler({
-                                code: {
-                                    after: () => {
-                                        reorderLabels(originalLabel, originalLabelOrder);
-                                    },
-                                },
-                                wildcard: {
-                                    after: () => {
-                                        reorderLabels(originalLabel, originalLabelOrder);
-                                    },
-                                },
-                            });
-
-                            handle(error);
-                        },
+                        onError: (error) => setupApiErrors(error, undo),
                     }
                 );
             },
-        },
-        transformContainerId: () => "",
-    });
+        });
+    }, [flatLabels, labelsMap]);
 
     return (
-        <DndContext id={dndContextId} sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOverOrMove}>
-            <SortableContext items={labelUIDs} strategy={verticalListSortingStrategy}>
-                <Flex direction="col" gap="2" py="4">
-                    {labels.map((label) => (
-                        <BoardSettingsLabel key={`board-setting-label-${label.uid}`} label={label} />
-                    ))}
-                </Flex>
-            </SortableContext>
+        <>
+            <Flex direction="col" gap="2" py="4">
+                {labels.map((label) => (
+                    <BoardSettingsLabel key={`board-setting-label-${label.uid}`} label={label} />
+                ))}
+            </Flex>
             <BoardSettingsLabelAddButton />
-
-            {!TypeUtils.isUndefined(window) &&
-                createPortal(<DragOverlay>{activeLabel && <BoardSettingsLabel label={activeLabel} isOverlay />}</DragOverlay>, document.body)}
-        </DndContext>
+        </>
     );
 });
 

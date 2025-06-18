@@ -7,6 +7,7 @@ export interface IBoardCardContext {
     projectUID: string;
     card: ProjectCard.TModel;
     currentUser: AuthUser.TModel;
+    viewportRef: React.RefObject<HTMLDivElement | null>;
     hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     socket: ISocketContext;
     editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
@@ -21,6 +22,7 @@ interface IBoardCardProviderProps {
     projectUID: string;
     card: ProjectCard.TModel;
     currentUser: AuthUser.TModel;
+    viewportRef: React.RefObject<HTMLDivElement | null>;
     children: React.ReactNode;
 }
 
@@ -28,6 +30,7 @@ const initialContext = {
     projectUID: "",
     card: {} as ProjectCard.TModel,
     currentUser: {} as AuthUser.TModel,
+    viewportRef: { current: null },
     hasRoleAction: () => false,
     socket: {} as ISocketContext,
     editorsRef: { current: {} },
@@ -38,7 +41,7 @@ const initialContext = {
 
 const BoardCardContext = createContext<IBoardCardContext>(initialContext);
 
-export const BoardCardProvider = ({ projectUID, card, currentUser, children }: IBoardCardProviderProps): React.ReactNode => {
+export const BoardCardProvider = ({ projectUID, card, currentUser, viewportRef, children }: IBoardCardProviderProps): React.ReactNode => {
     const socket = useSocket();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
@@ -72,6 +75,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, children }: I
                 projectUID,
                 card,
                 currentUser,
+                viewportRef,
                 hasRoleAction,
                 socket,
                 editorsRef,

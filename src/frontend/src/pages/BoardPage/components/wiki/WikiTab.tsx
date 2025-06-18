@@ -1,125 +1,87 @@
 import { Box, Button, IconComponent, Skeleton, Tabs, Toast, Tooltip } from "@/components/base";
 import useDeleteWiki from "@/controllers/api/wiki/useDeleteWiki";
+import { singleDndHelpers } from "@/core/helpers/dnd";
+import { SINGLE_ROW_IDLE } from "@/core/helpers/dnd/createDndSingleRowEvents";
+import { TSingleRowState } from "@/core/helpers/dnd/types";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { memo, useCallback } from "react";
+import TypeUtils from "@/core/utils/TypeUtils";
+import { BOARD_WIKI_DND_SYMBOL_SET } from "@/pages/BoardPage/components/wiki/WikiConstants";
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tv } from "tailwind-variants";
+import invariant from "tiny-invariant";
 
 export interface IWikiTabProps {
     changeTab: (uid: string) => void;
     wiki: ProjectWiki.TModel;
-    isOverlay?: bool;
-}
-
-interface IBoardWikiDragData extends ISortableDragData<ProjectWiki.TModel> {
-    type: "Wiki";
 }
 
 export function SkeletonWikiTab() {
     return <Skeleton h="8" w={{ initial: "14", sm: "20", md: "28" }} />;
 }
 
-const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
-    const [t] = useTranslation();
-    const isInBin = wiki.useField("isInBin");
-    const { projectUID, modeType, wikiTabListId, setWikis } = useBoardWiki();
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: wiki.uid,
-        data: {
-            type: "Wiki",
-            data: wiki,
-        } satisfies IBoardWikiDragData,
-        attributes: {
-            roleDescription: "Wiki",
-        },
-    });
+function WikiTab({ changeTab, wiki }: IWikiTabProps) {
+    const [state, setState] = useState<TSingleRowState>(SINGLE_ROW_IDLE);
+    const order = wiki.useField("order");
     const forbidden = wiki.useField("forbidden");
+    const outerRef = useRef<HTMLDivElement | null>(null);
+    const draggableRef = useRef<HTMLButtonElement | null>(null);
+
+    useEffect(() => {
+        if (forbidden) {
+            return;
+        }
+
+        const outer = outerRef.current;
+        const draggable = draggableRef.current;
+        invariant(outer && draggable);
+
+        return singleDndHelpers.row({
+            row: wiki,
+            symbolSet: BOARD_WIKI_DND_SYMBOL_SET,
+            draggable: draggable,
+            dropTarget: outer,
+            isHorizontal: true,
+            setState,
+            renderPreview({ container }) {
+                // Simple drag preview generation: just cloning the current element.
+                // Not using react for this.
+                const rect = outer.getBoundingClientRect();
+                const preview = outer.cloneNode(true);
+                invariant(TypeUtils.isElement(preview, "div"));
+                preview.style.width = `${rect.width}px`;
+                preview.style.height = `${rect.height}px`;
+
+                container.appendChild(preview);
+            },
+        });
+    }, [wiki, order, forbidden]);
+
+    return (
+        <Box position="relative" ref={outerRef}>
+            {state.type === "is-over" && <DropIndicator edge={state.closestEdge} gap="4px" />}
+            <WikiTabDisplay changeTab={changeTab} wiki={wiki} draggableRef={draggableRef} />
+        </Box>
+    );
+}
+
+interface IWikiTabDisplayProps {
+    changeTab: (uid: string) => void;
+    wiki: ProjectWiki.TModel;
+    draggableRef?: React.RefObject<HTMLButtonElement | null>;
+}
+
+const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayProps) => {
+    const [t] = useTranslation();
+    const { projectUID, modeType, wikiTabListId } = useBoardWiki();
+    const forbidden = wiki.useField("forbidden");
+    const title = wiki.useField("title");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
     const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki();
-    const title = wiki.useField("title");
-
-    const deleteWiki = useCallback(
-        (e: React.MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const promise = deleteWikiMutateAsync({
-                project_uid: projectUID,
-                wiki_uid: wiki.uid,
-            });
-
-            Toast.Add.promise(promise, {
-                loading: t("common.Deleting..."),
-                error: (error) => {
-                    const messageRef = { message: "" };
-                    const { handle } = setupApiErrorHandler({}, messageRef);
-
-                    handle(error);
-                    return messageRef.message;
-                },
-                success: () => {
-                    setWikis((prev) => prev.filter((wikiItem) => wikiItem.uid !== wiki.uid));
-                    return t("wiki.successes.Wiki page deleted successfully.");
-                },
-                finally: () => {},
-            });
-        },
-        [setWikis]
-    );
-
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
-
-    const variants = tv({
-        base: cn("cursor-pointer ring-primary", modeType === "delete" && "pr-1"),
-        variants: {
-            dragging: {
-                over: "ring-2 opacity-30",
-                overlay: "ring-2",
-            },
-        },
-    });
-
-    let props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
-    if (!forbidden) {
-        props = {
-            style,
-            className: variants({
-                dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
-            }),
-            onClick: () => {
-                if (isDragging) {
-                    return;
-                }
-
-                changeTab(wiki.uid);
-            },
-            ...attributes,
-            ...listeners,
-            ref: setNodeRef,
-        };
-    } else {
-        props = {
-            className: variants(),
-        };
-    }
-
-    if (isOverlay) {
-        return (
-            <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={forbidden} {...props}>
-                <span className="max-w-40 truncate">{forbidden ? t("wiki.Private") : title}</span>
-            </Tabs.Trigger>
-        );
-    }
 
     const scrollHorizontal = (event: React.PointerEvent<HTMLElement>) => {
         if (modeType !== "view") {
@@ -129,33 +91,64 @@ const WikiTab = memo(({ changeTab, wiki, isOverlay }: IWikiTabProps) => {
         onPointerDown(event);
     };
 
+    const handleTriggerClick = useCallback(() => {
+        if (forbidden) {
+            return;
+        }
+
+        changeTab(wiki.uid);
+    }, [changeTab, forbidden]);
+
+    const deleteWiki = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const promise = deleteWikiMutateAsync({
+            project_uid: projectUID,
+            wiki_uid: wiki.uid,
+        });
+
+        Toast.Add.promise(promise, {
+            loading: t("common.Deleting..."),
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
+            success: () => {
+                return t("wiki.successes.Wiki page deleted successfully.");
+            },
+            finally: () => {},
+        });
+    };
+
     return (
-        <Box hidden={isInBin}>
-            <Tooltip.Root>
-                <Tabs.Trigger value={wiki.uid} key={`board-wiki-${wiki.uid}-tab`} disabled={forbidden} onPointerDown={scrollHorizontal} {...props}>
-                    <Tooltip.Trigger asChild>
-                        <span className="max-w-40 truncate" onPointerDown={scrollHorizontal}>
-                            {forbidden ? t("wiki.Private") : title}
+        <Tooltip.Root>
+            <Tabs.Trigger
+                value={wiki.uid}
+                id={`board-wiki-${wiki.uid}-tab`}
+                disabled={forbidden}
+                onPointerDown={scrollHorizontal}
+                className={cn("cursor-pointer ring-primary", modeType === "delete" && "pr-1")}
+                onClick={handleTriggerClick}
+            >
+                <Tooltip.Trigger asChild>
+                    <span className="max-w-40 truncate" onPointerDown={scrollHorizontal} ref={draggableRef}>
+                        {forbidden ? t("wiki.Private") : title}
+                    </span>
+                </Tooltip.Trigger>
+                {modeType === "delete" && (
+                    <Button asChild variant="destructiveGhost" size="icon-sm" title={t("common.Delete")} className="ml-2 size-6" onClick={deleteWiki}>
+                        <span>
+                            <IconComponent icon="trash-2" size="3" />
                         </span>
-                    </Tooltip.Trigger>
-                    {modeType === "delete" && (
-                        <Button
-                            asChild
-                            variant="destructiveGhost"
-                            size="icon-sm"
-                            title={t("common.Delete")}
-                            className="ml-2 size-6"
-                            onClick={deleteWiki}
-                        >
-                            <span>
-                                <IconComponent icon="trash-2" size="3" />
-                            </span>
-                        </Button>
-                    )}
-                </Tabs.Trigger>
-                <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
-            </Tooltip.Root>
-        </Box>
+                    </Button>
+                )}
+            </Tabs.Trigger>
+            <Tooltip.Content>{forbidden ? t("wiki.Private") : title}</Tooltip.Content>
+        </Tooltip.Root>
     );
 });
 

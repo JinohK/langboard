@@ -2,6 +2,7 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
+import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 
 export interface IDashboardProjectColumnOrderChangedRawResponse {
     uid: string;
@@ -22,9 +23,15 @@ const useDashboardProjectColumnOrderChangedHandlers = ({ callback, projectUID }:
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                const column = ProjectColumn.Model.getModel(data.uid);
-                if (column) {
-                    column.order = data.order;
+                const targetColumn = ProjectColumn.Model.getModel(data.uid);
+                if (targetColumn && targetColumn.order !== data.order) {
+                    const flatColumns = ProjectColumn.Model.getModels((model) => model.project_uid === projectUID);
+                    const columns = flatColumns.sort((a, b) => a.order - b.order);
+
+                    const reordered = reorder({ list: columns, startIndex: targetColumn.order, finishIndex: data.order });
+                    reordered.forEach((item, index) => {
+                        item.order = index;
+                    });
                 }
                 return {};
             },

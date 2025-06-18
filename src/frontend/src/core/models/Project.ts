@@ -7,7 +7,6 @@ import { registerModel } from "@/core/models/ModelRegistry";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
-import useBoardLabelOrderChangedHandlers from "@/controllers/socket/board/label/useBoardLabelOrderChangedHandlers";
 import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
 import useDashboardCardCreatedHandlers from "@/controllers/socket/dashboard/card/useDashboardCardCreatedHandlers";
@@ -26,7 +25,6 @@ import useDashboardProjectColumnOrderChangedHandlers from "@/controllers/socket/
 import useDashboardProjectColumnDeletedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnDeletedHandlers";
 import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/useBoardColumnCreatedHandlers";
 import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
-import useBoardColumnOrderChangedHandlers from "@/controllers/socket/board/column/useBoardColumnOrderChangedHandlers";
 import useBoardColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardColumnDeletedHandlers";
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
 import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
@@ -91,7 +89,6 @@ class Project extends BaseModel<IStore> {
             [
                 useBoardColumnCreatedHandlers,
                 useBoardColumnNameChangedHandlers,
-                useBoardColumnOrderChangedHandlers,
                 useBoardColumnDeletedHandlers,
                 useBoardDetailsChangedHandlers,
                 useBoardAssignedBotsUpdatedHandlers,
@@ -99,7 +96,6 @@ class Project extends BaseModel<IStore> {
                 useBoardBotRolesUpdatedHandlers,
                 useBoardUserRolesUpdatedHandlers,
                 useBoardLabelCreatedHandlers,
-                useBoardLabelOrderChangedHandlers,
                 useBoardLabelDeletedHandlers,
                 useCardRelationshipsUpdatedHandlers,
                 useBoardChatTemplateCreatedHandlers,

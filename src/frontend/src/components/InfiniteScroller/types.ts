@@ -3,7 +3,9 @@ export interface IUseInfiniteScrollerLoaderObserverProps {
     initialLoad?: bool;
     loadMore: (page: number) => Promise<bool> | bool;
     pageStart?: number;
+    gap?: number | string;
     loader: React.ReactNode;
+    loaderClassName?: string;
     scrollable: () => HTMLElement | null;
     children: React.ReactNode;
 }

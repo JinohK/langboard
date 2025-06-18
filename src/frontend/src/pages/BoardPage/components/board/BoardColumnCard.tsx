@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
 import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
 import { ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
-import { Box, Card, Popover, Skeleton } from "@/components/base";
+import { Box, Card, Flex, Popover, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
@@ -17,7 +17,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { TRowState } from "@/core/helpers/dnd/types";
 import { ROW_IDLE } from "@/core/helpers/dnd/createDndRowEvents";
-import { dndHelpers } from "@/core/helpers/dnd";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
 
 export function SkeletonBoardColumnCard({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     return (
@@ -43,7 +43,7 @@ const outerStyles: { [Key in TRowState["type"]]?: string } = {
     // Using `display:none` rather than returning `null` so we can always
     // return refs from this component.
     // Keeping the refs allows us to continue to receive events during the drag.
-    "is-dragging-and-left-self": "hidden",
+    "is-dragging-and-left-self": "opacity-40",
 };
 
 const HOVER_DELAY = 500;
@@ -65,13 +65,13 @@ function BoardColumnCard({ card }: { card: ProjectCard.TModel }) {
         const inner = innerRef.current;
         invariant(outer && inner);
 
-        return dndHelpers.row({
+        return columnRowDndHelpers.row({
             row: card,
             symbolSet: BOARD_DND_SYMBOL_SET,
             draggable: inner,
             dropTarget: outer,
             setState,
-            renderPreview: ({ container }) => {
+            renderPreview({ container }) {
                 // Demonstrating using a react portal to generate a preview
                 const rect = inner.getBoundingClientRect();
                 container.style.width = `${rect.width}px`;
@@ -151,43 +151,44 @@ function BoardColumnCardDisplay({
                   !!selectCardViewType && isSelectedCard(card.uid) && "ring-2",
                   !!selectCardViewType && isDisabledCard(card.uid) && "opacity-30"
               ),
-        ["is-dragging", "preview"].includes(state.type) && "ring-2",
-        outerStyles[state.type]
+        ["is-dragging", "preview"].includes(state.type) && "ring-2"
     );
 
     return (
         <ModelRegistry.ProjectCard.Provider model={card} params={{ setFilters }}>
-            {state.type === "is-over" && state.closestEdge === "top" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
-            <Box
-                className={cardClassName}
-                onPointerEnter={onCardPointerEnter}
-                onPointerLeave={onCardPointerLeave}
-                {...{ [HOVER_CARD_UID_ATTR]: card.uid }}
-                ref={outerRef}
-            >
-                <Popover.Root open={!!isHoverCardOpened && canViewPreview}>
-                    <Popover.Trigger asChild>
-                        <Box ref={innerRef} className="!w-[theme(spacing.72)_+_theme(spacing.1)]">
-                            <BoardColumnCardCollapsible isDragging={state.type !== "idle"} />
-                        </Box>
-                    </Popover.Trigger>
-                    <Popover.Content
-                        side="right"
-                        align="start"
-                        className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5"
-                        {...{ [DISABLE_DRAGGING_ATTR]: "", [HOVER_CARD_UID_ATTR]: card.uid }}
-                    >
-                        {state.type === "idle" && <BoardColumnCardPreview />}
-                    </Popover.Content>
-                </Popover.Root>
-            </Box>
-            {state.type === "is-over" && state.closestEdge === "bottom" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
+            <Flex gap="2" direction="col" className={outerStyles[state.type]}>
+                {state.type === "is-over" && state.closestEdge === "top" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
+                <Box
+                    className={cardClassName}
+                    onPointerEnter={onCardPointerEnter}
+                    onPointerLeave={onCardPointerLeave}
+                    {...{ [HOVER_CARD_UID_ATTR]: card.uid }}
+                    ref={outerRef}
+                >
+                    <Popover.Root open={!!isHoverCardOpened && canViewPreview}>
+                        <Popover.Trigger asChild>
+                            <Box ref={innerRef} className="!w-[theme(spacing.72)_+_theme(spacing.1)]">
+                                <BoardColumnCardCollapsible isDragging={state.type !== "idle"} />
+                            </Box>
+                        </Popover.Trigger>
+                        <Popover.Content
+                            side="right"
+                            align="start"
+                            className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5 peer-first:hidden"
+                            {...{ [DISABLE_DRAGGING_ATTR]: "", [HOVER_CARD_UID_ATTR]: card.uid }}
+                        >
+                            {state.type === "idle" && <BoardColumnCardPreview />}
+                        </Popover.Content>
+                    </Popover.Root>
+                </Box>
+                {state.type === "is-over" && state.closestEdge === "bottom" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
+            </Flex>
         </ModelRegistry.ProjectCard.Provider>
     );
 }
 
 export function BoardColumnCardShadow({ dragging }: { dragging: DOMRect }) {
-    return <Box rounded w="72" className="flex-shrink-0 bg-slate-900" style={{ height: dragging.height }} />;
+    return <Box rounded="xl" w="full" className="flex-shrink-0 bg-secondary/80" style={{ height: dragging.height }} />;
 }
 
 export default BoardColumnCard;

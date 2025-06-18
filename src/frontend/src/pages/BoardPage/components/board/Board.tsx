@@ -14,7 +14,7 @@ import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } fr
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { dndHelpers } from "@/core/helpers/dnd";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ProjectCard, ProjectColumn } from "@/core/models";
 import useColumnReordered from "@/core/hooks/useColumnReordered";
@@ -74,6 +74,7 @@ export function SkeletonBoard() {
 export function Board() {
     const { project, columns: flatColumns, cardsMap, socket, canDragAndDrop } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
+    const [_, forceUpdate] = updater;
     const { columns } = useColumnReordered({
         type: "ProjectColumn",
         topicId: project.uid,
@@ -103,7 +104,7 @@ export function Board() {
             handle(error);
         };
 
-        return dndHelpers.root<ProjectColumn.TModel, ProjectCard.TModel>({
+        return columnRowDndHelpers.root<ProjectColumn.TModel, ProjectCard.TModel>({
             columns,
             rowsMap: cardsMap,
             columnKeyInRow: "column_uid",
@@ -115,6 +116,7 @@ export function Board() {
                     { project_uid: project.uid, column_uid: columnUID, order },
                     {
                         onError: (error) => setupApiErrors(error, undo),
+                        onSettled: forceUpdate,
                     }
                 );
             },
@@ -123,11 +125,12 @@ export function Board() {
                     { project_uid: project.uid, parent_uid: parentUID, card_uid: rowUID, order },
                     {
                         onError: (error) => setupApiErrors(error, undo),
+                        onSettled: forceUpdate,
                     }
                 );
             },
         });
-    }, [flatColumns, cardsMap]);
+    }, [columns, cardsMap]);
 
     // Panning the board
     useEffect(() => {
@@ -189,11 +192,11 @@ export function Board() {
 
     return (
         <ScrollArea.Root
-            className="h-full max-h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]"
+            className="h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]"
             viewportClassName="!overflow-y-auto"
             viewportRef={scrollableRef}
         >
-            <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max">
+            <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max" h="full">
                 {columns.map((column) => (
                     <BoardColumn key={column.uid} column={column} />
                 ))}

@@ -1,5 +1,5 @@
 import { IUseInfiniteScrollerLoaderObserverProps } from "@/components/InfiniteScroller/types";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const useInfiniteScrollerLoaderObserver = ({
     hasMore = false,
@@ -13,8 +13,8 @@ const useInfiniteScrollerLoaderObserver = ({
     const pageRef = useRef(pageStart);
     const loaderRef = useRef<HTMLDivElement | null>(null);
     const canLoadRef = useRef(true);
-    const isFirstLoadedRef = useRef(!initialLoad);
-
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const [isFirstLoaded, setIsFirstLoaded] = useState(!initialLoad);
     const triggerLoad = useCallback(async () => {
         if (!canLoadRef.current || !hasMore) {
             return;
@@ -30,39 +30,47 @@ const useInfiniteScrollerLoaderObserver = ({
             pageRef.current = next;
         }
     }, [hasMore, loadMore]);
+    const setLoaderRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+
+            loaderRef.current = node;
+            if (!node) {
+                return;
+            }
+
+            const rootElem = scrollable();
+            if (!rootElem || !hasMore || !isFirstLoaded) {
+                return;
+            }
+
+            observerRef.current = new IntersectionObserver(
+                (entries) => {
+                    if (!isFirstLoaded) {
+                        return;
+                    }
+
+                    if (entries[0].isIntersecting) {
+                        triggerLoad();
+                    }
+                },
+                { root: rootElem, threshold: 0.1 }
+            );
+            observerRef.current.observe(node);
+        },
+        [triggerLoad, scrollable, hasMore, isFirstLoaded]
+    );
 
     useEffect(() => {
-        if (initialLoad && pageRef.current === pageStart) {
+        if (initialLoad && pageRef.current === pageStart && !isFirstLoaded) {
             triggerLoad().finally(() => {
-                isFirstLoadedRef.current = true;
+                setIsFirstLoaded(() => true);
             });
-        }
-    }, []);
-
-    useEffect(() => {
-        const rootElem = scrollable();
-        if (!rootElem || !loaderRef.current || !hasMore || !isFirstLoadedRef.current) {
             return;
         }
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (!isFirstLoadedRef.current) {
-                    return;
-                }
-
-                if (entries[0].isIntersecting) {
-                    triggerLoad();
-                }
-            },
-            { root: rootElem, threshold: 0.1 }
-        );
-        observer.observe(loaderRef.current);
-
-        return () => {
-            observer.disconnect();
-        };
-    }, [triggerLoad, scrollable, hasMore]);
+    }, []);
 
     let items = Array.isArray(children) ? children : [children];
     if (hasMore) {
@@ -70,7 +78,7 @@ const useInfiniteScrollerLoaderObserver = ({
     }
 
     return {
-        loaderRef,
+        setLoaderRef,
         items,
     };
 };

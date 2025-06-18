@@ -17,7 +17,6 @@ export interface IBoardWikiContext {
     projectUID: string;
     socket: ISocketContext;
     wikis: ProjectWiki.TModel[];
-    setWikis: React.Dispatch<React.SetStateAction<ProjectWiki.TModel[]>>;
     projectMembers: User.TModel[];
     projectBots: BotModel.TModel[];
     currentUser: AuthUser.TModel;
@@ -43,7 +42,6 @@ const initialContext = {
     projectUID: "",
     socket: {} as ISocketContext,
     wikis: [],
-    setWikis: () => {},
     projectMembers: [],
     projectBots: [],
     currentUser: {} as AuthUser.TModel,
@@ -66,8 +64,7 @@ export const BoardWikiProvider = ({
     children,
 }: IBoardWikiProps): React.ReactNode => {
     const socket = useSocket();
-    const flatWikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
-    const [wikis, setWikis] = useState<ProjectWiki.TModel[]>(flatWikis.sort((a, b) => a.order - b.order));
+    const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
     const [projectBots, setProjectBots] = useState(flatProjectBots);
     const [t] = useTranslation();
@@ -106,11 +103,9 @@ export const BoardWikiProvider = ({
     });
 
     useEffect(() => {
-        setWikis(() => flatWikis.sort((a, b) => a.order - b.order));
-
         const unsubscribes: (() => void)[] = [];
-        for (let i = 0; i < flatWikis.length; ++i) {
-            const wiki = flatWikis[i];
+        for (let i = 0; i < wikis.length; ++i) {
+            const wiki = wikis[i];
             const unsubscribe = wiki.subscribePrivateSocketHandlers(currentUser);
             unsubscribes.push(unsubscribe);
         }
@@ -118,7 +113,7 @@ export const BoardWikiProvider = ({
         return () => {
             unsubscribes.forEach((unsubscribe) => unsubscribe());
         };
-    }, [flatWikis]);
+    }, [wikis]);
 
     const setCurrentEditor = (uid: string) => {
         if (currentEditorRef.current) {
@@ -157,7 +152,6 @@ export const BoardWikiProvider = ({
                 projectUID,
                 socket,
                 wikis,
-                setWikis,
                 projectMembers,
                 projectBots,
                 currentUser,

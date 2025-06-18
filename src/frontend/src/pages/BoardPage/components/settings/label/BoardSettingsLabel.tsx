@@ -1,65 +1,75 @@
 import { ProjectLabel } from "@/core/models";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { memo, useState } from "react";
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tv } from "tailwind-variants";
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
 import BoardSettingsLabelMoreMenu from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelMoreMenu";
 import BoardSettingsLabelColor from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelColor";
-import { ISortableDragData } from "@/core/hooks/useColumnRowSortable";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { TSingleRowState } from "@/core/helpers/dnd/types";
+import { SINGLE_ROW_IDLE } from "@/core/helpers/dnd/createDndSingleRowEvents";
+import { singleDndHelpers } from "@/core/helpers/dnd";
+import { BOARD_SETTINGS_LABEL_DND_SYMBOL_SET } from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelConstants";
+import invariant from "tiny-invariant";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface IBoardSettingsLabelProps {
     label: ProjectLabel.TModel;
-    isOverlay?: bool;
 }
 
-interface IBoardSettingsLabelDragData extends ISortableDragData<ProjectLabel.TModel> {
-    type: "Label";
+function BoardSettingsLabel({ label }: IBoardSettingsLabelProps): JSX.Element {
+    const [state, setState] = useState<TSingleRowState>(SINGLE_ROW_IDLE);
+    const order = label.useField("order");
+    const outerRef = useRef<HTMLDivElement | null>(null);
+    const draggableRef = useRef<HTMLButtonElement | null>(null);
+
+    useEffect(() => {
+        const outer = outerRef.current;
+        const draggable = draggableRef.current;
+        invariant(outer && draggable);
+
+        return singleDndHelpers.row({
+            row: label,
+            symbolSet: BOARD_SETTINGS_LABEL_DND_SYMBOL_SET,
+            draggable: draggable,
+            dropTarget: outer,
+            setState,
+            renderPreview({ container }) {
+                // Simple drag preview generation: just cloning the current element.
+                // Not using react for this.
+                const rect = outer.getBoundingClientRect();
+                const preview = outer.cloneNode(true);
+                invariant(TypeUtils.isElement(preview, "div"));
+                preview.style.width = `${rect.width}px`;
+                preview.style.height = `${rect.height}px`;
+
+                container.appendChild(preview);
+            },
+        });
+    }, [label, order]);
+
+    return (
+        <Box position="relative" py="1" ref={outerRef}>
+            {state.type === "is-over" && <DropIndicator edge={state.closestEdge} />}
+            <BoardSettingsLabelDisplay label={label} draggableRef={draggableRef} />
+        </Box>
+    );
 }
 
-const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps): JSX.Element => {
+interface IBoardSettingsLabelDisplayProps {
+    label: ProjectLabel.TModel;
+    draggableRef: React.RefObject<HTMLButtonElement | null>;
+}
+
+const BoardSettingsLabelDisplay = memo(({ label, draggableRef }: IBoardSettingsLabelDisplayProps) => {
     const [t] = useTranslation();
     const labelName = label.useField("name");
     const labelDescription = label.useField("description");
     const [isValidating, setIsValidating] = useState(false);
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-        id: label.uid,
-        data: {
-            type: "Label",
-            data: label,
-        } satisfies IBoardSettingsLabelDragData,
-        attributes: {
-            roleDescription: "Label",
-        },
-    });
-
-    const style = {
-        transition,
-        transform: CSS.Translate.toString(transform),
-    };
-
-    const variants = tv({
-        variants: {
-            dragging: {
-                over: "border-b-2 border-primary/50 [&>div]:opacity-30",
-                overlay: "",
-            },
-        },
-    });
-
-    const props = {
-        style,
-        className: variants({
-            dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
-        }),
-        ref: setNodeRef,
-    };
 
     return (
         <ModelRegistry.ProjectLabel.Provider model={label} params={{ isValidating, setIsValidating }}>
-            <Flex items="center" justify="between" {...props}>
+            <Flex items="center" justify="between">
                 <Flex items="center" gap={{ initial: "1.5", sm: "2.5" }} className="truncate">
                     <Button
                         type="button"
@@ -68,8 +78,7 @@ const BoardSettingsLabel = memo(({ label, isOverlay }: IBoardSettingsLabelProps)
                         className="h-8 min-h-8 w-5 min-w-5 sm:size-8 sm:min-w-8"
                         title={t("common.Drag to reorder")}
                         disabled={isValidating}
-                        {...attributes}
-                        {...listeners}
+                        ref={draggableRef}
                     >
                         <IconComponent icon="grip-vertical" size="4" />
                     </Button>

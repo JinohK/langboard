@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, Flex, Skeleton } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
@@ -9,6 +9,8 @@ import ProjectItemColumn from "@/pages/DashboardPage/components/ProjectItemColum
 import ProjectItemStarButton from "@/pages/DashboardPage/components/ProjectItemStarButton";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { cn } from "@/core/utils/ComponentUtils";
+import useDashboardProjectUIColumnOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectUIColumnOrderChangedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 
 export const SkeletonProjectItem = memo(() => {
     const cards = [];
@@ -51,12 +53,24 @@ export interface IProjectItemProps extends React.ComponentPropsWithoutRef<typeof
 
 const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProjectItemProps): JSX.Element => {
     const [t] = useTranslation();
-    const { navigate } = useDashboard();
+    const { socket, navigate } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
     const title = project.useField("title");
     const projectType = project.useField("project_type");
     const flatColumns = project.useForeignField<ProjectColumn.TModel>("columns");
-    const [columns, setColumns] = useState(flatColumns);
+    const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
+    const columns = useMemo(() => flatColumns.sort((a, b) => a.order - b.order), [flatColumns, updated]);
+    const handlers = useMemo(
+        () =>
+            useDashboardProjectUIColumnOrderChangedHandlers({
+                projectUID: project.uid,
+                callback: () => {
+                    forceUpdate();
+                },
+            }),
+        [forceUpdate]
+    );
+    useSwitchSocketHandlers({ socket, handlers, dependencies: [handlers] });
 
     const toBoard = () => {
         if (!project) {
@@ -79,7 +93,7 @@ const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProject
                 <Card.Content></Card.Content>
                 <Card.Footer className="flex items-center gap-1.5">
                     {columns.map((column) => (
-                        <ProjectItemColumn key={createShortUUID()} column={column} setColumns={setColumns} />
+                        <ProjectItemColumn key={createShortUUID()} column={column} />
                     ))}
                 </Card.Footer>
             </ModelRegistry.Project.Provider>

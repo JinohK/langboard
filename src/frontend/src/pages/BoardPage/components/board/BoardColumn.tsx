@@ -15,7 +15,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import useBoardUIColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardUIColumnDeletedHandlers";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { dndHelpers } from "@/core/helpers/dnd";
+import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import { TColumnState } from "@/core/helpers/dnd/types";
 import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
 import { COLUMN_IDLE } from "@/core/helpers/dnd/createDndColumnEvents";
@@ -67,7 +67,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
         invariant(header);
         invariant(inner);
 
-        return dndHelpers.column<ProjectColumn.TModel>({
+        return columnRowDndHelpers.column<ProjectColumn.TModel>({
             column,
             symbolSet: BOARD_DND_SYMBOL_SET,
             draggable: header,
@@ -75,7 +75,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
             scrollable,
             settings: BOARD_DND_SETTINGS,
             setState,
-            renderPreview: ({ container }) => {
+            renderPreview({ container }) {
                 // Simple drag preview generation: just cloning the current element.
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();

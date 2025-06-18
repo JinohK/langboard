@@ -1,18 +1,13 @@
 import { Flex } from "@/components/base";
 import useChangeWikiOrder from "@/controllers/api/wiki/useChangeWikiOrder";
+import { singleDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useColumnRowSortable from "@/core/hooks/useColumnRowSortable";
-import useReorderColumn from "@/core/hooks/useReorderColumn";
+import useColumnReordered from "@/core/hooks/useColumnReordered";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
-import { TMoreWikiTabDropzonCallbacks } from "@/pages/BoardPage/components/wiki/types";
-import WikiBin from "@/pages/BoardPage/components/wiki/WikiBin";
 import WikiTab, { SkeletonWikiTab } from "@/pages/BoardPage/components/wiki/WikiTab";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { memo, useEffect, useId, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { BOARD_WIKI_DND_SYMBOL_SET } from "@/pages/BoardPage/components/wiki/WikiConstants";
+import { memo, useEffect, useMemo, useReducer } from "react";
 
 export interface IWikiTabListProps {
     changeTab: (uid: string) => void;
@@ -30,112 +25,58 @@ export function SkeletonWikiTabList() {
 
 const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
     const { projectUID, wikis: flatWikis, socket, modeType } = useBoardWiki();
+    const wikisMap = useMemo<Record<string, ProjectWiki.TModel>>(() => {
+        const map: Record<string, ProjectWiki.TModel> = {};
+        flatWikis.forEach((wiki) => {
+            map[wiki.uid] = wiki;
+        });
+        return map;
+    }, [flatWikis]);
+    const updater = useReducer((x) => x + 1, 0);
     const { mutate: changeWikiOrderMutate } = useChangeWikiOrder();
-    const moreDroppableZoneCallbacksRef = useRef<TMoreWikiTabDropzonCallbacks>({});
-    const {
-        columns: wikis,
-        setColumns: setWikis,
-        reorder: reorderWikis,
-    } = useReorderColumn<ProjectWiki.TModel>({
+    const { columns: wikis } = useColumnReordered({
         type: "ProjectWiki",
-        eventNameParams: { uid: projectUID },
         topicId: projectUID,
+        eventNameParams: { uid: projectUID },
         columns: flatWikis,
         socket,
-    });
-    const wikisUIDs = useMemo(() => wikis.map((wiki) => wiki.uid), [wikis]);
-    const dndContextId = useId();
-    const {
-        activeColumn: activeWiki,
-        sensors,
-        onDragStart,
-        onDragEnd,
-        onDragOverOrMove,
-        onDragCancel,
-    } = useColumnRowSortable<ProjectWiki.TModel, ProjectWiki.TModel>({
-        columnDragDataType: "Wiki",
-        rowDragDataType: "FakeWiki",
-        columnCallbacks: {
-            onDragEnd: (orignalWiki, index) => {
-                const originalWikiOrder = orignalWiki.order;
-                const targetWiki = wikis.find((wiki) => wiki.uid === orignalWiki.uid);
-                if (targetWiki) {
-                    targetWiki.isInBin = false;
-                }
-
-                if (!reorderWikis(orignalWiki, index)) {
-                    return;
-                }
-
-                changeWikiOrderMutate(
-                    { project_uid: projectUID, wiki_uid: orignalWiki.uid, order: index },
-                    {
-                        onError: (error) => {
-                            const { handle } = setupApiErrorHandler({
-                                code: {
-                                    after: () => {
-                                        reorderWikis(orignalWiki, originalWikiOrder);
-                                    },
-                                },
-                                wildcard: {
-                                    after: () => {
-                                        reorderWikis(orignalWiki, originalWikiOrder);
-                                    },
-                                },
-                            });
-
-                            handle(error);
-                        },
-                    }
-                );
-            },
-            onDragOverOrMove: (activeWiki) => {
-                const targetWiki = wikis.find((wiki) => wiki.uid === activeWiki.uid);
-                if (!targetWiki || !targetWiki.isInBin) {
-                    return;
-                }
-
-                targetWiki.isInBin = false;
-                setWikis((prev) => [...prev]);
-            },
-            onDragCancel: (originalWiki) => {
-                const targetWiki = wikis.find((wiki) => wiki.uid === originalWiki.uid);
-                if (!targetWiki) {
-                    return;
-                }
-
-                targetWiki.isInBin = false;
-                setWikis((prev) => [...prev]);
-            },
-        },
-        transformContainerId: () => "",
-        moreDroppableZoneCallbacks: moreDroppableZoneCallbacksRef.current,
+        updater,
     });
 
     useEffect(() => {
-        setWikis(() => flatWikis);
-    }, [flatWikis]);
+        if (modeType !== "reorder") {
+            return;
+        }
 
-    return (
-        <DndContext
-            id={dndContextId}
-            sensors={sensors}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            onDragOver={onDragOverOrMove}
-            onDragCancel={onDragCancel}
-        >
-            <SortableContext items={wikisUIDs} strategy={horizontalListSortingStrategy} disabled={modeType !== "reorder"}>
-                {wikis.map((wiki) => (
-                    <WikiTab key={`board-wiki-${wiki.uid}-tab`} changeTab={changeTab} wiki={wiki} />
-                ))}
-            </SortableContext>
+        const setupApiErrors = (error: unknown, undo: () => void) => {
+            const { handle } = setupApiErrorHandler({
+                code: {
+                    after: undo,
+                },
+                wildcard: {
+                    after: undo,
+                },
+            });
 
-            {!TypeUtils.isUndefined(window) &&
-                createPortal(<DragOverlay>{activeWiki && <WikiTab changeTab={changeTab} wiki={activeWiki} isOverlay />}</DragOverlay>, document.body)}
-            {activeWiki && createPortal(<WikiBin moreDroppableZoneCallbacksRef={moreDroppableZoneCallbacksRef} />, document.body)}
-        </DndContext>
-    );
+            handle(error);
+        };
+
+        return singleDndHelpers.root<ProjectWiki.TModel>({
+            rowsMap: wikisMap,
+            symbolSet: BOARD_WIKI_DND_SYMBOL_SET,
+            isHorizontal: true,
+            changeOrder: ({ rowUID, order, undo }) => {
+                changeWikiOrderMutate(
+                    { project_uid: projectUID, wiki_uid: rowUID, order },
+                    {
+                        onError: (error) => setupApiErrors(error, undo),
+                    }
+                );
+            },
+        });
+    }, [flatWikis, wikisMap, modeType]);
+
+    return wikis.map((wiki) => <WikiTab key={`board-wiki-${wiki.uid}-tab`} changeTab={changeTab} wiki={wiki} />);
 });
 
 export default WikiTabList;

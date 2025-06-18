@@ -1,19 +1,14 @@
 import { Box, Flex, Tooltip } from "@/components/base";
 import { ProjectColumn } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
-import { arrayMove } from "@dnd-kit/sortable";
 
 export interface IProjectCardColumnProps {
     column: ProjectColumn.TModel;
-    setColumns: React.Dispatch<React.SetStateAction<ProjectColumn.TModel[]>>;
 }
 
-function ProjectCardColumn({ column, setColumns }: IProjectCardColumnProps) {
+function ProjectCardColumn({ column }: IProjectCardColumnProps) {
     const name = column.useField("name");
     const count = column.useField("count");
-    column.useField("order", (newOrder, oldOrder) => {
-        setColumns((prev) => arrayMove(prev, oldOrder, newOrder));
-    });
 
     return (
         <Tooltip.Root>

@@ -7,16 +7,18 @@ import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/ad
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
-import { TRowModelWithKey, TSettings, TSortableData, TSymbolSet } from "@/core/helpers/dnd/types";
-import createDndDataHelper from "@/core/helpers/dnd/createDndDataHelper";
+import { TRowModelWithKey, TColumnRowSettings, TSortableData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
+import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
+import { canReorderByClosestEdge } from "@/core/helpers/dnd/utils";
 
 export interface ICreateDndRootEventsProps<TColumnModel extends TSortableData, TRowModel extends TSortableData> {
     columns: TColumnModel[];
     rowsMap: Record<string, TRowModelWithKey<TRowModel>>;
     columnKeyInRow: keyof TRowModel;
-    symbolSet: TSymbolSet;
+    symbolSet: TColumnRowSymbolSet;
     scrollable: HTMLElement;
-    settings: TSettings;
+    settings: TColumnRowSettings;
+    isIndicator?: bool;
     changeColumnOrder: (context: { columnUID: string; order: number; undo: () => void }) => void;
     changeRowOrder: (context: { rowUID: string; order: number; parentUID?: string; undo: () => void }) => void;
 }
@@ -24,13 +26,14 @@ export interface ICreateDndRootEventsProps<TColumnModel extends TSortableData, T
 const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel extends TSortableData>(
     props: ICreateDndRootEventsProps<TColumnModel, TRowModel>
 ) => {
-    const { columns, rowsMap, columnKeyInRow, symbolSet, scrollable, settings, changeColumnOrder, changeRowOrder } = props;
+    const { columns, rowsMap, columnKeyInRow, symbolSet, scrollable, settings, isIndicator, changeColumnOrder, changeRowOrder } = props;
 
     type TRow = TRowModelWithKey<TRowModel>;
 
-    const { isColumnData, isDraggingAColumn, isRowData, isDraggingARow, isDroppableTargetData } = createDndDataHelper<TColumnModel, TRowModel>({
-        symbolSet,
-    });
+    const { isColumnData, isDraggingAColumn, isColumnDroppableTargetData, isRowData, isDraggingARow, isRowDroppableTargetData } =
+        createDndColumnRowDataHelper<TColumnModel, TRowModel>({
+            symbolSet,
+        });
 
     const getRowsByColumn = (column: TColumnModel): TRowModelWithKey<TRowModel>[] => {
         return Object.values(rowsMap)
@@ -52,7 +55,6 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
         }
 
         const reordered = reorder({ list, startIndex, finishIndex });
-        console.log(list, reordered, startIndex, finishIndex);
         reordered.forEach((item, index) => {
             item.order = index;
         });
@@ -201,19 +203,21 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
                 const rowIndexInHome = dragging.row.order;
 
                 // dropping on a row
-                if (isDroppableTargetData(dropTargetData)) {
+                if (isRowDroppableTargetData(dropTargetData)) {
                     const destinationColumnIndex = columns.findIndex((column) => column.uid === dropTargetData.row[columnKeyInRow]);
                     const destination = columns[destinationColumnIndex];
                     // reordering in home column
                     if (home === destination) {
                         const rowFinishIndex = dropTargetData.row.order;
-
                         // no change needed
                         if (rowIndexInHome === rowFinishIndex) {
                             return;
                         }
 
                         const closestEdge = extractClosestEdge(dropTargetData);
+                        if (!canReorderByClosestEdge({ sourceIndex: rowIndexInHome, targetIndex: rowFinishIndex, closestEdge })) {
+                            return;
+                        }
 
                         const { undo } = reorderItemsWithEdge({
                             list: getRowsByColumn(home),
@@ -236,6 +240,14 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
                     const indexOfTarget = rowsMap[dropTargetData.row.uid].order;
                     const closestEdge = extractClosestEdge(dropTargetData);
                     const finalIndex = closestEdge === "bottom" ? indexOfTarget + 1 : indexOfTarget;
+
+                    if (
+                        home === destination &&
+                        (rowIndexInHome === finalIndex ||
+                            !canReorderByClosestEdge({ sourceIndex: rowIndexInHome, targetIndex: indexOfTarget, closestEdge }))
+                    ) {
+                        return;
+                    }
 
                     const { undo } = moveRow({
                         draggingRow: dragging.row,
@@ -296,12 +308,34 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
                 }
 
                 const dropTargetData = innerMost.data;
+                const homeIndex = dragging.column.order;
+
+                if (isColumnDroppableTargetData(dropTargetData)) {
+                    const indexOfTarget = dropTargetData.column.order;
+                    const closestEdge = extractClosestEdge(dropTargetData);
+
+                    if (isIndicator && !canReorderByClosestEdge({ sourceIndex: homeIndex, targetIndex: indexOfTarget, closestEdge })) {
+                        return;
+                    }
+
+                    if (homeIndex === indexOfTarget) {
+                        return;
+                    }
+
+                    const { undo } = reorderItems({
+                        list: columns,
+                        startIndex: homeIndex,
+                        finishIndex: indexOfTarget,
+                    });
+
+                    changeColumnOrder({ columnUID: dragging.column.uid, order: dragging.column.order, undo });
+                    return;
+                }
 
                 if (!isColumnData(dropTargetData)) {
                     return;
                 }
 
-                const homeIndex = dragging.column.order;
                 const destinationIndex = dropTargetData.column.order;
                 if (homeIndex === destinationIndex) {
                     return;

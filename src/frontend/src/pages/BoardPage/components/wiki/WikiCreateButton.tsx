@@ -10,7 +10,7 @@ export interface IWikiCreateButtonProps {
 }
 
 const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
-    const { projectUID, setWikis, wikiTabListId } = useBoardWiki();
+    const { projectUID, wikiTabListId } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: createWikiMutateAsync } = useCreateWiki();
 
@@ -30,15 +30,20 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
                 return messageRef.message;
             },
             success: (data) => {
-                setWikis((prev) => [...prev, data.wiki]);
-                setTimeout(() => {
+                const changeCreatedTab = () => {
+                    const wikiTab = document.getElementById(`board-wiki-${data.wiki.uid}-tab`);
+                    if (!wikiTab) {
+                        return setTimeout(changeCreatedTab, 50);
+                    }
+
                     const wikiTabList = document.getElementById(wikiTabListId);
                     wikiTabList?.scrollTo({
                         left: wikiTabList.scrollWidth,
                         behavior: "smooth",
                     });
                     changeTab(data.wiki.uid);
-                }, 0);
+                };
+                changeCreatedTab();
                 return t("wiki.successes.New wiki page created successfully.");
             },
             finally: () => {},

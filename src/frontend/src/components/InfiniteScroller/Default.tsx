@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
@@ -7,27 +7,56 @@ import { Box, composeRefs } from "@udecode/cn";
 export interface IDefaultInfiniteScrollerProps extends TSharedInfiniteScrollerProps<React.ReactElement> {
     as?: React.ElementType;
     row?: React.ElementType;
+    outerToApplyHeightRef?: React.RefObject<HTMLElement | null>;
     rowClassName?: string;
 }
 
 const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScrollerProps>(
     (
-        { hasMore, initialLoad, loadMore, pageStart, loader, scrollable, as = "div", row = "div", rowClassName, className, children, ...props },
+        {
+            hasMore,
+            initialLoad,
+            loadMore,
+            pageStart,
+            loader,
+            loaderClassName,
+            scrollable,
+            gap,
+            as = "div",
+            row = "div",
+            outerToApplyHeightRef,
+            rowClassName,
+            className,
+            children,
+            ...props
+        },
         ref
     ) => {
-        const { loaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
+        const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
             initialLoad,
             loadMore,
             pageStart,
             loader,
             scrollable,
+            gap,
             children,
         });
 
         const virtualItems = virtualizer.getVirtualItems();
         const loaderIndex = hasMore ? (virtualItems[virtualItems.length - 1]?.index ?? "-1") : "-1";
         const loaderY = hasMore ? (virtualItems[virtualItems.length - 1]?.start ?? -99999) : -99999;
+
+        useEffect(() => {
+            const outer = outerToApplyHeightRef?.current;
+            if (!outer) {
+                return;
+            }
+
+            setTimeout(() => {
+                outer.style.height = `${virtualizer.getTotalSize()}px`;
+            }, 0);
+        }, [virtualizer.getTotalSize, children]);
 
         const Comp = as;
         const RowComp = row;
@@ -51,12 +80,12 @@ const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScroller
                     );
                 })}
                 <Box
-                    className={cn(rowClassName, "absolute left-0 top-0", !hasMore && "hidden")}
+                    className={cn(loaderClassName, "absolute left-0 top-0 w-full", !hasMore && "hidden")}
                     data-index={loaderIndex}
                     style={{
                         transform: `translateY(${loaderY}px)`,
                     }}
-                    ref={composeRefs(loaderRef, virtualizer.measureElement)}
+                    ref={composeRefs(setLoaderRef, virtualizer.measureElement)}
                 >
                     {loader}
                 </Box>

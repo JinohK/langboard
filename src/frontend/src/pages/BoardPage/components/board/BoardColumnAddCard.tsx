@@ -22,7 +22,7 @@ const BoardColumnAddCard = memo(() => {
                     pr="1"
                     rounded="md"
                     mb="-2.5"
-                    className="overflow-y-auto bg-secondary/70"
+                    className="bg-secondary/70"
                     {...{ [disableChangeModeAttr]: true }}
                     onClick={(e) => {
                         if ((e.target as HTMLElement) === e.currentTarget) {

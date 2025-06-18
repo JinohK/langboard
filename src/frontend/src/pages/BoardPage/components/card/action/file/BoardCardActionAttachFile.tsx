@@ -18,7 +18,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
     const attachedFileMap = useRef<Record<string, IAttachedFile>>({});
     const attachedFiles = useMemo(() => {
-        return Object.values(attachedFileMap.current).sort((a, b) => a.order - b.order);
+        return Object.values(attachedFileMap.current);
     }, [updated, forceUpdate, attachedFileMap.current]);
     const inputRef = useRef<HTMLInputElement>(null);
     const handleAttach = (files: File[]) => {
@@ -26,10 +26,9 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
             return;
         }
 
-        const count = Object.keys(attachedFileMap.current).length;
         for (let i = 0; i < files.length; ++i) {
             const key = createUUID();
-            attachedFileMap.current[key] = { uid: key, file: files[i], order: count + i };
+            attachedFileMap.current[key] = { uid: key, file: files[i] };
         }
 
         if (inputRef.current) {
@@ -115,7 +114,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
                                 {t("card.Drag and drop a file here")}
                             </Flex>
                         ) : (
-                            <BoardCardActionAttachedFileList attachedFiles={attachedFiles} deleteFile={deleteFile} update={forceUpdate} />
+                            <BoardCardActionAttachedFileList attachedFiles={attachedFiles} deleteFile={deleteFile} />
                         )}
                     </Box>
                 </ScrollArea.Root>

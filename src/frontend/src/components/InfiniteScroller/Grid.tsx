@@ -5,6 +5,7 @@ import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/type
 import { composeRefs } from "@udecode/cn";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { Box } from "@/components/base";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 function chunkArray<T>(array: T[], size: number): T[][] {
     const chunked: T[][] = [];
@@ -18,7 +19,6 @@ export interface IGridInfiniteScrollerProps extends TSharedInfiniteScrollerProps
     as?: React.ElementType;
     row?: React.ElementType;
     rowClassName?: string;
-    gap?: number;
 }
 
 const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>(
@@ -29,13 +29,14 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
             loadMore,
             pageStart,
             loader,
+            loaderClassName,
             scrollable,
             as = "div",
             row = "div",
             rowClassName,
             className,
             children,
-            gap = 16,
+            gap = "16",
             ...props
         },
         ref
@@ -61,13 +62,13 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
 
         const sampleRow = (
             <RowComp ref={measureRef} className={cn(rowClassName, "pointer-events-none invisible absolute grid w-full")} style={{ display: "grid" }}>
-                {flatItems.slice(0, 10)}
+                {flatItems}
             </RowComp>
         );
 
         const chunked = chunkArray(flatItems, columnCount);
 
-        const { loaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
+        const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
             initialLoad,
             loadMore,
@@ -80,6 +81,8 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         const virtualItems = virtualizer.getVirtualItems();
         const loaderIndex = hasMore ? (virtualItems[virtualItems.length - 1]?.index ?? "-1") : "-1";
         const loaderY = hasMore ? (virtualItems[virtualItems.length - 1]?.start ?? -99999) : -99999;
+
+        gap = TypeUtils.isString(gap) ? parseInt(gap) : gap;
 
         return (
             <Comp
@@ -123,12 +126,12 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
 
                 <Box
                     key={createShortUUID()}
-                    className={cn(rowClassName, "absolute left-0 top-0", !hasMore && "hidden")}
+                    className={cn(loaderClassName, "absolute left-0 top-0 w-full", !hasMore && "hidden")}
                     data-index={loaderIndex}
                     style={{
                         transform: `translateY(${loaderY}px)`,
                     }}
-                    ref={composeRefs(loaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement | null>)}
+                    ref={composeRefs(setLoaderRef, virtualizer.measureElement as React.Ref<HTMLDivElement | null>)}
                 >
                     {loader}
                 </Box>

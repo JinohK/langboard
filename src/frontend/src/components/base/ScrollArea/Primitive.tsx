@@ -4,7 +4,7 @@ import * as React from "react";
 import { Primitive } from "@radix-ui/react-primitive";
 import { Presence } from "@radix-ui/react-presence";
 import { createContextScope } from "@radix-ui/react-context";
-import { useComposedRefs } from "@radix-ui/react-compose-refs";
+import { composeRefs, useComposedRefs } from "@radix-ui/react-compose-refs";
 import { useCallbackRef } from "@radix-ui/react-use-callback-ref";
 import { useDirection } from "@radix-ui/react-direction";
 import { useLayoutEffect } from "@radix-ui/react-use-layout-effect";
@@ -127,12 +127,14 @@ const VIEWPORT_NAME = "ScrollAreaViewport";
 type ScrollAreaViewportElement = React.ComponentRef<typeof Primitive.div>;
 interface ScrollAreaViewportProps extends PrimitiveDivProps {
     asTable?: bool;
+    displayClassName?: string;
+    displayRef?: React.Ref<HTMLDivElement>;
     nonce?: string;
 }
 
 const ScrollAreaViewport = React.forwardRef<ScrollAreaViewportElement, ScrollAreaViewportProps>(
     (props: ScopedProps<ScrollAreaViewportProps>, forwardedRef) => {
-        const { __scopeScrollArea, children, asTable, nonce, ...viewportProps } = props;
+        const { __scopeScrollArea, children, asTable, displayClassName, displayRef, nonce, ...viewportProps } = props;
         const context = useScrollAreaContext(VIEWPORT_NAME, __scopeScrollArea);
         const ref = React.useRef<ScrollAreaViewportElement>(null);
         const composedRefs = useComposedRefs(forwardedRef, ref, context.onViewportChange);
@@ -174,11 +176,17 @@ const ScrollAreaViewport = React.forwardRef<ScrollAreaViewportElement, ScrollAre
                      * before trying to resolve it.
                      */}
                     {asTable ? (
-                        <div ref={context.onContentChange} style={{ display: "table", minWidth: "100%" }}>
+                        <div
+                            ref={composeRefs(context.onContentChange, displayRef)}
+                            style={{ display: "table", minWidth: "100%" }}
+                            className={displayClassName}
+                        >
                             {children}
                         </div>
                     ) : (
-                        <div ref={context.onContentChange}>{children}</div>
+                        <div ref={composeRefs(context.onContentChange, displayRef)} className={displayClassName}>
+                            {children}
+                        </div>
                     )}
                 </Primitive.div>
             </>
