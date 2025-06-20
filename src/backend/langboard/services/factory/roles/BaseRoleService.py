@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Generic, TypeVar
-from ....core.db import DbSession, SqlBuilder
-from ....models.BaseRoleModel import BaseRoleModel
+from core.db import DbSession, SqlBuilder
+from models.BaseRoleModel import BaseRoleModel
 
 
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)

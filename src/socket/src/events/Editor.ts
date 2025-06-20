@@ -53,13 +53,33 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             return;
         }
 
+        let newContent = "";
+        let isReceived = false;
+        let lastContent: string | undefined = undefined;
+
         await response({
-            onMessage: (data) => {
+            onMessage: (chunk) => {
                 if (isAborted()) {
                     return;
                 }
-                stream.buffer({ message: data });
-                message = `${message}${data}`;
+
+                isReceived = true;
+                const oldContent = newContent;
+                let updatedContent = "";
+                if (chunk) {
+                    if (oldContent) {
+                        newContent = chunk.startsWith(oldContent) ? chunk : `${oldContent}${chunk}`;
+                        updatedContent = chunk.split(oldContent, 2).pop() || chunk;
+                    } else {
+                        newContent = chunk;
+                        updatedContent = chunk;
+                    }
+                }
+
+                if (lastContent !== newContent) {
+                    stream.buffer({ message: updatedContent });
+                    lastContent = newContent;
+                }
             },
             onError: (error) => {
                 if (isAborted()) {

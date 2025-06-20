@@ -2,16 +2,18 @@ from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, cast
 from urllib.parse import urlparse
-from ...Constants import COMMON_SECRET_KEY, FRONTEND_REDIRECT_URL, QUERY_NAMES
-from ...core.caching import Cache
-from ...core.db import DbSession, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...core.storage import FileModel
-from ...core.types import SafeDateTime, SnowflakeID
-from ...core.utils.Converter import convert_python_data
-from ...core.utils.Encryptor import Encryptor
-from ...core.utils.String import concat, generate_random_string
-from ...models import User, UserEmail, UserProfile
+from core.caching import Cache
+from core.db import DbSession, SqlBuilder
+from core.Env import Env
+from core.service import BaseService
+from core.storage import FileModel
+from core.types import SafeDateTime, SnowflakeID
+from core.utils.Converter import convert_python_data
+from core.utils.Encryptor import Encryptor
+from core.utils.String import concat, generate_random_string
+from models import User, UserEmail, UserProfile
+from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
+from ...core.service import ServiceHelper
 from ...publishers import UserPublisher
 from ...resources.locales.LangEnum import LangEnum
 from ...security import Auth
@@ -95,7 +97,7 @@ class UserService(BaseService):
         token = generate_random_string(32)
         token_expire_hours = 24
         token_data = json_dumps({"token": token, "id": user.id})
-        encrypted_token = Encryptor.encrypt(token_data, COMMON_SECRET_KEY)
+        encrypted_token = Encryptor.encrypt(token_data, Env.COMMON_SECRET_KEY)
 
         url_chunks = urlparse(FRONTEND_REDIRECT_URL)
         token_url = url_chunks._replace(
@@ -120,7 +122,7 @@ class UserService(BaseService):
         self, token_type: str, token: str
     ) -> tuple[User, str, dict | None] | tuple[None, None, None]:
         try:
-            token_info = json_loads(Encryptor.decrypt(token, COMMON_SECRET_KEY))
+            token_info = json_loads(Encryptor.decrypt(token, Env.COMMON_SECRET_KEY))
             if not token_info or "token" not in token_info or "id" not in token_info:
                 raise Exception()
         except Exception:

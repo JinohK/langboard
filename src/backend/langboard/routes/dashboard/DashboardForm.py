@@ -1,6 +1,6 @@
-from ...core.routing import BaseFormModel, form_model
-from ...core.schema import Pagination
-from ...core.types import SafeDateTime
+from core.routing import BaseFormModel, form_model
+from core.schema import Pagination
+from core.types import SafeDateTime
 
 
 @form_model

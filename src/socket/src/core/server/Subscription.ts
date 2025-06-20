@@ -118,6 +118,10 @@ class _Subscription {
             subscribersIteratable.delete(ws);
         }
 
+        if (!subscriptions.size) {
+            this.#subscriptions.delete(topic);
+        }
+
         ws.send({
             event: "unsubscribed",
             topic,
@@ -126,8 +130,9 @@ class _Subscription {
     }
 
     public async unsubscribeAll(ws: ISocketClient) {
+        const topics = Array.from(this.#subscriptions.keys());
         for (let i = 0; i < this.#subscriptions.size; ++i) {
-            const topic = Array.from(this.#subscriptions.keys())[i];
+            const topic = topics[i];
             const subscriptions = this.#subscriptions.get(topic);
             if (!subscriptions) {
                 continue;
@@ -137,6 +142,11 @@ class _Subscription {
                 subscribers.delete(ws);
                 subscribersIteratable.delete(ws);
             });
+        }
+
+        for (let i = 0; i < topics.length; ++i) {
+            const topic = topics[i];
+            this.#subscriptions.delete(topic);
         }
     }
 }

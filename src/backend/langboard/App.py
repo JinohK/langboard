@@ -1,11 +1,11 @@
+from core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
+from core.security import AuthSecurity
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from .ai import BotScheduleHelper
 from .AppConfig import AppConfig
 from .Constants import PUBLIC_FRONTEND_URL
-from .core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
-from .core.security import AuthSecurity
 from .Loader import load_modules
 from .middlewares import AuthMiddleware, RoleMiddleware
 

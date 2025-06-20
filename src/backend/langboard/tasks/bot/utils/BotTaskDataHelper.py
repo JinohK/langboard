@@ -1,10 +1,10 @@
 from typing import Any, cast
+from core.db import DbSession, SqlBuilder
+from core.utils.decorators import staticclass
+from models import Bot, Card, Project, ProjectColumn, ProjectWiki, ProjectWikiAssignedBot, User
+from models.BotTrigger import BotTriggerCondition
 from ....ai import BotDefaultTrigger
 from ....core.broker import Broker
-from ....core.db import DbSession, SqlBuilder
-from ....core.utils.decorators import staticclass
-from ....models import Bot, Card, Project, ProjectColumn, ProjectWiki, ProjectWikiAssignedBot, User
-from ....models.BotTrigger import BotTriggerCondition
 
 
 @staticclass

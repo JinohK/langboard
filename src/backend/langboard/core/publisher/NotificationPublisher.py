@@ -1,9 +1,9 @@
 from typing import Any
+from core.utils.decorators import staticclass
+from models import User, UserNotification
 from pydantic import BaseModel
-from ...models import User, UserNotification
 from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ..broadcast import DispatcherModel, DispatcherQueue
-from ..utils.decorators import staticclass
 
 
 class NotificationPublishModel(BaseModel):

@@ -11,18 +11,24 @@ import sqlalchemy as sa
 import sqlmodel
 import sqlmodel.sql.sqltypes
 from alembic import op
-from langboard.core.db.ColumnTypes import CSVType, EnumLikeType, ModelColumnType, SecretStrType, SnowflakeIDType
-from langboard.core.db.Models import ChatContentModel, EditorContentModel
-from langboard.core.storage.FileModel import FileModel
-from langboard.models.AppSetting import AppSettingType
-from langboard.models.Bot import BotAPIAuthType
-from langboard.models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
-from langboard.models.BotTrigger import BotTriggerCondition
-from langboard.models.ProjectActivity import ProjectActivityType
-from langboard.models.ProjectWikiActivity import ProjectWikiActivityType
-from langboard.models.UserActivity import UserActivityType
-from langboard.models.UserNotification import NotificationType
-from langboard.models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
+from core.db.ColumnTypes import (  # type: ignore
+    CSVType,
+    EnumLikeType,
+    ModelColumnType,
+    SecretStrType,
+    SnowflakeIDType,
+)
+from core.db.Models import ChatContentModel, EditorContentModel  # type: ignore
+from core.storage.FileModel import FileModel  # type: ignore
+from models.AppSetting import AppSettingType
+from models.Bot import BotAPIAuthType
+from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
+from models.BotTrigger import BotTriggerCondition
+from models.ProjectActivity import ProjectActivityType
+from models.ProjectWikiActivity import ProjectWikiActivityType
+from models.UserActivity import UserActivityType
+from models.UserNotification import NotificationType
+from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 
 
 # revision identifiers, used by Alembic.

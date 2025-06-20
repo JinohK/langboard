@@ -11,10 +11,7 @@ import useBotSettingTriggerConditionToggledHandlers from "@/controllers/socket/s
 import useBotSettingUpdatedHandlers from "@/controllers/socket/settings/bots/useBotSettingUpdatedHandlers";
 
 export enum EAPIAuthType {
-    Basic = "basic",
-    Bearer = "bearer",
     Langflow = "langflow",
-    OpenAI = "openai",
 }
 
 export interface Interface extends IBaseModel {
@@ -67,10 +64,8 @@ class BotModel extends BaseModel<Interface> {
             model.avatar = convertServerFileURL(model.avatar);
         }
 
-        if (model.api_auth_type) {
-            if (TypeUtils.isString(model.api_auth_type)) {
-                model.api_auth_type = convertSafeEnum(EAPIAuthType, model.api_auth_type);
-            }
+        if (TypeUtils.isString(model.api_auth_type)) {
+            model.api_auth_type = convertSafeEnum(EAPIAuthType, model.api_auth_type);
         }
 
         if (model.conditions) {

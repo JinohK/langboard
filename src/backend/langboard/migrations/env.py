@@ -2,8 +2,8 @@ from logging.config import fileConfig
 from typing import Any
 from alembic import context
 from alembic.autogenerate.api import AutogenContext
-from langboard.Constants import MAIN_DATABASE_URL
-from langboard.core.db.DbConfigHelper import DbConfigHelper
+from core.db.DbConfigHelper import DbConfigHelper  # type: ignore
+from core.Env import Env  # type: ignore
 from langboard.core.utils import ModelUtils
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection, engine_from_config
@@ -16,7 +16,7 @@ ModelUtils.ensure_models_imported()
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", DbConfigHelper.get_sanitized_driver(MAIN_DATABASE_URL))
+config.set_main_option("sqlalchemy.url", DbConfigHelper.get_sanitized_driver(Env.MAIN_DATABASE_URL))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

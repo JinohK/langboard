@@ -1,9 +1,9 @@
 from typing import Any
+from core.routing import SocketTopic
+from core.utils.decorators import staticclass
+from models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
+from models.Checkitem import CheckitemStatus
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import SocketTopic
-from ..core.utils.decorators import staticclass
-from ..models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
-from ..models.Checkitem import CheckitemStatus
 
 
 @staticclass

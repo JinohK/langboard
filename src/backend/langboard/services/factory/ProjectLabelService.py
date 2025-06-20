@@ -1,8 +1,9 @@
 from typing import Any, Literal, overload
-from ...core.db import DbSession, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...core.utils.Converter import convert_python_data
-from ...models import Bot, Card, CardAssignedProjectLabel, Project, ProjectLabel
+from core.db import DbSession, SqlBuilder
+from core.service import BaseService
+from core.utils.Converter import convert_python_data
+from models import Bot, Card, CardAssignedProjectLabel, Project, ProjectLabel
+from ...core.service import ServiceHelper
 from ...publishers import ProjectLabelPublisher
 from ...tasks.activities import ProjectLabelActivityTask
 from ...tasks.bot import ProjectLabelBotTask

@@ -8,9 +8,10 @@ from celery.app.task import Task
 from celery.apps import worker
 from celery.apps.worker import Worker
 from celery.signals import celeryd_after_setup, setup_logging
-from ...Constants import CACHE_TYPE, CACHE_URL, ENVIRONMENT, PROJECT_NAME, SCHEMA_DIR
+from core.Env import Env
+from core.utils.decorators import class_instance
+from ...Constants import SCHEMA_DIR
 from ..logger import Logger
-from ..utils.decorators import class_instance
 from .TaskParameters import TaskParameters
 
 
@@ -45,14 +46,14 @@ class Broker:
     _schemas = {}
 
     def __init__(self):
-        if CACHE_TYPE == "in-memory":
+        if Env.CACHE_TYPE == "in-memory":
             self.broker_url = "memory://"
             self.backend_url = "cache+memory://"
         else:
-            self.broker_url = CACHE_URL
-            self.backend_url = CACHE_URL
+            self.broker_url = Env.CACHE_URL
+            self.backend_url = Env.CACHE_URL
 
-        self.celery = Celery(PROJECT_NAME)
+        self.celery = Celery(Env.PROJECT_NAME)
 
         self.celery.conf.update(
             broker_url=self.broker_url,
@@ -64,7 +65,7 @@ class Broker:
         self.logger = logger
 
     def is_in_memory(self) -> bool:
-        return CACHE_TYPE == "in-memory"
+        return Env.CACHE_TYPE == "in-memory"
 
     def wrap_async_task_decorator(
         self, func: Callable[Concatenate[_TParams], Coroutine[Any, Any, Any]]
@@ -76,7 +77,7 @@ class Broker:
         DO NOT use *args or **kwargs in async task.
         """
 
-        if ENVIRONMENT == "local":
+        if Env.ENVIRONMENT == "local":
 
             def local_task(*args: _TParams.args, **kwargs: _TParams.kwargs):
                 return Thread(target=run_async, args=(func(*args, **kwargs),)).start()
@@ -100,7 +101,7 @@ class Broker:
         DO NOT use *args or **kwargs in sync task.
         """
 
-        if ENVIRONMENT == "local":
+        if Env.ENVIRONMENT == "local":
 
             def local_task(*args: _TParams.args, **kwargs: _TParams.kwargs):
                 return func(*args, **kwargs)
@@ -125,7 +126,7 @@ class Broker:
             if self.is_in_memory():
                 self.logger.info("Broker started with in-memory cache.")
             else:
-                self.logger.info("Broker started with cache: %s", CACHE_URL)
+                self.logger.info("Broker started with cache: %s", Env.CACHE_URL)
             self.celery.worker_main(argv)
         except Exception:
             self.celery.close()

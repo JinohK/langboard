@@ -1,8 +1,8 @@
 from typing import Any
+from core.routing import SocketTopic
+from core.utils.decorators import staticclass
+from models import Card, Project
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import SocketTopic
-from ..core.utils.decorators import staticclass
-from ..models import Card, Project
 
 
 @staticclass

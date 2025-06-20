@@ -1,99 +1,36 @@
 from enum import Enum
-from importlib.metadata import version
-from os import environ
 from os.path import dirname
 from pathlib import Path
 from sys import executable
-from typing import Any, Literal, cast
+from core.Env import Env
 
-
-def _get_env(name: str, default: Any = None) -> Any | str:
-    is_default = name not in environ or not environ[name]
-    return default if is_default else environ[name]
-
-
-IS_EXECUTABLE = _get_env("IS_EXECUTABLE", "false") == "true"
-
-# Environment
-ENVIRONMENT: Literal["local", "development", "production"] = cast(Any, _get_env("ENVIRONMENT", "local"))
-PROJECT_NAME = _get_env("PROJECT_NAME")
-PROJECT_SHORT_NAME = _get_env("PROJECT_SHORT_NAME", PROJECT_NAME)
-PROJECT_VERSION = version(PROJECT_NAME)
 
 # Directory
-BASE_DIR = Path(dirname(__file__)) if not IS_EXECUTABLE else Path(dirname(executable))
+BASE_DIR = Path(dirname(__file__)) if not Env.IS_EXECUTABLE else Path(dirname(executable))
 ROOT_DIR = BASE_DIR / ".." / ".." / ".."
-DATA_DIR = ROOT_DIR / "local" if not IS_EXECUTABLE else BASE_DIR / "data"
+DATA_DIR = ROOT_DIR / "local" if not Env.IS_EXECUTABLE else BASE_DIR / "data"
 SCHEMA_DIR = DATA_DIR / "schemas"
 SCHEMA_DIR.mkdir(exist_ok=True)
 
 # URL
-HOST = _get_env("BACKEND_HOST", "localhost")
-PORT = int(_get_env("BACKEND_PORT", "5381"))
-FRONTEND_PORT = int(_get_env("FRONTEND_PORT", "5173"))
+HOST = Env.get_from_env("BACKEND_HOST", "localhost")
+PORT = int(Env.get_from_env("BACKEND_PORT", "5381"))
+FRONTEND_PORT = int(Env.get_from_env("FRONTEND_PORT", "5173"))
 PUBLIC_FRONTEND_URL = (
-    _get_env("PUBLIC_FRONTEND_URL", f"http://{HOST}:{FRONTEND_PORT}")
-    if ENVIRONMENT != "local"
+    Env.get_from_env("PUBLIC_FRONTEND_URL", f"http://{HOST}:{FRONTEND_PORT}")
+    if Env.ENVIRONMENT != "local"
     else f"http://{HOST}:{FRONTEND_PORT}"
 )
 FRONTEND_REDIRECT_URL = f"{PUBLIC_FRONTEND_URL}/redirect"
 
-# Database
-MAIN_DATABASE_URL = _get_env("MAIN_DATABASE_URL", f"sqlite:///{PROJECT_NAME}.db")
-READONLY_DATABASE_URL = _get_env("READONLY_DATABASE_URL", MAIN_DATABASE_URL)
-DB_TIMEOUT = int(_get_env("DB_TIMEOUT", "120"))  # seconds
-DB_TCP_USER_TIMEOUT = int(_get_env("DB_TCP_USER_TIMEOUT", "1000"))  # milliseconds
-
 # Logging
-TERMINAL_LOGGING_LEVEL = _get_env("TERMINAL_LOGGING_LEVEL", "AUTO").upper()
-FILE_LOGGING_LEVEL = _get_env("FILE_LOGGING_LEVEL", "AUTO").upper()
-LOGGING_DIR = Path(_get_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
-
-# Sentry
-SENTRY_DSN = _get_env("SENTRY_DSN")
-
-BROADCAST_TYPE: Literal["in-memory", "kafka"] = cast(Any, _get_env("BROADCAST_TYPE", "in-memory"))
-BROADCAST_URLS = _get_env("BROADCAST_URLS", "").split(",") if _get_env("BROADCAST_URLS") else []
-_AVAILABLE_BROADCAST_TYPES = set(["in-memory", "kafka"])
-if BROADCAST_TYPE not in _AVAILABLE_BROADCAST_TYPES:
-    raise ValueError(f"Invalid broadcast type: {BROADCAST_TYPE}. Must be one of {_AVAILABLE_BROADCAST_TYPES}")
-
-# Cache
-CACHE_TYPE: Literal["in-memory", "redis"] = cast(Any, _get_env("CACHE_TYPE", "in-memory"))
-CACHE_URL = _get_env("CACHE_URL")
-_AVAILABLE_CACHE_TYPES = set(["in-memory", "redis"])
-
-if CACHE_TYPE not in _AVAILABLE_CACHE_TYPES:
-    raise ValueError(f"Invalid cache type: {CACHE_TYPE}. Must be one of {_AVAILABLE_CACHE_TYPES}")
-
-# Security
-COMMON_SECRET_KEY = _get_env("COMMON_SECRET_KEY", f"{PROJECT_NAME}_common_key")
-JWT_SECRET_KEY = _get_env("JWT_SECRET_KEY", f"{PROJECT_NAME}_secret_key")
-JWT_ALGORITHM = _get_env("JWT_ALGORITHM", "HS256")
-JWT_AT_EXPIRATION = int(_get_env("JWT_AT_EXPIRATION", 60 * 60 * 3))  # 3 hours for default
-JWT_RT_EXPIRATION = int(_get_env("JWT_RT_EXPIRATION", 30))  # 30 days for default
-ACCESS_TOKEN_NAME = f"access_token_{PROJECT_SHORT_NAME}"
-REFRESH_TOKEN_NAME = f"refresh_token_{PROJECT_SHORT_NAME}"
+LOGGING_DIR = Path(Env.get_from_env("LOGGING_DIR", DATA_DIR / "logs" / "backend"))
 
 # Storage
-LOCAL_STORAGE_DIR = Path(_get_env("LOCAL_STORAGE_DIR", DATA_DIR / "uploads"))
-S3_ACCESS_KEY_ID = _get_env("S3_ACCESS_KEY_ID")
-S3_SECRET_ACCESS_KEY = _get_env("S3_SECRET_ACCESS_KEY")
-S3_REGION_NAME = _get_env("S3_REGION_NAME", "us-east-1")
-S3_BUCKET_NAME = _get_env("S3_BUCKET_NAME", PROJECT_NAME)
-
-# SMTP
-MAIL_FROM = _get_env("MAIL_FROM")
-MAIL_FROM_NAME = _get_env("MAIL_FROM_NAME", f"{PROJECT_NAME.capitalize()} Team")
-MAIL_USERNAME = _get_env("MAIL_USERNAME", "")
-MAIL_PASSWORD = _get_env("MAIL_PASSWORD", "")
-MAIL_SERVER = _get_env("MAIL_SERVER")
-MAIL_PORT = _get_env("MAIL_PORT")
-MAIL_STARTTLS = _get_env("MAIL_STARTTLS") == "true"
-MAIL_SSL_TLS = _get_env("MAIL_SSL_TLS") == "true"
+LOCAL_STORAGE_DIR = Path(Env.get_from_env("LOCAL_STORAGE_DIR", DATA_DIR / "uploads"))
 
 # Scheduler
-CRON_TAB_FILE = Path(_get_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
+CRON_TAB_FILE = Path(Env.get_from_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
 
 
 # Frontend query names

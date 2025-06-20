@@ -1,22 +1,18 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
+from core.types import SafeDateTime
 from fastapi import Depends, status
+from models import Bot, BotSchedule, Card, Project, ProjectColumn, ProjectRole
+from models.BotSchedule import BotScheduleRunningType
+from models.ProjectRole import ProjectRoleAction
 from ...ai import BotScheduleHelper
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
 from ...core.service import ServiceHelper
-from ...core.types import SafeDateTime
-from ...models import Bot, BotSchedule, Card, Project, ProjectColumn, ProjectRole
-from ...models.BotSchedule import BotScheduleRunningType
-from ...models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
 from ...publishers import ProjectBotPublisher
+from ...security import RoleFinder
 from ...services import Service
-from .scopes import (
-    BotSchedulePagination,
-    BotScheduleSearchForm,
-    CreateBotCronTimeForm,
-    UpdateBotCronTimeForm,
-    project_role_finder,
-)
+from .scopes import BotSchedulePagination, BotScheduleSearchForm, CreateBotCronTimeForm, UpdateBotCronTimeForm
 
 
 @AppRouter.schema(query=BotSchedulePagination)
@@ -34,7 +30,7 @@ from .scopes import (
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_bot_schedules(
     project_uid: str, bot_uid: str, pagination: BotSchedulePagination = Depends(), service: Service = Service.scope()
@@ -73,7 +69,7 @@ async def get_bot_schedules(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_bot_schedules_by_card(
     project_uid: str,
@@ -115,7 +111,7 @@ async def get_bot_schedules_by_card(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_bot_schedules_by_column(
     project_uid: str,
@@ -149,7 +145,7 @@ async def get_bot_schedules_by_column(
     description="Schedule a bot cron schedule.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def schedule_bot_crons(
     project_uid: str, bot_uid: str, form: CreateBotCronTimeForm, service: Service = Service.scope()
@@ -192,7 +188,7 @@ async def schedule_bot_crons(
     description="Reschedule a bot cron schedule.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2017).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def reschedule_bot_crons(
     project_uid: str, bot_uid: str, schedule_uid: str, form: UpdateBotCronTimeForm, service: Service = Service.scope()
@@ -239,7 +235,7 @@ async def reschedule_bot_crons(
     description="Unschedule a bot cron schedule.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2017).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def unschedule_bot_crons(
     project_uid: str, bot_uid: str, schedule_uid: str, service: Service = Service.scope()

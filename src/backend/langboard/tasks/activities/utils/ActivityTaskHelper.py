@@ -1,7 +1,7 @@
 from typing import Any, Callable, Generic, TypeVar, cast
-from ....core.db import BaseSqlModel, DbSession, SqlBuilder
-from ....core.types import SnowflakeID
-from ....models import (
+from core.db import BaseSqlModel, DbSession, SqlBuilder
+from core.types import SnowflakeID
+from models import (
     Bot,
     Card,
     CardRelationship,
@@ -11,7 +11,7 @@ from ....models import (
     ProjectLabel,
     User,
 )
-from ....models.BaseActivityModel import BaseActivityModel
+from models.BaseActivityModel import BaseActivityModel
 from .ActivityHistoryHelper import ActivityHistoryHelper
 
 

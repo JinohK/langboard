@@ -1,6 +1,6 @@
 from contextlib import contextmanager
+from core.service import ServiceFactory
 from fastapi import Depends
-from ..core.service import ServiceFactory
 from . import factory
 
 

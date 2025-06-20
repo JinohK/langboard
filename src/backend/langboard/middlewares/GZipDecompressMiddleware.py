@@ -1,7 +1,7 @@
 from gzip import decompress
+from core.routing import BaseMiddleware
 from starlette.datastructures import Headers
 from starlette.types import Message
-from ..core.routing import BaseMiddleware
 
 
 class GZipDecompressMiddleware(BaseMiddleware):

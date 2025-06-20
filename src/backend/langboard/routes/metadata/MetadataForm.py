@@ -1,5 +1,5 @@
+from core.routing import BaseFormModel, form_model
 from pydantic import BaseModel, Field
-from ...core.routing import BaseFormModel, form_model
 
 
 class MetadataGetModel(BaseModel):

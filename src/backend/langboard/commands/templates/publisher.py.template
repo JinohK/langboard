@@ -1,0 +1,9 @@
+from core.routing import SocketTopic
+from core.utils.decorators import staticclass
+from typing import Any
+from ..core.publisher import BaseSocketPublisher, SocketPublishModel
+
+
+@staticclass
+class {class_name}Publisher(BaseSocketPublisher):
+    

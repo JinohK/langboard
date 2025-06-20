@@ -1,4 +1,4 @@
-from ....core.routing import BaseFormModel, form_model
+from core.routing import BaseFormModel, form_model
 
 
 @form_model

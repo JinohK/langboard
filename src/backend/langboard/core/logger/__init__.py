@@ -1,4 +1,5 @@
-from .Logger import Logger
+from core.logger import Logger as _Logger
+from ...Constants import LOGGING_DIR
 
 
-__all__ = ["Logger"]
+Logger = _Logger(LOGGING_DIR)

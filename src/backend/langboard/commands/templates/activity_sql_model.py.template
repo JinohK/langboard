@@ -1,0 +1,21 @@
+from enum import Enum
+from typing import Any
+from sqlmodel import Field
+from core.db import EnumLikeType, SnowflakeIDField
+from core.types import SafeDateTime, SnowflakeID
+from models.BaseActivityModel import BaseActivityModel
+
+
+class {class_name}ActivityType(Enum):
+    pass
+
+
+class {class_name}Activity(BaseActivityModel, table=True):
+    activity_type: {class_name}ActivityType = Field(nullable=False)
+
+    def api_response(self) -> dict[str, Any]:
+        base_api_response = super().api_response()
+        base_api_response["activity_type"] = self.activity_type.value
+        base_api_response["filterable_type"] = ""
+        base_api_response["filterable_uid"] = self.
+        return base_api_response

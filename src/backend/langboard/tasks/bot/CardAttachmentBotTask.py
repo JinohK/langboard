@@ -1,7 +1,7 @@
 from typing import Any
+from models import Bot, Card, CardAttachment, Project, User
+from models.BotTrigger import BotTriggerCondition
 from ...core.broker import Broker
-from ...models import Bot, Card, CardAttachment, Project, User
-from ...models.BotTrigger import BotTriggerCondition
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 

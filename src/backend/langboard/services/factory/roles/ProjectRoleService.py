@@ -1,5 +1,5 @@
-from ....core.utils.Extractor import extract_func_param
-from ....models import ProjectRole
+from core.utils.Extractor import extract_func_param
+from models import ProjectRole
 from .BaseRoleService import BaseRoleService
 
 

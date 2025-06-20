@@ -1,9 +1,9 @@
 from typing import Any
+from core.routing import BaseFormModel, form_model
+from models.AppSetting import AppSettingType
+from models.Bot import BotAPIAuthType
+from models.BotTrigger import BotTriggerCondition
 from pydantic import Field
-from ...core.routing import BaseFormModel, form_model
-from ...models.AppSetting import AppSettingType
-from ...models.Bot import BotAPIAuthType
-from ...models.BotTrigger import BotTriggerCondition
 
 
 @form_model

@@ -42,15 +42,6 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
 
         const res = await api.put(url, formData);
 
-        Object.entries(res.data).forEach(([key, value]) => {
-            if (key === "deleted_avatar") {
-                bot.avatar = undefined;
-                return;
-            }
-
-            bot[key as keyof BotModel.Interface] = value;
-        });
-
         return res.data;
     };
 

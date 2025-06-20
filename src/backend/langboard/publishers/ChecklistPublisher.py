@@ -1,7 +1,7 @@
+from core.routing import SocketTopic
+from core.utils.decorators import staticclass
+from models import Card, Checklist
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import SocketTopic
-from ..core.utils.decorators import staticclass
-from ..models import Card, Checklist
 
 
 @staticclass

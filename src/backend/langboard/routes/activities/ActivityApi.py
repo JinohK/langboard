@@ -1,13 +1,13 @@
+from core.filter import AuthFilter
+from core.routing import AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import Depends
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import ProjectActivity, ProjectRole, ProjectWikiActivity, User, UserActivity
-from ...models.BaseActivityModel import BaseActivityModel
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import ProjectActivity, ProjectRole, ProjectWikiActivity, User, UserActivity
+from models.BaseActivityModel import BaseActivityModel
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from ..board.scopes import project_role_finder
 from .ActivityForm import ActivityPagination
 
 
@@ -50,7 +50,7 @@ async def get_current_user_activities(
     tags=["Activity"],
     responses=OpenApiSchema().suc(USER_ACTIVITY_SCHEMA).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def get_project_assignee_activities(
     project_uid: str, assignee_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
@@ -77,7 +77,7 @@ async def get_project_assignee_activities(
         OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_activities(
     project_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
@@ -108,7 +108,7 @@ async def get_project_activities(
         OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_activities(
     project_uid: str, card_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()
@@ -150,7 +150,7 @@ async def get_card_activities(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_wiki_activities(
     project_uid: str, wiki_uid: str, pagination: ActivityPagination = Depends(), service: Service = Service.scope()

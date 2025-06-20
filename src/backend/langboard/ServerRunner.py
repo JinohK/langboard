@@ -1,9 +1,10 @@
 from ssl import CERT_NONE
+from core.bootstrap.uvicorn import create_config
+from core.bootstrap.uvicorn import run as run_server
+from core.Env import Env
 from uvicorn.config import SSL_PROTOCOL_VERSION
 from .AppConfig import AppConfig
-from .Constants import BASE_DIR, PROJECT_NAME
-from .core.bootstrap.uvicorn import create_config
-from .core.bootstrap.uvicorn import run as run_server
+from .Constants import BASE_DIR
 from .core.logger import Logger
 
 
@@ -12,7 +13,7 @@ def run():
 
     try:
         uvicorn_config = create_config(
-            f"{PROJECT_NAME}.AppInstance:app",
+            f"{Env.PROJECT_NAME}.AppInstance:app",
             host=config.host,
             port=config.port,
             uds=config.uds,
@@ -32,5 +33,6 @@ def run():
         )
 
         run_server(uvicorn_config)
-    except Exception:
+    except Exception as e:
+        print(e)
         return

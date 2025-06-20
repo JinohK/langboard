@@ -1,5 +1,5 @@
 from typing import Callable, TypeVar
-from ...core.service import BaseService
+from core.service import BaseService
 from . import roles as factory
 from .roles.BaseRoleService import BaseRoleService
 

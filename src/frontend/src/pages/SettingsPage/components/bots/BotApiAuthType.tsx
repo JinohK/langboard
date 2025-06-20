@@ -56,14 +56,14 @@ const BotApiAuthType = memo(() => {
     return (
         <Box>
             <Select.Root value={apiAuthType} onValueChange={changeAPIAuthType} disabled={isValidating}>
-                <Select.Trigger>
+                <Select.Trigger defaultValue={apiAuthType.toString()}>
                     <Select.Value placeholder={t("settings.Select an api auth type")} />
                 </Select.Trigger>
                 <Select.Content>
                     {Object.keys(BotModel.EAPIAuthType).map((authTypeKey) => {
                         const authType = BotModel.EAPIAuthType[authTypeKey];
                         return (
-                            <Select.Item value={authType} key={`bot-auth-type-select-${authType}`}>
+                            <Select.Item value={authType.toString()} key={`bot-auth-type-select-${authType}`}>
                                 {t(`settings.authTypes.${authType}`)}
                             </Select.Item>
                         );

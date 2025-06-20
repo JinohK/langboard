@@ -1,15 +1,14 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
+from core.db import DbSession, SqlBuilder
+from core.utils.decorators import staticclass
 from httpx import post
+from models import Bot, BotTrigger, Project, ProjectAssignedBot, ProjectLabel
+from models.Bot import BotAPIAuthType
+from models.BotTrigger import BotTriggerCondition
 from ....ai import BotDefaultTrigger, LangboardCalledVariablesComponent, LangflowConstants
-from ....core.db import DbSession, SqlBuilder
 from ....core.logger import Logger
-from ....core.utils.decorators import staticclass
-from ....core.utils.EditorContentParser import DATA_TEXT_FORMAT_DESCRIPTIONS
-from ....models import Bot, BotTrigger, Project, ProjectAssignedBot, ProjectLabel
-from ....models.Bot import BotAPIAuthType
-from ....models.BotTrigger import BotTriggerCondition
 from ...WebhookTask import run_webhook
 from .BotTaskDataHelper import BotTaskDataHelper
 
@@ -85,19 +84,8 @@ class BotTaskHelper:
             "Accept": "application/json",
         }
 
-        response = {
-            "data": data,
-            "custom_markdown_formats": DATA_TEXT_FORMAT_DESCRIPTIONS,
-        }
-
         json_data = {}
-        if bot.api_auth_type == BotAPIAuthType.Basic:
-            headers["Authorization"] = f"Basic {bot.api_key}"
-            json_data = response
-        elif bot.api_auth_type == BotAPIAuthType.Bearer:
-            headers["Authorization"] = f"Bearer {bot.api_key}"
-            json_data = response
-        elif bot.api_auth_type == BotAPIAuthType.Langflow:
+        if bot.api_auth_type == BotAPIAuthType.Langflow:
             headers[LangflowConstants.ApiKey.value] = bot.api_key
             tweaks = LangboardCalledVariablesComponent(
                 event=event,
@@ -123,9 +111,6 @@ class BotTaskHelper:
                     "output_type": "chat",
                     "tweaks": tweaks,
                 }
-        elif bot.api_auth_type == BotAPIAuthType.OpenAI:
-            headers["Authorization"] = f"Bearer {bot.api_key}"
-            json_data = response
         else:
             logger.error("Unknown API Auth Type: %s", bot.api_auth_type)
             return

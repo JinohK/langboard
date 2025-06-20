@@ -90,6 +90,7 @@ class KafkaConsumer extends BaseConsumer {
                 break;
             } catch (error) {
                 Logger.red("Error starting consumer", error, "\n");
+                await new Promise((resolve) => setTimeout(resolve, 5000)); // Retry after 5 seconds
             }
         }
     }

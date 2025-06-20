@@ -1,6 +1,6 @@
+from core.routing import BaseFormModel, form_model
+from models.BaseReactionModel import REACTION_TYPES
 from pydantic import Field
-from ....core.routing import BaseFormModel, form_model
-from ....models.BaseReactionModel import REACTION_TYPES
 
 
 @form_model

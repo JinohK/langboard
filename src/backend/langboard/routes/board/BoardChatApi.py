@@ -1,13 +1,14 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import Depends, status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import ChatHistory, ChatTemplate, Project, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
+from models import ChatHistory, ChatTemplate, Project, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
 from ...publishers import ProjectPublisher
-from ...security import Auth
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate, project_role_finder
+from .scopes import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate
 
 
 @AppRouter.api.get(
@@ -15,7 +16,7 @@ from .scopes import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplat
     tags=["Board.Chat"],
     responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def get_project_chat(
     project_uid: str,
@@ -33,7 +34,7 @@ async def get_project_chat(
     tags=["Board.Chat"],
     responses=OpenApiSchema().auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def clear_project_chat(
     project_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
@@ -48,7 +49,7 @@ async def clear_project_chat(
     tags=["Board.Chat"],
     responses=OpenApiSchema().suc({"templates": [ChatTemplate]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def get_chat_templates(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     templates = await service.chat.get_templates(Project.__tablename__, project_uid)
@@ -61,7 +62,7 @@ async def get_chat_templates(project_uid: str, service: Service = Service.scope(
     tags=["Board.Chat"],
     responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def create_chat_template(
     project_uid: str, form: CreateChatTemplate, service: Service = Service.scope()
@@ -82,7 +83,7 @@ async def create_chat_template(
     tags=["Board.Chat"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_chat_template(
     project_uid: str, template_uid: str, form: UpdateChatTemplate, service: Service = Service.scope()
@@ -109,7 +110,7 @@ async def update_chat_template(
     tags=["Board.Chat"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def delete_chat_template(project_uid: str, template_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)

@@ -1,12 +1,13 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
+from core.utils.Converter import convert_python_data
 from fastapi import status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...core.utils.Converter import convert_python_data
-from ...models import Bot, Card, ChatTemplate, Project, ProjectColumn, ProjectLabel, ProjectRole, User
-from ...models.BaseRoleModel import ALL_GRANTED
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import Bot, Card, ChatTemplate, Project, ProjectColumn, ProjectLabel, ProjectRole, User
+from models.BaseRoleModel import ALL_GRANTED
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
 from .scopes import (
     AssignBotsForm,
@@ -15,7 +16,6 @@ from .scopes import (
     UpdateProjectDetailsForm,
     UpdateProjectLabelDetailsForm,
     UpdateRolesForm,
-    project_role_finder,
 )
 
 
@@ -55,7 +55,7 @@ from .scopes import (
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_details(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -84,7 +84,7 @@ async def get_project_details(
     description="Change project details.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_details(
     project_uid: str,
@@ -106,7 +106,7 @@ async def change_project_details(
     description="Update assigned bots for a project.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_assigned_bots(
     project_uid: str, form: AssignBotsForm, user: User = Auth.scope("api_user"), service: Service = Service.scope()
@@ -123,7 +123,7 @@ async def update_project_assigned_bots(
     tags=["Board.Settings"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_bot_roles(
     project_uid: str, bot_uid: str, form: UpdateRolesForm, service: Service = Service.scope()
@@ -140,7 +140,7 @@ async def update_project_bot_roles(
     tags=["Board.Settings"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def toggle_project_bot_activation(
     project_uid: str, bot_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
@@ -157,7 +157,7 @@ async def toggle_project_bot_activation(
     tags=["Board.Settings"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2008).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_user_roles(
     project_uid: str, user_uid: str, form: UpdateRolesForm, service: Service = Service.scope()
@@ -178,7 +178,7 @@ async def update_project_user_roles(
         OpenApiSchema().suc({"label": ProjectLabel}, 201).auth().forbidden().err(404, ApiErrorCode.NF2001).get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def create_project_label(
     project_uid: str,
@@ -214,7 +214,7 @@ async def create_project_label(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_label_details(
     project_uid: str,
@@ -248,7 +248,7 @@ async def change_project_label_details(
     description="Change project label order.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2009).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def change_project_label_order(
     project_uid: str, label_uid: str, form: ChangeRootOrderForm, service: Service = Service.scope()
@@ -267,7 +267,7 @@ async def change_project_label_order(
     description="Delete a project label.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2009).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def delete_label(
     project_uid: str, label_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -284,7 +284,7 @@ async def delete_label(
     tags=["Board.Settings"],
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2002).err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def delete_project(
     project_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()

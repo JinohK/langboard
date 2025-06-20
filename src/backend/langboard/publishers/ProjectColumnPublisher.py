@@ -1,8 +1,8 @@
+from core.routing import SocketTopic
+from core.types import SafeDateTime
+from core.utils.decorators import staticclass
+from models import Project, ProjectColumn
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import SocketTopic
-from ..core.types import SafeDateTime
-from ..core.utils.decorators import staticclass
-from ..models import Project, ProjectColumn
 
 
 @staticclass

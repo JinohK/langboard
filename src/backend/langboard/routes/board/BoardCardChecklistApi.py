@@ -1,12 +1,13 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import Bot, Checkitem, Checklist, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import Bot, Checkitem, Checklist, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrderForm, project_role_finder
+from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrderForm
 
 
 @AppRouter.schema()
@@ -45,7 +46,7 @@ from .scopes import CardChecklistNotifyForm, CardCheckRelatedForm, ChangeRootOrd
     .forbidden()
     .get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_checklists(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     checklists = await service.checklist.get_list(card_uid, as_api=True)
@@ -61,7 +62,7 @@ async def get_card_checklists(card_uid: str, service: Service = Service.scope())
         OpenApiSchema().suc({"checklist": Checklist}, 201).auth().forbidden().err(404, ApiErrorCode.NF2004).get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def create_checklist(
     project_uid: str,
@@ -92,7 +93,7 @@ async def create_checklist(
     description="Create a checkitem.",
     responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def create_checkitem(
     project_uid: str,
@@ -116,7 +117,7 @@ async def create_checkitem(
     description="Notify members of the checklist.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def notify_checklist(
     project_uid: str,
@@ -140,7 +141,7 @@ async def notify_checklist(
     description="Change checklist title.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_checklist_title(
     project_uid: str,
@@ -164,7 +165,7 @@ async def change_checklist_title(
     description="Change checklist order.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_checklist_order(
     project_uid: str,
@@ -188,7 +189,7 @@ async def change_checklist_order(
     description="Toggle checklist checked.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def toggle_checklist_checked(
     project_uid: str,
@@ -211,7 +212,7 @@ async def toggle_checklist_checked(
     description="Delete a checklist.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2012).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def delete_checklist(
     project_uid: str,

@@ -1,12 +1,13 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import Bot, ProjectColumn, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import Bot, ProjectColumn, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
+from .scopes import ChangeRootOrderForm, ColumnForm
 
 
 @AppRouter.schema(form=ColumnForm)
@@ -23,7 +24,7 @@ from .scopes import ChangeRootOrderForm, ColumnForm, project_role_finder
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def create_project_column(
     project_uid: str, form: ColumnForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -50,7 +51,7 @@ async def create_project_column(
     description="Change project column name.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def update_project_column_name(
     project_uid: str,
@@ -72,7 +73,7 @@ async def update_project_column_name(
     description="Change project column order.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_column_order(
     project_uid: str,
@@ -95,7 +96,7 @@ async def update_project_column_order(
     description="Delete a project column.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def delete_project_column(
     project_uid: str, column_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()

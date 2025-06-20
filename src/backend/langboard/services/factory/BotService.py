@@ -1,14 +1,15 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, overload
-from ...core.db import DbSession, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...core.storage import FileModel
-from ...core.utils.Converter import convert_python_data
-from ...core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
-from ...core.utils.String import generate_random_string
-from ...models import AppSetting, Bot, BotTrigger, ProjectAssignedBot
-from ...models.Bot import BotAPIAuthType
-from ...models.BotTrigger import BotTriggerCondition
+from core.db import DbSession, SqlBuilder
+from core.service import BaseService
+from core.storage import FileModel
+from core.utils.Converter import convert_python_data
+from core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
+from core.utils.String import generate_random_string
+from models import AppSetting, Bot, BotTrigger, ProjectAssignedBot
+from models.Bot import BotAPIAuthType
+from models.BotTrigger import BotTriggerCondition
+from ...core.service import ServiceHelper
 from ...publishers import BotPublisher
 from ...tasks.bot import BotDefaultTask
 from .Types import TBotParam
@@ -81,8 +82,8 @@ class BotService(BaseService):
         bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return None
-        mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_key", "prompt"]
-        unpublishable_keys = ["api_url", "api_key", "prompt"]
+        mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_auth_type", "api_key", "prompt"]
+        unpublishable_keys = ["api_url", "api_auth_type", "api_key", "prompt"]
 
         old_bot_record = {}
 

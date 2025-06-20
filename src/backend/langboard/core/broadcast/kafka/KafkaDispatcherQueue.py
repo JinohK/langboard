@@ -1,15 +1,15 @@
 import json
 from typing import Any
+from core.broadcast import BaseDispatcherQueue
+from core.Env import Env
 from kafka import KafkaProducer
-from ....Constants import BROADCAST_URLS
-from ..BaseDispatcherQueue import BaseDispatcherQueue
 from ..DispatcherModel import DispatcherModel, record_model
 
 
 class KafkaDispatcherQueue(BaseDispatcherQueue):
     def __init__(self):
         self.producer = KafkaProducer(
-            bootstrap_servers=BROADCAST_URLS, value_serializer=lambda v: json.dumps(v).encode("utf-8")
+            bootstrap_servers=Env.BROADCAST_URLS, value_serializer=lambda v: json.dumps(v).encode("utf-8")
         )
 
     async def put(self, event: str | DispatcherModel, data: dict[str, Any] | None = None):

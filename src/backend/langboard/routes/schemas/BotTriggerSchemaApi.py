@@ -1,16 +1,16 @@
 from typing import Any
+from core.Env import Env
+from core.routing import AppRouter, JsonResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
-from ...Constants import PROJECT_NAME, PROJECT_VERSION
+from models import Bot, ProjectLabel
+from models.BotTrigger import BotTriggerCondition
 from ...core.broker import Broker
-from ...core.routing import AppRouter, JsonResponse
-from ...models import Bot, ProjectLabel
-from ...models.BotTrigger import BotTriggerCondition
 
 
 @AppRouter.api.get("/schema/bot", tags=["Schema"], response_class=HTMLResponse)
 async def bot_docs():
-    return get_swagger_ui_html(openapi_url="/schema/bot.json", title=PROJECT_NAME.capitalize())
+    return get_swagger_ui_html(openapi_url="/schema/bot.json", title=Env.PROJECT_NAME.capitalize())
 
 
 @AppRouter.api.get("/schema/bot.json", include_in_schema=False)
@@ -47,8 +47,8 @@ async def bot_openapi():
         content={
             "openapi": "3.1.0",
             "info": {
-                "title": PROJECT_NAME.capitalize(),
-                "version": PROJECT_VERSION,
+                "title": Env.PROJECT_NAME.capitalize(),
+                "version": Env.PROJECT_VERSION,
             },
             "components": {"schemas": schemas},
             "shared": {

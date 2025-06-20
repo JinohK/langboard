@@ -1,15 +1,15 @@
 from typing import Any, Literal, cast, overload
+from core.caching import Cache
+from core.db import DbSession, SqlBuilder
+from core.Env import Env
+from core.security import AuthSecurity
+from core.utils.decorators import staticclass
+from core.utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_range
 from fastapi import Depends, Request, status
 from jwt import ExpiredSignatureError, InvalidTokenError
+from models import Bot, User
 from starlette.datastructures import Headers
 from starlette.requests import cookie_parser
-from ..Constants import ENVIRONMENT, REFRESH_TOKEN_NAME
-from ..core.caching import Cache
-from ..core.db import DbSession, SqlBuilder
-from ..core.security import AuthSecurity
-from ..core.utils.decorators import staticclass
-from ..core.utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_range
-from ..models import Bot, User
 
 
 @staticclass
@@ -172,7 +172,7 @@ class Auth:
                 return status.HTTP_401_UNAUTHORIZED
 
             cookie = cookie_parser(queries_headers.get("cookie", ""))
-            refresh_token = cookie.get(REFRESH_TOKEN_NAME)
+            refresh_token = cookie.get(Env.REFRESH_TOKEN_NAME)
             if not AuthSecurity.compare_tokens(access_token, refresh_token):
                 return status.HTTP_401_UNAUTHORIZED
         else:
@@ -204,7 +204,7 @@ class Auth:
         if not api_token:
             return status.HTTP_401_UNAUTHORIZED
 
-        if ENVIRONMENT != "local":
+        if Env.ENVIRONMENT != "local":
             if not ip:
                 return status.HTTP_401_UNAUTHORIZED
 
@@ -218,7 +218,7 @@ class Auth:
         if not bot:
             return status.HTTP_401_UNAUTHORIZED
 
-        if ENVIRONMENT == "local":
+        if Env.ENVIRONMENT == "local":
             return bot
 
         ip = cast(str, ip)
@@ -240,7 +240,7 @@ class Auth:
 
         try:
             payload = AuthSecurity.decode_access_token(api_token)
-            if "sub" not in payload or "chat" not in payload or not payload["sub"] or not payload["chat"]:
+            if "sub" not in payload or "internal" not in payload or not payload["sub"] or not payload["internal"]:
                 return status.HTTP_401_UNAUTHORIZED
             user_id = int(payload["sub"])
         except Exception:

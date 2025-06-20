@@ -31,7 +31,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         apiKey: null as HTMLInputElement | null,
         prompt: null as HTMLTextAreaElement | null,
     });
-    const [selectedAPIAuthType, setSelectedAPIAuthType] = useState<BotModel.EAPIAuthType>(BotModel.EAPIAuthType.Basic);
+    const [selectedAPIAuthType, setSelectedAPIAuthType] = useState<BotModel.EAPIAuthType>(BotModel.EAPIAuthType.Langflow);
     const { mutate } = useCreateBot();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const ipWhitelistRef = useRef<string[]>([]);

@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Any
+from core.broadcast import DispatcherQueue
+from core.utils.decorators import staticclass
 from pydantic import BaseModel
-from ..broadcast import DispatcherModel, DispatcherQueue
-from ..utils.decorators import staticclass
+from ..broadcast import DispatcherModel
 
 
 class SocketPublishModel(BaseModel):

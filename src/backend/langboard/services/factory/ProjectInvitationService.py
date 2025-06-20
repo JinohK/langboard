@@ -1,15 +1,16 @@
 from json import dumps as json_dumps
 from typing import Any, Literal, overload
 from urllib.parse import urlparse
+from core.db import DbSession, SqlBuilder
+from core.service import BaseService
+from core.types import SnowflakeID
+from core.utils.String import concat, generate_random_string
+from models import Project, ProjectAssignedUser, ProjectInvitation, User, UserEmail, UserNotification
+from models.UserNotification import NotificationType
 from sqlalchemy import String
 from sqlalchemy import cast as sql_cast
 from ...Constants import FRONTEND_REDIRECT_URL, QUERY_NAMES
-from ...core.db import DbSession, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...core.types import SnowflakeID
-from ...core.utils.String import concat, generate_random_string
-from ...models import Project, ProjectAssignedUser, ProjectInvitation, User, UserEmail, UserNotification
-from ...models.UserNotification import NotificationType
+from ...core.service import ServiceHelper
 from ...publishers import ProjectInvitationPublisher
 from ...tasks.activities import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService

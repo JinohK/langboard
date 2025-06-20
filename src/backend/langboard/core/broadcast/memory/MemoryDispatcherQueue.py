@@ -1,5 +1,5 @@
 from typing import Any
-from ..BaseDispatcherQueue import BaseDispatcherQueue
+from core.broadcast import BaseDispatcherQueue
 from ..DispatcherModel import DispatcherModel, record_model
 
 

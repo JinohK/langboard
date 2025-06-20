@@ -1,14 +1,14 @@
+from core.Env import Env
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
+from core.security import AuthSecurity
+from core.utils.Encryptor import Encryptor
 from fastapi import Request, status
 from jwt import ExpiredSignatureError
-from ...Constants import JWT_RT_EXPIRATION, REFRESH_TOKEN_NAME
-from ...core.filter import AuthFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...core.security import AuthSecurity
-from ...core.utils.Encryptor import Encryptor
-from ...models import User, UserEmail, UserGroup, UserNotification, UserProfile
-from ...models.UserNotification import NotificationType
-from ...models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
+from models import User, UserEmail, UserGroup, UserNotification, UserProfile
+from models.UserNotification import NotificationType
+from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from ...security import Auth
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, SignInForm
@@ -67,9 +67,9 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
 
     response = JsonResponse({"access_token": access_token}, status_code=status.HTTP_200_OK)
     response.set_cookie(
-        REFRESH_TOKEN_NAME,
+        Env.REFRESH_TOKEN_NAME,
         refresh_token,
-        max_age=JWT_RT_EXPIRATION * 60 * 60 * 24,
+        max_age=Env.JWT_RT_EXPIRATION * 60 * 60 * 24,
         httponly=True,
         secure=True,
     )
@@ -90,7 +90,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
 )
 async def refresh(request: Request) -> JsonResponse:
     try:
-        refresh_token = request.cookies.get(REFRESH_TOKEN_NAME, None)
+        refresh_token = request.cookies.get(Env.REFRESH_TOKEN_NAME, None)
         if not refresh_token:
             raise Exception()
 
@@ -189,6 +189,6 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
 @AppRouter.api.post("/auth/signout", tags=["Auth"], responses=OpenApiSchema(202).suc({}).get())
 async def sign_out():
     response = JsonResponse(status_code=status.HTTP_202_ACCEPTED)
-    response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+    response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=True)
 
     return response

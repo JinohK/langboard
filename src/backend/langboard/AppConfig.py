@@ -1,8 +1,8 @@
 from typing import Any, Optional
+from core.utils.decorators import staticclass
 from pydantic import BaseModel
 from uvicorn.config import LifespanType
 from .Constants import DATA_DIR
-from .core.utils.decorators import staticclass
 
 
 class AppConfigModel(BaseModel):

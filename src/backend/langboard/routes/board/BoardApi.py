@@ -1,9 +1,9 @@
 from typing import cast
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import (
+from models import (
     Bot,
     Card,
     CardRelationship,
@@ -16,11 +16,12 @@ from ...models import (
     ProjectRole,
     User,
 )
-from ...models.BaseRoleModel import ALL_GRANTED
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models.BaseRoleModel import ALL_GRANTED
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import InviteProjectMemberForm, ProjectInvitationForm, project_role_finder
+from .scopes import InviteProjectMemberForm, ProjectInvitationForm
 
 
 @AppRouter.schema()
@@ -30,7 +31,7 @@ from .scopes import InviteProjectMemberForm, ProjectInvitationForm, project_role
     description="Check if the project is available.",
     responses=OpenApiSchema().suc({"title": "string"}).auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def is_project_available(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -53,7 +54,7 @@ async def is_project_available(project_uid: str, service: Service = Service.scop
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_current_roles(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -96,7 +97,7 @@ async def get_project_current_roles(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -119,7 +120,7 @@ async def get_project(
         OpenApiSchema().suc({"users": [User], "bots": [Bot]}).auth().forbidden().err(404, ApiErrorCode.NF2001).get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_assignees(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -139,7 +140,7 @@ async def get_project_assignees(project_uid: str, service: Service = Service.sco
     description="Get project assigned users.",
     responses=OpenApiSchema().suc({"users": [User]}).auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_assigned_users(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -158,7 +159,7 @@ async def get_project_assigned_users(project_uid: str, service: Service = Servic
     description="Get project assigned bots.",
     responses=OpenApiSchema().suc({"bots": [Bot]}).auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_assigned_bots(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -179,7 +180,7 @@ async def get_project_assigned_bots(project_uid: str, service: Service = Service
         OpenApiSchema().suc({"columns": [ProjectColumn]}).auth().forbidden().err(404, ApiErrorCode.NF2001).get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_columns(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -222,7 +223,7 @@ async def get_project_columns(project_uid: str, service: Service = Service.scope
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_cards(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
@@ -239,7 +240,7 @@ async def get_project_cards(project_uid: str, service: Service = Service.scope()
     tags=["Board"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_member(
     project_uid: str,
@@ -259,7 +260,7 @@ async def update_project_member(
     tags=["Board"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2006).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def unassign_project_assignee(
     project_uid: str, assignee_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
@@ -285,7 +286,7 @@ async def unassign_project_assignee(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def is_project_assignee(project_uid: str, assignee_uid: str, service: Service = Service.scope()) -> JsonResponse:
     target = await service.user.get_by_uid(assignee_uid)

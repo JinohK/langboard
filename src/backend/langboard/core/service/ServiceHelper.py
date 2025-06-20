@@ -1,9 +1,9 @@
 from typing import Any, Literal, Sequence, TypeVar, cast, overload
+from core.db import BaseSqlModel, DbSession, SoftDeleteModel, SqlBuilder
+from core.types import SnowflakeID
+from core.utils.decorators import staticclass
 from sqlalchemy import Delete, Update, func
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ..db import BaseSqlModel, DbSession, SoftDeleteModel, SqlBuilder
-from ..types import SnowflakeID
-from ..utils.decorators import staticclass
 from ..utils.ModelUtils import get_model_by_table_name
 
 

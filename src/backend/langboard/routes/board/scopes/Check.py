@@ -1,6 +1,6 @@
+from core.routing import BaseFormModel, form_model
+from models.Checkitem import CheckitemStatus
 from pydantic import Field
-from ....core.routing import BaseFormModel, form_model
-from ....models.Checkitem import CheckitemStatus
 
 
 @form_model

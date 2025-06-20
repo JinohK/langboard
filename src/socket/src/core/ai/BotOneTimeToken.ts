@@ -10,7 +10,7 @@ export const createOneTimeToken = (userId: number | SnowflakeID) => {
     const encoded = jwt.sign(
         {
             sub: userId.toString(),
-            chat: "bot",
+            internal: "bot",
             exp: expiry,
         },
         JWT_SECRET_KEY,

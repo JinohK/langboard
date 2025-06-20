@@ -1,10 +1,11 @@
 from json import loads as json_loads
 from typing import Any
+from core.caching import Cache
+from core.Env import Env
+from core.types import SafeDateTime, SnowflakeID
+from core.utils.String import create_short_unique_id
 from pydantic import BaseModel
-from ...Constants import CACHE_TYPE, DATA_DIR
-from ..caching import Cache
-from ..types import SafeDateTime, SnowflakeID
-from ..utils.String import create_short_unique_id
+from ...Constants import DATA_DIR
 
 
 def _convert_id_for_js(v: dict):
@@ -41,7 +42,7 @@ async def record_model(
 
     model = DispatcherModel(event=event, data=data or {}) if isinstance(event, str) else event
 
-    if CACHE_TYPE == "redis":
+    if Env.CACHE_TYPE == "redis":
         cache_key = f"broadcast-{now_str}-{random_str}"
         # Prevent enums from being Enum.Name
         await Cache.set(cache_key, json_loads(model.model_dump_json())["data"], 3 * 60)

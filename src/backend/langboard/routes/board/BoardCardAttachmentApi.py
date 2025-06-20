@@ -1,15 +1,16 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.routing.Exception import MissingException
+from core.schema import OpenApiSchema
+from core.storage import StorageName
 from fastapi import File, UploadFile, status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.routing.Exception import MissingException
-from ...core.schema import OpenApiSchema
-from ...core.security import RoleSecurity
-from ...core.storage import Storage, StorageName
-from ...models import CardAttachment, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import CardAttachment, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...core.storage import Storage
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder, RoleSecurity
 from ...services import Service
-from .scopes import ChangeAttachmentNameForm, ChangeChildOrderForm, project_role_finder
+from .scopes import ChangeAttachmentNameForm, ChangeChildOrderForm
 
 
 @AppRouter.api.post(
@@ -28,7 +29,7 @@ from .scopes import ChangeAttachmentNameForm, ChangeChildOrderForm, project_role
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def upload_card_attachment(
     project_uid: str,
@@ -59,7 +60,7 @@ async def upload_card_attachment(
     tags=["Board.Card.Attachment"],
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2011).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add("user")
 async def change_attachment_order(
     project_uid: str, card_uid: str, attachment_uid: str, form: ChangeChildOrderForm, service: Service = Service.scope()
@@ -76,7 +77,7 @@ async def change_attachment_order(
     tags=["Board.Card.Attachment"],
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2003).err(404, ApiErrorCode.NF2011).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def change_card_attachment_name(
     project_uid: str,
@@ -93,7 +94,7 @@ async def change_card_attachment_name(
     if card_attachment.user_id != user.id and not user.is_admin:
         role_filter = RoleSecurity(ProjectRole)
         if not await role_filter.is_authorized(
-            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], RoleFinder.project
         ):
             return JsonResponse(content=ApiErrorCode.PE2003, status_code=status.HTTP_403_FORBIDDEN)
 
@@ -111,7 +112,7 @@ async def change_card_attachment_name(
     tags=["Board.Card.Attachment"],
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2003).err(404, ApiErrorCode.NF2011).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def delete_card_attachment(
     project_uid: str,
@@ -127,7 +128,7 @@ async def delete_card_attachment(
     if card_attachment.user_id != user.id and not user.is_admin:
         role_filter = RoleSecurity(ProjectRole)
         if not await role_filter.is_authorized(
-            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], project_role_finder
+            user.id, {"project_uid": project_uid}, [ProjectRoleAction.CardUpdate.value], RoleFinder.project
         ):
             return JsonResponse(content=ApiErrorCode.PE2003, status_code=status.HTTP_403_FORBIDDEN)
 

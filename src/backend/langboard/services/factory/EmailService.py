@@ -1,19 +1,9 @@
 from json import loads as json_loads
+from core.Env import Env
+from core.service import BaseService
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import SecretStr
-from ...Constants import (
-    MAIL_FROM,
-    MAIL_FROM_NAME,
-    MAIL_PASSWORD,
-    MAIL_PORT,
-    MAIL_SERVER,
-    MAIL_SSL_TLS,
-    MAIL_STARTTLS,
-    MAIL_USERNAME,
-    PROJECT_NAME,
-    PUBLIC_FRONTEND_URL,
-)
-from ...core.service import BaseService
+from ...Constants import PUBLIC_FRONTEND_URL
 from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ...resources.Resource import get_resource_path
 
@@ -35,7 +25,7 @@ class EmailService(BaseService):
             template_name,
             {
                 **formats,
-                "app_name": PROJECT_NAME.capitalize(),
+                "app_name": Env.PROJECT_NAME.capitalize(),
                 "logo_url": f"{PUBLIC_FRONTEND_URL}/images/logo.png",
             },
         )
@@ -61,15 +51,15 @@ class EmailService(BaseService):
 
         try:
             self.__config = ConnectionConfig(
-                MAIL_FROM=MAIL_FROM,
-                MAIL_FROM_NAME=MAIL_FROM_NAME,
-                MAIL_USERNAME=MAIL_USERNAME,
-                MAIL_PASSWORD=SecretStr(MAIL_PASSWORD),
-                MAIL_PORT=int(MAIL_PORT),
-                MAIL_SERVER=MAIL_SERVER,
-                MAIL_STARTTLS=MAIL_STARTTLS,
-                MAIL_SSL_TLS=MAIL_SSL_TLS,
-                USE_CREDENTIALS=bool(MAIL_USERNAME) and bool(MAIL_PASSWORD),
+                MAIL_FROM=Env.MAIL_FROM,
+                MAIL_FROM_NAME=Env.MAIL_FROM_NAME,
+                MAIL_USERNAME=Env.MAIL_USERNAME,
+                MAIL_PASSWORD=SecretStr(Env.MAIL_PASSWORD),
+                MAIL_PORT=int(Env.MAIL_PORT),
+                MAIL_SERVER=Env.MAIL_SERVER,
+                MAIL_STARTTLS=Env.MAIL_STARTTLS,
+                MAIL_SSL_TLS=Env.MAIL_SSL_TLS,
+                USE_CREDENTIALS=bool(Env.MAIL_USERNAME) and bool(Env.MAIL_PASSWORD),
                 TIMEOUT=5,
             )
             return True
@@ -91,4 +81,4 @@ class EmailService(BaseService):
         return subject, template
 
     def __create_subject(self, subject: str) -> str:
-        return f"[{PROJECT_NAME.capitalize()}] {subject}"
+        return f"[{Env.PROJECT_NAME.capitalize()}] {subject}"

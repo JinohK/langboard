@@ -23,6 +23,11 @@
     "editor.formatOnSave": true
   },
   "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.extraPaths": [
+    "./src/langboard",
+    "./src/flows",
+    "./src/shared"
+  ],
   "python.languageServer": "Pylance",
   "python.analysis.typeEvaluation.enableTypeIgnoreComments": true,
   "[json]": {

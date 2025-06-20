@@ -1,7 +1,8 @@
 from typing import Any
-from ...core.db import DbSession, EditorContentModel, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...models import Bot, Card, CardComment, CardCommentReaction, Project, User
+from core.db import DbSession, EditorContentModel, SqlBuilder
+from core.service import BaseService
+from models import Bot, Card, CardComment, CardCommentReaction, Project, User
+from ...core.service import ServiceHelper
 from ...publishers import CardCommentPublisher
 from ...tasks.activities import CardCommentActivityTask
 from ...tasks.bot import CardCommentBotTask

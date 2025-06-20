@@ -1,24 +1,19 @@
+from core.db import EditorContentModel
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.routing.Exception import MissingException
+from core.schema import OpenApiSchema
+from core.storage import StorageName
+from core.utils.Converter import convert_python_data
 from fastapi import File, UploadFile, status
-from ...core.db import EditorContentModel
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.routing.Exception import MissingException
-from ...core.schema import OpenApiSchema
+from models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiAttachment, User
+from models.ProjectRole import ProjectRoleAction
 from ...core.service import ServiceHelper
-from ...core.storage import Storage, StorageName
-from ...core.utils.Converter import convert_python_data
-from ...models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiAttachment, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from ...core.storage import Storage
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import (
-    AssigneesForm,
-    ChangeChildOrderForm,
-    ChangeWikiDetailsForm,
-    ChangeWikiPublicForm,
-    WikiForm,
-    project_role_finder,
-)
+from .scopes import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
 @AppRouter.schema()
@@ -51,7 +46,7 @@ from .scopes import (
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_wikis(
     project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -91,7 +86,7 @@ async def get_project_wikis(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_wiki_details(
     project_uid: str,
@@ -138,7 +133,7 @@ async def get_project_wiki_details(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def create_project_wiki(
     project_uid: str, form: WikiForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -171,7 +166,7 @@ async def create_project_wiki(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_wiki_details(
     project_uid: str,
@@ -219,7 +214,7 @@ async def change_project_wiki_details(
     description="Change project wiki public status.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_wiki_public(
     project_uid: str,
@@ -249,7 +244,7 @@ async def change_project_wiki_public(
     description="Update project wiki assignees.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_project_wiki_assignees(
     project_uid: str,
@@ -282,7 +277,7 @@ async def update_project_wiki_assignees(
     description="Change project wiki order.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2010).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_wiki_order(
     project_uid: str, wiki_uid: str, form: ChangeChildOrderForm, service: Service = Service.scope()
@@ -313,7 +308,7 @@ async def change_project_wiki_order(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def upload_wiki_attachment(
     project_uid: str,
@@ -346,7 +341,7 @@ async def upload_wiki_attachment(
     description="Delete project wiki.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def delete_project_wiki(
     project_uid: str, wiki_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()

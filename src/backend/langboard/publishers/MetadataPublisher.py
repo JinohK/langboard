@@ -1,6 +1,6 @@
+from core.routing import SocketTopic
+from core.utils.decorators import staticclass
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import SocketTopic
-from ..core.utils.decorators import staticclass
 
 
 @staticclass

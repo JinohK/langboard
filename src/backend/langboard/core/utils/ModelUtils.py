@@ -1,6 +1,6 @@
 from typing import cast
-from ... import models
-from ..db import BaseSqlModel
+import models
+from core.db import BaseSqlModel
 
 
 def get_model_by_table_name(table_name: str) -> type[BaseSqlModel] | None:

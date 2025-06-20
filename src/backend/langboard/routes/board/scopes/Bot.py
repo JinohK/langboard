@@ -1,9 +1,9 @@
+from core.routing import BaseFormModel, form_model
+from core.schema import Pagination
+from core.types import SafeDateTime
+from models import BotSchedule, Card, ProjectColumn
+from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from pydantic import Field
-from ....core.routing import BaseFormModel, form_model
-from ....core.schema import Pagination
-from ....core.types import SafeDateTime
-from ....models import BotSchedule, Card, ProjectColumn
-from ....models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 
 
 class BotSchedulePagination(Pagination):

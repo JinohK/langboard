@@ -1,10 +1,5 @@
-from .FileModel import FileModel
-from .Storage import Storage
-from .StorageName import StorageName
+from core.storage import Storage as _Storage
+from ...Constants import LOCAL_STORAGE_DIR
 
 
-__all__ = [
-    "FileModel",
-    "Storage",
-    "StorageName",
-]
+Storage = _Storage(LOCAL_STORAGE_DIR)

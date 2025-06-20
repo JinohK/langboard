@@ -13,13 +13,11 @@ from .Project import (
     UpdateRolesForm,
 )
 from .ProjectLabel import CreateProjectLabelForm, UpdateProjectLabelDetailsForm
-from .RoleFinder import project_role_finder
 from .Shared import AssignBotsForm, AssigneesForm, AssignUsersForm, ChangeChildOrderForm, ChangeRootOrderForm
 from .Wiki import ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
 __all__ = [
-    "project_role_finder",
     "AssignBotsForm",
     "AssignUsersForm",
     "AssigneesForm",

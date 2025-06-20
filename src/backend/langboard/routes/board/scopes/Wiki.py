@@ -1,6 +1,6 @@
+from core.db import EditorContentModel
+from core.routing import BaseFormModel, form_model
 from pydantic import Field
-from ....core.db import EditorContentModel
-from ....core.routing import BaseFormModel, form_model
 
 
 @form_model

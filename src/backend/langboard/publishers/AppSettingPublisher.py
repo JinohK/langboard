@@ -1,7 +1,7 @@
 from typing import Any
+from core.routing import GLOBAL_TOPIC_ID, SocketTopic
+from core.utils.decorators import staticclass
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
-from ..core.routing import GLOBAL_TOPIC_ID, SocketTopic
-from ..core.utils.decorators import staticclass
 
 
 @staticclass

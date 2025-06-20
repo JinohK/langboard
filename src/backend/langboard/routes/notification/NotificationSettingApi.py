@@ -1,12 +1,12 @@
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...models.UserNotification import NotificationType
-from ...security import Auth
+from core.filter import AuthFilter
+from core.routing import AppRouter, JsonResponse
+from core.schema import OpenApiSchema
+from models import ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from models.UserNotification import NotificationType
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from ..board.scopes import project_role_finder
 from .NotificationSettingForm import NotificationSettingForm, NotificationSettingTypeForm
 
 
@@ -112,7 +112,7 @@ async def toggle_all_wiki_notification_subscription(
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def toggle_project_notification_subscription(
     project_uid: str,
@@ -133,7 +133,7 @@ async def toggle_project_notification_subscription(
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def toggle_column_notification_subscription(
     project_uid: str,
@@ -155,7 +155,7 @@ async def toggle_column_notification_subscription(
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def toggle_card_notification_subscription(
     project_uid: str,
@@ -177,7 +177,7 @@ async def toggle_card_notification_subscription(
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def toggle_wiki_notification_subscription(
     project_uid: str,

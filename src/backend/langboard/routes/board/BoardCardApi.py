@@ -1,12 +1,11 @@
+from core.db import EditorContentModel
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
+from core.types import SafeDateTime
+from core.utils.Converter import convert_python_data
 from fastapi import status
-from ...core.db import EditorContentModel
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...core.service import ServiceHelper
-from ...core.types import SafeDateTime
-from ...core.utils.Converter import convert_python_data
-from ...models import (
+from models import (
     Bot,
     Card,
     CardAttachment,
@@ -21,9 +20,11 @@ from ...models import (
     ProjectRole,
     User,
 )
-from ...models.BaseRoleModel import ALL_GRANTED
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models.BaseRoleModel import ALL_GRANTED
+from models.ProjectRole import ProjectRoleAction
+from ...core.service import ServiceHelper
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
 from .scopes import (
     AssignUsersForm,
@@ -32,7 +33,6 @@ from .scopes import (
     CreateCardForm,
     UpdateCardLabelsForm,
     UpdateCardRelationshipsForm,
-    project_role_finder,
 )
 
 
@@ -92,7 +92,7 @@ from .scopes import (
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_detail(
     project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -140,7 +140,7 @@ async def get_card_detail(
     .forbidden()
     .get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_comments(card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     comments = await service.card_comment.get_board_list(card_uid)
@@ -180,7 +180,7 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def create_card(
     project_uid: str,
@@ -218,7 +218,7 @@ async def create_card(
         .get()
     ),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_card_details(
     project_uid: str,
@@ -266,7 +266,7 @@ async def change_card_details(
     description="Assign users to a card.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def update_card_assigned_users(
     project_uid: str,
@@ -289,7 +289,7 @@ async def update_card_assigned_users(
     description="Change card order or move to another project column.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_card_order_or_move_column(
     project_uid: str,
@@ -312,7 +312,7 @@ async def change_card_order_or_move_column(
     description="Update assigned labels to a card.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def update_card_labels(
     project_uid: str,
@@ -335,7 +335,7 @@ async def update_card_labels(
     description="Update card relationships.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def update_card_relationships(
     project_uid: str,
@@ -360,7 +360,7 @@ async def update_card_relationships(
     description="Archive a card.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def archive_card(
     project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
@@ -385,7 +385,7 @@ async def archive_card(
     description="Delete a card. (Only available for archived cards)",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], RoleFinder.project)
 @AuthFilter.add()
 async def delete_card(
     project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()

@@ -70,6 +70,10 @@ const useInfiniteScrollerLoaderObserver = ({
             });
             return;
         }
+
+        return () => {
+            observerRef.current?.disconnect();
+        };
     }, []);
 
     let items = Array.isArray(children) ? children : [children];

@@ -1,18 +1,13 @@
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import status
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import Bot, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import Bot, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import (
-    CardCheckRelatedForm,
-    CardifyCheckitemForm,
-    ChangeCardCheckitemStatusForm,
-    ChangeChildOrderForm,
-    project_role_finder,
-)
+from .scopes import CardCheckRelatedForm, CardifyCheckitemForm, ChangeCardCheckitemStatusForm, ChangeChildOrderForm
 
 
 @AppRouter.schema(form=CardCheckRelatedForm)
@@ -22,7 +17,7 @@ from .scopes import (
     description="Change checkitem title.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_checkitem_title(
     project_uid: str,
@@ -46,7 +41,7 @@ async def change_checkitem_title(
     description="Change checkitem order or move to another checklist.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def change_checkitem_order_or_move_checklist(
     project_uid: str,
@@ -71,7 +66,7 @@ async def change_checkitem_order_or_move_checklist(
     description="Change checkitem status.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2004).err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add("user")
 async def change_checkitem_status(
     project_uid: str,
@@ -102,7 +97,7 @@ async def change_checkitem_status(
     description="Cardify checkitem.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2004).err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def cardify_checkitem(
     project_uid: str,
@@ -133,7 +128,7 @@ async def cardify_checkitem(
     description="Toggle checkitem checked.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2004).err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def toggle_checkitem_checked(
     project_uid: str,
@@ -163,7 +158,7 @@ async def toggle_checkitem_checked(
     description="Delete checkitem.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2004).err(404, ApiErrorCode.NF2013).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def delete_checkitem(
     project_uid: str,

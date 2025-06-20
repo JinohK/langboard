@@ -1,10 +1,10 @@
 from typing import Any, Literal, overload
-from ...core.db import DbSession, EditorContentModel, SqlBuilder
-from ...core.service import BaseService, ServiceHelper
-from ...core.storage import FileModel
-from ...core.types import SnowflakeID
-from ...core.utils.Converter import convert_python_data
-from ...models import (
+from core.db import DbSession, EditorContentModel, SqlBuilder
+from core.service import BaseService
+from core.storage import FileModel
+from core.types import SnowflakeID
+from core.utils.Converter import convert_python_data
+from models import (
     Bot,
     Project,
     ProjectAssignedBot,
@@ -15,6 +15,7 @@ from ...models import (
     ProjectWikiAttachment,
     User,
 )
+from ...core.service import ServiceHelper
 from ...publishers import ProjectWikiPublisher
 from ...tasks.activities import ProjectWikiActivityTask
 from ...tasks.bot import ProjectWikiBotTask

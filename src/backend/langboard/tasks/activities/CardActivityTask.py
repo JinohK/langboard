@@ -1,7 +1,7 @@
 from typing import Any
+from models import Bot, Card, Project, ProjectActivity, ProjectColumn, User
+from models.ProjectActivity import ProjectActivityType
 from ...core.broker import Broker
-from ...models import Bot, Card, Project, ProjectActivity, ProjectColumn, User
-from ...models.ProjectActivity import ProjectActivityType
 from .UserActivityTask import record_project_activity
 from .utils import ActivityHistoryHelper, ActivityTaskHelper
 

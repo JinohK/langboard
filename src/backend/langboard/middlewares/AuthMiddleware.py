@@ -1,13 +1,13 @@
+from core.Env import Env
+from core.filter import AuthFilter, FilterMiddleware
+from core.routing import ApiErrorCode, JsonResponse
+from core.security import AuthSecurity
 from fastapi import status
+from models import Bot, User
 from starlette.datastructures import Headers
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
-from ..Constants import REFRESH_TOKEN_NAME
-from ..core.filter import AuthFilter, FilterMiddleware
-from ..core.routing import ApiErrorCode, JsonResponse
-from ..core.security import AuthSecurity
-from ..models import Bot, User
 from ..security import Auth
 
 
@@ -35,7 +35,7 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
             validation_result = await self._validate(headers)
             if isinstance(validation_result, int):
                 response = JsonResponse(status_code=validation_result)
-                response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+                response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=True)
                 await response(scope, receive, send)
                 return
 
@@ -49,7 +49,7 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
                 )
             ):
                 response = JsonResponse(content=ApiErrorCode.AU1001, status_code=status.HTTP_403_FORBIDDEN)
-                response.delete_cookie(REFRESH_TOKEN_NAME, httponly=True, secure=True)
+                response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=True)
                 await response(scope, receive, send)
                 return
 

@@ -1,13 +1,14 @@
+from core.db import EditorContentModel
+from core.filter import AuthFilter
+from core.routing import ApiErrorCode, AppRouter, JsonResponse
+from core.schema import OpenApiSchema
 from fastapi import status
-from ...core.db import EditorContentModel
-from ...core.filter import AuthFilter, RoleFilter
-from ...core.routing import ApiErrorCode, AppRouter, JsonResponse
-from ...core.schema import OpenApiSchema
-from ...models import Bot, CardComment, ProjectRole, User
-from ...models.ProjectRole import ProjectRoleAction
-from ...security import Auth
+from models import Bot, CardComment, ProjectRole, User
+from models.ProjectRole import ProjectRoleAction
+from ...filter import RoleFilter
+from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import ToggleCardCommentReactionForm, project_role_finder
+from .scopes import ToggleCardCommentReactionForm
 
 
 @AppRouter.schema(form=EditorContentModel)
@@ -17,7 +18,7 @@ from .scopes import ToggleCardCommentReactionForm, project_role_finder
     description="Add a comment to a card.",
     responses=OpenApiSchema(201).auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def add_card_comment(
     project_uid: str,
@@ -40,7 +41,7 @@ async def add_card_comment(
     description="Update a comment.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2014).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def update_card_comment(
     project_uid: str,
@@ -69,7 +70,7 @@ async def update_card_comment(
     description="Delete a comment.",
     responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2014).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def delete_card_comment(
     project_uid: str,
@@ -97,7 +98,7 @@ async def delete_card_comment(
     description="Toggle reaction on a comment.",
     responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2014).get(),
 )
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], project_role_finder)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def toggle_reaction_card_comment(
     project_uid: str,
