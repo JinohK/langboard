@@ -5,7 +5,7 @@ from models import Card, CardMetadata, Project, ProjectRole
 from models.ProjectRole import ProjectRoleAction
 from ...core.service import ServiceHelper
 from ...filter import RoleFilter
-from ...publishers.MetadataPublisher import MetadataPublisher
+from ...publishers import MetadataPublisher
 from ...security import RoleFinder
 from ...services import Service
 from .MetadataForm import MetadataDeleteForm, MetadataForm, MetadataGetModel

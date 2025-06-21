@@ -5,7 +5,7 @@ from models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiMetadata, 
 from models.ProjectRole import ProjectRoleAction
 from ...core.service import ServiceHelper
 from ...filter import RoleFilter
-from ...publishers.MetadataPublisher import MetadataPublisher
+from ...publishers import MetadataPublisher
 from ...security import Auth, RoleFinder
 from ...services import Service
 from .MetadataForm import MetadataDeleteForm, MetadataForm, MetadataGetModel

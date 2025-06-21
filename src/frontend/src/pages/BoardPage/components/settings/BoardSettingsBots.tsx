@@ -12,7 +12,7 @@ const BoardSettingsBots = memo(() => {
     const [isValidating, setIsValidating] = useState(false);
     const { project, allBots } = useBoardSettings();
     const projectBots = project.useForeignField<BotModel.TModel>("bots");
-    const { mutateAsync } = useUpdateProjectAssignedBots();
+    const { mutateAsync } = useUpdateProjectAssignedBots({ interceptToast: true });
     const [readOnly, setReadOnly] = useState(true);
 
     const save = async (selectedBots: BotModel.TModel[]) => {

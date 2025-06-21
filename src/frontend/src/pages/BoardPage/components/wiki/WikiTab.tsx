@@ -81,7 +81,7 @@ const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayP
     const forbidden = wiki.useField("forbidden");
     const title = wiki.useField("title");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
-    const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki();
+    const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki({ interceptToast: true });
 
     const scrollHorizontal = (event: React.PointerEvent<HTMLElement>) => {
         if (modeType !== "view") {

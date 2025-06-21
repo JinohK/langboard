@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,7 +17,11 @@ const useDeleteProjectColumn = (options?: TMutationOptions<IDeleteProjectColumnF
             uid: params.project_uid,
             column_uid: params.column_uid,
         });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

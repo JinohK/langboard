@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,7 +16,11 @@ const useGetProjectChatTemplates = (options?: TMutationOptions) => {
         const url = format(API_ROUTES.BOARD.CHAT.TEMPLATE.GET_LIST, {
             uid: params.project_uid,
         });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         ChatTemplateModel.Model.fromObjectArray(res.data.templates, true);
 

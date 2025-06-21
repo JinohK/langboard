@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TMetadataForm } from "@/controllers/api/metadata/types";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -26,9 +27,17 @@ const useSaveMetadata = (form: TMetadataForm, options?: TMutationOptions<ISaveMe
     }
 
     const saveMetadata = async (params: ISaveMetadataForm) => {
-        const res = await api.post(url, {
-            ...params,
-        });
+        const res = await api.post(
+            url,
+            {
+                ...params,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

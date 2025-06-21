@@ -15,7 +15,7 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: updateCardLabelsMutateAsync } = useUpdateCardLabels();
+    const { mutateAsync: updateCardLabelsMutateAsync } = useUpdateCardLabels({ interceptToast: true });
     const [selectedLabelUIDs, setSelectedLabelUIDs] = useState(card.labels.map((label) => label.uid));
 
     const changeOpenedState = (opened: bool) => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -21,7 +22,11 @@ const useUnscheduleProjectBotCron = (options?: TMutationOptions<IUnscheduleProje
             bot_uid: params.bot_uid,
             schedule_uid: params.schedule_uid,
         });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         BotSchedule.Model.deleteModel(params.schedule_uid);
 

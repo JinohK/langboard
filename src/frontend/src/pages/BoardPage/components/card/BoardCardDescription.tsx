@@ -24,7 +24,7 @@ export function SkeletonBoardCardDescription() {
 const BoardCardDescription = memo((): JSX.Element => {
     const { projectUID, card, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
-    const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description");
+    const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description", { interceptToast: true });
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const projectMembers = card.useForeignField<User.TModel>("project_members");

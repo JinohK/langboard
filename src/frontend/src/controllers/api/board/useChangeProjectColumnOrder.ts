@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -14,9 +15,17 @@ const useChangeProjectColumnOrder = (options?: TMutationOptions<IChangeProjectCo
 
     const changeProjectColumnOrder = async (params: IChangeProjectColumnOrderForm) => {
         const url = format(API_ROUTES.BOARD.COLUMN.CHANGE_ORDER, { uid: params.project_uid, column_uid: params.column_uid });
-        const res = await api.put(url, {
-            order: params.order,
-        });
+        const res = await api.put(
+            url,
+            {
+                order: params.order,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

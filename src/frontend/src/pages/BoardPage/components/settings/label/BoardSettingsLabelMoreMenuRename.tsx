@@ -11,7 +11,7 @@ function BoardSettingsLabelMoreMenuRename(): JSX.Element {
     const { model: label } = ModelRegistry.ProjectLabel.useContext();
     const { project } = useBoardSettings();
     const [t] = useTranslation();
-    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("name");
+    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("name", { interceptToast: true });
     const nameInputRef = useRef<HTMLInputElement>(null);
 
     const changeLabelName = (endCallback: (shouldClose: bool) => void) => {

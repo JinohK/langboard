@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -17,11 +18,19 @@ const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string
         const url = format(API_ROUTES.BOARD.CARD.CREATE, {
             uid: params.project_uid,
         });
-        const res = await api.post(url, {
-            column_uid: params.column_uid,
-            title: params.title,
-            assign_users: params.assign_users,
-        });
+        const res = await api.post(
+            url,
+            {
+                column_uid: params.column_uid,
+                title: params.title,
+                assign_users: params.assign_users,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return {
             uid: res.data.card.uid,

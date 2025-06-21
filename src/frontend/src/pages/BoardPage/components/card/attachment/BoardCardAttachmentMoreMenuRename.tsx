@@ -11,7 +11,7 @@ function BoardCardAttachmentMoreMenuRename(): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const { model: attachment } = ModelRegistry.ProjectCardAttachment.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: changeCardAttachmentNameMutateAsync } = useChangeCardAttachmentName();
+    const { mutateAsync: changeCardAttachmentNameMutateAsync } = useChangeCardAttachmentName({ interceptToast: true });
     const nameInputRef = useRef<HTMLInputElement | null>(null);
 
     const changeAttachmentName = (endCallback: (shouldClose: bool) => void) => {

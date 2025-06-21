@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -7,7 +8,11 @@ const useGetAllSettings = (options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
 
     const getAllSettings = async () => {
-        const res = await api.get(API_ROUTES.SETTINGS.GET_ALL);
+        const res = await api.get(API_ROUTES.SETTINGS.GET_ALL, {
+            env: {
+                noToast: options?.interceptToast,
+            } as any,
+        });
 
         AppSettingModel.Model.fromObjectArray(res.data.settings);
         BotModel.Model.fromObjectArray(res.data.bots);

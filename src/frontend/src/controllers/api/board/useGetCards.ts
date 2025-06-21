@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
@@ -18,7 +19,11 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
 
     const getCards = async () => {
         const url = format(API_ROUTES.BOARD.GET_CARDS, { uid: params.project_uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         ProjectCard.Model.fromObjectArray(res.data.cards);
         GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships, true);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,9 +16,17 @@ const useUpdateUserGroupAssignedEmails = (group: UserGroup.TModel, options?: TMu
         const url = format(API_ROUTES.ACCOUNT.USER_GROUP.UPDATE_ASSIGNED_EMAILS, {
             group_uid: group.uid,
         });
-        const res = await api.put(url, {
-            emails: params.emails,
-        });
+        const res = await api.put(
+            url,
+            {
+                emails: params.emails,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         User.Model.deleteModels(group.users.filter((emailUser) => !emailUser.isValidUser() && !emailUser.isBot()).map((emailUser) => emailUser.uid));
         group.users = res.data.users;

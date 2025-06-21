@@ -15,7 +15,7 @@ const BotApiAuthType = memo(() => {
     const { navigateRef } = useAppSetting();
     const apiAuthType = bot.useField("api_auth_type");
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
     const changeAPIAuthType = async (value: BotModel.EAPIAuthType) => {
         if (isValidating) {

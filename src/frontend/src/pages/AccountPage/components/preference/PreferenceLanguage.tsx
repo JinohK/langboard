@@ -8,7 +8,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 function PreferenceLanguage() {
     const { currentUser, isValidating, setIsValidating } = useAccountSetting();
     const [t, i18n] = useTranslation();
-    const { mutateAsync } = useUpdatePreferredLanguage();
+    const { mutateAsync } = useUpdatePreferredLanguage({ interceptToast: true });
     const preferredLang = currentUser.useField("preferred_lang");
 
     const handleUpdate = (lang: string) => {

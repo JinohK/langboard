@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -19,9 +20,17 @@ const useChangeCardAttachmentName = (options?: TMutationOptions<IChangeCardAttac
             card_uid: params.card_uid,
             attachment_uid: params.attachment_uid,
         });
-        const res = await api.put(url, {
-            attachment_name: params.attachment_name,
-        });
+        const res = await api.put(
+            url,
+            {
+                attachment_name: params.attachment_name,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

@@ -14,7 +14,7 @@ function GlobalRelationshipDescription() {
     const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const { navigateRef } = useAppSetting();
     const description = globalRelationship.useField("description");
-    const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
+    const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

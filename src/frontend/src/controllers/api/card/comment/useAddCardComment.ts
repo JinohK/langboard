@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,9 +16,17 @@ const useAddCardComment = (options?: TMutationOptions<IAddCardCommentForm>) => {
 
     const addCardComment = async (params: IAddCardCommentForm) => {
         const url = format(API_ROUTES.BOARD.CARD.COMMENT.ADD, { uid: params.project_uid, card_uid: params.card_uid });
-        const res = await api.post(url, {
-            ...params.content,
-        });
+        const res = await api.post(
+            url,
+            {
+                ...params.content,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

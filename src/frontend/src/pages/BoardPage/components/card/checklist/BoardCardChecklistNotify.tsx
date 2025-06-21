@@ -14,7 +14,7 @@ function BoardCardChecklistNotify() {
     const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
     const { model: checklist, params } = ModelRegistry.ProjectChecklist.useContext<IBoardCardCheckRelatedContextParams>();
     const { isValidating, setIsValidating } = params;
-    const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist();
+    const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist({ interceptToast: true });
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const projectMembers = card.useForeignField<User.TModel>("project_members");

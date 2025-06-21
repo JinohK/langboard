@@ -33,7 +33,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
         () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
         [members, invitedMembers]
     );
-    const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers();
+    const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers({ interceptToast: true });
 
     const save = (items: (string | User.TModel)[]) => {
         const promise = updateProjectAssignedUsersMutateAsync({

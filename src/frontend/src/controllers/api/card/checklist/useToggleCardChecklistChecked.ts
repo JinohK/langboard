@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -18,7 +19,11 @@ const useToggleCardChecklistChecked = (options?: TMutationOptions<IToggleCardChe
             card_uid: params.card_uid,
             checklist_uid: params.checklist_uid,
         });
-        const res = await api.put(url);
+        const res = await api.put(url, undefined, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

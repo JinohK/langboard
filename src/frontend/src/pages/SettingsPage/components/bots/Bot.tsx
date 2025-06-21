@@ -15,7 +15,7 @@ export interface IBotProps {
 const Bot = memo(({ bot }: IBotProps) => {
     const [t] = useTranslation();
     const { navigateRef, isValidating, setIsValidating } = useAppSetting();
-    const { mutateAsync } = useDeleteBot(bot);
+    const { mutateAsync } = useDeleteBot(bot, { interceptToast: true });
     const name = bot.useField("name");
     const uname = bot.useField("bot_uname");
     const avatar = bot.useField("avatar");

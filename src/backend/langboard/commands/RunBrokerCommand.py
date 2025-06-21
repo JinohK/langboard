@@ -1,6 +1,6 @@
 from core.bootstrap import BaseCommand, BaseCommandOptions
 from ..core.broker import Broker
-from ..Loader import load_modules
+from ..Loader import ModuleLoader
 
 
 class RunBrokerCommandOptions(BaseCommandOptions):
@@ -37,6 +37,6 @@ class RunBrokerCommand(BaseCommand):
         return bool
 
     def execute(self, _: RunBrokerCommandOptions) -> None:
-        load_modules("tasks", "Task")
+        ModuleLoader.load("tasks", "Task")
 
         Broker.start()

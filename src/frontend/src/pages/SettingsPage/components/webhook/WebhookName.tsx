@@ -14,7 +14,7 @@ function WebhookName() {
     const { model: url } = ModelRegistry.AppSettingModel.useContext();
     const { navigateRef } = useAppSetting();
     const name = url.useField("setting_name");
-    const { mutateAsync } = useUpdateSetting(url);
+    const { mutateAsync } = useUpdateSetting(url, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

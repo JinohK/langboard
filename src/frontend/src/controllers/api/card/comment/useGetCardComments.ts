@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -18,7 +19,11 @@ const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOption
 
     const getCardComments = async () => {
         const url = format(API_ROUTES.BOARD.CARD.COMMENT.GET_LIST, { uid: params.project_uid, card_uid: params.card_uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         const comments = ProjectCardComment.Model.fromObjectArray(res.data.comments);
 

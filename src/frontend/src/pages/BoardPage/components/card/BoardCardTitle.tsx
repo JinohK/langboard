@@ -22,7 +22,7 @@ function BoardCardTitle(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const { projectUID, card, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
-    const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title");
+    const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("title", { interceptToast: true });
     const title = card.useField("title");
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const titleSpanRef = useRef<HTMLSpanElement>(null);

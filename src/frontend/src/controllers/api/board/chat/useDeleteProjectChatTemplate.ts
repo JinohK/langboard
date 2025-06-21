@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,7 +17,11 @@ const useDeleteProjectChatTemplate = (options?: TMutationOptions) => {
             uid: params.project_uid,
             template_uid: params.template_uid,
         });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

@@ -18,7 +18,7 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
     const [t] = useTranslation();
     const { navigateRef } = useAppSetting();
     const name = apiKey.useField("setting_name");
-    const { mutateAsync } = useUpdateSetting(apiKey);
+    const { mutateAsync } = useUpdateSetting(apiKey, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

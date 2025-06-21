@@ -32,6 +32,9 @@ LOCAL_STORAGE_DIR = Path(Env.get_from_env("LOCAL_STORAGE_DIR", DATA_DIR / "uploa
 # Scheduler
 CRON_TAB_FILE = Path(Env.get_from_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
 
+# App Config
+APP_CONFIG_FILE = DATA_DIR / "api_config.json"
+
 
 # Frontend query names
 class QUERY_NAMES(Enum):

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,10 +16,18 @@ const useChangeCardOrder = (options?: TMutationOptions<IChangeCardOrderForm>) =>
 
     const changeCardOrder = async (params: IChangeCardOrderForm) => {
         const url = format(API_ROUTES.BOARD.CARD.CHANGE_ORDER, { uid: params.project_uid, card_uid: params.card_uid });
-        const res = await api.put(url, {
-            parent_uid: params.parent_uid,
-            order: params.order,
-        });
+        const res = await api.put(
+            url,
+            {
+                parent_uid: params.parent_uid,
+                order: params.order,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

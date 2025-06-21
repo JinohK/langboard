@@ -15,7 +15,7 @@ function BoardSettingsChatTemplateMoreMenuEdit() {
     const template = chatTemplate.useField("template");
     const nameInputRef = useRef<HTMLInputElement>(null);
     const templateInputRef = useRef<HTMLTextAreaElement>(null);
-    const { mutateAsync: updateChatTemplateMutateAsync } = useUpdateProjectChatTemplate();
+    const { mutateAsync: updateChatTemplateMutateAsync } = useUpdateProjectChatTemplate({ interceptToast: true });
 
     const editChatTemplate = async (endCallback: (shouldClose: bool) => void) => {
         if (!nameInputRef.current || !templateInputRef.current) {

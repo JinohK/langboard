@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -18,7 +19,11 @@ const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm>
             card_uid: params.card_uid,
             comment_uid: params.comment_uid,
         });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
         return res.data;
     };
 

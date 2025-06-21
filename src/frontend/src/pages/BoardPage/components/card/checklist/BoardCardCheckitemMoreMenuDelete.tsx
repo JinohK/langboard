@@ -10,7 +10,7 @@ function BoardCardCheckitemMoreDelete(): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: deleteCheckitemMutateAsync } = useDeleteCardCheckitem();
+    const { mutateAsync: deleteCheckitemMutateAsync } = useDeleteCardCheckitem({ interceptToast: true });
 
     const deleteCheckitem = (endCallback: (shouldClose: bool) => void) => {
         const promise = deleteCheckitemMutateAsync({

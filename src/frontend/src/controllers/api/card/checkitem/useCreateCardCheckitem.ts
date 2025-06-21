@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -19,9 +20,17 @@ const useCreateCardCheckitem = (options?: TMutationOptions<ICreateCardCheckitemF
             card_uid: params.card_uid,
             checklist_uid: params.checklist_uid,
         });
-        const res = await api.post(url, {
-            title: params.title,
-        });
+        const res = await api.post(
+            url,
+            {
+                title: params.title,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

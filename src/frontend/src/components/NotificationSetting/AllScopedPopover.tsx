@@ -32,7 +32,7 @@ const AllScopedSwitchList = memo(({ modal, currentUser, type, triggerProps, icon
         }),
         [unsubscriptions]
     );
-    const { mutateAsync } = useToggleAllScopedNotificationSettings(currentUser, type);
+    const { mutateAsync } = useToggleAllScopedNotificationSettings(currentUser, type, { interceptToast: true });
 
     const toggle = (channel: ENotificationChannel, endCallback: () => void) => {
         const promise = mutateAsync({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -27,14 +28,22 @@ const useRescheduleProjectBotCron = (options?: TMutationOptions<IRescheduleProje
             bot_uid: params.bot_uid,
             schedule_uid: params.schedule_uid,
         });
-        const res = await api.put(url, {
-            interval_str: params.interval,
-            target_table: params.scope?.type,
-            target_uid: params.scope?.uid,
-            running_type: params.running_type,
-            start_at: params.start_at,
-            end_at: params.end_at,
-        });
+        const res = await api.put(
+            url,
+            {
+                interval_str: params.interval,
+                target_table: params.scope?.type,
+                target_uid: params.scope?.uid,
+                running_type: params.running_type,
+                start_at: params.start_at,
+                end_at: params.end_at,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

@@ -14,7 +14,7 @@ const BotApiURL = memo(() => {
     const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const apiURL = bot.useField("api_url");
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
     const inputRef = useRef<HTMLInputElement>(null);
     const [isValidating, setIsValidating] = useState(false);
 

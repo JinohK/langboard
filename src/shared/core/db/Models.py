@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, ClassVar, Literal, TypeVar, overload
 from pydantic import BaseModel, SecretStr, model_serializer
-from sqlalchemy.orm import declared_attr
+from sqlalchemy import MetaData
+from sqlalchemy.orm import declared_attr, registry
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel import Field, SQLModel
 from ..types import SafeDateTime, SnowflakeID
@@ -12,8 +13,11 @@ from .ColumnTypes import DateTimeField, SnowflakeIDField
 
 _TColumnType = TypeVar("_TColumnType")
 
+SQLModel.metadata = MetaData()
+default_registry = registry()
 
-class BaseSqlModel(ABC, SQLModel):
+
+class BaseSqlModel(ABC, SQLModel, registry=default_registry):
     """Bases for all SQL models in the application inherited from :class:`SQLModel`."""
 
     __changes__: ClassVar[dict[str, dict[str, Any]]] = {}
@@ -236,7 +240,7 @@ class BaseSqlModel(ABC, SQLModel):
                 chunks.append(f"{repr_key}={value}")
 
         if hasattr(self, "deleted_at") and getattr(self, "deleted_at") is not None:
-            chunks.append(f"deleted_at={getattr(self, "deleted_at")}")
+            chunks.append(f"deleted_at={getattr(self, 'deleted_at')}")
 
         info = ", ".join(chunks)
         return f"{self.__class__.__name__}({info})"

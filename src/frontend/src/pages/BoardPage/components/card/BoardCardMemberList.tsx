@@ -15,7 +15,7 @@ const BoardCardMemberList = memo(() => {
     const projectMembers = card.useForeignField<User.TModel>("project_members");
     const members = card.useForeignField<User.TModel>("members");
     const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
-    const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers();
+    const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers({ interceptToast: true });
 
     const onSave = async (items: User.TModel[]) => {
         const promise = updateCardAssignedUsersMutateAsync({

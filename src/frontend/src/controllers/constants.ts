@@ -329,10 +329,10 @@ export const SOCKET_SERVER_EVENTS = {
             DELETED: "bot:deleted:{uid}",
         },
         GLOBAL_RELATIONSHIPS: {
-            CREATED: "settings:global-relationship:created",
-            UPDATED: "settings:global-relationship:updated:{uid}",
-            DELETED: "settings:global-relationship:deleted:{uid}",
-            SELECTIONS_DELETED: "settings:global-relationship:deleted",
+            CREATED: "global-relationship:created",
+            UPDATED: "global-relationship:updated:{uid}",
+            DELETED: "global-relationship:deleted:{uid}",
+            SELECTIONS_DELETED: "global-relationship:deleted",
         },
     },
     SETTINGS: {

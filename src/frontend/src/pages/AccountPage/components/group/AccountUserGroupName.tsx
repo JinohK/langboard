@@ -14,7 +14,7 @@ export interface IAccountUserGroupNameProps {
 const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
     const [t] = useTranslation();
     const groupName = group.useField("name");
-    const { mutateAsync } = useChangeUserGroupName(group);
+    const { mutateAsync } = useChangeUserGroupName(group, { interceptToast: true });
 
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => true,

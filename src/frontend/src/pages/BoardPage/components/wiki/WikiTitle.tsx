@@ -17,7 +17,7 @@ export interface IWikiTitleProps {
 const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
     const { navigate, projectUID } = useBoardWiki();
     const [t] = useTranslation();
-    const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title");
+    const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title", { interceptToast: true });
     const title = wiki.useField("title");
     const forbidden = wiki.useField("forbidden");
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({

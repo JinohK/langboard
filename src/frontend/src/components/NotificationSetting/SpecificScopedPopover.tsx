@@ -24,7 +24,7 @@ const SpecificScopedPopover = memo(
         onlyPopover,
     }: TSpecificScopedPopoverProps) => {
         const [t] = useTranslation();
-        const { mutateAsync } = useToggleSpecificScopedNotificationSettings(type, currentUser);
+        const { mutateAsync } = useToggleSpecificScopedNotificationSettings(type, currentUser, { interceptToast: true });
         const unsubscriptions = currentUser.useField("notification_unsubs");
         const subscribedChannelMap = useMemo(
             () => ({

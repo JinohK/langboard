@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -14,9 +15,17 @@ const useAcceptProjectInvitation = (options?: TMutationOptions<IAcceptProjectInv
     const { mutate } = useQueryMutation();
 
     const acceptProjectInvitation = async (params: IAcceptProjectInvitationForm) => {
-        const res = await api.post(API_ROUTES.BOARD.ACCEPT_INVITATION, {
-            invitation_token: params.token,
-        });
+        const res = await api.post(
+            API_ROUTES.BOARD.ACCEPT_INVITATION,
+            {
+                invitation_token: params.token,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

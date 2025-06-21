@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -10,9 +11,17 @@ const useUpdatePreferredLanguage = (options?: TMutationOptions<IUpdatePreferredL
     const { mutate } = useQueryMutation();
 
     const updatePreferredLanguage = async (params: IUpdatePreferredLanguageForm) => {
-        const res = await api.put(API_ROUTES.ACCOUNT.UPDATE_PREFERRED_LANGUAGE, {
-            lang: params.lang,
-        });
+        const res = await api.put(
+            API_ROUTES.ACCOUNT.UPDATE_PREFERRED_LANGUAGE,
+            {
+                lang: params.lang,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

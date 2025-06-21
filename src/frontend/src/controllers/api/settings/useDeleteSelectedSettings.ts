@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -13,6 +14,9 @@ const useDeleteSelectedSettings = (options?: TMutationOptions<IDeleteSelectedSet
     const deleteSelectedSettings = async (params: IDeleteSelectedSettingsForm) => {
         const res = await api.delete(API_ROUTES.SETTINGS.DELETE_SELECTED, {
             data: params,
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         AppSettingModel.Model.deleteModels(params.setting_uids);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -18,7 +19,11 @@ const useIsProjectAssignee = (options?: TMutationOptions<IIsProjectAssigneeForm,
 
     const isProjectAssignee = async (params: IIsProjectAssigneeForm) => {
         const url = format(API_ROUTES.BOARD.IS_PROJECT_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

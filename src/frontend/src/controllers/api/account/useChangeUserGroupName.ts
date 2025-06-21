@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,9 +16,17 @@ const useChangeUserGroupName = (group: UserGroup.TModel, options?: TMutationOpti
         const url = format(API_ROUTES.ACCOUNT.USER_GROUP.CHANGE_NAME, {
             group_uid: group.uid,
         });
-        const res = await api.put(url, {
-            name: params.name,
-        });
+        const res = await api.put(
+            url,
+            {
+                name: params.name,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         group.name = params.name;
 

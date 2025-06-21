@@ -80,7 +80,7 @@ function BoardCardCheckitemTimerManager() {
     const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const status = checkitem.useField("status");
-    const { mutateAsync: changeCheckitemStatusMutateAsync } = useChangeCardCheckitemStatus();
+    const { mutateAsync: changeCheckitemStatusMutateAsync } = useChangeCardCheckitemStatus({ interceptToast: true });
 
     const changeStatus = (e: React.MouseEvent<HTMLButtonElement>) => {
         if (isValidating) {

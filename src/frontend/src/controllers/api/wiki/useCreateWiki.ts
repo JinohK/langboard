@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -20,9 +21,17 @@ const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiRe
         const url = format(API_ROUTES.BOARD.WIKI.CREATE, {
             uid: params.project_uid,
         });
-        const res = await api.post(url, {
-            title: params.title,
-        });
+        const res = await api.post(
+            url,
+            {
+                title: params.title,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return {
             wiki: ProjectWiki.Model.fromObject(res.data.wiki, true),

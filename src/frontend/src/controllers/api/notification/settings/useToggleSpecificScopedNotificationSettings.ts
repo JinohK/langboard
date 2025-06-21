@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TToggleSpecificScopedNotificationSettingsForm } from "@/controllers/api/notification/settings/types";
 import { toggleSpecificScopedUnsubscriptions } from "@/controllers/api/notification/settings/utils";
 import { API_ROUTES } from "@/controllers/constants";
@@ -42,16 +43,24 @@ const useToggleSpecificScopedNotificationSettings = <TType extends TNotification
             uid: params.project_uid,
             ...(params as unknown as Record<string, string>),
         });
-        const res = await api.put(formattedURL, {
-            channel: params.channel,
-            is_unsubscribed: params.is_unsubscribed,
-        });
+        const res = await api.put(
+            formattedURL,
+            {
+                channel: params.channel,
+                is_unsubscribed: params.is_unsubscribed,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         toggleSpecificScopedUnsubscriptions({
             currentUser,
             types: res.data.notification_types,
             channel: params.channel,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             specificUID: getSpecificUID(params as any),
             isUnsubscribed: params.is_unsubscribed,
         });

@@ -12,7 +12,7 @@ function BoardSettingsLabelMoreChangeDescription(): JSX.Element {
     const { model: label } = ModelRegistry.ProjectLabel.useContext();
     const [t] = useTranslation();
     const descriptionInputRef = useRef<HTMLInputElement>(null);
-    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("description");
+    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("description", { interceptToast: true });
 
     const changeLabelDescription = (endCallback: (shouldClose: bool) => void) => {
         if (!descriptionInputRef.current) {

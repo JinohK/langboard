@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -27,9 +28,17 @@ const useChangeCardDetails = <TDetail extends TChangeableDetail>(type: TDetail, 
             uid: params.project_uid,
             card_uid: params.card_uid,
         });
-        const res = await api.put(url, {
-            [type]: params[type],
-        });
+        const res = await api.put(
+            url,
+            {
+                [type]: params[type],
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

@@ -14,7 +14,9 @@ import {
     useQueryClient,
 } from "@tanstack/react-query";
 
-export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError = Error> = UseQueryOptions<TQueryFnData, TError, TData>;
+export type TQueryOptions<TQueryFnData = unknown, TData = TQueryFnData, TError = Error> = UseQueryOptions<TQueryFnData, TError, TData> & {
+    interceptToast?: bool;
+};
 export type TInfiniteQueryOptions<TQueryFnData, TPageParam = unknown, TError = Error> = Partial<
     UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TQueryFnData, TPageParam>, TQueryFnData, QueryKey, TPageParam>
 >;
@@ -24,7 +26,7 @@ export type TMutationOptions<TVariables = unknown, TData = unknown, TContext = u
     TError,
     TVariables,
     TContext
->;
+> & { interceptToast?: bool };
 
 export const useQueryMutation = (queryClient: QueryClient = useQueryClient()) => {
     function query<TQueryFnData = unknown, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TError = Error>(

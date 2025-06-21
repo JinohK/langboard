@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -19,7 +20,11 @@ const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGe
 
     const getWikis = async () => {
         const url = format(API_ROUTES.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return {
             wikis: ProjectWiki.Model.fromObjectArray(res.data.wikis),

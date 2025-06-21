@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -17,7 +18,11 @@ const useGetProject = (form: IGetProjectForm, options?: TQueryOptions<unknown, I
 
     const getProject = async () => {
         const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         const project = Project.Model.fromObject(res.data.project);
         project.last_viewed_at = new Date();

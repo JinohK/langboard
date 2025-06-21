@@ -12,7 +12,7 @@ function BoardCardCheckitemCheckbox() {
     const { canEdit: canEditCheckitem, isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const isChecked = checkitem.useField("is_checked");
-    const { mutateAsync: toggleCheckitemMutateAsync } = useToggleCardCheckitemChecked();
+    const { mutateAsync: toggleCheckitemMutateAsync } = useToggleCardCheckitemChecked({ interceptToast: true });
 
     const toggleChecked = () => {
         if (isValidating || !canEditCheckitem) {

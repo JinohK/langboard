@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -20,7 +21,11 @@ const useGetProjectCurrentAuthRoles = (
 
     const getProjectCurrentAuthRoles = async () => {
         const url = format(API_ROUTES.BOARD.CURRENT_AUTH_ROLES, { uid: form.uid });
-        const res = await api.get(url);
+        const res = await api.get(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return {
             roles: res.data.roles,

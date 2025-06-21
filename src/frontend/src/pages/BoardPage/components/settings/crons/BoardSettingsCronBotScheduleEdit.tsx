@@ -26,7 +26,7 @@ function BoardSettingsCronBotScheduleEdit({
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: rescheduleProjectBotCronMutateAsync } = useRescheduleProjectBotCron();
+    const { mutateAsync: rescheduleProjectBotCronMutateAsync } = useRescheduleProjectBotCron({ interceptToast: true });
     const runningType = schedule.useField("running_type");
     const intervalStr = schedule.useField("interval_str");
     const targetTable = schedule.useField("target_table");

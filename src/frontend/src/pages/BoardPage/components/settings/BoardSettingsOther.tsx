@@ -13,7 +13,7 @@ const BoardSettingsOther = memo(() => {
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
     const [t] = useTranslation();
-    const { mutateAsync } = useDeleteProject();
+    const { mutateAsync } = useDeleteProject({ interceptToast: true });
 
     const deleteProject = () => {
         if (isValidating) {

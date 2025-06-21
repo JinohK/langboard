@@ -12,7 +12,7 @@ export interface IWikiCreateButtonProps {
 const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
     const { projectUID, wikiTabListId } = useBoardWiki();
     const [t] = useTranslation();
-    const { mutateAsync: createWikiMutateAsync } = useCreateWiki();
+    const { mutateAsync: createWikiMutateAsync } = useCreateWiki({ interceptToast: true });
 
     const createWiki = () => {
         const promise = createWikiMutateAsync({

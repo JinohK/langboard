@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -13,6 +14,9 @@ const useDeleteSelectedGlobalRelationships = (options?: TMutationOptions<IDelete
     const deleteSelectedGlobalRelationships = async (params: IDeleteSelectedGlobalRelationshipsForm) => {
         const res = await api.delete(API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.DELETE_SELECTED, {
             data: params,
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         GlobalRelationshipType.Model.deleteModels(params.relationship_type_uids);

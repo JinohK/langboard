@@ -67,16 +67,31 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (value) => value,
     async (error) => {
+        const interceptToast = error.config?.env?.interceptToast;
         const { handleAsync } = setupApiErrorHandler({
+            code: {
+                message: (e) => {
+                    throw e;
+                },
+                toast: !interceptToast,
+            },
+            network: {
+                message: (e) => {
+                    throw e;
+                },
+                toast: !interceptToast,
+            },
             nonApi: {
                 message: (e) => {
                     throw e;
                 },
+                toast: !interceptToast,
             },
             wildcard: {
                 message: (e) => {
                     throw e;
                 },
+                toast: !interceptToast,
             },
             [EHttpStatus.HTTP_401_UNAUTHORIZED]: {
                 message: (e) => {
@@ -84,6 +99,7 @@ api.interceptors.response.use(
                     authStore.removeToken();
                     throw e;
                 },
+                toast: !interceptToast,
             },
             [EHttpStatus.HTTP_422_UNPROCESSABLE_ENTITY]: {
                 message: async (e) => {

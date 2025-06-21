@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SOCKET_URL } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -27,6 +28,9 @@ const useUploadProjectChatAttachment = (options?: TMutationOptions<IUploadProjec
         const res = await api.post(url, formData, {
             baseURL: SOCKET_URL,
             onUploadProgress: params.onUploadProgress,
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         return res.data;

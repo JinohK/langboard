@@ -10,7 +10,7 @@ function BoardCardAttachmentMoreMenuDelete(): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const { model: attachment } = ModelRegistry.ProjectCardAttachment.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: deleteCardAttachmentMutateAsync } = useDeleteCardAttachment();
+    const { mutateAsync: deleteCardAttachmentMutateAsync } = useDeleteCardAttachment({ interceptToast: true });
 
     const deleteAttachment = (endCallback: (shouldClose: bool) => void) => {
         const promise = deleteCardAttachmentMutateAsync({

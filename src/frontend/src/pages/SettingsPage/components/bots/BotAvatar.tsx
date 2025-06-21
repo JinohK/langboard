@@ -17,7 +17,7 @@ const BotAvatar = memo(() => {
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
     const isAvatarDeletedRef = useRef(false);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
     const onChange = useCallback(
         (files: File[] | FileList) => {

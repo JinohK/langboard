@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -11,7 +12,11 @@ const useRecoveryPassword = (options?: TMutationOptions<IRecoveryPasswordForm>) 
     const { mutate } = useQueryMutation();
 
     const recoveryPassword = async (params: IRecoveryPasswordForm) => {
-        const res = await api.post(API_ROUTES.AUTH.RECOVERY.RESET, params);
+        const res = await api.post(API_ROUTES.AUTH.RECOVERY.RESET, params, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

@@ -15,7 +15,7 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const { mutateAsync: createChecklistMutateAsync } = useCreateCardChecklist();
+    const { mutateAsync: createChecklistMutateAsync } = useCreateCardChecklist({ interceptToast: true });
 
     const changeOpenedState = (opened: bool) => {
         if (isValidating) {

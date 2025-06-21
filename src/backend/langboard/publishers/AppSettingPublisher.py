@@ -55,8 +55,8 @@ class AppSettingPublisher(BaseSocketPublisher):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
-            event="settings:global-relationship:created",
-            data_keys="global_relationships",
+            event="global-relationship:created",
+            data_keys="global_relationships:created",
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)
@@ -66,7 +66,7 @@ class AppSettingPublisher(BaseSocketPublisher):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:global-relationship:updated:{uid}",
+            event=f"global-relationship:updated:{uid}",
             data_keys=list(model.keys()),
         )
 
@@ -77,7 +77,7 @@ class AppSettingPublisher(BaseSocketPublisher):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
-            event=f"settings:global-relationship:deleted:{uid}",
+            event=f"global-relationship:deleted:{uid}",
         )
 
         await AppSettingPublisher.put_dispather({}, publish_model)
@@ -88,7 +88,7 @@ class AppSettingPublisher(BaseSocketPublisher):
         publish_model = SocketPublishModel(
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
-            event="settings:global-relationship:deleted",
+            event="global-relationship:deleted",
             data_keys="uids",
         )
 

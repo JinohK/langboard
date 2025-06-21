@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -40,7 +41,11 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
             }
         });
 
-        const res = await api.put(url, formData);
+        const res = await api.put(url, formData, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

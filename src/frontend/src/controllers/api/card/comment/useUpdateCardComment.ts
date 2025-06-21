@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -20,9 +21,17 @@ const useUpdateCardComment = (options?: TMutationOptions<IUpdateCardCommentForm>
             card_uid: params.card_uid,
             comment_uid: params.comment_uid,
         });
-        const res = await api.put(url, {
-            ...params.content,
-        });
+        const res = await api.put(
+            url,
+            {
+                ...params.content,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         res.data.commented_at = new Date(res.data.commented_at);
 

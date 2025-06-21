@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -11,7 +12,11 @@ const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjects
     const { query } = useQueryMutation();
 
     const getAllStarredProjects = async () => {
-        const res = await api.get(API_ROUTES.DASHBOARD.ALL_STARRED_PROJECTS);
+        const res = await api.get(API_ROUTES.DASHBOARD.ALL_STARRED_PROJECTS, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return {
             projects: Project.Model.fromObjectArray(res.data.projects, true),

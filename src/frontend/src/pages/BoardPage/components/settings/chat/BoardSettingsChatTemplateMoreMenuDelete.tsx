@@ -10,7 +10,7 @@ function BoardSettingsChatTemplateMoreMenuDelete(): JSX.Element {
     const { project } = useBoardSettings();
     const { model: chatTemplate } = ModelRegistry.ChatTemplateModel.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: deleteProjectChatTemplateMutateAsync } = useDeleteProjectChatTemplate();
+    const { mutateAsync: deleteProjectChatTemplateMutateAsync } = useDeleteProjectChatTemplate({ interceptToast: true });
 
     const deleteAttachment = (endCallback: (shouldClose: bool) => void) => {
         const promise = deleteProjectChatTemplateMutateAsync({

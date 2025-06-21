@@ -112,9 +112,8 @@ class AppRouter:
 
         app.openapi_schema = openapi_schema
 
-    def create_schema_file(self, app: FastAPI, schema_dir: str | Path):
-        schema_file = Path(schema_dir) / "openapi.json"
-        with schema_file.open("w", encoding="utf-8") as f:
+    def create_schema_file(self, app: FastAPI, schema_file: str | Path):
+        with Path(schema_file).open("w", encoding="utf-8") as f:
             f.write(json_dumps(app.openapi_schema))
         app.openapi_schema = None
 

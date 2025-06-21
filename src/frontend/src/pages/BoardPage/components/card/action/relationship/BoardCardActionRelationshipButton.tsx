@@ -27,7 +27,7 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
     const { projectUID, card } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: updateCardRelationshipsMutateAsync } = useUpdateCardRelationships();
+    const { mutateAsync: updateCardRelationshipsMutateAsync } = useUpdateCardRelationships({ interceptToast: true });
     const [t] = useTranslation();
     const isParent = type === "parents";
 

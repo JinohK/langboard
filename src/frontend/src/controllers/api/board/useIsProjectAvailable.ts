@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,7 +17,11 @@ const useIsProjectAvailable = (form: IIsProjectAvailableForm, options?: TQueryOp
 
     const isProjectAvailable = async () => {
         const url = format(API_ROUTES.BOARD.IS_AVAILABLE, { uid: form.uid });
-        const res = await api.post(url);
+        const res = await api.post(url, undefined, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

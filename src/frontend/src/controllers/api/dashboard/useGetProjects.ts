@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isAxiosError } from "axios";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -16,7 +17,11 @@ const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) 
 
     const getProjects = async () => {
         try {
-            const res = await api.get(API_ROUTES.DASHBOARD.PROJECTS);
+            const res = await api.get(API_ROUTES.DASHBOARD.PROJECTS, {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            });
 
             const projects = Project.Model.fromObjectArray(res.data.projects, true);
 

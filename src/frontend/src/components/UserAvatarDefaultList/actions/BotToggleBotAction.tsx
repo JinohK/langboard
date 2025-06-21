@@ -19,7 +19,7 @@ function UserAvatarDefaultBotToggleAction({ bot, project }: IUserAvatarDefaultBo
     const { socket, setIsBotDisabled, isBotDisabled } = useUserAvatar();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation();
+    const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation({ interceptToast: true });
     const toggle = useCallback(() => {
         if (isValidating) {
             return;

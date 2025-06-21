@@ -44,7 +44,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
     const [isValidating, setIsValidating] = useState(false);
     const disableChangeModeAttr = "data-disable-change-mode";
     const canWrite = hasRoleAction(Project.ERoleAction.CardWrite) && !column.is_archive;
-    const { mutateAsync: createCardMutateAsync } = useCreateCard();
+    const { mutateAsync: createCardMutateAsync } = useCreateCard({ interceptToast: true });
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "textarea",

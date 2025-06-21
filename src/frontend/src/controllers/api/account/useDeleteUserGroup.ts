@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -11,7 +12,11 @@ const useDeleteUserGroup = (group: UserGroup.TModel, options?: TMutationOptions)
         const url = format(API_ROUTES.ACCOUNT.USER_GROUP.DELETE, {
             group_uid: group.uid,
         });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         UserGroup.Model.deleteModel(group.uid);
 

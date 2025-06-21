@@ -104,7 +104,7 @@ function BoardCommentFooterActions() {
     const [isValidating, setIsValidating] = useState(false);
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const canEdit = currentUser.uid === commentAuthor.uid || currentUser.is_admin;
-    const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment();
+    const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment({ interceptToast: true });
 
     const deleteComment = () => {
         if (isValidating) {

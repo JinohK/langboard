@@ -18,8 +18,8 @@ export interface IMetadataRowProps {
 
 function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowProps): JSX.Element {
     const [t] = useTranslation();
-    const { mutateAsync: saveMetadataMutateAsync } = useSaveMetadata(form);
-    const { mutateAsync: deleteMetadataMutateAsync } = useDeleteMetadata(form);
+    const { mutateAsync: saveMetadataMutateAsync } = useSaveMetadata(form, { interceptToast: true });
+    const { mutateAsync: deleteMetadataMutateAsync } = useDeleteMetadata(form, { interceptToast: true });
     const [isValidating, setIsValidating] = useState(false);
     const keyInputRef = useRef<HTMLInputElement>(null);
     const valueInputRef = useRef<HTMLInputElement>(null);

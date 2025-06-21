@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -17,9 +18,17 @@ const useChangeWikiOrder = (options?: TMutationOptions<IChangeWikiOrderForm>) =>
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });
-        const res = await api.put(url, {
-            order: params.order,
-        });
+        const res = await api.put(
+            url,
+            {
+                order: params.order,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

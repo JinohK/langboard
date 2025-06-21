@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,7 +17,11 @@ const useArchiveCard = (options?: TMutationOptions<IArchiveCardForm>) => {
             uid: params.project_uid,
             card_uid: params.card_uid,
         });
-        const res = await api.put(url);
+        const res = await api.put(url, undefined, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

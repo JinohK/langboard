@@ -20,7 +20,7 @@ function UserAvatarDefaultUserCreateAssignCardAction({ user, project }: IUserAva
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: createCardMutateAsync } = useCreateCard();
+    const { mutateAsync: createCardMutateAsync } = useCreateCard({ interceptToast: true });
 
     const createCard = () => {
         if (isValidating) {

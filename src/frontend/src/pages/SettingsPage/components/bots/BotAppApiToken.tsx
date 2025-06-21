@@ -14,7 +14,7 @@ const BotAppApiToken = memo(() => {
     const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const appApiToken = bot.useField("app_api_token");
-    const { mutateAsync } = useGenerateNewBotApiToken(bot);
+    const { mutateAsync } = useGenerateNewBotApiToken(bot, { interceptToast: true });
     const [isValidating, setIsValidating] = useState(false);
     const [opened, setOpened] = useState(false);
     const [revealedToken, setRevealedToken] = useState<string>();

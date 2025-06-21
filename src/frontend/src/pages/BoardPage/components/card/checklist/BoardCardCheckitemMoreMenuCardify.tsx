@@ -14,7 +14,7 @@ function BoardCardCheckitemMoreMenuCardify(): JSX.Element {
     const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const [t] = useTranslation();
     const { isValidating } = useMoreMenu();
-    const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCardCheckitem();
+    const { mutateAsync: cardifyCheckitemMutateAsync } = useCardifyCardCheckitem({ interceptToast: true });
     const allColumns = ProjectColumn.Model.useModels((model) => model.project_uid === projectUID && !model.is_archive);
     const [selectedColumnUID, setSelectedColumnUID] = useState<string | undefined>(
         allColumns.some((column) => column.uid === card.column_uid) ? card.column_uid : allColumns[0]?.uid

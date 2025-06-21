@@ -45,8 +45,8 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         [assignedBots, assignedMembers]
     );
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic();
-    const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees();
+    const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic({ interceptToast: true });
+    const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees({ interceptToast: true });
 
     useEffect(() => {
         if (forbidden && !isChangedTabRef.current) {

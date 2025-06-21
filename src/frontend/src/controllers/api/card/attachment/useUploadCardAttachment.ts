@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -23,6 +24,9 @@ const useUploadCardAttachment = (options?: TMutationOptions<IUploadCardAttachmen
         formData.append("attachment", params.attachment);
         const res = await api.post(url, formData, {
             onUploadProgress: params.onUploadProgress,
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         return res.data;

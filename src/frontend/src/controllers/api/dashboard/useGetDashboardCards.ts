@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -27,6 +28,9 @@ const useGetDashboardCards = (limit: number = 30, options?: TMutationOptions) =>
                 page: pageRef.current,
                 limit,
             },
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         Project.Model.fromObjectArray(res.data.projects, true);

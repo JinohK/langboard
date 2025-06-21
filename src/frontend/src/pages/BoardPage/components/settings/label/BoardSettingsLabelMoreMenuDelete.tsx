@@ -10,7 +10,7 @@ function BoardSettingsLabelMoreMenuDelete(): JSX.Element {
     const { project } = useBoardSettings();
     const { model: label } = ModelRegistry.ProjectLabel.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: deleteProjectLabelMutateAsync } = useDeleteProjectLabel();
+    const { mutateAsync: deleteProjectLabelMutateAsync } = useDeleteProjectLabel({ interceptToast: true });
 
     const deleteLabel = (endCallback: (shouldClose: bool) => void) => {
         const promise = deleteProjectLabelMutateAsync({

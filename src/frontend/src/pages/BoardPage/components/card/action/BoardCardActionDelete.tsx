@@ -17,7 +17,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
     const navigateRef = useRef(useNavigate());
-    const { mutateAsync } = useDeleteCard();
+    const { mutateAsync } = useDeleteCard({ interceptToast: true });
 
     const deleteCard = () => {
         if (isValidating) {

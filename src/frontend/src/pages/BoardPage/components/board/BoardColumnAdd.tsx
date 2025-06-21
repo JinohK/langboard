@@ -13,7 +13,7 @@ const BoardColumnAdd = memo(() => {
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: createProjectColumnMutateAsync } = useCreateProjectColumn();
+    const { mutateAsync: createProjectColumnMutateAsync } = useCreateProjectColumn({ interceptToast: true });
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "input",

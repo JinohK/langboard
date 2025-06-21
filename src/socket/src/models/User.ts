@@ -59,7 +59,7 @@ class User extends BaseModel {
             lastname: this.lastname,
             email: this.email,
             username: this.username,
-            avatar: this.avatar,
+            avatar: this.avatar?.path ?? null,
         };
     }
 
@@ -75,22 +75,22 @@ class User extends BaseModel {
     }
 
     public static async findById(id: TBigIntString): Promise<User | null> {
-        const user = await User.createQueryBuilder("User")
+        const user = await User.createQueryBuilder()
             .select([
-                "cast(User.id as text) as converted_id",
-                "User.firstname",
-                "User.lastname",
-                "User.email",
-                "User.username",
-                "User.avatar",
-                "User.is_admin",
-                "User.preferred_lang",
-                "User.activated_at",
-                "User.deleted_at",
-                "User.created_at",
-                "User.updated_at",
+                "cast(id as text) as converted_id",
+                "firstname",
+                "lastname",
+                "email",
+                "username",
+                "avatar",
+                "is_admin",
+                "preferred_lang",
+                "activated_at",
+                "deleted_at",
+                "created_at",
+                "updated_at",
             ])
-            .where("User.id = :id", { id })
+            .where("id = :id", { id })
             .getRawOne();
 
         if (!user) {

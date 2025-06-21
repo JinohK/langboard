@@ -16,7 +16,7 @@ const BotIpWhitelist = memo(() => {
     const { navigateRef } = useAppSetting();
     const ipWhitelist = bot.useField("ip_whitelist");
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
     const updateBot = (values: string[]) => {
         if (values.length === ipWhitelist.length || isValidating) {
             return;

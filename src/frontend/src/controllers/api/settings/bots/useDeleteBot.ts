@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -9,7 +10,11 @@ const useDeleteBot = (bot: BotModel.TModel, options?: TMutationOptions<unknown>)
 
     const deleteBot = async () => {
         const url = format(API_ROUTES.SETTINGS.BOTS.DELETE, { bot_uid: bot.uid });
-        const res = await api.delete(url);
+        const res = await api.delete(url, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         BotModel.Model.deleteModel(bot.uid);
 

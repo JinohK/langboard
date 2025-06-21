@@ -10,7 +10,7 @@ function BoardCardChecklistMoreMenuDelete(): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const { model: checklist } = ModelRegistry.ProjectChecklist.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: deleteChecklistMutateAsync } = useDeleteCardChecklist();
+    const { mutateAsync: deleteChecklistMutateAsync } = useDeleteCardChecklist({ interceptToast: true });
 
     const deleteChecklist = (endCallback: (shouldClose: bool) => void) => {
         const promise = deleteChecklistMutateAsync({

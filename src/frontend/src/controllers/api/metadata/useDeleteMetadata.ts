@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TMetadataForm } from "@/controllers/api/metadata/types";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -26,6 +27,9 @@ const useDeleteMetadata = (form: TMetadataForm, options?: TMutationOptions<IDele
     const deleteMetadata = async (params: IDeleteMetadataForm) => {
         const res = await api.delete(url, {
             data: params,
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         return res.data;

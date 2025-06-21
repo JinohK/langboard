@@ -37,7 +37,7 @@ export function SkeletonWikiContent() {
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor, navigate } = useBoardWiki();
     const [t] = useTranslation();
-    const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content");
+    const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
     const mentionables = useMemo(

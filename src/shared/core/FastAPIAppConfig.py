@@ -1,11 +1,10 @@
+from pathlib import Path
 from typing import Any, Optional
-from core.utils.decorators import staticclass
 from pydantic import BaseModel
 from uvicorn.config import LifespanType
-from .Constants import DATA_DIR
 
 
-class AppConfigModel(BaseModel):
+class FastAPIAppConfigModel(BaseModel):
     host: str
     port: int
     uds: Optional[str] = None
@@ -16,12 +15,12 @@ class AppConfigModel(BaseModel):
     watch: bool = False
 
 
-@staticclass
-class AppConfig:
-    CONFIG_FILE = DATA_DIR / "config.json"
+class FastAPIAppConfig:
+    def __init__(self, config_file: str | Path):
+        self.__config_file = Path(config_file)
 
-    @staticmethod
     def create(
+        self,
         host: str = "localhost",
         port: int = 5381,
         uds: Optional[str] = None,
@@ -30,10 +29,10 @@ class AppConfig:
         workers: int = 1,
         watch: bool = False,
     ):
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        AppConfig.CONFIG_FILE.touch(exist_ok=True)
+        self.__config_file.parent.mkdir(parents=True, exist_ok=True)
+        self.__config_file.touch(exist_ok=True)
 
-        config = AppConfigModel.model_validate(
+        config = FastAPIAppConfigModel.model_validate(
             {
                 "host": host,
                 "port": port,
@@ -46,22 +45,20 @@ class AppConfig:
             }
         )
 
-        with open(AppConfig.CONFIG_FILE, "w") as f:
+        with open(self.__config_file, "w") as f:
             f.write(config.model_dump_json())
 
-    @staticmethod
-    def load() -> AppConfigModel:
-        if not AppConfig.CONFIG_FILE.exists():
-            raise FileNotFoundError(f"Configuration file {AppConfig.CONFIG_FILE} does not exist.")
+    def load(self) -> FastAPIAppConfigModel:
+        if not self.__config_file.exists():
+            raise FileNotFoundError(f"Configuration file {self.__config_file} does not exist.")
 
-        with open(AppConfig.CONFIG_FILE, "r") as f:
+        with open(self.__config_file, "r") as f:
             config = f.read()
-            return AppConfigModel.model_validate_json(config)
+        return FastAPIAppConfigModel.model_validate_json(config)
 
-    @staticmethod
-    def set_restarting(is_restarting: bool):
-        config = AppConfig.load()
+    def set_restarting(self, is_restarting: bool):
+        config = self.load()
         config.is_restarting = is_restarting
 
-        with open(AppConfig.CONFIG_FILE, "w") as f:
+        with open(self.__config_file, "w") as f:
             f.write(config.model_dump_json())

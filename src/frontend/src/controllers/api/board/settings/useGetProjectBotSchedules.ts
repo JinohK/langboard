@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -32,6 +33,9 @@ const useGetProjectBotSchedules = (projectUID: string, botUID: string, limit: nu
                 page: pageRef.current,
                 limit,
             },
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
         });
 
         for (let i = 0; i < res.data.schedules.length; ++i) {

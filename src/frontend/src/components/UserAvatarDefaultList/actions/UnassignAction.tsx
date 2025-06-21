@@ -16,7 +16,7 @@ function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUser
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: unassignProjectAssigneeMutateAsync } = useUnassignProjectAssignee();
+    const { mutateAsync: unassignProjectAssigneeMutateAsync } = useUnassignProjectAssignee({ interceptToast: true });
 
     const unassign = () => {
         if (isValidating) {

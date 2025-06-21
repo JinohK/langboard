@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,10 +17,18 @@ const useCreateProjectChatTemplate = (options?: TMutationOptions) => {
         const url = format(API_ROUTES.BOARD.CHAT.TEMPLATE.CREATE, {
             uid: params.project_uid,
         });
-        const res = await api.post(url, {
-            name: params.name,
-            template: params.template,
-        });
+        const res = await api.post(
+            url,
+            {
+                name: params.name,
+                template: params.template,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

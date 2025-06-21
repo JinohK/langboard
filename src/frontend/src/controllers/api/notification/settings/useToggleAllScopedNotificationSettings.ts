@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { toggleAllScopedUnsubscriptions } from "@/controllers/api/notification/settings/utils";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
@@ -37,10 +38,18 @@ const useToggleAllScopedNotificationSettings = (
     }
 
     const toggleAllScopedNotificationSettings = async (params: IToggleAllScopedNotificationSettingsForm) => {
-        const res = await api.put(url, {
-            channel: params.channel,
-            is_unsubscribed: params.is_unsubscribed,
-        });
+        const res = await api.put(
+            url,
+            {
+                channel: params.channel,
+                is_unsubscribed: params.is_unsubscribed,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         toggleAllScopedUnsubscriptions({
             currentUser,

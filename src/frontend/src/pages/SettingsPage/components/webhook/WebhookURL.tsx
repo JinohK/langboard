@@ -14,7 +14,7 @@ function WebhookURL() {
     const { model: url } = ModelRegistry.AppSettingModel.useContext();
     const { navigateRef } = useAppSetting();
     const urlValue = url.useField("setting_value");
-    const { mutateAsync } = useUpdateSetting(url);
+    const { mutateAsync } = useUpdateSetting(url, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -13,9 +14,17 @@ const useCreateGlobalRelationship = (options?: TMutationOptions<ICreateGlobalRel
     const { mutate } = useQueryMutation();
 
     const createGlobalRelationship = async (params: ICreateGlobalRelationshipForm) => {
-        const res = await api.post(API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.CREATE, {
-            ...params,
-        });
+        const res = await api.post(
+            API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.CREATE,
+            {
+                ...params,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         GlobalRelationshipType.Model.fromObject(res.data.global_relationship, true);
 

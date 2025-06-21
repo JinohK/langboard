@@ -26,7 +26,7 @@ function BoardSettingsCronBotScheduleAddButton({
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: scheduleProjectBotCronMutateAsync } = useScheduleProjectBotCron();
+    const { mutateAsync: scheduleProjectBotCronMutateAsync } = useScheduleProjectBotCron({ interceptToast: true });
     const valuesMapRef = useRef<IBotScheduleFormMap>(copiedForm ?? {});
     const triggersMapRef = useRef<IBotScheduleTriggersMap>({});
 

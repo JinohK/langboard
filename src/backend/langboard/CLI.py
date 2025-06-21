@@ -1,11 +1,11 @@
 from core.bootstrap import BaseCommand, Commander
 from core.Env import Env
-from .AppConfig import AppConfig
+from core.FastAPIAppConfig import FastAPIAppConfig
 from .commands.DbUpgradeCommand import DbUpgradeCommand, DbUpgradeCommandOptions
 from .commands.RunCommand import RunCommandOptions
-from .Constants import HOST, PORT
+from .Constants import APP_CONFIG_FILE, HOST, PORT
 from .core.broadcast import ensure_initialized
-from .Loader import load_modules
+from .Loader import ModuleLoader
 from .ServerRunner import run as run_server
 
 
@@ -15,7 +15,7 @@ ensure_initialized()
 def execute():
     commander = Commander()
 
-    modules = load_modules("commands", "Command", BaseCommand, log=False)
+    modules = ModuleLoader.load("commands", "Command", BaseCommand, log=False)
     for module in modules.values():
         for command in module:
             if not command.__name__.endswith("Command") or (Env.IS_EXECUTABLE and command.is_only_in_dev()):  # type: ignore
@@ -34,7 +34,8 @@ def _run_app(options: RunCommandOptions):
 
     DbUpgradeCommand().execute(DbUpgradeCommandOptions())
 
-    AppConfig.create(
+    app_config = FastAPIAppConfig(APP_CONFIG_FILE)
+    app_config.create(
         host=HOST,
         port=PORT,
         uds=options.uds,

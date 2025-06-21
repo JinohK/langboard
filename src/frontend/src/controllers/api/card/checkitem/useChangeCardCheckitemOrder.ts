@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -20,10 +21,18 @@ const useChangeCardCheckitemOrder = (options?: TMutationOptions<IChangeCardCheck
             card_uid: params.card_uid,
             checkitem_uid: params.checkitem_uid,
         });
-        const res = await api.put(url, {
-            parent_uid: params.parent_uid,
-            order: params.order,
-        });
+        const res = await api.put(
+            url,
+            {
+                parent_uid: params.parent_uid,
+                order: params.order,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

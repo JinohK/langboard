@@ -9,7 +9,7 @@ function BoardSettingsChatTemplateAddButton() {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: createProjectChatTemplateMutateAsync } = useCreateProjectChatTemplate();
+    const { mutateAsync: createProjectChatTemplateMutateAsync } = useCreateProjectChatTemplate({ interceptToast: true });
 
     const createChatTemplate = () => {
         if (isValidating) {

@@ -16,7 +16,7 @@ function MetadataAddButton({ form, errorsMap }: IMetadataAddButtonProps): JSX.El
     const [isValidating, setIsValidating] = useState(false);
     const keyInputRef = useRef<HTMLInputElement>(null);
     const valueInputRef = useRef<HTMLInputElement>(null);
-    const { mutateAsync: saveMetadataMutateAsync } = useSaveMetadata(form);
+    const { mutateAsync: saveMetadataMutateAsync } = useSaveMetadata(form, { interceptToast: true });
 
     const add = () => {
         if (isValidating || !keyInputRef.current || !valueInputRef.current) {

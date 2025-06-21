@@ -11,7 +11,7 @@ function BoardSettingsLabelAddButton() {
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: createProjectLabelMutateAsync } = useCreateProjectLabel();
+    const { mutateAsync: createProjectLabelMutateAsync } = useCreateProjectLabel({ interceptToast: true });
 
     const createLabel = () => {
         if (isValidating) {

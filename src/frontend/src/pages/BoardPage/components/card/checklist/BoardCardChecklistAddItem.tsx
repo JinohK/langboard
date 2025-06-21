@@ -14,7 +14,7 @@ function BoardCardChecklistAddItem(): JSX.Element {
     const { model: checklist, params } = ModelRegistry.ProjectChecklist.useContext<IBoardCardCheckRelatedContextParams>();
     const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
-    const { mutateAsync: createCheckitemMutateAsync } = useCreateCardCheckitem();
+    const { mutateAsync: createCheckitemMutateAsync } = useCreateCardCheckitem({ interceptToast: true });
     const isAddedRef = useRef(false);
     const handlers = useCardCheckitemCreatedHandlers({
         cardUID: card.uid,

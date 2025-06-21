@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -16,7 +17,11 @@ const useSignIn = (options?: TMutationOptions<ISignInForm, ISignInResponse>) => 
     const { mutate } = useQueryMutation();
 
     const signIn = async (params: ISignInForm) => {
-        const res = await api.post(API_ROUTES.AUTH.SIGN_IN, params);
+        const res = await api.post(API_ROUTES.AUTH.SIGN_IN, params, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

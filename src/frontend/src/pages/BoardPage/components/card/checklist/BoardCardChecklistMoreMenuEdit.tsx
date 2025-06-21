@@ -11,7 +11,7 @@ function BoardCardChecklistMoreMenuEdit(): JSX.Element {
     const { projectUID, card, sharedClassNames } = useBoardCard();
     const { model: checklist } = ModelRegistry.ProjectChecklist.useContext();
     const [t] = useTranslation();
-    const { mutateAsync: changeChecklistTitleMutateAsync } = useChangeCardChecklistTitle();
+    const { mutateAsync: changeChecklistTitleMutateAsync } = useChangeCardChecklistTitle({ interceptToast: true });
     const title = checklist.useField("title");
     const titleInputRef = useRef<HTMLInputElement>(null);
 

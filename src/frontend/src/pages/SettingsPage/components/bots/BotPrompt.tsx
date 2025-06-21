@@ -14,7 +14,7 @@ const BotPrompt = memo(() => {
     const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const prompt = bot.useField("prompt");
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
     const { valueRef, changeMode } = useChangeEditMode({
         canEdit: () => true,

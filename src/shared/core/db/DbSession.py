@@ -77,7 +77,6 @@ class DbSession:
                     db = DbSession(session, readonly=readonly)
                     with session.begin():
                         yield db
-                    session.commit()
                     db.close()
                     session.close()
                     db = None

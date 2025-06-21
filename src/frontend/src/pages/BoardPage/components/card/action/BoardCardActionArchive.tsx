@@ -13,7 +13,7 @@ const BoardCardActionArchive = memo(({ buttonClassName }: IBoardCardActionArchiv
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
-    const { mutateAsync } = useArchiveCard();
+    const { mutateAsync } = useArchiveCard({ interceptToast: true });
 
     const archiveCard = () => {
         if (isValidating) {

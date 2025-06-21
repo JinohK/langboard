@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -12,9 +13,17 @@ const useDeclineProjectInvitation = (options?: TMutationOptions<IDeclineProjectI
     const { mutate } = useQueryMutation();
 
     const declineProjectInvitation = async (params: IDeclineProjectInvitationForm) => {
-        const res = await api.post(API_ROUTES.BOARD.DECLINE_INVITATION, {
-            invitation_token: params.token,
-        });
+        const res = await api.post(
+            API_ROUTES.BOARD.DECLINE_INVITATION,
+            {
+                invitation_token: params.token,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

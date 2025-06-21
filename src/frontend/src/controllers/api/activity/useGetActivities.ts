@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -100,6 +101,9 @@ const useGetActivities = (
                     refer_time: lastCurrentDateRef.current,
                     limit: limitRef.current,
                 },
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
             });
 
             if (res.data.references) {
@@ -153,6 +157,9 @@ const useGetActivities = (
                     page: 1,
                     limit: 1,
                 },
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
             });
 
             if (res.data.count_new_records) {

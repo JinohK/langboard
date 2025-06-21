@@ -25,7 +25,7 @@ function BotsPage() {
 
         const bot = BotModel.Model.getModel(botUID);
         if (!bot) {
-            Toast.Add.error(t("settings.errors.NF3001"));
+            Toast.Add.error(t("errors.requests.NF3001"));
             navigateRef.current(ROUTES.SETTINGS.BOTS);
             return;
         }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -10,7 +11,11 @@ const useVerifyNewEmail = (options?: TMutationOptions<IVerifyNewEmailForm>) => {
     const { mutate } = useQueryMutation();
 
     const verifyNewEmail = async (params: IVerifyNewEmailForm) => {
-        const res = await api.post(API_ROUTES.ACCOUNT.EMAIL.VERIFY, params);
+        const res = await api.post(API_ROUTES.ACCOUNT.EMAIL.VERIFY, params, {
+            env: {
+                interceptToast: options?.interceptToast,
+            } as any,
+        });
 
         return res.data;
     };

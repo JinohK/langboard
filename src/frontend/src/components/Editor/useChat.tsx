@@ -130,7 +130,7 @@ const createStream = ({ socket, eventKey, events, signal, key, send }: ICreateSt
                     socket.send({
                         topic: ESocketTopic.None,
                         eventName: events.abort,
-                        data: { key },
+                        data: { task_id: key },
                     });
                     controller.error(new Error("Stream aborted"));
                 };

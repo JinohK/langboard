@@ -54,7 +54,7 @@ BoardColumnMoreMenu.displayName = "Board.ColumnMore";
 const BoardColumnMoreMenuDelete = memo(({ column }: Omit<IBoardColumnMoreMenuProps, "isEditingState">) => {
     const [t] = useTranslation();
     const { project } = useBoard();
-    const { mutateAsync } = useDeleteProjectColumn();
+    const { mutateAsync } = useDeleteProjectColumn({ interceptToast: true });
 
     const deleteColumn = (endCallback: (shouldClose: bool) => void) => {
         const promise = mutateAsync({

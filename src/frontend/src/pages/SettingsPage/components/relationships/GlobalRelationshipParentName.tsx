@@ -14,7 +14,7 @@ function GlobalRelationshipParentName() {
     const { navigateRef } = useAppSetting();
     const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const parentName = globalRelationship.useField("parent_name");
-    const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship);
+    const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

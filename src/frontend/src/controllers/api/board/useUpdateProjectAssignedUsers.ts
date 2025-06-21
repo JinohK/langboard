@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -15,9 +16,17 @@ const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProject
         const url = format(API_ROUTES.BOARD.UPDATE_ASSIGNED_USERS, {
             uid: params.uid,
         });
-        const res = await api.put(url, {
-            ...params,
-        });
+        const res = await api.put(
+            url,
+            {
+                ...params,
+            },
+            {
+                env: {
+                    interceptToast: options?.interceptToast,
+                } as any,
+            }
+        );
 
         return res.data;
     };

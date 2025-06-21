@@ -1,12 +1,12 @@
+from core.FastAPIAppConfig import FastAPIAppConfig
 from core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
 from core.security import AuthSecurity
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from .ai import BotScheduleHelper
-from .AppConfig import AppConfig
-from .Constants import PUBLIC_FRONTEND_URL
-from .Loader import load_modules
+from .Constants import APP_CONFIG_FILE, PUBLIC_FRONTEND_URL, SCHEMA_DIR
+from .Loader import ModuleLoader
 from .middlewares import AuthMiddleware, RoleMiddleware
 
 
@@ -14,19 +14,21 @@ class App:
     api: FastAPI
 
     def __init__(self):
-        self.config = AppConfig.load()
+        self.app_config = FastAPIAppConfig(APP_CONFIG_FILE)
+        self.config = self.app_config.load()
         self.api = FastAPI(debug=True)
         self._init_api_middlewares()
         self._init_api_routes()
 
         AppRouter.set_openapi_schema(self.api)
         AuthSecurity.set_openapi_schema(self.api)
+        AppRouter.create_schema_file(self.api, SCHEMA_DIR / "openapi.json")
         AppRouter.set_app(self.api)
 
     def create(self):
         AppRouter.set_app(self.api)
         BotScheduleHelper.reload_cron()
-        AppConfig.set_restarting(True)
+        self.app_config.set_restarting(True)
         return self.api
 
     def _init_api_middlewares(self):
@@ -56,7 +58,10 @@ class App:
                 AuthSecurity.IP_HEADER,
             ],
         )
-        middleware_modules = load_modules("middlewares", "Middleware", BaseMiddleware, not self.config.is_restarting)
+
+        middleware_modules = ModuleLoader.load(
+            "middlewares", "Middleware", BaseMiddleware, not self.config.is_restarting
+        )
         for module in middleware_modules.values():
             for middleware in module:
                 if middleware.__auto_load__:
@@ -64,6 +69,5 @@ class App:
 
     def _init_api_routes(self):
         self.api.router.route_class = AppExceptionHandlingRoute
-        load_modules("routes", "Api", log=not self.config.is_restarting)
-        load_modules("routes", "Socket", log=not self.config.is_restarting)
+        ModuleLoader.load("routes", "Api", log=not self.config.is_restarting)
         self.api.include_router(AppRouter.api)

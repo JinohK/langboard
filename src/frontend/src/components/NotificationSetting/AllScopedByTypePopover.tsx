@@ -27,7 +27,7 @@ const AllScopedByTypeSwitchList = memo(
             }),
             [unsubscriptions]
         );
-        const { mutateAsync } = useToggleAllByTypeNotificationSettings(currentUser);
+        const { mutateAsync } = useToggleAllByTypeNotificationSettings(currentUser, { interceptToast: true });
 
         const toggle = (channel: ENotificationChannel, endCallback: () => void) => {
             const promise = mutateAsync({

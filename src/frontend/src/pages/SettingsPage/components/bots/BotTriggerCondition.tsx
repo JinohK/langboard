@@ -22,7 +22,7 @@ function BotTriggerCondition({ category, conditionType }: IBotTriggerConditionPr
     const conditions = bot.useField("conditions");
     const condition = useMemo(() => conditions?.[conditionType], [conditions]);
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync } = useToggleBotTriggerCondition(bot);
+    const { mutateAsync } = useToggleBotTriggerCondition(bot, { interceptToast: true });
 
     const toggle = () => {
         if (isValidating) {

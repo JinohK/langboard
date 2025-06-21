@@ -16,7 +16,7 @@ const BotUniqueName = memo(() => {
     const { model: bot } = ModelRegistry.BotModel.useContext();
     const { navigateRef } = useAppSetting();
     const uname = bot.useField("bot_uname");
-    const { mutateAsync } = useUpdateBot(bot);
+    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,

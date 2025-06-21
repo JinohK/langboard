@@ -13,7 +13,7 @@ const BoardSettingsLabelColor = memo(() => {
     const { isValidating, setIsValidating } = params;
     const [t] = useTranslation();
     const labelColor = label.useField("color");
-    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("color");
+    const { mutateAsync: changeProjectLabelDetailsMutateAsync } = useChangeProjectLabelDetails("color", { interceptToast: true });
 
     const changeColor = (color: string, endCallback: () => void) => {
         if (isValidating) {

@@ -22,7 +22,7 @@ function BoardSettingsCronBotScheduleDelete({
     const { project } = useBoardSettings();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync: unscheduleProjectBotCronMutateAsync } = useUnscheduleProjectBotCron();
+    const { mutateAsync: unscheduleProjectBotCronMutateAsync } = useUnscheduleProjectBotCron({ interceptToast: true });
     const [isOpened, setIsOpened] = useState(false);
 
     const unschedule = () => {
