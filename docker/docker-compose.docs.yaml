@@ -27,7 +27,7 @@ services:
       - ../docs/yarn.lock:/opt/docusaurus/yarn.lock
       - ../.env:/opt/.env
     depends_on:
-      - backend
+      - api
     networks:
       - net
     restart: always

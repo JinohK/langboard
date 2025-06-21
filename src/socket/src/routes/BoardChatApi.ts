@@ -1,9 +1,9 @@
 import BotRunner from "@/core/ai/BotRunner";
-import EInternalBotType from "@/core/ai/EInternalBotType";
 import EApiErrorCode from "@/core/server/ApiErrorCode";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
 import EHttpStatus from "@/core/server/EHttpStatus";
 import Routes from "@/core/server/Routes";
+import { EInternalBotType } from "@/models/InternalBotSetting";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 import formidable from "formidable";
 

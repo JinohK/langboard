@@ -1,11 +1,11 @@
 name: ${PROJECT_NAME}
 
 services:
-  frontend:
+  ui:
     environment:
       - ENVIRONMENT=production
 
-  backend:
+  api:
     environment:
       - ENVIRONMENT=production
 

@@ -1,9 +1,9 @@
 import BotRunner from "@/core/ai/BotRunner";
-import EInternalBotType from "@/core/ai/EInternalBotType";
 import ESocketStatus from "@/core/server/ESocketStatus";
 import ESocketTopic, { NONE_TOPIC_ID } from "@/core/server/ESocketTopic";
 import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { EInternalBotType } from "@/models/InternalBotSetting";
 
 interface IEditorEventRegistryParams {
     eventPrefix: string;
@@ -23,12 +23,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             user_id: context.client.user.id,
         });
 
-        const isAborted = BotRunner.createAbortedChecker(chatType, context.client, task_id, {
-            event: `${eventPrefix}:editor:chat:abort:${task_id}`,
-            topic: ESocketTopic.None,
-            topic_id: NONE_TOPIC_ID,
-            data: { text: "0" },
-        });
+        const isAborted = BotRunner.createAbortedChecker(chatType, task_id);
 
         if (isAborted()) {
             return;
@@ -54,16 +49,10 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
         }
 
         let newContent = "";
-        let isReceived = false;
         let lastContent: string | undefined = undefined;
 
         await response({
             onMessage: (chunk) => {
-                if (isAborted()) {
-                    return;
-                }
-
-                isReceived = true;
                 const oldContent = newContent;
                 let updatedContent = "";
                 if (chunk) {
@@ -82,15 +71,9 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
                 }
             },
             onError: (error) => {
-                if (isAborted()) {
-                    return;
-                }
                 stream.end({ status: "failed", message: error.message });
             },
             onEnd: () => {
-                if (isAborted()) {
-                    return;
-                }
                 stream.end({ message });
             },
         });
@@ -103,12 +86,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             return;
         }
 
-        await BotRunner.abort(chatType, task_id);
-        context.client.send({
-            topic: ESocketTopic.None,
-            event: `${eventPrefix}:editor:chat:abort:${task_id}`,
-            data: { text: "0" },
-        });
+        await BotRunner.abort(chatType, task_id, context.client);
     });
 
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:copilot:send`, async (context) => {
@@ -122,12 +100,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             ...context.data,
         });
 
-        const isAborted = BotRunner.createAbortedChecker(copilotType, context.client, task_id, {
-            event: `${eventPrefix}:editor:copilot:abort:${task_id}`,
-            topic: ESocketTopic.None,
-            topic_id: NONE_TOPIC_ID,
-            data: { text: "0" },
-        });
+        const isAborted = BotRunner.createAbortedChecker(copilotType, task_id);
 
         const sharedData = {
             topic: ESocketTopic.None,
@@ -158,24 +131,15 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
         let message = "";
         await response({
             onMessage: (data) => {
-                if (isAborted()) {
-                    return;
-                }
                 message = `${message}${data}`;
             },
             onError: () => {
-                if (isAborted()) {
-                    return;
-                }
                 context.client.send({
                     ...sharedData,
                     data: { text: "0" },
                 });
             },
             onEnd: () => {
-                if (isAborted()) {
-                    return;
-                }
                 context.client.send({
                     ...sharedData,
                     data: { text: message },
@@ -191,12 +155,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             return;
         }
 
-        await BotRunner.abort(chatType, task_id);
-        context.client.send({
-            topic: ESocketTopic.None,
-            event: `${eventPrefix}:editor:copilot:abort:${task_id}`,
-            data: { text: "0" },
-        });
+        await BotRunner.abort(chatType, task_id, context.client);
     });
 };
 

@@ -1,0 +1,40 @@
+import { IconComponent } from "@/components/base";
+import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from "@/components/Chat/ChatBubble";
+import { ChatMessageModel } from "@/core/models";
+import { useBoardChat } from "@/core/providers/BoardChatProvider";
+
+export interface IChatMessageProps {
+    chatMessage: ChatMessageModel.TModel;
+}
+
+function ChatMessage({ chatMessage }: IChatMessageProps): JSX.Element {
+    const message = chatMessage.useField("message");
+    const isReceived = chatMessage.useField("isReceived");
+    const isPending = chatMessage.useField("isPending");
+    const variant = isReceived ? "received" : "sent";
+
+    return (
+        <ChatBubble key={`chat-bubble-${chatMessage.uid}`} variant={variant}>
+            {isReceived && <ChatMessageBotAvatar />}
+            {isPending ? <ChatBubbleMessage isLoading /> : <ChatBubbleMessage variant={variant} message={message} />}
+        </ChatBubble>
+    );
+}
+
+function ChatMessageBotAvatar() {
+    const { bot } = useBoardChat();
+    const displayName = bot.useField("display_name");
+    const avatar = bot.useField("avatar");
+
+    return (
+        <ChatBubbleAvatar
+            fallback={<IconComponent icon="bot" className="size-[60%]" />}
+            src={avatar}
+            title={displayName}
+            titleSide="top"
+            titleAlign="start"
+        />
+    );
+}
+
+export default ChatMessage;

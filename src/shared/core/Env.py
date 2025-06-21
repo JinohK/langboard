@@ -1,3 +1,4 @@
+from enum import Enum
 from importlib.metadata import version
 from os import environ
 from typing import Any, Literal, cast
@@ -22,6 +23,22 @@ class Env:
     @property
     def PROJECT_SHORT_NAME(self) -> str:
         return self.__get_from_cache("PROJECT_SHORT_NAME", self.PROJECT_NAME)
+
+    @property
+    def UI_PORT(self) -> int:
+        return int(self.__get_from_cache("UI_PORT", "5173"))
+
+    @property
+    def PUBLIC_UI_URL(self) -> str:
+        return (
+            self.__get_from_cache("PUBLIC_UI_URL", f"http://localhost:{self.UI_PORT}")
+            if self.ENVIRONMENT != "local"
+            else f"http://localhost:{self.UI_PORT}"
+        )
+
+    @property
+    def UI_REDIRECT_URL(self) -> str:
+        return f"{self.PUBLIC_UI_URL}/redirect"
 
     @property
     def PROJECT_VERSION(self) -> str:
@@ -156,6 +173,16 @@ class Env:
     def MAIL_SSL_TLS(self) -> bool:
         return self.__get_from_cache("MAIL_SSL_TLS", "false") == "true"
 
+    @property
+    def FLOWS_PORT(self) -> int:
+        return int(self.__get_from_cache("FLOWS_PORT", "5019"))
+
+    @property
+    def DEFAULT_LANGFLOW_URL(self) -> str:
+        host = "127.0.0.1" if self.ENVIRONMENT == "local" else f"{self.PROJECT_NAME}_flows"
+        port = self.FLOWS_PORT
+        return f"http://{host}:{port}"
+
     def __init__(self):
         self.__envs = {}
 
@@ -163,7 +190,26 @@ class Env:
         is_default = name not in environ or not environ[name]
         return default if is_default else environ[name]
 
+    def update_env(self, name: str, value: Any) -> None:
+        if not hasattr(self, name):
+            raise AttributeError(f"Environment variable '{name}' does not exist.")
+
+        self.__envs[name] = value
+
     def __get_from_cache(self, name: str, default: Any = None) -> Any | str:
         if name not in self.__envs:
             self.__envs[name] = self.get_from_env(name, default)
         return self.__envs[name]
+
+
+# UI query names
+class UI_QUERY_NAMES(Enum):
+    SUB_EMAIL_VERIFY_TOKEN = "bEvt"
+    RECOVERY_TOKEN = "rtK"
+    SIGN_UP_ACTIVATE_TOKEN = "sAVk"
+    PROJCT_INVITATION_TOKEN = "PikQ"
+    BOARD = "bp"
+    BOARD_CARD = "BpC"
+    BOARD_CARD_CHUNK = "BpCC"
+    BOARD_WIKI = "bPw"
+    BOARD_WIKI_CHUNK = "BpWc"

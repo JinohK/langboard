@@ -6,3 +6,4 @@ class StorageName(Enum):
     CardAttachment = "card_attachment"
     Wiki = "wiki"
     BotAvatar = "bot_avatar"
+    InternalBot = "internal_bot"

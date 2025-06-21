@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PUBLIC_FRONTEND_URL } from "@/Constants";
+import { PUBLIC_UI_URL } from "@/Constants";
 import Auth from "@/core/security/Auth";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
 import EHttpStatus from "@/core/server/EHttpStatus";
@@ -102,7 +102,7 @@ class _Routes {
     }
 
     #getCorsHeaders() {
-        const origins = [PUBLIC_FRONTEND_URL];
+        const origins = [PUBLIC_UI_URL];
         const allowedMethods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
         const allowedHeaders = [
             "Accept",

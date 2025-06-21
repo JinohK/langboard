@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBot } from "@/core/ai/BaseBot";
-import EInternalBotType from "@/core/ai/EInternalBotType";
-import { TSocketSendParams } from "@/core/server/ISocketClient";
-import SocketClient from "@/core/server/SocketClient";
+import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/server/ESocketTopic";
+import ISocketClient from "@/core/server/ISocketClient";
+import InternalBotSetting, { EInternalBotType } from "@/models/InternalBotSetting";
 import formidable from "formidable";
 
 class BotRunner {
@@ -22,18 +22,26 @@ class BotRunner {
         return await bot.runAbortable(data, task_id);
     }
 
-    public static async abort(botType: EInternalBotType, task_id: string): Promise<void> {
+    public static async abort(botType: EInternalBotType, task_id: string, client?: ISocketClient): Promise<void> {
         const bot = getBot(botType);
         if (!bot) {
             return;
         }
         await bot.abort(task_id);
+        client?.send({
+            topic: ESocketTopic.Global,
+            topic_id: GLOBAL_TOPIC_ID,
+            event: "task:aborted",
+            data: {
+                task_id,
+            },
+        });
     }
 
-    public static async isAvailable(botType: EInternalBotType): Promise<bool> {
+    public static async isAvailable(botType: EInternalBotType): Promise<InternalBotSetting | null> {
         const bot = getBot(botType);
         if (!bot) {
-            return false;
+            return null;
         }
         return await bot.isAvailable();
     }
@@ -54,12 +62,9 @@ class BotRunner {
         return bot.isAborted(task_id);
     }
 
-    public static createAbortedChecker(botType: EInternalBotType, client: SocketClient, task_id: string, eventData: TSocketSendParams) {
+    public static createAbortedChecker(botType: EInternalBotType, task_id: string) {
         const isAborted = () => {
             const aborted = BotRunner.isAborted(botType, task_id);
-            if (aborted) {
-                client.send(eventData);
-            }
             return aborted;
         };
         return isAborted;

@@ -39,7 +39,7 @@ class CLIHelpFormatter(HelpFormatter):
 
         if usage_only:
             if usage_only.metavar["positional_name"]:  # type: ignore
-                usage_only_text = f"{usage_only.metavar["command_name"]} <{usage_only.metavar["positional_name"]}>"  # type: ignore
+                usage_only_text = f"{usage_only.metavar['command_name']} <{usage_only.metavar['positional_name']}>"  # type: ignore
             else:
                 usage_only_text = usage_only.metavar["command_name"]  # type: ignore
         else:
@@ -64,7 +64,7 @@ class CLIHelpFormatter(HelpFormatter):
             assert " ".join(pos_parts).replace("<args>", "").strip() == pos_usage.strip()
 
             if usage_only:
-                pos_parts = [f"<{usage_only.metavar["command_name"]}>"]  # type: ignore
+                pos_parts = [f"<{usage_only.metavar['command_name']}>"]  # type: ignore
 
             # helper for wrapping lines
             def get_lines(parts, indent, prefix=None):
@@ -224,7 +224,7 @@ class CLIHelpFormatter(HelpFormatter):
         if metadata["type"] is str:  # type: ignore
             new_action_args["metavar"] = {
                 "is_fake": True,
-                "arg": f"<{metadata["positional_name"]}>",  # type: ignore
+                "arg": f"<{metadata['positional_name']}>",  # type: ignore
             }
 
             if "choices_description" in metadata:

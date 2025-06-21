@@ -17,7 +17,7 @@ class _EventManager {
         this.#events = new Map();
     }
 
-    public on(topic: ESocketTopic, event: string, callback: TEventCallback): void {
+    public on(topic: ESocketTopic, event: string, callback: TEventCallback): _EventManager {
         topic = convertSafeEnum(ESocketTopic, topic);
 
         if (!this.#events.has(event)) {
@@ -27,6 +27,8 @@ class _EventManager {
             this.#events.get(event)![topic] = [];
         }
         this.#events.get(event)![topic]!.push(callback);
+
+        return this;
     }
 
     public async emit(topic: ESocketTopic, event: string, context: TEventContext): Promise<void> {

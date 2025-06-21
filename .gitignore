@@ -204,16 +204,10 @@ docker/volumes
 *.db*
 uploads
 
-**/backend/**/bots/*
-!**/backend/**/bots/.gitkeep
-
-**/socket/**/bots/*
-!**/socket/**/bots/index.ts
-
 **/tests/**
 !**/tests/**/.gitkeep
 
-**/backend/**/seeds/*
-!**/backend/**/seeds/.gitkeep
+**/api/**/seeds/*
+!**/api/**/seeds/.gitkeep
 
 bundler

@@ -3,9 +3,11 @@
 COMPOSE_PREFIX := ./docker/docker-compose
 COMPOSE_ARGS := -f $(COMPOSE_PREFIX).kafka.yaml -f $(COMPOSE_PREFIX).pg.yaml -f $(COMPOSE_PREFIX).redis.yaml -f $(COMPOSE_PREFIX).server.yaml --env-file ./.env
 DOCS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).docs.yaml
-FRONTEND_WATCHER_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).frontend-watcher.yaml
-FRONTEND_DIR := src/frontend
-BACKEND_DIR := src/backend
+UI_WATCHER_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ui-watcher.yaml
+FLOWS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).flows.yaml
+UI_DIR := src/ui
+API_DIR := src/api
+FLOWS_DIR := src/flows
 GREEN := \033[0;32m
 RED := \033[0;31m
 CYAN := \033[0;36m
@@ -15,12 +17,16 @@ NC := \033[0m
 
 COMPOSE_ARGS := $(COMPOSE_ARGS)
 WITH_DOCS ?= false
-WITH_FRONTEND_WATCHER ?= false
+WITH_UI_WATCHER ?= false
+WITH_FLOWS ?= true
 ifeq ($(WITH_DOCS), true)
 	COMPOSE_ARGS += $(DOCS_COMPOSE_ARGS)
 endif
-ifeq ($(WITH_FRONTEND_WATCHER), true)
-	COMPOSE_ARGS += $(FRONTEND_WATCHER_COMPOSE_ARGS)
+ifeq ($(WITH_UI_WATCHER), true)
+	COMPOSE_ARGS += $(UI_WATCHER_COMPOSE_ARGS)
+endif
+ifeq ($(WITH_FLOWS), true)
+	COMPOSE_ARGS += $(FLOWS_COMPOSE_ARGS)
 endif
 
 check_tools:
@@ -28,6 +34,7 @@ check_tools:
 	@command -v npm >/dev/null 2>&1 || { echo >&2 "$(RED)NPM is not installed. Aborting.$(NC)"; exit 1; }
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "$(RED)Docker is not installed. Aborting.$(NC)"; exit 1; }
 	@command -v pipx >/dev/null 2>&1 || { echo >&2 "$(RED)pipx is not installed. Aborting.$(NC)"; exit 1; }
+	@command -v uv >/dev/null 2>&1 || { echo >&2 "$(RED)uv is not installed. Aborting.$(NC)"; exit 1; }
 	@printf "$(GREEN)All required tools are installed.$(NC)"
 
 help: ## show this help message
@@ -51,34 +58,41 @@ clean_python_cache: ## clean Python cache
 
 clean_yarn_cache: ## clean Yarn cache
 	@echo "Cleaning yarn cache..."
-	cd $(FRONTEND_DIR) && yarn cache clean --force
-	rm -rf $(FRONTEND_DIR)/node_modules $(FRONTEND_DIR)/build
-	@printf "$(GREEN)Yarn cache and frontend directories cleaned.$(NC)"
+	cd $(UI_DIR) && yarn cache clean --force
+	rm -rf $(UI_DIR)/node_modules $(UI_DIR)/build
+	@printf "$(GREEN)Yarn cache and ui directories cleaned.$(NC)"
 
 format: ## run code formatters
 	poetry run ruff check . --fix
 	poetry run ruff format .
-	cd $(FRONTEND_DIR) && yarn run format
+	cd $(FLOWS_DIR) && uv run ruff check . --fix
+	cd $(FLOWS_DIR) && uv run ruff format .
+	cd $(UI_DIR) && yarn run format
 
 lint: ## run linters
 	poetry run ruff check .
-	cd $(FRONTEND_DIR) && yarn run lint
+	cd $(FLOWS_DIR) && uv run ruff check . --fix
+	cd $(UI_DIR) && yarn run lint
 
-install_backend: ## install the backend dependencies
-	@echo 'Installing backend dependencies'
+install_api: ## install the api dependencies
+	@echo 'Installing api dependencies'
 	@poetry install
 
-install_frontend: ## install frontend dependencies
-	@echo 'Installing frontend dependencies'
-	cd $(FRONTEND_DIR) && yarn install
+install_ui: ## install ui dependencies
+	@echo 'Installing ui dependencies'
+	cd $(UI_DIR) && yarn install
 
-build_frontend: ## build the frontend static files
-	cd $(FRONTEND_DIR) && CI='' yarn run build
+install_flows: ## install flows dependencies
+	@echo 'Installing flows dependencies'
+	cd $(FLOWS_DIR) && uv venv && uv pip install .
+
+build_ui: ## build the ui static files
+	cd $(UI_DIR) && CI='' yarn run build
 
 init: check_tools clean_python_cache clean_yarn_cache ## initialize the project
-	make install_backend
-	make install_frontend
-	make build_frontend
+	make install_api
+	make install_ui
+	make install_flows
 	@printf "$(GREEN)All requirements are installed.$(NC)"
 
 start_docker_dev: ## run the development environment in Docker
@@ -96,8 +110,8 @@ stop_docker_prod: ## stop the production environment in Docker
 	docker compose -f $(COMPOSE_PREFIX).prod.yaml $(COMPOSE_ARGS) down --rmi all --volumes
 
 unit_tests: ## run unit tests
-	poetry run pytest $(BACKEND_DIR)/tests/units
+	poetry run pytest $(API_DIR)/tests/units
 
 cov_unit_tests: ## run unit tests with coverage
-	poetry run pytest -vv --cov=$(BACKEND_DIR)/langboard $(BACKEND_DIR)/tests/units --cov-report=html:./$(BACKEND_DIR)/coverage
-	@printf "$(GREEN)Coverage report generated in $(BACKEND_DIR)/coverage directory.$(NC)"
+	poetry run pytest -vv --cov=$(API_DIR)/langboard $(API_DIR)/tests/units --cov-report=html:./$(API_DIR)/coverage
+	@printf "$(GREEN)Coverage report generated in $(API_DIR)/coverage directory.$(NC)"

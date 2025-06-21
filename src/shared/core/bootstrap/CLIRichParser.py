@@ -41,7 +41,7 @@ class CLIRichParser(ArgumentParser):
                                 "positional_name" in action.metavar[metavar]  # type: ignore
                                 and action.metavar[metavar]["positional_name"]  # type: ignore
                             ):
-                                positionals.append(f"{metavar} <{action.metavar[metavar]["positional_name"]}>")  # type: ignore
+                                positionals.append(f"{metavar} <{action.metavar[metavar]['positional_name']}>")  # type: ignore
                             positionals.append(metavar)
                 else:
                     positionals.append(action.dest)
@@ -87,11 +87,11 @@ class CLIRichParser(ArgumentParser):
 
         if usage_only:
             message = message.replace(
-                f"{usage_only.metavar["command_name"]} <{usage_only.metavar["positional_name"]}>",  # type: ignore
-                f"[{COLOR_COMMAND}]{usage_only.metavar["command_name"]}[/{COLOR_COMMAND}] ＜[{COLOR_POSITIONAL_NAME}]{usage_only.metavar["positional_name"]}[/{COLOR_POSITIONAL_NAME}]＞",  # type: ignore
+                f"{usage_only.metavar['command_name']} <{usage_only.metavar['positional_name']}>",  # type: ignore
+                f"[{COLOR_COMMAND}]{usage_only.metavar['command_name']}[/{COLOR_COMMAND}] ＜[{COLOR_POSITIONAL_NAME}]{usage_only.metavar['positional_name']}[/{COLOR_POSITIONAL_NAME}]＞",  # type: ignore
             ).replace(
-                f"<{usage_only.metavar["command_name"]}>",  # type: ignore
-                f"[{COLOR_COMMAND}]{usage_only.metavar["command_name"]}[/{COLOR_COMMAND}]",  # type: ignore
+                f"<{usage_only.metavar['command_name']}>",  # type: ignore
+                f"[{COLOR_COMMAND}]{usage_only.metavar['command_name']}[/{COLOR_COMMAND}]",  # type: ignore
             )  # type: ignore
 
             lines = message.split("\n")

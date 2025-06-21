@@ -1,7 +1,7 @@
 x-server-common-env: &server-common-env
   PROJECT_NAME: ${PROJECT_NAME}
   PROJECT_SHORT_NAME: ${PROJECT_SHORT_NAME}
-  PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
+  PUBLIC_UI_URL: ${PUBLIC_UI_URL:-http://localhost:${NGINX_UI_EXPOSE_PORT}}
 
 x-server-env: &server-env
   <<: *server-common-env
@@ -29,6 +29,7 @@ x-server-env: &server-env
   MAIL_PORT: ${MAIL_PORT}
   MAIL_STARTTLS: ${MAIL_STARTTLS}
   MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+  FLOWS_PORT: ${FLOWS_PORT}
 
 services:
   server:
@@ -36,72 +37,72 @@ services:
     container_name: ${PROJECT_NAME}_server
     image: nginx:latest
     ports:
-      - "${NGINX_FRONTEND_EXPOSE_PORT}:8000"
+      - "${NGINX_UI_EXPOSE_PORT}:8000"
       - "${NGINX_SOCKET_EXPOSE_PORT}:8010"
       - "${NGINX_API_EXPOSE_PORT}:8020"
       - "${DOCS_EXPOSE_PORT}:8030"
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
-      - BACKEND_HOST=${PROJECT_NAME}_backend:${BACKEND_PORT}
+      - API_HOST=${PROJECT_NAME}_api:${API_PORT}
       - SOCKET_HOST=${PROJECT_NAME}_socket:${SOCKET_PORT}
     volumes:
       - ./server/conf.template:/etc/nginx/templates/default.conf.template
       - ./server/nginx.conf:/etc/nginx/nginx.conf
-      - ../src/frontend/dist:/usr/share/nginx/html
+      - ../src/ui/dist:/usr/share/nginx/html
     command: [nginx-debug, "-g", "daemon off;"]
     depends_on:
-      - frontend
-      - backend
+      - ui
+      - api
       - socket
     networks:
       - net
     restart: always
 
-  frontend:
+  ui:
     init: true
-    container_name: ${PROJECT_NAME}_frontend
+    container_name: ${PROJECT_NAME}_ui
     build:
-      context: ../src/frontend
+      context: ../src/ui
     environment:
       <<: *server-common-env
-      SOCKET_URL: ${SOCKET_URL}
-      API_URL: ${API_URL}
+      SOCKET_URL: ${SOCKET_URL:-http://localhost:${NGINX_SOCKET_EXPOSE_PORT}}
+      API_URL: ${API_URL:-http://localhost:${NGINX_API_EXPOSE_PORT}}
     working_dir: /app
     command: yarn build
     volumes:
-      - ../src/frontend/src:/app/src
-      - ../src/frontend/dist:/app/dist:rw
-      - ../src/frontend/vite.config.ts:/app/vite.config.ts
-      - ../src/frontend/tailwind.config.js:/app/tailwind.config.js
-      - ../src/frontend/postcss.config.js:/app/postcss.config.js
+      - ../src/ui/src:/app/src
+      - ../src/ui/dist:/app/dist:rw
+      - ../src/ui/vite.config.ts:/app/vite.config.ts
+      - ../src/ui/tailwind.config.js:/app/tailwind.config.js
+      - ../src/ui/postcss.config.js:/app/postcss.config.js
       - ../.env:/app/.env
     networks:
       - net
 
-  backend: &backend
+  api: &api
     init: true
-    container_name: ${PROJECT_NAME}_backend
+    container_name: ${PROJECT_NAME}_api
     build:
       context: ../
       target: with-cron
     environment:
       <<: *server-env
-      BACKEND_HOST: ${PROJECT_NAME}_backend
-      BACKEND_PORT: ${BACKEND_PORT}
+      API_HOST: ${PROJECT_NAME}_api
+      API_PORT: ${API_PORT}
       CRON_TAB_FILE: ${CRON_TAB_FILE}
       SENTRY_DSN: ${SENTRY_DSN}
-      JWT_AT_EXPIRATION: ${JWT_AT_EXPIRATION}
-      JWT_RT_EXPIRATION: ${JWT_RT_EXPIRATION}
       LOCAL_STORAGE_DIR: ${LOCAL_STORAGE_DIR}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_REGION_NAME: ${S3_REGION_NAME}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      FRONTEND_PORT: ${NGINX_FRONTEND_EXPOSE_PORT}
+      UI_PORT: ${NGINX_UI_EXPOSE_PORT}
     working_dir: /app
-    command: ${PROJECT_NAME} run --workers ${BACKEND_WORKERS_COUNT:-1}
+    command: ${PROJECT_NAME} run --workers ${API_WORKERS_COUNT:-1}
     volumes:
-      - ../src/backend/${PROJECT_NAME}:/app/src/backend/${PROJECT_NAME}
+      - ../src/api/${PROJECT_NAME}:/app/src/api/${PROJECT_NAME}
+      - ../src/shared/core:/app/src/shared/core
+      - ../src/shared/models:/app/src/shared/models
       - ../src/resources:/app/src/resources
       - ../pyproject.toml:/app/pyproject.toml
       - ../poetry.lock:/app/poetry.lock
@@ -120,7 +121,7 @@ services:
     restart: always
 
   celeryworker:
-    <<: *backend
+    <<: *api
     init: true
     container_name: ${PROJECT_NAME}_celeryworker
     build:

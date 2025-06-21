@@ -26,9 +26,9 @@ def __extract_func_param(
 
 
 @overload
-def extract_func_param() -> (
-    Callable[[Callable[Concatenate[_TParams], Any]], Callable[[Callable[..., _TReturn]], _Func[_TParams, _TReturn]]]
-): ...
+def extract_func_param() -> Callable[
+    [Callable[Concatenate[_TParams], Any]], Callable[[Callable[..., _TReturn]], _Func[_TParams, _TReturn]]
+]: ...
 @overload
 def extract_func_param(
     exclude_length: Literal[0],

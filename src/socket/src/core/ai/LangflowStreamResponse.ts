@@ -1,6 +1,7 @@
+import { api } from "@/core/helpers/Api";
 import JsonUtils from "@/core/utils/JsonUtils";
+import Logger from "@/core/utils/Logger";
 import TypeUtils from "@/core/utils/TypeUtils";
-import axios from "axios";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const getLangflowOutputMessage = (response: Record<string, any>): string | undefined => {
@@ -33,88 +34,111 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
         onEnd: () => void | Promise<void>;
         onError?: (error: Error) => void | Promise<void>;
     }) => {
-        if (signal && signal.aborted) {
+        if (signal?.aborted) {
             return;
         }
 
-        const result = await axios.post<NodeJS.ReadableStream>(url, body, {
-            headers,
-            responseType: "stream",
-            timeout: 120000,
-            signal,
-        });
+        try {
+            const result = await api.post<NodeJS.ReadableStream>(url, body, {
+                headers,
+                responseType: "stream",
+                signal,
+            });
 
-        const bufferedChunks: string[] = [];
-        const textDecoder = new TextDecoder();
-        result.data.on("data", async (chunk) => {
-            if (signal && signal.aborted) {
-                await onEnd();
-                onEndCallback?.();
-                return;
-            }
+            const bufferedChunks: string[] = [];
+            const textDecoder = new TextDecoder();
 
-            const chunkString = textDecoder.decode(chunk);
-            if (!chunkString.trim()) {
-                return;
-            }
+            const endStream = async () => {
+                if (!signal?.aborted && bufferedChunks.length) {
+                    const allString = bufferedChunks.splice(0).join("");
+                    let jsonChunk: Record<string, any>;
+                    try {
+                        jsonChunk = JsonUtils.Parse(allString);
+                    } catch (e) {
+                        return;
+                    }
 
-            const splitChunks = chunkString.split("\n\n");
-            for (let i = 0; i < splitChunks.length; ++i) {
-                const chunk = splitChunks[i];
-                if (!chunk.endsWith("}")) {
-                    bufferedChunks.push(chunk);
-                    continue;
-                }
-
-                let jsonChunk: Record<string, any>;
-                try {
-                    jsonChunk = JsonUtils.Parse(`${bufferedChunks.join("")}${chunk}`);
-                } catch (e) {
-                    bufferedChunks.push(chunk);
-                    continue;
+                    const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
+                    if (TypeUtils.isString(parsedMessage)) {
+                        await onMessage(parsedMessage);
+                    }
                 }
 
                 bufferedChunks.splice(0);
 
-                const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
-                if (!parsedMessage) {
-                    continue;
-                }
+                await onEnd();
+                onEndCallback?.();
 
-                if (parsedMessage === true) {
-                    await onEnd();
+                result.data.removeAllListeners("data");
+                result.data.removeAllListeners("end");
+                result.data.removeAllListeners("error");
+            };
+
+            if (signal) {
+                const abortEvent = async () => {
+                    await endStream();
+                    signal.removeEventListener("abort", abortEvent);
+                };
+
+                signal.addEventListener("abort", abortEvent);
+            }
+
+            result.data
+                .on("data", async (chunk) => {
+                    const chunkString = textDecoder.decode(chunk);
+                    if (!chunkString.trim()) {
+                        return;
+                    }
+
+                    const splitChunks = chunkString.split("\n\n");
+                    for (let i = 0; i < splitChunks.length; ++i) {
+                        const chunk = splitChunks[i];
+                        if (!chunk.endsWith("}")) {
+                            bufferedChunks.push(chunk);
+                            continue;
+                        }
+
+                        let jsonChunk: Record<string, any>;
+                        try {
+                            jsonChunk = JsonUtils.Parse(`${bufferedChunks.join("")}${chunk}`);
+                        } catch (e) {
+                            bufferedChunks.push(chunk);
+                            continue;
+                        }
+
+                        bufferedChunks.splice(0);
+
+                        const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
+                        if (!parsedMessage) {
+                            continue;
+                        }
+
+                        if (parsedMessage === true) {
+                            await onEnd();
+                            onEndCallback?.();
+                            return;
+                        }
+
+                        await onMessage(parsedMessage);
+                    }
+                })
+                .on("end", endStream)
+                .on("error", async (error) => {
+                    if (!signal?.aborted) {
+                        await onError?.(error);
+                    }
+
                     onEndCallback?.();
-                    return;
-                }
-
-                await onMessage(parsedMessage);
-            }
-        });
-
-        result.data.on("end", async () => {
-            if ((!signal || !signal.aborted) && bufferedChunks.length) {
-                const allString = bufferedChunks.splice(0).join("");
-                let jsonChunk: Record<string, any>;
-                try {
-                    jsonChunk = JsonUtils.Parse(allString);
-                } catch (e) {
-                    return;
-                }
-
-                const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
-                if (TypeUtils.isString(parsedMessage)) {
-                    await onMessage(parsedMessage);
-                }
+                });
+        } catch (error) {
+            Logger.error(error);
+            if (signal?.aborted) {
+                return;
             }
 
-            await onEnd();
+            await onError?.(TypeUtils.isError(error) ? error : new Error("An unknown error occurred while processing the Langflow stream response."));
             onEndCallback?.();
-        });
-
-        result.data.on("error", async (error) => {
-            await onError?.(error);
-            onEndCallback?.();
-        });
+        }
     };
 };
 

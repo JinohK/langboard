@@ -53,6 +53,7 @@ class ApiErrorCode(Enum):
     NF3001 = "Bot not found."
     NF3002 = "Settings not found."
     NF3003 = "Global relationships not found."
+    NF3004 = "Internal bot setting not found."
 
     # Validation Errors
     VA0000 = "Invalid request."

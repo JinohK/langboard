@@ -1,17 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import EInternalBotType from "@/core/ai/EInternalBotType";
 import { createLangflowRequestModel } from "@/core/ai/LangflowHelper";
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
 import { TBigIntString } from "@/core/db/BaseModel";
-import JsonUtils from "@/core/utils/JsonUtils";
+import { api } from "@/core/helpers/Api";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
-import AppSetting, { EAppSettingType } from "@/models/AppSetting";
-import axios from "axios";
+import InternalBotSetting, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBotSetting";
 import formidable from "formidable";
-import { In } from "typeorm";
 
 export interface ILangflowRequestModel {
-    flowId: string;
     message: string;
     projectUID: string;
     userId: TBigIntString;
@@ -25,9 +21,6 @@ abstract class BaseBot {
     static get BOT_TYPE(): EInternalBotType {
         return null!;
     }
-    static get BOT_AVATAR(): string | null {
-        return null;
-    }
     #abortableTasks: Map<string, AbortController>;
 
     constructor() {
@@ -36,7 +29,7 @@ abstract class BaseBot {
 
     public abstract run(data: Record<string, any>): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
     public abstract runAbortable(data: Record<string, any>, taskID: string): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
-    public abstract isAvailable(): Promise<bool>;
+    public abstract isAvailable(): Promise<InternalBotSetting | null>;
     public abstract uploadFile(file: formidable.File): Promise<string | null>;
 
     public async abort(taskID: string): Promise<void> {
@@ -59,31 +52,36 @@ abstract class BaseBot {
         return task.signal.aborted;
     }
 
-    protected async isLangflowAvailable(): Promise<bool> {
-        const settings = await this.#getLangflowSettings();
-        if (!settings) {
-            return false;
+    protected async isLangflowAvailable(): Promise<InternalBotSetting | null> {
+        const botSetting = await this.getBotSetting();
+        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
+            return null;
         }
 
-        const healthCheck = await axios.get(`${settings[EAppSettingType.LangflowUrl]}/health`, {
-            headers: {
-                "x-api-key": settings[EAppSettingType.LangflowApiKey],
-            },
+        const healthCheck = await api.get(`${botSetting.url}/health`, {
+            headers: await this.getBotRequestHeaders(botSetting),
         });
 
-        return healthCheck.status === 200;
+        return healthCheck.status === 200 ? botSetting : null;
     }
 
     protected async runLangflow(
         requestModel: ILangflowRequestModel,
         useStream: bool = false
     ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        const settings = await this.#getLangflowSettings();
-        if (!settings) {
+        const botSetting = await this.getBotSetting();
+        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
-        const apiRequestModel = createLangflowRequestModel(settings, requestModel, useStream);
+        const headers = await this.getBotRequestHeaders(botSetting);
+
+        const apiRequestModel = createLangflowRequestModel({
+            botSetting,
+            headers,
+            requestModel,
+            useStream,
+        });
 
         if (useStream) {
             return langflowStreamResponse({
@@ -94,7 +92,7 @@ abstract class BaseBot {
         }
 
         try {
-            const response = await axios.post(apiRequestModel.url, apiRequestModel.reqData, {
+            const response = await api.post(apiRequestModel.url, apiRequestModel.reqData, {
                 headers: apiRequestModel.headers,
             });
 
@@ -113,12 +111,20 @@ abstract class BaseBot {
         requestModel: ILangflowRequestModel,
         useStream: bool = false
     ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        const settings = await this.#getLangflowSettings();
-        if (!settings) {
+        const botSetting = await this.getBotSetting();
+        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
-        const apiRequestModel = createLangflowRequestModel(settings, requestModel, useStream);
+        const headers = await this.getBotRequestHeaders(botSetting);
+
+        const apiRequestModel = createLangflowRequestModel({
+            botSetting,
+            headers,
+            requestModel,
+            useStream,
+        });
+
         const abortController = new AbortController();
         this.#abortableTasks.set(taskID, abortController);
 
@@ -136,7 +142,7 @@ abstract class BaseBot {
 
         let result;
         try {
-            const response = await axios.post(apiRequestModel.url, apiRequestModel.reqData, {
+            const response = await api.post(apiRequestModel.url, apiRequestModel.reqData, {
                 headers: apiRequestModel.headers,
                 timeout: 120000,
                 signal: abortController.signal,
@@ -162,22 +168,23 @@ abstract class BaseBot {
             return null;
         }
 
-        const settings = await this.#getLangflowSettings();
-        if (!settings) {
+        const botSetting = await this.getBotSetting();
+        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
-        const url = `${settings[EAppSettingType.LangflowUrl]}/api/v2/files`;
         const headers = {
             "Content-Type": "multipart/form-data",
-            "x-api-key": settings[EAppSettingType.LangflowApiKey],
+            ...(await this.getBotRequestHeaders(botSetting)),
         };
+
+        const url = `${botSetting.url}/api/v2/files`;
 
         const formData = new FormData();
         formData.append("file", file, filename);
 
         try {
-            const response = await axios.post(url, formData, {
+            const response = await api.post(url, formData, {
                 headers: {
                     ...headers,
                 },
@@ -194,27 +201,27 @@ abstract class BaseBot {
         }
     }
 
-    async #getLangflowSettings() {
-        const rawSettings = await AppSetting.find({
-            where: {
-                setting_type: In([EAppSettingType.LangflowUrl, EAppSettingType.LangflowApiKey]),
-            },
-        });
-        const settings: Partial<Record<EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey, string>> = {};
-        if (!rawSettings || rawSettings.length !== 2) {
-            return undefined;
+    async getBotSetting() {
+        const constructor = this.#getConstructor();
+        const botSetting = await InternalBotSetting.findByType(constructor.BOT_TYPE);
+        return botSetting;
+    }
+
+    async getBotRequestHeaders(setting: InternalBotSetting) {
+        const headers: Record<string, any> = {};
+        switch (setting.platform) {
+            case EInternalBotPlatform.Langflow:
+                headers["x-api-key"] = setting.api_key;
+                break;
+            default:
+                throw new Error(`Unsupported platform: ${setting.platform}`);
         }
 
-        for (let i = 0; i < rawSettings.length; ++i) {
-            const row = rawSettings[i];
-            settings[row.setting_type as EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey] = JsonUtils.Parse(row.setting_value);
-        }
+        return headers;
+    }
 
-        if (!settings[EAppSettingType.LangflowUrl] || !settings[EAppSettingType.LangflowApiKey]) {
-            return undefined;
-        }
-
-        return settings as Record<EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey, string>;
+    #getConstructor() {
+        return this.constructor as typeof BaseBot;
     }
 }
 

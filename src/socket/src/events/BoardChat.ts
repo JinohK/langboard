@@ -1,34 +1,27 @@
 import BotRunner from "@/core/ai/BotRunner";
-import EInternalBotType from "@/core/ai/EInternalBotType";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import ESocketStatus from "@/core/server/ESocketStatus";
 import ESocketTopic from "@/core/server/ESocketTopic";
 import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
 import ChatHistory from "@/models/ChatHistory";
+import { EInternalBotType } from "@/models/InternalBotSetting";
 
 EventManager.on(ESocketTopic.Board, "board:chat:available", async ({ client, topicId }) => {
-    let isAvailable;
+    let botSetting;
     try {
-        isAvailable = await BotRunner.isAvailable(EInternalBotType.ProjectChat);
+        botSetting = await BotRunner.isAvailable(EInternalBotType.ProjectChat);
     } catch {
-        isAvailable = false;
+        botSetting = null;
     }
 
-    let apiBot = null;
-    if (isAvailable) {
-        apiBot = {
-            bot_type: EInternalBotType.ProjectChat,
-            display_name: EInternalBotType.ProjectChat,
-            avatar: null,
-        };
-    }
+    const apiBot = botSetting?.apiResponse ?? null;
 
     client.send({
         topic: ESocketTopic.Board,
         topic_id: topicId,
         event: "board:chat:available",
-        data: { available: isAvailable, bot: apiBot },
+        data: { available: !!botSetting, bot: apiBot },
     });
 });
 
@@ -55,13 +48,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
         return;
     }
 
-    const isAborted = BotRunner.createAbortedChecker(EInternalBotType.ProjectChat, client, task_id, {
-        event: "board:chat:cancelled",
-        topic: ESocketTopic.Board,
-        topic_id: topicId,
-        data: {},
-    });
-
+    const isAborted = BotRunner.createAbortedChecker(EInternalBotType.ProjectChat, task_id);
     if (isAborted()) {
         return;
     }
@@ -115,12 +102,14 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
     let isReceived = false;
     let lastContent: string | undefined = undefined;
 
+    const saveMessage = async () => {
+        await ChatHistory.update(aiMessage.id, {
+            message: newContent,
+        });
+    };
+
     await response({
         onMessage: async (chunk) => {
-            if (isAborted()) {
-                return;
-            }
-
             isReceived = true;
             const oldContent = newContent.content;
             let updatedContent = "";
@@ -140,25 +129,21 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
             }
         },
         onError: async (error) => {
-            if (isAborted()) {
-                return;
-            }
             stream.end({ uid: aiMessageUID, status: "failed", error: error.message });
             await aiMessage.remove();
         },
         onEnd: async () => {
-            aiMessage.message = newContent;
             if (!isReceived) {
                 if (!isAborted()) {
                     stream.end({ uid: aiMessageUID, status: "failed" });
                     await aiMessage.remove();
-                    return;
                 }
+
+                return;
             }
 
-            aiMessage.message = newContent;
-            stream.end({ uid: aiMessageUID, status: "success" });
-            await aiMessage.save();
+            stream.end({ uid: aiMessageUID, status: isAborted() ? "aborted" : "success" });
+            await saveMessage();
         },
     });
 });
@@ -170,5 +155,5 @@ EventManager.on(ESocketTopic.Board, "board:chat:cancel", async ({ client, data }
         return;
     }
 
-    await BotRunner.abort(EInternalBotType.ProjectChat, task_id);
+    await BotRunner.abort(EInternalBotType.ProjectChat, task_id, client);
 });

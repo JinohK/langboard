@@ -4,11 +4,11 @@ services:
   server:
     command: [nginx-debug, "-g", "daemon off;"]
 
-  frontend:
+  ui:
     environment:
       - ENVIRONMENT=development
 
-  backend:
+  api:
     environment:
       - ENVIRONMENT=development
 

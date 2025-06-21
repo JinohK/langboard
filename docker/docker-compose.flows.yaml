@@ -1,0 +1,63 @@
+x-server-common-env: &server-common-env
+  PROJECT_NAME: ${PROJECT_NAME}
+  PROJECT_SHORT_NAME: ${PROJECT_SHORT_NAME}
+  PUBLIC_UI_URL: ${PUBLIC_UI_URL:-http://localhost:${NGINX_UI_EXPOSE_PORT}}
+
+x-server-env: &server-env
+  <<: *server-common-env
+  TERMINAL_LOGGING_LEVEL: ${TERMINAL_LOGGING_LEVEL}
+  FILE_LOGGING_LEVEL: ${FILE_LOGGING_LEVEL}
+  LOGGING_DIR: ${LOGGING_DIR}
+  MAIN_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/master
+  READONLY_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PROJECT_NAME}_db_bouncer:6432/readonly
+  DB_TIMEOUT: ${DB_TIMEOUT}
+  DB_TCP_USER_TIMEOUT: ${DB_TCP_USER_TIMEOUT}
+  CACHE_TYPE: redis
+  CACHE_URL: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_redis:6379/0
+  BROADCAST_TYPE: kafka
+  BROADCAST_URLS: ${PROJECT_NAME}_kafka0:9092,${PROJECT_NAME}_kafka1:9092,${PROJECT_NAME}_kafka2:9092
+  COMMON_SECRET_KEY: ${COMMON_SECRET_KEY}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+  JWT_ALGORITHM: ${JWT_ALGORITHM}
+  JWT_AT_EXPIRATION: ${JWT_AT_EXPIRATION}
+  JWT_RT_EXPIRATION: ${JWT_RT_EXPIRATION}
+  MAIL_FROM: ${MAIL_FROM}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_SERVER: ${MAIL_SERVER}
+  MAIL_PORT: ${MAIL_PORT}
+  MAIL_STARTTLS: ${MAIL_STARTTLS}
+  MAIL_SSL_TLS: ${MAIL_SSL_TLS}
+  FLOWS_PORT: ${FLOWS_PORT}
+
+services:
+  flows:
+    init: true
+    container_name: ${PROJECT_NAME}_flows
+    build:
+      context: ../src/flows
+    environment:
+      <<: *server-env
+      LANGFLOW_HOST: ${PROJECT_NAME}_flows
+      SENTRY_DSN: ${SENTRY_DSN}
+      LOGGING_DIR: ${FLOWS_LOGGING_DIR}
+    working_dir: /app/src/flows
+    command: uv run flows run --workers ${FLOWS_WORKERS_COUNT:-1}
+    volumes:
+      - ../src/flows/${PROJECT_NAME}_flows:/app/src/flows/${PROJECT_NAME}_flows
+      - ../src/shared/core:/app/src/shared/core
+      - ../src/shared/models:/app/src/shared/models
+      - ../src/resources:/app/src/resources
+      - ../src/flows/pyproject.toml:/app/src/flows/pyproject.toml
+      - ../src/flows/uv.lock:/app/src/flows/uv.lock
+      - ../local:/app/local
+    depends_on:
+      - db-bouncer
+      - kafka0
+      - kafka1
+      - kafka2
+      - api
+    networks:
+      - net
+    restart: always

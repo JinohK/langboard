@@ -4,7 +4,7 @@ import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { DATA_TEXT_FORMAT_DESCRIPTIONS } from "@/core/utils/EditorUtils";
 import { generateToken } from "@/core/utils/StringUtils";
-import { EAppSettingType } from "@/models/AppSetting";
+import InternalBotSetting, { EInternalBotPlatformRunningType } from "@/models/InternalBotSetting";
 
 export enum ELangflowConstants {
     ApiKey = "x-api-key",
@@ -50,20 +50,41 @@ export class LangboardCalledVariablesComponent extends BaseLangflowComponent {
     }
 }
 
-export const createLangflowRequestModel = (
-    settings: Record<EAppSettingType.LangflowUrl | EAppSettingType.LangflowApiKey, string>,
-    requestModel: ILangflowRequestModel,
-    useStream: bool = false
-) => {
+export interface ICreateLangflowRequestModelParams {
+    botSetting: InternalBotSetting;
+    headers: Record<string, any>;
+    requestModel: ILangflowRequestModel;
+    useStream?: bool;
+}
+
+export const createLangflowRequestModel = ({ botSetting, headers, requestModel, useStream }: ICreateLangflowRequestModelParams) => {
     const sessionId = requestModel.sessionId ?? generateToken(32);
     const oneTimeToken = createOneTimeToken(new SnowflakeID(requestModel.userId));
 
+    const queryParams = new URLSearchParams({
+        stream: useStream ? "true" : "false",
+    });
+
+    let url = botSetting.url;
+    switch (botSetting.platform_running_type) {
+        case EInternalBotPlatformRunningType.FlowId:
+            url = `${url}/api/v1/run/${botSetting.value}`;
+            break;
+        case EInternalBotPlatformRunningType.FlowJson:
+            url = `${url}/api/v1/run/${botSetting.id}`;
+            break;
+        default:
+            throw new Error(`Unsupported platform running type: ${botSetting.platform_running_type}`);
+    }
+
+    url = `${url}?${queryParams.toString()}`;
+
     return {
-        url: `${settings[EAppSettingType.LangflowUrl]}/api/v1/run/${requestModel.flowId}?stream=${useStream}`,
+        url,
         sessionId,
         headers: {
             "Content-Type": "application/json",
-            [ELangflowConstants.ApiKey]: settings[EAppSettingType.LangflowApiKey],
+            ...headers,
         },
         oneTimeToken,
         reqData: {
@@ -72,6 +93,7 @@ export const createLangflowRequestModel = (
             output_type: requestModel.outputType,
             session: sessionId,
             session_id: sessionId,
+            setting_uid: botSetting.uid,
             tweaks: {
                 ...(requestModel.tweaks ?? {}),
                 ...new LangboardCalledVariablesComponent(

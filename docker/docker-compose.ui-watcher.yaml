@@ -1,0 +1,4 @@
+services:
+  ui:
+    command: yarn build -w
+    restart: always

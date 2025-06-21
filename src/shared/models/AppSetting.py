@@ -10,8 +10,6 @@ from sqlmodel import Field
 
 class AppSettingType(Enum):
     ApiKey = "api_key"
-    LangflowUrl = "langflow_url"
-    LangflowApiKey = "langflow_api_key"
     WebhookUrl = "webhook_url"
 
 

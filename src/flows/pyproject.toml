@@ -1,0 +1,60 @@
+[project]
+name = "langboard-flows"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "langflow>=1.4.3,<2.0.0",
+    "fastapi>=0.115.13,<0.120.0",
+    "uvicorn>=0.34.3,<0.40.0",
+    "psycopg[binary]>=3.2.9",
+    "cryptocode>=0.1",
+]
+
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.7,<0.10",
+]
+
+
+[tool.uv]
+link-mode = "copy"
+
+
+[tool.uv.sources]
+core = { path = "../shared/core" }
+models = { path = "../shared/models" }
+langboard-flows = { workspace = true }
+
+
+[tool.uv.workspace]
+members = ["."]
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["langboard_flows"]
+
+
+[project.scripts]
+flows = "langboard_flows.CLI:execute"
+
+
+[tool.ruff]
+line-length = 120
+lint.extend-select = ["I"]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+no-lines-before = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
