@@ -36,6 +36,11 @@ class _Routes {
         req.url = req.url || "/";
         const url = new URL(!isValidURL(req.url) ? `http://localhost${req.url}` : req.url);
 
+        if (method === "OPTIONS") {
+            this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_204_NO_CONTENT));
+            return;
+        }
+
         const [handler, params] = this.#getRoute(method, url.pathname) ?? [undefined, {}];
 
         if (!handler) {

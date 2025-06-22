@@ -3,9 +3,11 @@ import { createLangflowRequestModel } from "@/core/ai/LangflowHelper";
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
 import { TBigIntString } from "@/core/db/BaseModel";
 import { api } from "@/core/helpers/Api";
+import EHttpStatus from "@/core/server/EHttpStatus";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
 import InternalBotSetting, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBotSetting";
 import formidable from "formidable";
+import fs from "fs";
 
 export interface ILangflowRequestModel {
     message: string;
@@ -181,7 +183,8 @@ abstract class BaseBot {
         const url = `${botSetting.url}/api/v2/files`;
 
         const formData = new FormData();
-        formData.append("file", file, filename);
+        const blob = new Blob([fs.readFileSync(file.filepath)], { type: file.mimetype ?? undefined });
+        formData.append("file", blob, filename);
 
         try {
             const response = await api.post(url, formData, {
@@ -191,12 +194,13 @@ abstract class BaseBot {
                 data: formData,
             });
 
-            if (response.status !== 200) {
+            if (![EHttpStatus.HTTP_200_OK, EHttpStatus.HTTP_201_CREATED].includes(response.status)) {
                 throw new Error("Langflow file upload failed");
             }
 
             return response.data.path ?? null;
         } catch (error) {
+            console.error(error);
             return null;
         }
     }

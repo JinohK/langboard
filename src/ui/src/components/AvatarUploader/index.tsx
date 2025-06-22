@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { VariantProps } from "tailwind-variants";
@@ -55,7 +55,6 @@ function AvatarUploader({
 }: TAvatarUploaderProps): JSX.Element {
     const [t] = useTranslation();
     const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialAvatarUrl);
-    const inputRef = useRef<HTMLInputElement>(null);
     const handleUpload = useCallback((files: File[] | FileList) => {
         if (!files.length) {
             if (initialAvatarUrl && !isDeletedRef?.current) {
@@ -86,7 +85,7 @@ function AvatarUploader({
         reader.readAsDataURL(file);
         onChange?.(files);
     }, []);
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const { getRootProps, getInputProps, inputRef, isDragActive } = useDropzone({
         accept: { "image/*": [] },
         onDrop: handleUpload,
         onFileDialogCancel: () => handleUpload([]),

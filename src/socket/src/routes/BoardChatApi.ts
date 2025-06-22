@@ -5,7 +5,7 @@ import EHttpStatus from "@/core/server/EHttpStatus";
 import Routes from "@/core/server/Routes";
 import { EInternalBotType } from "@/models/InternalBotSetting";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
-import formidable from "formidable";
+import { IncomingForm } from "formidable";
 
 Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => {
     const { projectUID } = params;
@@ -17,14 +17,14 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
         return ApiErrorResponse(EApiErrorCode.PE1001, EHttpStatus.HTTP_403_FORBIDDEN);
     }
 
-    const form = new formidable.IncomingForm({
+    const form = new IncomingForm({
         keepExtensions: true,
         multiples: false,
     });
 
     try {
         const [_, files] = await form.parse(req);
-        const file = files.file?.[0];
+        const file = files.attachment?.[0];
         if (!file) {
             return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
         }
@@ -35,7 +35,8 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
         }
 
         return JsonResponse({ file_path: filePath }, EHttpStatus.HTTP_201_CREATED);
-    } catch {
+    } catch (error) {
+        console.error(error);
         return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
     }
 });

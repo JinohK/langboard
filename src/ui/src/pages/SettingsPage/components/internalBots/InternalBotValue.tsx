@@ -244,7 +244,7 @@ function InternalBotValueJsonInput({ value, newValueRef, isValidating, change }:
                     disabled={isValidating}
                     ref={textareaRef}
                 />
-                <Box position="absolute" top="0" right="0">
+                <Box position="absolute" top="1" right="1.5" className="opacity-70">
                     <Input type="file" className="hidden" ref={fileInputRef} accept=".json" onChange={onFileInputChange} disabled={isValidating} />
                     <Button
                         variant="secondary"

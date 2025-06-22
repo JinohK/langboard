@@ -27,6 +27,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
     const chatAttachmentRef = useRef<HTMLInputElement>(null);
     const chatInputRef = useRef<HTMLTextAreaElement>(null);
     const [previewElement, setPreviewElement] = useState<React.ReactNode | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
     const updateHeight = useCallback(() => {
         if (!TypeUtils.isElement(chatInputRef.current, "textarea")) {
             return;
@@ -40,7 +41,12 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
     }, [setHeight]);
 
     const sendChat = useCallback(async () => {
-        if (!chatInputRef.current || !chatAttachmentRef.current || isUploading) {
+        if (!chatInputRef.current || !chatAttachmentRef.current) {
+            return;
+        }
+
+        if (isUploading) {
+            abortControllerRef.current?.abort();
             return;
         }
 
@@ -57,12 +63,14 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
         const attachment = chatAttachmentRef.current.files?.[0];
         if (attachment) {
             setIsUploading(true);
+            abortControllerRef.current = new AbortController();
 
             let result;
             try {
                 result = await uploadProjectChatAttachmentMutateAsync({
                     project_uid: projectUID,
                     attachment,
+                    abortController: abortControllerRef.current,
                 });
             } catch {
                 Toast.Add.error(t("errors.Failed to upload attachment. File size may be too large."));
@@ -218,9 +226,8 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                     variant={isSending ? "secondary" : "default"}
                     size={isSending ? "icon-sm" : "sm"}
                     className={"mr-1 gap-1.5 px-2"}
-                    title={t("project.Send a message")}
+                    title={t(isSending ? "project.Stop" : "project.Send a message")}
                     titleSide="top"
-                    disabled={isUploading}
                     onClick={sendChat}
                 >
                     <IconComponent

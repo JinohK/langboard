@@ -15,7 +15,6 @@ const InternalBotAvatar = memo(() => {
     const avatar = internalBot.useField("avatar");
     const { navigateRef } = useAppSetting();
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
-    const isAvatarDeletedRef = useRef(false);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
 
@@ -92,7 +91,6 @@ const InternalBotAvatar = memo(() => {
                 notInForm
                 initialAvatarUrl={avatar}
                 dataTransferRef={dataTransferRef}
-                isDeletedRef={isAvatarDeletedRef}
                 isValidating={isValidating}
                 avatarSize={{
                     initial: "lg",

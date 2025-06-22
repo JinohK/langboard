@@ -2,7 +2,7 @@ from json import loads as json_loads
 from core.db import DbSession, SqlBuilder
 from core.routing import AppRouter
 from core.types import SnowflakeID
-from fastapi import BackgroundTasks, HTTPException, status
+from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from langflow.load import aload_flow_from_json
 from models.InternalBotSetting import InternalBotSetting
@@ -13,7 +13,7 @@ from ..core.schema.Exception import APIException, InvalidChatInputError
 
 
 @AppRouter.api.post("/api/v1/run/{anypath}")
-async def run_flow(background_tasks: BackgroundTasks, api_request: FlowRequestModel, stream: bool = False):
+async def run_flow(api_request: FlowRequestModel, stream: bool = False):
     setting = None
     with DbSession.use(readonly=True) as db:
         result = db.exec(

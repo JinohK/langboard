@@ -10,6 +10,7 @@ export interface IUploadProjectChatAttachmentForm {
     project_uid: string;
     attachment: File;
     onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
+    abortController?: AbortController;
 }
 
 export interface IUploadProjectChatAttachmentResponse {
@@ -28,6 +29,7 @@ const useUploadProjectChatAttachment = (options?: TMutationOptions<IUploadProjec
         const res = await api.post(url, formData, {
             baseURL: SOCKET_URL,
             onUploadProgress: params.onUploadProgress,
+            signal: params.abortController?.signal,
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

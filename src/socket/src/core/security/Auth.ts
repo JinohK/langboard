@@ -2,7 +2,7 @@ import User from "@/models/User";
 import http from "http";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
-import { JWT_ALGORITHM, JWT_SECRET_KEY, PROJECT_NAME } from "@/Constants";
+import { JWT_ALGORITHM, JWT_SECRET_KEY, PROJECT_NAME, REFRESH_TOKEN_NAME } from "@/Constants";
 import Encryptor from "@/core/security/Encryptor";
 import TypeUtils from "@/core/utils/TypeUtils";
 
@@ -21,8 +21,15 @@ class Auth {
             case "http":
                 {
                     token = (paramsOrHeaders as http.IncomingHttpHeaders).authorization;
+                    const [bearer, accessToken] = (token ?? "").split(" ");
+                    if (bearer?.toLowerCase() !== "bearer" || !accessToken) {
+                        return null;
+                    }
+
+                    token = accessToken;
+
                     const cookies = cookie.parse((paramsOrHeaders as http.IncomingHttpHeaders).cookie ?? "");
-                    const refreshToken = cookies.refresh_token;
+                    const refreshToken = cookies[REFRESH_TOKEN_NAME]?.replace(/"/g, "");
                     if (!Auth.#compareTokens(token, refreshToken)) {
                         return null;
                     }

@@ -15,7 +15,6 @@ const BotAvatar = memo(() => {
     const avatar = bot.useField("avatar");
     const { navigateRef } = useAppSetting();
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
-    const isAvatarDeletedRef = useRef(false);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
@@ -92,7 +91,6 @@ const BotAvatar = memo(() => {
                 notInForm
                 initialAvatarUrl={avatar}
                 dataTransferRef={dataTransferRef}
-                isDeletedRef={isAvatarDeletedRef}
                 isValidating={isValidating}
                 avatarSize={{
                     initial: "lg",

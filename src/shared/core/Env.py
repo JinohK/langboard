@@ -118,10 +118,6 @@ class Env:
         return int(self.__get_from_cache("JWT_RT_EXPIRATION", 30))  # 30 days for default
 
     @property
-    def ACCESS_TOKEN_NAME(self) -> str:
-        return f"access_token_{self.PROJECT_SHORT_NAME}"
-
-    @property
     def REFRESH_TOKEN_NAME(self) -> str:
         return f"refresh_token_{self.PROJECT_SHORT_NAME}"
 

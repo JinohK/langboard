@@ -32,6 +32,7 @@ export const ENVIRONMENT = getEnv({ key: "ENVIRONMENT", defaultValue: "local", a
 export const IS_EXECUTABLE = getEnv<string>({ key: "IS_EXECUTABLE", defaultValue: "false" }) == "true";
 
 export const PROJECT_NAME = getEnv({ key: "PROJECT_NAME" });
+export const PROJECT_SHORT_NAME = getEnv({ key: "PROJECT_SHORT_NAME", defaultValue: PROJECT_NAME });
 
 export const BASE_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = path.join(BASE_DIR, "..", "..", "..");
@@ -82,6 +83,8 @@ export const READONLY_DATABASE_URL = getEnv<string>({
 });
 export const DB_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TIMEOUT" }));
 export const DB_TCP_USER_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TCP_USER_TIMEOUT" }));
+
+export const REFRESH_TOKEN_NAME = `refresh_token_${PROJECT_SHORT_NAME}`;
 
 // SMTP
 export const MAIL_FROM = getEnv<string>({ key: "MAIL_FROM" });
