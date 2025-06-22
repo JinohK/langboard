@@ -23,12 +23,6 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             user_id: context.client.user.id,
         });
 
-        const isAborted = BotRunner.createAbortedChecker(chatType, task_id);
-
-        if (isAborted()) {
-            return;
-        }
-
         const stream = context.client.stream(ESocketTopic.None, NONE_TOPIC_ID, `${eventPrefix}:editor:chat:stream`);
         stream.start();
         let message = "";
@@ -37,14 +31,15 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             return;
         }
 
-        if (isAborted()) {
-            return;
-        }
-
         if (TypeUtils.isString(response)) {
             stream.buffer({ message: response });
             message = response;
             stream.end({ message });
+            return;
+        }
+
+        const isAborted = BotRunner.createAbortedChecker(chatType, task_id);
+        if (isAborted()) {
             return;
         }
 
@@ -100,17 +95,11 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             ...context.data,
         });
 
-        const isAborted = BotRunner.createAbortedChecker(copilotType, task_id);
-
         const sharedData = {
             topic: ESocketTopic.None,
             topic_id: NONE_TOPIC_ID,
             event: `${eventPrefix}:editor:copilot:receive:${task_id}`,
         };
-
-        if (isAborted()) {
-            return;
-        }
 
         if (!response) {
             context.client.send({
@@ -125,6 +114,11 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
                 ...sharedData,
                 data: { text: response },
             });
+            return;
+        }
+
+        const isAborted = BotRunner.createAbortedChecker(copilotType, task_id);
+        if (isAborted()) {
             return;
         }
 

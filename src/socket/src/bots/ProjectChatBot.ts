@@ -8,9 +8,6 @@ class ProjectChatBot extends BaseBot {
     static get BOT_TYPE(): EInternalBotType {
         return EInternalBotType.ProjectChat;
     }
-    static get BOT_AVATAR(): string | null {
-        return null;
-    }
 
     public async run(data: Record<string, any>) {
         return await this.runLangflow(

@@ -207,9 +207,6 @@ class ProjectColumnService(BaseService):
 
         current_time = SafeDateTime.now()
 
-        cards_to_archive_query = (
-            SqlBuilder.select.column(Card.column("id")).where(Card.column("project_column_id") == column.id)
-        ).cte("cards_to_archive")
         with DbSession.use(readonly=False) as db:
             db.exec(
                 SqlBuilder.update.table(Card)
@@ -217,19 +214,22 @@ class ProjectColumnService(BaseService):
                 .where(Card.column("project_column_id") == archive_column.id)
             )
 
-            cards_to_archive_query = (
-                SqlBuilder.select.column(Card.column("id")).where(Card.column("project_column_id") == column.id)
-            ).cte("cards_to_archive")
+            ordered_cards_cte = (
+                SqlBuilder.select.columns(
+                    Card.column("id"), (func.row_number().over(order_by=Card.column("order")) - 1).label("new_order")
+                )
+                .where(Card.column("project_column_id") == column.id)
+                .cte("ordered_cards")
+            )
 
             db.exec(
                 SqlBuilder.update.table(Card)
-                .filter(Card.column("id") == cards_to_archive_query.c.id)
+                .filter(Card.column("id") == ordered_cards_cte.c.id)
                 .values(
                     {
+                        Card.column("order"): ordered_cards_cte.c.new_order,
                         Card.column("project_column_id"): archive_column.id,
                         Card.column("archived_at"): current_time,
-                        Card.column("order"): func.row_number().over(order_by=Card.column("order")).label("new_order")
-                        - 1,
                     }
                 )
             )

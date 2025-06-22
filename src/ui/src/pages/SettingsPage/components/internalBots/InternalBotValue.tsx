@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Floating, IconComponent, Input, ScrollArea, Textarea, Toast } from "@/components/base";
+import { Alert, Box, Button, Flex, Floating, IconComponent, Input, ScrollArea, Textarea, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -74,6 +74,11 @@ const InternalBotValue = memo(() => {
 
     return (
         <Box w="full">
+            {platformRunningType === InternalBotModel.EInternalBotPlatformRunningType.FlowJson && (
+                <Alert variant="warning" icon="alert-triangle" title={t("common.Warning")} className="mb-2">
+                    {t("settings.Flow json is only supported in the internal flows server.")}
+                </Alert>
+            )}
             <InternalBotValueProxy value={value} valueType={valueType} newValueRef={newValueRef} isValidating={isValidating} change={change} />
         </Box>
     );

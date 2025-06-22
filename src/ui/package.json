@@ -115,7 +115,6 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.0",
     "react-dropzone": "^14.3.8",
-    "react-error-boundary": "^6.0.0",
     "react-flagkit": "^2.0.4",
     "react-i18next": "^15.5.1",
     "react-intersection-observer": "^9.16.0",

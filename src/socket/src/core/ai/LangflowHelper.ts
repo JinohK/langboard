@@ -107,3 +107,7 @@ export const createLangflowRequestModel = ({ botSetting, headers, requestModel, 
         },
     };
 };
+
+export const parseLangflowResponse = (response: { session_id: string; outputs: Record<string, any>[] }): string => {
+    return response.outputs?.[0]?.outputs?.[0]?.results?.message?.data?.text ?? "";
+};

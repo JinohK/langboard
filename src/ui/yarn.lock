@@ -422,11 +422,6 @@
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.27.6.tgz#ec4070a04d76bae8ddbb10770ba55714a417b7c6"
   integrity sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==
 
-"@babel/runtime@^7.12.5", "@babel/runtime@^7.27.1":
-  version "7.27.1"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.27.1.tgz#9fce313d12c9a77507f264de74626e87fd0dc541"
-  integrity sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==
-
 "@babel/runtime@^7.20.13", "@babel/runtime@^7.25.0", "@babel/runtime@^7.9.2":
   version "7.26.0"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.26.0.tgz#8600c2f595f277c60815256418b85356a65173c1"
@@ -440,6 +435,11 @@
   integrity sha512-VBj9MYyDb9tuLq7yzqjgzt6Q+IBQLrGZfdjOekyEirZPHxXWoTSGUTMrpsfi58Up73d13NfYLv8HT9vmznjzhQ==
   dependencies:
     regenerator-runtime "^0.14.0"
+
+"@babel/runtime@^7.27.1":
+  version "7.27.1"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.27.1.tgz#9fce313d12c9a77507f264de74626e87fd0dc541"
+  integrity sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==
 
 "@babel/runtime@^7.3.1":
   version "7.26.7"
@@ -5778,13 +5778,6 @@ react-dropzone@^14.3.8:
     attr-accept "^2.2.4"
     file-selector "^2.1.0"
     prop-types "^15.8.1"
-
-react-error-boundary@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/react-error-boundary/-/react-error-boundary-6.0.0.tgz#a9e552146958fa77d873b587aa6a5e97544ee954"
-  integrity sha512-gdlJjD7NWr0IfkPlaREN2d9uUZUlksrfOx7SX62VRerwXbMY6ftGCIZua1VG1aXFNOimhISsTq+Owp725b9SiA==
-  dependencies:
-    "@babel/runtime" "^7.12.5"
 
 react-fast-compare@^3.0.1:
   version "3.2.2"

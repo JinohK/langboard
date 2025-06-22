@@ -3,6 +3,7 @@ import EApiErrorCode from "@/core/server/ApiErrorCode";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
 import EHttpStatus from "@/core/server/EHttpStatus";
 import Routes from "@/core/server/Routes";
+import Logger from "@/core/utils/Logger";
 import { EInternalBotType } from "@/models/InternalBotSetting";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 import { IncomingForm } from "formidable";
@@ -36,7 +37,7 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
 
         return JsonResponse({ file_path: filePath }, EHttpStatus.HTTP_201_CREATED);
     } catch (error) {
-        console.error(error);
+        Logger.error(error);
         return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
     }
 });

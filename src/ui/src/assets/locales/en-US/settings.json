@@ -48,6 +48,7 @@
   "Internal bot API URL": "Internal bot API URL",
   "Internal bot API key": "Internal bot API key",
   "Internal bot value": "Internal bot value",
+  "Flow json is only supported in the internal flows server.": "Flow json is only supported in the internal flows server.",
   "botTypes": {
     "project_chat": "Project Chat",
     "editor_chat": "Editor Chat",

@@ -8,9 +8,6 @@ class EditorCopilotBot extends BaseBot {
     static get BOT_TYPE(): EInternalBotType {
         return EInternalBotType.EditorCopilot;
     }
-    static get BOT_AVATAR(): string | null {
-        return null;
-    }
 
     public async run(data: Record<string, any>) {
         return await this.runLangflow(
@@ -18,6 +15,9 @@ class EditorCopilotBot extends BaseBot {
                 message: data.prompt,
                 projectUID: data.project_uid,
                 userId: data.user_id,
+                inputType: "chat",
+                outputType: "chat",
+                tweaks: { Prompt: { prompt: data.system } },
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
             false
@@ -31,6 +31,9 @@ class EditorCopilotBot extends BaseBot {
                 message: data.prompt,
                 projectUID: data.project_uid,
                 userId: data.user_id,
+                inputType: "chat",
+                outputType: "chat",
+                tweaks: { Prompt: { prompt: data.system } },
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
             false

@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createLangflowRequestModel } from "@/core/ai/LangflowHelper";
+import { createLangflowRequestModel, parseLangflowResponse } from "@/core/ai/LangflowHelper";
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
 import { TBigIntString } from "@/core/db/BaseModel";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/server/EHttpStatus";
+import Logger from "@/core/utils/Logger";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
 import InternalBotSetting, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBotSetting";
 import formidable from "formidable";
@@ -154,7 +155,7 @@ abstract class BaseBot {
                 throw new Error("Langflow request failed");
             }
 
-            result = response.data;
+            result = parseLangflowResponse(response.data);
         } catch {
             result = null;
         } finally {
@@ -200,7 +201,7 @@ abstract class BaseBot {
 
             return response.data.path ?? null;
         } catch (error) {
-            console.error(error);
+            Logger.error(error);
             return null;
         }
     }

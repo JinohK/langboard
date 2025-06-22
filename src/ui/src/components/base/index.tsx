@@ -1,4 +1,5 @@
 export * as Accordion from "@/components/base/Accordion";
+export { default as Alert, AlertVariants } from "@/components/base/Alert";
 export { default as AnimatedEmoji } from "@/components/base/AnimatedEmoji";
 export * as AnimatedList from "@/components/base/AnimatedList";
 export { default as AutoComplete } from "@/components/base/AutoComplete";
