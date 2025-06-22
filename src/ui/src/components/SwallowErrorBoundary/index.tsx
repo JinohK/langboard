@@ -1,5 +1,6 @@
 import { Toast } from "@/components/base";
 import React from "react";
+import { t } from "i18next";
 
 interface TProps {
     children?: React.ReactNode;
@@ -20,7 +21,7 @@ class SwallowErrorBoundary extends React.Component<TProps, TState> {
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-        Toast.Add.error("An error occured. Please report this issue to the developers that how you got this error.");
+        Toast.Add.error(t("errors.A rendering error occurred. Please report this issue to the developers that how you got this error."));
         console.error(error, errorInfo);
     }
 

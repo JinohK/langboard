@@ -4,6 +4,7 @@
   "Network error": "Network error",
   "Malformed request": "Malformed request",
   "Forbidden": "Forbidden",
+  "A rendering error occurred. Please report this issue to the developers that how you got this error.": "A rendering error occurred. Please report this issue to the developers that how you got this error.",
   "Email service is temporarily unavailable. Please try again later.": "Email service is temporarily unavailable. Please try again later.",
   "Server has been temporarily disabled. Please try again later.": "Server has been temporarily disabled. Please try again later.",
   "Download failed.": "Download failed.",
