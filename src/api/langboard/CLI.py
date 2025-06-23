@@ -34,7 +34,7 @@ def _run_app(options: RunCommandOptions):
 
     DbUpgradeCommand().execute(DbUpgradeCommandOptions())
 
-    _init_internal_bot_settings()
+    _init_internal_bots()
 
     app_config = FastAPIAppConfig(APP_CONFIG_FILE)
     app_config.create(
@@ -53,19 +53,20 @@ def _run_app(options: RunCommandOptions):
         return
 
 
-def _init_internal_bot_settings():
+def _init_internal_bots():
     from core.db import DbSession, SqlBuilder
-    from models import InternalBotSetting
-    from models.InternalBotSetting import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
+    from models import InternalBot
+    from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
     from .resources.Resource import get_resource_path
 
     settings = []
     with DbSession.use(readonly=True) as db:
         result = db.exec(
-            SqlBuilder.select.column(InternalBotSetting.bot_type).where(
-                InternalBotSetting.column("bot_type").in_(
+            SqlBuilder.select.column(InternalBot.bot_type).where(
+                InternalBot.column("bot_type").in_(
                     [InternalBotType.ProjectChat, InternalBotType.EditorChat, InternalBotType.EditorCopilot]
                 )
+                & (InternalBot.is_default == True)  # noqa: E712
             )
         )
         settings = result.all()
@@ -83,12 +84,13 @@ def _init_internal_bot_settings():
                 continue
 
             display_name = bot_type.value.replace("_", " ").title()
-            setting = InternalBotSetting(
+            setting = InternalBot(
                 bot_type=bot_type,
                 display_name=display_name,
                 platform=InternalBotPlatform.Langflow,
                 platform_running_type=InternalBotPlatformRunningType.FlowJson,
                 url=Env.DEFAULT_LANGFLOW_URL,
+                is_default=True,
                 value=default_flow_json,
             )
             db.insert(setting)

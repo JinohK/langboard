@@ -52,6 +52,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
         if (!isUploading && isSending) {
             cancelChat({
+                project_uid: projectUID,
                 task_id: chatTaskIdRef.current,
             });
             return;

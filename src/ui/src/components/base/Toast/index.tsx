@@ -53,6 +53,7 @@ const Area = ({ ...props }: AreaProps) => {
                     warning: cn(sharedToastClassNames, "group-[.toaster]:bg-yellow group-[.toaster]:text-yellow-600"),
                     info: cn(sharedToastClassNames, "group-[.toaster]:bg-blue group-[.toaster]:text-blue-600"),
                     icon: "mt-0.5",
+                    content: "max-w-[calc(100%_-_theme(spacing.12))] group-data-[type=loading]:max-w-full",
                 },
             }}
             icons={{
@@ -68,7 +69,13 @@ const ActionList = ({ isLast = false, children }: { isLast?: bool; children: Rea
 );
 const ToastCloseButton = ({ id }: { id: string | number }) => {
     return (
-        <Button type="button" variant="ghost" className="absolute right-3 ml-auto size-6 p-1" size="icon" onClick={() => toast.dismiss(id)}>
+        <Button
+            type="button"
+            variant="ghost"
+            className={cn("absolute right-3 ml-auto size-6 p-1 group-data-[type=loading]:hidden")}
+            size="icon"
+            onClick={() => toast.dismiss(id)}
+        >
             <IconComponent icon="x" size="4" />
         </Button>
     );

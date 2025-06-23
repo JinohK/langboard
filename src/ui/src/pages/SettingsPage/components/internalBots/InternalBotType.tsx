@@ -11,7 +11,7 @@ const InternalBotBotType = memo(() => {
     return (
         <Box textSize="lg" weight="semibold">
             <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
-                {t(`settings.botTypes.${botType}`)}
+                {t(`internalBot.botTypes.${botType}`)}
             </Box>
         </Box>
     );

@@ -1,3 +1,4 @@
+import useInternalBotSettingDefaultChangedHandlers from "@/controllers/socket/settings/internalBots/useInternalBotSettingDefaultChangedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import { convertSafeEnum, convertServerFileURL } from "@/core/utils/StringUtils";
@@ -26,6 +27,7 @@ export interface Interface extends IBaseModel {
     url: string;
     api_key: string;
     value: string;
+    is_default: bool;
     avatar?: string;
 }
 
@@ -36,6 +38,10 @@ class InternalBotModel extends BaseModel<Interface> {
 
     constructor(model: Record<string, unknown>) {
         super(model);
+
+        this.subscribeSocketEvents([useInternalBotSettingDefaultChangedHandlers], {
+            internalBot: this,
+        });
     }
 
     public static convertModel(model: Interface): Interface {
@@ -105,6 +111,13 @@ class InternalBotModel extends BaseModel<Interface> {
     }
     public set value(value: string) {
         this.update({ value: value });
+    }
+
+    public get is_default() {
+        return this.getValue("is_default");
+    }
+    public set is_default(value: boolean) {
+        this.update({ is_default: value });
     }
 
     public get avatar() {

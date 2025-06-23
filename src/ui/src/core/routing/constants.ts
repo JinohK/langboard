@@ -66,6 +66,7 @@ export const ROUTES = {
         CREATE_BOT: "/settings/bots/create",
         BOT_DETAILS: (uid: string) => `/settings/bots/${uid}`,
         INTERNAL_BOTS: "/settings/internal-bots",
+        CREATE_INTERNAL_BOT: "/settings/internal-bots/create",
         INTERNAL_BOT_DETAILS: (uid: string) => `/settings/internal-bots/${uid}`,
         GLOBAL_RELATIONSHIPS: "/settings/global-relationships",
         CREATE_GLOBAL_RELATIONSHIP: "/settings/global-relationships/create",

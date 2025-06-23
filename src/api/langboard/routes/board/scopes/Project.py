@@ -29,3 +29,8 @@ class UpdateProjectDetailsForm(BaseFormModel):
 @form_model
 class UpdateRolesForm(BaseFormModel):
     roles: list[ProjectRoleAction]
+
+
+@form_model
+class ChangeInternalBotForm(BaseFormModel):
+    internal_bot_uid: str

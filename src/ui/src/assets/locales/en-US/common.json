@@ -23,6 +23,7 @@
   "Or": "Or",
   "Copy": "Copy",
   "Send": "Send",
+  "Refresh": "Refresh",
   "Use this template": "Use this template",
   "Adding...": "Adding...",
   "Creating...": "Creating...",
@@ -44,6 +45,9 @@
   "No message": "No message",
   "Coming soon": "Coming soon",
   "Warning": "Warning",
+  "JSON Viewer": "JSON Viewer",
+  "JSON Editor": "JSON Editor",
+  "default": "default",
   "avatarActions": {
     "Create & assign a card": "Create & assign a card",
     "View cards": "View cards",

@@ -32,6 +32,7 @@ import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDel
 import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 import useBoardChatTemplateCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatTemplateCreatedHandlers";
+import { InternalBotModel } from "@/core/models";
 
 export enum ERoleAction {
     Read = "read",
@@ -56,6 +57,7 @@ export interface IStore extends Interface {
     columns: ProjectColumn.Interface[];
     members: User.Interface[];
     bots: BotModel.Interface[];
+    internal_bots: InternalBotModel.Interface[];
     current_auth_role_actions: TRoleActions[];
     invited_members: User.Interface[];
     labels: ProjectLabel.Interface[];
@@ -74,6 +76,7 @@ class Project extends BaseModel<IStore> {
             columns: ProjectColumn.Model.MODEL_NAME,
             members: User.Model.MODEL_NAME,
             bots: BotModel.Model.MODEL_NAME,
+            internal_bots: InternalBotModel.Model.MODEL_NAME,
             invited_members: User.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
         };
@@ -229,6 +232,13 @@ class Project extends BaseModel<IStore> {
     }
     public set bots(value: (BotModel.TModel | BotModel.Interface)[]) {
         this.update({ bots: value });
+    }
+
+    public get internal_bots(): InternalBotModel.TModel[] {
+        return this.getForeignModels("internal_bots");
+    }
+    public set internal_bots(value: (InternalBotModel.TModel | InternalBotModel.Interface)[]) {
+        this.update({ internal_bots: value });
     }
 
     public get current_auth_role_actions() {

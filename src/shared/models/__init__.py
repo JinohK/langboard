@@ -16,10 +16,11 @@ from .Checkitem import Checkitem
 from .CheckitemTimerRecord import CheckitemTimerRecord
 from .Checklist import Checklist
 from .GlobalCardRelationshipType import GlobalCardRelationshipType
-from .InternalBotSetting import InternalBotSetting
+from .InternalBot import InternalBot
 from .Project import Project
 from .ProjectActivity import ProjectActivity
 from .ProjectAssignedBot import ProjectAssignedBot
+from .ProjectAssignedInternalBot import ProjectAssignedInternalBot
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectColumn import ProjectColumn
 from .ProjectInvitation import ProjectInvitation
@@ -45,7 +46,6 @@ __all__ = [
     "AppSetting",
     "Bot",
     "BotSchedule",
-    "InternalBotSetting",
     "BotTrigger",
     "Card",
     "CardAssignedProjectLabel",
@@ -61,9 +61,11 @@ __all__ = [
     "CheckitemTimerRecord",
     "Checklist",
     "GlobalCardRelationshipType",
+    "InternalBot",
     "Project",
     "ProjectActivity",
     "ProjectAssignedBot",
+    "ProjectAssignedInternalBot",
     "ProjectAssignedUser",
     "ProjectColumn",
     "ProjectInvitation",

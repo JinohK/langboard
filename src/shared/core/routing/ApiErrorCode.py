@@ -14,6 +14,7 @@ class ApiErrorCode(Enum):
     EX1003 = "The email is already in use."
     EX1004 = "The account is already activated."
     EX3001 = "Bot uname already exists."
+    EX3002 = "Default internal bot cannot be deleted."
 
     # Permission Errors
     PE1001 = "Not enough permissions to access this endpoint."
@@ -50,10 +51,11 @@ class ApiErrorCode(Enum):
     NF2018 = "Project, card, or metadata not found."
     NF2019 = "Project, wiki, or metadata not found."
     NF2020 = "Project or chat template not found."
+    NF2021 = "Project or internal bot not found."
     NF3001 = "Bot not found."
     NF3002 = "Settings not found."
     NF3003 = "Global relationships not found."
-    NF3004 = "Internal bot setting not found."
+    NF3004 = "Internal bot not found."
 
     # Validation Errors
     VA0000 = "Invalid request."

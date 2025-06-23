@@ -6,6 +6,7 @@ from .Check import CardChecklistNotifyForm, CardCheckRelatedForm, CardifyCheckit
 from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
 from .Project import (
+    ChangeInternalBotForm,
     ChatHistoryPagination,
     InviteProjectMemberForm,
     ProjectInvitationForm,
@@ -50,4 +51,5 @@ __all__ = [
     "WikiForm",
     "ChangeWikiDetailsForm",
     "ChangeWikiPublicForm",
+    "ChangeInternalBotForm",
 ]

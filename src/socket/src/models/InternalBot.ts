@@ -16,8 +16,8 @@ export enum EInternalBotPlatformRunningType {
     FlowJson = "flow_json",
 }
 
-@Entity({ name: "internal_bot_setting" })
-class InternalBotSetting extends BaseModel {
+@Entity({ name: "internal_bot" })
+class InternalBot extends BaseModel {
     @Column({ type: "varchar", enum: EInternalBotType })
     public bot_type!: EInternalBotType;
 
@@ -51,34 +51,39 @@ class InternalBotSetting extends BaseModel {
         };
     }
 
-    public static async findByType(type: EInternalBotType): Promise<InternalBotSetting | null> {
-        const internalBotSetting = await InternalBotSetting.createQueryBuilder()
-            .select([
-                "cast(id as text) as converted_id",
-                "bot_type",
-                "display_name",
-                "platform",
-                "platform_running_type",
-                "url",
-                "api_key",
-                `CASE WHEN platform_running_type = '${EInternalBotPlatformRunningType.FlowJson}' THEN NULL ELSE value END as value`,
-                "avatar",
-                "created_at",
-                "updated_at",
-            ])
+    public static getSelectAllQuery(alias?: string): string[] {
+        const prefix = alias ? `${alias}.` : "";
+        return [
+            `cast(${prefix}id as text) as converted_id`,
+            `${prefix}bot_type as bot_type`,
+            `${prefix}display_name as display_name`,
+            `${prefix}platform as platform`,
+            `${prefix}platform_running_type as platform_running_type`,
+            `${prefix}url as url`,
+            `${prefix}api_key as api_key`,
+            `CASE WHEN ${prefix}platform_running_type = '${EInternalBotPlatformRunningType.FlowJson}' THEN NULL ELSE ${prefix}value END as value`,
+            `${prefix}avatar as avatar`,
+            `${prefix}created_at as created_at`,
+            `${prefix}updated_at as updated_at`,
+        ];
+    }
+
+    public static async findByType(type: EInternalBotType): Promise<InternalBot | null> {
+        const internalBot = await InternalBot.createQueryBuilder()
+            .select(InternalBot.getSelectAllQuery())
             .where("bot_type = :type", { type })
             .getRawOne();
 
-        if (!internalBotSetting) {
+        if (!internalBot) {
             return null;
         }
 
-        internalBotSetting.id = internalBotSetting.converted_id;
+        internalBot.id = internalBot.converted_id;
 
-        return InternalBotSetting.create({
-            ...internalBotSetting,
+        return InternalBot.create({
+            ...internalBot,
         });
     }
 }
 
-export default InternalBotSetting;
+export default InternalBot;

@@ -2,24 +2,24 @@
 import { getBot } from "@/core/ai/BaseBot";
 import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/server/ESocketTopic";
 import ISocketClient from "@/core/server/ISocketClient";
-import InternalBotSetting, { EInternalBotType } from "@/models/InternalBotSetting";
+import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 
 class BotRunner {
-    public static async run(botType: EInternalBotType, data: Record<string, any>) {
-        const bot = getBot(botType);
+    public static async run(internalBot: InternalBot, data: Record<string, any>) {
+        const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.run(data);
+        return await bot.run(internalBot, data);
     }
 
-    public static async runAbortable(botType: EInternalBotType, task_id: string, data: Record<string, any>) {
-        const bot = getBot(botType);
+    public static async runAbortable(internalBot: InternalBot, task_id: string, data: Record<string, any>) {
+        const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.runAbortable(data, task_id);
+        return await bot.runAbortable(internalBot, data, task_id);
     }
 
     public static async abort(botType: EInternalBotType, task_id: string, client?: ISocketClient): Promise<void> {
@@ -38,20 +38,20 @@ class BotRunner {
         });
     }
 
-    public static async isAvailable(botType: EInternalBotType): Promise<InternalBotSetting | null> {
-        const bot = getBot(botType);
+    public static async isAvailable(internalBot: InternalBot): Promise<bool> {
+        const bot = getBot(internalBot.bot_type);
         if (!bot) {
-            return null;
+            return false;
         }
-        return await bot.isAvailable();
+        return await bot.isAvailable(internalBot);
     }
 
-    public static async uploadFile(botType: EInternalBotType, file: formidable.File): Promise<string | null> {
-        const bot = getBot(botType);
+    public static async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+        const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.uploadFile(file);
+        return await bot.uploadFile(internalBot, file);
     }
 
     public static isAborted(botType: EInternalBotType, task_id: string): bool {

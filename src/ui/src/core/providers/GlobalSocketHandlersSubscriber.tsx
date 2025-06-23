@@ -1,6 +1,7 @@
 import useBotCreatedHandlers from "@/controllers/socket/global/useBotCreatedHandlers";
 import useGlobalRelationshipCreatedHandlers from "@/controllers/socket/global/useGlobalRelationshipCreatedHandlers";
 import useInternalBotCreatedHandlers from "@/controllers/socket/global/useInternalBotCreatedHandlers";
+import useInternalBotDeletedHandlers from "@/controllers/socket/global/useInternalBotDeletedHandlers";
 import useInternalBotUpdatedHandlers from "@/controllers/socket/global/useInternalBotUpdatedHandlers";
 import useSelectedGlobalRelationshipsDeletedHandlers from "@/controllers/socket/global/useSelectedGlobalRelationshipsDeletedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
@@ -20,6 +21,7 @@ export const GlobalSocketHandlersSubscriber = ({ children }: IGlobalSocketHandle
     const selectedGlobalRelationshipsDeletedHandlers = useSelectedGlobalRelationshipsDeletedHandlers({});
     const internalBotCreatedHandlers = useInternalBotCreatedHandlers({});
     const internalBotUpdatedHandlers = useInternalBotUpdatedHandlers({});
+    const internalBotDeletedHandlers = useInternalBotDeletedHandlers({});
 
     useSwitchSocketHandlers({
         socket,
@@ -29,6 +31,7 @@ export const GlobalSocketHandlersSubscriber = ({ children }: IGlobalSocketHandle
             selectedGlobalRelationshipsDeletedHandlers,
             internalBotCreatedHandlers,
             internalBotUpdatedHandlers,
+            internalBotDeletedHandlers,
         ],
     });
 

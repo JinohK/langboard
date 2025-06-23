@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BaseBot, { registerBot } from "@/core/ai/BaseBot";
 import SnowflakeID from "@/core/db/SnowflakeID";
-import { EInternalBotType } from "@/models/InternalBotSetting";
+import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 
 class ProjectChatBot extends BaseBot {
@@ -9,8 +9,9 @@ class ProjectChatBot extends BaseBot {
         return EInternalBotType.ProjectChat;
     }
 
-    public async run(data: Record<string, any>) {
+    public async run(internalBot: InternalBot, data: Record<string, any>) {
         return await this.runLangflow(
+            internalBot,
             {
                 message: data.message,
                 projectUID: data.project_uid,
@@ -24,8 +25,9 @@ class ProjectChatBot extends BaseBot {
         );
     }
 
-    public async runAbortable(data: Record<string, any>, taskID: string) {
+    public async runAbortable(internalBot: InternalBot, data: Record<string, any>, taskID: string) {
         return await this.runLangflowAbortable(
+            internalBot,
             taskID,
             {
                 message: data.message,
@@ -40,12 +42,12 @@ class ProjectChatBot extends BaseBot {
         );
     }
 
-    public async isAvailable() {
-        return await this.isLangflowAvailable();
+    public async isAvailable(internalBot: InternalBot) {
+        return await this.isLangflowAvailable(internalBot);
     }
 
-    public async uploadFile(file: formidable.File): Promise<string | null> {
-        return await this.uploadFileToLangflow(file);
+    public async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+        return await this.uploadFileToLangflow(internalBot, file);
     }
 }
 

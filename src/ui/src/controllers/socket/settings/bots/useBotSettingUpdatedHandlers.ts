@@ -1,5 +1,5 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { StringCase } from "@/core/utils/StringUtils";
@@ -21,7 +21,7 @@ export interface IUseBotSettingUpdatedHandlersProps extends IBaseUseSocketHandle
 const useBotSettingUpdatedHandlers = ({ callback, bot }: IUseBotSettingUpdatedHandlersProps) => {
     return useSocketHandler<{}, IBotSettingUpdatedRawResponse>({
         topic: ESocketTopic.AppSettings,
-        topicId: "all",
+        topicId: GLOBAL_TOPIC_ID,
         eventKey: `bot-setting-updated-${bot.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.UPDATED,

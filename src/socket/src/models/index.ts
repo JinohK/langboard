@@ -2,8 +2,9 @@ import AppSetting from "@/models/AppSetting";
 import Bot from "@/models/Bot";
 import Card from "@/models/Card";
 import ChatHistory from "@/models/ChatHistory";
-import InternalBotSetting from "@/models/InternalBotSetting";
+import InternalBot from "@/models/InternalBot";
 import ProjectAssignedBot from "@/models/ProjectAssignedBot";
+import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 import ProjectRole from "@/models/ProjectRole";
 import ProjectWiki from "@/models/ProjectWiki";
@@ -17,9 +18,10 @@ export const ALL_ENTITIES = [
     Bot,
     Card,
     ChatHistory,
-    InternalBotSetting,
+    InternalBot,
     ProjectAssignedUser,
     ProjectAssignedBot,
+    ProjectAssignedInternalBot,
     ProjectRole,
     ProjectWiki,
     ProjectWikiAssignedUser,

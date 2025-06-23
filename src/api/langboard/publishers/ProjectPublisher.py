@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 from core.routing import SocketTopic
+from core.types import SnowflakeID
 from core.utils.decorators import staticclass
 from models import Bot, ChatTemplate, Project, User
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
@@ -161,3 +162,16 @@ class ProjectPublisher(BaseSocketPublisher):
         )
 
         await ProjectPublisher.put_dispather({}, publish_model)
+
+    @staticmethod
+    async def internal_bot_changed(project: Project, internal_bot_id: SnowflakeID):
+        topic_id = project.get_uid()
+        model = {"internal_bot_uid": internal_bot_id.to_short_code()}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.Board,
+            topic_id=topic_id,
+            event=f"board:assigned-internal-bot:changed:{topic_id}",
+            data_keys=list(model.keys()),
+        )
+
+        await ProjectPublisher.put_dispather(model, publish_model)

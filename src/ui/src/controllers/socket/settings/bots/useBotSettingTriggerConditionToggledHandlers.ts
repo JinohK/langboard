@@ -1,5 +1,5 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
@@ -17,7 +17,7 @@ export interface IUseBotSettingTriggerConditionToggledHandlersProps extends IBas
 const useBotSettingTriggerConditionToggledHandlers = ({ callback, bot }: IUseBotSettingTriggerConditionToggledHandlersProps) => {
     return useSocketHandler<{}, IBotSettingTriggerConditionToggledRawResponse>({
         topic: ESocketTopic.AppSettings,
-        topicId: "all",
+        topicId: GLOBAL_TOPIC_ID,
         eventKey: `bot-setting-trigger-condition-predefined-${bot.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.TRIGGER_CONDITION_TOGGLED,

@@ -119,5 +119,5 @@ class Service(ServiceFactory):
         return self._create_or_get_service(factory.MetadataService)
 
     @property
-    def internal_bot_setting(self):
-        return self._create_or_get_service(factory.InternalBotSettingService)
+    def internal_bot(self):
+        return self._create_or_get_service(factory.InternalBotService)

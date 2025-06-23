@@ -2,12 +2,12 @@ from logging.config import fileConfig
 from typing import Any
 from alembic import context
 from alembic.autogenerate.api import AutogenContext
+from core.db import BaseSqlModel
 from core.db.DbConfigHelper import DbConfigHelper  # type: ignore
 from core.Env import Env  # type: ignore
 from langboard.core.utils import ModelUtils
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection, engine_from_config
-from sqlmodel import SQLModel
 
 
 ModelUtils.ensure_models_imported()
@@ -27,7 +27,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = SQLModel.metadata
+target_metadata = BaseSqlModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

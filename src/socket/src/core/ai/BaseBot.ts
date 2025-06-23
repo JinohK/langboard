@@ -6,7 +6,7 @@ import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/server/EHttpStatus";
 import Logger from "@/core/utils/Logger";
 import { convertSafeEnum } from "@/core/utils/StringUtils";
-import InternalBotSetting, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBotSetting";
+import InternalBot, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 import fs from "fs";
 
@@ -30,10 +30,14 @@ abstract class BaseBot {
         this.#abortableTasks = new Map();
     }
 
-    public abstract run(data: Record<string, any>): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
-    public abstract runAbortable(data: Record<string, any>, taskID: string): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
-    public abstract isAvailable(): Promise<InternalBotSetting | null>;
-    public abstract uploadFile(file: formidable.File): Promise<string | null>;
+    public abstract run(internalBot: InternalBot, data: Record<string, any>): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
+    public abstract runAbortable(
+        internalBot: InternalBot,
+        data: Record<string, any>,
+        taskID: string
+    ): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
+    public abstract isAvailable(internalBot: InternalBot): Promise<bool>;
+    public abstract uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null>;
 
     public async abort(taskID: string): Promise<void> {
         const task = this.#abortableTasks.get(taskID);
@@ -55,32 +59,31 @@ abstract class BaseBot {
         return task.signal.aborted;
     }
 
-    protected async isLangflowAvailable(): Promise<InternalBotSetting | null> {
-        const botSetting = await this.getBotSetting();
-        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
-            return null;
+    protected async isLangflowAvailable(internalBot: InternalBot): Promise<bool> {
+        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
+            return false;
         }
 
-        const healthCheck = await api.get(`${botSetting.url}/health`, {
-            headers: await this.getBotRequestHeaders(botSetting),
+        const healthCheck = await api.get(`${internalBot.url}/health`, {
+            headers: await this.getBotRequestHeaders(internalBot),
         });
 
-        return healthCheck.status === 200 ? botSetting : null;
+        return healthCheck.status === 200;
     }
 
     protected async runLangflow(
+        internalBot: InternalBot,
         requestModel: ILangflowRequestModel,
         useStream: bool = false
     ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        const botSetting = await this.getBotSetting();
-        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
+        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
-        const headers = await this.getBotRequestHeaders(botSetting);
+        const headers = await this.getBotRequestHeaders(internalBot);
 
         const apiRequestModel = createLangflowRequestModel({
-            botSetting,
+            internalBot,
             headers,
             requestModel,
             useStream,
@@ -110,19 +113,19 @@ abstract class BaseBot {
     }
 
     protected async runLangflowAbortable(
+        internalBot: InternalBot,
         taskID: string,
         requestModel: ILangflowRequestModel,
         useStream: bool = false
     ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        const botSetting = await this.getBotSetting();
-        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
+        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
-        const headers = await this.getBotRequestHeaders(botSetting);
+        const headers = await this.getBotRequestHeaders(internalBot);
 
         const apiRequestModel = createLangflowRequestModel({
-            botSetting,
+            internalBot,
             headers,
             requestModel,
             useStream,
@@ -165,23 +168,22 @@ abstract class BaseBot {
         return result;
     }
 
-    protected async uploadFileToLangflow(file: formidable.File): Promise<string | null> {
+    protected async uploadFileToLangflow(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
         const filename = file.originalFilename || file.newFilename;
         if (!filename || !file.size) {
             return null;
         }
 
-        const botSetting = await this.getBotSetting();
-        if (!botSetting || botSetting.platform !== EInternalBotPlatform.Langflow) {
+        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
             return null;
         }
 
         const headers = {
             "Content-Type": "multipart/form-data",
-            ...(await this.getBotRequestHeaders(botSetting)),
+            ...(await this.getBotRequestHeaders(internalBot)),
         };
 
-        const url = `${botSetting.url}/api/v2/files`;
+        const url = `${internalBot.url}/api/v2/files`;
 
         const formData = new FormData();
         const blob = new Blob([fs.readFileSync(file.filepath)], { type: file.mimetype ?? undefined });
@@ -206,27 +208,17 @@ abstract class BaseBot {
         }
     }
 
-    async getBotSetting() {
-        const constructor = this.#getConstructor();
-        const botSetting = await InternalBotSetting.findByType(constructor.BOT_TYPE);
-        return botSetting;
-    }
-
-    async getBotRequestHeaders(setting: InternalBotSetting) {
+    async getBotRequestHeaders(internalBot: InternalBot) {
         const headers: Record<string, any> = {};
-        switch (setting.platform) {
+        switch (internalBot.platform) {
             case EInternalBotPlatform.Langflow:
-                headers["x-api-key"] = setting.api_key;
+                headers["x-api-key"] = internalBot.api_key;
                 break;
             default:
-                throw new Error(`Unsupported platform: ${setting.platform}`);
+                throw new Error(`Unsupported platform: ${internalBot.platform}`);
         }
 
         return headers;
-    }
-
-    #getConstructor() {
-        return this.constructor as typeof BaseBot;
     }
 }
 

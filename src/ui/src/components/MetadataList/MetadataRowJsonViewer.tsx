@@ -80,7 +80,7 @@ function MetadataRowJsonViewer({ valueInputRef, handleValueInput, currentValue, 
                 <Button
                     variant="ghost"
                     size="icon-sm"
-                    title={t(`metadata.JSON ${canEdit() ? "Editor" : "Viewer"}`)}
+                    title={t(`common.JSON ${canEdit() ? "Editor" : "Viewer"}`)}
                     titleAlign="end"
                     className="absolute right-0 top-1/2 h-8 w-7 -translate-y-1/2 rounded-l-none"
                 >
@@ -88,7 +88,7 @@ function MetadataRowJsonViewer({ valueInputRef, handleValueInput, currentValue, 
                 </Button>
             </Dialog.Trigger>
             <Dialog.Content className="max-h-[70vh] max-w-screen-md">
-                <Dialog.Title>{t(`metadata.JSON ${canEdit() ? "Editor" : "Viewer"}`)}</Dialog.Title>
+                <Dialog.Title>{t(`common.JSON ${canEdit() ? "Editor" : "Viewer"}`)}</Dialog.Title>
                 <Dialog.Description asChild className="my-3 text-base text-primary-foreground">
                     <Flex
                         direction={{

@@ -5,7 +5,7 @@ from core.types import SnowflakeID
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from langflow.load import aload_flow_from_json
-from models.InternalBotSetting import InternalBotSetting
+from models.InternalBot import InternalBot
 from ..core.flows import FlowRunner
 from ..core.logger import Logger
 from ..core.schema import FlowRequestModel
@@ -17,8 +17,8 @@ async def run_flow(api_request: FlowRequestModel, stream: bool = False):
     setting = None
     with DbSession.use(readonly=True) as db:
         result = db.exec(
-            SqlBuilder.select.table(InternalBotSetting).where(
-                (InternalBotSetting.id == SnowflakeID.from_short_code(api_request.setting_uid))
+            SqlBuilder.select.table(InternalBot).where(
+                (InternalBot.id == SnowflakeID.from_short_code(api_request.setting_uid))
             )
         )
 

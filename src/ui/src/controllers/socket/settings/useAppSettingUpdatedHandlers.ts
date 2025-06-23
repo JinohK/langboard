@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AppSettingModel } from "@/core/models";
 
@@ -20,7 +20,7 @@ export interface IUseAppSettingUpdatedHandlersProps extends IBaseUseSocketHandle
 const useAppSettingUpdatedHandlers = ({ callback, setting }: IUseAppSettingUpdatedHandlersProps) => {
     return useSocketHandler<{}, IAppSettingUpdatedRawResponse>({
         topic: ESocketTopic.AppSettings,
-        topicId: "all",
+        topicId: GLOBAL_TOPIC_ID,
         eventKey: `app-setting-updated-${setting.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.SETTINGS.UPDATED,

@@ -3,8 +3,6 @@
   "Key": "Key",
   "Value": "Value",
   "Add a data": "Add a data",
-  "JSON Viewer": "JSON Viewer",
-  "JSON Editor": "JSON Editor",
   "successes": {
     "Metadata added successfully.": "Metadata added successfully.",
     "Metadata saved successfully.": "Metadata saved successfully.",

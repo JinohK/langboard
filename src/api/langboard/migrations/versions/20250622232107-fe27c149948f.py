@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 727556c74b05
+Revision ID: fe27c149948f
 Revises:
-Create Date: 2025-06-20 04:03:15.456929
+Create Date: 2025-06-22 23:21:07.660257
 
 """
 
@@ -18,7 +18,7 @@ from models.AppSetting import AppSettingType
 from models.Bot import BotAPIAuthType
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from models.BotTrigger import BotTriggerCondition
-from models.InternalBotSetting import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
+from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
 from models.ProjectActivity import ProjectActivityType
 from models.ProjectWikiActivity import ProjectWikiActivityType
 from models.UserActivity import UserActivityType
@@ -27,7 +27,7 @@ from models.UserNotificationUnsubscription import NotificationChannel, Notificat
 
 
 # revision identifiers, used by Alembic.
-revision: str = "727556c74b05"
+revision: str = "fe27c149948f"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -86,7 +86,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "internal_bot_setting",
+        "internal_bot",
         sa.Column("id", SnowflakeIDType, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -97,6 +97,7 @@ def upgrade() -> None:
         sa.Column("url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("value", sa.Text(), nullable=False),
+        sa.Column("is_default", sa.Boolean(), nullable=False),
         sa.Column("avatar", ModelColumnType(FileModel), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -284,6 +285,29 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_project_assigned_bot_bot_id"), "project_assigned_bot", ["bot_id"], unique=False)
     op.create_index(op.f("ix_project_assigned_bot_project_id"), "project_assigned_bot", ["project_id"], unique=False)
+    op.create_table(
+        "project_assigned_internal_bot",
+        sa.Column("id", SnowflakeIDType, nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("project_id", SnowflakeIDType, nullable=False),
+        sa.Column("internal_bot_id", SnowflakeIDType, nullable=False),
+        sa.ForeignKeyConstraint(["internal_bot_id"], ["internal_bot.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["project_id"], ["project.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(
+        op.f("ix_project_assigned_internal_bot_internal_bot_id"),
+        "project_assigned_internal_bot",
+        ["internal_bot_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_project_assigned_internal_bot_project_id"),
+        "project_assigned_internal_bot",
+        ["project_id"],
+        unique=False,
+    )
     op.create_table(
         "project_assigned_user",
         sa.Column("id", SnowflakeIDType, nullable=True),
@@ -764,6 +788,9 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_project_assigned_user_user_id"), table_name="project_assigned_user")
     op.drop_index(op.f("ix_project_assigned_user_project_id"), table_name="project_assigned_user")
     op.drop_table("project_assigned_user")
+    op.drop_index(op.f("ix_project_assigned_internal_bot_project_id"), table_name="project_assigned_internal_bot")
+    op.drop_index(op.f("ix_project_assigned_internal_bot_internal_bot_id"), table_name="project_assigned_internal_bot")
+    op.drop_table("project_assigned_internal_bot")
     op.drop_index(op.f("ix_project_assigned_bot_project_id"), table_name="project_assigned_bot")
     op.drop_index(op.f("ix_project_assigned_bot_bot_id"), table_name="project_assigned_bot")
     op.drop_table("project_assigned_bot")
@@ -786,7 +813,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_bot_schedule_bot_id"), table_name="bot_schedule")
     op.drop_table("bot_schedule")
     op.drop_table("user")
-    op.drop_table("internal_bot_setting")
+    op.drop_table("internal_bot")
     op.drop_table("global_card_relationship_type")
     op.drop_table("chat_template")
     op.drop_table("bot")

@@ -24,6 +24,7 @@ const InternalBotApiURL = memo(() => {
         }
 
         const value = inputRef.current.value.trim();
+        console.log(value, apiURL, !isValidURL(value));
         if (value === apiURL || !value || !isValidURL(value)) {
             inputRef.current.value = apiURL;
             return;

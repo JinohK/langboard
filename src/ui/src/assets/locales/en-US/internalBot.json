@@ -1,0 +1,14 @@
+{
+  "botTypes": {
+    "project_chat": "Project Chat",
+    "editor_chat": "Editor Chat",
+    "editor_copilot": "Editor Copilot"
+  },
+  "platforms": {
+    "langflow": "LangFlow"
+  },
+  "platformRunningTypes": {
+    "flow_id": "Flow ID",
+    "flow_json": "Flow JSON"
+  }
+}

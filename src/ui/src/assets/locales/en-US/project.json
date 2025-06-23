@@ -42,6 +42,7 @@
   },
   "settings": {
     "Basic info": "Basic info",
+    "Internal bots": "Internal bots",
     "Bots": "Bots",
     "Add a bot...": "Add a bot...",
     "Bot roles": "Bot roles",
@@ -105,6 +106,7 @@
       "Assigned bots updated successfully.": "Assigned bots updated successfully.",
       "Bot roles updated successfully.": "Bot roles updated successfully.",
       "Member roles updated successfully.": "Member roles updated successfully.",
+      "Internal bot changed successfully.": "Internal bot changed successfully.",
       "Bot scheduled successfully.": "Bot scheduled successfully.",
       "Bot rescheduled successfully.": "Bot rescheduled successfully.",
       "Bot unscheduled successfully.": "Bot unscheduled successfully.",

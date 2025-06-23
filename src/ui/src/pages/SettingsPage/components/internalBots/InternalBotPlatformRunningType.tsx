@@ -67,7 +67,7 @@ const InternalBotPlatformRunningType = memo(() => {
                                 value={targetPlatformRunningType.toString()}
                                 key={`internalBot-platform-running-type-select-${targetPlatformRunningType}`}
                             >
-                                {t(`settings.platformRunningTypes.${targetPlatformRunningType}`)}
+                                {t(`internalBot.platformRunningTypes.${targetPlatformRunningType}`)}
                             </Select.Item>
                         );
                     })}

@@ -29,6 +29,7 @@ function SettingsRoute() {
 
             <Route path={ROUTES.SETTINGS.CREATE_API_KEY} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_BOT} element={<ModalPage />} />
+            <Route path={ROUTES.SETTINGS.CREATE_INTERNAL_BOT} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_WEBHOOK} element={<ModalPage />} />
         </Route>

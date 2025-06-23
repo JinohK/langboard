@@ -1,5 +1,5 @@
 import { SOCKET_URL } from "@/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import ESocketTopic, { GLOBAL_TOPIC_ID, NONE_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import { create } from "zustand";
 
 export type TDefaultEvents = "open" | "close" | "error";
@@ -516,10 +516,10 @@ export const getTopicWithId = (props: { topic?: ESocketTopic; topicId?: string }
     let topicId;
     switch (topic) {
         case ESocketTopic.None:
-            topicId = "none";
+            topicId = NONE_TOPIC_ID;
             break;
         case ESocketTopic.Global:
-            topicId = "all";
+            topicId = GLOBAL_TOPIC_ID;
             break;
         default:
             topicId = props.topicId!;

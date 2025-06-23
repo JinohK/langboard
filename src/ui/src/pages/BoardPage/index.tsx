@@ -25,6 +25,10 @@ import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDel
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import useBoardDetailsChangedHandlers from "@/controllers/socket/board/useBoardDetailsChangedHandlers";
 import { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
+import useBoardAssignedInternalBotChangedHandlers from "@/controllers/socket/board/useBoardAssignedInternalBotChangedHandlers";
+import useInternalBotUpdatedHandlers from "@/controllers/socket/global/useInternalBotUpdatedHandlers";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { Project } from "@/core/models";
 
 const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -66,6 +70,17 @@ const BoardProxy = memo((): JSX.Element => {
         projectUID,
         callback: (result) => {
             if (result.available) {
+                const project = Project.Model.getModel(projectUID);
+                if (project) {
+                    const existingBots = [...project.internal_bots];
+                    const targetBot = existingBots.find((bot) => bot.bot_type === result.bot.bot_type);
+                    if (targetBot && targetBot.uid !== result.bot.uid) {
+                        existingBots.splice(existingBots.indexOf(targetBot), 1);
+                    }
+                    existingBots.push(result.bot);
+                    project.internal_bots = existingBots;
+                }
+
                 setResizableSidebar(() => ({
                     children: (
                         <Suspense>
@@ -79,6 +94,13 @@ const BoardProxy = memo((): JSX.Element => {
                     floatingIcon: "message-circle",
                     floatingTitle: t("project.Chat with AI"),
                     floatingFullScreen: true,
+                }));
+            } else {
+                setResizableSidebar(() => ({
+                    children: <></>,
+                    initialWidth: 280,
+                    collapsableWidth: 210,
+                    hidden: true,
                 }));
             }
             setIsReady(() => true);
@@ -108,6 +130,22 @@ const BoardProxy = memo((): JSX.Element => {
                 setProjectTitleRef.current(title);
             }
         },
+    });
+    const { on: onBoardAssignedInternalBotChanged } = useBoardAssignedInternalBotChangedHandlers({
+        projectUID,
+        callback: () => {
+            sendIsBoardChatAvailable({});
+        },
+    });
+    const internalBotUpdatedHandlers = useInternalBotUpdatedHandlers({
+        callback: () => {
+            sendIsBoardChatAvailable({});
+        },
+    });
+
+    useSwitchSocketHandlers({
+        socket,
+        handlers: internalBotUpdatedHandlers,
     });
 
     useEffect(() => {
@@ -147,6 +185,7 @@ const BoardProxy = memo((): JSX.Element => {
             onBoardAssignedUsersUpdated();
             onProjectDeleted();
             onProjectDetailsChanged();
+            onBoardAssignedInternalBotChanged();
             sendIsBoardChatAvailable({});
         });
         socket.subscribe(ESocketTopic.BoardSettings, [projectUID]);
@@ -215,7 +254,7 @@ const BoardProxy = memo((): JSX.Element => {
         <DashboardStyledLayout
             headerNavs={headerNavs}
             headerTitle={projectTitle}
-            resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType } : undefined}
+            resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType || !!resizableSidebar.hidden } : undefined}
             noPadding
         >
             {isReady && currentUser ? (

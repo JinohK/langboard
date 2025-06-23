@@ -64,7 +64,7 @@ const InternalBotPlatform = memo(() => {
                         const targetPlatform = InternalBotModel.EInternalBotPlatform[platformKey];
                         return (
                             <Select.Item value={targetPlatform.toString()} key={`internalBot-platform-select-${targetPlatform}`}>
-                                {t(`settings.platforms.${targetPlatform}`)}
+                                {t(`internalBot.platforms.${targetPlatform}`)}
                             </Select.Item>
                         );
                     })}

@@ -1,24 +1,32 @@
 import BotRunner from "@/core/ai/BotRunner";
 import ESocketStatus from "@/core/server/ESocketStatus";
 import ESocketTopic, { NONE_TOPIC_ID } from "@/core/server/ESocketTopic";
-import EventManager from "@/core/server/EventManager";
+import EventManager, { TEventContext } from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { EInternalBotType } from "@/models/InternalBotSetting";
+import InternalBot, { EInternalBotType } from "@/models/InternalBot";
+import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 
 interface IEditorEventRegistryParams {
     eventPrefix: string;
     chatType: EInternalBotType;
     copilotType: EInternalBotType;
+    getInternalBot: (botType: EInternalBotType, context: TEventContext) => Promise<InternalBot | null>;
 }
 
-const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEventRegistryParams) => {
+const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalBot }: IEditorEventRegistryParams) => {
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:chat:send`, async (context) => {
         const { task_id } = context.data ?? {};
         if (!context.data || !TypeUtils.isString(task_id)) {
             return;
         }
 
-        const response = await BotRunner.runAbortable(chatType, task_id, {
+        const internalBot = await getInternalBot(chatType, context);
+        if (!internalBot) {
+            context.client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "No chat bot available for this project", false);
+            return;
+        }
+
+        const response = await BotRunner.runAbortable(internalBot, task_id, {
             ...context.data,
             user_id: context.client.user.id,
         });
@@ -91,7 +99,13 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
             return;
         }
 
-        const response = await BotRunner.runAbortable(copilotType, task_id, {
+        const internalBot = await getInternalBot(copilotType, context);
+        if (!internalBot) {
+            context.client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "No chat bot available for this project", false);
+            return;
+        }
+
+        const response = await BotRunner.runAbortable(internalBot, task_id, {
             ...context.data,
         });
 
@@ -153,13 +167,34 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType }: IEditorEve
     });
 };
 
-const EDITOR_TYPES = ["board:card", "board:wiki"];
+interface IEditorType {
+    type: string;
+    getInternalBot: (botType: EInternalBotType, context: TEventContext) => Promise<InternalBot | null>;
+}
+
+const EDITOR_TYPES: IEditorType[] = [
+    {
+        type: "board:card",
+        getInternalBot: async (botType, context) =>
+            !TypeUtils.isString(context.data.project_uid)
+                ? null
+                : await ProjectAssignedInternalBot.getInternalBotByProjectUID(botType, context.data.project_uid),
+    },
+    {
+        type: "board:wiki",
+        getInternalBot: async (botType, context) =>
+            !TypeUtils.isString(context.data.project_uid)
+                ? null
+                : await ProjectAssignedInternalBot.getInternalBotByProjectUID(botType, context.data.project_uid),
+    },
+];
 
 for (let i = 0; i < EDITOR_TYPES.length; ++i) {
-    const type = EDITOR_TYPES[i];
+    const { type, getInternalBot } = EDITOR_TYPES[i];
     registerEditorEvents({
         eventPrefix: type,
         chatType: EInternalBotType.EditorChat,
         copilotType: EInternalBotType.EditorCopilot,
+        getInternalBot,
     });
 }

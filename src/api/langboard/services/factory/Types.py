@@ -9,7 +9,7 @@ from models import (
     Checkitem,
     Checklist,
     GlobalCardRelationshipType,
-    InternalBotSetting,
+    InternalBot,
     Project,
     ProjectColumn,
     ProjectLabel,
@@ -38,4 +38,4 @@ TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str | None
 TNotificationParam = UserNotification | int | str | None
 TBotScheduleParam = BotSchedule | int | str | None
 TChatTemplateParam = ChatTemplate | int | str | None
-TInternalBotParam = InternalBotSetting | int | str | None
+TInternalBotParam = InternalBot | int | str | None

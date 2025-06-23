@@ -42,25 +42,17 @@
     "langflow": "Langflow",
     "openai": "OpenAI"
   },
+  "Create internal bot": "Create internal bot",
+  "Select a type": "Select a type",
   "Select a platform": "Select a platform",
   "Select a platform running type": "Select a platform running type",
   "Upload JSON": "Upload JSON",
+  "Internal bot display name": "Internal bot display name",
+  "Set as default": "Set as default",
   "Internal bot API URL": "Internal bot API URL",
   "Internal bot API key": "Internal bot API key",
   "Internal bot value": "Internal bot value",
   "Flow json is only supported in the internal flows server.": "Flow json is only supported in the internal flows server.",
-  "botTypes": {
-    "project_chat": "Project Chat",
-    "editor_chat": "Editor Chat",
-    "editor_copilot": "Editor Copilot"
-  },
-  "platforms": {
-    "langflow": "LangFlow"
-  },
-  "platformRunningTypes": {
-    "flow_id": "Flow ID",
-    "flow_json": "Flow JSON"
-  },
   "successes": {
     "API key created successfully.": "API key created successfully.",
     "API key name changed successfully.": "API key name changed successfully.",
@@ -89,13 +81,17 @@
     "Webhook name changed successfully.": "Webhook name changed successfully.",
     "Webhook URL changed successfully.": "Webhook URL changed successfully.",
     "Selected webhooks deleted successfully.": "Selected webhooks deleted successfully.",
+    "Internal bot created successfully.": "Internal bot created successfully.",
+    "Internal bot display name changed successfully.": "Internal bot display name changed successfully.",
+    "Internal bot default changed successfully.": "Internal bot default changed successfully.",
     "Internal bot API URL changed successfully.": "Internal bot API URL changed successfully.",
     "Internal bot avatar changed successfully.": "Internal bot avatar changed successfully.",
     "Internal bot avatar uploaded successfully.": "Internal bot avatar uploaded successfully.",
     "Internal bot avatar deleted successfully.": "Internal bot avatar deleted successfully.",
     "Internal bot platform changed successfully.": "Internal bot platform changed successfully.",
     "Internal bot platform running type changed successfully.": "Internal bot platform running type changed successfully.",
-    "Internal bot value changed successfully.": "Internal bot value changed successfully."
+    "Internal bot value changed successfully.": "Internal bot value changed successfully.",
+    "Internal bot deleted successfully.": "Internal bot deleted successfully."
   },
   "errors": {
     "missing": {
@@ -108,12 +104,16 @@
       "parent_name": "Enter a parent name.",
       "child_name": "Enter a child name.",
       "webhook_name": "Enter a webhook name.",
-      "webhook_url": "Enter a webhook URL."
+      "webhook_url": "Enter a webhook URL.",
+      "internal_bot_displayName": "Enter an internal bot display name.",
+      "internal_bot_url": "Enter an internal bot API URL.",
+      "internal_bot_value": "Enter an internal bot value."
     },
     "invalid": {
       "bot_apiURL": "Enter a valid API URL.",
       "langflow_url": "Enter a valid Langflow URL.",
-      "webhook_url": "Enter a valid webhook URL."
+      "webhook_url": "Enter a valid webhook URL.",
+      "internal_bot_url": "Enter a valid internal bot API URL."
     }
   }
 }

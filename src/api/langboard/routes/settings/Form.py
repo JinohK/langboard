@@ -3,7 +3,7 @@ from core.routing import BaseFormModel, form_model
 from models.AppSetting import AppSettingType
 from models.Bot import BotAPIAuthType
 from models.BotTrigger import BotTriggerCondition
-from models.InternalBotSetting import InternalBotPlatform, InternalBotPlatformRunningType
+from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
 from pydantic import Field
 
 
@@ -78,7 +78,18 @@ class DeleteSelectedGlobalRelationshipTypesForm(BaseFormModel):
 
 
 @form_model
-class UpdateInternalBotSettingForm(BaseFormModel):
+class CreateInternalBotForm(BaseFormModel):
+    bot_type: InternalBotType
+    display_name: str
+    platform: InternalBotPlatform
+    platform_running_type: InternalBotPlatformRunningType
+    url: str
+    api_key: str = ""
+    value: str
+
+
+@form_model
+class UpdateInternalBotForm(BaseFormModel):
     display_name: str | None = None
     platform: InternalBotPlatform | None = None
     platform_running_type: InternalBotPlatformRunningType | None = None

@@ -8,8 +8,10 @@ from models import (
     Card,
     Checkitem,
     Checklist,
+    InternalBot,
     Project,
     ProjectAssignedBot,
+    ProjectAssignedInternalBot,
     ProjectAssignedUser,
     ProjectRole,
     User,
@@ -23,11 +25,12 @@ from ...core.service import ServiceHelper
 from ...publishers import ProjectPublisher
 from ...tasks.activities import ProjectActivityTask
 from ...tasks.bot import BotDefaultTask, ProjectBotTask
+from .InternalBotService import InternalBotService
 from .ProjectColumnService import ProjectColumnService
 from .ProjectInvitationService import ProjectInvitationService
 from .ProjectLabelService import ProjectLabelService
 from .RoleService import RoleService
-from .Types import TBotParam, TProjectParam, TUserOrBot, TUserParam
+from .Types import TBotParam, TInternalBotParam, TProjectParam, TUserOrBot, TUserParam
 
 
 class ProjectService(BaseService):
@@ -122,6 +125,37 @@ class ProjectService(BaseService):
 
         users = [user.api_response() for user, _ in raw_users]
         return users
+
+    @overload
+    async def get_assigned_internal_bots(
+        self, project: TProjectParam, as_api: Literal[False]
+    ) -> list[tuple[InternalBot, ProjectAssignedInternalBot]]: ...
+    @overload
+    async def get_assigned_internal_bots(
+        self, project: TProjectParam, as_api: Literal[True]
+    ) -> list[dict[str, Any]]: ...
+    async def get_assigned_internal_bots(
+        self, project: TProjectParam, as_api: bool
+    ) -> list[tuple[InternalBot, ProjectAssignedInternalBot]] | list[dict[str, Any]]:
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return []
+
+        query = (
+            SqlBuilder.select.tables(InternalBot, ProjectAssignedInternalBot)
+            .join(ProjectAssignedInternalBot, InternalBot.column("id") == ProjectAssignedInternalBot.internal_bot_id)
+            .where(ProjectAssignedInternalBot.project_id == project.id)
+        )
+
+        raw_internal_bots = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            raw_internal_bots = result.all()
+        if not as_api:
+            return raw_internal_bots
+
+        internal_bots = [internal_bot.api_response() for internal_bot, _ in raw_internal_bots]
+        return internal_bots
 
     async def get_dashboard_list(self, user: User) -> list[dict[str, Any]]:
         sql_query = (
@@ -312,7 +346,8 @@ class ProjectService(BaseService):
         column_service = self._get_service(ProjectColumnService)
         await column_service.get_or_create_archive_if_not_exists(project)
 
-        await self._get_service(ProjectLabelService).init_defaults(project)
+        label_service = self._get_service(ProjectLabelService)
+        await label_service.init_defaults(project)
 
         assigned_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
         with DbSession.use(readonly=False) as db:
@@ -320,6 +355,14 @@ class ProjectService(BaseService):
 
         role_service = self._get_service(RoleService)
         await role_service.project.grant_all(user_id=user.id, project_id=project.id)
+
+        internal_bot_service = self._get_service(InternalBotService)
+        internal_bots = await internal_bot_service.get_list_by_default()
+
+        for internal_bot in internal_bots:
+            assigned_internal_bot = ProjectAssignedInternalBot(project_id=project.id, internal_bot_id=internal_bot.id)
+            with DbSession.use(readonly=False) as db:
+                db.insert(assigned_internal_bot)
 
         ProjectActivityTask.project_created(user, project)
 
@@ -557,6 +600,51 @@ class ProjectService(BaseService):
 
         await ProjectPublisher.bot_activation_toggled(project, target_bot, is_disabled)
         ProjectActivityTask.project_bot_activation_toggled(user, project, target_bot, is_disabled)
+
+        return True
+
+    async def change_internal_bot(self, project: TProjectParam, internal_bot: TInternalBotParam):
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return False
+
+        internal_bot = ServiceHelper.get_by_param(InternalBot, internal_bot)
+        if not internal_bot:
+            return False
+
+        original_internal_bot = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
+                SqlBuilder.select.table(InternalBot)
+                .join(
+                    ProjectAssignedInternalBot,
+                    InternalBot.column("id") == ProjectAssignedInternalBot.column("internal_bot_id"),
+                )
+                .where(
+                    (ProjectAssignedInternalBot.column("project_id") == project.id)
+                    & (InternalBot.column("bot_type") == internal_bot.bot_type)
+                )
+                .limit(1)
+            )
+            original_internal_bot = result.first()
+
+        if not original_internal_bot:
+            return False
+
+        if original_internal_bot.id == internal_bot.id:
+            return True
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(
+                SqlBuilder.update.table(ProjectAssignedInternalBot)
+                .values({ProjectAssignedInternalBot.column("internal_bot_id"): internal_bot.id})
+                .where(
+                    (ProjectAssignedInternalBot.column("project_id") == project.id)
+                    & (ProjectAssignedInternalBot.column("internal_bot_id") == original_internal_bot.id)
+                )
+            )
+
+        await ProjectPublisher.internal_bot_changed(project, internal_bot.id)
 
         return True
 

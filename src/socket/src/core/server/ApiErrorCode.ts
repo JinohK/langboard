@@ -11,6 +11,7 @@ enum EApiErrorCode {
     EX1003 = "The email is already in use.",
     EX1004 = "The account is already activated.",
     EX3001 = "Bot uname already exists.",
+    EX3002 = "Default internal bot cannot be deleted.",
 
     // Permission Errors
     PE1001 = "Not enough permissions to access this endpoint.",
@@ -50,6 +51,7 @@ enum EApiErrorCode {
     NF3001 = "Bot not found.",
     NF3002 = "Settings not found.",
     NF3003 = "Global relationships not found.",
+    NF3004 = "Internal bot not found.",
 
     // Validation Errors
     VA0000 = "Invalid request.",

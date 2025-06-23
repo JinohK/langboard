@@ -3,7 +3,7 @@ from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from core.storage import StorageName
 from fastapi import File, UploadFile, status
-from models import AppSetting, Bot, GlobalCardRelationshipType, InternalBotSetting
+from models import AppSetting, Bot, GlobalCardRelationshipType, InternalBot
 from models.AppSetting import AppSettingType
 from ...core.storage import Storage
 from ...security import Auth
@@ -11,6 +11,7 @@ from ...services import Service
 from .Form import (
     CreateBotForm,
     CreateGlobalRelationshipTypeForm,
+    CreateInternalBotForm,
     CreateSettingForm,
     DeleteSelectedGlobalRelationshipTypesForm,
     DeleteSelectedSettingsForm,
@@ -18,7 +19,7 @@ from .Form import (
     ToggleBotTriggerConditionForm,
     UpdateBotForm,
     UpdateGlobalRelationshipTypeForm,
-    UpdateInternalBotSettingForm,
+    UpdateInternalBotForm,
     UpdateSettingForm,
 )
 
@@ -39,7 +40,7 @@ async def is_settings_available() -> JsonResponse:
                 "settings": [AppSetting],
                 "bots": [(Bot, {"is_setting": True})],
                 "global_relationships": [GlobalCardRelationshipType],
-                "internal_bots": [(InternalBotSetting, {"is_setting": True})],
+                "internal_bots": [(InternalBot, {"is_setting": True})],
             }
         )
         .auth()
@@ -52,7 +53,7 @@ async def get_all_settings(service: Service = Service.scope()) -> JsonResponse:
     settings = await service.app_setting.get_all(as_api=True)
     bots = await service.bot.get_list(as_api=True, is_setting=True)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
-    internal_bots = await service.internal_bot_setting.get_list(as_api=True, is_setting=True)
+    internal_bots = await service.internal_bot.get_list(as_api=True, is_setting=True)
 
     return JsonResponse(
         content={
@@ -396,6 +397,35 @@ async def delete_selected_global_relationship(
     return JsonResponse()
 
 
+@AppRouter.api.post(
+    "/settings/internal-bot",
+    tags=["AppSettings"],
+    responses=(OpenApiSchema(201).auth().forbidden().get()),
+)
+@AuthFilter.add("admin")
+async def create_internal_bot(
+    form: CreateInternalBotForm = CreateInternalBotForm.scope(),
+    avatar: UploadFile | None = File(None),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    file_model = Storage.upload(avatar, StorageName.InternalBot) if avatar else None
+    internal_bot = await service.internal_bot.create(
+        form.bot_type,
+        form.display_name,
+        form.platform,
+        form.platform_running_type,
+        form.url,
+        form.value,
+        form.api_key,
+        file_model,
+    )
+
+    return JsonResponse(
+        content={"internal_bot": internal_bot.api_response(is_setting=True)},
+        status_code=status.HTTP_201_CREATED,
+    )
+
+
 @AppRouter.api.put(
     "/settings/internal-bot/{internal_bot_uid}",
     tags=["AppSettings"],
@@ -404,11 +434,11 @@ async def delete_selected_global_relationship(
 @AuthFilter.add("admin")
 async def update_internal_bot(
     internal_bot_uid: str,
-    form: UpdateInternalBotSettingForm = UpdateInternalBotSettingForm.scope(),
+    form: UpdateInternalBotForm = UpdateInternalBotForm.scope(),
     avatar: UploadFile | None = File(None),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    internal_bot = await service.internal_bot_setting.get_by_uid(internal_bot_uid)
+    internal_bot = await service.internal_bot.get_by_uid(internal_bot_uid)
     if not internal_bot:
         return JsonResponse(content=ApiErrorCode.NF3004, status_code=status.HTTP_404_NOT_FOUND)
 
@@ -417,8 +447,40 @@ async def update_internal_bot(
     if file_model:
         form_dict["avatar"] = file_model
 
-    result = await service.internal_bot_setting.update(internal_bot, form_dict)
+    result = await service.internal_bot.update(internal_bot, form_dict)
     if not result:
         return JsonResponse(content=ApiErrorCode.NF3004, status_code=status.HTTP_404_NOT_FOUND)
 
+    return JsonResponse()
+
+
+@AppRouter.api.put(
+    "/settings/internal-bot/{internal_bot_uid}/default",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3004).get(),
+)
+@AuthFilter.add("admin")
+async def set_internal_bot_default(internal_bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    internal_bot = await service.internal_bot.change_default(internal_bot_uid)
+    if not internal_bot:
+        return JsonResponse(content=ApiErrorCode.NF3004, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse()
+
+
+@AppRouter.api.delete(
+    "/settings/internal-bot/{internal_bot_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3004).err(409, ApiErrorCode.EX3002).get(),
+)
+@AuthFilter.add("admin")
+async def delete_internal_bot(internal_bot_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    internal_bot = await service.internal_bot.get_by_uid(internal_bot_uid)
+    if not internal_bot:
+        return JsonResponse(content=ApiErrorCode.NF3004, status_code=status.HTTP_404_NOT_FOUND)
+
+    if internal_bot.is_default:
+        return JsonResponse(content=ApiErrorCode.EX3002, status_code=status.HTTP_409_CONFLICT)
+
+    await service.internal_bot.delete(internal_bot)
     return JsonResponse()

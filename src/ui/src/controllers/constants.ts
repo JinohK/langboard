@@ -153,6 +153,7 @@ export const API_ROUTES = {
             UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
             UPDATE_BOT_ROLES: "/board/{uid}/settings/roles/bot/{bot_uid}",
             UPDATE_USER_ROLES: "/board/{uid}/settings/roles/user/{user_uid}",
+            CHANGE_INTERNAL_BOT: "/board/{uid}/settings/internal-bot",
             TOGGLE_BOT_ACTIVATION: "/board/{uid}/settings/bot/{bot_uid}/toggle-activation",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
@@ -194,7 +195,10 @@ export const API_ROUTES = {
             DELETE_SELECTED: "/settings/global-relationship",
         },
         INTERNAL_BOTS: {
+            CREATE: "/settings/internal-bot",
             UPDATE: "/settings/internal-bot/{bot_uid}",
+            CHANGE_DEFAULT: "/settings/internal-bot/{bot_uid}/default",
+            DELETE: "/settings/internal-bot/{bot_uid}",
         },
     },
     GLBOAL: {
@@ -235,6 +239,7 @@ export const SOCKET_SERVER_EVENTS = {
         BOT_ROLES_UPDATED: "board:roles:bot:updated:{uid}",
         USER_ROLES_UPDATED: "board:roles:user:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
+        ASSIGNED_INTERNAL_BOT_CHANGED: "board:assigned-internal-bot:changed:{uid}",
         DELETED: "board:deleted:{uid}",
         CHAT: {
             IS_AVAILABLE: "board:chat:available",
@@ -344,6 +349,7 @@ export const SOCKET_SERVER_EVENTS = {
         INTERNAL_BOTS: {
             CREATED: "internal-bot:created",
             UPDATED: "internal-bot:updated",
+            DELETED: "internal-bot:deleted",
         },
         TASK_ABORTED: "task:aborted",
     },
@@ -357,6 +363,9 @@ export const SOCKET_SERVER_EVENTS = {
             UPDATED: "settings:bot:updated:{uid}",
             TRIGGER_CONDITION_PREDEFINED: "settings:bot:trigger-condition:predefined:{uid}",
             TRIGGER_CONDITION_TOGGLED: "settings:bot:trigger-condition:toggled:{uid}",
+        },
+        INTERNAL_BOTS: {
+            DEFAULT_CHANGED: "settings:internal-bot:default-changed:{uid}",
         },
     },
     PROJECT_BOT: {

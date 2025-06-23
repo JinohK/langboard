@@ -13,4 +13,7 @@ enum ESocketTopic {
     None = "none",
 }
 
+export const GLOBAL_TOPIC_ID = "all" as const;
+export const NONE_TOPIC_ID = "none" as const;
+
 export default ESocketTopic;

@@ -4,6 +4,7 @@ import { ModelRegistry } from "@/core/models/ModelRegistry";
 import InternalBotApiKey from "@/pages/SettingsPage/components/internalBots/InternalBotApiKey";
 import InternalBotApiURL from "@/pages/SettingsPage/components/internalBots/InternalBotApiURL";
 import InternalBotAvatar from "@/pages/SettingsPage/components/internalBots/InternalBotAvatar";
+import InternalBotDefault from "@/pages/SettingsPage/components/internalBots/InternalBotDefault";
 import InternalBotDisplayName from "@/pages/SettingsPage/components/internalBots/InternalBotDisplayName";
 import InternalBotPlatform from "@/pages/SettingsPage/components/internalBots/InternalBotPlatform";
 import InternalBotPlatformRunningType from "@/pages/SettingsPage/components/internalBots/InternalBotPlatformRunningType";
@@ -23,7 +24,10 @@ const InternalBotDetails = memo(({ internalBot }: IInternalBotDetailsProps) => {
                 <Flex justify="center">
                     <Flex direction="col" gap="2" w="full" className="max-w-screen-xs">
                         <InternalBotDisplayName />
-                        <InternalBotType />
+                        <Flex gap="2" items="center">
+                            <InternalBotType />
+                            <InternalBotDefault />
+                        </Flex>
                     </Flex>
                 </Flex>
                 <Flex justify="center" mt="3">

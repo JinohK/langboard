@@ -5,23 +5,27 @@ import ESocketTopic from "@/core/server/ESocketTopic";
 import EventManager from "@/core/server/EventManager";
 import TypeUtils from "@/core/utils/TypeUtils";
 import ChatHistory from "@/models/ChatHistory";
-import { EInternalBotType } from "@/models/InternalBotSetting";
+import { EInternalBotType } from "@/models/InternalBot";
+import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 
 EventManager.on(ESocketTopic.Board, "board:chat:available", async ({ client, topicId }) => {
-    let botSetting;
-    try {
-        botSetting = await BotRunner.isAvailable(EInternalBotType.ProjectChat);
-    } catch {
-        botSetting = null;
+    const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
+    let isAvailable = false;
+    if (internalBot) {
+        try {
+            isAvailable = await BotRunner.isAvailable(internalBot);
+        } catch {
+            isAvailable = false;
+        }
     }
 
-    const apiBot = botSetting?.apiResponse ?? null;
+    const apiBot = internalBot?.apiResponse ?? null;
 
     client.send({
         topic: ESocketTopic.Board,
         topic_id: topicId,
         event: "board:chat:available",
-        data: { available: !!botSetting, bot: apiBot },
+        data: { available: isAvailable, bot: apiBot },
     });
 });
 
@@ -32,7 +36,13 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
         return;
     }
 
-    const response = await BotRunner.runAbortable(EInternalBotType.ProjectChat, task_id, {
+    const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
+    if (!internalBot) {
+        client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "No chat bot available for this project", false);
+        return;
+    }
+
+    const response = await BotRunner.runAbortable(internalBot, task_id, {
         message,
         file_path,
         project_uid: topicId,

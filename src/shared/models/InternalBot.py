@@ -21,7 +21,7 @@ class InternalBotPlatformRunningType(Enum):
     FlowJson = "flow_json"
 
 
-class InternalBotSetting(BaseSqlModel, table=True):
+class InternalBot(BaseSqlModel, table=True):
     bot_type: InternalBotType = Field(nullable=False, sa_type=EnumLikeType(InternalBotType))
     display_name: str = Field(nullable=False)
     platform: InternalBotPlatform = Field(nullable=False, sa_type=EnumLikeType(InternalBotPlatform))
@@ -31,6 +31,7 @@ class InternalBotSetting(BaseSqlModel, table=True):
     url: str = Field(nullable=False)
     api_key: str = Field(default="", nullable=False)
     value: str = Field(nullable=False, sa_type=Text)
+    is_default: bool = Field(default=False, nullable=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
 
     @staticmethod
@@ -49,6 +50,7 @@ class InternalBotSetting(BaseSqlModel, table=True):
                     "platform_running_type": f"Literal[{', '.join([running_type.value for running_type in InternalBotPlatformRunningType])}]",
                     "url": "string",
                     "api_key": "string",
+                    "is_default": "bool",
                     "value": "string",
                 }
             )
@@ -70,6 +72,7 @@ class InternalBotSetting(BaseSqlModel, table=True):
                     "platform_running_type": self.platform_running_type.value,
                     "url": self.url,
                     "api_key": self.api_key,
+                    "is_default": self.is_default,
                     "value": self.value,
                 }
             )
@@ -80,4 +83,4 @@ class InternalBotSetting(BaseSqlModel, table=True):
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["bot_type", "display_name", "platform", "platform_running_type"]
+        return ["bot_type", "display_name", "platform", "platform_running_type", "is_default"]

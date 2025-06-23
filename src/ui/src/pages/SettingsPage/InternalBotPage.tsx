@@ -1,4 +1,4 @@
-import { Flex, Toast } from "@/components/base";
+import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import { InternalBotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
@@ -12,7 +12,7 @@ import { useParams } from "react-router-dom";
 function InternalBotPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const { navigateRef, isValidating } = useAppSetting();
     const { botUID } = useParams();
     const [bot, setBot] = useState<InternalBotModel.TModel | null>(null);
 
@@ -34,6 +34,10 @@ function InternalBotPage() {
         setBot(targetBot);
     }, [botUID]);
 
+    const openCreateDialog = () => {
+        navigateRef.current(ROUTES.SETTINGS.CREATE_INTERNAL_BOT);
+    };
+
     return (
         <>
             {bot ? (
@@ -42,6 +46,10 @@ function InternalBotPage() {
                 <>
                     <Flex justify="between" mb="4" pb="2" textSize="3xl" weight="semibold" className="scroll-m-20 border-b tracking-tight">
                         <span className="max-w-72 truncate">{t("settings.Internal bots")}</span>
+                        <Button variant="outline" disabled={isValidating} className="gap-2 pl-2 pr-3" onClick={openCreateDialog}>
+                            <IconComponent icon="plus" size="4" />
+                            {t("settings.Add new")}
+                        </Button>
                     </Flex>
                     <InternalBotList />
                 </>

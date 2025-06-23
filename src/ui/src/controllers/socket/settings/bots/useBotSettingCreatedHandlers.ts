@@ -1,5 +1,5 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 
@@ -10,7 +10,7 @@ export interface IBotSettingCreatedRawResponse {
 const useBotSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) => {
     return useSocketHandler<{}, IBotSettingCreatedRawResponse>({
         topic: ESocketTopic.AppSettings,
-        topicId: "all",
+        topicId: GLOBAL_TOPIC_ID,
         eventKey: "bot-setting-created",
         onProps: {
             name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.CREATED,

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { BotModel, ChatTemplateModel, Project, ProjectCard, ProjectColumn } from "@/core/models";
+import { BotModel, ChatTemplateModel, InternalBotModel, Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
 export interface IGetProjectDetailsForm {
@@ -12,6 +12,7 @@ export interface IGetProjectDetailsForm {
 export interface IGetProjectDetailsResponse {
     project: Project.TModel;
     bots: BotModel.TModel[];
+    internal_bots: InternalBotModel.TModel[];
     columns: ProjectColumn.TModel[];
     cards: ProjectCard.TModel[];
 }
@@ -30,6 +31,7 @@ const useGetProjectDetails = (form: IGetProjectDetailsForm, options?: TQueryOpti
         return {
             project: Project.Model.fromObject(res.data.project),
             bots: BotModel.Model.fromObjectArray(res.data.bots),
+            internal_bots: InternalBotModel.Model.fromObjectArray(res.data.internal_bots),
             columns: ProjectColumn.Model.fromObjectArray(res.data.columns),
             cards: ProjectCard.Model.fromObjectArray(res.data.cards),
             chat_templates: ChatTemplateModel.Model.fromObjectArray(res.data.chat_templates),

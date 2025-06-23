@@ -6,6 +6,7 @@ import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSetti
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
 import BoardSettingsChatTemplateList from "@/pages/BoardPage/components/settings/chat/BoardSettingsChatTemplateList";
 import BoardSettingsCronBotList from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotList";
+import BoardSettingsInternalBotList from "@/pages/BoardPage/components/settings/internalBots/BoardSettingsInternalBotList";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
 import BoardSettingsBotRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsBotRoleList";
 import BoardSettingsMemberRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsMemberRoleList";
@@ -22,6 +23,9 @@ const BoardSettingsList = memo(() => {
         <Flex direction="col" gap="3" p={{ initial: "4", md: "6", lg: "8" }} items="center">
             <BoardSettingsSection title="project.settings.Basic info">
                 <BoardSettingsBasic />
+            </BoardSettingsSection>
+            <BoardSettingsSection title="project.settings.Internal bots">
+                <BoardSettingsInternalBotList key={`board-settings-internal-bots-${project.uid}`} />
             </BoardSettingsSection>
             <BoardSettingsSection title="project.settings.Bots">
                 <BoardSettingsBots key={`board-settings-bots-${project.uid}`} />
