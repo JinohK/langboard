@@ -18,20 +18,23 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const [t] = useTranslation();
     const { project, currentUser, hasRoleAction } = useBoard();
     const canEdit = hasRoleAction(Project.ERoleAction.Update);
-    const owners = project.useForeignField("owner");
-    const owner = owners[0];
-    const members = project.useForeignField("members");
+    const ownerUID = project.useField("owner_uid");
+    const owner = User.Model.getModel(ownerUID)!;
+    const allMemebers = project.useForeignField("all_members");
+    const invitedMemberUIDs = project.useField("invited_member_uids");
     const bots = project.useForeignField("bots");
-    const invitedMembers = project.useForeignField("invited_members");
     const groups = currentUser.useForeignField("user_groups");
     const allSelectables = useMemo(
-        () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
-        [members, invitedMembers]
+        () => allMemebers.filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        [allMemebers, invitedMemberUIDs]
     );
-    const showableAssignees = useMemo(() => [...members, ...bots].slice(0, 6), [members, bots]);
+    const showableAssignees = useMemo(
+        () => [...allMemebers.filter((model) => model.isValidUser() && !invitedMemberUIDs.includes(model.uid)), ...bots].slice(0, 6),
+        [allMemebers, bots, invitedMemberUIDs]
+    );
     const selectedAssignees = useMemo(
-        () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
-        [members, invitedMembers]
+        () => allMemebers.filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        [allMemebers, invitedMemberUIDs]
     );
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers({ interceptToast: true });
 
@@ -111,7 +114,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 }
 
                 item = item as User.TModel;
-                const isInvited = invitedMembers.some((invited) => invited.uid === (item as User.TModel).uid);
+                const isInvited = item.isPresentableUnknownUser() || invitedMemberUIDs.includes(item.uid);
                 const invitedText = isInvited ? ` (${t("project.invited")})` : "";
                 if (item.isValidUser()) {
                     return `${item.firstname} ${item.lastname}${invitedText}`.trim();

@@ -12,6 +12,7 @@ import { BotModel } from "@/core/models";
 import { isValidIpv4OrRnage, isValidURL } from "@/core/utils/StringUtils";
 import CopyInput from "@/components/CopyInput";
 import MultiSelect from "@/components/MultiSelect";
+import PasswordInput from "@/components/PasswordInput";
 
 export interface IBotCreateFormDialogProps {
     opened: bool;
@@ -217,10 +218,10 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                             </Select.Root>
                         </Box>
                         <Box mt="4">
-                            <Floating.LabelInput
+                            <PasswordInput
                                 label={t("settings.Bot API key")}
+                                isValidating={isValidating}
                                 autoComplete="off"
-                                disabled={isValidating}
                                 ref={(el) => {
                                     inputsRef.current.apiKey = el;
                                 }}

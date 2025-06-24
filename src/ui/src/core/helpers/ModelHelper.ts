@@ -67,9 +67,8 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
         return true;
     });
     const userGroupUIDs = currentUser.user_groups.map((group) => group.users.map((user) => user.uid)).flat();
-    const memberUIDs = project.members
+    const memberUIDs = project.all_members
         .map((member) => member.uid)
-        .concat(project.invited_members.map((member) => member.uid))
         .filter((memberUID) => currentUser.uid !== memberUID && !userGroupUIDs.includes(memberUID));
     User.Model.deleteModels((model) => memberUIDs.includes(model.uid));
     Project.Model.deleteModel(projectUID);

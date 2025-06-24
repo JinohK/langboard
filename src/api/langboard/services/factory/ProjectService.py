@@ -239,8 +239,14 @@ class ProjectService(BaseService):
         if not owner:
             return None
 
-        response["owner"] = owner.api_response()
-        response["members"] = await self.get_assigned_users(project, as_api=True)
+        invitation_service = self._get_service(ProjectInvitationService)
+        invited_members = await invitation_service.get_invited_users(project, as_api=True)
+        response["all_members"] = [
+            owner.api_response(),
+            *(await self.get_assigned_users(project, as_api=True)),
+            *invited_members,
+        ]
+        response["invited_member_uids"] = [invitation["uid"] for invitation in invited_members]
         response["bots"] = await self.get_assigned_bots(project, as_api=True)
         response["current_auth_role_actions"] = await self.get_role_actions(user_or_bot, project)
         response["labels"] = await self._get_service(ProjectLabelService).get_all(project, as_api=True)
@@ -254,9 +260,6 @@ class ProjectService(BaseService):
                     response["bot_roles"][role.bot_id.to_short_code()] = role.actions
                 elif role.user_id and role.user_id != project.owner_id:
                     response["member_roles"][role.user_id.to_short_code()] = role.actions
-
-        invitation_service = self._get_service(ProjectInvitationService)
-        response["invited_members"] = await invitation_service.get_invited_users(project, as_api=True)
 
         return project, response
 

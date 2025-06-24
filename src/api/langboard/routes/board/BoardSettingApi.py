@@ -33,13 +33,12 @@ from .scopes import (
                     Project,
                     {
                         "schema": {
-                            "owner": User,
-                            "members": [User],
+                            "all_members": [User],
+                            "invited_member_uids": "string[]",
                             "bots": [Bot],
                             "internal_bots": [InternalBot],
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                             "labels": [ProjectLabel],
-                            "invited_members": [User],
                             "bot_roles": {"<bot uid>": [ALL_GRANTED, ProjectRoleAction]},
                             "member_roles": {"<user uid>": [ALL_GRANTED, ProjectRoleAction]},
                             "chat_templates": [ChatTemplate],

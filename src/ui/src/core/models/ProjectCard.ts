@@ -41,7 +41,7 @@ export interface Interface extends IBaseModel {
 
 export interface IStore extends Interface {
     count_comment: number;
-    members: User.Interface[];
+    member_uids: string[];
     column_name: string;
     current_auth_role_actions: Project.TRoleActions[];
     project_members: User.Interface[];
@@ -59,7 +59,6 @@ export interface IStore extends Interface {
 class ProjectCard extends BaseModel<IStore> {
     static override get FOREIGN_MODELS() {
         return {
-            members: User.Model.MODEL_NAME,
             project_members: User.Model.MODEL_NAME,
             project_bots: BotModel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
@@ -180,11 +179,11 @@ class ProjectCard extends BaseModel<IStore> {
         this.update({ count_comment: value });
     }
 
-    public get members(): User.TModel[] {
-        return this.getForeignValue("members");
+    public get member_uids() {
+        return this.getValue("member_uids");
     }
-    public set members(value: (User.TModel | User.Interface)[]) {
-        this.update({ members: value });
+    public set member_uids(value: string[]) {
+        this.update({ member_uids: value });
     }
 
     public get deadline_at(): Date | undefined {

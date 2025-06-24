@@ -17,6 +17,7 @@ class Project(SoftDeleteModel, table=True):
     def api_schema(schema: dict | None = None) -> dict[str, Any]:
         return {
             "uid": "string",
+            "owner_uid": "string",
             "title": "string",
             "project_type": "string",
             "updated_at": "string",
@@ -26,6 +27,7 @@ class Project(SoftDeleteModel, table=True):
     def api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
+            "owner_uid": self.owner_id.to_short_code(),
             "title": self.title,
             "project_type": self.project_type,
             "updated_at": self.updated_at,

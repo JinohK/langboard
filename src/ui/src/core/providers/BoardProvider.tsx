@@ -73,7 +73,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
     const socket = useSocket();
     const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
-    const members = project.useForeignField("members");
+    const members = project.useForeignField("all_members");
     const {
         filters,
         toString: filtersToString,
@@ -167,7 +167,9 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
             return true;
         }
 
-        return card.title.toLowerCase().includes(keyword.toLowerCase()) || card.members.some((member) => filterMember(member));
+        return (
+            card.title.toLowerCase().includes(keyword.toLowerCase()) || User.Model.getModels(card.member_uids).some((member) => filterMember(member))
+        );
     };
 
     const filterCardMember = (card: ProjectCard.TModel) => {
@@ -175,7 +177,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
             return true;
         }
 
-        if (filters.members.includes("none") && !card.members.length) {
+        if (filters.members.includes("none") && !card.member_uids.length) {
             return true;
         }
 
@@ -185,14 +187,15 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
             if (userUID === "me") {
                 user = currentUser;
             } else {
-                user = project.members.find((member) => member.uid === userUID);
+                user = project.all_members.find((member) => member.uid === userUID);
             }
 
             if (!user) {
                 continue;
             }
 
-            if (card.members.some((member) => member.email === user.email && member.username === user.username)) {
+            const projectMembers = User.Model.getModels(card.member_uids);
+            if (projectMembers.some((member) => member.email === user.email && member.username === user.username)) {
                 return true;
             }
         }

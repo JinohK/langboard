@@ -5,7 +5,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardCardMemberList = memo(() => {
@@ -13,7 +13,8 @@ const BoardCardMemberList = memo(() => {
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const projectMembers = card.useForeignField("project_members");
-    const members = card.useForeignField("members");
+    const cardMemberUIDs = card.useField("member_uids");
+    const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
     const groups = currentUser.useForeignField("user_groups");
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers({ interceptToast: true });
 
@@ -68,7 +69,7 @@ const BoardCardMemberList = memo(() => {
             tagContentProps={{
                 projectUID,
             }}
-            originalAssignees={members}
+            originalAssignees={cardMembers}
             createSearchText={
                 ((item: User.TModel) => `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`) as IFormProps["createSearchText"]
             }

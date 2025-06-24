@@ -80,12 +80,11 @@ async def get_project_current_roles(
                     Project,
                     {
                         "schema": {
-                            "owner": User,
-                            "members": [User],
+                            "all_members": [User],
+                            "invited_member_uids": "string[]",
                             "bots": [Bot],
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                             "labels": [ProjectLabel],
-                            "invited_members": [User],
                         }
                     },
                 )
@@ -205,7 +204,7 @@ async def get_project_columns(project_uid: str, service: Service = Service.scope
                         {
                             "schema": {
                                 "count_comment": "integer",
-                                "members": [User],
+                                "member_uids": "string[]",
                                 "relationships": [CardRelationship],
                                 "labels": [ProjectLabel],
                                 "checklists": [Checklist],

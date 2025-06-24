@@ -29,13 +29,17 @@ const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoar
             responseConverter: (data) => {
                 const model = Project.Model.getModel(projectUID);
                 if (model) {
-                    model.members = [...data.assigned_members];
-                    model.invited_members = [...data.invited_members];
+                    model.all_members = [
+                        model.all_members.find((user) => user.uid === model.owner_uid)!,
+                        ...data.assigned_members,
+                        ...data.invited_members,
+                    ];
+                    model.invited_member_uids = data.invited_members.map((user) => user.uid);
 
                     if (model.member_roles) {
                         const memberRoles = { ...model.member_roles };
                         Object.keys(memberRoles).forEach((userUID) => {
-                            if (!model.members.some((member) => member.uid === userUID)) {
+                            if (!model.all_members.some((member) => member.uid === userUID)) {
                                 delete memberRoles[userUID];
                             }
                         });

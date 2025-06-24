@@ -141,13 +141,15 @@ class _ModelEdgeStore {
             return;
         }
 
+        modelName = modelName ? this.#convertModelName(modelName) : undefined;
+
         if (TypeUtils.isFunction(targets)) {
             if (!modelName || !targetMap[modelName]) {
                 return;
             }
 
             const filter = targets;
-            const children = targetMap[modelName];
+            const children = targetMap[modelName]!;
             Array.from(children).forEach((uid) => {
                 if (!filter(uid)) {
                     return;
@@ -172,7 +174,7 @@ class _ModelEdgeStore {
                 return;
             }
 
-            const children = targetMap[modelName];
+            const children = targetMap[modelName]!;
             for (let i = 0; i < targets.length; ++i) {
                 const target = targets[i];
                 const targetUID = TypeUtils.isString(target) ? target : target.uid;
@@ -376,7 +378,8 @@ class _ModelEdgeStore {
         const sourceModelName = this.#convertModelName(source.MODEL_NAME);
         let subscriptions;
         if (event === "CONNECTED") {
-            subscriptions = getDeepRecordMap(false, this.#subscriptions.CONNECTED, sourceModelName, source.uid, context.targetClass.MODEL_NAME);
+            const targetModelName = this.#convertModelName(context.targetClass.MODEL_NAME);
+            subscriptions = getDeepRecordMap(false, this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName);
         } else {
             const { modelName, uid } = context.target;
             subscriptions = getDeepRecordMap(false, this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, modelName, uid);

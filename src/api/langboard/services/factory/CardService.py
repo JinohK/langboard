@@ -70,7 +70,7 @@ class CardService(BaseService):
         project_label_service = self._get_service(ProjectLabelService)
         api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
 
-        api_card["members"] = await self.get_assigned_users(card, as_api=True)
+        api_card["member_uids"] = await self.get_assigned_users(card, as_api=True, only_ids=True)
 
         card_relationship_service = self._get_service(CardRelationshipService)
         api_card["relationships"] = await card_relationship_service.get_all_by_card(card, as_api=True)
@@ -105,11 +105,11 @@ class CardService(BaseService):
         checklist_service = self._get_service(ChecklistService)
 
         raw_members = await self.get_assigned_users_by_project(project)
-        members: dict[int, list[dict[str, Any]]] = {}
+        members: dict[int, list[str]] = {}
         for user, card_assigned_user in raw_members:
             if card_assigned_user.card_id not in members:
                 members[card_assigned_user.card_id] = []
-            members[card_assigned_user.card_id].append(user.api_response())
+            members[card_assigned_user.card_id].append(user.get_uid())
 
         raw_relationships = await card_relationship_service.get_all_by_project(project, as_api=False)
         relationships: dict[int, list[dict[str, Any]]] = {}
@@ -138,7 +138,7 @@ class CardService(BaseService):
         for card, count_comment in raw_cards:
             api_card = card.api_response()
             api_card["count_comment"] = count_comment
-            api_card["members"] = members.get(card.id, [])
+            api_card["member_uids"] = members.get(card.id, [])
             api_card["relationships"] = relationships.get(card.id, [])
             api_card["labels"] = labels.get(card.id, [])
             api_card["checklists"] = checklists.get(card.id, [])
@@ -227,25 +227,48 @@ class CardService(BaseService):
     ) -> list[tuple[User, CardAssignedUser]]: ...
     @overload
     async def get_assigned_users(self, card: TCardParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
+    @overload
     async def get_assigned_users(
-        self, card: TCardParam, as_api: bool
-    ) -> list[tuple[User, CardAssignedUser]] | list[dict[str, Any]]:
+        self, card: TCardParam, as_api: Literal[False], only_ids: Literal[True]
+    ) -> list[tuple[SnowflakeID, CardAssignedUser]]: ...
+    @overload
+    async def get_assigned_users(
+        self, card: TCardParam, as_api: Literal[True], only_ids: Literal[True]
+    ) -> list[str]: ...
+    async def get_assigned_users(
+        self, card: TCardParam, as_api: bool, only_ids: bool = False
+    ) -> (
+        list[tuple[User, CardAssignedUser]]
+        | list[dict[str, Any]]
+        | list[tuple[SnowflakeID, CardAssignedUser]]
+        | list[str]
+    ):
         card = ServiceHelper.get_by_param(Card, card)
         if not card:
             return []
 
         raw_users = []
+        if only_ids:
+            query = SqlBuilder.select.columns(User.id, CardAssignedUser)
+        else:
+            query = SqlBuilder.select.tables(User, CardAssignedUser)
         with DbSession.use(readonly=True) as db:
             result = db.exec(
-                SqlBuilder.select.tables(User, CardAssignedUser)
-                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
-                .where(CardAssignedUser.column("card_id") == card.id)
+                query.join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id")).where(
+                    CardAssignedUser.column("card_id") == card.id
+                )
             )
             raw_users = result.all()
         if not as_api:
-            return raw_users
+            return cast(Any, raw_users)
 
-        users = [user.api_response() for user, _ in raw_users]
+        if only_ids:
+            return cast(
+                Any,
+                [user_id.to_short_code() for user_id, _ in cast(list[tuple[SnowflakeID, CardAssignedUser]], raw_users)],
+            )
+
+        users = [user.api_response() for user, _ in cast(list[tuple[User, CardAssignedUser]], raw_users)]
         return users
 
     async def get_assigned_users_by_project(self, project: TProjectParam) -> list[tuple[User, CardAssignedUser]]:
@@ -311,7 +334,7 @@ class CardService(BaseService):
                         )
                     )
 
-        api_card = card.board_api_response(0, [user.api_response() for user in users], [], [], [])
+        api_card = card.board_api_response(0, [user.get_uid() for user in users], [], [], [])
         model = {"card": api_card}
 
         await CardPublisher.created(project, column, model)

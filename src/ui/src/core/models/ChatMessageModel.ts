@@ -73,7 +73,7 @@ class ChatMessageModel extends BaseModel<Interface> {
         return this.getValue("updated_at");
     }
     public set updated_at(value: string | Date) {
-        this.update({ updated_at: value });
+        this.update({ updated_at: new Date(value) });
     }
 
     public get isReceived() {

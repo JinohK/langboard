@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
 import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
@@ -106,7 +106,9 @@ function BoardColumnCardDisplay({
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
     const { filters, canDragAndDrop, navigateWithFilters } = useBoard();
     const description = card.useField("description");
-    const cardMembers = card.useForeignField("members");
+    const projectMembers = card.useForeignField("project_members");
+    const cardMemberUIDs = card.useField("member_uids");
+    const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
     const isHoverCardOpened = card.useField("isHoverCardOpened");
     const labels = card.useForeignField("labels");
     const checklists = card.useForeignField("checklists");

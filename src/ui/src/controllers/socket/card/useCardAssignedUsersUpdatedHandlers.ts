@@ -1,10 +1,10 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectCard, User } from "@/core/models";
+import { ProjectCard } from "@/core/models";
 
 export interface ICardAssignedUsersUpdatedRawResponse {
-    assigned_members: User.Interface[];
+    member_uids: string[];
 }
 
 export interface IUseCardAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
@@ -24,7 +24,7 @@ const useCardAssignedUsersUpdatedHandlers = ({ callback, projectUID, cardUID }: 
             responseConverter: (data) => {
                 const card = ProjectCard.Model.getModel(cardUID);
                 if (card) {
-                    card.members = data.assigned_members;
+                    card.member_uids = data.member_uids;
                 }
                 return {};
             },

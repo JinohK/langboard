@@ -12,12 +12,20 @@ import { HOVER_CARD_UID_ATTR, IBoardColumnCardContextParams } from "@/pages/Boar
 function BoardColumnCardPreview() {
     const { project, currentUser } = useBoard();
     const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const projectMembers = project.useForeignField("members");
+    const projectMembers = project.useForeignField("all_members");
+    const projectInvitedMemberUIDs = project.useField("invited_member_uids");
     const projectBots = project.useForeignField("bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
+    const mentionables = useMemo(
+        () => [
+            ...projectMembers.filter((model) => model.isValidUser() && !projectInvitedMemberUIDs.includes(model.uid)),
+            ...projectBots.map((bot) => bot.as_user),
+        ],
+        [projectMembers, projectBots, projectInvitedMemberUIDs]
+    );
     const description = card.useField("description");
     const labels = card.useForeignField("labels");
-    const cardMembers = card.useForeignField("members");
+    const cardMemberUIDs = card.useField("member_uids");
+    const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
     const flatChecklists = card.useForeignField("checklists");
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
 

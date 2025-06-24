@@ -94,8 +94,11 @@ function BoardFilter() {
                                     uncountableItems={["none", "me"]}
                                     filterName="members"
                                     createFilterItems={() =>
-                                        project.members
-                                            .filter((member) => filterMember(member))
+                                        project.all_members
+                                            .filter(
+                                                (member) =>
+                                                    member.isValidUser() && !project.invited_member_uids.includes(member.uid) && filterMember(member)
+                                            )
                                             .map((member) => (
                                                 <BoardFilterItem key={createShortUUID()} name="members" value={member.email}>
                                                     <UserAvatar.Root user={member} withName avatarSize="xs" labelClassName="gap-1" />

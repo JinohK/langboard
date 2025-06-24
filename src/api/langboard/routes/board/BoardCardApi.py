@@ -75,7 +75,7 @@ from .scopes import (
                             "project_bots": [Bot],
                             "attachments": [CardAttachment],
                             "labels": [ProjectLabel],
-                            "members": [User],
+                            "member_uids": "string[]",
                             "relationships": [CardRelationship],
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                         }
@@ -165,7 +165,7 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
                             "project_bots": [Bot],
                             "attachments": [CardAttachment],
                             "labels": [ProjectLabel],
-                            "members": [User],
+                            "member_uids": "string[]",
                             "relationships": [CardRelationship],
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                         }

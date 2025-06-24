@@ -50,7 +50,7 @@ class Card(SoftDeleteModel, table=True):
     def board_api_response(
         self,
         count_comment: int,
-        members: list[dict[str, Any]],
+        member_uids: list[str],
         relationships: list[dict[str, Any]],
         labels: list[dict[str, Any]],
         checklists: list[dict[str, Any]],
@@ -58,7 +58,7 @@ class Card(SoftDeleteModel, table=True):
         return {
             **self.api_response(),
             "count_comment": count_comment,
-            "members": members,
+            "member_uids": member_uids,
             "relationships": relationships,
             "labels": labels,
             "checklists": checklists,

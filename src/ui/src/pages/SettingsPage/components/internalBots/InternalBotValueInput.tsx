@@ -29,7 +29,7 @@ function InternalBotValueInput({ valueType, ...props }: IInternalBotValueInputPr
 
 function InternalBotValueTextInput({ value, newValueRef, change, ref }: Omit<IInternalBotValueInputProps, "valueType">) {
     const [t] = useTranslation();
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
             e.stopPropagation();
@@ -46,7 +46,8 @@ function InternalBotValueTextInput({ value, newValueRef, change, ref }: Omit<IIn
             autoComplete="off"
             defaultValue={value}
             onBlur={change}
-            onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyEvent}
+            onKeyUp={handleKeyEvent}
             ref={ref as React.RefObject<HTMLInputElement>}
         />
     );

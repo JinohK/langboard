@@ -1,6 +1,9 @@
-import { Flex } from "@/components/base";
+import { Breadcrumb, Flex } from "@/components/base";
 import { BotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { useAppSetting } from "@/core/providers/AppSettingProvider";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { ROUTES } from "@/core/routing/constants";
 import BotApiAuthType from "@/pages/SettingsPage/components/bots/BotApiAuthType";
 import BotApiKey from "@/pages/SettingsPage/components/bots/BotApiKey";
 import BotApiURL from "@/pages/SettingsPage/components/bots/BotApiURL";
@@ -11,15 +14,44 @@ import BotName from "@/pages/SettingsPage/components/bots/BotName";
 import BotPrompt from "@/pages/SettingsPage/components/bots/BotPrompt";
 import BotTriggerConditionList from "@/pages/SettingsPage/components/bots/BotTriggerConditionList";
 import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
-import { memo } from "react";
+import { memo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface IBotDetailsProps {
     bot: BotModel.TModel;
 }
 
 const BotDetails = memo(({ bot }: IBotDetailsProps) => {
+    const { setPageAliasRef } = usePageHeader();
+    const [t] = useTranslation();
+    const { navigateRef, isValidating } = useAppSetting();
+    const name = bot.useField("name");
+
+    const moveToList = () => {
+        if (isValidating) {
+            return;
+        }
+
+        navigateRef.current(ROUTES.SETTINGS.BOTS);
+    };
+
+    useEffect(() => {
+        setPageAliasRef.current(t("settings.{botName} details", { botName: name }));
+    }, [name]);
+
     return (
         <ModelRegistry.BotModel.Provider model={bot}>
+            <Breadcrumb.Root>
+                <Breadcrumb.List>
+                    <Breadcrumb.Item className="cursor-pointer">
+                        <Breadcrumb.Link onClick={moveToList}>{t("settings.Bots")}</Breadcrumb.Link>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Separator />
+                    <Breadcrumb.Item>
+                        <Breadcrumb.Page>{t("settings.{botName} details", { botName: name })}</Breadcrumb.Page>
+                    </Breadcrumb.Item>
+                </Breadcrumb.List>
+            </Breadcrumb.Root>
             <Flex direction="col" gap="4">
                 <BotAvatar />
                 <Flex justify="center">

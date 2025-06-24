@@ -30,7 +30,6 @@ function BotsPage() {
             return;
         }
 
-        setPageAliasRef.current(`${bot.name} Details`);
         setBot(bot);
     }, [botUID]);
 

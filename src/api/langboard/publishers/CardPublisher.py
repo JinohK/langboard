@@ -136,12 +136,12 @@ class CardPublisher(BaseSocketPublisher):
 
     @staticmethod
     async def assigned_users_updated(project: Project, card: Card, users: list[User]):
-        model = {"assigned_members": [user.api_response() for user in users]}
+        model = {"member_uids": [user.get_uid() for user in users]}
         publish_model = SocketPublishModel(
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:card:assigned-users:updated:{card.get_uid()}",
-            data_keys="assigned_members",
+            data_keys="member_uids",
         )
 
         await CardPublisher.put_dispather(model, publish_model)

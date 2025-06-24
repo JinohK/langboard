@@ -3,7 +3,7 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Floating, Form, IconComponent, Input } from "@/components/base";
 
 interface IBasePasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    name: string;
+    name?: string;
     label: string;
     autoFocus?: bool;
     className?: string;
@@ -15,6 +15,7 @@ interface IBasePasswordInputProps extends React.InputHTMLAttributes<HTMLInputEle
 }
 
 interface IFormPasswordInputProps extends IBasePasswordInputProps {
+    name: string;
     isFormControl: true;
     isValidating: bool;
 }

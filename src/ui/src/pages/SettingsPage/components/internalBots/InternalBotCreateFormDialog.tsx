@@ -11,6 +11,7 @@ import { InternalBotModel } from "@/core/models";
 import { isValidURL } from "@/core/utils/StringUtils";
 import useCreateInternalBot from "@/controllers/api/settings/internalBots/useCreateInternalBot";
 import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
+import PasswordInput from "@/components/PasswordInput";
 
 export interface IInternalBotCreateFormDialogProps {
     opened: bool;
@@ -223,10 +224,10 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
                         {errors.url && <FormErrorMessage error={errors.url} notInForm />}
                     </Box>
                     <Box mt="4">
-                        <Floating.LabelInput
+                        <PasswordInput
                             label={t("settings.Internal bot API key")}
+                            isValidating={isValidating}
                             autoComplete="off"
-                            disabled={isValidating}
                             ref={(el) => {
                                 inputsRef.current.apiKey = el;
                             }}

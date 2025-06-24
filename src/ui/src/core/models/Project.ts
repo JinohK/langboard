@@ -46,20 +46,20 @@ export type TRoleActions = ERoleAction | keyof typeof ERoleAction | TRoleAllGran
 export const TYPES = ["SI", "SW", "Other"];
 
 export interface Interface extends IBaseModel {
+    owner_uid: string;
     title: string;
     project_type: string;
     updated_at: Date;
 }
 
 export interface IStore extends Interface {
+    all_members: User.Interface[];
+    invited_member_uids: string[];
     starred: bool;
-    owner: User.Interface;
     columns: ProjectColumn.Interface[];
-    members: User.Interface[];
     bots: BotModel.Interface[];
     internal_bots: InternalBotModel.Interface[];
     current_auth_role_actions: TRoleActions[];
-    invited_members: User.Interface[];
     labels: ProjectLabel.Interface[];
     description: string;
     ai_description?: string;
@@ -72,12 +72,10 @@ export interface IStore extends Interface {
 class Project extends BaseModel<IStore> {
     static override get FOREIGN_MODELS() {
         return {
-            owner: User.Model.MODEL_NAME,
+            all_members: User.Model.MODEL_NAME,
             columns: ProjectColumn.Model.MODEL_NAME,
-            members: User.Model.MODEL_NAME,
             bots: BotModel.Model.MODEL_NAME,
             internal_bots: InternalBotModel.Model.MODEL_NAME,
-            invited_members: User.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
         };
     }
@@ -151,6 +149,13 @@ class Project extends BaseModel<IStore> {
         );
     }
 
+    public get owner_uid() {
+        return this.getValue("owner_uid");
+    }
+    public set owner_uid(value) {
+        this.update({ owner_uid: value });
+    }
+
     public get title() {
         return this.getValue("title");
     }
@@ -186,11 +191,18 @@ class Project extends BaseModel<IStore> {
         this.update({ ai_description: value });
     }
 
-    public get owner(): User.TModel {
-        return this.getForeignValue("owner")[0];
+    public get all_members(): User.TModel[] {
+        return this.getForeignValue("all_members");
     }
-    public set owner(value: User.TModel | User.Interface) {
-        this.update({ owner: value });
+    public set all_members(value: (User.TModel | User.Interface)[]) {
+        this.update({ all_members: value });
+    }
+
+    public get invited_member_uids(): string[] {
+        return this.getValue("invited_member_uids");
+    }
+    public set invited_member_uids(value: string[]) {
+        this.update({ invited_member_uids: value });
     }
 
     public get columns(): ProjectColumn.TModel[] {
@@ -198,13 +210,6 @@ class Project extends BaseModel<IStore> {
     }
     public set columns(value: (ProjectColumn.TModel | ProjectColumn.Interface)[]) {
         this.update({ columns: value });
-    }
-
-    public get members(): User.TModel[] {
-        return this.getForeignValue("members");
-    }
-    public set members(value: (User.TModel | User.Interface)[]) {
-        this.update({ members: value });
     }
 
     public get bots(): BotModel.TModel[] {
@@ -226,13 +231,6 @@ class Project extends BaseModel<IStore> {
     }
     public set current_auth_role_actions(value) {
         this.update({ current_auth_role_actions: value });
-    }
-
-    public get invited_members(): User.TModel[] {
-        return this.getForeignValue("invited_members");
-    }
-    public set invited_members(value: (User.TModel | User.Interface)[]) {
-        this.update({ invited_members: value });
     }
 
     public get labels(): ProjectLabel.TModel[] {

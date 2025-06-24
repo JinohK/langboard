@@ -30,7 +30,6 @@ function InternalBotPage() {
             return;
         }
 
-        setPageAliasRef.current(`${targetBot.display_name} Details`);
         setBot(targetBot);
     }, [botUID]);
 

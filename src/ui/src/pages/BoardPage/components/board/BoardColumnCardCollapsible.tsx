@@ -24,6 +24,9 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
     const [t] = useTranslation();
     const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const title = card.useField("title");
+    const projectMembers = project.useForeignField("all_members");
+    const cardMemberUIDs = card.useField("member_uids");
+    const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
     const commentCount = card.useField("count_comment");
     const isCollapseOpened = card.useField("isCollapseOpened");
     const labels = card.useForeignField("labels");
@@ -180,7 +183,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                             </Flex>
                             <UserAvatarList
                                 maxVisible={3}
-                                users={card.members}
+                                users={cardMembers}
                                 projectUID={project.uid}
                                 size="sm"
                                 {...attributes}

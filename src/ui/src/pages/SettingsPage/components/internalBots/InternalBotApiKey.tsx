@@ -1,4 +1,5 @@
-import { Box, Floating, Toast } from "@/components/base";
+import { Box, Toast } from "@/components/base";
+import PasswordInput from "@/components/PasswordInput";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -68,8 +69,9 @@ const InternalBotApiKey = memo(() => {
 
     return (
         <Box>
-            <Floating.LabelInput
+            <PasswordInput
                 label={t("settings.Internal bot API key")}
+                isValidating={isValidating}
                 autoComplete="off"
                 defaultValue={apiKey}
                 onBlur={change}
