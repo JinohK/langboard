@@ -7,6 +7,7 @@ RUN mkdir -p /etc/cron.d
 COPY docker-entrypoint.sh /scripts/docker-entrypoint.sh
 COPY backup.sh /scripts/backup.sh
 COPY cron.tab /var/spool/cron/crontabs/root
+RUN chmod +x /scripts/docker-entrypoint.sh
 
 RUN chmod +x /scripts/backup.sh && \
     chmod 600 /var/spool/cron/crontabs/root && \

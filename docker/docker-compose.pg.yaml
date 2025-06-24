@@ -87,7 +87,6 @@ services:
       - PG_DB=${POSTGRES_DB}
     volumes:
       - ./volumes/db_backup:/backup
-      - ./db_backup/docker-entrypoint.sh:/scripts/docker-entrypoint.sh
       - ./db_backup/backup.sh:/scripts/backup.sh
       - ./db_backup/cron.tab:/var/spool/cron/crontabs/root
       - ./volumes/logs/db_backup:/logs
