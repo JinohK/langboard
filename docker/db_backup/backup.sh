@@ -1,6 +1,7 @@
 #!/bin/sh
 
-LOG_DIR="/logs"
+. /scripts/.env
+
 BACKUP_DIR="/backup"
 TAR_NAME=${PG_DB}"*.tar.gz"
 DELDAY=7
@@ -27,9 +28,6 @@ rm $FILE_PATH_PREFIX.dump
 
 record_log "Deleting backup files older than $DELDAY days..."
 find $BACKUP_DIR -name "${TAR_NAME}" -mtime +$DELDAY -delete
-
-record_log "Deleting old log files older than $DELDAY days..."
-find $LOG_DIR -name "*.log" -mtime +$DELDAY -delete
 
 record_log "${FILE_PATH_PREFIX}.tar.gz created successfully."
 record_log "Backup process completed successfully."

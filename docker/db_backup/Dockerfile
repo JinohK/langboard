@@ -4,6 +4,7 @@ RUN apk add --no-cache postgresql-client busybox-suid
 
 RUN mkdir -p /etc/cron.d
 
+COPY docker-entrypoint.sh /scripts/docker-entrypoint.sh
 COPY backup.sh /scripts/backup.sh
 COPY cron.tab /var/spool/cron/crontabs/root
 
@@ -13,4 +14,4 @@ RUN chmod +x /scripts/backup.sh && \
 
 RUN mkdir -p /logs
 
-CMD ["crond", "-f", "-l", "7", "-c", "/var/spool/cron/crontabs"]
+ENTRYPOINT ["/scripts/docker-entrypoint.sh"]
