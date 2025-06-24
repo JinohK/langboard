@@ -29,12 +29,12 @@ const useGetProjectDetails = (form: IGetProjectDetailsForm, options?: TQueryOpti
         });
 
         return {
-            project: Project.Model.fromObject(res.data.project),
-            bots: BotModel.Model.fromObjectArray(res.data.bots),
-            internal_bots: InternalBotModel.Model.fromObjectArray(res.data.internal_bots),
-            columns: ProjectColumn.Model.fromObjectArray(res.data.columns),
-            cards: ProjectCard.Model.fromObjectArray(res.data.cards),
-            chat_templates: ChatTemplateModel.Model.fromObjectArray(res.data.chat_templates),
+            project: Project.Model.fromOne(res.data.project),
+            bots: BotModel.Model.fromArray(res.data.bots),
+            internal_bots: InternalBotModel.Model.fromArray(res.data.internal_bots),
+            columns: ProjectColumn.Model.fromArray(res.data.columns),
+            cards: ProjectCard.Model.fromArray(res.data.cards),
+            chat_templates: ChatTemplateModel.Model.fromArray(res.data.chat_templates),
         };
     };
 

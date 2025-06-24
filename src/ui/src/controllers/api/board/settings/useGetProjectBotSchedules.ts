@@ -42,17 +42,17 @@ const useGetProjectBotSchedules = (projectUID: string, botUID: string, limit: nu
             const schedule = res.data.schedules[i];
             switch (schedule.target_table as BotSchedule.TTargetTable) {
                 case "project_column":
-                    ProjectColumn.Model.fromObject(schedule.target);
+                    ProjectColumn.Model.fromOne(schedule.target);
                     break;
                 case "card":
-                    ProjectCard.Model.fromObject(schedule.target);
+                    ProjectCard.Model.fromOne(schedule.target);
                     break;
             }
 
             delete schedule.target;
         }
 
-        BotSchedule.Model.fromObjectArray(res.data.schedules, true);
+        BotSchedule.Model.fromArray(res.data.schedules, true);
 
         setIsLastPage(res.data.schedules.length < limit);
 

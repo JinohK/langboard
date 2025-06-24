@@ -27,56 +27,56 @@ export class ActivityModel extends BaseModel<TActivity> {
     public get activity_type() {
         return this.getValue("activity_type");
     }
-    public set activity_type(value: TActivity["activity_type"]) {
+    public set activity_type(value) {
         this.update({ activity_type: value });
     }
 
     public get activity_history() {
         return this.getValue("activity_history");
     }
-    public set activity_history(value: TActivity["activity_history"]) {
+    public set activity_history(value) {
         this.update({ activity_history: value });
     }
 
     public get filterable_type() {
         return this.getValue("filterable_type");
     }
-    public set filterable_type(value: TActivity["filterable_type"]) {
+    public set filterable_type(value) {
         this.update({ filterable_type: value });
     }
 
     public get filterable_uid() {
         return this.getValue("filterable_uid");
     }
-    public set filterable_uid(value: TActivity["filterable_uid"]) {
+    public set filterable_uid(value) {
         this.update({ filterable_uid: value });
     }
 
     public get sub_filterable_type() {
         return this.getValue("sub_filterable_type");
     }
-    public set sub_filterable_type(value: TActivity["sub_filterable_type"]) {
+    public set sub_filterable_type(value) {
         this.update({ sub_filterable_type: value });
     }
 
     public get sub_filterable_uid() {
         return this.getValue("sub_filterable_uid");
     }
-    public set sub_filterable_uid(value: TActivity["sub_filterable_uid"]) {
+    public set sub_filterable_uid(value) {
         this.update({ sub_filterable_uid: value });
     }
 
     public get refer() {
         return this.getValue("refer");
     }
-    public set refer(value: TActivity["refer"]) {
+    public set refer(value) {
         this.update({ refer: value });
     }
 
     public get references() {
         return this.getValue("references");
     }
-    public set references(value: TActivity["references"]) {
+    public set references(value) {
         this.update({ references: value });
     }
 
@@ -84,7 +84,7 @@ export class ActivityModel extends BaseModel<TActivity> {
         return this.getValue("created_at");
     }
     public set created_at(value: string | Date) {
-        this.update({ created_at: value });
+        this.update({ created_at: new Date(value) });
     }
 }
 

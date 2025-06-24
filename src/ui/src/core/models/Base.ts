@@ -3,14 +3,15 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import { create, StoreApi, UseBoundStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { produce } from "immer";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import useSocketHandler from "@/core/helpers/SocketHandler";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { createUUID } from "@/core/utils/StringUtils";
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
-import { ModelRegistry, IModelMap } from "@/core/models/ModelRegistry";
+import { ModelRegistry, IModelMap, TPickedModel } from "@/core/models/ModelRegistry";
+import ModelEdgeStore from "@/core/models/ModelEdgeStore";
 
 export const ROLE_ALL_GRANTED = "*";
 
@@ -39,37 +40,9 @@ export interface IModelNotifiersMap {
     DELETION: Partial<Record<keyof IModelMap, Record<string, (uids: string[]) => void>>>;
 }
 
-export type TBaseModelClass<TModel extends IBaseModel> = {
-    MODEL_NAME: keyof IModelMap;
-    FOREIGN_MODELS: Partial<Record<keyof TModel, string>>;
-    convertModel(model: any): any;
-    createFakeMethodsMap<TMethodMap>(model: TModel): TMethodMap;
-    fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
-        this: TDerived,
-        model: Partial<TModel> & { uid: string },
-        shouldNotify?: bool,
-        createdModels?: BaseModel<TModel>[]
-    ): InstanceType<TDerived>;
-    subscribe<TDerived extends TBaseModelClass<any>>(
-        this: TDerived,
-        type: "CREATION",
-        key: string,
-        notifier: (models: InstanceType<TDerived>[]) => void,
-        filter: (model: InstanceType<TDerived>) => bool
-    ): () => void;
-    subscribe(type: "DELETION", key: string, notifier: (uids: string[]) => void): () => void;
-    unsubscribe(type: keyof IModelNotifiersMap, key: string): void;
-    unsubscribeSocketEvents(uid: string): void;
-    new (model: Record<string, any>): BaseModel<TModel>;
-};
-
-export type TBaseModelInstance<TModel extends IBaseModel> = {
-    [K in keyof TModel]: TModel[K];
-} & InstanceType<TBaseModelClass<TModel>>;
-
 type TModelStoreMap = {
     [TModelName in keyof IModelMap]: {
-        [uid: string]: TBaseModelInstance<any>;
+        [uid: string]: TPickedModel<TModelName>;
     };
 };
 
@@ -87,11 +60,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         DELETION: {},
     };
     static readonly #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
-    readonly #mForeignModelUIDs: Record<string, string[]> = {};
-    readonly #mForeignModelVersions: Record<string, number> = {};
     #store: TStateStore<TModel>;
 
-    static get FOREIGN_MODELS(): Partial<Record<string, string>> {
+    static get FOREIGN_MODELS(): Record<string, keyof IModelMap> {
         return {};
     }
 
@@ -100,32 +71,32 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     }
 
     constructor(model: Record<string, any>) {
-        this.#upsertForeignModel(model);
-
+        const foreignModels = this.#parseForeignModels(model);
         this.#store = create(
             immer(() => ({
                 ...model,
             }))
         ) as any;
+        this.#buildEdges(foreignModels);
     }
 
-    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+    public static fromOne<TDerived extends typeof BaseModel<any>, TModel extends IBaseModel>(
         this: TDerived,
-        model: Partial<TModel> & { uid: string },
+        model: Partial<TModel> & IBaseModel,
         shouldNotify: true,
         createdModels?: never
     ): InstanceType<TDerived>;
-    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+    public static fromOne<TDerived extends typeof BaseModel<any>, TModel extends IBaseModel>(
         this: TDerived,
-        model: Partial<TModel> & { uid: string },
+        model: Partial<TModel> & IBaseModel,
         shouldNotify?: false,
-        createdModels?: BaseModel<TModel>[]
+        createdModels?: TPickedModel<keyof IModelMap>[]
     ): InstanceType<TDerived>;
-    public static fromObject<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+    public static fromOne<TDerived extends typeof BaseModel<any>, TModel extends IBaseModel>(
         this: TDerived,
-        model: Partial<TModel> & { uid: string },
+        model: Partial<TModel> & IBaseModel,
         shouldNotify: bool = false,
-        createdModels?: BaseModel<TModel>[]
+        createdModels?: TPickedModel<keyof IModelMap>[]
     ) {
         const modelName = this.MODEL_NAME;
         if (!BaseModel.#MODELS[modelName]) {
@@ -138,7 +109,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
         if (!targetModelMap[model.uid]) {
             model = this.convertModel(model);
-            targetModelMap[model.uid] = new this(model);
+            targetModelMap[model.uid] = new (this as any)(model);
             const targetModel = targetModelMap[model.uid];
             if (shouldNotify) {
                 BaseModel.#notify("CREATION", modelName, targetModel);
@@ -148,76 +119,28 @@ export abstract class BaseModel<TModel extends IBaseModel> {
                 }
             }
         } else {
-            targetModelMap[model.uid].update(model);
+            (targetModelMap[model.uid] as any).update(model);
         }
 
         return targetModelMap[model.uid];
     }
 
-    public static fromObjectArray<TDerived extends TBaseModelClass<any>, TModel extends IBaseModel>(
+    public static fromArray<TDerived extends typeof BaseModel<any>, TModel extends IBaseModel>(
         this: TDerived,
-        models: (Partial<TModel> & { uid: string })[],
+        models: (Partial<TModel> & IBaseModel)[],
         shouldNotify: bool = false
     ): InstanceType<TDerived>[] {
         if (!shouldNotify) {
-            return models.map((model) => this.fromObject(model, false));
+            return models.map((model) => this.fromOne(model, false));
         }
 
-        const createdModels: BaseModel<TModel>[] = [];
-        const resultModels = models.map((model) => this.fromObject(model, false, createdModels));
+        const createdModels: any[] = [];
+        const resultModels = models.map((model) => this.fromOne(model, false, createdModels));
         if (createdModels.length > 0) {
             const modelName = this.MODEL_NAME;
             BaseModel.#notify("CREATION", modelName, createdModels);
         }
         return resultModels;
-    }
-
-    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify: true): void;
-    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify?: false): void;
-    public static addModel<TDerived extends TBaseModelClass<any>>(this: TDerived, model: InstanceType<TDerived>, shouldNotify: bool = false) {
-        const modelName = this.MODEL_NAME;
-        if (!BaseModel.#MODELS[modelName]) {
-            BaseModel.#MODELS[modelName] = {};
-        }
-
-        const targetModelMap = BaseModel.#MODELS[modelName];
-        if (targetModelMap[model.uid]) {
-            return;
-        }
-
-        targetModelMap[model.uid] = model;
-        if (!shouldNotify) {
-            return;
-        }
-
-        BaseModel.#notify("CREATION", modelName, targetModelMap[model.uid]);
-    }
-
-    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify: true): void;
-    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify?: false): void;
-    public static addModels<TDerived extends TBaseModelClass<any>>(this: TDerived, models: InstanceType<TDerived>[], shouldNotify: bool = false) {
-        const modelName = this.MODEL_NAME;
-        if (!BaseModel.#MODELS[modelName]) {
-            BaseModel.#MODELS[modelName] = {};
-        }
-
-        const targetModelMap = BaseModel.#MODELS[modelName];
-
-        const createdModels: TBaseModelInstance<any>[] = [];
-        for (let i = 0; i < models.length; ++i) {
-            const model = models[i];
-            if (!targetModelMap[model.uid]) {
-                targetModelMap[model.uid] = model;
-                if (shouldNotify) {
-                    createdModels.push(model);
-                }
-            }
-        }
-
-        if (createdModels.length > 0) {
-            const modelName = this.MODEL_NAME;
-            BaseModel.#notify("CREATION", modelName, createdModels);
-        }
     }
 
     public static convertModel(model: any): any {
@@ -228,7 +151,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return {} as TMethodMap;
     }
 
-    public static subscribe<TDerived extends TBaseModelClass<any>>(
+    public static subscribe<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         type: "CREATION",
         key: string,
@@ -236,7 +159,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         filter: (model: InstanceType<TDerived>) => bool
     ): () => void;
     public static subscribe(type: "DELETION", key: string, notifier: (uids: string[]) => void): () => void;
-    public static subscribe<TDerived extends TBaseModelClass<any>>(
+    public static subscribe<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         type: keyof IModelNotifiersMap,
         key: string,
@@ -268,12 +191,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         delete BaseModel.#NOTIFIERS[type][modelName][key];
     }
 
-    public static getModel<TDerived extends TBaseModelClass<any>>(this: TDerived, uid: string): InstanceType<TDerived> | undefined;
-    public static getModel<TDerived extends TBaseModelClass<any>>(
+    public static getModel<TDerived extends typeof BaseModel<any>>(this: TDerived, uid: string): InstanceType<TDerived> | undefined;
+    public static getModel<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         filter: (model: InstanceType<TDerived>) => bool
     ): InstanceType<TDerived> | undefined;
-    public static getModel<TDerived extends TBaseModelClass<any>>(
+    public static getModel<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         uidOrFilter: string | ((model: InstanceType<TDerived>) => bool)
     ): InstanceType<TDerived> | undefined {
@@ -290,12 +213,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return undefined;
     }
 
-    public static getModels<TDerived extends TBaseModelClass<any>>(this: TDerived, uids: string[]): InstanceType<TDerived>[];
-    public static getModels<TDerived extends TBaseModelClass<any>>(
+    public static getModels<TDerived extends typeof BaseModel<any>>(this: TDerived, uids: string[]): InstanceType<TDerived>[];
+    public static getModels<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         filter: (model: InstanceType<TDerived>) => bool
     ): InstanceType<TDerived>[];
-    public static getModels<TDerived extends TBaseModelClass<any>>(
+    public static getModels<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         uidsOrFilter: string[] | ((model: InstanceType<TDerived>) => bool)
     ): InstanceType<TDerived>[] {
@@ -313,7 +236,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return models;
     }
 
-    public static useModels<TDerived extends TBaseModelClass<any>>(
+    public static useModels<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         filter: (model: InstanceType<TDerived>) => bool,
         dependencies?: React.DependencyList
@@ -359,9 +282,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return models;
     }
 
-    public static deleteModel<TDerived extends TBaseModelClass<any>>(this: TDerived, uid: string): void;
-    public static deleteModel<TDerived extends TBaseModelClass<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
-    public static deleteModel<TDerived extends TBaseModelClass<any>>(
+    public static deleteModel<TDerived extends typeof BaseModel<any>>(this: TDerived, uid: string): void;
+    public static deleteModel<TDerived extends typeof BaseModel<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
+    public static deleteModel<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         uidOrFilter: string | ((model: InstanceType<TDerived>) => bool)
     ) {
@@ -387,9 +310,9 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
     }
 
-    public static deleteModels<TDerived extends TBaseModelClass<any>>(this: TDerived, uids: string[]): void;
-    public static deleteModels<TDerived extends TBaseModelClass<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
-    public static deleteModels<TDerived extends TBaseModelClass<any>>(
+    public static deleteModels<TDerived extends typeof BaseModel<any>>(this: TDerived, uids: string[]): void;
+    public static deleteModels<TDerived extends typeof BaseModel<any>>(this: TDerived, filter: (model: InstanceType<TDerived>) => bool): void;
+    public static deleteModels<TDerived extends typeof BaseModel<any>>(
         this: TDerived,
         uidsOrFilter: string[] | ((model: InstanceType<TDerived>) => bool)
     ) {
@@ -444,12 +367,16 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         delete BaseModel.#socketSubscriptions[modelName];
     }
 
-    static #notify(type: "CREATION", modelName: keyof IModelMap, targetModels: BaseModel<any> | BaseModel<any>[]): void;
-    static #notify(type: "DELETION", modelName: keyof IModelMap, uids: string | string[]): void;
-    static #notify(
+    static #notify<TModelName extends keyof IModelMap>(
+        type: "CREATION",
+        modelName: TModelName,
+        targetModels: TPickedModel<TModelName> | TPickedModel<TModelName>[]
+    ): void;
+    static #notify<TModelName extends keyof IModelMap>(type: "DELETION", modelName: TModelName, uids: string | string[]): void;
+    static #notify<TModelName extends keyof IModelMap>(
         type: keyof IModelNotifiersMap,
-        modelName: keyof IModelMap,
-        targetModelsOrUIDs: (BaseModel<any> | string) | (BaseModel<any> | string)[]
+        modelName: TModelName,
+        targetModelsOrUIDs: (TPickedModel<TModelName> | string) | (TPickedModel<TModelName> | string)[]
     ) {
         const notifierMap = BaseModel.#NOTIFIERS[type]?.[modelName];
         if (!notifierMap) {
@@ -475,6 +402,10 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         });
     }
 
+    public get FOREIGN_MODELS(): Partial<Record<keyof TModel, keyof IModelMap>> {
+        return this.#getConstructor().FOREIGN_MODELS as any;
+    }
+
     public get uid() {
         return this.getValue("uid");
     }
@@ -486,15 +417,12 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return this.constructor.name as any;
     }
 
-    public asFake<TDerived extends TBaseModelInstance<any>>(this: TDerived): TDerived {
+    public asFake<TDerived extends BaseModel<any>>(this: TDerived): TDerived {
         const constructor = this.#getConstructor();
         const model = {
             ...this.#store.getState(),
         };
-        Object.keys(constructor.FOREIGN_MODELS).forEach((key) => {
-            model[key] = this.getForeignModels<BaseModel<any>>(key as keyof IModelMap);
-        });
-        return createFakeModel(model, constructor.createFakeMethodsMap(model), Object.keys(constructor.FOREIGN_MODELS));
+        return createFakeModel(model, constructor.createFakeMethodsMap(model));
     }
 
     public useField<TKey extends keyof TModel>(
@@ -523,59 +451,30 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         return fieldValue;
     }
 
-    public useForeignField<TForeignModel>(
-        field: keyof TModel,
-        updatedCallback?: (newValue: TForeignModel[], oldValue: TForeignModel[]) => void
-    ): TForeignModel[] {
-        const [fieldValue, setFieldValue] = useState<TForeignModel[]>(this.getForeignModels<TForeignModel>(field));
-        const currentVersionRef = useRef(this.#getForeignModelVersions(field));
+    public useForeignField<TDerived extends BaseModel<TModel>, TKey extends keyof TDerived["FOREIGN_MODELS"]>(this: TDerived, field: TKey) {
+        type TModelName = TDerived["FOREIGN_MODELS"][TKey];
+        type TForeignModel = TModelName extends keyof IModelMap ? InstanceType<IModelMap[TModelName]["Model"]> : never;
+        const modelName = this.#getConstructor().FOREIGN_MODELS[field as string];
+        const fieldValue = ModelEdgeStore.useModels(this as any, ModelRegistry[modelName].Model);
 
-        useEffect(() => {
-            setFieldValue(this.getForeignModels<TForeignModel>(field));
-
-            const unsub = this.#store.subscribe((newValue) => {
-                if (newValue[field] === currentVersionRef.current) {
-                    return;
-                }
-
-                setTimeout(() => {
-                    setFieldValue(this.getForeignModels<TForeignModel>(field));
-                    updatedCallback?.(this.getForeignModels<TForeignModel>(field), fieldValue);
-                    currentVersionRef.current = this.#getForeignModelVersions(field);
-                }, 0);
-            });
-
-            return unsub;
-        }, []);
-
-        return fieldValue;
+        return fieldValue as TForeignModel[];
     }
 
     protected getValue<TKey extends keyof TModel>(field: TKey): TModel[TKey] {
         return this.#store.getState()[field];
     }
 
-    protected getForeignModels<TForeignModel>(field: keyof TModel): TForeignModel[] {
-        const constructor = this.#getConstructor();
-        if (!constructor.FOREIGN_MODELS[field]) {
-            return [];
-        }
+    protected getForeignValue<TDerived extends BaseModel<TModel>, TKey extends keyof TDerived["FOREIGN_MODELS"]>(this: TDerived, field: TKey) {
+        type TModelName = TDerived["FOREIGN_MODELS"][TKey];
+        type TForeignModel = TModelName extends keyof IModelMap ? InstanceType<IModelMap[TModelName]["Model"]> : never;
+        const modelName = this.#getConstructor().FOREIGN_MODELS[field as string];
+        const fieldValue = ModelEdgeStore.getModels(this as any, ModelRegistry[modelName].Model);
 
-        const modelName = constructor.FOREIGN_MODELS[field] as keyof IModelMap;
-        const uids = this.#getForeignModelUIDs(field);
-        const models = [];
-        for (let i = 0; i < uids.length; ++i) {
-            const model = BaseModel.#MODELS[modelName]?.[uids[i]];
-            if (!model) {
-                continue;
-            }
-            models.push(model);
-        }
-        return models;
+        return fieldValue as TForeignModel[];
     }
 
-    protected update<TUpdateModel extends Partial<TModel | TBaseModelInstance<any>>>(model: TUpdateModel) {
-        this.#upsertForeignModel(model);
+    protected update<TUpdateModel extends Partial<TModel | TPickedModel<keyof IModelMap>>>(model: TUpdateModel) {
+        this.#buildEdges(model);
         model = this.#getConstructor().convertModel(model);
 
         this.#store.setState(
@@ -681,72 +580,47 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         };
     }
 
-    #upsertForeignModel(model: Record<string, any>) {
-        const foreignModels = this.#getConstructor().FOREIGN_MODELS;
-        Object.keys<Record<string, any>>(foreignModels).forEach((key) => {
+    #parseForeignModels(model: Record<string, any>) {
+        const foreignModels: Record<string, any> = {};
+        Object.keys(this.#getConstructor().FOREIGN_MODELS).forEach((key) => {
             if (!model[key]) {
                 return;
             }
 
-            const modelName = foreignModels[key as keyof TModel] as keyof IModelMap;
+            foreignModels[key] = model[key];
+        });
 
+        return foreignModels;
+    }
+
+    #buildEdges(model: Record<string, any>) {
+        const foreignModels = this.#getConstructor().FOREIGN_MODELS;
+        Object.keys(foreignModels).forEach((key) => {
+            if (!model[key]) {
+                return;
+            }
+
+            const modelName = foreignModels[key];
             if (!TypeUtils.isArray(model[key])) {
                 model[key] = [model[key]];
             }
 
-            const uids = this.#getForeignModelUIDs(key as keyof TModel);
-            uids.splice(0);
+            const oldModels = ModelEdgeStore.getModels(this as any, ModelRegistry[modelName].Model);
+            ModelEdgeStore.removeEdge(this as any, oldModels);
 
-            for (let i = 0; i < model[key].length; ++i) {
-                const subModel = model[key][i];
-                if (subModel instanceof BaseModel) {
-                    if (!uids.includes(subModel.uid)) {
-                        uids.push(subModel.uid);
-                    }
-                    continue;
-                }
+            const foreigns = model[key] as (BaseModel<any> | IBaseModel)[];
+            const rawModels = foreigns.filter((subModel) => !(subModel instanceof BaseModel));
+            const models = ModelRegistry[modelName].Model.fromArray(rawModels);
 
-                ModelRegistry[modelName].Model.fromObject(subModel);
-                if (!uids.includes(subModel.uid)) {
-                    uids.push(subModel.uid);
-                }
-            }
+            const allModels = [...(foreigns.filter((m) => m instanceof BaseModel) as TPickedModel<keyof IModelMap>[]), ...models];
+            ModelEdgeStore.addEdge(this as any, allModels);
 
             delete model[key];
-            model[key] = this.#updateForeignModelVersions(key as keyof TModel);
         });
     }
 
-    #getForeignModelUIDs(field: keyof TModel) {
-        const foreignModels = this.#getConstructor().FOREIGN_MODELS;
-        const fieldKey = `${field as string}.${foreignModels[field]}`;
-        if (!this.#mForeignModelUIDs[fieldKey]) {
-            this.#mForeignModelUIDs[fieldKey] = [];
-        }
-
-        return this.#mForeignModelUIDs[fieldKey];
-    }
-
-    #getForeignModelVersions(field: keyof TModel) {
-        const foreignModels = this.#getConstructor().FOREIGN_MODELS;
-        const fieldKey = `${field as string}.${foreignModels[field]}`;
-        if (!this.#mForeignModelVersions[fieldKey]) {
-            this.#mForeignModelVersions[fieldKey] = 0;
-        }
-
-        return this.#mForeignModelVersions[fieldKey];
-    }
-
-    #updateForeignModelVersions(field: keyof TModel) {
-        const foreignModels = this.#getConstructor().FOREIGN_MODELS;
-        const fieldKey = `${field as string}.${foreignModels[field]}`;
-
-        this.#mForeignModelVersions[fieldKey] = this.#getForeignModelVersions(field) + 1;
-        return this.#mForeignModelVersions[fieldKey];
-    }
-
-    #getConstructor(): TBaseModelClass<TModel> {
-        return this.constructor as TBaseModelClass<TModel>;
+    #getConstructor(): typeof BaseModel<TModel> {
+        return this.constructor as typeof BaseModel<TModel>;
     }
 }
 

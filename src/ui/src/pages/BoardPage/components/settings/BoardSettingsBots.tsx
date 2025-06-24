@@ -11,7 +11,7 @@ const BoardSettingsBots = memo(() => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { project, allBots } = useBoardSettings();
-    const projectBots = project.useForeignField<BotModel.TModel>("bots");
+    const projectBots = project.useForeignField("bots");
     const { mutateAsync } = useUpdateProjectAssignedBots({ interceptToast: true });
     const [readOnly, setReadOnly] = useState(true);
 

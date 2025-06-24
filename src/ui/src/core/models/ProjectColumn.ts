@@ -29,35 +29,35 @@ class ProjectColumn extends BaseModel<IStore> {
     public get project_uid() {
         return this.getValue("project_uid");
     }
-    public set project_uid(value: string) {
+    public set project_uid(value) {
         this.update({ project_uid: value });
     }
 
     public get name() {
         return this.getValue("name");
     }
-    public set name(value: string) {
+    public set name(value) {
         this.update({ name: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
     public get count() {
         return this.getValue("count");
     }
-    public set count(value: number) {
+    public set count(value) {
         this.update({ count: value });
     }
 
     public get is_archive() {
         return this.getValue("is_archive");
     }
-    public set is_archive(value: bool) {
+    public set is_archive(value) {
         this.update({ is_archive: value });
     }
 }

@@ -26,7 +26,7 @@ const useCreateGlobalRelationship = (options?: TMutationOptions<ICreateGlobalRel
             }
         );
 
-        GlobalRelationshipType.Model.fromObject(res.data.global_relationship, true);
+        GlobalRelationshipType.Model.fromOne(res.data.global_relationship, true);
 
         return res.data;
     };

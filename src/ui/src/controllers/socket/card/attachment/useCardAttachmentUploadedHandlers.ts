@@ -21,7 +21,7 @@ const useCardAttachmentUploadedHandlers = ({ callback, cardUID }: IUseCardAttach
             params: cardUID ? { uid: cardUID } : undefined,
             callback,
             responseConverter: (data) => {
-                ProjectCardAttachment.Model.fromObject(data.attachment, true);
+                ProjectCardAttachment.Model.fromOne(data.attachment, true);
                 return {};
             },
         },

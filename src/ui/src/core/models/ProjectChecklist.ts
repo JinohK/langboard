@@ -19,10 +19,13 @@ export interface IStore extends Interface {
 }
 
 class ProjectChecklist extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             checkitems: ProjectCheckitem.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectChecklist.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectChecklist" as const;
@@ -36,43 +39,31 @@ class ProjectChecklist extends BaseModel<IStore> {
             checklistUID: this.uid,
             checklist: this,
         });
-
-        ProjectCheckitem.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.checkitems = [...this.checkitems, ...models];
-            },
-            (model) => model.checklist_uid === this.uid
-        );
-        ProjectCheckitem.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.checkitems = this.checkitems.filter((checkitem) => !uids.includes(checkitem.uid));
-        });
     }
 
     public get card_uid() {
         return this.getValue("card_uid");
     }
-    public set card_uid(value: string) {
+    public set card_uid(value) {
         this.update({ card_uid: value });
     }
 
     public get title() {
         return this.getValue("title");
     }
-    public set title(value: string) {
+    public set title(value) {
         this.update({ title: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
     public get checkitems(): ProjectCheckitem.TModel[] {
-        return this.getForeignModels("checkitems");
+        return this.getForeignValue("checkitems");
     }
     public set checkitems(value: (ProjectCheckitem.TModel | ProjectCheckitem.Interface)[]) {
         this.update({ checkitems: value });
@@ -81,14 +72,14 @@ class ProjectChecklist extends BaseModel<IStore> {
     public get is_checked() {
         return this.getValue("is_checked");
     }
-    public set is_checked(value: bool) {
+    public set is_checked(value) {
         this.update({ is_checked: value });
     }
 
     public get isOpenedInBoardCard() {
         return this.getValue("isOpenedInBoardCard") ?? false;
     }
-    public set isOpenedInBoardCard(value: bool) {
+    public set isOpenedInBoardCard(value) {
         this.update({ isOpenedInBoardCard: value });
     }
 }

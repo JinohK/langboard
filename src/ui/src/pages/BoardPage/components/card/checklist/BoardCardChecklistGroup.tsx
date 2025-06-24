@@ -27,7 +27,7 @@ function BoardCardChecklistGroup(): JSX.Element {
     const [t] = useTranslation();
     const { projectUID, card, socket, viewportRef } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
-    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const flatChecklists = card.useForeignField("checklists");
     const checkitemsMap = useMemo<Record<string, ProjectCheckitem.TModel>>(() => {
         const map: Record<string, ProjectCheckitem.TModel> = {};
         flatChecklists.forEach((checklist) => {

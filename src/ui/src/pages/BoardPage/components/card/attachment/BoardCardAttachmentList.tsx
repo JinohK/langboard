@@ -32,7 +32,7 @@ function BoardCardAttachmentList(): JSX.Element {
     const { projectUID, card, socket, viewportRef } = useBoardCard();
     const { mutate: changeCardAttachmentOrderMutate } = useChangeCardAttachmentOrder();
     const updater = useReducer((x) => x + 1, 0);
-    const flatAttachments = card.useForeignField<ProjectCardAttachment.TModel>("attachments");
+    const flatAttachments = card.useForeignField("attachments");
     const attachmentsMap = useMemo<Record<string, ProjectCardAttachment.TModel>>(() => {
         const map: Record<string, ProjectCardAttachment.TModel> = {};
         flatAttachments.forEach((attachment) => {

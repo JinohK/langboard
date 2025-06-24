@@ -290,7 +290,7 @@ function MultiSelectBotTagContent({
 }: TAssigneeSelecItem & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
     const name = assignee.useField("name");
     const botUname = assignee.useField("bot_uname");
-    const botAsUser = assignee.useForeignField<User.TModel>("as_user")[0];
+    const botAsUser = assignee.useForeignField("as_user")[0];
 
     return (
         <UserAvatar.Root user={botAsUser} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>

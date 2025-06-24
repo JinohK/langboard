@@ -21,7 +21,7 @@ const useDashboardProjectColumnCreatedHandlers = ({ callback, projectUID }: IUse
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                ProjectColumn.Model.fromObject(data.column, true);
+                ProjectColumn.Model.fromOne(data.column, true);
                 return {};
             },
         },

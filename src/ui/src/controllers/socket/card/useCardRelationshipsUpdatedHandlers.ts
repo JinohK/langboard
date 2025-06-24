@@ -26,7 +26,7 @@ const useCardRelationshipsUpdatedHandlers = ({ callback, projectUID }: IUseCardR
                 if (card) {
                     ProjectCardRelationship.Model.deleteModels(card.relationships.map((r) => r.uid));
                 }
-                ProjectCardRelationship.Model.fromObjectArray(data.relationships, true);
+                ProjectCardRelationship.Model.fromArray(data.relationships, true);
                 return {};
             },
         },

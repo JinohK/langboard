@@ -99,42 +99,42 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
     public get type() {
         return this.getValue("type");
     }
-    public set type(value: Interface["type"]) {
+    public set type(value) {
         this.update({ type: value });
     }
 
     public get firstname() {
         return this.getValue("firstname");
     }
-    public set firstname(value: string) {
+    public set firstname(value) {
         this.update({ firstname: value });
     }
 
     public get lastname() {
         return this.getValue("lastname");
     }
-    public set lastname(value: string) {
+    public set lastname(value) {
         this.update({ lastname: value });
     }
 
     public get email() {
         return this.getValue("email");
     }
-    public set email(value: string) {
+    public set email(value) {
         this.update({ email: value });
     }
 
     public get username() {
         return this.getValue("username");
     }
-    public set username(value: string) {
+    public set username(value) {
         this.update({ username: value });
     }
 
     public get avatar() {
         return this.getValue("avatar");
     }
-    public set avatar(value: string | undefined) {
+    public set avatar(value) {
         this.update({ avatar: value });
     }
 

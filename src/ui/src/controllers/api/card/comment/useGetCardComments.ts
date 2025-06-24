@@ -25,14 +25,14 @@ const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOption
             } as any,
         });
 
-        const comments = ProjectCardComment.Model.fromObjectArray(res.data.comments);
+        const comments = ProjectCardComment.Model.fromArray(res.data.comments);
 
         ProjectCardComment.Model.deleteModels(
             (model) => model.card_uid === params.card_uid && !comments.some((comment: ProjectCardComment.TModel) => comment.uid === model.uid)
         );
 
         return {
-            comments: ProjectCardComment.Model.fromObjectArray(res.data.comments),
+            comments: ProjectCardComment.Model.fromArray(res.data.comments),
         };
     };
 

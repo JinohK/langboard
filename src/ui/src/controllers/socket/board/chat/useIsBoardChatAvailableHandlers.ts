@@ -52,7 +52,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
             responseConverter: (data) => {
                 let bot = undefined;
                 if (data.available) {
-                    bot = InternalBotModel.Model.fromObject(data.bot, true);
+                    bot = InternalBotModel.Model.fromOne(data.bot, true);
                 }
 
                 return {

@@ -29,7 +29,6 @@ Consumer.register("socket_publish", async (data: unknown) => {
     }
 
     const publishModels = data.publish_models;
-
     for (let i = 0; i < publishModels.length; ++i) {
         const publishData: Record<string, unknown> = {};
         const publishModel = publishModels[i];

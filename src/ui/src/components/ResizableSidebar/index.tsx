@@ -104,8 +104,6 @@ function ResizableSidebar({
         window.addEventListener("mouseup", stopResizing);
     };
 
-    console.log(hidden);
-
     return (
         <>
             <Box

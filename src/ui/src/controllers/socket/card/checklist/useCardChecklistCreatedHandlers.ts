@@ -22,7 +22,7 @@ const useCardChecklistCreatedHandlers = ({ callback, projectUID, cardUID }: IUse
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
-                ProjectChecklist.Model.fromObject(data.checklist, true);
+                ProjectChecklist.Model.fromOne(data.checklist, true);
                 return {};
             },
         },

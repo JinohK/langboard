@@ -3,7 +3,7 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
-import { BotModel, ProjectCardComment, User } from "@/core/models";
+import { ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -35,12 +35,12 @@ export interface IBoardCommentProps {
 const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX.Element => {
     const { projectUID, card, currentUser, editorsRef } = useBoardCard();
     const [isEditing, setIsEditing] = useState(false);
-    const projectMembers = card.useForeignField<User.TModel>("project_members");
-    const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
+    const projectMembers = card.useForeignField("project_members");
+    const projectBots = card.useForeignField("project_bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const content = comment.useField("content");
-    const commentUsers = comment.useForeignField<User.TModel>("user");
-    const commentBots = comment.useForeignField<BotModel.TModel>("bot");
+    const commentUsers = comment.useForeignField("user");
+    const commentBots = comment.useForeignField("bot");
     const commentAuthor = commentUsers[0] || commentBots[0].as_user;
     const valueRef = useRef<IEditorContent>(content);
     const setValue = (value: IEditorContent) => {

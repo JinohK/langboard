@@ -27,35 +27,35 @@ class ProjectLabel extends BaseModel<Interface> {
     public get project_uid() {
         return this.getValue("project_uid");
     }
-    public set project_uid(value: string) {
+    public set project_uid(value) {
         this.update({ project_uid: value });
     }
 
     public get name() {
         return this.getValue("name");
     }
-    public set name(value: string) {
+    public set name(value) {
         this.update({ name: value });
     }
 
     public get color() {
         return this.getValue("color");
     }
-    public set color(value: string) {
+    public set color(value) {
         this.update({ color: value });
     }
 
     public get description() {
         return this.getValue("description");
     }
-    public set description(value: string) {
+    public set description(value) {
         this.update({ description: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 }

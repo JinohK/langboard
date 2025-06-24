@@ -29,7 +29,7 @@ const useCardCommentAddedHandlers = ({ callback, projectUID, cardUID }: IUseCard
                         card.count_comment = card.count_comment + 1;
                     }
                 }
-                ProjectCardComment.Model.fromObject(data.comment, true);
+                ProjectCardComment.Model.fromOne(data.comment, true);
                 return {};
             },
         },

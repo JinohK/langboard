@@ -34,7 +34,7 @@ const useCreateSetting = (options?: TMutationOptions<ICreateSettingForm, ICreate
             }
         );
 
-        AppSettingModel.Model.fromObject(res.data.setting, true);
+        AppSettingModel.Model.fromOne(res.data.setting, true);
 
         return {
             revealed_value: res.data.revealed_value,

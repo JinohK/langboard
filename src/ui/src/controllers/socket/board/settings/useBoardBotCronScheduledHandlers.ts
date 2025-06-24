@@ -22,7 +22,7 @@ const useBoardBotCronScheduledHandlers = ({ callback, projectUID, botUID }: IUse
             params: { uid: botUID },
             callback,
             responseConverter: (data) => {
-                BotSchedule.Model.fromObject(data.schedule, true);
+                BotSchedule.Model.fromOne(data.schedule, true);
                 return {};
             },
         },

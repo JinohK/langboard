@@ -25,9 +25,9 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
             } as any,
         });
 
-        ProjectCard.Model.fromObjectArray(res.data.cards);
-        GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships, true);
-        ProjectColumn.Model.fromObjectArray(res.data.columns);
+        ProjectCard.Model.fromArray(res.data.cards);
+        GlobalRelationshipType.Model.fromArray(res.data.global_relationships, true);
+        ProjectColumn.Model.fromArray(res.data.columns);
 
         ProjectCard.Model.getModels(
             (model) => model.project_uid === params.project_uid && !res.data.cards.some((card: ProjectCard.TModel) => card.uid === model.uid)

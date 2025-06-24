@@ -22,7 +22,7 @@ const useCardProjectUsersUpdatedHandlers = ({ callback, projectUID, card }: IUse
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                card.project_members = User.Model.fromObjectArray(data.assigned_members);
+                card.project_members = User.Model.fromArray(data.assigned_members);
                 card.members = card.members.filter((member) => {
                     return data.assigned_members.some((projectMember) => projectMember.uid === member.uid);
                 });

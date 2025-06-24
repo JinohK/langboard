@@ -3,7 +3,7 @@ import { Toast } from "@/components/base";
 import { EMAIL_REGEX } from "@/constants";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel, Project, User, UserGroup } from "@/core/models";
+import { BotModel, Project, User } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -18,12 +18,12 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const [t] = useTranslation();
     const { project, currentUser, hasRoleAction } = useBoard();
     const canEdit = hasRoleAction(Project.ERoleAction.Update);
-    const owners = project.useForeignField<User.TModel>("owner");
+    const owners = project.useForeignField("owner");
     const owner = owners[0];
-    const members = project.useForeignField<User.TModel>("members");
-    const bots = project.useForeignField<BotModel.TModel>("bots");
-    const invitedMembers = project.useForeignField<User.TModel>("invited_members");
-    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const members = project.useForeignField("members");
+    const bots = project.useForeignField("bots");
+    const invitedMembers = project.useForeignField("invited_members");
+    const groups = currentUser.useForeignField("user_groups");
     const allSelectables = useMemo(
         () => [...members, ...invitedMembers].filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
         [members, invitedMembers]

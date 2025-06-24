@@ -27,9 +27,9 @@ const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGe
         });
 
         return {
-            wikis: ProjectWiki.Model.fromObjectArray(res.data.wikis),
-            project_members: User.Model.fromObjectArray(res.data.project_members),
-            project_bots: BotModel.Model.fromObjectArray(res.data.project_bots),
+            wikis: ProjectWiki.Model.fromArray(res.data.wikis),
+            project_members: User.Model.fromArray(res.data.project_members),
+            project_bots: BotModel.Model.fromArray(res.data.project_bots),
         };
     };
 

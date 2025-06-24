@@ -5,7 +5,7 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { BotModel, User } from "@/core/models";
+import { User } from "@/core/models";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
@@ -30,8 +30,8 @@ export function SkeletonBoardCommentForm() {
 const BoardCommentForm = memo((): JSX.Element => {
     const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [t] = useTranslation();
-    const projectMembers = card.useForeignField<User.TModel>("project_members");
-    const projectBots = card.useForeignField<BotModel.TModel>("project_bots");
+    const projectMembers = card.useForeignField("project_members");
+    const projectBots = card.useForeignField("project_bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {

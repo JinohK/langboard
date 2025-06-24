@@ -1,7 +1,6 @@
 import { Button, Card, Collapsible, Flex, IconComponent } from "@/components/base";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import { ProjectCardRelationship, ProjectLabel } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -27,8 +26,8 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
     const title = card.useField("title");
     const commentCount = card.useField("count_comment");
     const isCollapseOpened = card.useField("isCollapseOpened");
-    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
-    const cardRelationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
+    const labels = card.useForeignField("labels");
+    const cardRelationships = card.useForeignField("relationships");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),

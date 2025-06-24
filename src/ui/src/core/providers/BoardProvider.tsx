@@ -73,7 +73,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
     const socket = useSocket();
     const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
-    const members = project.useForeignField<User.TModel>("members");
+    const members = project.useForeignField("members");
     const {
         filters,
         toString: filtersToString,

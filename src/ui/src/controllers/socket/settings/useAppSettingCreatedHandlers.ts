@@ -16,7 +16,7 @@ const useAppSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<
             name: SOCKET_SERVER_EVENTS.SETTINGS.CREATED,
             callback,
             responseConverter: (data) => {
-                AppSettingModel.Model.fromObject(data.setting, true);
+                AppSettingModel.Model.fromOne(data.setting, true);
                 return {};
             },
         },

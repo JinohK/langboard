@@ -112,7 +112,7 @@ const useGetActivities = (
                 }
             }
 
-            ActivityModel.Model.fromObjectArray(res.data.activities, true);
+            ActivityModel.Model.fromArray(res.data.activities, true);
 
             setIsLastPage(res.data.activities.length < limitRef.current);
             if (res.data.count_new_records) {

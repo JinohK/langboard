@@ -2,7 +2,7 @@ import { Button, Flex, Separator, SubmitButton, Toast } from "@/components/base"
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, User } from "@/core/models";
+import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -100,7 +100,7 @@ function BoardCommentFooterActions() {
     const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
     const { model: commentAuthor } = ModelRegistry.User.useContext();
     const { deletedComment } = params;
-    const projectMembers = card.useForeignField<User.TModel>("project_members");
+    const projectMembers = card.useForeignField("project_members");
     const [isValidating, setIsValidating] = useState(false);
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const canEdit = currentUser.uid === commentAuthor.uid || currentUser.is_admin;

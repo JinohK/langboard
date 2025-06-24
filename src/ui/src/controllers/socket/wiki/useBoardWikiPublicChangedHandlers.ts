@@ -23,7 +23,7 @@ const useBoardWikiPublicChangedHandlers = ({ callback, projectUID, currentUser, 
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {
-                ProjectWiki.Model.fromObject(data.wiki, true);
+                ProjectWiki.Model.fromOne(data.wiki, true);
                 if (!wiki.is_public && !currentUser.is_admin) {
                     if (!wiki.assigned_members.some((member) => member.uid === currentUser.uid)) {
                         wiki.changeToPrivate();

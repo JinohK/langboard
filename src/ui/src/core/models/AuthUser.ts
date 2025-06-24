@@ -26,17 +26,20 @@ export interface Interface extends User.Interface {
     purpose: string;
     affiliation?: string;
     position?: string;
-    user_groups: { uid: string; name: string; users: User.TModel[] }[];
+    user_groups: UserGroup.Interface[];
     subemails: { email: string; verified_at: string }[];
     preferred_lang: string;
     notification_unsubs: INotificationUnsubscriptionMap;
 }
 
 class AuthUser extends User.Model<Interface> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             user_groups: UserGroup.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return AuthUser.FOREIGN_MODELS;
     }
 
     static get currentUser() {
@@ -50,18 +53,6 @@ class AuthUser extends User.Model<Interface> {
 
         this.subscribeSocketEvents([useUserNotifiedHandlers, useUserNotificationDeletedHandlers, useUserProjectRolesUpdatedHandlers], {
             currentUser: this,
-        });
-
-        UserGroup.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.user_groups = this.user_groups.concat(models);
-            },
-            () => true
-        );
-        UserGroup.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.user_groups = this.user_groups.filter((column) => !uids.includes(column.uid));
         });
 
         AuthUser.subscribe("DELETION", this.uid, () => {
@@ -105,10 +96,10 @@ class AuthUser extends User.Model<Interface> {
     }
 
     public get user_groups(): UserGroup.TModel[] {
-        return this.getForeignModels("user_groups");
+        return this.getForeignValue("user_groups");
     }
     public set user_groups(value: (UserGroup.TModel | UserGroup.Interface)[]) {
-        this.update({ user_groups: value });
+        this.update({ user_groups: value as UserGroup.TModel[] });
     }
 
     public get subemails() {

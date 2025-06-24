@@ -5,7 +5,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
-import { ProjectWiki, User } from "@/core/models";
+import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -39,7 +39,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const isPublic = wiki.useField("is_public");
-    const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
+    const assignedMembers = wiki.useForeignField("assigned_members");
     const mentionables = useMemo(
         () => [...(isPublic ? projectMembers : assignedMembers), ...projectBots.map((bot) => bot.as_user)],
         [isPublic, assignedMembers, projectMembers, projectBots]

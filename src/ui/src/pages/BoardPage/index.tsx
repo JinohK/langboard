@@ -73,9 +73,9 @@ const BoardProxy = memo((): JSX.Element => {
                 const project = Project.Model.getModel(projectUID);
                 if (project) {
                     const existingBots = [...project.internal_bots];
-                    const targetBot = existingBots.find((bot) => bot.bot_type === result.bot.bot_type);
-                    if (targetBot && targetBot.uid !== result.bot.uid) {
-                        existingBots.splice(existingBots.indexOf(targetBot), 1);
+                    const targetBotIndex = existingBots.findIndex((bot) => bot.bot_type === result.bot.bot_type);
+                    if (targetBotIndex !== -1 && existingBots[targetBotIndex].uid !== result.bot.uid) {
+                        existingBots.splice(targetBotIndex, 1);
                     }
                     existingBots.push(result.bot);
                     project.internal_bots = existingBots;

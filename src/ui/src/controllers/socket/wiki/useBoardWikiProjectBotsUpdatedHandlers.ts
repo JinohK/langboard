@@ -26,7 +26,7 @@ const useBoardWikiProjectBotsUpdatedHandlers = ({ callback, projectUID }: IUseBo
             callback,
             responseConverter: (data) => {
                 return {
-                    assigned_bots: BotModel.Model.fromObjectArray(data.assigned_bots),
+                    assigned_bots: BotModel.Model.fromArray(data.assigned_bots),
                 };
             },
         },

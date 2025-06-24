@@ -2,7 +2,7 @@ import { Toast } from "@/components/base";
 import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import useNotifyCardChecklist from "@/controllers/api/card/checklist/useNotifyCardChecklist";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, User, UserGroup } from "@/core/models";
+import { Project, User } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -17,8 +17,8 @@ function BoardCardChecklistNotify() {
     const { mutateAsync: notifyChecklistMutateAsync } = useNotifyCardChecklist({ interceptToast: true });
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
-    const projectMembers = card.useForeignField<User.TModel>("project_members");
-    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const projectMembers = card.useForeignField("project_members");
+    const groups = currentUser.useForeignField("user_groups");
 
     const notify = useCallback(
         (selectedItems: User.TModel[]) => {

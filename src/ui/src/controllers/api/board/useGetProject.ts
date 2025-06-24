@@ -24,7 +24,7 @@ const useGetProject = (form: IGetProjectForm, options?: TQueryOptions<unknown, I
             } as any,
         });
 
-        const project = Project.Model.fromObject(res.data.project);
+        const project = Project.Model.fromOne(res.data.project);
         project.last_viewed_at = new Date();
 
         return {

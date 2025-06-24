@@ -29,7 +29,7 @@ const useUpdateSetting = (setting: AppSettingModel.TModel, options?: TMutationOp
             }
         );
 
-        AppSettingModel.Model.fromObject({
+        AppSettingModel.Model.fromOne({
             uid: setting.uid,
             ...res.data,
         });

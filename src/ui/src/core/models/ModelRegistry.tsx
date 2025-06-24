@@ -50,6 +50,9 @@ export interface IModelMap {
     UserNotification: IModelRegistry<typeof UserNotificationModel>;
 }
 
+export type TPickedModelClass<TModelName extends keyof IModelMap> = IModelMap[TModelName]["Model"];
+export type TPickedModel<TModelName extends keyof IModelMap> = InstanceType<TPickedModelClass<TModelName>>;
+
 type TClass = abstract new (...args: any) => any;
 
 interface IModelRegistry<TModel extends TClass, TRegistryParams = any> {

@@ -52,7 +52,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const scrollToBottomRef = useRef<() => void>(() => {});
     const isAtBottomRef = useRef(true);
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
-        ChatMessageModel.Model.fromObject({ ...data.ai_message, isPending: true }, true);
+        ChatMessageModel.Model.fromOne({ ...data.ai_message, isPending: true }, true);
         scrollToBottomRef.current();
     }, []);
     const bufferCallback = useCallback((data: { uid: string; message?: IChatContent; chunk?: string }) => {

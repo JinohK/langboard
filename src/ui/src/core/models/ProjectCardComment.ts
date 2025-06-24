@@ -19,11 +19,14 @@ export interface IStore extends Interface {
 }
 
 class ProjectCardComment extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             user: User.Model.MODEL_NAME,
             bot: BotModel.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectCardComment.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectCardComment" as const;
@@ -43,21 +46,21 @@ class ProjectCardComment extends BaseModel<IStore> {
     public get card_uid() {
         return this.getValue("card_uid");
     }
-    public set card_uid(value: string) {
+    public set card_uid(value) {
         this.update({ card_uid: value });
     }
 
     public get content() {
         return this.getValue("content");
     }
-    public set content(value: IEditorContent) {
+    public set content(value) {
         this.update({ content: value });
     }
 
     public get is_edited() {
         return this.getValue("is_edited");
     }
-    public set is_edited(value: bool) {
+    public set is_edited(value) {
         this.update({ is_edited: value });
     }
 
@@ -65,18 +68,18 @@ class ProjectCardComment extends BaseModel<IStore> {
         return this.getValue("commented_at");
     }
     public set commented_at(value: string | Date) {
-        this.update({ commented_at: value });
+        this.update({ commented_at: new Date(value) });
     }
 
     public get user(): User.TModel | undefined {
-        return this.getForeignModels<User.TModel>("user")[0];
+        return this.getForeignValue("user")[0];
     }
     public set user(value: User.TModel | User.Interface) {
         this.update({ user: value });
     }
 
     public get bot(): BotModel.TModel | undefined {
-        return this.getForeignModels<BotModel.TModel>("bot")[0];
+        return this.getForeignValue("bot")[0];
     }
     public set bot(value: BotModel.TModel | BotModel.Interface) {
         this.update({ bot: value });
@@ -85,7 +88,7 @@ class ProjectCardComment extends BaseModel<IStore> {
     public get reactions() {
         return this.getValue("reactions");
     }
-    public set reactions(value: Partial<Record<TEmoji, string[]>>) {
+    public set reactions(value) {
         this.update({ reactions: value });
     }
 }

@@ -8,10 +8,13 @@ export interface Interface extends IBaseModel {
 }
 
 class UserGroup extends BaseModel<Interface> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             users: User.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return UserGroup.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "UserGroup" as const;
@@ -25,7 +28,7 @@ class UserGroup extends BaseModel<Interface> {
     }
 
     public get users(): User.TModel[] {
-        return this.getForeignModels("users");
+        return this.getForeignValue("users");
     }
     public set users(value: (User.TModel | User.Interface)[]) {
         this.update({ users: value });

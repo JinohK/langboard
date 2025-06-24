@@ -1,7 +1,7 @@
 import { Box, Checkbox, Flex, HoverCard, ScrollArea, Separator } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { UserAvatarBadgeList } from "@/components/UserAvatarList";
-import { BotModel, ProjectChecklist, ProjectLabel, User } from "@/core/models";
+import { ProjectChecklist, ProjectLabel } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { Fragment, memo, useMemo, useState } from "react";
 import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
@@ -12,13 +12,13 @@ import { HOVER_CARD_UID_ATTR, IBoardColumnCardContextParams } from "@/pages/Boar
 function BoardColumnCardPreview() {
     const { project, currentUser } = useBoard();
     const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const projectMembers = project.useForeignField<User.TModel>("members");
-    const projectBots = project.useForeignField<BotModel.TModel>("bots");
+    const projectMembers = project.useForeignField("members");
+    const projectBots = project.useForeignField("bots");
     const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
     const description = card.useField("description");
-    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
-    const cardMembers = card.useForeignField<User.TModel>("members");
-    const flatChecklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const labels = card.useForeignField("labels");
+    const cardMembers = card.useForeignField("members");
+    const flatChecklists = card.useForeignField("checklists");
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
 
     return (

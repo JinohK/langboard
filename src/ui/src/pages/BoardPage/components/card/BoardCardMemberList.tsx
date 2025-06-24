@@ -2,7 +2,7 @@ import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/Mult
 import { Toast } from "@/components/base";
 import useUpdateCardAssignedUsers from "@/controllers/api/card/useUpdateCardAssignedUsers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, User, UserGroup } from "@/core/models";
+import { Project, User } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
@@ -12,9 +12,9 @@ const BoardCardMemberList = memo(() => {
     const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
-    const projectMembers = card.useForeignField<User.TModel>("project_members");
-    const members = card.useForeignField<User.TModel>("members");
-    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const projectMembers = card.useForeignField("project_members");
+    const members = card.useForeignField("members");
+    const groups = currentUser.useForeignField("user_groups");
     const { mutateAsync: updateCardAssignedUsersMutateAsync } = useUpdateCardAssignedUsers({ interceptToast: true });
 
     const onSave = async (items: User.TModel[]) => {

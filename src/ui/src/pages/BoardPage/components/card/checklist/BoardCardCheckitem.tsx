@@ -1,6 +1,6 @@
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
 import { useNavigate } from "react-router-dom";
-import { Project, ProjectCard, ProjectCheckitem, User } from "@/core/models";
+import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -89,9 +89,9 @@ const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }:
     const [isTitleOpened, setIsTitleOpened] = useState(false);
     const title = checkitem.useField("title");
     const isChecked = checkitem.useField("is_checked");
-    const cardifiedCards = checkitem.useForeignField<ProjectCard.TModel>("cardified_card");
+    const cardifiedCards = checkitem.useForeignField("cardified_card");
     const cardifiedCard = cardifiedCards[0];
-    const assignedUsers = checkitem.useForeignField<User.TModel>("user");
+    const assignedUsers = checkitem.useForeignField("user");
     const assignedUser = assignedUsers[0];
     const canEditCheckitem = (!assignedUser && hasRoleAction(Project.ERoleAction.CardUpdate)) || assignedUser.uid === currentUser.uid;
 

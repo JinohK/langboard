@@ -30,11 +30,14 @@ export interface Interface extends IBaseModel {
 }
 
 class ProjectCheckitem extends BaseModel<Interface> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             cardified_card: ProjectCard.Model.MODEL_NAME,
             user: User.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectCheckitem.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectCheckitem" as const;
@@ -55,13 +58,6 @@ class ProjectCheckitem extends BaseModel<Interface> {
                 checkitem: this,
             }
         );
-
-        ProjectCard.Model.subscribe("DELETION", this.uid, (uids) => {
-            if (!this.cardified_card || !uids.includes(this.cardified_card.uid)) {
-                return;
-            }
-            this.cardified_card = undefined;
-        });
     }
 
     public static convertModel(model: Interface): Interface {
@@ -80,26 +76,26 @@ class ProjectCheckitem extends BaseModel<Interface> {
     public get card_uid() {
         return this.getValue("card_uid");
     }
-    public set card_uid(value: string) {
+    public set card_uid(value) {
         this.update({ card_uid: value });
     }
 
     public get checklist_uid() {
         return this.getValue("checklist_uid");
     }
-    public set checklist_uid(value: string) {
+    public set checklist_uid(value) {
         this.update({ checklist_uid: value });
     }
 
     public get cardified_card(): ProjectCard.TModel | undefined {
-        return this.getForeignModels<ProjectCard.TModel>("cardified_card")?.[0];
+        return this.getForeignValue("cardified_card")?.[0];
     }
     public set cardified_card(value: ProjectCard.TModel | ProjectCard.Interface | undefined) {
-        this.update({ cardified_card: value });
+        this.update({ cardified_card: value as ProjectCard.TModel });
     }
 
     public get user(): User.TModel | undefined {
-        return this.getForeignModels<User.TModel>("user")?.[0];
+        return this.getForeignValue("user")?.[0];
     }
     public set user(value: User.TModel | User.Interface | undefined) {
         this.update({ user: value });
@@ -108,35 +104,35 @@ class ProjectCheckitem extends BaseModel<Interface> {
     public get title() {
         return this.getValue("title");
     }
-    public set title(value: string) {
+    public set title(value) {
         this.update({ title: value });
     }
 
     public get status() {
         return this.getValue("status");
     }
-    public set status(value: ECheckitemStatus) {
+    public set status(value) {
         this.update({ status: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
     public get accumulated_seconds() {
         return this.getValue("accumulated_seconds");
     }
-    public set accumulated_seconds(value: number) {
+    public set accumulated_seconds(value) {
         this.update({ accumulated_seconds: value });
     }
 
     public get is_checked() {
         return this.getValue("is_checked");
     }
-    public set is_checked(value: bool) {
+    public set is_checked(value) {
         this.update({ is_checked: value });
     }
 
@@ -144,14 +140,14 @@ class ProjectCheckitem extends BaseModel<Interface> {
         return this.getValue("initial_timer_started_at");
     }
     public set initial_timer_started_at(value: string | Date | undefined) {
-        this.update({ initial_timer_started_at: value });
+        this.update({ initial_timer_started_at: TypeUtils.isString(value) ? new Date(value) : value });
     }
 
     public get timer_started_at(): Date | undefined {
         return this.getValue("timer_started_at");
     }
     public set timer_started_at(value: string | Date | undefined) {
-        this.update({ timer_started_at: value });
+        this.update({ timer_started_at: TypeUtils.isString(value) ? new Date(value) : value });
     }
 }
 

@@ -19,7 +19,7 @@ const useGetAllStarredProjects = (options?: TQueryOptions<IGetAllStarredProjects
         });
 
         return {
-            projects: Project.Model.fromObjectArray(res.data.projects, true),
+            projects: Project.Model.fromArray(res.data.projects, true),
         };
     };
 

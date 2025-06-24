@@ -26,7 +26,7 @@ const useBoardWikiProjectUsersUpdatedHandlers = ({ callback, projectUID }: IUseB
             callback,
             responseConverter: (data) => {
                 return {
-                    assigned_members: User.Model.fromObjectArray(data.assigned_members),
+                    assigned_members: User.Model.fromArray(data.assigned_members),
                 };
             },
         },

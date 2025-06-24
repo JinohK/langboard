@@ -1,4 +1,3 @@
-import { ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import BoardCardActionRelationshipButton from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationshipButton";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
@@ -7,7 +6,7 @@ export interface IBoardCardActionRelationshipProps extends ISharedBoardCardActio
 
 function BoardCardActionRelationship({ buttonClassName }: IBoardCardActionRelationshipProps) {
     const { card } = useBoardCard();
-    const relationships = card.useForeignField<ProjectCardRelationship.TModel>("relationships");
+    const relationships = card.useForeignField("relationships");
 
     return (
         <>

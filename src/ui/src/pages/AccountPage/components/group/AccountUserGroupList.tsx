@@ -1,5 +1,4 @@
 import { Flex } from "@/components/base";
-import { UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 import AccountUserGroup, { SkeletonAccountUserGroup } from "@/pages/AccountPage/components/group/AccountUserGroup";
 import AccountUserGroupAddButton from "@/pages/AccountPage/components/group/AccountUserGroupAddButton";
@@ -15,7 +14,7 @@ export function SkeletonAccountUserGroupList(): JSX.Element {
 
 function AccountUserGroupList(): JSX.Element {
     const { currentUser } = useAccountSetting();
-    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const groups = currentUser.useForeignField("user_groups");
 
     return (
         <Flex direction="col" gap="5">

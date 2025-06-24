@@ -33,8 +33,8 @@ const useGetDashboardCards = (limit: number = 30, options?: TMutationOptions) =>
             } as any,
         });
 
-        Project.Model.fromObjectArray(res.data.projects, true);
-        ProjectCard.Model.fromObjectArray(res.data.cards, true);
+        Project.Model.fromArray(res.data.projects, true);
+        ProjectCard.Model.fromArray(res.data.cards, true);
         setCardUIDs((prev) => [
             ...prev.filter((uid) => !(res.data.cards as ProjectCard.Interface[]).some((card) => card.uid === uid)),
             ...(res.data.cards as ProjectCard.Interface[]).map((card) => card.uid),

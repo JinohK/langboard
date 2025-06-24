@@ -46,7 +46,7 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
                                 wiki_uid: wiki.uid,
                             })
                         ).then((response) => {
-                            ProjectWiki.Model.fromObject(response.data.wiki, true);
+                            ProjectWiki.Model.fromOne(response.data.wiki, true);
                         });
                     });
                 } else {

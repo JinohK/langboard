@@ -18,21 +18,21 @@ class ProjectCardRelationship extends BaseModel<Interface> {
     public get relationship_type_uid() {
         return this.getValue("relationship_type_uid");
     }
-    public set relationship_type_uid(value: string) {
+    public set relationship_type_uid(value) {
         this.update({ relationship_type_uid: value });
     }
 
     public get parent_card_uid() {
         return this.getValue("parent_card_uid");
     }
-    public set parent_card_uid(value: string) {
+    public set parent_card_uid(value) {
         this.update({ parent_card_uid: value });
     }
 
     public get child_card_uid() {
         return this.getValue("child_card_uid");
     }
-    public set child_card_uid(value: string) {
+    public set child_card_uid(value) {
         this.update({ child_card_uid: value });
     }
 

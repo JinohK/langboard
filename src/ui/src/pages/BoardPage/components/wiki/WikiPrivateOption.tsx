@@ -3,7 +3,7 @@ import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
 import useUpdateWikiAssignees from "@/controllers/api/wiki/useUpdateWikiAssignees";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel, ProjectWiki, User, UserGroup } from "@/core/models";
+import { BotModel, ProjectWiki, User } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
@@ -35,9 +35,9 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
     const isPublic = wiki.useField("is_public");
     const forbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);
-    const assignedBots = wiki.useForeignField<BotModel.TModel>("assigned_bots");
-    const assignedMembers = wiki.useForeignField<User.TModel>("assigned_members");
-    const groups = currentUser.useForeignField<UserGroup.TModel>("user_groups");
+    const assignedBots = wiki.useForeignField("assigned_bots");
+    const assignedMembers = wiki.useForeignField("assigned_members");
+    const groups = currentUser.useForeignField("user_groups");
     const allItems = useMemo(() => [...projectBots, ...projectMembers].filter((item) => item.uid !== currentUser.uid), [projectBots, projectMembers]);
     const showableAssignees = useMemo(() => [...assignedBots, ...assignedMembers], [assignedBots, assignedMembers]);
     const originalAssignees = useMemo(

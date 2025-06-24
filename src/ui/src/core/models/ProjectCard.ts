@@ -1,5 +1,4 @@
 import * as BotModel from "@/core/models/BotModel";
-import * as GlobalRelationshipType from "@/core/models/GlobalRelationshipType";
 import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
 import * as ProjectChecklist from "@/core/models/ProjectChecklist";
@@ -58,7 +57,7 @@ export interface IStore extends Interface {
 }
 
 class ProjectCard extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             members: User.Model.MODEL_NAME,
             project_members: User.Model.MODEL_NAME,
@@ -68,6 +67,9 @@ class ProjectCard extends BaseModel<IStore> {
             attachments: ProjectCardAttachment.Model.MODEL_NAME,
             checklists: ProjectChecklist.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectCard.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectCard" as const;
@@ -107,46 +109,6 @@ class ProjectCard extends BaseModel<IStore> {
             type: "card",
             uid: this.uid,
         });
-
-        ProjectLabel.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.labels = this.labels.filter((label) => !uids.includes(label.uid));
-        });
-        GlobalRelationshipType.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.relationships = this.relationships.filter((relationship) => !uids.includes(relationship.relationship_type_uid));
-        });
-        ProjectCardAttachment.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.attachments = [...this.attachments, ...models];
-            },
-            (model) => model.card_uid === this.uid
-        );
-        ProjectCardAttachment.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.attachments = this.attachments.filter((attachment) => !uids.includes(attachment.uid));
-        });
-        ProjectChecklist.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.checklists = [...this.checklists, ...models];
-            },
-            (model) => model.card_uid === this.uid
-        );
-        ProjectChecklist.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.checklists = this.checklists.filter((checklist) => !uids.includes(checklist.uid));
-        });
-        ProjectCardRelationship.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.relationships = [...this.relationships, ...models];
-            },
-            (model) => model.parent_card_uid === this.uid || model.child_card_uid === this.uid
-        );
-        ProjectCardRelationship.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.relationships = this.relationships.filter((relationship) => !uids.includes(relationship.uid));
-        });
     }
 
     public static convertModel(model: IStore): IStore {
@@ -165,35 +127,35 @@ class ProjectCard extends BaseModel<IStore> {
     public get project_uid() {
         return this.getValue("project_uid");
     }
-    public set project_uid(value: string) {
+    public set project_uid(value) {
         this.update({ project_uid: value });
     }
 
     public get column_uid() {
         return this.getValue("column_uid");
     }
-    public set column_uid(value: string) {
+    public set column_uid(value) {
         this.update({ column_uid: value });
     }
 
     public get title() {
         return this.getValue("title");
     }
-    public set title(value: string) {
+    public set title(value) {
         this.update({ title: value });
     }
 
     public get description() {
         return this.getValue("description");
     }
-    public set description(value: IEditorContent) {
+    public set description(value) {
         this.update({ description: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
@@ -201,25 +163,25 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("created_at");
     }
     public set created_at(value: string | Date) {
-        this.update({ created_at: value });
+        this.update({ created_at: new Date(value) });
     }
 
     public get archived_at(): Date | undefined {
         return this.getValue("archived_at");
     }
     public set archived_at(value: string | Date | undefined) {
-        this.update({ archived_at: value });
+        this.update({ archived_at: TypeUtils.isString(value) ? new Date(value) : value });
     }
 
     public get count_comment() {
         return this.getValue("count_comment");
     }
-    public set count_comment(value: number) {
+    public set count_comment(value) {
         this.update({ count_comment: value });
     }
 
     public get members(): User.TModel[] {
-        return this.getForeignModels("members");
+        return this.getForeignValue("members");
     }
     public set members(value: (User.TModel | User.Interface)[]) {
         this.update({ members: value });
@@ -229,60 +191,60 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("deadline_at");
     }
     public set deadline_at(value: string | Date | undefined) {
-        this.update({ deadline_at: value });
+        this.update({ deadline_at: TypeUtils.isString(value) ? new Date(value) : value });
     }
 
     public get column_name() {
         return this.getValue("column_name");
     }
-    public set column_name(value: string) {
+    public set column_name(value) {
         this.update({ column_name: value });
     }
 
     public get current_auth_role_actions() {
         return this.getValue("current_auth_role_actions");
     }
-    public set current_auth_role_actions(value: Project.TRoleActions[]) {
+    public set current_auth_role_actions(value) {
         this.update({ current_auth_role_actions: value });
     }
 
     public get project_members(): User.TModel[] {
-        return this.getForeignModels("project_members");
+        return this.getForeignValue("project_members");
     }
     public set project_members(value: (User.TModel | User.Interface)[]) {
         this.update({ project_members: value });
     }
 
     public get project_bots(): BotModel.TModel[] {
-        return this.getForeignModels("project_bots");
+        return this.getForeignValue("project_bots");
     }
     public set project_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
         this.update({ project_bots: value });
     }
 
     public get labels(): ProjectLabel.TModel[] {
-        return this.getForeignModels("labels");
+        return this.getForeignValue("labels");
     }
     public set labels(value: (ProjectLabel.TModel | ProjectLabel.Interface)[]) {
         this.update({ labels: value });
     }
 
     public get relationships(): ProjectCardRelationship.TModel[] {
-        return this.getForeignModels("relationships");
+        return this.getForeignValue("relationships");
     }
     public set relationships(value: (ProjectCardRelationship.TModel | ProjectCardRelationship.Interface)[]) {
         this.update({ relationships: value });
     }
 
     public get attachments(): ProjectCardAttachment.TModel[] {
-        return this.getForeignModels("attachments");
+        return this.getForeignValue("attachments");
     }
     public set attachments(value: (ProjectCardAttachment.TModel | ProjectCardAttachment.IStore)[]) {
-        this.update({ attachments: value });
+        this.update({ attachments: value as ProjectCardAttachment.TModel[] });
     }
 
     public get checklists(): ProjectChecklist.TModel[] {
-        return this.getForeignModels("checklists");
+        return this.getForeignValue("checklists");
     }
     public set checklists(value: (ProjectChecklist.TModel | ProjectChecklist.IStore)[]) {
         this.update({ checklists: value });
@@ -291,14 +253,14 @@ class ProjectCard extends BaseModel<IStore> {
     public get isHoverCardOpened() {
         return this.getValue("isHoverCardOpened");
     }
-    public set isHoverCardOpened(value: bool | undefined) {
+    public set isHoverCardOpened(value) {
         this.update({ isHoverCardOpened: value });
     }
 
     public get isCollapseOpened() {
         return this.getValue("isCollapseOpened");
     }
-    public set isCollapseOpened(value: bool | undefined) {
+    public set isCollapseOpened(value) {
         this.update({ isCollapseOpened: value });
     }
 }

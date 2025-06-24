@@ -19,11 +19,14 @@ export interface Interface extends IBaseModel {
 }
 
 class UserNotification extends BaseModel<Interface> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             notifier_user: User.Model.MODEL_NAME,
             notifier_bot: BotModel.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return UserNotification.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "UserNotification" as const;
@@ -52,7 +55,7 @@ class UserNotification extends BaseModel<Interface> {
                     bot_uname: botAsUser.username,
                     avatar: botAsUser.avatar,
                     as_user: botAsUser,
-                } as BotModel.Interface;
+                } as unknown as BotModel.Interface;
             }
         }
         return model;
@@ -61,28 +64,28 @@ class UserNotification extends BaseModel<Interface> {
     public get type() {
         return this.getValue("type");
     }
-    public set type(value: ENotificationType) {
+    public set type(value) {
         this.update({ type: value });
     }
 
     public get notifier_user(): User.TModel | undefined {
-        return this.getForeignModels<User.TModel>("notifier_user")[0];
+        return this.getForeignValue("notifier_user")[0];
     }
     public set notifier_user(value: User.Interface | User.TModel | undefined) {
         this.update({ notifier_user: value });
     }
 
     public get notifier_bot(): BotModel.TModel | undefined {
-        return this.getForeignModels<BotModel.TModel>("notifier_bot")[0];
+        return this.getForeignValue("notifier_bot")[0];
     }
     public set notifier_bot(value: BotModel.Interface | BotModel.TModel | undefined) {
         this.update({ notifier_bot: value });
     }
 
-    public get message_vars(): Record<string, any> {
+    public get message_vars() {
         return this.getValue("message_vars");
     }
-    public set message_vars(value: Record<string, any>) {
+    public set message_vars(value) {
         this.update({ message_vars: value });
     }
 
@@ -90,20 +93,20 @@ class UserNotification extends BaseModel<Interface> {
         return this.getValue("read_at");
     }
     public set read_at(value: string | Date | undefined) {
-        this.update({ read_at: value });
+        this.update({ read_at: TypeUtils.isString(value) ? new Date(value) : value });
     }
 
     public get created_at(): Date {
         return this.getValue("created_at");
     }
     public set created_at(value: string | Date) {
-        this.update({ created_at: value });
+        this.update({ created_at: new Date(value) });
     }
 
-    public get records(): Record<string, any> {
+    public get records() {
         return this.getValue("records");
     }
-    public set records(value: Record<string, any>) {
+    public set records(value) {
         this.update({ records: value });
     }
 }

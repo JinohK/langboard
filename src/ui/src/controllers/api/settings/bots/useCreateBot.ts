@@ -48,7 +48,7 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm, ICreateBotRespo
             } as any,
         });
 
-        BotModel.Model.fromObject(res.data.bot, true);
+        BotModel.Model.fromOne(res.data.bot, true);
 
         return {
             revealed_app_api_token: res.data.revealed_app_api_token,

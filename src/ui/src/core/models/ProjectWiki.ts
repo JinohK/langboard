@@ -30,11 +30,14 @@ export interface IStore extends Interface {
 }
 
 class ProjectWiki extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             assigned_bots: BotModel.Model.MODEL_NAME,
             assigned_members: User.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectWiki.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectWiki" as const;
@@ -59,7 +62,6 @@ class ProjectWiki extends BaseModel<IStore> {
                 model.content = undefined;
                 model.is_public = false;
                 model.forbidden = true;
-                model.assigned_members = [];
             },
         };
         return map as TMethodMap;
@@ -95,47 +97,47 @@ class ProjectWiki extends BaseModel<IStore> {
     public get project_uid() {
         return this.getValue("project_uid");
     }
-    public set project_uid(value: string) {
+    public set project_uid(value) {
         this.update({ project_uid: value });
     }
 
     public get title() {
         return this.getValue("title");
     }
-    public set title(value: string) {
+    public set title(value) {
         this.update({ title: value });
     }
 
     public get content() {
         return this.getValue("content");
     }
-    public set content(value: IEditorContent | undefined) {
+    public set content(value) {
         this.update({ content: value });
     }
 
     public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
     public get is_public() {
         return this.getValue("is_public");
     }
-    public set is_public(value: bool) {
+    public set is_public(value) {
         this.update({ is_public: value });
     }
 
     public get assigned_bots(): BotModel.TModel[] {
-        return this.getForeignModels("assigned_bots");
+        return this.getForeignValue("assigned_bots");
     }
     public set assigned_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
         this.update({ assigned_bots: value });
     }
 
     public get assigned_members(): User.TModel[] {
-        return this.getForeignModels("assigned_members");
+        return this.getForeignValue("assigned_members");
     }
     public set assigned_members(value: (User.TModel | User.Interface)[]) {
         this.update({ assigned_members: value });
@@ -144,14 +146,14 @@ class ProjectWiki extends BaseModel<IStore> {
     public get forbidden() {
         return this.getValue("forbidden");
     }
-    public set forbidden(value: bool) {
+    public set forbidden(value) {
         this.update({ forbidden: value });
     }
 
     public get isInBin() {
         return this.getValue("isInBin") ?? false;
     }
-    public set isInBin(value: bool) {
+    public set isInBin(value) {
         this.update({ isInBin: value });
     }
 
@@ -163,7 +165,6 @@ class ProjectWiki extends BaseModel<IStore> {
         this.content = undefined;
         this.is_public = false;
         this.forbidden = true;
-        this.assigned_members = [];
     }
 }
 

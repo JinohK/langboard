@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
 import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
-import { ProjectCard, ProjectCardRelationship, ProjectChecklist, ProjectLabel, User } from "@/core/models";
+import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { Box, Card, Flex, Popover, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
@@ -106,10 +106,10 @@ function BoardColumnCardDisplay({
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
     const { filters, canDragAndDrop, navigateWithFilters } = useBoard();
     const description = card.useField("description");
-    const cardMembers = card.useForeignField<User.TModel>("members");
+    const cardMembers = card.useForeignField("members");
     const isHoverCardOpened = card.useField("isHoverCardOpened");
-    const labels = card.useForeignField<ProjectLabel.TModel>("labels");
-    const checklists = card.useForeignField<ProjectChecklist.TModel>("checklists");
+    const labels = card.useForeignField("labels");
+    const checklists = card.useForeignField("checklists");
     const { onPointerEnter: onCardPointerEnter, onPointerLeave: onCardPointerLeave } = useHoverEffect({
         isOpened: isHoverCardOpened ?? false,
         setIsOpened: (opened) => {

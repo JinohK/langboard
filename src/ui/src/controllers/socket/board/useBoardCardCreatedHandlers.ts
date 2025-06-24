@@ -22,7 +22,7 @@ const useBoardCardCreatedHandlers = ({ callback, projectUID, columnUID }: IUseBo
             params: { uid: columnUID },
             callback,
             responseConverter: (data) => {
-                ProjectCard.Model.fromObject(data.card, true);
+                ProjectCard.Model.fromOne(data.card, true);
                 return {};
             },
         },

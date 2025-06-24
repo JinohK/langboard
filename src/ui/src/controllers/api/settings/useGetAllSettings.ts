@@ -14,10 +14,10 @@ const useGetAllSettings = (options?: TMutationOptions) => {
             } as any,
         });
 
-        AppSettingModel.Model.fromObjectArray(res.data.settings);
-        BotModel.Model.fromObjectArray(res.data.bots);
-        GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships);
-        InternalBotModel.Model.fromObjectArray(res.data.internal_bots);
+        AppSettingModel.Model.fromArray(res.data.settings);
+        BotModel.Model.fromArray(res.data.bots);
+        GlobalRelationshipType.Model.fromArray(res.data.global_relationships);
+        InternalBotModel.Model.fromArray(res.data.internal_bots);
 
         return {};
     };

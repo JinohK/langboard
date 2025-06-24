@@ -16,7 +16,7 @@ const useBotSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<
             name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.CREATED,
             callback,
             responseConverter: (data) => {
-                BotModel.Model.fromObject(data.setting_bot, true);
+                BotModel.Model.fromOne(data.setting_bot, true);
                 return {};
             },
         },

@@ -6,7 +6,7 @@ import { memo } from "react";
 
 const BoardSettingsInternalBotList = memo(() => {
     const { project } = useBoardSettings();
-    const internalBots = project.useForeignField<InternalBotModel.TModel>("internal_bots");
+    const internalBots = project.useForeignField("internal_bots");
 
     return (
         <>

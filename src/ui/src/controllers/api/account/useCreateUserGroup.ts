@@ -29,7 +29,7 @@ const useCreateUserGroup = (options?: TMutationOptions<ICreateUserGroupForm, ICr
         );
 
         return {
-            user_group: UserGroup.Model.fromObject(res.data.user_group),
+            user_group: UserGroup.Model.fromOne(res.data.user_group),
         };
     };
 

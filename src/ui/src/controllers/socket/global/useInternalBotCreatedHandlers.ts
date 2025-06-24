@@ -22,7 +22,7 @@ const useInternalBotCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps
                 api.get(url, {
                     env: { interceptToast: true } as any,
                 }).then((res) => {
-                    InternalBotModel.Model.fromObject(res.data.internal_bot, true);
+                    InternalBotModel.Model.fromOne(res.data.internal_bot, true);
                 });
                 return {};
             },

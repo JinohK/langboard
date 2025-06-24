@@ -70,7 +70,7 @@ export interface IStore extends Interface {
 }
 
 class Project extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             owner: User.Model.MODEL_NAME,
             columns: ProjectColumn.Model.MODEL_NAME,
@@ -80,6 +80,9 @@ class Project extends BaseModel<IStore> {
             invited_members: User.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return Project.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "Project" as const;
@@ -109,29 +112,6 @@ class Project extends BaseModel<IStore> {
                 project: this,
             }
         );
-
-        ProjectColumn.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.columns = [...this.columns, ...models] as ProjectColumn.Interface[];
-            },
-            (model) => model.project_uid === this.uid
-        );
-        ProjectColumn.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.columns = this.columns.filter((column) => !uids.includes(column.uid));
-        });
-        ProjectLabel.Model.subscribe(
-            "CREATION",
-            this.uid,
-            (models) => {
-                this.labels = [...this.labels, ...models] as ProjectLabel.Interface[];
-            },
-            (model) => model.project_uid === this.uid
-        );
-        ProjectLabel.Model.subscribe("DELETION", this.uid, (uids) => {
-            this.labels = this.labels.filter((label) => !uids.includes(label.uid));
-        });
     }
 
     public static convertModel(model: IStore): Interface {
@@ -174,68 +154,68 @@ class Project extends BaseModel<IStore> {
     public get title() {
         return this.getValue("title");
     }
-    public set title(value: string) {
+    public set title(value) {
         this.update({ title: value });
     }
 
     public get project_type() {
         return this.getValue("project_type");
     }
-    public set project_type(value: string) {
+    public set project_type(value) {
         this.update({ project_type: value });
     }
 
     public get starred() {
         return this.getValue("starred");
     }
-    public set starred(value: bool) {
+    public set starred(value) {
         this.update({ starred: value });
     }
 
     public get description() {
         return this.getValue("description");
     }
-    public set description(value: string) {
+    public set description(value) {
         this.update({ description: value });
     }
 
     public get ai_description() {
         return this.getValue("ai_description");
     }
-    public set ai_description(value: string | undefined) {
+    public set ai_description(value) {
         this.update({ ai_description: value });
     }
 
     public get owner(): User.TModel {
-        return this.getForeignModels<User.TModel>("owner")[0];
+        return this.getForeignValue("owner")[0];
     }
     public set owner(value: User.TModel | User.Interface) {
         this.update({ owner: value });
     }
 
     public get columns(): ProjectColumn.TModel[] {
-        return this.getForeignModels("columns");
+        return this.getForeignValue("columns");
     }
     public set columns(value: (ProjectColumn.TModel | ProjectColumn.Interface)[]) {
         this.update({ columns: value });
     }
 
     public get members(): User.TModel[] {
-        return this.getForeignModels("members");
+        return this.getForeignValue("members");
     }
     public set members(value: (User.TModel | User.Interface)[]) {
         this.update({ members: value });
     }
 
     public get bots(): BotModel.TModel[] {
-        return this.getForeignModels("bots");
+        return this.getForeignValue("bots");
     }
     public set bots(value: (BotModel.TModel | BotModel.Interface)[]) {
         this.update({ bots: value });
     }
 
     public get internal_bots(): InternalBotModel.TModel[] {
-        return this.getForeignModels("internal_bots");
+        return this.getForeignValue("internal_bots");
     }
     public set internal_bots(value: (InternalBotModel.TModel | InternalBotModel.Interface)[]) {
         this.update({ internal_bots: value });
@@ -244,19 +224,19 @@ class Project extends BaseModel<IStore> {
     public get current_auth_role_actions() {
         return this.getValue("current_auth_role_actions");
     }
-    public set current_auth_role_actions(value: TRoleActions[]) {
+    public set current_auth_role_actions(value) {
         this.update({ current_auth_role_actions: value });
     }
 
     public get invited_members(): User.TModel[] {
-        return this.getForeignModels("invited_members");
+        return this.getForeignValue("invited_members");
     }
     public set invited_members(value: (User.TModel | User.Interface)[]) {
         this.update({ invited_members: value });
     }
 
     public get labels(): ProjectLabel.TModel[] {
-        return this.getForeignModels("labels");
+        return this.getForeignValue("labels");
     }
     public set labels(value: (ProjectLabel.TModel | ProjectLabel.Interface)[]) {
         this.update({ labels: value });
@@ -266,27 +246,27 @@ class Project extends BaseModel<IStore> {
         return this.getValue("updated_at");
     }
     public set updated_at(value: string | Date) {
-        this.update({ updated_at: value });
+        this.update({ updated_at: new Date(value) });
     }
 
     public get last_viewed_at(): Date {
         return this.getValue("last_viewed_at");
     }
     public set last_viewed_at(value: string | Date) {
-        this.update({ last_viewed_at: value });
+        this.update({ last_viewed_at: new Date(value) });
     }
 
     public get bot_roles() {
         return this.getValue("bot_roles");
     }
-    public set bot_roles(value: Record<string, TRoleActions[]>) {
+    public set bot_roles(value) {
         this.update({ bot_roles: value });
     }
 
     public get member_roles() {
         return this.getValue("member_roles");
     }
-    public set member_roles(value: Record<string, TRoleActions[]>) {
+    public set member_roles(value) {
         this.update({ member_roles: value });
     }
 }

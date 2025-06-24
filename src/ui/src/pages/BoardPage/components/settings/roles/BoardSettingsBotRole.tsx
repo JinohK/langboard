@@ -6,7 +6,7 @@ import useUpdateProjectBotRoles from "@/controllers/api/board/settings/useUpdate
 import useBoardBotActivationToggledHandlers from "@/controllers/socket/board/settings/useBoardBotActivationToggledHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { BotModel, Project, User } from "@/core/models";
+import { BotModel, Project } from "@/core/models";
 import { ROLE_ALL_GRANTED } from "@/core/models/Base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -25,7 +25,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
     const roles = botRoles[bot.uid];
     const { mutateAsync: updateProjectBotRolesMutateAsync } = useUpdateProjectBotRoles(bot.uid, { interceptToast: true });
     const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation({ interceptToast: true });
-    const botAsUser = bot.useForeignField<User.TModel>("as_user")[0];
+    const botAsUser = bot.useForeignField("as_user")[0];
     const [isDisabled, setIsDisabled] = useState(false);
     const updateRole = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {

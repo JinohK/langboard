@@ -23,7 +23,7 @@ const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) 
                 } as any,
             });
 
-            const projects = Project.Model.fromObjectArray(res.data.projects, true);
+            const projects = Project.Model.fromArray(res.data.projects, true);
 
             Project.Model.getModels((model) => !projects.some((project: Project.TModel) => project.uid === model.uid)).forEach((model) => {
                 deleteProjectModel(ESocketTopic.Dashboard, model.uid);

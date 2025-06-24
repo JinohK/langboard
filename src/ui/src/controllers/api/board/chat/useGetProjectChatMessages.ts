@@ -35,7 +35,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
             } as any,
         });
 
-        ChatMessageModel.Model.fromObjectArray(res.data.histories, true);
+        ChatMessageModel.Model.fromArray(res.data.histories, true);
 
         setIsLastPage(res.data.histories.length < limit);
 

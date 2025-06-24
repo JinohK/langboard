@@ -21,7 +21,7 @@ const useBoardChatTemplateCreatedHandlers = ({ callback, projectUID }: IUseBoard
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                ChatTemplateModel.Model.fromObject(data.template, true);
+                ChatTemplateModel.Model.fromOne(data.template, true);
                 return {};
             },
         },

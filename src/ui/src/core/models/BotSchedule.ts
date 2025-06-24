@@ -74,56 +74,56 @@ class BotSchedule extends BaseModel<Interface> {
     public get bot_uid() {
         return this.getValue("bot_uid");
     }
-    public set bot_uid(value: string) {
+    public set bot_uid(value) {
         this.update({ bot_uid: value });
     }
 
     public get running_type() {
         return this.getValue("running_type");
     }
-    public set running_type(value: ERunningType) {
+    public set running_type(value) {
         this.update({ running_type: value });
     }
 
     public get status() {
         return this.getValue("status");
     }
-    public set status(value: EStatus) {
+    public set status(value) {
         this.update({ status: value });
     }
 
     public get target_table() {
         return this.getValue("target_table");
     }
-    public set target_table(value: TTargetTable) {
+    public set target_table(value) {
         this.update({ target_table: value });
     }
 
     public get target_uid() {
         return this.getValue("target_uid");
     }
-    public set target_uid(value: string) {
+    public set target_uid(value) {
         this.update({ target_uid: value });
     }
 
     public get filterable_table() {
         return this.getValue("filterable_table");
     }
-    public set filterable_table(value: string | undefined) {
+    public set filterable_table(value) {
         this.update({ filterable_table: value });
     }
 
     public get filterable_uid() {
         return this.getValue("filterable_uid");
     }
-    public set filterable_uid(value: string | undefined) {
+    public set filterable_uid(value) {
         this.update({ filterable_uid: value });
     }
 
     public get interval_str() {
         return this.getValue("interval_str");
     }
-    public set interval_str(value: string) {
+    public set interval_str(value) {
         this.update({ interval_str: value });
     }
 

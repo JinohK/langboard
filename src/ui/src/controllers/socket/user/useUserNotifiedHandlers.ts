@@ -20,7 +20,7 @@ const useUserNotifiedHandlers = ({ callback, currentUser }: IUseUserNotifiedHand
             name: SOCKET_SERVER_EVENTS.USER.NOTIFIED,
             callback,
             responseConverter: (data) => {
-                UserNotification.Model.fromObject(data.notification, true);
+                UserNotification.Model.fromOne(data.notification, true);
                 return {};
             },
         },

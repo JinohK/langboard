@@ -34,7 +34,7 @@ const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiRe
         );
 
         return {
-            wiki: ProjectWiki.Model.fromObject(res.data.wiki, true),
+            wiki: ProjectWiki.Model.fromOne(res.data.wiki, true),
         };
     };
 

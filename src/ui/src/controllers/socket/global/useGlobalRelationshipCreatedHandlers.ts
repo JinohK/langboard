@@ -15,7 +15,7 @@ const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandle
             name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.CREATED,
             callback,
             responseConverter: (data) => {
-                GlobalRelationshipType.Model.fromObject(data.global_relationships, true);
+                GlobalRelationshipType.Model.fromOne(data.global_relationships, true);
                 return {};
             },
         },

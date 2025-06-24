@@ -67,8 +67,8 @@ const useAuthStore = create(
                     return;
                 }
 
-                const user = AuthUser.Model.fromObject(data.user);
-                UserNotification.Model.fromObjectArray(data.notifications);
+                const user = AuthUser.Model.fromOne(data.user);
+                UserNotification.Model.fromArray(data.notifications);
 
                 set({ currentUser: user, state: "loaded" });
             },

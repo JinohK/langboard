@@ -29,10 +29,10 @@ const useGetCardDetails = (params: IGetCardDetailsForm, options?: TQueryOptions<
         });
 
         return {
-            card: ProjectCard.Model.fromObject(res.data.card),
-            global_relationships: GlobalRelationshipType.Model.fromObjectArray(res.data.global_relationships, true),
-            project_columns: ProjectColumn.Model.fromObjectArray(res.data.project_columns, true),
-            project_labels: ProjectLabel.Model.fromObjectArray(res.data.project_labels, true),
+            card: ProjectCard.Model.fromOne(res.data.card),
+            global_relationships: GlobalRelationshipType.Model.fromArray(res.data.global_relationships, true),
+            project_columns: ProjectColumn.Model.fromArray(res.data.project_columns, true),
+            project_labels: ProjectLabel.Model.fromArray(res.data.project_labels, true),
         };
     };
 

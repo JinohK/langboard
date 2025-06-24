@@ -22,7 +22,7 @@ const useGetProjectChatTemplates = (options?: TMutationOptions) => {
             } as any,
         });
 
-        ChatTemplateModel.Model.fromObjectArray(res.data.templates, true);
+        ChatTemplateModel.Model.fromArray(res.data.templates, true);
 
         return {};
     };

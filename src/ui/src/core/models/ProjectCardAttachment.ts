@@ -18,10 +18,13 @@ export interface IStore extends Interface {
 }
 
 class ProjectCardAttachment extends BaseModel<IStore> {
-    static get FOREIGN_MODELS() {
+    static override get FOREIGN_MODELS() {
         return {
             user: User.Model.MODEL_NAME,
         };
+    }
+    override get FOREIGN_MODELS() {
+        return ProjectCardAttachment.FOREIGN_MODELS;
     }
     static get MODEL_NAME() {
         return "ProjectCardAttachment" as const;
@@ -45,31 +48,31 @@ class ProjectCardAttachment extends BaseModel<IStore> {
         return model;
     }
 
-    public get card_uid(): string {
+    public get card_uid() {
         return this.getValue("card_uid");
     }
-    public set card_uid(value: string) {
+    public set card_uid(value) {
         this.update({ card_uid: value });
     }
 
-    public get name(): string {
+    public get name() {
         return this.getValue("name");
     }
-    public set name(value: string) {
+    public set name(value) {
         this.update({ name: value });
     }
 
-    public get url(): string {
+    public get url() {
         return this.getValue("url");
     }
-    public set url(value: string) {
+    public set url(value) {
         this.update({ url: value });
     }
 
-    public get order(): number {
+    public get order() {
         return this.getValue("order");
     }
-    public set order(value: number) {
+    public set order(value) {
         this.update({ order: value });
     }
 
@@ -77,11 +80,11 @@ class ProjectCardAttachment extends BaseModel<IStore> {
         return this.getValue("created_at");
     }
     public set created_at(value: string | Date) {
-        this.update({ created_at: value });
+        this.update({ created_at: new Date(value) });
     }
 
     public get user(): User.TModel {
-        return this.getForeignModels<User.TModel>("user")[0];
+        return this.getForeignValue("user")[0];
     }
     public set user(value: User.TModel | User.Interface) {
         this.update({ user: value });

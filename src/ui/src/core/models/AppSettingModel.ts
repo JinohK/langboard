@@ -51,42 +51,42 @@ class AppSettingModel extends BaseModel<Interface> {
     public get setting_type() {
         return this.getValue("setting_type");
     }
-    public set setting_type(value: ESettingType) {
+    public set setting_type(value) {
         this.update({ setting_type: value });
     }
 
     public get setting_name() {
         return this.getValue("setting_name");
     }
-    public set setting_name(value: string) {
+    public set setting_name(value) {
         this.update({ setting_name: value });
     }
 
     public get setting_value() {
         return this.getValue("setting_value");
     }
-    public set setting_value(value: any) {
+    public set setting_value(value) {
         this.update({ setting_value: value });
     }
 
-    public get created_at() {
+    public get created_at(): Date {
         return this.getValue("created_at");
     }
     public set created_at(value: string | Date) {
-        this.update({ created_at: value });
+        this.update({ created_at: new Date(value) });
     }
 
-    public get last_used_at() {
+    public get last_used_at(): Date {
         return this.getValue("last_used_at");
     }
     public set last_used_at(value: string | Date) {
-        this.update({ last_used_at: value });
+        this.update({ last_used_at: new Date(value) });
     }
 
     public get total_used_count() {
         return this.getValue("total_used_count");
     }
-    public set total_used_count(value: number) {
+    public set total_used_count(value) {
         this.update({ total_used_count: value });
     }
 }

@@ -21,7 +21,7 @@ const useBoardLabelCreatedHandlers = ({ callback, projectUID }: IUseBoardLabelCr
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                ProjectLabel.Model.fromObject(data.label, true);
+                ProjectLabel.Model.fromOne(data.label, true);
                 return {};
             },
         },

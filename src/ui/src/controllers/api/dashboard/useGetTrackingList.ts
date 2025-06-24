@@ -33,9 +33,9 @@ const useGetTrackingList = (limit: number = 30, options?: TMutationOptions) => {
             } as any,
         });
 
-        Project.Model.fromObjectArray(res.data.projects, true);
-        ProjectCard.Model.fromObjectArray(res.data.cards, true);
-        ProjectCheckitem.Model.fromObjectArray(res.data.checkitems, true);
+        Project.Model.fromArray(res.data.projects, true);
+        ProjectCard.Model.fromArray(res.data.cards, true);
+        ProjectCheckitem.Model.fromArray(res.data.checkitems, true);
         setCheckitemUIDs((prev) => [
             ...prev.filter((uid) => !(res.data.checkitems as ProjectCheckitem.Interface[]).some((item) => item.uid === uid)),
             ...(res.data.checkitems as ProjectCheckitem.Interface[]).map((item) => item.uid),

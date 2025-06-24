@@ -28,7 +28,7 @@ const useGetMetadata = (form: TMetadataForm, options?: TQueryOptions) => {
             } as any,
         });
 
-        MetadataModel.Model.fromObject(
+        MetadataModel.Model.fromOne(
             {
                 uid: form.uid,
                 type: form.type,
