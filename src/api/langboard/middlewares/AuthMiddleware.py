@@ -29,13 +29,14 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
             return
 
         should_filter, child_scope = self.should_filter(scope)
+        is_secure = Env.PUBLIC_UI_URL.startswith("https://")
         if should_filter:
             headers = Headers(scope=scope)
 
             validation_result = await self._validate(headers)
             if isinstance(validation_result, int):
                 response = JsonResponse(status_code=validation_result)
-                response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=True)
+                response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=is_secure)
                 await response(scope, receive, send)
                 return
 

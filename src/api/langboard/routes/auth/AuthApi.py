@@ -188,7 +188,8 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
 
 @AppRouter.api.post("/auth/signout", tags=["Auth"], responses=OpenApiSchema(202).suc({}).get())
 async def sign_out():
+    is_secure = Env.PUBLIC_UI_URL.startswith("https://")
     response = JsonResponse(status_code=status.HTTP_202_ACCEPTED)
-    response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=True)
+    response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=is_secure)
 
     return response
