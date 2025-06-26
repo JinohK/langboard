@@ -174,6 +174,8 @@ class BaseSqlModel(ABC, SQLModel, registry=default_registry):
             value = getattr(self, key)
             if isinstance(value, datetime):
                 value = value.isoformat()
+                if not value.count("+"):
+                    value = f"{value}+00:00"
             elif isinstance(value, SecretStr):
                 value = value.get_secret_value()
             serialized[key] = value

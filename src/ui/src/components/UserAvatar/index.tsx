@@ -1,109 +1,130 @@
 /* eslint-disable @/max-len */
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import React, { forwardRef, memo, useState } from "react";
+import React, { forwardRef, memo } from "react";
 import { Avatar, Box, Card, Flex, IconComponent, Popover, Separator } from "@/components/base";
-import { IAvatarProps } from "@/components/base/Avatar";
-import { User } from "@/core/models";
+import { BotModel, User } from "@/core/models";
 import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createNameInitials } from "@/core/utils/StringUtils";
-import { useTranslation } from "react-i18next";
-import { tv } from "tailwind-variants";
-import useHoverEffect from "@/core/hooks/useHoverEffect";
+import { UserAvatarProvider, useUserAvatar } from "@/components/UserAvatar/Provider";
+import UserAvatarTrigger, { TriggerVariants } from "@/components/UserAvatar/Trigger";
+import { IUserAvatarProps } from "@/components/UserAvatar/types";
+import { isModel } from "@/core/models/ModelRegistry";
 
-interface IBaseUserAvatarProps {
-    user: User.TModel;
-    children?: React.ReactNode;
-    listAlign?: "center" | "start" | "end";
-    avatarSize?: IAvatarProps["size"];
-    className?: string;
-    withName?: bool;
-    nameClassName?: string;
-    labelClassName?: string;
-    noAvatar?: bool;
-    customName?: React.ReactNode;
-    customTrigger?: React.ReactNode;
-    hoverProps?: Record<string, string>;
-    onlyAvatar?: bool;
+const Root = memo(({ userOrBot, customTrigger, ...props }: IUserAvatarProps): JSX.Element => {
+    let trigger;
+    if (customTrigger) {
+        trigger = customTrigger;
+    } else {
+        trigger = <UserAvatarTrigger {...props} userOrBot={userOrBot} />;
+    }
+
+    let root;
+    if (isModel(userOrBot, "User")) {
+        root = <UserRoot {...props} user={userOrBot} trigger={trigger} />;
+    } else if (isModel(userOrBot, "BotModel")) {
+        root = <BotRoot {...props} bot={userOrBot} trigger={trigger} />;
+    } else {
+        root = <></>;
+    }
+
+    return (
+        <UserAvatarProvider userOrBot={userOrBot} {...props}>
+            {root}
+        </UserAvatarProvider>
+    );
+});
+
+interface IUserAvatarRootProps extends Omit<IUserAvatarProps, "userOrBot" | "customTrigger"> {
+    trigger: React.ReactNode;
 }
 
-interface IUserAvatarPropsWithName extends IBaseUserAvatarProps {
-    withName: true;
-    nameClassName?: string;
-    labelClassName?: string;
-    noAvatar?: bool;
-    customName?: React.ReactNode;
-    customTrigger?: never;
-}
-
-interface IUserAvatarPropsWithoutName extends IBaseUserAvatarProps {
-    withName?: false;
-    nameClassName?: never;
-    labelClassName?: never;
-    noAvatar?: never;
-    customName?: never;
-    customTrigger?: never;
-}
-
-interface IUserAvatarPropsWithCustomTrigger extends IBaseUserAvatarProps {
-    withName?: never;
-    nameClassName?: never;
-    labelClassName?: never;
-    noAvatar?: never;
-    customName?: never;
-    customTrigger: React.ReactNode;
-}
-
-export type TUserAvatarProps = IUserAvatarPropsWithName | IUserAvatarPropsWithoutName | IUserAvatarPropsWithCustomTrigger;
-
-const HOVER_DELAY = 500;
-const HOVER_USER_UID_ATTR = "data-avatar-user";
-export const getAvatarHoverCardAttrs = (user: User.TModel): Record<string, string> => {
-    return {
-        [HOVER_USER_UID_ATTR]: user.uid,
-    };
-};
-
-const Root = memo((props: TUserAvatarProps): JSX.Element => {
-    const { user, children, listAlign, customTrigger, hoverProps = {}, onlyAvatar } = props;
-    const [isOpened, setIsOpened] = useState(false);
+function UserRoot(props: IUserAvatarRootProps & { user: User.TModel }) {
+    const { user, children, listAlign, trigger, onlyAvatar } = props;
     const userType = user.useField("type");
     const firstname = user.useField("firstname");
     const lastname = user.useField("lastname");
     const username = user.useField("username");
     const userAvatar = user.useField("avatar");
     const initials = createNameInitials(firstname, lastname);
-    const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
-    const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
     const isDeletedUser = user.isDeletedUser(userType);
     const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
-    const { onPointerEnter, onPointerLeave } = useHoverEffect({
-        isOpened,
-        setIsOpened,
-        scopeAttr: HOVER_USER_UID_ATTR,
-        expectedScopeValue: user.uid,
-        delay: HOVER_DELAY,
-    });
-
-    const styles: Record<string, string> = {
-        "--avatar-bg": bgColor,
-        "--avatar-text-color": textColor,
-    };
-
-    let trigger;
-    if (customTrigger) {
-        trigger = customTrigger;
-    } else {
-        trigger = <Trigger {...props} isOpened={isOpened} setIsOpened={setIsOpened} />;
-    }
 
     if (onlyAvatar || !children || isDeletedUser) {
         return <>{trigger}</>;
     }
 
+    return (
+        <HoverableRoot
+            trigger={trigger}
+            initials={initials}
+            listAlign={listAlign}
+            avatarUrl={userAvatar}
+            avatarFallback={isPresentableUnknownUser ? <IconComponent icon="user" className="h-[80%] w-[80%]" /> : initials}
+            cardTitle={
+                <Card.Title className={cn("ml-24 pt-6", isPresentableUnknownUser ? "pt-10" : "")}>
+                    {firstname} {lastname}
+                    {!isPresentableUnknownUser ? <Card.Description className="mt-1 text-muted-foreground">@{username}</Card.Description> : null}
+                </Card.Title>
+            }
+        >
+            {!isPresentableUnknownUser && children}
+        </HoverableRoot>
+    );
+}
+
+function BotRoot(props: IUserAvatarRootProps & { bot: BotModel.TModel }) {
+    const { bot, children, listAlign, trigger, onlyAvatar } = props;
+    const botName = bot.useField("name");
+    const botUName = bot.useField("bot_uname");
+    const botAvatar = bot.useField("avatar");
+    const initials = createNameInitials(botName);
+
+    if (onlyAvatar || !children) {
+        return <>{trigger}</>;
+    }
+
+    return (
+        <HoverableRoot
+            trigger={trigger}
+            initials={initials}
+            listAlign={listAlign}
+            avatarUrl={botAvatar}
+            avatarFallback={<IconComponent icon="bot" className="h-[80%] w-[80%]" />}
+            cardTitle={
+                <Card.Title className="ml-24 pt-6">
+                    {botName}
+                    <Card.Description className="mt-1 text-muted-foreground">@{botUName}</Card.Description>
+                </Card.Title>
+            }
+        >
+            {children}
+        </HoverableRoot>
+    );
+}
+
+interface IHoverableRootProps {
+    trigger: React.ReactNode;
+    initials: string;
+    listAlign?: "center" | "start" | "end";
+    avatarUrl?: string;
+    avatarFallback: React.ReactNode;
+    cardTitle: React.ReactNode;
+    children: React.ReactNode;
+}
+
+function HoverableRoot({ trigger, initials, listAlign, avatarUrl, avatarFallback, cardTitle, children }: IHoverableRootProps) {
+    const { isOpened, hoverProps, setIsOpened, onPointerEnter, onPointerLeave, getAvatarHoverCardAttrs } = useUserAvatar();
+    const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+
     const hoverAttrs = {
-        ...getAvatarHoverCardAttrs(user),
+        ...getAvatarHoverCardAttrs(),
         ...hoverProps,
+    };
+
+    const styles: Record<string, string> = {
+        "--avatar-bg": bgColor,
+        "--avatar-text-color": textColor,
     };
 
     return (
@@ -116,124 +137,19 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">
-                            <Avatar.Image src={userAvatar} />
-                            <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                                {user.isBot(userType) ? (
-                                    <IconComponent icon="bot" className="h-[80%] w-[80%]" />
-                                ) : isPresentableUnknownUser ? (
-                                    <IconComponent icon="user" className="h-[80%] w-[80%]" />
-                                ) : (
-                                    initials
-                                )}
+                            <Avatar.Image src={avatarUrl} />
+                            <Avatar.Fallback className="bg-[--avatar-bg] font-semibold text-[--avatar-text-color]" style={styles}>
+                                {avatarFallback}
                             </Avatar.Fallback>
                         </Avatar.Root>
-                        <Card.Title className={cn("ml-24 pt-6", !user.isBot() && isPresentableUnknownUser ? "pt-10" : "")}>
-                            {firstname} {lastname}
-                            {user.isBot(userType) || !isPresentableUnknownUser ? (
-                                <Card.Description className="mt-1 text-muted-foreground">@{username}</Card.Description>
-                            ) : null}
-                        </Card.Title>
+                        {cardTitle}
                     </Card.Header>
-                    <Card.Content className="px-0 pt-8">{!isPresentableUnknownUser && children}</Card.Content>
+                    <Card.Content className="px-0 pt-8">{children}</Card.Content>
                 </Card.Root>
             </Popover.Content>
         </Popover.Root>
     );
-});
-
-export interface IUserAvatarTriggerProps extends Omit<TUserAvatarProps, "listAlign" | "customTrigger"> {
-    isOpened: bool;
-    setIsOpened: (opened: bool) => void;
 }
-
-const TriggerVariants = tv({
-    base: "relative after:transition-all after:block after:z-[-1] after:size-full after:absolute after:top-0 after:left-0 after:rounded-full after:bg-background after:opacity-0",
-    variants: {
-        hoverable: {
-            true: "hover:after:z-10 hover:after:bg-accent hover:after:opacity-45 cursor-pointer",
-        },
-    },
-});
-
-const Trigger = memo(
-    ({
-        user,
-        children,
-        avatarSize,
-        className,
-        withName = false,
-        nameClassName,
-        labelClassName,
-        noAvatar,
-        customName,
-        isOpened,
-        setIsOpened,
-    }: IUserAvatarTriggerProps) => {
-        const [t] = useTranslation();
-        const userType = user.useField("type");
-        const firstname = user.useField("firstname");
-        const lastname = user.useField("lastname");
-        const userAvatar = user.useField("avatar");
-        const initials = createNameInitials(firstname, lastname);
-        const isDeletedUser = user.isDeletedUser(userType);
-        const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
-
-        const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
-
-        const styles: Record<string, string> = {
-            "--avatar-bg": bgColor,
-            "--avatar-text-color": textColor,
-        };
-
-        const avatarFallbackClassNames = "bg-[--avatar-bg] font-semibold text-[--avatar-text-color]";
-        let avatarRootClassName = className;
-        let avatarRootOnClick;
-
-        if (children) {
-            avatarRootClassName = cn(avatarRootClassName, TriggerVariants({ hoverable: !!children && !isDeletedUser }));
-            if (!isDeletedUser && !isPresentableUnknownUser) {
-                avatarRootOnClick = () => setIsOpened(!isOpened);
-            }
-        }
-
-        const avatar = (
-            <Avatar.Root size={avatarSize} className={avatarRootClassName} onClick={avatarRootOnClick}>
-                <Avatar.Image src={userAvatar} />
-                <Avatar.Fallback className={avatarFallbackClassNames} style={styles}>
-                    {user.isBot(userType) ? (
-                        <IconComponent icon="bot" className="h-[80%] w-[80%]" />
-                    ) : isPresentableUnknownUser || isDeletedUser ? (
-                        <IconComponent icon="user" className="h-[80%] w-[80%]" />
-                    ) : (
-                        initials
-                    )}
-                </Avatar.Fallback>
-            </Avatar.Root>
-        );
-
-        let avatarWrapper = avatar;
-
-        if (withName) {
-            let names: string;
-            if (isDeletedUser) {
-                names = t("common.Unknown User");
-            } else if (isPresentableUnknownUser) {
-                names = firstname;
-            } else {
-                names = `${firstname} ${lastname}`;
-            }
-
-            avatarWrapper = (
-                <Flex items="center" style={styles} className={labelClassName} onClick={avatarRootOnClick}>
-                    {!noAvatar && avatar}
-                    {customName ? customName : <span className={nameClassName}>{names}</span>}
-                </Flex>
-            );
-        }
-
-        return avatarWrapper;
-    }
-);
 
 const List = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
     return (

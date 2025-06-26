@@ -81,16 +81,28 @@ class Validator {
         return true;
     }
 
-    public custom(schemaValue: TValidationSchema["custom"], value?: string | File[] | FileList): bool {
+    public enum(schemaValue: TValidationSchema["enum"], value?: string | File[] | FileList): bool {
+        if (!schemaValue || !value) {
+            return true;
+        }
+
+        if (!TypeUtils.isString(value)) {
+            return false;
+        }
+
+        return Object.values(schemaValue).includes(value);
+    }
+
+    public custom(schemaValue: TValidationSchema["custom"], value?: string | File[] | FileList): bool | Promise<bool> {
         return !schemaValue || !value || schemaValue.validate(value);
     }
 }
 
-export const validate = (
+export const validate = async (
     form: HTMLFormElement | Record<string, string | File | DataTransfer>,
     value: string | File[] | FileList,
     schema: TValidationSchema
-): keyof IBaseValidationSchema | (string & {}) | undefined => {
+): Promise<keyof IBaseValidationSchema | (string & {}) | undefined> => {
     const validator = new Validator();
     const keys = Object.keys(schema);
 
@@ -98,7 +110,7 @@ export const validate = (
         const key = keys[i];
         const validate = validator[key] as Validator[typeof key];
         const schemaValue = schema[key] as TValidationSchema[typeof key];
-        const result = validate(schemaValue as undefined, value, form);
+        const result = await validate(schemaValue as undefined, value, form);
         if (!result) {
             if (key === "custom" && schema.custom) {
                 return `custom:${schema.custom!.errorKey}`;

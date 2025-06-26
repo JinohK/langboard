@@ -10,7 +10,8 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
-import MultiSelectAssignee, { TAssignee, TSaveHandler } from "@/components/MultiSelectAssignee";
+import MultiSelectAssignee, { TSaveHandler } from "@/components/MultiSelectAssignee";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.TModel;
@@ -96,7 +97,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
         });
     };
 
-    const saveAssignees = (items: TAssignee[]) => {
+    const saveAssignees = (items: TUserLikeModel[]) => {
         if (isValidating || isPublic) {
             return;
         }

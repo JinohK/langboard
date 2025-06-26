@@ -7,6 +7,7 @@ import { useEditorData } from "@/core/providers/EditorDataProvider";
 import { User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
+import { isModel } from "@/core/models/ModelRegistry";
 
 export function MentionElementStatic(
     props: SlateElementProps<IMentionElement> & {
@@ -14,17 +15,39 @@ export function MentionElementStatic(
     }
 ) {
     const { mentionables, form } = useEditorData();
-    const { prefix } = props;
     const element = props.element;
     const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
     const renderLabel = React.useCallback(() => {
-        const user = mentionables.find((val) => val.uid === element.key);
-        if (user) {
-            return `${user.firstname} ${user.lastname}`;
+        const mentionable = mentionables.find((val) => val.uid === element.key);
+        if (isModel(mentionable, "User")) {
+            return `${mentionable.firstname} ${mentionable.lastname}`;
+        } else if (isModel(mentionable, "BotModel")) {
+            return mentionable.name;
         } else {
             return element.value;
         }
     }, [element, mentionables]);
+
+    let customName;
+    if (IS_APPLE) {
+        // Mac OS IME https://github.com/ianstormtaylor/slate/issues/3490
+        customName = (
+            <>
+                {props.children}
+                {props.prefix}
+                {renderLabel()}
+            </>
+        );
+    } else {
+        // Others like Android https://github.com/ianstormtaylor/slate/pull/5360
+        customName = (
+            <>
+                {props.prefix}
+                {renderLabel()}
+                {props.children}
+            </>
+        );
+    }
 
     return (
         <SlateElement
@@ -37,39 +60,15 @@ export function MentionElementStatic(
             data-slate-value={element.value}
             {...props}
         >
-            {IS_APPLE ? (
-                // Mac OS IME https://github.com/ianstormtaylor/slate/issues/3490
-                <UserAvatar.Root
-                    user={mentionedUser}
-                    withName
-                    noAvatar
-                    customName={
-                        <>
-                            {props.children}
-                            {prefix}
-                            {renderLabel()}
-                        </>
-                    }
-                >
-                    <UserAvatarDefaultList user={mentionedUser} projectUID={form?.project_uid} />
-                </UserAvatar.Root>
-            ) : (
-                // Others like Android https://github.com/ianstormtaylor/slate/pull/5360
-                <UserAvatar.Root
-                    user={mentionedUser}
-                    withName
-                    noAvatar
-                    customName={
-                        <>
-                            {props.prefix}
-                            {renderLabel()}
-                            {props.children}
-                        </>
-                    }
-                >
-                    <UserAvatarDefaultList user={mentionedUser} projectUID={form?.project_uid} />
-                </UserAvatar.Root>
-            )}
+            <UserAvatar.Root
+                userOrBot={mentionedUser}
+                withNameProps={{
+                    noAvatar: true,
+                    customName: customName,
+                }}
+            >
+                <UserAvatarDefaultList userOrBot={mentionedUser} projectUID={form?.project_uid} />
+            </UserAvatar.Root>
         </SlateElement>
     );
 }

@@ -29,7 +29,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const projectMembers = card.useForeignField("project_members");
     const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
     const description = card.useField("description");
     const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({

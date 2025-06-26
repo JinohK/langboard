@@ -98,12 +98,11 @@ function BoardCommentFooterActions() {
     const { projectUID, card, currentUser, hasRoleAction, setCurrentEditor, replyRef } = useBoardCard();
     const [t] = useTranslation();
     const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
-    const { model: commentAuthor } = ModelRegistry.User.useContext();
-    const { deletedComment } = params;
+    const { author, deletedComment } = params;
     const projectMembers = card.useForeignField("project_members");
     const [isValidating, setIsValidating] = useState(false);
     const editorComponentRef = useRef<HTMLDivElement>(null);
-    const canEdit = currentUser.uid === commentAuthor.uid || currentUser.is_admin;
+    const canEdit = currentUser.uid === author.uid || currentUser.is_admin;
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment({ interceptToast: true });
 
     const deleteComment = () => {
@@ -142,17 +141,12 @@ function BoardCommentFooterActions() {
         <>
             <BoardCommentReaction comment={comment} />
             {hasRoleAction(Project.ERoleAction.Read) &&
-                currentUser.uid !== commentAuthor.uid &&
+                currentUser.uid !== author.uid &&
                 currentUser.isValidUser() &&
-                projectMembers.find((user) => user.uid === commentAuthor.uid) && (
+                projectMembers.find((user) => user.uid === author.uid) && (
                     <>
                         <Separator orientation="vertical" className="h-1/2" />
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="h-5 p-0 text-accent-foreground/50"
-                            onClick={() => replyRef.current?.(commentAuthor)}
-                        >
+                        <Button variant="link" size="sm" className="h-5 p-0 text-accent-foreground/50" onClick={() => replyRef.current?.(author)}>
                             {t("card.Reply")}
                         </Button>
                     </>

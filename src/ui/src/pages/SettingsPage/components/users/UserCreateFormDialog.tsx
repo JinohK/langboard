@@ -1,99 +1,109 @@
 import { useTranslation } from "react-i18next";
-import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
-import { useRef, useState } from "react";
+import { AutoComplete, Box, Button, Dialog, Flex, Floating, Form, Input, SubmitButton, Switch, Toast } from "@/components/base";
+import { useRef } from "react";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
-import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
-import { ESettingType } from "@/core/models/AppSettingModel";
-import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import useCreateUserInSettings from "@/controllers/api/settings/users/useCreateUserInSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { isValidURL } from "@/core/utils/StringUtils";
+import useForm from "@/core/hooks/form/useForm";
+import TypeUtils from "@/core/utils/TypeUtils";
+import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
+import { User } from "@/core/models";
+import PasswordInput from "@/components/PasswordInput";
 
-export interface IWebhookCreateFormDialogProps {
+export interface IUserCreateFormDialogProps {
     opened: bool;
     setOpened: (opened: bool) => void;
 }
 
-function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialogProps): JSX.Element {
+function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
     const { navigateRef } = useAppSetting();
-    const [isValidating, setIsValidating] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const urlInputRef = useRef<HTMLInputElement>(null);
-    const { mutate } = useCreateSetting();
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const save = () => {
-        if (isValidating || !nameInputRef.current || !urlInputRef.current) {
-            return;
-        }
+    const { mutate } = useCreateUserInSettings();
+    const { mutateAsync: checkExistsEmailMutateAsync } = useSignUpExistsEmail();
+    const industryRef = useRef("");
+    const industryInputRef = useRef<HTMLInputElement>(null);
+    const purposeRef = useRef("");
+    const purposeInputRef = useRef<HTMLInputElement>(null);
+    const { errors, isValidating, handleSubmit, formRef, focusComponentRef } = useForm({
+        errorLangPrefix: "settings.errors.user",
+        schema: {
+            email: {
+                required: true,
+                email: true,
+                custom: {
+                    errorKey: "exists",
+                    validate: async (value) => {
+                        if (!TypeUtils.isString(value) || !value.trim().length) {
+                            return false;
+                        }
 
-        setIsValidating(true);
+                        const result = await checkExistsEmailMutateAsync({ email: value });
 
-        const nameValue = nameInputRef.current.value.trim();
-        const urlValue = urlInputRef.current.value.trim();
-        const newErrors: Record<string, string> = {};
-        let focusableInput: HTMLInputElement | null = null;
-
-        if (!nameValue) {
-            newErrors.name = t("settings.errors.missing.webhook_url");
-            focusableInput = nameInputRef.current;
-        }
-
-        if (!isValidURL(urlValue)) {
-            newErrors.url = t("settings.errors.invalid.webhook_url");
-            if (!focusableInput) {
-                focusableInput = urlInputRef.current;
-            }
-        }
-
-        if (!urlValue) {
-            newErrors.url = t("settings.errors.missing.webhook_url");
-            if (!focusableInput) {
-                focusableInput = urlInputRef.current;
-            }
-        }
-
-        if (Object.keys(newErrors).length) {
-            setErrors(newErrors);
-            setIsValidating(false);
-            focusableInput?.focus();
-            return;
-        }
-
-        mutate(
-            {
-                setting_type: ESettingType.WebhookUrl,
-                setting_name: nameValue,
-                setting_value: urlValue,
+                        return !result.exists;
+                    },
+                },
             },
-            {
-                onSuccess: () => {
-                    Toast.Add.success(t("successes.Webhook created successfully."));
-                    setTimeout(() => {
-                        setOpened(false);
-                    }, 0);
-                },
-                onError: (error) => {
-                    const { handle } = setupApiErrorHandler({
-                        [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
-                        },
-                    });
-
-                    handle(error);
-                },
-                onSettled: () => {
-                    if (nameInputRef.current) {
-                        nameInputRef.current.value = "";
-                    }
-                    if (urlInputRef.current) {
-                        urlInputRef.current.value = "";
-                    }
-                    setIsValidating(false);
-                },
+            firstname: {
+                required: true,
+            },
+            lastname: {
+                required: true,
+            },
+            password: {
+                required: true,
+            },
+            "password-confirm": { required: true, sameWith: "password" },
+            industry: {
+                required: true,
+            },
+            purpose: {
+                required: true,
+            },
+            affiliation: {},
+            position: {},
+            is_admin: {},
+            should_activate: {},
+        },
+        inputRefs: {
+            industry: industryInputRef,
+            purpose: purposeInputRef,
+        },
+        mutate,
+        mutateOnSuccess: () => {
+            Toast.Add.success(t("successes.User created successfully."));
+            setOpened(false);
+        },
+        mutateOnSettled: () => {
+            if (!focusComponentRef.current) {
+                return;
             }
-        );
+
+            setTimeout(() => {
+                if (TypeUtils.isElement(focusComponentRef.current)) {
+                    focusComponentRef.current.focus();
+                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                    formRef.current?.[focusComponentRef.current]?.focus();
+                }
+            }, 0);
+        },
+        useDefaultBadRequestHandler: true,
+        apiErrorHandlers: {
+            [EHttpStatus.HTTP_403_FORBIDDEN]: {
+                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+            },
+        },
+    });
+
+    const setIndustry = (value: string) => {
+        industryRef.current = value;
+        industryInputRef.current!.value = value;
+    };
+
+    const setPurpose = (value: string) => {
+        purposeRef.current = value;
+        purposeInputRef.current!.value = value;
     };
 
     const changeOpenedState = (opened: bool) => {
@@ -107,30 +117,126 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
     return (
         <Dialog.Root open={opened} onOpenChange={changeOpenedState}>
             <Dialog.Content className="sm:max-w-md" aria-describedby="">
-                <Dialog.Header>
-                    <Dialog.Title>{t("settings.Create webhook")}</Dialog.Title>
-                </Dialog.Header>
-                <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook name")} autoFocus autoComplete="off" disabled={isValidating} ref={nameInputRef} />
-                    {errors.name && <FormErrorMessage error={errors.name} notInForm />}
-                </Box>
-                <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook URL")} autoComplete="off" disabled={isValidating} ref={urlInputRef} />
-                    {errors.url && <FormErrorMessage error={errors.url} notInForm />}
-                </Box>
-                <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
-                    <Dialog.Close asChild>
-                        <Button type="button" variant="destructive" disabled={isValidating}>
-                            {t("common.Cancel")}
-                        </Button>
-                    </Dialog.Close>
-                    <SubmitButton type="button" isValidating={isValidating} onClick={save}>
-                        {t("common.Create")}
-                    </SubmitButton>
-                </Dialog.Footer>
+                <Form.Root onSubmit={handleSubmit} ref={formRef}>
+                    <Dialog.Header>
+                        <Dialog.Title>{t("settings.Create user")}</Dialog.Title>
+                    </Dialog.Header>
+                    <Flex direction="col" gap="4" w="full" mt="4">
+                        <Box>
+                            <Form.Field name="email">
+                                <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
+                                {errors.email && <FormErrorMessage error={errors.email} />}
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="firstname">
+                                <Floating.LabelInput label={t("user.First Name")} isFormControl autoComplete="firstname" disabled={isValidating} />
+                                {errors.firstname && <FormErrorMessage error={errors.firstname} />}
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="lastname">
+                                <Floating.LabelInput label={t("user.Last Name")} isFormControl autoComplete="lastname" disabled={isValidating} />
+                                {errors.lastname && <FormErrorMessage error={errors.lastname} />}
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <PasswordInput
+                                name="password"
+                                label={t("user.Password")}
+                                isFormControl
+                                isValidating={isValidating}
+                                error={errors.password}
+                            />
+                        </Box>
+                        <Box>
+                            <PasswordInput
+                                name="password-confirm"
+                                label={t("auth.Confirm password")}
+                                isFormControl
+                                isValidating={isValidating}
+                                error={errors["password-confirm"]}
+                            />
+                        </Box>
+                        <Box>
+                            <Form.Field name="industry">
+                                <Input type="hidden" name="industry" ref={industryInputRef} />
+                                <AutoComplete
+                                    onValueChange={setIndustry}
+                                    items={User.INDUSTRIES.map((industry) => ({ value: industry, label: t(`auth.industries.${industry}`) }))}
+                                    emptyMessage={industryRef.current ?? ""}
+                                    disabled={isValidating}
+                                    placeholder={t("user.What industry are you in?")}
+                                />
+                                {errors.industry && <FormErrorMessage error={errors.industry} />}
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="purpose">
+                                <Input type="hidden" name="purpose" ref={purposeInputRef} />
+                                <AutoComplete
+                                    onValueChange={setPurpose}
+                                    items={User.PURPOSES.map((purpose) => ({ value: purpose, label: t(`auth.purposes.${purpose}`) }))}
+                                    emptyMessage={purposeRef.current ?? ""}
+                                    disabled={isValidating}
+                                    placeholder={t("user.What is your purpose for using {app}?")}
+                                />
+                                {errors.purpose && <FormErrorMessage error={errors.purpose} />}
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="affiliation">
+                                <Form.Control asChild>
+                                    <Input
+                                        className="w-full"
+                                        placeholder={t("user.What organization are you affiliated with?")}
+                                        autoComplete="affiliation"
+                                        disabled={isValidating}
+                                    />
+                                </Form.Control>
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="position">
+                                <Form.Control asChild>
+                                    <Input
+                                        className="w-full"
+                                        placeholder={t("user.What is your position in your organization?")}
+                                        autoComplete="position"
+                                        disabled={isValidating}
+                                    />
+                                </Form.Control>
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="is_admin">
+                                <Form.Control asChild>
+                                    <Switch label={t("settings.Admin")} />
+                                </Form.Control>
+                            </Form.Field>
+                        </Box>
+                        <Box>
+                            <Form.Field name="should_activate">
+                                <Form.Control asChild>
+                                    <Switch label={t("settings.Activation")} />
+                                </Form.Control>
+                            </Form.Field>
+                        </Box>
+                    </Flex>
+                    <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
+                        <Dialog.Close asChild>
+                            <Button type="button" variant="destructive" disabled={isValidating}>
+                                {t("common.Cancel")}
+                            </Button>
+                        </Dialog.Close>
+                        <SubmitButton type="submit" isValidating={isValidating}>
+                            {t("common.Create")}
+                        </SubmitButton>
+                    </Dialog.Footer>
+                </Form.Root>
             </Dialog.Content>
         </Dialog.Root>
     );
 }
 
-export default WebhookCreateFormDialog;
+export default UserCreateFormDialog;

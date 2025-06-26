@@ -16,7 +16,6 @@ class SafeDateTime(datetime):
 
     @classmethod
     def now(cls, tz=None):
-        "Construct a datetime from time.time() and optional time zone info."
         t = time()
         if tz is None:
             tz = timezone.utc

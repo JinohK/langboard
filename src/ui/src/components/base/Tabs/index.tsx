@@ -8,25 +8,30 @@ import { cn } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { composeRefs } from "@udecode/cn";
 
-const TabsVariants = tv({
-    base: "relative inline-flex items-center justify-center rounded-lg transition-all duration-300 w-full",
-    variants: {
-        variant: {
-            default: "bg-background border border-border",
-            ghost: "bg-transparent",
-            underline: "bg-transparent border-b border-border rounded-none",
+const TabsVariants = tv(
+    {
+        base: "relative inline-flex items-center justify-center rounded-lg transition-all duration-300 w-full",
+        variants: {
+            variant: {
+                default: "bg-background border border-border",
+                ghost: "bg-transparent",
+                underline: "bg-transparent border-b border-border rounded-none",
+            },
+            size: {
+                sm: "h-9 p-1",
+                default: "h-10 p-1.5",
+                lg: "h-12 p-2",
+            },
         },
-        size: {
-            sm: "h-9 p-1",
-            default: "h-10 p-1.5",
-            lg: "h-12 p-2",
+        defaultVariants: {
+            variant: "default",
+            size: "default",
         },
     },
-    defaultVariants: {
-        variant: "default",
-        size: "default",
-    },
-});
+    {
+        responsiveVariants: true,
+    }
+);
 
 export interface ITabsContext {
     activeValue?: string;
@@ -147,25 +152,30 @@ const List = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 );
 List.displayName = "TabsList";
 
-const TabTriggerVariants = tv({
-    base: "relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1 disabled:pointer-events-none disabled:opacity-5",
-    variants: {
-        variant: {
-            default: "text-muted-foreground hover:text-foreground data-[state=active]:text-primary-foreground",
-            ghost: "text-muted-foreground hover:text-foreground hover:bg-accent data-[state=active]:text-primary-foreground data-[state=active]:bg-transparent",
-            underline: "text-muted-foreground hover:text-foreground data-[state=active]:text-accent-foreground rounded-none",
+const TabTriggerVariants = tv(
+    {
+        base: "relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1 disabled:pointer-events-none disabled:opacity-5",
+        variants: {
+            variant: {
+                default: "text-muted-foreground hover:text-foreground data-[state=active]:text-primary-foreground",
+                ghost: "text-muted-foreground hover:text-foreground hover:bg-accent data-[state=active]:text-primary-foreground data-[state=active]:bg-transparent",
+                underline: "text-muted-foreground hover:text-foreground data-[state=active]:text-accent-foreground rounded-none",
+            },
+            size: {
+                sm: "px-2.5 py-1 text-xs",
+                default: "px-3 py-1.5 text-sm",
+                lg: "px-4 py-2 text-base",
+            },
         },
-        size: {
-            sm: "px-2.5 py-1 text-xs",
-            default: "px-3 py-1.5 text-sm",
-            lg: "px-4 py-2 text-base",
+        defaultVariants: {
+            variant: "default",
+            size: "default",
         },
     },
-    defaultVariants: {
-        variant: "default",
-        size: "default",
-    },
-});
+    {
+        responsiveVariants: true,
+    }
+);
 
 export interface ITabTrigger extends React.HTMLAttributes<HTMLButtonElement>, VariantProps<typeof TabTriggerVariants> {
     value: string;

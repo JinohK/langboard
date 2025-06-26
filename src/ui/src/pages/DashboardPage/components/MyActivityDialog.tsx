@@ -19,7 +19,7 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
             <Dialog.Title hidden />
             <Dialog.Content className="p-0 pb-4 pt-8 sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md" aria-describedby="">
                 <ActivityList
-                    form={{ type: "user", user_uid: currentUser.uid }}
+                    form={{ listType: "ActivityModel", type: "user", user_uid: currentUser.uid }}
                     currentUser={currentUser}
                     infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                     isUserView

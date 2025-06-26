@@ -3,12 +3,13 @@ import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
-import { ProjectCardComment } from "@/core/models";
+import { BotModel, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
-import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { isModel, ModelRegistry, TUserLikeModel } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCommentFooter from "@/pages/BoardPage/components/card/comment/BoardCommentFooter";
+import { IBoardCommentContextParams } from "@/pages/BoardPage/components/card/comment/types";
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,11 +38,11 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const [isEditing, setIsEditing] = useState(false);
     const projectMembers = card.useForeignField("project_members");
     const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
     const content = comment.useField("content");
     const commentUsers = comment.useForeignField("user");
     const commentBots = comment.useForeignField("bot");
-    const commentAuthor = commentUsers[0] || commentBots[0].as_user;
+    const commentAuthor = commentUsers[0] || commentBots[0];
     const valueRef = useRef<IEditorContent>(content);
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -56,68 +57,65 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     };
 
     return (
-        <ModelRegistry.ProjectCardComment.Provider model={comment} params={{ deletedComment, valueRef, isEditing }}>
-            <ModelRegistry.User.Provider model={commentAuthor}>
-                <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
-                    <Box>
-                        <BoardCommentUserAvatar projectUID={projectUID} />
-                    </Box>
-                    <Flex
-                        direction="col"
-                        gap="2"
-                        className={cn(
-                            "max-w-[calc(100vw_-_theme(spacing.20))]",
-                            "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.52)_-_theme(spacing.2))]",
-                            "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.52)_-_theme(spacing.2))]"
-                        )}
-                    >
-                        <BoardCommentHeader />
-                        <Flex
-                            px="3"
-                            py="1.5"
-                            rounded="lg"
-                            className={cn("rounded-ss-none bg-accent/70", isEditing ? "border bg-transparent p-0" : "w-fit max-w-full")}
-                        >
-                            <PlateEditor
-                                value={comment.content}
-                                currentUser={currentUser}
-                                mentionables={mentionables}
-                                className={isEditing ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
-                                readOnly={!isEditing}
-                                editorType="card-comment"
-                                form={{
-                                    project_uid: projectUID,
-                                    card_uid: card.uid,
-                                    comment_uid: comment.uid,
-                                }}
-                                setValue={setValue}
-                                editorComponentRef={editorComponentRef}
-                            />
-                        </Flex>
-                        <BoardCommentFooter />
-                    </Flex>
+        <ModelRegistry.ProjectCardComment.Provider model={comment} params={{ author: commentAuthor, deletedComment, valueRef, isEditing }}>
+            <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
+                <Box>
+                    <BoardCommentUserAvatar projectUID={projectUID} />
                 </Box>
-            </ModelRegistry.User.Provider>
+                <Flex
+                    direction="col"
+                    gap="2"
+                    className={cn(
+                        "max-w-[calc(100vw_-_theme(spacing.20))]",
+                        "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.52)_-_theme(spacing.2))]",
+                        "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.52)_-_theme(spacing.2))]"
+                    )}
+                >
+                    <BoardCommentHeader />
+                    <Flex
+                        px="3"
+                        py="1.5"
+                        rounded="lg"
+                        className={cn("rounded-ss-none bg-accent/70", isEditing ? "border bg-transparent p-0" : "w-fit max-w-full")}
+                    >
+                        <PlateEditor
+                            value={comment.content}
+                            currentUser={currentUser}
+                            mentionables={mentionables}
+                            className={isEditing ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
+                            readOnly={!isEditing}
+                            editorType="card-comment"
+                            form={{
+                                project_uid: projectUID,
+                                card_uid: card.uid,
+                                comment_uid: comment.uid,
+                            }}
+                            setValue={setValue}
+                            editorComponentRef={editorComponentRef}
+                        />
+                    </Flex>
+                    <BoardCommentFooter />
+                </Flex>
+            </Box>
         </ModelRegistry.ProjectCardComment.Provider>
     );
 });
 
 function BoardCommentUserAvatar({ projectUID }: { projectUID: string }): JSX.Element {
-    const { model: user } = ModelRegistry.User.useContext();
+    const { params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
+    const { author } = params;
 
     return (
-        <UserAvatar.Root avatarSize="sm" user={user}>
-            <UserAvatarDefaultList user={user} projectUID={projectUID} />
+        <UserAvatar.Root avatarSize="sm" userOrBot={author}>
+            <UserAvatarDefaultList userOrBot={author} projectUID={projectUID} />
         </UserAvatar.Root>
     );
 }
 
 function BoardCommentHeader(): JSX.Element {
     const [t] = useTranslation();
-    const { model: user } = ModelRegistry.User.useContext();
-    const { model: comment } = ModelRegistry.ProjectCardComment.useContext();
-    const firstname = user.useField("firstname");
-    const lastname = user.useField("lastname");
+    const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
+    const { author } = params;
     const rawCommentedAt = comment.useField("commented_at");
     const isEdited = comment.useField("is_edited");
     const commentedAt = useUpdateDateDistance(rawCommentedAt);
@@ -125,7 +123,7 @@ function BoardCommentHeader(): JSX.Element {
     return (
         <Flex gap="2" items="center">
             <span className="text-sm font-bold">
-                {firstname} {lastname}
+                <BoardCommentUserLikeHeader author={author} />
             </span>
             <span className="text-xs text-accent-foreground/50">
                 {commentedAt}
@@ -133,6 +131,33 @@ function BoardCommentHeader(): JSX.Element {
             </span>
         </Flex>
     );
+}
+
+function BoardCommentUserLikeHeader({ author }: { author: TUserLikeModel }): JSX.Element {
+    if (isModel(author, "User")) {
+        return <BoardCommentUserHeader author={author} />;
+    } else if (isModel(author, "BotModel")) {
+        return <BoardCommentBotHeader author={author} />;
+    } else {
+        return <Skeleton className="h-4 w-24" />;
+    }
+}
+
+function BoardCommentUserHeader({ author }: { author: User.TModel }): JSX.Element {
+    const firstname = author.useField("firstname");
+    const lastname = author.useField("lastname");
+
+    return (
+        <>
+            {firstname} {lastname}
+        </>
+    );
+}
+
+function BoardCommentBotHeader({ author }: { author: BotModel.TModel }): JSX.Element {
+    const name = author.useField("name");
+
+    return <>{name}</>;
 }
 
 export default BoardComment;

@@ -12,6 +12,7 @@ import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { AuthUser, User, UserNotification } from "@/core/models";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { ENotificationType } from "@/core/models/notification.type";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -208,16 +209,21 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
         UserNotification.Model.deleteModel(notification.uid);
     };
 
-    const UserAvatarComp = ({ user }: { user: User.TModel }) => {
+    const UserAvatarComp = ({ userOrBot }: { userOrBot?: TUserLikeModel }) => {
+        if (!userOrBot) {
+            return <></>;
+        }
+
         return (
             <UserAvatar.Root
-                user={user}
+                userOrBot={userOrBot}
                 avatarSize="xs"
-                withName
-                labelClassName="inline-flex gap-1 cursor-pointer select-none"
-                nameClassName="text-base"
+                withNameProps={{
+                    className: "inline-flex gap-1 cursor-pointer select-none",
+                    nameClassName: "text-base",
+                }}
             >
-                <UserAvatarDefaultList user={user} projectUID={notification.records.project?.uid} />
+                <UserAvatarDefaultList userOrBot={userOrBot} projectUID={notification.records.project?.uid} />
             </UserAvatar.Root>
         );
     };
@@ -244,7 +250,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                         <Trans
                             i18nKey={`notification.titles.${notification.type}`}
                             components={{
-                                Who: <UserAvatarComp user={notification.notifier_user ?? notification.notifier_bot!.as_user} />,
+                                Who: <UserAvatarComp userOrBot={notification.notifier_user ?? notification.notifier_bot} />,
                                 Span: <Box as="span" className="truncate" />,
                             }}
                         />

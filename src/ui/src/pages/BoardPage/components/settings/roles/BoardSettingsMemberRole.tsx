@@ -64,8 +64,15 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }:
 
     return (
         <Flex items="center" justify="between" gap="3">
-            <UserAvatar.Root user={member} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
-                <UserAvatarDefaultList user={member} projectUID={project.uid} />
+            <UserAvatar.Root
+                userOrBot={member}
+                avatarSize="xs"
+                withNameProps={{
+                    className: "inline-flex gap-1 select-none",
+                    nameClassName: "text-base",
+                }}
+            >
+                <UserAvatarDefaultList userOrBot={member} projectUID={project.uid} />
             </UserAvatar.Root>
             <Flex wrap gap="2">
                 {Object.keys(Project.ERoleAction).map((key) => {

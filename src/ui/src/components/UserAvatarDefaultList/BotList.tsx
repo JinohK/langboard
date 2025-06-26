@@ -2,14 +2,16 @@ import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultBotToggleAction from "@/components/UserAvatarDefaultList/actions/BotToggleBotAction";
 import UserAvatarDefaultUnassignAction from "@/components/UserAvatarDefaultList/actions/UnassignAction";
 import UserAvatarDefaultViewActivitiesAction from "@/components/UserAvatarDefaultList/actions/ViewActivitiesAction";
+import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
 import { BotModel, Project } from "@/core/models";
-import { useUserAvatar } from "@/core/providers/UserAvatarProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 
-function UserAvatarDefaultBotList(): JSX.Element {
-    const { user, project, currentUser, hasRoleAction, setIsAssignee, isBotDisabled } = useUserAvatar();
-    const bots = BotModel.Model.useModels((model) => model.uid === user.uid);
-    const bot = bots[0];
+interface IUserAvatarDefaultUserListProps {
+    bot: BotModel.TModel;
+}
+
+function UserAvatarDefaultBotList({ bot }: IUserAvatarDefaultUserListProps): JSX.Element {
+    const { project, currentUser, hasRoleAction, setIsAssignee, isBotDisabled } = useUserAvatarDefaultList();
 
     return (
         <>
@@ -18,13 +20,13 @@ function UserAvatarDefaultBotList(): JSX.Element {
             )}
             {project && (
                 <>
-                    <UserAvatarDefaultViewActivitiesAction user={user} project={project} currentUser={currentUser} />
+                    <UserAvatarDefaultViewActivitiesAction project={project} currentUser={currentUser} />
                     <UserAvatar.ListSeparator />
                 </>
             )}
             {project && (hasRoleAction(Project.ERoleAction.Update) || currentUser?.is_admin) && (
                 <>
-                    <UserAvatarDefaultUnassignAction user={user} project={project} setIsAssignee={setIsAssignee} />
+                    <UserAvatarDefaultUnassignAction project={project} setIsAssignee={setIsAssignee} />
                     <UserAvatar.ListSeparator />
                 </>
             )}

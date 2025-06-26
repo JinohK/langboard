@@ -16,10 +16,7 @@ function BoardColumnCardPreview() {
     const projectInvitedMemberUIDs = project.useField("invited_member_uids");
     const projectBots = project.useForeignField("bots");
     const mentionables = useMemo(
-        () => [
-            ...projectMembers.filter((model) => model.isValidUser() && !projectInvitedMemberUIDs.includes(model.uid)),
-            ...projectBots.map((bot) => bot.as_user),
-        ],
+        () => [...projectMembers.filter((model) => model.isValidUser() && !projectInvitedMemberUIDs.includes(model.uid)), ...projectBots],
         [projectMembers, projectBots, projectInvitedMemberUIDs]
     );
     const description = card.useField("description");
@@ -34,7 +31,7 @@ function BoardColumnCardPreview() {
             {!!labels.length && <BoardColumnCardPreviewLabelList labels={labels} />}
             {!!cardMembers.length && (
                 <UserAvatarBadgeList
-                    users={cardMembers}
+                    userOrBots={cardMembers}
                     maxVisible={2}
                     listAlign="start"
                     projectUID={project.uid}

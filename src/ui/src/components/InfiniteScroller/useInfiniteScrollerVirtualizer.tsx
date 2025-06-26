@@ -7,9 +7,20 @@ export interface IUseInfiniteScrollerVirtualizerProps extends IUseInfiniteScroll
     scrollable: () => HTMLElement | null;
     loader: React.ReactNode;
     children: React.ReactNode;
+    totalCount: number;
+    virtualizerRef?: React.RefObject<ReturnType<typeof useVirtualizer> | undefined>;
 }
 
-const useInfiniteScrollerVirtualizer = ({ scrollable, loader, children, hasMore, gap, ...props }: IUseInfiniteScrollerVirtualizerProps) => {
+const useInfiniteScrollerVirtualizer = ({
+    scrollable,
+    loader,
+    children,
+    hasMore,
+    gap,
+    totalCount,
+    virtualizerRef,
+    ...props
+}: IUseInfiniteScrollerVirtualizerProps) => {
     const { setLoaderRef, items } = useInfiniteScrollerLoaderObserver({
         scrollable,
         loader,
@@ -19,13 +30,17 @@ const useInfiniteScrollerVirtualizer = ({ scrollable, loader, children, hasMore,
     });
 
     const virtualizer = useVirtualizer({
-        count: items.length,
+        count: totalCount,
         getScrollElement: scrollable,
         estimateSize: () => 0,
         measureElement: (el: HTMLElement) => el.getBoundingClientRect().height,
         gap: TypeUtils.isString(gap) ? parseInt(gap) : gap,
         overscan: 5,
     });
+
+    if (virtualizerRef) {
+        virtualizerRef.current = virtualizer as unknown as ReturnType<typeof useVirtualizer>;
+    }
 
     return {
         setLoaderRef,

@@ -1,11 +1,11 @@
 import { Toast } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
+import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
 import useToggleProjectBotActivation from "@/controllers/api/board/settings/useToggleProjectBotActivation";
 import useProjectBotActivationToggledHandlers from "@/controllers/socket/projectBot/useProjectBotActivationToggledHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, Project } from "@/core/models";
-import { useUserAvatar } from "@/core/providers/UserAvatarProvider";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,7 @@ export interface IUserAvatarDefaultBotToggleActionProps {
 }
 
 function UserAvatarDefaultBotToggleAction({ bot, project }: IUserAvatarDefaultBotToggleActionProps): JSX.Element {
-    const { socket, setIsBotDisabled, isBotDisabled } = useUserAvatar();
+    const { socket, setIsBotDisabled, isBotDisabled } = useUserAvatarDefaultList();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation({ interceptToast: true });

@@ -5,10 +5,10 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { User } from "@/core/models";
 import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
+import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export function SkeletonBoardCommentForm() {
     return (
@@ -32,7 +32,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     const [t] = useTranslation();
     const projectMembers = card.useForeignField("project_members");
     const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots.map((bot) => bot.as_user)], [projectMembers, projectBots]);
+    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -76,8 +76,21 @@ const BoardCommentForm = memo((): JSX.Element => {
         [isValidating, setIsValidating]
     );
 
-    replyRef.current = (targetUser: User.TModel) => {
-        if (isValidating || !targetUser.isValidUser()) {
+    replyRef.current = (target: TUserLikeModel) => {
+        if (isValidating) {
+            return;
+        }
+
+        let username;
+        if (isModel(target, "User")) {
+            if (!target.isValidUser()) {
+                return;
+            }
+
+            username = target.username;
+        } else if (isModel(target, "BotModel")) {
+            username = target.bot_uname;
+        } else {
             return;
         }
 
@@ -87,7 +100,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         }
 
         setValue({
-            content: `[**@${targetUser.username}**](${targetUser.uid}) `,
+            content: `[**@${username}**](${target.uid}) `,
         });
 
         setTimeout(() => {
@@ -177,7 +190,7 @@ const BoardCommentForm = memo((): JSX.Element => {
             >
                 <Drawer.Trigger asChild>
                     <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t bg-background">
-                        <UserAvatar.Root user={currentUser as User.TModel} avatarSize="sm" />
+                        <UserAvatar.Root userOrBot={currentUser} avatarSize="sm" />
                         <Box w="full" cursor="text" py="1">
                             {t("card.Add a comment as {firstname} {lastname}", { firstname: currentUser.firstname, lastname: currentUser.lastname })}
                         </Box>

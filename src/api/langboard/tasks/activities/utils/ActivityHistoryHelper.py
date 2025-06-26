@@ -43,7 +43,7 @@ class ActivityHistoryHelper:
             }
         else:
             return {
-                "type": User.BOT_TYPE,
+                "type": Bot.BOT_TYPE,
                 "name": user_or_bot.name,
                 "avatar": avatar_path,
             }

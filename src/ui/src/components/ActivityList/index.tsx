@@ -1,12 +1,12 @@
 import { Box, Button, Flex, Loading } from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
-import { TGetActivitiesForm } from "@/controllers/api/activity/useGetActivities";
+import { TGetActivitiesForm } from "@/controllers/api/shared/types";
 import useCreateActivityTimeline from "@/core/hooks/activity/useCreateActivityTimeline";
-import { AuthUser } from "@/core/models";
-import { ActivityProvider, useActivity } from "@/core/providers/ActivityProvider";
+import { ActivityModel, AuthUser } from "@/core/models";
+import { RefreshableListProvider, useRefreshableList } from "@/core/providers/RefreshableListProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IActivityListProps extends Pick<React.ComponentProps<typeof InfiniteScroller.Default>, "as"> {
@@ -17,48 +17,64 @@ export interface IActivityListProps extends Pick<React.ComponentProps<typeof Inf
     isUserView?: bool;
 }
 
-function ActivityList(props: IActivityListProps) {
+const PAGE_LIMIT = 15;
+
+function ActivityList({ form, ...props }: IActivityListProps) {
+    const activityFilter = useMemo(() => {
+        switch (form.type) {
+            case "user":
+                return (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.user_uid;
+            case "project":
+                return (model: ActivityModel.TModel) => model.filterable_type === "project" && model.filterable_uid === form.project_uid;
+            case "card":
+                return (model: ActivityModel.TModel) =>
+                    model.filterable_type === "project" &&
+                    model.filterable_uid === form.project_uid &&
+                    model.sub_filterable_type === "card" &&
+                    model.sub_filterable_uid === form.card_uid;
+            case "project_wiki":
+                return (model: ActivityModel.TModel) =>
+                    model.filterable_type === "project" &&
+                    model.filterable_uid === form.project_uid &&
+                    model.sub_filterable_type === "project_wiki" &&
+                    model.sub_filterable_uid === form.wiki_uid;
+            case "project_assignee":
+                return (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.assignee_uid;
+            default:
+                throw new Error("Invalid activity type");
+        }
+    }, [form.type]);
+    const activities = ActivityModel.Model.useModels(activityFilter, [activityFilter]);
+
     return (
-        <ActivityProvider form={props.form}>
+        <RefreshableListProvider
+            models={activities}
+            form={form}
+            limit={PAGE_LIMIT}
+            prepareData={(models, data) => {
+                for (let i = 0; i < models.length; ++i) {
+                    models[i].references = data.references;
+                }
+            }}
+        >
             <ActivityListInner {...props} />
-        </ActivityProvider>
+        </RefreshableListProvider>
     );
 }
 
 function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, isUserView = false }: Omit<IActivityListProps, "form">): JSX.Element {
     const [t] = useTranslation();
     const {
-        activities,
-        activityListIdRef,
-        isFetchingRef,
-        isDelayingCheckOutdated,
-        delayCheckOutdatedTimeoutRef,
+        models: activities,
+        listIdRef,
         isLastPage,
         countNewRecords,
         isRefreshing,
         nextPage,
         refreshList,
-        checkOutdated,
-    } = useActivity();
+        checkOutdatedOnScroll,
+    } = useRefreshableList<"ActivityModel">();
     const { SkeletonActivity, ActivityTimeline } = useCreateActivityTimeline(currentUser, isUserView);
-    const checkOutdatedOnScroll = React.useCallback(
-        async (e: React.UIEvent<HTMLDivElement>) => {
-            const target = e.target as HTMLElement;
-            if (isFetchingRef.current || isDelayingCheckOutdated.current || target.scrollTop < target.scrollHeight * 0.3) {
-                return;
-            }
-
-            isDelayingCheckOutdated.current = true;
-
-            await checkOutdated();
-
-            delayCheckOutdatedTimeoutRef.current = setTimeout(() => {
-                isDelayingCheckOutdated.current = false;
-                delayCheckOutdatedTimeoutRef.current = null;
-            }, 5000);
-        },
-        [checkOutdated]
-    );
 
     return (
         <Box position="relative">
@@ -67,15 +83,16 @@ function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, 
                     {t("activity.No Activities")}
                 </Flex>
             )}
-            <Box id={activityListIdRef.current} className={cn(infiniteScrollerClassName, "overflow-y-auto")} onScroll={checkOutdatedOnScroll}>
-                {isRefreshing && <Loading variant="secondary" size="4" mt="4" />}
+            <Box id={listIdRef.current} className={cn(infiniteScrollerClassName, "overflow-y-auto")} onScroll={checkOutdatedOnScroll}>
+                {isRefreshing && <Loading variant="secondary" size="4" my="2" />}
                 <InfiniteScroller.Default
                     as={as}
                     row={Box}
-                    scrollable={() => document.getElementById(activityListIdRef.current)}
+                    scrollable={() => document.getElementById(listIdRef.current)}
                     loadMore={nextPage}
                     loader={<SkeletonActivity key={createShortUUID()} />}
                     hasMore={!isLastPage}
+                    totalCount={activities.length}
                     rowClassName="w-full p-1.5"
                     style={style}
                 >

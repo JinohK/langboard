@@ -422,7 +422,13 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         const model = {
             ...this.#store.getState(),
         };
-        return createFakeModel(model, constructor.createFakeMethodsMap(model));
+        const foreignModels: Record<string, any[]> = {};
+        Object.keys(constructor.FOREIGN_MODELS).forEach((key) => {
+            foreignModels[key] = this.getForeignValue(key).map((foreignModel) => {
+                return foreignModel.asFake();
+            });
+        });
+        return createFakeModel(constructor.MODEL_NAME, model, constructor.createFakeMethodsMap(model), foreignModels);
     }
 
     public useField<TKey extends keyof TModel>(

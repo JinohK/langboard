@@ -17,30 +17,21 @@ import { useTranslation } from "react-i18next";
 import { IUserAvatarListProps, UserAvatarList } from "@/components/UserAvatarList";
 import { TIconProps } from "@/components/base/IconComponent";
 import { createShortUUID } from "@/core/utils/StringUtils";
-
-export type TAssignee = User.TModel | BotModel.TModel;
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export type TAssigneeSelecItem = TSelectItem & {
-    assignee: TAssignee;
+    assignee: TUserLikeModel;
 };
 
 export type TSaveHandler =
-    | ((assignees: TAssignee[]) => void)
-    | ((assignees: TAssignee[]) => Promise<void>)
-    | ((assignees: (string | TAssignee)[]) => void)
-    | ((assignees: (string | TAssignee)[]) => Promise<void>);
-
-export const getMultiSelectItemAsUser = (item: TAssignee): User.TModel => {
-    if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
-        return (item as BotModel.TModel).as_user;
-    } else {
-        return item as User.TModel;
-    }
-};
+    | ((assignees: TUserLikeModel[]) => void)
+    | ((assignees: TUserLikeModel[]) => Promise<void>)
+    | ((assignees: (string | TUserLikeModel)[]) => void)
+    | ((assignees: (string | TUserLikeModel)[]) => Promise<void>);
 
 const createAssigneeSelectItemCreator =
-    (createSearchText: (item: TAssignee) => string, createLabel: (item: TAssignee) => string) =>
-    (item: TAssignee): TAssigneeSelecItem => ({
+    (createSearchText: (item: TUserLikeModel) => string, createLabel: (item: TUserLikeModel) => string) =>
+    (item: TUserLikeModel): TAssigneeSelecItem => ({
         value: createSearchText(item),
         label: createLabel(item),
         assignee: item,
@@ -54,8 +45,8 @@ export interface IPopoverProps
         > {
     popoverButtonProps?: ButtonProps;
     popoverContentProps?: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
-    userAvatarListProps?: Omit<IUserAvatarListProps, "users">;
-    showableAssignees?: TAssignee[];
+    userAvatarListProps?: Omit<IUserAvatarListProps, "userOrBots">;
+    showableAssignees?: TUserLikeModel[];
     multiSelectProps?: Omit<React.ComponentPropsWithoutRef<typeof SelectEditor>, "value" | "onValueChange" | "items">;
     addIcon?: React.ComponentPropsWithoutRef<TIconProps>["icon"];
     addIconSize?: React.ComponentPropsWithoutRef<TIconProps>["size"];
@@ -68,9 +59,7 @@ const Popover = memo((props: IPopoverProps) => {
 
     return (
         <Flex items="center" gap="1">
-            {showableAssignees.length > 0 && (
-                <UserAvatarList users={showableAssignees.map(getMultiSelectItemAsUser)} {...(tagContentProps as any)} {...userAvatarListProps} />
-            )}
+            {showableAssignees.length > 0 && <UserAvatarList userOrBots={showableAssignees} {...(tagContentProps as any)} {...userAvatarListProps} />}
             {canEdit && <PopoverInner {...props} />}
         </Flex>
     );
@@ -95,7 +84,7 @@ const PopoverInner = memo((props: IPopoverProps) => {
     const { variant: popoverButtonVariant = "outline" } = popoverButtonProps;
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
-    const [selectedValues, setSelectedValues] = useState<(string | TAssignee)[]>([]);
+    const [selectedValues, setSelectedValues] = useState<(string | TUserLikeModel)[]>([]);
 
     const handleSave = useCallback(async () => {
         if (isValidating) {
@@ -149,12 +138,12 @@ const PopoverInner = memo((props: IPopoverProps) => {
 });
 
 export interface IFormProps {
-    TagContent?: React.ComponentType<TAssigneeSelecItem & { assignee: TAssignee; label?: string; readOnly: bool } & Record<string, unknown>>;
+    TagContent?: React.ComponentType<TAssigneeSelecItem & { assignee: TUserLikeModel; label?: string; readOnly: bool } & Record<string, unknown>>;
     tagContentProps?: Record<string, unknown>;
-    allSelectables: TAssignee[];
-    originalAssignees: TAssignee[];
-    createSearchText: (item: TAssignee) => string;
-    createLabel: (item: TAssignee) => string;
+    allSelectables: TUserLikeModel[];
+    originalAssignees: TUserLikeModel[];
+    createSearchText: (item: TUserLikeModel) => string;
+    createLabel: (item: TUserLikeModel) => string;
     placeholder?: string;
     useEditorProps?: {
         canAddNew?: bool;
@@ -162,7 +151,7 @@ export interface IFormProps {
         isValidating: bool;
         readOnly: bool;
         setReadOnly: (readOnly: bool) => void;
-        onValueChange?: ((items: TAssignee[]) => void) | ((items: (string | TAssigneeSelecItem)[]) => void);
+        onValueChange?: ((items: TUserLikeModel[]) => void) | ((items: (string | TAssigneeSelecItem)[]) => void);
         save: TSaveHandler;
         withUserGroups?: bool;
         groups?: UserGroup.TModel[];
@@ -290,11 +279,10 @@ function MultiSelectBotTagContent({
 }: TAssigneeSelecItem & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
     const name = assignee.useField("name");
     const botUname = assignee.useField("bot_uname");
-    const botAsUser = assignee.useForeignField("as_user")[0];
 
     return (
-        <UserAvatar.Root user={botAsUser} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>
-            <UserAvatarDefaultList user={botAsUser} {...props} />
+        <UserAvatar.Root userOrBot={assignee} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>
+            <UserAvatarDefaultList userOrBot={assignee} {...props} />
         </UserAvatar.Root>
     );
 }
@@ -309,8 +297,8 @@ function MultiSelectUserTagContent({
     const lastname = assignee.useField("lastname");
 
     return (
-        <UserAvatar.Root user={assignee} customTrigger={label ?? `${firstname} ${lastname}`}>
-            <UserAvatarDefaultList user={assignee} {...props} />
+        <UserAvatar.Root userOrBot={assignee} customTrigger={label ?? `${firstname} ${lastname}`}>
+            <UserAvatarDefaultList userOrBot={assignee} {...props} />
         </UserAvatar.Root>
     );
 }
@@ -319,7 +307,7 @@ type TUserGroupSelectDropdownMenuProps = Pick<Required<IFormProps>["useEditorPro
     groups: UserGroup.TModel[];
     selectedValues: TAssigneeSelecItem[];
     onValueChange: (items: TSelectItem[]) => void;
-    createAssigneeSelectItem: (item: TAssignee) => TAssigneeSelecItem;
+    createAssigneeSelectItem: (item: TUserLikeModel) => TAssigneeSelecItem;
 };
 
 function UserGroupSelectDropdownMenu({

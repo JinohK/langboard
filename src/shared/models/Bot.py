@@ -4,7 +4,6 @@ from core.db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel
 from core.storage import FileModel
 from sqlalchemy import TEXT
 from sqlmodel import Field
-from .User import User
 
 
 class BotAPIAuthType(Enum):
@@ -12,6 +11,7 @@ class BotAPIAuthType(Enum):
 
 
 class Bot(SoftDeleteModel, table=True):
+    BOT_TYPE: ClassVar[str] = "bot"
     BOT_UNAME_PREFIX: ClassVar[str] = "bot-"
     name: str = Field(nullable=False)
     bot_uname: str = Field(nullable=False)
@@ -30,7 +30,6 @@ class Bot(SoftDeleteModel, table=True):
             "name": "string",
             "bot_uname": "string",
             "avatar": "string?",
-            "as_user": User.api_schema(),
             **(other_schema or {}),
         }
         if is_setting:
@@ -59,7 +58,6 @@ class Bot(SoftDeleteModel, table=True):
             "name": self.name,
             "bot_uname": self.bot_uname,
             "avatar": self.avatar.path if self.avatar else None,
-            "as_user": self.as_user_api_response(),
         }
         if is_setting:
             response["api_url"] = self.api_url
@@ -72,40 +70,16 @@ class Bot(SoftDeleteModel, table=True):
 
         return response
 
-    def as_user_api_response(self) -> dict[str, Any]:
-        return {
-            "type": User.BOT_TYPE,
-            "uid": self.get_uid(),
-            "firstname": self.name,
-            "lastname": "",
-            "email": "",
-            "username": self.bot_uname,
-            "avatar": self.avatar.path if self.avatar else None,
-        }
-
     def create_unknown_bot_api_response(self) -> dict[str, Any]:
         return {
             "uid": self.get_uid(),
             "name": self.name,
             "bot_uname": self.bot_uname,
             "avatar": None,
-            "as_user": Bot.create_unknown_as_user_api_response(self.get_uid()),
-        }
-
-    @staticmethod
-    def create_unknown_as_user_api_response(uid: str) -> dict[str, Any]:
-        return {
-            "type": User.UNKNOWN_USER_TYPE,
-            "uid": uid,
-            "firstname": "",
-            "lastname": "",
-            "email": "",
-            "username": "",
-            "avatar": None,
         }
 
     def notification_data(self) -> dict[str, Any]:
-        return self.as_user_api_response()
+        return self.api_response()
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["name"]

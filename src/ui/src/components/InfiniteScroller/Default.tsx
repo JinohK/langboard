@@ -3,12 +3,15 @@ import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
 import { Box, composeRefs } from "@udecode/cn";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export interface IDefaultInfiniteScrollerProps extends TSharedInfiniteScrollerProps<React.ReactElement> {
     as?: React.ElementType;
     row?: React.ElementType;
     outerToApplyHeightRef?: React.RefObject<HTMLElement | null>;
     rowClassName?: string;
+    totalCount: number;
+    virtualizerRef?: React.RefObject<ReturnType<typeof useVirtualizer>>;
 }
 
 const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScrollerProps>(
@@ -27,6 +30,8 @@ const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScroller
             outerToApplyHeightRef,
             rowClassName,
             className,
+            totalCount,
+            virtualizerRef,
             children,
             ...props
         },
@@ -40,6 +45,8 @@ const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScroller
             loader,
             scrollable,
             gap,
+            totalCount,
+            virtualizerRef,
             children,
         });
 

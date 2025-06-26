@@ -2,6 +2,7 @@ from json import dumps as json_dumps
 from typing import Any, Mapping
 from fastapi.responses import Response
 from starlette.background import BackgroundTask
+from ..utils.Converter import json_default
 from .ApiErrorCode import ApiErrorCode
 
 
@@ -33,5 +34,5 @@ class JsonResponse(Response):
             allow_nan=False,
             indent=None,
             separators=(",", ":"),
-            default=str,
+            default=json_default,
         ).encode("utf-8")

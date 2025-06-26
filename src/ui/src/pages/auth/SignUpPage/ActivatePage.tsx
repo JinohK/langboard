@@ -41,16 +41,16 @@ function ActivatePage(): JSX.Element {
                 onSuccess: () => {
                     setDescription(
                         <>
-                            <h2 className="text-center text-2xl font-normal xs:text-3xl">{t("signUp.activate.Welcome to {app}!")}</h2>
+                            <h2 className="text-center text-2xl font-normal xs:text-3xl">{t("auth.activate.Welcome to {app}!")}</h2>
                             <p className="mt-8 text-sm xs:text-base">
-                                {t("signUp.activate.Your account is now active and ready to go!")}&nbsp;
-                                {t("signUp.activate.Dive in and discover all the amazing features we have in store for you.")}
+                                {t("auth.activate.Your account is now active and ready to go!")}&nbsp;
+                                {t("auth.activate.Dive in and discover all the amazing features we have in store for you.")}
                             </p>
                             <p className="mt-4 text-sm xs:text-base">
-                                {t("signUp.activate.Simply sign in with your email and password to get started.")}
+                                {t("auth.activate.Simply sign in with your email and password to get started.")}
                             </p>
                             <Flex justify="center" mt="8">
-                                <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>{t("signIn.Sign in")}</Button>
+                                <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>{t("auth.Sign in")}</Button>
                             </Flex>
                         </>
                     );

@@ -1,7 +1,8 @@
 import { createContext, useContext, useRef } from "react";
-import { AuthUser, Project, ProjectCard, User } from "@/core/models";
+import { AuthUser, Project, ProjectCard } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export interface IBoardCardContext {
     projectUID: string;
@@ -12,7 +13,7 @@ export interface IBoardCardContext {
     socket: ISocketContext;
     editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
-    replyRef: React.RefObject<(targetUser: User.TModel) => void>;
+    replyRef: React.RefObject<(target: TUserLikeModel) => void>;
     sharedClassNames: {
         popoverContent: string;
     };
@@ -45,7 +46,7 @@ export const BoardCardProvider = ({ projectUID, card, currentUser, viewportRef, 
     const socket = useSocket();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef<string>("");
-    const replyRef = useRef<(targetUser: User.TModel) => void>(() => {});
+    const replyRef = useRef<(target: TUserLikeModel) => void>(() => {});
     const currentUserRoleActions = card.useField("current_auth_role_actions");
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const sharedClassNames = {

@@ -68,6 +68,7 @@ function TrackingPage(): JSX.Element {
             scrollable={() => document.getElementById("main")}
             loadMore={nextPage}
             hasMore={!isLastPage}
+            totalCount={checkitems.length}
             loader={
                 <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
                     <Loading size="3" variant="secondary" />

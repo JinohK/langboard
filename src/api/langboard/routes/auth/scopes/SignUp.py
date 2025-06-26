@@ -2,9 +2,7 @@ from re import match
 from core.routing import BaseFormModel, form_model
 from core.routing.Exception import InvalidError, InvalidException, MissingException
 from pydantic import field_validator
-
-
-EMAIL_REGEX = r"^.+@.+\..+$"
+from ....Constants import EMAIL_REGEX
 
 
 @form_model

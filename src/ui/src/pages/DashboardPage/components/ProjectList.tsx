@@ -49,6 +49,7 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
                 scrollable={() => document.getElementById("main")}
                 loadMore={nextPage}
                 hasMore={hasMore}
+                totalCount={projects.length}
                 loader={<SkeletonProjectList key={createShortUUID()} />}
             >
                 {items.map((project) => (

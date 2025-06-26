@@ -61,6 +61,8 @@ export type TCreatedAtModelName = {
 }[keyof IModelMap];
 export type TCreatedAtModel<TModelName extends TCreatedAtModelName> = TPickedModel<TModelName>;
 
+export type TUserLikeModel = TPickedModel<"AuthUser"> | TPickedModel<"User"> | TPickedModel<"BotModel">;
+
 type TClass = abstract new (...args: any) => any;
 
 interface IModelRegistry<TModel extends TClass, TRegistryParams = any> {
@@ -121,4 +123,8 @@ export function registerModel<TModelName extends keyof IModelMap, TModel extends
         Context: ModelContext,
         useContext: useModel,
     } as any;
+}
+
+export function isModel<TModelName extends keyof IModelMap>(model: any, modelName: TModelName): model is TPickedModel<TModelName> {
+    return model && (model.MODEL_NAME === modelName || (model.MODEL_NAME === "AuthUser" && modelName === "User"));
 }

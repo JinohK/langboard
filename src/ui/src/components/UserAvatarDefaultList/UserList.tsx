@@ -1,20 +1,26 @@
 import { Popover } from "@/components/base";
 import NotificationSetting from "@/components/NotificationSetting";
-import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultUserCreateAssignCardAction from "@/components/UserAvatarDefaultList/actions/UserCreateAssignCardAction";
 import UserAvatarDefaultUnassignAction from "@/components/UserAvatarDefaultList/actions/UnassignAction";
 import UserAvatarDefaultViewActivitiesAction from "@/components/UserAvatarDefaultList/actions/ViewActivitiesAction";
 import useSearchFilters from "@/core/hooks/useSearchFilters";
-import { Project } from "@/core/models";
+import { Project, User } from "@/core/models";
 import { BOARD_FILTER_KEYS, IFilterMap } from "@/core/providers/BoardProvider";
-import { useUserAvatar } from "@/core/providers/UserAvatarProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
+import { useUserAvatar } from "@/components/UserAvatar/Provider";
 
-function UserAvatarDefaultUserList(): JSX.Element {
-    const { user, project, currentUser, hasRoleAction, isAssignee, setIsAssignee } = useUserAvatar();
+interface IUserAvatarDefaultUserListProps {
+    user: User.TModel;
+}
+
+function UserAvatarDefaultUserList({ user }: IUserAvatarDefaultUserListProps): JSX.Element {
+    const { getAvatarHoverCardAttrs } = useUserAvatar();
+    const { project, currentUser, hasRoleAction, isAssignee, setIsAssignee } = useUserAvatarDefaultList();
     const [t] = useTranslation();
     const {
         filters,
@@ -58,7 +64,7 @@ function UserAvatarDefaultUserList(): JSX.Element {
             )}
             {project && (
                 <>
-                    <UserAvatarDefaultViewActivitiesAction user={user} project={project} currentUser={currentUser} />
+                    <UserAvatarDefaultViewActivitiesAction project={project} currentUser={currentUser} />
                     <UserAvatar.ListSeparator />
                 </>
             )}
@@ -68,7 +74,7 @@ function UserAvatarDefaultUserList(): JSX.Element {
                         <Popover.Trigger asChild>
                             <UserAvatar.ListItem>{t("common.avatarActions.Set notifications")}</UserAvatar.ListItem>
                         </Popover.Trigger>
-                        <Popover.Content className="z-[999999]" {...getAvatarHoverCardAttrs(user)}>
+                        <Popover.Content className="z-[999999]" {...getAvatarHoverCardAttrs()}>
                             <NotificationSetting.SpecificScopedPopover
                                 type="project"
                                 currentUser={currentUser}
@@ -85,7 +91,7 @@ function UserAvatarDefaultUserList(): JSX.Element {
             )}
             {project && currentUser?.uid !== user.uid && isAssignee && (hasRoleAction(Project.ERoleAction.Update) || currentUser?.is_admin) && (
                 <>
-                    <UserAvatarDefaultUnassignAction user={user} project={project} setIsAssignee={setIsAssignee} />
+                    <UserAvatarDefaultUnassignAction project={project} setIsAssignee={setIsAssignee} />
                     <UserAvatar.ListSeparator />
                 </>
             )}

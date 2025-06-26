@@ -6,6 +6,7 @@ import createFakeModel from "@/core/models/FakeModel";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { convertServerFileURL } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
+import useUserDeletedHandlers from "@/controllers/socket/user/useUserDeletedHandlers";
 
 export interface Interface extends IBaseModel {
     type: "user" | "unknown" | "bot" | "group_email";
@@ -14,6 +15,15 @@ export interface Interface extends IBaseModel {
     email: string;
     username: string;
     avatar?: string;
+
+    // In settings
+    is_admin?: bool;
+    industry: string;
+    purpose: string;
+    affiliation?: string;
+    position?: string;
+    created_at: Date;
+    activated_at?: Date;
 }
 
 export const INDUSTRIES: string[] = ["Industry 1"];
@@ -29,9 +39,6 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
     }
     static get UNKNOWN_TYPE() {
         return "unknown" as const;
-    }
-    static get BOT_TYPE() {
-        return "bot" as const;
     }
     static get GROUP_EMAIL_TYPE() {
         return "group_email" as const;
@@ -56,9 +63,16 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             email: "",
             username: "",
             avatar: undefined,
+            created_at: undefined!,
+            activated_at: undefined,
+            is_admin: undefined,
+            industry: "",
+            purpose: "",
+            affiliation: undefined,
+            position: undefined,
         };
 
-        return createFakeModel(model, User.createFakeMethodsMap(model));
+        return createFakeModel(User.MODEL_NAME, model, User.createFakeMethodsMap(model));
     }
 
     public static createTempEmailUser(email: string): User {
@@ -70,18 +84,31 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             email,
             username: "",
             avatar: undefined,
+            created_at: undefined!,
+            activated_at: undefined,
+            is_admin: undefined,
+            industry: "",
+            purpose: "",
+            affiliation: undefined,
+            position: undefined,
         };
 
-        return createFakeModel(model, User.createFakeMethodsMap(model));
+        return createFakeModel(User.MODEL_NAME, model, User.createFakeMethodsMap(model));
     }
 
     public static createFakeUser(model: Interface): User {
-        return createFakeModel(model, User.createFakeMethodsMap(model));
+        return createFakeModel(User.MODEL_NAME, model, User.createFakeMethodsMap(model));
     }
 
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
             model.avatar = convertServerFileURL(model.avatar);
+        }
+        if (TypeUtils.isString(model.created_at)) {
+            model.created_at = new Date(model.created_at);
+        }
+        if (TypeUtils.isString(model.activated_at)) {
+            model.activated_at = new Date(model.activated_at);
         }
         return model;
     }
@@ -91,9 +118,25 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             isPresentableUnknownUser: () => model.type === User.GROUP_EMAIL_TYPE,
             isValidUser: () => TypeUtils.isString(model.uid) && !map.isPresentableUnknownUser(),
             isDeletedUser: () => model.type === User.UNKNOWN_TYPE,
-            isBot: () => model.type === User.BOT_TYPE,
         };
         return map as TMethodMap;
+    }
+
+    public setDeleted() {
+        this.update({
+            type: User.UNKNOWN_TYPE,
+            firstname: "",
+            lastname: "",
+            email: "",
+            username: "",
+            avatar: undefined,
+            activated_at: undefined,
+            is_admin: undefined,
+            industry: "",
+            purpose: "",
+            affiliation: undefined,
+            position: undefined,
+        });
     }
 
     public get type() {
@@ -138,6 +181,55 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         this.update({ avatar: value });
     }
 
+    public get is_admin() {
+        return this.getValue("is_admin");
+    }
+    public set is_admin(value) {
+        this.update({ is_admin: value });
+    }
+
+    public get industry() {
+        return this.getValue("industry");
+    }
+    public set industry(value) {
+        this.update({ industry: value });
+    }
+
+    public get purpose() {
+        return this.getValue("purpose");
+    }
+    public set purpose(value) {
+        this.update({ purpose: value });
+    }
+
+    public get affiliation() {
+        return this.getValue("affiliation");
+    }
+    public set affiliation(value) {
+        this.update({ affiliation: value });
+    }
+
+    public get position() {
+        return this.getValue("position");
+    }
+    public set position(value) {
+        this.update({ position: value });
+    }
+
+    public get created_at(): Date {
+        return this.getValue("created_at");
+    }
+    public set created_at(value: string | Date) {
+        this.update({ created_at: new Date(value) });
+    }
+
+    public get activated_at(): Date | undefined {
+        return this.getValue("activated_at");
+    }
+    public set activated_at(value: string | Date | undefined) {
+        this.update({ activated_at: TypeUtils.isString(value) ? new Date(value) : value });
+    }
+
     public isPresentableUnknownUser(type?: User["type"]) {
         if (!type) {
             type = this.type;
@@ -154,13 +246,6 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             type = this.type;
         }
         return type === User.UNKNOWN_TYPE;
-    }
-
-    public isBot(type?: User["type"]) {
-        if (!type) {
-            type = this.type;
-        }
-        return type === User.BOT_TYPE;
     }
 
     #subscribeUser() {
@@ -192,7 +277,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
             }
         }, 100);
 
-        this.subscribeSocketEvents([useUserUpdatedHandlers], {
+        this.subscribeSocketEvents([useUserUpdatedHandlers, useUserDeletedHandlers], {
             user: this,
         });
     }

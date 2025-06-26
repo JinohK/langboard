@@ -4,6 +4,7 @@ from json import loads as json_loads
 from typing import Any
 from core.db import BaseSqlModel, DateTimeField, EnumLikeType
 from core.types import SafeDateTime
+from core.utils.Converter import json_default
 from sqlalchemy import TEXT
 from sqlmodel import Field
 
@@ -65,7 +66,7 @@ class AppSetting(BaseSqlModel, table=True):
         return json_loads(self.setting_value)
 
     def set_value(self, value: Any):
-        self.setting_value = json_dumps(value, default=str)
+        self.setting_value = json_dumps(value, default=json_default)
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return []

@@ -1,10 +1,20 @@
+from re import match
 from typing import Any
 from core.routing import BaseFormModel, form_model
+from core.routing.Exception import InvalidError, InvalidException, MissingException
+from core.schema import Pagination
+from core.types import SafeDateTime
 from models.AppSetting import AppSettingType
 from models.Bot import BotAPIAuthType
 from models.BotTrigger import BotTriggerCondition
 from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
-from pydantic import Field
+from pydantic import Field, field_validator
+from ...Constants import EMAIL_REGEX
+
+
+class UsersPagination(Pagination):
+    refer_time: SafeDateTime = SafeDateTime.now()
+    only_count: bool = False
 
 
 @form_model
@@ -23,6 +33,55 @@ class UpdateSettingForm(BaseFormModel):
 @form_model
 class DeleteSelectedSettingsForm(BaseFormModel):
     setting_uids: list[str]
+
+
+@form_model
+class CreateUserForm(BaseFormModel):
+    firstname: str
+    lastname: str
+    email: str
+    password: str
+    industry: str
+    purpose: str
+    affiliation: str | None = None
+    position: str | None = None
+    is_admin: bool = False
+    should_activate: bool = False
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        if not value:
+            raise MissingException("body", "email", {"email": value})
+
+        if not bool(match(EMAIL_REGEX, value)):
+            raise InvalidException(
+                InvalidError(
+                    loc="body",
+                    field="email",
+                    inputs={"email": value},
+                )
+            )
+
+        return value
+
+
+@form_model
+class UpdateUserForm(BaseFormModel):
+    firstname: str | None = None
+    lastname: str | None = None
+    password: str | None = None
+    industry: str | None = None
+    purpose: str | None = None
+    affiliation: str | None = None
+    position: str | None = None
+    is_admin: bool | None = None
+    activate: bool | None = None
+
+
+@form_model
+class DeleteSelectedUsersForm(BaseFormModel):
+    user_uids: list[str]
 
 
 @form_model

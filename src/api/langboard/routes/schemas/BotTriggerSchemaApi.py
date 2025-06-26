@@ -66,8 +66,6 @@ async def get_bot_trigger_conditions():
 
 def _make_object_property(schema_name: str, schema: dict[str, Any]):
     properties, required = _make_property(schema)
-    if "as_user" in properties:
-        properties.pop("as_user")
 
     return {
         "type": "object",

@@ -4,7 +4,7 @@ import { CollapsibleVersionHistoryPlate } from "@/components/Editor/version-hist
 import UserAvatar from "@/components/UserAvatar";
 import { useNavigate } from "react-router-dom";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
-import { ActivityModel, AuthUser, ProjectCard, User } from "@/core/models";
+import { ActivityModel, AuthUser, ProjectCard } from "@/core/models";
 import { IBotInActivityHistory, IChangesInActivityHistory, IUserInActivityHistory } from "@/core/models/activities/base.type";
 import { IProjectActivityHistory } from "@/core/models/activities/project.activity.type";
 import { IProjectCardActivityHistory } from "@/core/models/activities/project.card.activity.type";
@@ -247,20 +247,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 }
 
                 if (before?.type === "editor" || after?.type === "editor") {
-                    const mentionables = [...(before?.mentionables ?? []), ...(after?.mentionables ?? [])].map(
-                        (mentionable: IBotInActivityHistory | IUserInActivityHistory) => {
-                            const isBot = mentionable.type === "bot";
-                            return User.Model.createFakeUser({
-                                type: mentionable.type,
-                                uid: "0",
-                                firstname: isBot ? mentionable.name : mentionable.firstname,
-                                lastname: isBot ? "" : mentionable.lastname,
-                                username: "",
-                                email: "",
-                                avatar: mentionable.avatar,
-                            });
-                        }
-                    );
+                    const mentionables = [...(before?.mentionables ?? []), ...(after?.mentionables ?? [])];
 
                     newElements.push(
                         <CollapsibleVersionHistoryPlate

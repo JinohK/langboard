@@ -1,3 +1,5 @@
+import useUserDeactivatedHandlers from "@/controllers/socket/user/useUserDeactivatedHandlers";
+import useUserDeletedHandlers from "@/controllers/socket/user/useUserDeletedHandlers";
 import useUserNotificationDeletedHandlers from "@/controllers/socket/user/useUserNotificationDeletedHandlers";
 import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
 import useUserProjectRolesUpdatedHandlers from "@/controllers/socket/user/useUserProjectRolesUpdatedHandlers";
@@ -21,11 +23,6 @@ interface INotificationUnsubscriptionMap {
 }
 
 export interface Interface extends User.Interface {
-    is_admin?: bool;
-    industry: string;
-    purpose: string;
-    affiliation?: string;
-    position?: string;
     user_groups: UserGroup.Interface[];
     subemails: { email: string; verified_at: string }[];
     preferred_lang: string;
@@ -51,48 +48,23 @@ class AuthUser extends User.Model<Interface> {
 
         const socket = useSocketOutsideProvider();
 
-        this.subscribeSocketEvents([useUserNotifiedHandlers, useUserNotificationDeletedHandlers, useUserProjectRolesUpdatedHandlers], {
-            currentUser: this,
-        });
+        this.subscribeSocketEvents(
+            [
+                useUserNotifiedHandlers,
+                useUserNotificationDeletedHandlers,
+                useUserProjectRolesUpdatedHandlers,
+                useUserDeactivatedHandlers,
+                useUserDeletedHandlers,
+            ],
+            {
+                currentUser: this,
+                user: this,
+            }
+        );
 
         AuthUser.subscribe("DELETION", this.uid, () => {
             socket.unsubscribe(ESocketTopic.UserPrivate, [this.uid]);
         });
-    }
-
-    public get is_admin() {
-        return this.getValue("is_admin");
-    }
-    public set is_admin(value: bool | undefined) {
-        this.update({ is_admin: value });
-    }
-
-    public get industry() {
-        return this.getValue("industry");
-    }
-    public set industry(value: string) {
-        this.update({ industry: value });
-    }
-
-    public get purpose() {
-        return this.getValue("purpose");
-    }
-    public set purpose(value: string) {
-        this.update({ purpose: value });
-    }
-
-    public get affiliation() {
-        return this.getValue("affiliation");
-    }
-    public set affiliation(value: string | undefined) {
-        this.update({ affiliation: value });
-    }
-
-    public get position() {
-        return this.getValue("position");
-    }
-    public set position(value: string | undefined) {
-        this.update({ position: value });
     }
 
     public get user_groups(): UserGroup.TModel[] {
@@ -105,21 +77,21 @@ class AuthUser extends User.Model<Interface> {
     public get subemails() {
         return this.getValue("subemails");
     }
-    public set subemails(value: { email: string; verified_at: string }[]) {
+    public set subemails(value) {
         this.update({ subemails: value });
     }
 
     public get preferred_lang() {
         return this.getValue("preferred_lang");
     }
-    public set preferred_lang(value: string) {
+    public set preferred_lang(value) {
         this.update({ preferred_lang: value });
     }
 
     public get notification_unsubs() {
         return this.getValue("notification_unsubs");
     }
-    public set notification_unsubs(value: INotificationUnsubscriptionMap) {
+    public set notification_unsubs(value) {
         this.update({ notification_unsubs: value });
     }
 }

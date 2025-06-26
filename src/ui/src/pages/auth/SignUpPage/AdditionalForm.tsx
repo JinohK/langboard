@@ -16,7 +16,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
     const purposeRef = useRef<string>(values.purpose ?? "");
     const purposeInputRef = useRef<HTMLInputElement>(null);
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Pick<ISignUpForm, "industry" | "purpose">>({
-        errorLangPrefix: "signUp.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             industry: { required: true },
             purpose: { required: true },
@@ -53,7 +53,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                 <AutoComplete
                     selectedValue={values.industry}
                     onValueChange={setIndustry}
-                    items={User.INDUSTRIES.map((industry) => ({ value: industry, label: t(`signUp.industries.${industry}`) }))}
+                    items={User.INDUSTRIES.map((industry) => ({ value: industry, label: t(`auth.industries.${industry}`) }))}
                     emptyMessage={industryRef.current ?? ""}
                     disabled={isValidating}
                     placeholder={t("user.What industry are you in?")}
@@ -65,7 +65,7 @@ function AdditionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps
                 <AutoComplete
                     selectedValue={values.purpose}
                     onValueChange={setPurpose}
-                    items={User.PURPOSES.map((purpose) => ({ value: purpose, label: t(`signUp.purposes.${purpose}`) }))}
+                    items={User.PURPOSES.map((purpose) => ({ value: purpose, label: t(`auth.purposes.${purpose}`) }))}
                     emptyMessage={purposeRef.current ?? ""}
                     disabled={isValidating}
                     placeholder={t("user.What is your purpose for using {app}?")}

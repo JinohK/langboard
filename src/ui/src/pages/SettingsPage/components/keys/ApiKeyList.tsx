@@ -37,7 +37,7 @@ function ApiKeyList({ selectedKeys, setSelectedKeys }: IApiKeyListProps) {
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
-                        <Table.Head className="w-12 px-0 text-center">
+                        <Table.Head className="w-12 text-center">
                             <Checkbox checked={!!keys.length && keys.length === selectedKeys.length} onClick={selectAll} />
                         </Table.Head>
                         <Table.Head className="text-center" title={t("settings.Name")}>

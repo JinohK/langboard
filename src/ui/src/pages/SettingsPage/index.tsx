@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
+import UsersPage from "@/pages/SettingsPage/UsersPage";
 
 function SettingsProxy(): JSX.Element {
     const [t] = useTranslation();
@@ -80,6 +81,13 @@ function SettingsProxy(): JSX.Element {
                 navigateRef.current(ROUTES.SETTINGS.API_KEYS);
             },
         },
+        [ROUTES.SETTINGS.USERS]: {
+            icon: "users",
+            name: t("settings.Users"),
+            onClick: () => {
+                navigateRef.current(ROUTES.SETTINGS.USERS);
+            },
+        },
         [ROUTES.SETTINGS.BOTS]: {
             icon: "bot",
             name: t("settings.Bots"),
@@ -119,6 +127,10 @@ function SettingsProxy(): JSX.Element {
     switch (pathname) {
         case ROUTES.SETTINGS.API_KEYS:
             pageContent = <ComingSoon />;
+            skeletonContent = <></>;
+            break;
+        case ROUTES.SETTINGS.USERS:
+            pageContent = <UsersPage />;
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.BOTS:

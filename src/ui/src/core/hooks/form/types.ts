@@ -10,9 +10,10 @@ export interface IBaseValidationSchema {
     email?: bool;
     sameWith?: string;
     mimeType?: string | string[];
+    enum?: Record<string, string>;
     custom?: {
         errorKey: keyof IBaseValidationSchema | (string & {});
-        validate: (value: string | File[] | FileList) => bool;
+        validate: (value: string | File[] | FileList) => bool | Promise<bool>;
     };
 }
 
@@ -31,7 +32,7 @@ interface IBaseUseFormProps<TVariables = unknown, TData = unknown, TContext = un
     schema: Record<string, TValidationSchema> | (() => Record<string, TValidationSchema>);
     isValidatingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
     isFormData?: TFormData;
-    inputRefs?: Record<string, React.RefObject<HTMLInputElement | DataTransfer | string | bool>>;
+    inputRefs?: Record<string, React.RefObject<HTMLInputElement | DataTransfer | string | bool | null>>;
     beforeHandleSubmit?: () => void;
     predefineValues?: Partial<TVariables> | (() => Partial<TVariables>);
     successCallback?: (form: TFormDataType<TFormData, TVariables>) => void;

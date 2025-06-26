@@ -14,7 +14,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     const [t] = useTranslation();
     const { mutate: existsEmailMutate } = useSignUpExistsEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef, formDataRef, focusComponentRef } = useForm({
-        errorLangPrefix: "signUp.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             email: { required: true, email: true },
             firstname: { required: true },
@@ -25,7 +25,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
         mutate: existsEmailMutate,
         mutateOnSuccess: (data) => {
             if (data.exists) {
-                setErrors({ email: "signUp.errors.invalid.email-exists" });
+                setErrors({ email: "auth.errors.invalid.email-exists" });
                 if (TypeUtils.isElement(focusComponentRef.current)) {
                     focusComponentRef.current.focus();
                 } else if (TypeUtils.isString(focusComponentRef.current)) {
@@ -92,7 +92,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
             />
             <PasswordInput
                 name="password-confirm"
-                label={t("signUp.Confirm password")}
+                label={t("auth.Confirm password")}
                 isFormControl
                 isValidating={isValidating}
                 defaultValue={values.password}

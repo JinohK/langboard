@@ -3,6 +3,7 @@ import BotCreateFormDialog from "@/pages/SettingsPage/components/bots/BotCreateF
 import InternalBotCreateFormDialog from "@/pages/SettingsPage/components/internalBots/InternalBotCreateFormDialog";
 import ApiKeyCreateFormDialog from "@/pages/SettingsPage/components/keys/ApiKeyCreateFormDialog";
 import GlobalRelationshipCreateFormDialog from "@/pages/SettingsPage/components/relationships/GlobalRelationshipCreateFormDialog";
+import UserCreateFormDialog from "@/pages/SettingsPage/components/users/UserCreateFormDialog";
 import WebhookCreateFormDialog from "@/pages/SettingsPage/components/webhook/WebhookCreateFormDialog";
 import { memo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,9 @@ const ModalPage = memo(() => {
         switch (pathname) {
             case ROUTES.SETTINGS.CREATE_API_KEY:
                 navigate(ROUTES.SETTINGS.API_KEYS);
+                break;
+            case ROUTES.SETTINGS.CREATE_USER:
+                navigate(ROUTES.SETTINGS.USERS);
                 break;
             case ROUTES.SETTINGS.CREATE_BOT:
                 navigate(ROUTES.SETTINGS.BOTS);
@@ -47,6 +51,9 @@ const ModalPage = memo(() => {
     switch (pathname) {
         case ROUTES.SETTINGS.CREATE_API_KEY:
             modalContent = <ApiKeyCreateFormDialog opened={isOpened} setOpened={changeIsOpenedState} />;
+            break;
+        case ROUTES.SETTINGS.CREATE_USER:
+            modalContent = <UserCreateFormDialog opened={isOpened} setOpened={changeIsOpenedState} />;
             break;
         case ROUTES.SETTINGS.CREATE_BOT:
             modalContent = <BotCreateFormDialog opened={isOpened} setOpened={changeIsOpenedState} />;

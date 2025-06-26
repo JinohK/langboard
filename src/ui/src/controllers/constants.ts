@@ -181,6 +181,13 @@ export const API_ROUTES = {
         UPDATE: "/settings/app/{uid}",
         DELETE: "/settings/app/{uid}",
         DELETE_SELECTED: "/settings/app",
+        USERS: {
+            GET_LIST: "/settings/users",
+            CREATE: "/settings/users",
+            UPDATE: "/settings/users/{user_uid}",
+            DELETE: "/settings/users/{user_uid}",
+            DELETE_SELECTED: "/settings/users",
+        },
         BOTS: {
             CREATE: "/settings/bot",
             UPDATE: "/settings/bot/{bot_uid}",
@@ -333,6 +340,8 @@ export const SOCKET_SERVER_EVENTS = {
         NOTIFIED: "user:notified",
         NOTIFICATION_DELETED: "user:notification:deleted",
         PROJECT_ROLES_UPDATED: "user:project-roles:updated",
+        DELETED: "user:deleted:{uid}",
+        DEACTIVATED: "user:deactivated:{uid}",
     },
     GLOBALS: {
         BOTS: {
@@ -358,6 +367,10 @@ export const SOCKET_SERVER_EVENTS = {
         UPDATED: "settings:updated:{uid}",
         DELETED: "settings:deleted:{uid}",
         SELECTIONS_DELETED: "settings:deleted",
+        USERS: {
+            CREATED: "user:created",
+            SELECTION_DELETED: "user:deleted",
+        },
         BOTS: {
             CREATED: "settings:bot:created",
             UPDATED: "settings:bot:updated:{uid}",

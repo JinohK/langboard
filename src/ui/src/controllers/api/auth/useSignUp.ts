@@ -33,7 +33,7 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
 
                 formData.append(key, value[0], value[0].name);
             } else {
-                formData.append(key, value);
+                formData.append(key, value.toString());
             }
         });
 

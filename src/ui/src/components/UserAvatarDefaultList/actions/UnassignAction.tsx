@@ -1,18 +1,19 @@
 import { Box, Button, Flex, Popover, SubmitButton, Toast } from "@/components/base";
-import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import { useUserAvatar } from "@/components/UserAvatar/Provider";
 import useUnassignProjectAssignee from "@/controllers/api/board/useUnassignProjectAssignee";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project, User } from "@/core/models";
+import { Project } from "@/core/models";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IUserAvatarDefaultUnassignActionProps {
-    user: User.TModel;
     project: Project.TModel;
     setIsAssignee: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUserAvatarDefaultUnassignActionProps): JSX.Element {
+function UserAvatarDefaultUnassignAction({ project, setIsAssignee }: IUserAvatarDefaultUnassignActionProps): JSX.Element {
+    const { userOrBot, getAvatarHoverCardAttrs } = useUserAvatar();
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -27,7 +28,7 @@ function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUser
 
         const promise = unassignProjectAssigneeMutateAsync({
             project_uid: project.uid,
-            assignee_uid: user.uid,
+            assignee_uid: userOrBot.uid,
         });
 
         Toast.Add.promise(promise, {
@@ -54,7 +55,7 @@ function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUser
             <Popover.Trigger asChild>
                 <UserAvatar.ListItem>{t("common.avatarActions.Unassign from this project")}</UserAvatar.ListItem>
             </Popover.Trigger>
-            <Popover.Content className="z-[999999]" {...getAvatarHoverCardAttrs(user)}>
+            <Popover.Content className="z-[999999]" {...getAvatarHoverCardAttrs()}>
                 <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
                     {t("ask.Are you sure you want to unassign this assignee?")}
                 </Box>

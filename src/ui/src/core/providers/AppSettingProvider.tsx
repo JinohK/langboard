@@ -36,7 +36,10 @@ export const AppSettingProvider = ({ currentUser, navigateRef, children }: IAppS
     const selectedAppSettingsDeletedHandlers = useSelectedAppSettingsDeletedHandlers({});
     const botSettingCreatedHandlers = useBotSettingCreatedHandlers({});
 
-    useSwitchSocketHandlers({ socket, handlers: [appSettingCreatedHandlers, selectedAppSettingsDeletedHandlers, botSettingCreatedHandlers] });
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [appSettingCreatedHandlers, selectedAppSettingsDeletedHandlers, botSettingCreatedHandlers],
+    });
 
     return (
         <AppSettingContext.Provider

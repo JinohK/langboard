@@ -20,7 +20,7 @@ const HeaderUserMenu = memo(({ currentUser, navigateRef }: IHeaderUserMenuProps)
 
     return (
         <UserAvatar.Root
-            user={currentUser}
+            userOrBot={currentUser}
             listAlign="end"
             avatarSize={{
                 initial: "sm",

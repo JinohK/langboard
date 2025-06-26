@@ -36,7 +36,7 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
-                        <Table.Head className="w-12 px-0 text-center">
+                        <Table.Head className="w-12 text-center">
                             <Checkbox
                                 checked={!!relationships.length && relationships.length === selectedGlobalRelationships.length}
                                 onClick={selectAll}

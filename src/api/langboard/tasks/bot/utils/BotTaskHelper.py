@@ -2,6 +2,7 @@ from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any
 from core.db import DbSession, SqlBuilder
+from core.utils.Converter import json_default
 from core.utils.decorators import staticclass
 from httpx import post
 from models import Bot, BotTrigger, Project, ProjectAssignedBot, ProjectLabel
@@ -97,7 +98,7 @@ class BotTaskHelper:
                     **BotTaskDataHelper.create_user_or_bot(bot),
                     "prompt": bot.prompt,
                 },
-                rest_data=json_loads(json_dumps(data, default=str)),
+                rest_data=json_loads(json_dumps(data, default=json_default)),
             ).to_data()
 
             if bot.api_url.count("v1/webhook") > 0:

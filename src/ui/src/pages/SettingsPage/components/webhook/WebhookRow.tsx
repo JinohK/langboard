@@ -31,7 +31,7 @@ const WebhookRow = memo(({ url, selectedWebhooks, setSelectedWebhooks }: IWebhoo
     return (
         <ModelRegistry.AppSettingModel.Provider model={url}>
             <Table.Row>
-                <Table.Cell className="w-12 p-0 text-center">
+                <Table.Cell className="w-12 text-center">
                     <Checkbox checked={selectedWebhooks.some((value) => value === url.uid)} onClick={toggleSelect} />
                 </Table.Cell>
                 <WebhookName />

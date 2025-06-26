@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useMemo } from "react";
-import { AuthUser, User } from "@/core/models";
+import { AuthUser } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 import { API_ROUTES } from "@/controllers/constants";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export type TEditorType = "view" | "card-description" | "card-comment" | "card-new-comment" | "wiki-content";
 
 export interface IEditorDataContext {
     currentUser: AuthUser.TModel;
-    mentionables: User.TModel[];
+    mentionables: TUserLikeModel[];
     form?: any;
     socketEvents?: ReturnType<typeof createEditorSocketEvents>;
     chatEventKey?: string;
@@ -20,7 +21,7 @@ export interface IEditorDataContext {
 
 interface IBaseEditorDataProviderProps {
     currentUser: AuthUser.TModel;
-    mentionables: User.TModel[];
+    mentionables: TUserLikeModel[];
     editorType: TEditorType;
     form?: any;
     uploadedCallback?: (respones: any) => void;

@@ -3,6 +3,7 @@ from json import loads as json_loads
 from typing import cast
 from core.filter import AuthFilter
 from core.routing import AppExceptionHandlingRoute, AppRouter, JsonResponse
+from core.utils.Converter import json_default
 from fastapi import Request, status
 from models import Bot, User
 from starlette.types import Message
@@ -57,7 +58,7 @@ async def batch_apis(request: Request, form: BatchForm, user_or_bot: User | Bot 
         async def receive():
             message = b""
             if request_schema.form:
-                message = json_dumps(request_schema.form, default=str).encode()
+                message = json_dumps(request_schema.form, default=json_default).encode()
             return {"type": "http.request", "body": message, "more_body": False}
 
         async def send(message: Message):

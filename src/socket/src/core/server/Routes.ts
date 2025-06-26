@@ -24,6 +24,10 @@ class _Routes {
         this.#routes = new Map();
     }
 
+    public get(path: string, handler: TRouteHandler) {
+        this.#addRoute("GET", path, handler);
+    }
+
     public post(path: string, handler: TRouteHandler) {
         this.#addRoute("POST", path, handler);
     }

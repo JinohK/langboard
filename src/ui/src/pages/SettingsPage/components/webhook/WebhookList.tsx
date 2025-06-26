@@ -37,7 +37,7 @@ function WebhookList({ selectedWebhooks, setSelectedWebhooks }: IWebhookListProp
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
-                        <Table.Head className="w-12 px-0 text-center">
+                        <Table.Head className="w-12 text-center">
                             <Checkbox checked={!!urls.length && urls.length === selectedWebhooks.length} onClick={selectAll} />
                         </Table.Head>
                         <Table.Head className="w-1/6 text-center" title={t("settings.Name")}>

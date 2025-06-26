@@ -1,5 +1,5 @@
 import React, { cloneElement, forwardRef, isValidElement } from "react";
-import { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Box, ScrollArea, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
@@ -14,10 +14,30 @@ interface ITableColumn {
 
 export interface ITableInfiniteScrollerProps extends Omit<TSharedInfiniteScrollerProps<HTMLDivElement>, "loaderClassName"> {
     columns: ITableColumn[];
+    headerClassName?: string;
+    totalCount: number;
+    virtualizerRef?: React.RefObject<ReturnType<typeof useVirtualizer> | undefined>;
 }
 
 const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
-    ({ hasMore, initialLoad, loadMore, pageStart, loader, scrollable, gap, columns, children, ...props }, ref) => {
+    (
+        {
+            hasMore,
+            initialLoad,
+            loadMore,
+            pageStart,
+            loader,
+            scrollable,
+            gap,
+            columns,
+            headerClassName,
+            totalCount,
+            virtualizerRef,
+            children,
+            ...props
+        },
+        ref
+    ) => {
         const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
             initialLoad,
@@ -26,6 +46,8 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
             loader,
             scrollable,
             gap,
+            totalCount,
+            virtualizerRef,
             children,
         });
 
@@ -36,7 +58,7 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
         return (
             <Box>
                 <Table.FlexRoot {...props} ref={ref}>
-                    <Table.FlexHeader>
+                    <Table.FlexHeader className={headerClassName}>
                         <Table.FlexRow>
                             {columns.map((column) => (
                                 <Table.FlexHead key={createShortUUID()} className={column.className}>
@@ -74,12 +96,29 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
 export interface IWithBodyScrollerProps
     extends Omit<ITableInfiniteScrollerProps, "scrollable">,
         Pick<React.ComponentProps<typeof ScrollArea.Root>, "mutable"> {
-    headerClassName?: string;
     innerClassName?: string;
 }
 
 const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
-    ({ hasMore, initialLoad, loadMore, pageStart, loader, columns, mutable, headerClassName, innerClassName, gap, children, ...props }, ref) => {
+    (
+        {
+            hasMore,
+            initialLoad,
+            loadMore,
+            pageStart,
+            loader,
+            columns,
+            mutable,
+            headerClassName,
+            innerClassName,
+            gap,
+            totalCount,
+            virtualizerRef,
+            children,
+            ...props
+        },
+        ref
+    ) => {
         const viewportRef = React.useRef<HTMLDivElement>(null);
         const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
@@ -89,6 +128,8 @@ const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
             loader,
             scrollable: () => viewportRef.current,
             gap,
+            totalCount,
+            virtualizerRef,
             children,
         });
 

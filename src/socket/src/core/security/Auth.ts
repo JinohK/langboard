@@ -14,9 +14,6 @@ class Auth {
         switch (type) {
             case "socket":
                 token = (paramsOrHeaders as URLSearchParams).get("authorization") ?? undefined;
-                if (!token) {
-                    return null;
-                }
                 break;
             case "http":
                 {

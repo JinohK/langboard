@@ -27,7 +27,7 @@ const GlobalRelationshipRow = memo(
         return (
             <ModelRegistry.GlobalRelationshipType.Provider model={globalRelationship}>
                 <Table.Row>
-                    <Table.Cell className="w-12 p-0 text-center">
+                    <Table.Cell className="w-12 text-center">
                         <Checkbox checked={selectedGlobalRelationships.some((value) => value === globalRelationship.uid)} onClick={toggleSelect} />
                     </Table.Cell>
                     <GlobalRelationshipParentName />

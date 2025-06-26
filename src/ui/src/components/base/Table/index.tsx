@@ -123,7 +123,7 @@ export interface ITableCellFlexProps extends IFlexProps, IBaseTableCellProps {}
 const FlexHead = React.forwardRef<HTMLDivElement, ITableCellFlexProps>(({ title, titleAlign, titleSide, className, children, ...props }, ref) => {
     const headProps = {
         ref,
-        className: cn("h-12 p-4 text-left font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 truncate", className),
+        className: cn("h-12 p-4 text-left font-medium text-muted-foreground truncate", className),
         ...props,
     };
 
@@ -147,7 +147,7 @@ FlexHead.displayName = "TableFlexHead";
 const FlexCell = React.forwardRef<HTMLDivElement, ITableCellFlexProps>(({ title, titleAlign, titleSide, className, children, ...props }, ref) => {
     const cellProps = {
         ref,
-        className: cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 truncate", className),
+        className: cn("p-4 align-middle truncate", className),
         ...props,
     };
 

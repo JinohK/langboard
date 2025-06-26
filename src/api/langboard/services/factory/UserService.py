@@ -1,10 +1,11 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, cast
+from typing import Any, Literal, cast, overload
 from urllib.parse import urlparse
 from core.caching import Cache
 from core.db import DbSession, SqlBuilder
 from core.Env import UI_QUERY_NAMES, Env
+from core.schema import Pagination
 from core.service import BaseService
 from core.storage import FileModel
 from core.types import SafeDateTime, SnowflakeID
@@ -13,7 +14,7 @@ from core.utils.Encryptor import Encryptor
 from core.utils.String import concat, generate_random_string
 from models import User, UserEmail, UserProfile
 from ...core.service import ServiceHelper
-from ...publishers import UserPublisher
+from ...publishers import AppSettingPublisher, UserPublisher
 from ...resources.locales.LangEnum import LangEnum
 from ...security import Auth
 from ...tasks.activities import UserActivityTask
@@ -30,6 +31,43 @@ class UserService(BaseService):
 
     def get_by_id(self, user_id: SnowflakeID) -> User | None:
         return ServiceHelper.get_by_param(User, user_id)
+
+    @overload
+    async def get_list(
+        self, pagination: Pagination, refer_time: SafeDateTime
+    ) -> tuple[list[tuple[User, UserProfile]], int]: ...
+    @overload
+    async def get_list(self, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]) -> int: ...
+    @overload
+    async def get_list(
+        self, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[False]
+    ) -> tuple[list[tuple[User, UserProfile]], int]: ...
+    async def get_list(self, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False):
+        outdated_query = SqlBuilder.select.count(User, User.column("id")).where(
+            (User.column("created_at") > refer_time) & (User.column("deleted_at") == None)  # noqa
+        )
+
+        count = 0
+        with DbSession.use(readonly=True) as db:
+            count = db.exec(outdated_query).first() or 0
+        if only_count:
+            return count
+
+        query = (
+            SqlBuilder.select.tables(User, UserProfile)
+            .join(UserProfile, User.column("id") == UserProfile.column("user_id"))
+            .where(User.column("created_at") <= refer_time)
+            .order_by(User.column("created_at").desc(), User.column("id").desc())
+        )
+
+        query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
+
+        records = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            records = result.all()
+
+        return records, count
 
     async def get_by_uid(self, uid: str) -> User | None:
         return ServiceHelper.get_by_param(User, uid)
@@ -63,7 +101,7 @@ class UserService(BaseService):
     async def get_profile(self, user: User) -> UserProfile:
         return cast(UserProfile, ServiceHelper.get_by(UserProfile, "user_id", user.id))
 
-    async def create(self, form: dict, avatar: FileModel | None = None) -> User:
+    async def create(self, form: dict, avatar: FileModel | None = None) -> tuple[User, UserProfile]:
         user = User(**form)
         user.avatar = avatar
 
@@ -74,7 +112,7 @@ class UserService(BaseService):
             user_profile = UserProfile(user_id=user.id, **form)
             db.insert(user_profile)
 
-        return user
+        return user, user_profile
 
     async def create_subemail(self, user_id: SnowflakeID, email: str) -> UserEmail:
         user_email = UserEmail(user_id=user_id, email=email)
@@ -155,10 +193,13 @@ class UserService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(subemail)
 
-    async def update(self, user: User, form: dict) -> bool:
+    async def update(self, user: User, form: dict, from_setting: bool = False) -> bool:
         profile = await self.get_profile(user)
         mutable_keys = ["firstname", "lastname", "avatar"]
         profile_mutable_keys = ["affiliation", "position"]
+        if from_setting:
+            mutable_keys.extend(["is_admin", "activated_at"])
+            profile_mutable_keys.extend(["industry", "purpose"])
 
         old_user_record = {}
 
@@ -167,7 +208,10 @@ class UserService(BaseService):
                 continue
             old_value = getattr(user, key)
             new_value = form[key]
-            if old_value == new_value or new_value is None:
+            if from_setting and key == "activated_at":
+                if old_value == new_value:
+                    continue
+            elif old_value == new_value or new_value is None:
                 continue
             old_user_record[key] = convert_python_data(old_value)
             setattr(user, key, new_value)
@@ -205,6 +249,9 @@ class UserService(BaseService):
                 model[key] = convert_python_data(getattr(user, key))
 
         await UserPublisher.updated(user, model)
+        if from_setting:
+            if "activated_at" in form and not user.activated_at:
+                await UserPublisher.deactivated(user)
 
         return True
 
@@ -248,3 +295,20 @@ class UserService(BaseService):
         user.set_password(password)
         with DbSession.use(readonly=False) as db:
             db.update(user)
+
+    async def delete(self, user: User) -> None:
+        with DbSession.use(readonly=False) as db:
+            db.delete(user)
+
+        await Auth.reset_user(user)
+        await UserPublisher.deleted(user)
+
+    async def delete_selected(self, uids: list[str]) -> None:
+        user_ids = [SnowflakeID.from_short_code(uid) for uid in uids]
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(SqlBuilder.delete.table(User).where(User.column("id").in_(user_ids)))
+
+        await AppSettingPublisher.selected_users_deleted(uids)
+        for user_id in user_ids:
+            await UserPublisher.deleted(user_id)

@@ -1,5 +1,6 @@
 import { Button, Flex, Input, Popover, Select, SubmitButton, Toast } from "@/components/base";
-import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import { useUserAvatar } from "@/components/UserAvatar/Provider";
 import useCreateCard from "@/controllers/api/board/useCreateCard";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn, User } from "@/core/models";
@@ -12,6 +13,7 @@ export interface IUserAvatarDefaultUserCreateAssignCardActionProps {
 }
 
 function UserAvatarDefaultUserCreateAssignCardAction({ user, project }: IUserAvatarDefaultUserCreateAssignCardActionProps): JSX.Element {
+    const { getAvatarHoverCardAttrs } = useUserAvatar();
     const [t] = useTranslation();
     const columns = ProjectColumn.Model.useModels((model) => project.uid === model.project_uid && !model.is_archive, [project]);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -80,12 +82,12 @@ function UserAvatarDefaultUserCreateAssignCardAction({ user, project }: IUserAva
             <Popover.Trigger asChild>
                 <UserAvatar.ListItem>{t("common.avatarActions.Create & assign a card")}</UserAvatar.ListItem>
             </Popover.Trigger>
-            <Popover.Content className="z-[999999]" ref={containerRef} {...getAvatarHoverCardAttrs(user)}>
-                <Select.Root onValueChange={(value) => (columnUidValueRef.current = value)} {...getAvatarHoverCardAttrs(user)}>
+            <Popover.Content className="z-[999999]" ref={containerRef} {...getAvatarHoverCardAttrs()}>
+                <Select.Root onValueChange={(value) => (columnUidValueRef.current = value)} {...getAvatarHoverCardAttrs()}>
                     <Select.Trigger ref={columnUidButtonRef}>
                         <Select.Value placeholder={t("common.avatarActions.Select a column")} />
                     </Select.Trigger>
-                    <Select.Content className="z-[999999]" container={containerRef.current} {...getAvatarHoverCardAttrs(user)}>
+                    <Select.Content className="z-[999999]" container={containerRef.current} {...getAvatarHoverCardAttrs()}>
                         {columns.map((column) => (
                             <Select.Item key={column.uid} value={column.uid}>
                                 {column.name}

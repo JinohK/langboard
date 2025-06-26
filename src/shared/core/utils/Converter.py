@@ -3,9 +3,21 @@ from typing import Any
 from pydantic import BaseModel
 
 
+def json_default(value: Any) -> str:
+    if isinstance(value, datetime):
+        value = value.isoformat()
+        if not value.count("+"):
+            value = f"{value}+00:00"
+        return value
+    return str(value)
+
+
 def convert_python_data(data: Any, recursive: bool = False) -> Any:
     if isinstance(data, datetime):
-        return data.isoformat()
+        data = data.isoformat()
+        if not data.count("+"):
+            data = f"{data}+00:00"
+        return data
 
     if not recursive:
         if isinstance(data, BaseModel):

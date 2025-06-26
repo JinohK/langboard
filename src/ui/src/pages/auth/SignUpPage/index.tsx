@@ -84,8 +84,8 @@ function SignUpPage(): JSX.Element {
 
     const leftSide = (
         <>
-            <h2 className="text-4xl font-normal">{t("signUp.Sign up")}</h2>
-            <span className="text-sm sm:text-base">{t("signUp.Already have an account?")}</span>
+            <h2 className="text-4xl font-normal">{t("auth.Sign up")}</h2>
+            <span className="text-sm sm:text-base">{t("auth.Already have an account?")}</span>
             <Button
                 id="back-to-sign-in-btn"
                 type="button"
@@ -97,7 +97,7 @@ function SignUpPage(): JSX.Element {
                 className="ml-2 mt-4"
                 onClick={backToSignIn}
             >
-                {t("signIn.Sign in")}
+                {t("auth.Sign in")}
             </Button>
         </>
     );

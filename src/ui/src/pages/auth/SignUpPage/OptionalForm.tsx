@@ -11,9 +11,9 @@ import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/uti
 function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const [t] = useTranslation();
     const dataTransferRef = useRef(new DataTransfer());
-    const avatarUrlRef = useRef<string>((values as unknown as Record<string, string>).avatarUrl ?? null);
+    const avatarUrlRef = useRef((values as unknown as Record<string, string>).avatarUrl ?? null);
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm<Record<string, unknown>>({
-        errorLangPrefix: "signUp.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             avatar: { mimeType: "image/*" },
             affiliation: {},
@@ -30,7 +30,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 avatarUrl: avatarUrlRef.current,
             };
 
-            moveStep(newValues, ROUTES.SIGN_UP.OVERVIEW);
+            moveStep(newValues as ISignUpFormProps["values"], ROUTES.SIGN_UP.OVERVIEW);
         },
     });
 

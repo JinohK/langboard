@@ -1,6 +1,14 @@
 {
   "App settings": "App settings",
   "API keys": "API keys",
+  "Users": "Users",
+  "Create user": "Create user",
+  "{count} New Users": "{{count}} New Users",
+  "No Users": "No Users",
+  "Admin": "Admin",
+  "Activation": "Activation",
+  "Activate": "Activate",
+  "Delete user": "Delete user",
   "Internal bots": "Internal bots",
   "Global relationships": "Global relationships",
   "Webhooks": "Webhooks",
@@ -75,6 +83,27 @@
       "langflow_url": "Enter a valid Langflow URL.",
       "webhook_url": "Enter a valid webhook URL.",
       "internal_bot_url": "Enter a valid internal bot API URL."
+    },
+    "user": {
+      "missing": {
+        "email": "Enter an email address.",
+        "firstname": "Enter your first name.",
+        "lastname": "Enter your last name.",
+        "password": "Enter a password.",
+        "password-confirm": "Enter a password confirmation.",
+        "industry": "Select an industry.",
+        "industry-other": "Enter an industry.",
+        "purpose": "Select a purpose.",
+        "purpose-other": "Enter a purpose."
+      },
+      "invalid": {
+        "email": "Enter a valid email address.",
+        "password": "Passwords do not match.",
+        "password-confirm": "Passwords do not match."
+      },
+      "exists": {
+        "email": "Email already exists. Try another one."
+      }
     }
   }
 }

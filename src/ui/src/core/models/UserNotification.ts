@@ -54,7 +54,6 @@ class UserNotification extends BaseModel<Interface> {
                     name: botAsUser.firstname,
                     bot_uname: botAsUser.username,
                     avatar: botAsUser.avatar,
-                    as_user: botAsUser,
                 } as unknown as BotModel.Interface;
             }
         }

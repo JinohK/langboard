@@ -101,7 +101,7 @@ function BoardFilter() {
                                             )
                                             .map((member) => (
                                                 <BoardFilterItem key={createShortUUID()} name="members" value={member.email}>
-                                                    <UserAvatar.Root user={member} withName avatarSize="xs" labelClassName="gap-1" />
+                                                    <UserAvatar.Root userOrBot={member} withNameProps={{ className: "gap-1" }} avatarSize="xs" />
                                                 </BoardFilterItem>
                                             ))
                                     }

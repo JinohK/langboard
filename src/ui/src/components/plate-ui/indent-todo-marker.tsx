@@ -13,7 +13,7 @@ export const TodoMarker = ({ element }: Omit<SlateRenderElementProps, "children"
 
     return (
         <div contentEditable={false}>
-            <Checkbox className={cn("absolute -left-6 top-1", readOnly && "pointer-events-none")} {...checkboxProps} />
+            <Checkbox className={cn("absolute -left-6 top-0.5", readOnly && "pointer-events-none")} {...checkboxProps} />
         </div>
     );
 };

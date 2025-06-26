@@ -30,7 +30,7 @@ async def signup(
         return JsonResponse(content=ApiErrorCode.EX1003, status_code=status.HTTP_409_CONFLICT)
 
     file_model = Storage.upload(avatar, StorageName.Avatar) if avatar else None
-    user = await service.user.create(form.model_dump(), avatar=file_model)
+    user, _ = await service.user.create(form.model_dump(), avatar=file_model)
 
     cache_key = service.user.create_cache_name("signup", user.email)
 

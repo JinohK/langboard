@@ -30,7 +30,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
     const focusComponentRef = useRef<HTMLInputElement | string | null>(null);
     const formRef = useRef<HTMLFormElement | null>(null);
 
-    const handleSubmit = (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => {
+    const handleSubmit = async (formOrEvent: React.FormEvent<HTMLFormElement> | HTMLFormElement | Record<string, string | File | DataTransfer>) => {
         if (isValidating) {
             return;
         }
@@ -81,14 +81,16 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
         const validationSchema = TypeUtils.isFunction(schema) ? schema() : schema;
 
-        Object.entries(validationSchema).forEach(([inputName, scheme]) => {
+        const schemaEntries = Object.entries(validationSchema);
+        for (let i = 0; i < schemaEntries.length; ++i) {
+            const [inputName, scheme] = schemaEntries[i];
             let input = form[inputName];
             let inputValue: string | File[] | FileList;
 
             if (inputRefs && inputRefs[inputName]) {
                 input = inputRefs[inputName].current;
                 if (!input) {
-                    return;
+                    continue;
                 }
 
                 if (input instanceof DataTransfer) {
@@ -104,6 +106,8 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                 if (form instanceof HTMLFormElement) {
                     if (input.type === "file") {
                         inputValue = input.files;
+                    } else if (input.type === "checkbox" || input.type === "radio") {
+                        inputValue = input.checked ? input.value : false;
                     } else {
                         inputValue = input.value.trim();
                     }
@@ -120,7 +124,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                 }
             }
 
-            const error = validate(form, inputValue, scheme);
+            const error = await validate(form, inputValue, scheme);
             if (error) {
                 newErrors[inputName] = convertValidationToLangKey(errorLangPrefix, error, inputName);
                 if (!focusComponentRef.current) {
@@ -143,7 +147,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             } else {
                 (formDataRef.current as Record<string, unknown>)[inputName] = inputValue;
             }
-        });
+        }
 
         if (focusComponentRef.current) {
             setErrors(newErrors);

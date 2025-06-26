@@ -25,7 +25,6 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
     const roles = botRoles[bot.uid];
     const { mutateAsync: updateProjectBotRolesMutateAsync } = useUpdateProjectBotRoles(bot.uid, { interceptToast: true });
     const { mutateAsync: toggleProjectBotActivationMutateAsync } = useToggleProjectBotActivation({ interceptToast: true });
-    const botAsUser = bot.useForeignField("as_user")[0];
     const [isDisabled, setIsDisabled] = useState(false);
     const updateRole = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -115,8 +114,15 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
     return (
         <Flex items="center" justify="between" gap="3">
             <Flex items="center" gap="1">
-                <UserAvatar.Root user={botAsUser} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
-                    <UserAvatarDefaultList user={botAsUser} projectUID={project.uid} />
+                <UserAvatar.Root
+                    userOrBot={bot}
+                    avatarSize="xs"
+                    withNameProps={{
+                        className: "inline-flex gap-1 select-none",
+                        nameClassName: "text-base",
+                    }}
+                >
+                    <UserAvatarDefaultList userOrBot={bot} projectUID={project.uid} />
                 </UserAvatar.Root>
                 <Button size="sm" onClick={toggleActivation} disabled={isValidating}>
                     {t(`project.settings.${isDisabled ? "Enable" : "Disable"}`)}

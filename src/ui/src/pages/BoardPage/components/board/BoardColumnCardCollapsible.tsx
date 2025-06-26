@@ -183,7 +183,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                             </Flex>
                             <UserAvatarList
                                 maxVisible={3}
-                                users={cardMembers}
+                                userOrBots={cardMembers}
                                 projectUID={project.uid}
                                 size="sm"
                                 {...attributes}

@@ -48,7 +48,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
         }
     }, []);
     const { isValidating, handleSubmit } = useForm({
-        errorLangPrefix: "signUp.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             email: { required: true, email: true },
             firstname: { required: true },
@@ -85,7 +85,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
         if (key === "industry") {
             return t(`user.industries.${value}`);
         } else if (key === "purpose") {
-            return t(`signUp.purposes.${value}`);
+            return t(`auth.purposes.${value}`);
         } else {
             return value;
         }
@@ -128,7 +128,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                     {t("common.Back")}
                 </Button>
                 <SubmitButton type="button" onClick={() => handleSubmit({ ...values })} isValidating={isValidating}>
-                    {t("signUp.Sign up")}
+                    {t("auth.Sign up")}
                 </SubmitButton>
             </Flex>
         </>

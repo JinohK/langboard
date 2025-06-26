@@ -6,6 +6,7 @@ import { composeRefs } from "@udecode/cn";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { Box } from "@/components/base";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 function chunkArray<T>(array: T[], size: number): T[][] {
     const chunked: T[][] = [];
@@ -19,6 +20,8 @@ export interface IGridInfiniteScrollerProps extends TSharedInfiniteScrollerProps
     as?: React.ElementType;
     row?: React.ElementType;
     rowClassName?: string;
+    totalCount: number;
+    virtualizerRef?: React.RefObject<ReturnType<typeof useVirtualizer>>;
 }
 
 const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>(
@@ -35,6 +38,8 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
             row = "div",
             rowClassName,
             className,
+            totalCount,
+            virtualizerRef,
             children,
             gap = "16",
             ...props
@@ -75,6 +80,8 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
             pageStart,
             loader,
             scrollable,
+            totalCount,
+            virtualizerRef,
             children: chunked,
         });
 
@@ -99,6 +106,10 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                     }
 
                     const rowItems = items[virtualRow.index] as React.ReactElement[];
+
+                    if (!rowItems) {
+                        return null;
+                    }
 
                     return (
                         <RowComp

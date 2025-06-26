@@ -11,12 +11,11 @@ from sqlmodel import Field
 class User(SoftDeleteModel, table=True):
     USER_TYPE: ClassVar[str] = "user"
     UNKNOWN_USER_TYPE: ClassVar[str] = "unknown"
-    BOT_TYPE: ClassVar[str] = "bot"
     GROUP_EMAIL_TYPE: ClassVar[str] = "group_email"
     firstname: str = Field(nullable=False)
     lastname: str = Field(nullable=False)
     email: str = Field(nullable=False)
-    username: str = Field(default=f"user-{generate_random_string(8)}", unique=True, nullable=False)
+    username: str = Field(default_factory=lambda: f"user-{generate_random_string(8)}", unique=True, nullable=False)
     password: SecretStr = Field(nullable=False, sa_type=SecretStrType)
     is_admin: bool = Field(default=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
@@ -26,7 +25,7 @@ class User(SoftDeleteModel, table=True):
     @staticmethod
     def api_schema(schema: dict | None = None) -> dict[str, Any]:
         return {
-            "type": f"Literal[{User.USER_TYPE}, {User.UNKNOWN_USER_TYPE}, {User.BOT_TYPE}, {User.GROUP_EMAIL_TYPE}]",
+            "type": f"Literal[{User.USER_TYPE}, {User.UNKNOWN_USER_TYPE}, {User.GROUP_EMAIL_TYPE}]",
             "uid": "string",
             "firstname": "string",
             "lastname": "string",

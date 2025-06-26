@@ -9,19 +9,19 @@ import {
     InlineComboboxInput,
 } from "@/components/plate-ui/inline-combobox";
 import { PlateElement, PlateElementProps } from "@udecode/plate/react";
-import { User } from "@/core/models";
 import { useTranslation } from "react-i18next";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
 import { TMentionInputElement } from "@udecode/plate-mention";
 import { useEditorData } from "@/core/providers/EditorDataProvider";
+import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export interface IMentionInputElement extends PlateElementProps<TMentionInputElement> {}
 
-export interface IMentionableUser extends User.TModel {
+export type TMentionableUser = TUserLikeModel & {
     key: string;
     text: string;
-}
+};
 
 export function MentionInputElement(props: IMentionInputElement) {
     const { editor, element } = props;
@@ -29,20 +29,32 @@ export function MentionInputElement(props: IMentionInputElement) {
     const { currentUser, mentionables: flatMentionables, form } = useEditorData();
     const [search, setSearch] = useState("");
     const mentionables = useMemo(() => {
-        const userList: IMentionableUser[] = [];
+        const userOrBots: TMentionableUser[] = [];
         for (let i = 0; i < flatMentionables.length; ++i) {
-            const user = flatMentionables[i];
-            if (user.uid === currentUser.uid || (!user.isValidUser() && !user.isBot())) {
+            const userOrBot = flatMentionables[i];
+            if (userOrBot.uid === currentUser.uid) {
                 continue;
             }
 
-            const fakeUser = user.asFake() as IMentionableUser;
-            fakeUser.text = user.username;
-            fakeUser.key = user.uid;
+            let username;
+            if (isModel(userOrBot, "User")) {
+                if (!userOrBot.isValidUser()) {
+                    continue;
+                }
+                username = userOrBot.username;
+            } else if (isModel(userOrBot, "BotModel")) {
+                username = userOrBot.bot_uname;
+            } else {
+                continue;
+            }
 
-            userList.push(fakeUser);
+            const fakeUser = userOrBot.asFake() as TMentionableUser;
+            fakeUser.text = username;
+            fakeUser.key = userOrBot.uid;
+
+            userOrBots.push(fakeUser);
         }
-        return userList;
+        return userOrBots;
     }, [flatMentionables]);
 
     return (
@@ -56,11 +68,11 @@ export function MentionInputElement(props: IMentionInputElement) {
                     <InlineComboboxEmpty>{t("editor.No results")}</InlineComboboxEmpty>
 
                     <InlineComboboxGroup>
-                        {mentionables.map((user) => (
+                        {mentionables.map((mentionable) => (
                             <MentionInputComboboxItem
                                 key={createShortUUID()}
                                 search={search}
-                                user={user}
+                                userOrBot={mentionable}
                                 editor={editor}
                                 projectUID={form?.project_uid}
                             />

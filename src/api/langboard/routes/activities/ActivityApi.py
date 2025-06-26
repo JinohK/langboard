@@ -12,7 +12,7 @@ from .ActivityForm import ActivityPagination
 
 
 USER_ACTIVITY_SCHEMA = {
-    "activities": [
+    "list": [
         (
             UserActivity,
             {
@@ -40,9 +40,9 @@ async def get_current_user_activities(
 
     result = await service.activity.get_list_by_user(user, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []})
+        return JsonResponse(content={"list": []})
     activities, count_new_records, _ = result
-    return JsonResponse(content={"activities": activities, "count_new_records": count_new_records})
+    return JsonResponse(content={"list": activities, "count_new_records": count_new_records})
 
 
 @AppRouter.api.get(
@@ -65,16 +65,16 @@ async def get_project_assignee_activities(
         project_uid, assignee_uid, pagination, pagination.refer_time
     )
     if not result:
-        return JsonResponse(content={"activities": []})
+        return JsonResponse(content={"list": []})
     activities, count_new_records, _ = result
-    return JsonResponse(content={"activities": activities, "count_new_records": count_new_records})
+    return JsonResponse(content={"list": activities, "count_new_records": count_new_records})
 
 
 @AppRouter.api.get(
     "/activity/project/{project_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
+        OpenApiSchema().suc({"list": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
@@ -90,11 +90,11 @@ async def get_project_activities(
 
     result = await service.activity.get_list_by_project(project_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []})
+        return JsonResponse(content={"list": []})
     activities, count_new_records, project = result
     return JsonResponse(
         content={
-            "activities": activities,
+            "list": activities,
             "count_new_records": count_new_records,
             "references": {"project": {"uid": project.get_uid()}},
         }
@@ -105,7 +105,7 @@ async def get_project_activities(
     "/activity/project/{project_uid}/card/{card_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema().suc({"activities": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
+        OpenApiSchema().suc({"list": [ProjectActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
@@ -121,11 +121,11 @@ async def get_card_activities(
 
     result = await service.activity.get_list_by_card(project_uid, card_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []})
+        return JsonResponse(content={"list": []})
     activities, count_new_records, project, card = result
     return JsonResponse(
         content={
-            "activities": activities,
+            "list": activities,
             "count_new_records": count_new_records,
             "references": {
                 "project": {
@@ -143,11 +143,7 @@ async def get_card_activities(
     "/activity/project/{project_uid}/wiki/{wiki_uid}",
     tags=["Activity"],
     responses=(
-        OpenApiSchema()
-        .suc({"activities": [ProjectWikiActivity], "count_new_records": "integer"})
-        .auth()
-        .forbidden()
-        .get()
+        OpenApiSchema().suc({"list": [ProjectWikiActivity], "count_new_records": "integer"}).auth().forbidden().get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
@@ -163,11 +159,11 @@ async def get_wiki_activities(
 
     result = await service.activity.get_list_by_wiki(project_uid, wiki_uid, pagination, pagination.refer_time)
     if not result:
-        return JsonResponse(content={"activities": []})
+        return JsonResponse(content={"list": []})
     activities, count_new_records, project, project_wiki = result
     return JsonResponse(
         content={
-            "activities": activities,
+            "list": activities,
             "count_new_records": count_new_records,
             "references": {
                 "project": {

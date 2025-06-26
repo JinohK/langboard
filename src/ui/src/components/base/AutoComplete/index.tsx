@@ -1,5 +1,5 @@
 import { Command as CommandPrimitive } from "cmdk";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as Command from "@/components/base/Command";
 import Input from "@/components/base/Input";
 import * as Popover from "@/components/base/Popover";
@@ -8,9 +8,11 @@ import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
 import Flex from "@/components/base/Flex";
 import Box from "@/components/base/Box";
+import { createShortUUID } from "@/core/utils/StringUtils";
+import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface IAutorCompleteProps {
-    selectedValue: string;
+    selectedValue?: string;
     onValueChange: (value: string) => void;
     items: { value: string; label: string }[];
     isLoading?: bool;
@@ -21,6 +23,7 @@ export interface IAutorCompleteProps {
 }
 
 function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, disabled, className }: IAutorCompleteProps) {
+    const id = useRef(createShortUUID());
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(selectedValue);
 
@@ -62,7 +65,8 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                     <Popover.Trigger asChild>
                         <CommandPrimitive.Input
                             asChild
-                            value={labels[currentValue] ?? currentValue}
+                            id={id.current}
+                            value={currentValue ? (labels[currentValue] ?? currentValue) : currentValue}
                             onValueChange={changeValue}
                             onKeyDown={(e) => {
                                 if (e.key !== "Escape") {
@@ -83,7 +87,11 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                         asChild
                         onOpenAutoFocus={(e) => e.preventDefault()}
                         onInteractOutside={(e) => {
-                            if (e.target instanceof Element && e.target.hasAttribute("cmdk-input")) {
+                            if (!TypeUtils.isElement(e.target, "input")) {
+                                return;
+                            }
+
+                            if (e.target.hasAttribute("cmdk-input") && e.target.id === id.current) {
                                 e.preventDefault();
                             }
                         }}

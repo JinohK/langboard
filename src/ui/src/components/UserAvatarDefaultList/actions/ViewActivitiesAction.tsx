@@ -1,17 +1,18 @@
 import { Popover } from "@/components/base";
-import { AuthUser, Project, User } from "@/core/models";
+import { AuthUser, Project } from "@/core/models";
 import ActivityList from "@/components/ActivityList";
-import UserAvatar, { getAvatarHoverCardAttrs } from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUserAvatar } from "@/components/UserAvatar/Provider";
+import UserAvatar from "@/components/UserAvatar";
 
 export interface IUserAvatarDefaultViewActivitiesActionProps {
-    user: User.TModel;
     project: Project.TModel;
     currentUser: AuthUser.TModel;
 }
 
-function UserAvatarDefaultViewActivitiesAction({ user, project, currentUser }: IUserAvatarDefaultViewActivitiesActionProps): JSX.Element | null {
+function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAvatarDefaultViewActivitiesActionProps): JSX.Element | null {
+    const { userOrBot, getAvatarHoverCardAttrs } = useUserAvatar();
     const [t] = useTranslation();
     const triggerRef = useRef<HTMLDivElement>(null);
     const [isOpened, setIsOpened] = useState(false);
@@ -78,10 +79,10 @@ function UserAvatarDefaultViewActivitiesAction({ user, project, currentUser }: I
             <Popover.Content
                 className="z-[999999] w-auto sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md"
                 side={side}
-                {...getAvatarHoverCardAttrs(user)}
+                {...getAvatarHoverCardAttrs()}
             >
                 <ActivityList
-                    form={{ type: "project_assignee", assignee_uid: user.uid, project_uid: project.uid }}
+                    form={{ listType: "ActivityModel", type: "project_assignee", assignee_uid: userOrBot.uid, project_uid: project.uid }}
                     currentUser={currentUser}
                     infiniteScrollerClassName="max-h-[calc(var(--max-height)_-_theme(spacing.8))] px-4 pb-2.5"
                     style={style as React.CSSProperties}

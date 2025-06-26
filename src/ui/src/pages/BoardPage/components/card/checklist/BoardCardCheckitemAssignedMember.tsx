@@ -10,8 +10,8 @@ export interface IBoardCardCheckitemAssignedMemberProps {
 
 const BoardCardCheckitemAssignedMember = memo(({ projectUID, assignedUser }: IBoardCardCheckitemAssignedMemberProps): JSX.Element => {
     return (
-        <UserAvatar.Root user={assignedUser} avatarSize="xs">
-            <UserAvatarDefaultList user={assignedUser} projectUID={projectUID} />
+        <UserAvatar.Root userOrBot={assignedUser} avatarSize="xs">
+            <UserAvatarDefaultList userOrBot={assignedUser} projectUID={projectUID} />
         </UserAvatar.Root>
     );
 });

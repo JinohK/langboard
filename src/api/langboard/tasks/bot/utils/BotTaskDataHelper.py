@@ -32,8 +32,6 @@ class BotTaskDataHelper:
     @staticmethod
     def create_user_or_bot(user_or_bot: User | Bot) -> dict[str, Any]:
         response = user_or_bot.api_response()
-        if isinstance(user_or_bot, Bot):
-            response.pop("as_user")
         return response
 
     @staticmethod

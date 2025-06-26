@@ -26,3 +26,5 @@ CRON_TAB_FILE = Path(Env.get_from_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
 
 # App Config
 APP_CONFIG_FILE = DATA_DIR / "api_config.json"
+
+EMAIL_REGEX = r"^.+@.+\..+$"

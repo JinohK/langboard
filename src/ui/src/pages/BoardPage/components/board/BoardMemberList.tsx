@@ -1,9 +1,10 @@
-import MultiSelectAssignee, { TAssignee, TSaveHandler } from "@/components/MultiSelectAssignee";
+import MultiSelectAssignee, { TSaveHandler } from "@/components/MultiSelectAssignee";
 import { Toast } from "@/components/base";
 import { EMAIL_REGEX } from "@/constants";
 import useUpdateProjectAssignedUsers from "@/controllers/api/board/useUpdateProjectAssignedUsers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel, Project, User } from "@/core/models";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
@@ -86,7 +87,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             allSelectables={allSelectables}
             showableAssignees={showableAssignees}
             originalAssignees={selectedAssignees}
-            createSearchText={(item: string | TAssignee) => {
+            createSearchText={(item: string | TUserLikeModel) => {
                 if (TypeUtils.isString(item)) {
                     return item;
                 }
@@ -102,7 +103,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                     return `${item.email} (${t("project.invited")})`;
                 }
             }}
-            createLabel={(item: string | TAssignee) => {
+            createLabel={(item: string | TUserLikeModel) => {
                 if (TypeUtils.isString(item)) {
                     return item;
                 }

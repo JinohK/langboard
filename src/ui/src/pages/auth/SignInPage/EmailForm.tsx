@@ -20,7 +20,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
     const navigate = useNavigate();
     const { mutate } = useAuthEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
-        errorLangPrefix: "signIn.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             email: { required: true, email: true },
         },
@@ -63,9 +63,9 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
     return (
         <>
             <Box className={className}>
-                <h2 className="text-4xl font-normal">{t("signIn.Sign in")}</h2>
+                <h2 className="text-4xl font-normal">{t("auth.Sign in")}</h2>
                 <Box mt="4" textSize="base">
-                    {t("signIn.Use your {app} Account")}
+                    {t("auth.Use your {app} Account")}
                 </Box>
             </Box>
             <Form.Root className={cn("mt-11 xs:mt-0", className)} onSubmit={handleSubmit} ref={formRef}>
@@ -80,7 +80,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                         disabled={isValidating}
                         onClick={() => navigate(`${ROUTES.SIGN_UP.REQUIRED}?${new URLSearchParams(location.search).toString()}`)}
                     >
-                        {t("signIn.Create account")}
+                        {t("auth.Create account")}
                     </Button>
                     <SubmitButton type="submit" isValidating={isValidating}>
                         {t("common.Next")}

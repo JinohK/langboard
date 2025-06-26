@@ -1,4 +1,3 @@
-import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import { convertSafeEnum, convertServerFileURL } from "@/core/utils/StringUtils";
@@ -18,7 +17,6 @@ export interface Interface extends IBaseModel {
     name: string;
     bot_uname: string;
     avatar?: string;
-    as_user: User.Interface;
     api_url: string;
     api_auth_type: EAPIAuthType;
     api_key: string;
@@ -29,14 +27,6 @@ export interface Interface extends IBaseModel {
 }
 
 class BotModel extends BaseModel<Interface> {
-    static override get FOREIGN_MODELS() {
-        return {
-            as_user: User.Model.MODEL_NAME,
-        };
-    }
-    override get FOREIGN_MODELS() {
-        return BotModel.FOREIGN_MODELS;
-    }
     static get MODEL_NAME() {
         return "BotModel" as const;
     }
@@ -102,13 +92,6 @@ class BotModel extends BaseModel<Interface> {
     }
     public set avatar(value) {
         this.update({ avatar: value });
-    }
-
-    public get as_user(): User.TModel {
-        return this.getForeignValue("as_user")[0];
-    }
-    public set as_user(value: User.TModel | User.Interface) {
-        this.update({ as_user: value });
     }
 
     public get api_url() {

@@ -28,7 +28,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
     const { mutate } = useSignIn();
     const { signIn } = useAuth();
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
-        errorLangPrefix: "signIn.errors",
+        errorLangPrefix: "auth.errors",
         schema: {
             password: { required: true },
         },
@@ -90,7 +90,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
     return (
         <>
             <Box className={className}>
-                <h2 className="text-4xl font-normal">{t("signIn.Welcome")}</h2>
+                <h2 className="text-4xl font-normal">{t("auth.Welcome")}</h2>
                 <Button
                     type="button"
                     id="back-to-email-btn"
@@ -118,11 +118,11 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
                 </Form.Field>
                 <Label display="flex" mt="3" gap="2" cursor="pointer" className="select-none">
                     <Checkbox onClick={() => setShouldShowPassword((prev) => !prev)} disabled={isValidating} />
-                    {t("signIn.Show password")}
+                    {t("auth.Show password")}
                 </Label>
                 <Flex items="center" gap="8" justify={{ initial: "between", xs: "end" }} mt="16">
                     <Button type="button" variant="ghost" disabled={isValidating} onClick={toFindPassword}>
-                        {t("signIn.Forgot password?")}
+                        {t("auth.Forgot password?")}
                     </Button>
                     <SubmitButton type="submit" isValidating={isValidating}>
                         {t("common.Next")}

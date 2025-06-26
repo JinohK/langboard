@@ -1,11 +1,12 @@
-import useGetActivities, { TGetActivitiesForm } from "@/controllers/api/activity/useGetActivities";
-import { ActivityModel } from "@/core/models";
+import { TGetRefreshableListForm } from "@/controllers/api/shared/types";
+import useGetRefreshableList, { IUseGetRefreshableListProps } from "@/controllers/api/shared/useGetRefreshableList";
+import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistry";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-export interface IActivityContext {
-    activities: ActivityModel.TModel[];
-    activityListIdRef: React.RefObject<string>;
+export interface IRefreshableListContext<TModelName extends TCreatedAtModelName> {
+    models: TCreatedAtModel<TModelName>[];
+    listIdRef: React.RefObject<string>;
     isFetchingRef: React.RefObject<bool>;
     isDelayingCheckOutdated: React.RefObject<bool>;
     delayCheckOutdatedTimeoutRef: React.RefObject<NodeJS.Timeout | null>;
@@ -15,16 +16,20 @@ export interface IActivityContext {
     nextPage: () => Promise<bool>;
     refreshList: () => void;
     checkOutdated: () => Promise<void>;
+    checkOutdatedOnScroll: (e: React.UIEvent<HTMLDivElement>) => Promise<void>;
 }
 
-interface IActivityProps {
-    form: TGetActivitiesForm;
+interface IRefreshableListProps<TModelName extends TCreatedAtModelName> {
+    models: TCreatedAtModel<TModelName>[];
+    form: TGetRefreshableListForm<TModelName>;
+    limit: number;
+    prepareData?: IUseGetRefreshableListProps<TModelName>["prepareData"];
     children: React.ReactNode;
 }
 
 const initialContext = {
-    activities: [],
-    activityListIdRef: { current: "" },
+    models: [],
+    listIdRef: { current: "" },
     isFetchingRef: { current: false },
     isDelayingCheckOutdated: { current: false },
     delayCheckOutdatedTimeoutRef: { current: null },
@@ -34,57 +39,35 @@ const initialContext = {
     nextPage: async () => false,
     refreshList: async () => {},
     checkOutdated: async () => {},
+    checkOutdatedOnScroll: async () => {},
 };
 
-const ActivityContext = createContext<IActivityContext>(initialContext);
+const RefreshableListContext = createContext<IRefreshableListContext<TCreatedAtModelName>>(initialContext);
 
-const PAGE_LIMIT = 15;
-
-export const ActivityProvider = ({ form, children }: IActivityProps): React.ReactNode => {
-    const activityFilter = useMemo(() => {
-        switch (form.type) {
-            case "user":
-                return (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.user_uid;
-            case "project":
-                return (model: ActivityModel.TModel) => model.filterable_type === "project" && model.filterable_uid === form.project_uid;
-            case "card":
-                return (model: ActivityModel.TModel) =>
-                    model.filterable_type === "project" &&
-                    model.filterable_uid === form.project_uid &&
-                    model.sub_filterable_type === "card" &&
-                    model.sub_filterable_uid === form.card_uid;
-            case "project_wiki":
-                return (model: ActivityModel.TModel) =>
-                    model.filterable_type === "project" &&
-                    model.filterable_uid === form.project_uid &&
-                    model.sub_filterable_type === "project_wiki" &&
-                    model.sub_filterable_uid === form.wiki_uid;
-            case "project_assignee":
-                return (model: ActivityModel.TModel) => model.filterable_type === "user" && model.filterable_uid === form.assignee_uid;
-            default:
-                throw new Error("Invalid activity type");
-        }
-    }, [form.type]);
-    const flatActivities = ActivityModel.Model.useModels(activityFilter, [activityFilter]);
+export function RefreshableListProvider<TModelName extends TCreatedAtModelName>({
+    models: flatModels,
+    form,
+    limit,
+    prepareData,
+    children,
+}: IRefreshableListProps<TModelName>): React.ReactNode {
     const [page, setPage] = useState(0);
-    const [isLastPage, setIsLastPage] = useState(!flatActivities.length);
+    const [isLastPage, setIsLastPage] = useState(!flatModels.length);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const activities = useMemo(
-        () => flatActivities.sort((a, b) => b.created_at.getTime() - a.created_at.getTime()).slice(0, PAGE_LIMIT * (page + 1)),
-        [flatActivities, page]
+    const models = useMemo(
+        () => flatModels.sort((a, b) => b.created_at.getTime() - a.created_at.getTime()).slice(0, limit * (page + 1)),
+        [flatModels, page]
     );
-    const lastCurrentDateRef = useRef<Date>(
-        activities[0] ? new Date(activities[0].created_at.setMinutes(activities[0].created_at.getMinutes() + 1)) : new Date()
-    );
+    const lastCurrentDateRef = useRef<Date>(models[0] ? new Date(models[0].created_at) : new Date());
     const {
         mutateAsync,
         refresh,
         checkOutdated: originalCheckOutdated,
         countNewRecords,
-    } = useGetActivities({ form, limit: PAGE_LIMIT, setPage, isLastPage, setIsLastPage, lastCurrentDateRef });
+    } = useGetRefreshableList({ form, limit, setPage, isLastPage, setIsLastPage, lastCurrentDateRef, prepareData });
     const isDelayingCheckOutdated = useRef(false);
     const isFetchingRef = useRef(false);
-    const activityListIdRef = useRef(createShortUUID());
+    const listIdRef = useRef(createShortUUID());
     const delayCheckOutdatedTimeoutRef = useRef<NodeJS.Timeout>(null);
     const nextPage = useCallback(async () => {
         if (isFetchingRef.current || isLastPage) {
@@ -94,7 +77,7 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
         isFetchingRef.current = true;
         return await new Promise<bool>((resolve) => {
             setTimeout(async () => {
-                if (flatActivities.length > PAGE_LIMIT * (page + 1)) {
+                if (flatModels.length > limit * (page + 1)) {
                     setPage((prev) => prev + 1);
                     isFetchingRef.current = false;
                     resolve(true);
@@ -109,7 +92,7 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
                 resolve(true);
             }, 500);
         });
-    }, [page, setPage, isLastPage, mutateAsync, flatActivities]);
+    }, [page, setPage, isLastPage, mutateAsync, flatModels]);
     const refreshList = useCallback(() => {
         if (isFetchingRef.current || isRefreshing) {
             return;
@@ -118,7 +101,7 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
         setIsRefreshing(true);
         const curIsDelayingCheckOutdated = isDelayingCheckOutdated.current;
         isDelayingCheckOutdated.current = false;
-        const list = document.getElementById(activityListIdRef.current)!;
+        const list = document.getElementById(listIdRef.current)!;
 
         list.scrollTo({
             top: 0,
@@ -142,13 +125,31 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
     const checkOutdated = useCallback(async () => {
         await originalCheckOutdated(lastCurrentDateRef.current);
     }, [originalCheckOutdated]);
+    const checkOutdatedOnScroll = useCallback(
+        async (e: React.UIEvent<HTMLDivElement>) => {
+            const target = e.target as HTMLElement;
+            if (isFetchingRef.current || isDelayingCheckOutdated.current || target.scrollTop < target.scrollHeight * 0.3) {
+                return;
+            }
+
+            isDelayingCheckOutdated.current = true;
+
+            await checkOutdated();
+
+            delayCheckOutdatedTimeoutRef.current = setTimeout(() => {
+                isDelayingCheckOutdated.current = false;
+                delayCheckOutdatedTimeoutRef.current = null;
+            }, 10000);
+        },
+        [checkOutdated]
+    );
 
     useEffect(() => {
         if (page) {
             return;
         }
 
-        if (flatActivities.length > 0) {
+        if (flatModels.length > 0) {
             nextPage();
             return;
         }
@@ -167,30 +168,31 @@ export const ActivityProvider = ({ form, children }: IActivityProps): React.Reac
     }, []);
 
     return (
-        <ActivityContext.Provider
+        <RefreshableListContext.Provider
             value={{
                 isFetchingRef,
                 isDelayingCheckOutdated,
                 delayCheckOutdatedTimeoutRef,
                 checkOutdated,
-                activities,
+                models,
                 nextPage,
                 refreshList,
                 isRefreshing,
-                activityListIdRef,
+                listIdRef,
                 isLastPage,
                 countNewRecords,
+                checkOutdatedOnScroll,
             }}
         >
             {children}
-        </ActivityContext.Provider>
+        </RefreshableListContext.Provider>
     );
-};
+}
 
-export const useActivity = () => {
-    const context = useContext(ActivityContext);
+export function useRefreshableList<TModelName extends TCreatedAtModelName>(): IRefreshableListContext<TModelName> {
+    const context = useContext(RefreshableListContext);
     if (!context) {
-        throw new Error("useActivity must be used within an ActivityProvider");
+        throw new Error("useRefreshableList must be used within an RefreshableListProvider");
     }
-    return context;
-};
+    return context as IRefreshableListContext<TModelName>;
+}

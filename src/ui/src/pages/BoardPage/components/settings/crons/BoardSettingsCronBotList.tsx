@@ -25,12 +25,15 @@ interface IBoardSettingsCronBotProps {
 
 const BoardSettingsCronBot = memo(({ bot }: IBoardSettingsCronBotProps) => {
     const { project } = useBoardSettings();
-    const botAsUser = bot.useForeignField("as_user")[0];
 
     return (
         <Flex items="center" justify="between" gap="3">
-            <UserAvatar.Root user={botAsUser} avatarSize="xs" withName labelClassName="inline-flex gap-1 select-none" nameClassName="text-base">
-                <UserAvatarDefaultList user={botAsUser} projectUID={project.uid} />
+            <UserAvatar.Root
+                userOrBot={bot}
+                avatarSize="xs"
+                withNameProps={{ className: "inline-flex gap-1 select-none", nameClassName: "text-base" }}
+            >
+                <UserAvatarDefaultList userOrBot={bot} projectUID={project.uid} />
             </UserAvatar.Root>
 
             <BoardSettingsCronBotScheduleListDialog bot={bot} />

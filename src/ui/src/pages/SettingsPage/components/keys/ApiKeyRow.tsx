@@ -30,7 +30,7 @@ const ApiKeyRow = memo(({ apiKey, selectedKeys, setSelectedKeys }: IApiKeyRowPro
 
     return (
         <Table.Row>
-            <Table.Cell className="w-12 p-0 text-center">
+            <Table.Cell className="w-12 text-center">
                 <Checkbox checked={selectedKeys.some((value) => value === apiKey.uid)} onClick={toggleSelect} />
             </Table.Cell>
             <ApiKeyName apiKey={apiKey} />

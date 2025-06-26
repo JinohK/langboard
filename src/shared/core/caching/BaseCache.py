@@ -4,6 +4,7 @@ from json import dumps as json_dumps
 from json import loads as json_loads
 from typing import Any, Callable
 from pydantic import BaseModel
+from ..utils.Converter import json_default
 
 
 class BaseCache(ABC):
@@ -72,4 +73,4 @@ class BaseCache(ABC):
         if isinstance(value, BaseModel):
             return value.model_dump_json()
         else:
-            return json_dumps(value, default=str)
+            return json_dumps(value, default=json_default)

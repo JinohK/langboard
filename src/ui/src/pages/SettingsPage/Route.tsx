@@ -20,6 +20,7 @@ function SettingsRoute() {
         >
             <Route index element={<Navigate to={ROUTES.SETTINGS.API_KEYS} replace />} />
             <Route path={ROUTES.SETTINGS.API_KEYS} element={<></>} />
+            <Route path={ROUTES.SETTINGS.USERS} element={<></>} />
             <Route path={ROUTES.SETTINGS.BOTS} element={<></>} />
             <Route path={ROUTES.SETTINGS.BOT_DETAILS(":botUID")} element={<></>} />
             <Route path={ROUTES.SETTINGS.INTERNAL_BOTS} element={<></>} />
@@ -28,6 +29,7 @@ function SettingsRoute() {
             <Route path={ROUTES.SETTINGS.WEBHOOKS} element={<></>} />
 
             <Route path={ROUTES.SETTINGS.CREATE_API_KEY} element={<ModalPage />} />
+            <Route path={ROUTES.SETTINGS.CREATE_USER} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_BOT} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_INTERNAL_BOT} element={<ModalPage />} />
             <Route path={ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP} element={<ModalPage />} />

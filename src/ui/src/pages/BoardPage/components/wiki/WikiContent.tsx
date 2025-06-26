@@ -41,7 +41,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField("assigned_members");
     const mentionables = useMemo(
-        () => [...(isPublic ? projectMembers : assignedMembers), ...projectBots.map((bot) => bot.as_user)],
+        () => [...(isPublic ? projectMembers : assignedMembers), ...projectBots],
         [isPublic, assignedMembers, projectMembers, projectBots]
     );
     const content = wiki.useField("content");

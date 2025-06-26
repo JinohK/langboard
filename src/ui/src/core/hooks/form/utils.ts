@@ -17,6 +17,7 @@ export const convertValidationName = (key: string) => {
         case "sameWith":
         case "mimeType":
         case "value_error":
+        case "enum":
         default:
             if (key.startsWith("custom:")) {
                 return key.replace("custom:", "");
