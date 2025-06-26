@@ -145,6 +145,10 @@ export const SelectEditorInput = React.forwardRef<HTMLDivElement, React.Componen
             variant="select"
             onBlur={() => setOpen(false)}
             onFocusCapture={() => {
+                if (props.readOnly) {
+                    return;
+                }
+
                 setOpen(true);
                 selectFirstItem();
             }}
