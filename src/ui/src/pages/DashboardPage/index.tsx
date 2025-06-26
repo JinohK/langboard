@@ -108,7 +108,12 @@ const DashboardProxy = memo((): JSX.Element => {
     }
 
     return (
-        <DashboardStyledLayout headerNavs={Object.values(headerNavs)} sidebarNavs={sidebarNavs} scrollAreaMutable={scrollAreaMutable}>
+        <DashboardStyledLayout
+            headerNavs={Object.values(headerNavs)}
+            sidebarNavs={sidebarNavs}
+            scrollAreaMutable={scrollAreaMutable}
+            className="overflow-x-hidden"
+        >
             {currentUser ? (
                 <DashboardProvider navigate={navigateRef.current} currentUser={currentUser}>
                     {pageContent}

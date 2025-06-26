@@ -34,7 +34,7 @@ function BoardSettingsChatTemplateAddButton() {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Chat template added successfully.");
+                return t("successes.Chat template added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

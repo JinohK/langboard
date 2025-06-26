@@ -45,7 +45,7 @@ const BoardSettingsLabelList = memo(() => {
             handle(error);
         };
 
-        return singleDndHelpers.root<ProjectLabel.TModel>({
+        return singleDndHelpers.root({
             rowsMap: labelsMap,
             symbolSet: BOARD_SETTINGS_LABEL_DND_SYMBOL_SET,
             changeOrder: ({ rowUID, order, undo }) => {

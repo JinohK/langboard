@@ -5,8 +5,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as React from "react";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
-import Flex from "@/components/base/Flex";
 import * as ScrollArea from "@/components/base/ScrollArea";
+import { motion } from "framer-motion";
 
 const Root = DialogPrimitive.Root;
 
@@ -21,7 +21,7 @@ const Overlay = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Overl
         <DialogPrimitive.Overlay
             ref={ref}
             className={cn(
-                "fixed inset-0 z-50 flex items-center justify-center bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+                "fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
                 className
             )}
             {...props}
@@ -98,11 +98,17 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
                         viewportRef={viewportRef}
                         viewportAsTable
                     >
-                        <Flex justify="center" items="center" size="full">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="z-50 flex size-full items-center justify-center shadow-lg"
+                        >
                             <DialogPrimitive.Content
                                 ref={ref}
                                 className={cn(
-                                    "relative w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 focus-visible:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+                                    "relative w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 focus-visible:outline-none sm:rounded-lg",
                                     className
                                 )}
                                 onPointerDownOutside={(e) => {
@@ -114,7 +120,7 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
                                 {withCloseButton && <CloseButton className="absolute right-2 top-2 z-50" />}
                                 {children}
                             </DialogPrimitive.Content>
-                        </Flex>
+                        </motion.div>
                     </ScrollArea.Root>
                 </Overlay>
             </Portal>

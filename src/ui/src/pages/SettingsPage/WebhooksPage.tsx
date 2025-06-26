@@ -37,7 +37,7 @@ function WebhooksPage() {
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("settings.successes.Selected webhooks deleted successfully."));
+                    Toast.Add.success(t("successes.Selected webhooks deleted successfully."));
                     setSelectedWebhooks([]);
                 },
                 onError: (error) => {

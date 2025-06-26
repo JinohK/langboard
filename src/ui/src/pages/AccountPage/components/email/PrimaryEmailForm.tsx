@@ -49,7 +49,7 @@ function PrimaryEmailForm(): JSX.Element {
                 onSuccess: () => {
                     setTimeout(() => {
                         updatedUser();
-                        Toast.Add.success(t("myAccount.successes.Primary email updated successfully."));
+                        Toast.Add.success(t("successes.Primary email updated successfully."));
                     }, 0);
                 },
                 onError: (error) => {

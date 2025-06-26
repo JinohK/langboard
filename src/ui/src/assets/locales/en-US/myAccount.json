@@ -15,19 +15,6 @@
   "Add new group": "Add new group",
   "Preferences": "Preferences",
   "Language": "Language",
-  "successes": {
-    "Profile updated successfully.": "Profile updated successfully.",
-    "Please check your inbox to verify your email.": "Please check your inbox to verify your email.",
-    "The email verified successfully.": "The email verified successfully.",
-    "Email deleted successfully.": "Email deleted successfully.",
-    "Primary email updated successfully.": "Primary email updated successfully.",
-    "Password updated successfully.": "Password updated successfully.",
-    "User group created successfully.": "User group created successfully.",
-    "User group name changed successfully.": "User group name changed successfully.",
-    "User group emails updated successfully.": "User group emails updated successfully.",
-    "User group deleted successfully.": "User group deleted successfully.",
-    "Preferred language updated successfully.": "Preferred language updated successfully."
-  },
   "errors": {
     "You must sign in before verifying your email.": "You must sign in before verifying your email.",
     "missing": {

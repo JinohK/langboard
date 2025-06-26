@@ -12,8 +12,8 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import BotsPage from "@/pages/SettingsPage/BotsPage";
 import GlobalRelationshipsPage from "@/pages/SettingsPage/GlobalRelationshipsPage";
-import InternalBotPage from "@/pages/SettingsPage/InternalBotPage";
-import WebhooksPage from "@/pages/SettingsPage/WebhookPage";
+import InternalBotsPage from "@/pages/SettingsPage/InternalBotsPage";
+import WebhooksPage from "@/pages/SettingsPage/WebhooksPage";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSocket } from "@/core/providers/SocketProvider";
@@ -126,7 +126,7 @@ function SettingsProxy(): JSX.Element {
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.INTERNAL_BOTS:
-            pageContent = <InternalBotPage />;
+            pageContent = <InternalBotsPage />;
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS:

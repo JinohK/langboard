@@ -72,7 +72,7 @@ const BoardColumnMoreMenuDelete = memo(({ column }: Omit<IBoardColumnMoreMenuPro
                 return messageRef.message;
             },
             success: () => {
-                return t("project.successes.Column deleted successfully.");
+                return t("successes.Column deleted successfully.");
             },
             finally: () => {
                 endCallback(true);
@@ -90,13 +90,13 @@ const BoardColumnMoreMenuDelete = memo(({ column }: Omit<IBoardColumnMoreMenuPro
             onSave={deleteColumn}
         >
             <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                {t("project.Are you sure you want to delete this column?")}
+                {t("ask.Are you sure you want to delete this column?")}
             </Box>
             <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
                 {t("project.All cards in this column will be archived.")}
             </Box>
             <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                {t("project.This action cannot be undone.")}
+                {t("common.deleteDescriptions.This action cannot be undone.")}
             </Box>
         </MoreMenu.PopoverItem>
     );

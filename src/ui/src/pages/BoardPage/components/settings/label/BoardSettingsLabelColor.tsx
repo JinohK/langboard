@@ -44,7 +44,7 @@ const BoardSettingsLabelColor = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Color changed successfully.");
+                return t("successes.Color changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

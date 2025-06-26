@@ -42,7 +42,7 @@ const InternalBotDisplayName = memo(() => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("settings.successes.Internal bot display name changed successfully.");
+                    return t("successes.Internal bot display name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

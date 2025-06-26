@@ -45,7 +45,7 @@ const InternalBotPlatform = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot platform changed successfully.");
+                return t("successes.Internal bot platform changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

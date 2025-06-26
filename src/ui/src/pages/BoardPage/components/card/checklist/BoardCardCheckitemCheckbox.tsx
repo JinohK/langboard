@@ -37,7 +37,7 @@ function BoardCardCheckitemCheckbox() {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Toggled checkitem successfully.");
+                return t("successes.Toggled checkitem successfully.");
             },
             finally: () => {
                 setIsValidating(false);

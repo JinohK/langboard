@@ -41,7 +41,7 @@ const BotPrompt = memo(() => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("settings.successes.Bot prompt changed successfully.");
+                    return t("successes.Bot prompt changed successfully.");
                 },
                 finally: () => {
                     endCallback();

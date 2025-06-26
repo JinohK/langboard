@@ -7,18 +7,12 @@ import {
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import {
-    TRowModelWithKey,
-    TSingleRowData,
-    TSingleRowDroppableTargetData,
-    TSingleRowState,
-    TSingleSymbolSet,
-    TSortableData,
-} from "@/core/helpers/dnd/types";
+import { TSingleRowData, TSingleRowDroppableTargetData, TSingleRowState, TSingleSymbolSet } from "@/core/helpers/dnd/types";
 import createDndSingleDataHelper from "@/core/helpers/dnd/createDndSingleDataHelper";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
-export interface ICreateDndSingleRowEventsProps<TRowModel extends TSortableData> {
-    row: TRowModelWithKey<TRowModel>;
+export interface ICreateDndSingleRowEventsProps<TRowModel extends TOrderableModel<TOrderableModelName>> {
+    row: TRowModel;
     symbolSet: TSingleSymbolSet;
     draggable: HTMLElement;
     dropTarget: HTMLElement;
@@ -29,7 +23,7 @@ export interface ICreateDndSingleRowEventsProps<TRowModel extends TSortableData>
 
 export const SINGLE_ROW_IDLE = { type: "idle" } satisfies TSingleRowState;
 
-const createDndSingleRowEvents = <TRowModel extends TSortableData>(props: ICreateDndSingleRowEventsProps<TRowModel>) => {
+const createDndSingleRowEvents = <TRowModel extends TOrderableModel<TOrderableModelName>>(props: ICreateDndSingleRowEventsProps<TRowModel>) => {
     const { row, symbolSet, draggable, dropTarget, isHorizontal, setState, renderPreview } = props;
     const { isRowData, shouldHideIndicator } = createDndSingleDataHelper<TRowModel>({ symbolSet, isHorizontal });
 

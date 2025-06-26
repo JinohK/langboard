@@ -48,7 +48,7 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }:
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("project.settings.successes.Member roles updated successfully.");
+                    return t("successes.Member roles updated successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);

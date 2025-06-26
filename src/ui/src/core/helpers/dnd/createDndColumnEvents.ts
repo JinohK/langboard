@@ -5,21 +5,15 @@ import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-an
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
-import {
-    TColumnData,
-    TColumnDroppableTargetData,
-    TColumnState,
-    TColumnRowSettings,
-    TSortableData,
-    TColumnRowSymbolSet,
-} from "@/core/helpers/dnd/types";
+import { TColumnData, TColumnDroppableTargetData, TColumnState, TColumnRowSettings, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import TypeUtils from "@/core/utils/TypeUtils";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
 export const COLUMN_IDLE = { type: "idle" } satisfies TColumnState;
 
-export interface ICreateDndColumnEventsProps<TColumnModel extends TSortableData> {
+export interface ICreateDndColumnEventsProps<TColumnModel extends TOrderableModel<TOrderableModelName>> {
     column: TColumnModel;
     symbolSet: TColumnRowSymbolSet;
     draggable: HTMLElement;
@@ -31,7 +25,7 @@ export interface ICreateDndColumnEventsProps<TColumnModel extends TSortableData>
     renderPreview: Parameters<typeof setCustomNativeDragPreview>[0]["render"];
 }
 
-const createDndColumnEvents = <TColumnModel extends TSortableData>(props: ICreateDndColumnEventsProps<TColumnModel>) => {
+const createDndColumnEvents = <TColumnModel extends TOrderableModel<TOrderableModelName>>(props: ICreateDndColumnEventsProps<TColumnModel>) => {
     const { column, symbolSet, draggable, dropTarget, scrollable, settings, isIndicator, setState, renderPreview } = props;
 
     type TColumnModelData = TColumnData<TColumnModel>;
@@ -54,7 +48,7 @@ const createDndColumnEvents = <TColumnModel extends TSortableData>(props: ICreat
 
     const { isColumnData, isDraggingAColumn, isRowData, isDraggingARow, setIsRowOver, shouldHideIndicator } = createDndColumnRowDataHelper<
         TColumnModel,
-        TSortableData
+        TOrderableModel<TOrderableModelName>
     >({
         symbolSet,
         setColumnState: setState,

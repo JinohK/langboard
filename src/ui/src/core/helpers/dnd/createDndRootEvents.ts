@@ -7,14 +7,18 @@ import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/ad
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
-import { TRowModelWithKey, TColumnRowSettings, TSortableData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
+import { TColumnRowSettings, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 import { canReorderByClosestEdge } from "@/core/helpers/dnd/utils";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
-export interface ICreateDndRootEventsProps<TColumnModel extends TSortableData, TRowModel extends TSortableData> {
+export interface ICreateDndRootEventsProps<
+    TColumnModel extends TOrderableModel<TOrderableModelName>,
+    TRowModel extends TOrderableModel<TOrderableModelName>,
+> {
     columns: TColumnModel[];
-    rowsMap: Record<string, TRowModelWithKey<TRowModel>>;
-    columnKeyInRow: keyof TRowModel;
+    rowsMap: Record<string, TRowModel>;
+    columnKeyInRow: keyof ICreateDndRootEventsProps<TColumnModel, TRowModel>["rowsMap"][string];
     symbolSet: TColumnRowSymbolSet;
     scrollable: HTMLElement;
     settings: TColumnRowSettings;
@@ -23,25 +27,23 @@ export interface ICreateDndRootEventsProps<TColumnModel extends TSortableData, T
     changeRowOrder: (context: { rowUID: string; order: number; parentUID?: string; undo: () => void }) => void;
 }
 
-const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel extends TSortableData>(
+const createDndRootEvents = <TColumnModel extends TOrderableModel<TOrderableModelName>, TRowModel extends TOrderableModel<TOrderableModelName>>(
     props: ICreateDndRootEventsProps<TColumnModel, TRowModel>
 ) => {
     const { columns, rowsMap, columnKeyInRow, symbolSet, scrollable, settings, isIndicator, changeColumnOrder, changeRowOrder } = props;
-
-    type TRow = TRowModelWithKey<TRowModel>;
 
     const { isColumnData, isDraggingAColumn, isColumnDroppableTargetData, isRowData, isDraggingARow, isRowDroppableTargetData } =
         createDndColumnRowDataHelper<TColumnModel, TRowModel>({
             symbolSet,
         });
 
-    const getRowsByColumn = (column: TColumnModel): TRowModelWithKey<TRowModel>[] => {
+    const getRowsByColumn = (column: TColumnModel): TRowModel[] => {
         return Object.values(rowsMap)
             .filter((row) => row[columnKeyInRow] === column.uid)
             .sort((a, b) => a.order - b.order);
     };
 
-    const reorderItems = <TValue extends TColumnModel | TRow>({
+    const reorderItems = <TValue extends TColumnModel | TRowModel>({
         list,
         startIndex,
         finishIndex,
@@ -78,7 +80,7 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
         };
     };
 
-    const reorderItemsWithEdge = <TValue extends TColumnModel | TRow>({
+    const reorderItemsWithEdge = <TValue extends TColumnModel | TRowModel>({
         list,
         startIndex,
         indexOfTarget,
@@ -127,9 +129,9 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
         destinationColumn,
         targetIndex,
     }: {
-        draggingRow: TRow;
-        sourceColumn: TSortableData;
-        destinationColumn: TSortableData;
+        draggingRow: TRowModel;
+        sourceColumn: TColumnModel;
+        destinationColumn: TColumnModel;
         targetIndex: number | "last";
     }) => {
         const updatedCards: Record<string, [number, string | null]> = {};
@@ -156,7 +158,7 @@ const createDndRootEvents = <TColumnModel extends TSortableData, TRowModel exten
             }
         });
 
-        updatedCards[draggingRow.uid] = [draggingRow.order, draggingRow[columnKeyInRow]];
+        updatedCards[draggingRow.uid] = [draggingRow.order, draggingRow[columnKeyInRow] as string | null];
         draggingRow.order = targetIndex === "last" ? lastIndex + 1 : targetIndex;
         draggingRow[columnKeyInRow] = destinationColumn.uid as any;
 

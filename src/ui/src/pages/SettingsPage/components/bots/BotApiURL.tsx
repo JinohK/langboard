@@ -50,7 +50,7 @@ const BotApiURL = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot API URL changed successfully.");
+                return t("successes.Bot API URL changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

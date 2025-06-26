@@ -44,7 +44,7 @@ export interface IUseGetActivitiesProps {
     lastCurrentDateRef: React.RefObject<Date>;
 }
 
-export interface IGetAcitvitiesParams {
+export interface IGetActivitiesParams {
     page: number;
 }
 
@@ -86,7 +86,7 @@ const useGetActivities = (
     }
 
     const getActivities = useCallback(
-        async (params: IGetAcitvitiesParams) => {
+        async (params: IGetActivitiesParams) => {
             if ((isLastPage && params.page) || isFetchingRef.current) {
                 return {};
             }

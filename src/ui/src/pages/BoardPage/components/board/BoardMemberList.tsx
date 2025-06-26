@@ -19,13 +19,12 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const { project, currentUser, hasRoleAction } = useBoard();
     const canEdit = hasRoleAction(Project.ERoleAction.Update);
     const ownerUID = project.useField("owner_uid");
-    const owner = User.Model.getModel(ownerUID)!;
     const allMemebers = project.useForeignField("all_members");
     const invitedMemberUIDs = project.useField("invited_member_uids");
     const bots = project.useForeignField("bots");
     const groups = currentUser.useForeignField("user_groups");
     const allSelectables = useMemo(
-        () => allMemebers.filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        () => allMemebers.filter((model) => model.uid !== ownerUID && model.uid !== currentUser.uid),
         [allMemebers, invitedMemberUIDs]
     );
     const showableAssignees = useMemo(
@@ -33,7 +32,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
         [allMemebers, bots, invitedMemberUIDs]
     );
     const selectedAssignees = useMemo(
-        () => allMemebers.filter((model) => model.uid !== owner.uid && model.uid !== currentUser.uid),
+        () => allMemebers.filter((model) => model.uid !== ownerUID && model.uid !== currentUser.uid),
         [allMemebers, invitedMemberUIDs]
     );
     const { mutateAsync: updateProjectAssignedUsersMutateAsync } = useUpdateProjectAssignedUsers({ interceptToast: true });
@@ -54,7 +53,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.successes.Assigned members updated and invited new users successfully.");
+                return t("successes.Assigned members updated and invited new users successfully.");
             },
         });
     };
@@ -128,7 +127,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             save={save as TSaveHandler}
             withUserGroups
             groups={groups}
-            canEdit={canEdit || owner.uid === currentUser.uid}
+            canEdit={canEdit || ownerUID === currentUser.uid}
         />
     );
 });

@@ -5,11 +5,12 @@ import invariant from "tiny-invariant";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { TRowDroppableTargetData, TRowData, TRowModelWithKey, TRowState, TSortableData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
+import { TRowDroppableTargetData, TRowData, TRowState, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
-export interface ICreateDndRowEventsProps<TRowModel extends TSortableData> {
-    row: TRowModelWithKey<TRowModel>;
+export interface ICreateDndRowEventsProps<TRowModel extends TOrderableModel<TOrderableModelName>> {
+    row: TRowModel;
     symbolSet: TColumnRowSymbolSet;
     draggable: HTMLElement;
     dropTarget: HTMLElement;
@@ -19,9 +20,9 @@ export interface ICreateDndRowEventsProps<TRowModel extends TSortableData> {
 
 export const ROW_IDLE = { type: "idle" } satisfies TRowState;
 
-const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRowEventsProps<TRowModel>) => {
-    type TRowModelData = TRowData<TRowModel, TRowModelWithKey<TRowModel>>;
-    type TRowDroppableModelData = TRowDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
+const createDndRowEvents = <TRowModel extends TOrderableModel<TOrderableModelName>>(props: ICreateDndRowEventsProps<TRowModel>) => {
+    type TRowModelData = TRowData<TRowModel>;
+    type TRowDroppableModelData = TRowDroppableTargetData<TRowModel>;
 
     const { row, symbolSet, draggable, dropTarget, setState, renderPreview } = props;
 
@@ -40,7 +41,7 @@ const createDndRowEvents = <TRowModel extends TSortableData>(props: ICreateDndRo
         };
     };
 
-    const { isRowData, isDraggingARow, shouldHideIndicator } = createDndColumnRowDataHelper<TSortableData, TRowModel>({
+    const { isRowData, isDraggingARow, shouldHideIndicator } = createDndColumnRowDataHelper<TOrderableModel<TOrderableModelName>, TRowModel>({
         symbolSet,
     });
 

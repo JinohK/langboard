@@ -45,7 +45,7 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("settings.successes.API key name changed successfully.");
+                    return t("successes.API key name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

@@ -1,7 +1,7 @@
 import { Box, Button, Collapsible, Flex } from "@/components/base";
 import useChangeCardChecklistOrder from "@/controllers/api/card/checklist/useChangeCardChecklistOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectChecklist, ProjectCheckitem } from "@/core/models";
+import { ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import BoardCardChecklist from "@/pages/BoardPage/components/card/checklist/BoardCardChecklist";
 import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/SkeletonBoardCardCheckitem";
@@ -66,7 +66,7 @@ function BoardCardChecklistGroup(): JSX.Element {
             handle(error);
         };
 
-        return columnRowDndHelpers.root<ProjectChecklist.TModel, ProjectCheckitem.TModel>({
+        return columnRowDndHelpers.root({
             columns: checklists,
             rowsMap: checkitemsMap,
             columnKeyInRow: "checklist_uid",

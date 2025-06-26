@@ -7,12 +7,13 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import createDndSingleDataHelper from "@/core/helpers/dnd/createDndSingleDataHelper";
-import { TRowModelWithKey, TSingleRowSettings, TSingleSymbolSet, TSortableData } from "@/core/helpers/dnd/types";
+import { TSingleRowSettings, TSingleSymbolSet } from "@/core/helpers/dnd/types";
 import { canReorderByClosestEdge } from "@/core/helpers/dnd/utils";
 import { CleanupFn } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
-export interface ICreateDndSingleRootEventsProps<TRowModel extends TSortableData> {
-    rowsMap: Record<string, TRowModelWithKey<TRowModel>>;
+export interface ICreateDndSingleRootEventsProps<TRowModel extends TOrderableModel<TOrderableModelName>> {
+    rowsMap: Record<string, TRowModel>;
     symbolSet: TSingleSymbolSet;
     settings?: TSingleRowSettings;
     scrollable?: HTMLElement;
@@ -20,7 +21,7 @@ export interface ICreateDndSingleRootEventsProps<TRowModel extends TSortableData
     changeOrder: (context: { rowUID: string; order: number; undo: () => void }) => void;
 }
 
-const createDndSingleRootEvents = <TRowModel extends TSortableData>(props: ICreateDndSingleRootEventsProps<TRowModel>) => {
+const createDndSingleRootEvents = <TRowModel extends TOrderableModel<TOrderableModelName>>(props: ICreateDndSingleRootEventsProps<TRowModel>) => {
     const { rowsMap, symbolSet, settings, scrollable, isHorizontal, changeOrder } = props;
     const { isRowData, isDraggingARow } = createDndSingleDataHelper<TRowModel>({ symbolSet });
 

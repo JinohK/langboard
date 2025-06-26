@@ -39,7 +39,7 @@ const BoardSettingsOther = memo(() => {
                 setTimeout(() => {
                     navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
                 }, 0);
-                return t("project.settings.successes.Project deleted successfully.");
+                return t("successes.Project deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -67,13 +67,13 @@ const BoardSettingsOther = memo(() => {
                 </Popover.Trigger>
                 <Popover.Content>
                     <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                        {t("project.settings.Are you sure you want to delete this project?")}
+                        {t("ask.Are you sure you want to delete this project?")}
                     </Box>
                     <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                        {t("project.settings.All data will be lost.")}
+                        {t("common.deleteDescriptions.All data will be lost.")}
                     </Box>
                     <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                        {t("project.settings.This action cannot be undone.")}
+                        {t("common.deleteDescriptions.This action cannot be undone.")}
                     </Box>
                     <Flex items="center" justify="end" gap="1" mt="2">
                         <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

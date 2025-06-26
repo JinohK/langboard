@@ -50,7 +50,7 @@ function BotTriggerCondition({ category, conditionType }: IBotTriggerConditionPr
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot trigger condition changed successfully.");
+                return t("successes.Bot trigger condition changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

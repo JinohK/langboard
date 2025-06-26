@@ -33,7 +33,7 @@ function GlobalRelationshipsPage() {
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("settings.successes.Selected global relationship types deleted successfully."));
+                    Toast.Add.success(t("successes.Selected global relationship types deleted successfully."));
                     setSelectedGlobalRelationships([]);
                 },
                 onError: (error) => {

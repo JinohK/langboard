@@ -29,7 +29,7 @@ function BoardCardAttachmentMoreMenuDelete(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.File deleted successfully.");
+                return t("successes.File deleted successfully.");
             },
             finally: () => {
                 endCallback(true);
@@ -47,10 +47,10 @@ function BoardCardAttachmentMoreMenuDelete(): JSX.Element {
             onSave={deleteAttachment}
         >
             <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold">
-                {t("card.Are you sure you want to delete this file?")}
+                {t("ask.Are you sure you want to delete this file?")}
             </Box>
             <Box textSize="sm" weight="bold" className="text-center text-red-500">
-                {t("card.This action cannot be undone.")}
+                {t("common.deleteDescriptions.This action cannot be undone.")}
             </Box>
         </MoreMenu.PopoverItem>
     );

@@ -37,7 +37,7 @@ function BoardCardAttachmentMoreMenuDownload(): JSX.Element {
 
     return (
         <DropdownMenu.Item onClick={handleDownload} disabled={isDownloading}>
-            {t("card.Download")}
+            {t("common.Download")}
         </DropdownMenu.Item>
     );
 }

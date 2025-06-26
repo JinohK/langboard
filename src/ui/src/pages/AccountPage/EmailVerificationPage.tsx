@@ -34,7 +34,7 @@ function EmailVerificationPage() {
             {
                 onSuccess: () => {
                     updatedUser();
-                    Toast.Add.success(t("myAccount.successes.The email verified successfully."));
+                    Toast.Add.success(t("successes.The email verified successfully."));
                     navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
                 },
                 onError: (error) => {

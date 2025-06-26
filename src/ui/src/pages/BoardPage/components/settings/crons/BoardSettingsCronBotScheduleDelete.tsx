@@ -48,7 +48,7 @@ function BoardSettingsCronBotScheduleDelete({
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Bot unscheduled successfully.");
+                return t("successes.Bot unscheduled successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -66,13 +66,13 @@ function BoardSettingsCronBotScheduleDelete({
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                 <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                    {t("project.settings.Are you sure you want to unschedule this cron?")}
+                    {t("ask.Are you sure you want to unschedule this cron?")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("project.settings.All data will be lost.")}
+                    {t("common.deleteDescriptions.All data will be lost.")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("project.settings.This action cannot be undone.")}
+                    {t("common.deleteDescriptions.This action cannot be undone.")}
                 </Box>
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

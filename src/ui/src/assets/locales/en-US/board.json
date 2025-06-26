@@ -28,11 +28,5 @@
   "Enter a title": "Enter a title",
   "Select parent cards": "Select parent cards",
   "Select child cards": "Select child cards",
-  "{count} selected": "{{count}} selected",
-  "Are you sure you want to unassign this assignee?": "Are you sure you want to unassign this assignee?",
-  "successes": {
-    "Column added successfully.": "Column added successfully.",
-    "Card added successfully.": "Card added successfully.",
-    "Unassigned successfully.": "Unassigned successfully."
-  }
+  "{count} selected": "{{count}} selected"
 }

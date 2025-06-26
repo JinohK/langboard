@@ -66,7 +66,7 @@ function BoardCommentFooterEditButtons() {
             {
                 onSuccess: () => {
                     comment.content = { ...valueRef.current };
-                    Toast.Add.success(t("card.successes.Comment updated successfully."));
+                    Toast.Add.success(t("successes.Comment updated successfully."));
                     cancelEditing();
                 },
                 onError: (error) => {
@@ -130,7 +130,7 @@ function BoardCommentFooterActions() {
             },
             success: () => {
                 deletedComment(comment.uid);
-                return t("card.successes.Comment deleted successfully.");
+                return t("successes.Comment deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

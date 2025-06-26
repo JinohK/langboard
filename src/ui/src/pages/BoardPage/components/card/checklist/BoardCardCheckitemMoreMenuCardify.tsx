@@ -44,7 +44,7 @@ function BoardCardCheckitemMoreMenuCardify(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Cardified the checkitem successfully.");
+                return t("successes.Cardified the checkitem successfully.");
             },
             finally: () => {
                 endCallback(true);

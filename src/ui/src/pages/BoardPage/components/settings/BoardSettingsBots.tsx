@@ -42,7 +42,7 @@ const BoardSettingsBots = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Assigned bots updated successfully.");
+                return t("successes.Assigned bots updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);

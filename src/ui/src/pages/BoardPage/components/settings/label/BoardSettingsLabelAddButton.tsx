@@ -37,7 +37,7 @@ function BoardSettingsLabelAddButton() {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Label added successfully.");
+                return t("successes.Label added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

@@ -64,43 +64,45 @@ const WikiList = memo(() => {
     };
 
     return (
-        <Tabs.Root value={wikiUID} className="p-2">
-            <Flex items="center" justify="between" gap="1">
-                <Box id={wikiTabListId} pb="0.5" w="full" className="max-w-[calc(100%_-_theme(spacing.20))] overflow-x-scroll">
-                    <Tabs.List className="gap-1" onPointerDown={onPointerDown}>
-                        <WikiTabList changeTab={changeTab} />
-                    </Tabs.List>
-                </Box>
-                <Flex h="full" pb="2" gap="1">
-                    <Button
-                        variant={modeType !== "delete" ? "ghost" : "default"}
-                        size="icon-sm"
-                        title={t("wiki.Toggle delete mode")}
-                        titleAlign="end"
-                        onClick={() => setModeType(modeType === "delete" ? "view" : "delete")}
-                    >
-                        <IconComponent icon="trash-2" size="4" />
-                    </Button>
-                    <Button
-                        variant={modeType !== "reorder" ? "ghost" : "default"}
-                        size="icon-sm"
-                        title={t("wiki.Toggle reorder mode")}
-                        titleAlign="end"
-                        onClick={() => setModeType(modeType === "reorder" ? "view" : "reorder")}
-                    >
-                        <IconComponent icon="replace-all" size="4" />
-                    </Button>
-                    <WikiCreateButton changeTab={changeTab} />
+        <Tabs.Provider value={wikiUID}>
+            <Box p="2">
+                <Flex items="center" justify="between" gap="1">
+                    <Box id={wikiTabListId} pb="0.5" w="full" className="max-w-[calc(100%_-_theme(spacing.20))] overflow-x-scroll">
+                        <Tabs.List className="justify-start gap-1 border-none p-0" onPointerDown={onPointerDown}>
+                            <WikiTabList changeTab={changeTab} />
+                        </Tabs.List>
+                    </Box>
+                    <Flex h="full" pb="2" gap="1">
+                        <Button
+                            variant={modeType !== "delete" ? "ghost" : "default"}
+                            size="icon-sm"
+                            title={t("wiki.Toggle delete mode")}
+                            titleAlign="end"
+                            onClick={() => setModeType(modeType === "delete" ? "view" : "delete")}
+                        >
+                            <IconComponent icon="trash-2" size="4" />
+                        </Button>
+                        <Button
+                            variant={modeType !== "reorder" ? "ghost" : "default"}
+                            size="icon-sm"
+                            title={t("wiki.Toggle reorder mode")}
+                            titleAlign="end"
+                            onClick={() => setModeType(modeType === "reorder" ? "view" : "reorder")}
+                        >
+                            <IconComponent icon="replace-all" size="4" />
+                        </Button>
+                        <WikiCreateButton changeTab={changeTab} />
+                    </Flex>
                 </Flex>
-            </Flex>
-            {wikis.map((wiki) =>
-                wikiUID === wiki.uid && canAccessWiki(false, wiki.uid) ? (
-                    <Tabs.Content key={`board-wiki-${wiki.uid}-content`} value={wiki.uid}>
-                        <WikiContent wiki={wiki} changeTab={changeTab} />
-                    </Tabs.Content>
-                ) : null
-            )}
-        </Tabs.Root>
+                {wikis.map((wiki) =>
+                    wikiUID === wiki.uid && canAccessWiki(false, wiki.uid) ? (
+                        <Tabs.Content key={`board-wiki-${wiki.uid}-content`} value={wiki.uid}>
+                            <WikiContent wiki={wiki} changeTab={changeTab} />
+                        </Tabs.Content>
+                    ) : null
+                )}
+            </Box>
+        </Tabs.Provider>
     );
 });
 

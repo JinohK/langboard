@@ -255,7 +255,7 @@ const BoardProxy = memo((): JSX.Element => {
             headerNavs={headerNavs}
             headerTitle={projectTitle}
             resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType || !!resizableSidebar.hidden } : undefined}
-            noPadding
+            className="!p-0"
         >
             {isReady && currentUser ? (
                 <PageComponent navigate={navigateRef.current} projectUID={projectUID} currentUser={currentUser} />

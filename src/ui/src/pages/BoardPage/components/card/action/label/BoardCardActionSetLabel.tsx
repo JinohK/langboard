@@ -52,7 +52,7 @@ const BoardCardActionSetLabel = memo(({ buttonClassName }: IBoardCardActionSetLa
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Labels updated successfully.");
+                return t("successes.Labels updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);

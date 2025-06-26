@@ -44,7 +44,7 @@ const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
                     changeTab(data.wiki.uid);
                 };
                 changeCreatedTab();
-                return t("wiki.successes.New wiki page created successfully.");
+                return t("successes.New wiki page created successfully.");
             },
             finally: () => {},
         });

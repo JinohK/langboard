@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { TRowData, TRowModelWithKey, TSingleSymbolSet, TSortableData } from "@/core/helpers/dnd/types";
+import { TRowData, TSingleSymbolSet } from "@/core/helpers/dnd/types";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 
 export interface ICreateDndSingleHelperProps {
@@ -8,8 +9,8 @@ export interface ICreateDndSingleHelperProps {
     isHorizontal?: bool;
 }
 
-const createDndSingleDataHelper = <TRowModel extends TSortableData>(props: ICreateDndSingleHelperProps) => {
-    type TRow = TRowData<TRowModel, TRowModelWithKey<TRowModel>>;
+const createDndSingleDataHelper = <TRowModel extends TOrderableModel<TOrderableModelName>>(props: ICreateDndSingleHelperProps) => {
+    type TRow = TRowData<TRowModel>;
 
     const { symbolSet, isHorizontal } = props;
     const { root, row } = symbolSet;

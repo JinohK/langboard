@@ -29,7 +29,7 @@ function BoardCardChecklistMoreMenuDelete(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Checklist deleted successfully.");
+                return t("successes.Checklist deleted successfully.");
             },
             finally: () => {
                 endCallback(true);
@@ -47,13 +47,13 @@ function BoardCardChecklistMoreMenuDelete(): JSX.Element {
             onSave={deleteChecklist}
         >
             <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                {t("card.Are you sure you want to delete this checklist?")}
+                {t("ask.Are you sure you want to delete this checklist?")}
             </Box>
             <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
                 {t("card.All checkitems in this group will be deleted as well.")}
             </Box>
             <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                {t("card.This action cannot be undone.")}
+                {t("common.deleteDescriptions.This action cannot be undone.")}
             </Box>
         </MoreMenu.PopoverItem>
     );

@@ -2,7 +2,7 @@ from calendar import timegm
 from datetime import timedelta
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any
+from typing import Any, Literal
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from jwt import ExpiredSignatureError, InvalidTokenError
@@ -106,15 +106,23 @@ class AuthSecurity:
         return Encryptor.encrypt(json_dumps(payload), Env.JWT_SECRET_KEY)
 
     @staticmethod
-    def compare_tokens(access_token: str | None, refresh_token: str | None) -> bool:
+    def compare_tokens(access_token: str | None, refresh_token: str | None) -> bool | Literal["expired_access"]:
         if not access_token or not refresh_token:
             return False
+
         try:
             access_payload = AuthSecurity.decode_access_token(access_token)
-            refresh_payload = AuthSecurity.decode_refresh_token(refresh_token)
-            return access_payload["sub"] == refresh_payload["sub"] and access_payload["iss"] == refresh_payload["iss"]
+        except ExpiredSignatureError:
+            return "expired_access"
         except Exception:
             return False
+
+        try:
+            refresh_payload = AuthSecurity.decode_refresh_token(refresh_token)
+        except Exception:
+            return False
+
+        return access_payload["sub"] == refresh_payload["sub"] and access_payload["iss"] == refresh_payload["iss"]
 
     @staticmethod
     def decode_access_token(token: str) -> dict[str, Any]:

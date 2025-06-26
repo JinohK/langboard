@@ -59,7 +59,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("card.successes.Description changed successfully.");
+                    return t("successes.Description changed successfully.");
                 },
                 finally: () => {
                     setCurrentEditor("");

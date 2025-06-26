@@ -45,7 +45,7 @@ function MetadataAddButton({ form, errorsMap }: IMetadataAddButtonProps): JSX.El
                 return messageRef.message;
             },
             success: () => {
-                return t("metadata.successes.Metadata added successfully.");
+                return t("successes.Metadata added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

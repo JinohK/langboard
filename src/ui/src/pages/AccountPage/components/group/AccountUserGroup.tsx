@@ -55,7 +55,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("myAccount.successes.User group emails updated successfully."));
+                    Toast.Add.success(t("successes.User group emails updated successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});

@@ -44,7 +44,7 @@ function EmailList(): JSX.Element {
             {
                 onSuccess: () => {
                     updatedUser();
-                    Toast.Add.success(t("myAccount.successes.Email deleted successfully."));
+                    Toast.Add.success(t("successes.Email deleted successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});
@@ -69,7 +69,7 @@ function EmailList(): JSX.Element {
             { is_resend: true, new_email: email },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("myAccount.successes.Please check your inbox to verify your email."));
+                    Toast.Add.success(t("successes.Please check your inbox to verify your email."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({

@@ -1,11 +1,11 @@
-import { Avatar, Box, Button, Flex, IconComponent, Toast } from "@/components/base";
+import { Avatar, Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteInternalBot from "@/controllers/api/settings/internalBots/useDeleteInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { InternalBotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IInternalBotProps {
@@ -16,6 +16,7 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
     const [t] = useTranslation();
     const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteInternalBot(internalBot, { interceptToast: true });
+    const [isOpened, setIsOpened] = useState(false);
     const displayName = internalBot.useField("display_name");
     const botType = internalBot.useField("bot_type");
     const avatar = internalBot.useField("avatar");
@@ -50,7 +51,7 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot deleted successfully.");
+                return t("successes.Internal bot deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -60,6 +61,14 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
 
     const toInternalBotDetails = () => {
         navigateRef.current(ROUTES.SETTINGS.INTERNAL_BOT_DETAILS(internalBot.uid));
+    };
+
+    const changeOpenState = (opened: boolean) => {
+        if (isValidating) {
+            return;
+        }
+
+        setIsOpened(opened);
     };
 
     return (
@@ -89,13 +98,41 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
                     </Box>
                 </Box>
             </Flex>
-            <Box>
+            <Box
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+            >
                 {isDefault ? (
                     <span className="text-secondary-foreground/50">{isDefault ? ` (${t("common.default")})` : ""}</span>
                 ) : (
-                    <Button variant="destructive" size="icon-sm" disabled={isValidating} onClick={deleteInternalBot}>
-                        <IconComponent icon="trash-2" size="5" />
-                    </Button>
+                    <Popover.Root open={isOpened} onOpenChange={changeOpenState}>
+                        <Popover.Trigger asChild>
+                            <Button variant="destructive" size="icon-sm" title={t("common.Delete")} titleSide="bottom" disabled={isValidating}>
+                                <IconComponent icon="trash-2" size="5" />
+                            </Button>
+                        </Popover.Trigger>
+                        <Popover.Content align="end">
+                            <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
+                                {t("ask.Are you sure you want to delete this internal bot?")}
+                            </Box>
+                            <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
+                                {t("common.deleteDescriptions.All data will be lost.")}
+                            </Box>
+                            <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
+                                {t("common.deleteDescriptions.This action cannot be undone.")}
+                            </Box>
+                            <Flex items="center" justify="end" gap="1" mt="2">
+                                <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
+                                    {t("common.Cancel")}
+                                </Button>
+                                <SubmitButton type="button" variant="destructive" size="sm" onClick={deleteInternalBot} isValidating={isValidating}>
+                                    {t("common.Delete")}
+                                </SubmitButton>
+                            </Flex>
+                        </Popover.Content>
+                    </Popover.Root>
                 )}
             </Box>
         </Flex>

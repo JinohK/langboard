@@ -34,7 +34,7 @@ const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("myAccount.successes.User group name changed successfully.");
+                    return t("successes.User group name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

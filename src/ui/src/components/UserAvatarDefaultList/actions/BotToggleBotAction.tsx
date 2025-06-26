@@ -42,7 +42,7 @@ function UserAvatarDefaultBotToggleAction({ bot, project }: IUserAvatarDefaultBo
                 return messageRef.message;
             },
             success: () => {
-                return t(`project.settings.successes.Bot ${isBotDisabled ? "enabled" : "disabled"} successfully.`);
+                return t(`successes.Bot ${isBotDisabled ? "enabled" : "disabled"} successfully.`);
             },
             finally: () => {
                 setIsValidating(false);

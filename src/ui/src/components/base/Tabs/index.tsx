@@ -1,49 +1,238 @@
+/* eslint-disable @/max-len */
 "use client";
 
-import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as React from "react";
+import { motion } from "framer-motion";
+import { type VariantProps, tv } from "tailwind-variants";
 import { cn } from "@/core/utils/ComponentUtils";
+import TypeUtils from "@/core/utils/TypeUtils";
+import { composeRefs } from "@udecode/cn";
 
-const Root = TabsPrimitive.Root;
+const TabsVariants = tv({
+    base: "relative inline-flex items-center justify-center rounded-lg transition-all duration-300 w-full",
+    variants: {
+        variant: {
+            default: "bg-background border border-border",
+            ghost: "bg-transparent",
+            underline: "bg-transparent border-b border-border rounded-none",
+        },
+        size: {
+            sm: "h-9 p-1",
+            default: "h-10 p-1.5",
+            lg: "h-12 p-2",
+        },
+    },
+    defaultVariants: {
+        variant: "default",
+        size: "default",
+    },
+});
 
-const List = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>>(
-    ({ className, ...props }, ref) => (
-        <TabsPrimitive.List
-            ref={ref}
-            className={cn("inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground", className)}
-            {...props}
-        />
-    )
+export interface ITabsContext {
+    activeValue?: string;
+    activeTabBounds: { left: number; width: number };
+    tabListRef: React.RefObject<HTMLDivElement | null>;
+    setActiveValue: React.Dispatch<React.SetStateAction<string | undefined>>;
+    setActiveTabBounds: React.Dispatch<React.SetStateAction<{ left: number; width: number }>>;
+    setTabRef: (id: string, element: HTMLButtonElement | null) => void;
+    handleTabClick: (value: string) => void;
+}
+
+interface IProviderProps {
+    defaultValue?: string;
+    value?: string;
+    onValueChange?: (value: string) => void;
+    children: React.ReactNode;
+}
+
+const initialContext = {
+    activeTabBounds: { left: 0, width: 0 },
+    tabListRef: { current: null },
+    setActiveValue: () => {},
+    setActiveTabBounds: () => {},
+    setTabRef: () => {},
+    handleTabClick: () => {},
+};
+
+const TabsContext = React.createContext<ITabsContext>(initialContext);
+
+const Provider = ({ defaultValue, value, onValueChange, children }: IProviderProps): React.ReactNode => {
+    const [activeValue, setActiveValue] = React.useState(value || defaultValue);
+    const [activeTabBounds, setActiveTabBounds] = React.useState({
+        left: 0,
+        width: 0,
+    });
+    const tabListRef = React.useRef<HTMLDivElement | null>(null);
+    const tabRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
+
+    const setTabRef = (value: string, element: HTMLButtonElement | null) => {
+        tabRefs.current[value] = element;
+    };
+
+    React.useEffect(() => {
+        if (value !== undefined) {
+            setActiveValue(value);
+        }
+    }, [value]);
+
+    React.useEffect(() => {
+        if (!activeValue || !tabListRef.current) {
+            return;
+        }
+
+        const activeTab = tabRefs.current[activeValue];
+        if (activeTab) {
+            const tabRect = activeTab.getBoundingClientRect();
+            const containerRect = tabListRef.current.getBoundingClientRect();
+
+            setActiveTabBounds({
+                left: tabRect.left - containerRect.left,
+                width: tabRect.width,
+            });
+        }
+    }, [activeValue]);
+
+    const handleTabClick = (value: string) => {
+        setActiveValue(value);
+        onValueChange?.(value);
+    };
+
+    return (
+        <TabsContext.Provider
+            value={{
+                activeValue,
+                activeTabBounds,
+                tabListRef,
+                setActiveValue,
+                setActiveTabBounds,
+                setTabRef,
+                handleTabClick,
+            }}
+        >
+            {children}
+        </TabsContext.Provider>
+    );
+};
+Provider.displayName = "TabsProvider";
+
+const List = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof TabsVariants>>(
+    ({ className, variant, size, children, ...props }, ref) => {
+        const { activeTabBounds, tabListRef } = React.useContext(TabsContext);
+
+        return (
+            <div ref={composeRefs(tabListRef, ref)} className={cn(TabsVariants({ variant, size }), className)} {...props}>
+                {" "}
+                {/* Animated indicator */}
+                <motion.div
+                    className={cn(
+                        "absolute z-10",
+                        variant === "underline" ? "bottom-0 h-0.5 rounded-none bg-foreground" : "bottom-1 top-1 rounded-md bg-accent"
+                    )}
+                    initial={false}
+                    animate={{
+                        left: activeTabBounds.left,
+                        width: activeTabBounds.width,
+                    }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                    }}
+                />
+                {/* Tab triggers */}
+                {children}
+            </div>
+        );
+    }
 );
-List.displayName = TabsPrimitive.List.displayName;
+List.displayName = "TabsList";
 
-const Trigger = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Trigger>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>>(
-    ({ className, ...props }, ref) => (
-        <TabsPrimitive.Trigger
-            ref={ref}
+const TabTriggerVariants = tv({
+    base: "relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1 disabled:pointer-events-none disabled:opacity-5",
+    variants: {
+        variant: {
+            default: "text-muted-foreground hover:text-foreground data-[state=active]:text-primary-foreground",
+            ghost: "text-muted-foreground hover:text-foreground hover:bg-accent data-[state=active]:text-primary-foreground data-[state=active]:bg-transparent",
+            underline: "text-muted-foreground hover:text-foreground data-[state=active]:text-accent-foreground rounded-none",
+        },
+        size: {
+            sm: "px-2.5 py-1 text-xs",
+            default: "px-3 py-1.5 text-sm",
+            lg: "px-4 py-2 text-base",
+        },
+    },
+    defaultVariants: {
+        variant: "default",
+        size: "default",
+    },
+});
+
+export interface ITabTrigger extends React.HTMLAttributes<HTMLButtonElement>, VariantProps<typeof TabTriggerVariants> {
+    value: string;
+    disabled?: bool;
+}
+
+const Trigger = React.forwardRef<HTMLButtonElement, ITabTrigger>(({ value, className, variant, size, children, ...props }, ref) => {
+    const { activeValue, setTabRef, handleTabClick } = React.useContext(TabsContext);
+
+    return (
+        <button
+            type="button"
+            ref={(el) => {
+                setTabRef(value, el);
+                if (TypeUtils.isFunction(ref)) {
+                    ref(el);
+                } else if (ref) {
+                    ref.current = el;
+                }
+            }}
             className={cn(
-                // eslint-disable-next-line @/max-len
-                "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all hover:bg-background/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                TabTriggerVariants({ variant, size }),
+                "z-20 gap-2 text-muted-foreground data-[state=active]:text-accent-foreground",
                 className
             )}
+            data-state={activeValue === value ? "active" : "inactive"}
+            onClick={() => handleTabClick(value)}
             {...props}
-        />
-    )
-);
-Trigger.displayName = TabsPrimitive.Trigger.displayName;
+        >
+            {children}
+        </button>
+    );
+});
+Trigger.displayName = "TabsTrigger";
 
-const Content = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Content>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>>(
-    ({ className, ...props }, ref) => (
-        <TabsPrimitive.Content
+// Content component for tab panels
+export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
+    value: string;
+}
+
+const Content = React.forwardRef<HTMLDivElement, TabsContentProps>(({ className, value, children, ...props }, ref) => {
+    const { activeValue } = React.useContext(TabsContext);
+    const isActive = value === activeValue;
+
+    if (!isActive) {
+        return null;
+    }
+
+    const { onDrag, onDragStart, onDragEnd, onAnimationStart, onAnimationEnd, onTransitionEnd, ...divProps } = props;
+
+    return (
+        <motion.div
             ref={ref}
             className={cn(
-                "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 className
             )}
-            {...props}
-        />
-    )
-);
-Content.displayName = TabsPrimitive.Content.displayName;
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            {...divProps}
+        >
+            {children}
+        </motion.div>
+    );
+});
+Content.displayName = "TabsContent";
 
-export { Content, List, Root, Trigger };
+export { Provider, List, Trigger, Content, TabsVariants };

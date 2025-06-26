@@ -25,6 +25,7 @@ export function SkeletonWikiTab() {
 }
 
 function WikiTab({ changeTab, wiki }: IWikiTabProps) {
+    const { modeType } = useBoardWiki();
     const [state, setState] = useState<TSingleRowState>(SINGLE_ROW_IDLE);
     const order = wiki.useField("order");
     const forbidden = wiki.useField("forbidden");
@@ -32,7 +33,7 @@ function WikiTab({ changeTab, wiki }: IWikiTabProps) {
     const draggableRef = useRef<HTMLButtonElement | null>(null);
 
     useEffect(() => {
-        if (forbidden) {
+        if (forbidden || modeType !== "reorder") {
             return;
         }
 
@@ -118,7 +119,7 @@ const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayP
                 return messageRef.message;
             },
             success: () => {
-                return t("wiki.successes.Wiki page deleted successfully.");
+                return t("successes.Wiki page deleted successfully.");
             },
             finally: () => {},
         });
@@ -140,7 +141,14 @@ const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayP
                     </span>
                 </Tooltip.Trigger>
                 {modeType === "delete" && (
-                    <Button asChild variant="destructiveGhost" size="icon-sm" title={t("common.Delete")} className="ml-2 size-6" onClick={deleteWiki}>
+                    <Button
+                        asChild
+                        variant="destructive-ghost"
+                        size="icon-sm"
+                        title={t("common.Delete")}
+                        className="ml-2 size-6"
+                        onClick={deleteWiki}
+                    >
                         <span>
                             <IconComponent icon="trash-2" size="3" />
                         </span>

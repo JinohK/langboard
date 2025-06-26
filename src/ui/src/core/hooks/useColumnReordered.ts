@@ -1,6 +1,6 @@
 import useColumnOrderChangedHandlers, { IUseColumnOrderChangedHandlersProps } from "@/controllers/socket/shared/useColumnOrderChangedHandlers";
 import useSwitchSocketHandlers, { TSocketHandler } from "@/core/hooks/useSwitchSocketHandlers";
-import { TBaseModelInstance } from "@/core/models/Base";
+import { TPickedModel } from "@/core/models/ModelRegistry";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { useMemo } from "react";
 
@@ -9,17 +9,17 @@ export interface IColumn {
     order: number;
 }
 
-export interface IUseColumnReorderedProps<TColumn extends TBaseModelInstance<IColumn>> {
-    type: IUseColumnOrderChangedHandlersProps["type"];
+export interface IUseColumnReorderedProps<TColumnModelName extends IUseColumnOrderChangedHandlersProps["type"]> {
+    type: TColumnModelName;
     eventNameParams?: IUseColumnOrderChangedHandlersProps["params"];
     topicId: string;
-    columns: TColumn[];
+    columns: TPickedModel<TColumnModelName>[];
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
     otherHandlers?: TSocketHandler[];
 }
 
-function useColumnReordered<TColumn extends TBaseModelInstance<IColumn>>({
+function useColumnReordered<TColumnModelName extends IUseColumnOrderChangedHandlersProps["type"]>({
     type,
     eventNameParams,
     topicId,
@@ -27,7 +27,7 @@ function useColumnReordered<TColumn extends TBaseModelInstance<IColumn>>({
     socket,
     updater,
     otherHandlers,
-}: IUseColumnReorderedProps<TColumn>) {
+}: IUseColumnReorderedProps<TColumnModelName>) {
     const [updated, forceUpdate] = updater;
     const columns = useMemo(() => flatColumns.sort((a, b) => a.order - b.order), [updated, flatColumns]);
     const handlers = useMemo(

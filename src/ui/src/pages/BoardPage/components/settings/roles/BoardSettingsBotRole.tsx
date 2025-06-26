@@ -54,7 +54,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("project.settings.successes.Bot roles updated successfully.");
+                    return t("successes.Bot roles updated successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);
@@ -100,7 +100,7 @@ const BoardSettingsBotRole = memo(({ bot, isValidating, setIsValidating }: IBoar
                 return messageRef.message;
             },
             success: () => {
-                return t(`project.settings.successes.Bot ${isDisabled ? "enabled" : "disabled"} successfully.`);
+                return t(`successes.Bot ${isDisabled ? "enabled" : "disabled"} successfully.`);
             },
             finally: () => {
                 setIsValidating(false);

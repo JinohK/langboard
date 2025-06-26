@@ -43,7 +43,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId, viewport
         projectUID,
         cardUID,
         callback: () => {
-            Toast.Add.error(t("card.successes.Card deleted."));
+            Toast.Add.error(t("successes.Card deleted."));
             navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
         },
     });

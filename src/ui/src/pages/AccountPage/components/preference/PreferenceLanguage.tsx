@@ -30,7 +30,7 @@ function PreferenceLanguage() {
                 return messageRef.message;
             },
             success: () => {
-                return t("myAccount.successes.Preferred language updated successfully.");
+                return t("successes.Preferred language updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);

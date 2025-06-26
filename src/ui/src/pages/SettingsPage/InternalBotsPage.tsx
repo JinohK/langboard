@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
-function InternalBotPage() {
+function InternalBotsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { navigateRef, isValidating } = useAppSetting();
@@ -57,4 +57,4 @@ function InternalBotPage() {
     );
 }
 
-export default InternalBotPage;
+export default InternalBotsPage;

@@ -61,7 +61,7 @@ const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
             handle(error);
         };
 
-        return singleDndHelpers.root<ProjectWiki.TModel>({
+        return singleDndHelpers.root({
             rowsMap: wikisMap,
             symbolSet: BOARD_WIKI_DND_SYMBOL_SET,
             isHorizontal: true,

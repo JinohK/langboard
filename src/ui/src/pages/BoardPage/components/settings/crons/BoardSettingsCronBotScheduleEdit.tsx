@@ -93,7 +93,7 @@ function BoardSettingsCronBotScheduleEdit({
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Bot rescheduled successfully.");
+                return t("successes.Bot rescheduled successfully.");
             },
             finally: () => {
                 setIsValidating(false);

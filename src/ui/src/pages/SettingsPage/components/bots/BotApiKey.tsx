@@ -50,7 +50,7 @@ const BotApiKey = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot API key changed successfully.");
+                return t("successes.Bot API key changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

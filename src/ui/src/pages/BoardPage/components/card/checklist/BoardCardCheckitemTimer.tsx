@@ -121,7 +121,7 @@ function BoardCardCheckitemTimerManager() {
                 return messageRef.message;
             },
             success: () => {
-                return t(`card.successes.Timer ${timerStatus} successfully.`);
+                return t(`successes.Timer ${timerStatus} successfully.`);
             },
             finally: () => {
                 setIsValidating(false);

@@ -89,7 +89,7 @@ function BoardSettingsCronBotScheduleAddButton({
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Bot scheduled successfully.");
+                return t("successes.Bot scheduled successfully.");
             },
             finally: () => {
                 setIsValidating(false);

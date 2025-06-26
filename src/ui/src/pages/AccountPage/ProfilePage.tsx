@@ -38,7 +38,7 @@ function ProfilePage(): JSX.Element {
         mutate,
         mutateOnSuccess: () => {
             updatedUser();
-            Toast.Add.success(t("myAccount.successes.Profile updated successfully."));
+            Toast.Add.success(t("successes.Profile updated successfully."));
         },
         mutateOnSettled: () => {
             if (!focusComponentRef.current) {

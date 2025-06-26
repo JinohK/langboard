@@ -56,7 +56,7 @@ function BoardCardChecklistAddItem(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Checkitem added successfully.");
+                return t("successes.Checkitem added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

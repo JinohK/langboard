@@ -48,7 +48,7 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("wiki.successes.Title changed successfully.");
+                    return t("successes.Title changed successfully.");
                 },
                 finally: () => {
                     endCallback();

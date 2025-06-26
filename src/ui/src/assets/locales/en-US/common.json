@@ -18,6 +18,7 @@
   "More": "More",
   "Edit": "Edit",
   "Upload": "Upload",
+  "Download": "Download",
   "Change": "Change",
   "Delete": "Delete",
   "Or": "Or",
@@ -34,7 +35,6 @@
   "Starting...": "Starting...",
   "Stopping...": "Stopping...",
   "Add members from group": "Add members from group",
-  "Assign '{emails}'": "Assign '{{emails, list}}'",
   "Add \"{value}\"": "Add <highlight>\"{{value}}\"</highlight>",
   "is editing...": "is editing...",
   "are editing...": "are editing...",
@@ -58,5 +58,9 @@
     "Disable from this project": "Disable from this project",
     "Select a column": "Select a column",
     "Card title": "Card title"
+  },
+  "deleteDescriptions": {
+    "All data will be lost.": "All data will be lost.",
+    "This action cannot be undone.": "This action cannot be undone."
   }
 }

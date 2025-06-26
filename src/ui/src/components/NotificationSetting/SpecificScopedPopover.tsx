@@ -54,7 +54,7 @@ const SpecificScopedPopover = memo(
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("notification.settings.successes.Notification settings updated successfully.");
+                    return t("successes.Notification settings updated successfully.");
                 },
                 finally: () => {
                     endCallback();

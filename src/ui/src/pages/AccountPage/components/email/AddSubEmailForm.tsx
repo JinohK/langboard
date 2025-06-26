@@ -54,7 +54,7 @@ function AddSubEmailForm(): JSX.Element {
         mutate,
         mutateOnSuccess: () => {
             setErrors({});
-            Toast.Add.success(t("myAccount.successes.Please check your inbox to verify your email."));
+            Toast.Add.success(t("successes.Please check your inbox to verify your email."));
             formRef.current?.reset();
             updatedUser();
         },

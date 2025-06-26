@@ -35,9 +35,9 @@ const BotAvatar = memo(() => {
 
             showToast(promise, () => {
                 if (hasAvatar) {
-                    return t("settings.successes.Bot avatar changed successfully.");
+                    return t("successes.Bot avatar changed successfully.");
                 } else {
-                    return t("settings.successes.Bot avatar uploaded successfully.");
+                    return t("successes.Bot avatar uploaded successfully.");
                 }
             });
         },
@@ -56,7 +56,7 @@ const BotAvatar = memo(() => {
         });
 
         showToast(promise, () => {
-            return t("settings.successes.Bot avatar deleted successfully.");
+            return t("successes.Bot avatar deleted successfully.");
         });
     };
 

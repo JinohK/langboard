@@ -52,7 +52,7 @@ const BoardCardChecklist = memo(({ checklist, checkitemsMap }: IBoardCardCheckli
         invariant(scrollable);
         invariant(draggable);
 
-        return columnRowDndHelpers.column<ProjectChecklist.TModel>({
+        return columnRowDndHelpers.column({
             column: checklist,
             symbolSet: BOARD_CARD_CHECK_DND_SYMBOL_SET,
             draggable,
@@ -202,8 +202,8 @@ const BoardCardCheckitemList = memo(({ checklist, checkitemsMap }: IBoardCardChe
         },
         [updated, checklist]
     );
-    const { rows: checkitems } = useRowReordered<ProjectCheckitem.TModel>({
-        type: "ProjectCardCheckitem",
+    const { rows: checkitems } = useRowReordered({
+        type: "ProjectCheckitem",
         topicId: card.uid,
         eventNameParams: { uid: checklist.uid },
         rows: groupCheckitems,

@@ -37,7 +37,7 @@ function ApiKeysPage() {
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("settings.successes.Selected API keys deleted successfully."));
+                    Toast.Add.success(t("successes.Selected API keys deleted successfully."));
                     setSelectedKeys([]);
                 },
                 onError: (error) => {

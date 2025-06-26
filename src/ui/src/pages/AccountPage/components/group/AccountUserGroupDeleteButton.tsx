@@ -24,7 +24,7 @@ function AccountUserGroupDeleteButton({ group }: IAccountUserGroupDeleteButtonPr
             {},
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("myAccount.successes.User group deleted successfully."));
+                    Toast.Add.success(t("successes.User group deleted successfully."));
                 },
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({});

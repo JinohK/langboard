@@ -57,7 +57,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
                 return messageRef.message;
             },
             success: () => {
-                return t("metadata.successes.Metadata saved successfully.");
+                return t("successes.Metadata saved successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -85,7 +85,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
                 return messageRef.message;
             },
             success: () => {
-                return t("metadata.successes.Metadata deleted successfully.");
+                return t("successes.Metadata deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);

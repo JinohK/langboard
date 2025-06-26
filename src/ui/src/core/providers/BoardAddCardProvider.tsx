@@ -102,7 +102,7 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
                         card.click();
                     };
                     openCard();
-                    return t("board.successes.Card added successfully.");
+                    return t("successes.Card added successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);

@@ -45,7 +45,7 @@ const BotApiAuthType = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot API auth type changed successfully.");
+                return t("successes.Bot API auth type changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

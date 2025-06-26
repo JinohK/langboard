@@ -1,27 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-    TColumnData,
-    TColumnState,
-    TRowDroppableTargetData,
-    TRowData,
-    TRowModelWithKey,
-    TSortableData,
-    TColumnRowSymbolSet,
-} from "@/core/helpers/dnd/types";
+import { TColumnData, TColumnState, TRowDroppableTargetData, TRowData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import TypeUtils from "@/core/utils/TypeUtils";
 import { DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 
 export interface ICreateDndColumnRowHelperProps {
     symbolSet: TColumnRowSymbolSet;
     setColumnState?: React.Dispatch<React.SetStateAction<TColumnState>>;
 }
 
-const createDndColumnRowDataHelper = <TColumnModel extends TSortableData, TRowModel extends TSortableData>(props: ICreateDndColumnRowHelperProps) => {
+const createDndColumnRowDataHelper = <
+    TColumnModel extends TOrderableModel<TOrderableModelName>,
+    TRowModel extends TOrderableModel<TOrderableModelName>,
+>(
+    props: ICreateDndColumnRowHelperProps
+) => {
     type TColumn = TColumnData<TColumnModel>;
-    type TRow = TRowData<TRowModel, TRowModelWithKey<TRowModel>>;
-    type TRowDroppableTarget = TRowDroppableTargetData<TRowModel, TRowModelWithKey<TRowModel>>;
+    type TRowDroppableTarget = TRowDroppableTargetData<TRowModel>;
+    type TRow = TRowData<TRowModel>;
 
     const { symbolSet, setColumnState } = props;
     const { column, columnDroppable, row, rowDroppable } = symbolSet;
@@ -34,7 +32,7 @@ const createDndColumnRowDataHelper = <TColumnModel extends TSortableData, TRowMo
         return isColumnData(source.data);
     };
 
-    const isColumnDroppableTargetData = (value: any): value is TColumnData<TColumnModel> => {
+    const isColumnDroppableTargetData = (value: any): value is TColumn => {
         return Boolean(value[columnDroppable]);
     };
 

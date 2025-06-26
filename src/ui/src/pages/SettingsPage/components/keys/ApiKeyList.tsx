@@ -9,12 +9,12 @@ import ApiKeyRow from "@/pages/SettingsPage/components/keys/ApiKeyRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IApiKeysListProps {
+export interface IApiKeyListProps {
     selectedKeys: string[];
     setSelectedKeys: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
+function ApiKeyList({ selectedKeys, setSelectedKeys }: IApiKeyListProps) {
     const [t] = useTranslation();
     const updater = useReducer((x) => x + 1, 0);
     const apiKeys = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.ApiKey);
@@ -87,4 +87,4 @@ function ApiKeysList({ selectedKeys, setSelectedKeys }: IApiKeysListProps) {
     );
 }
 
-export default ApiKeysList;
+export default ApiKeyList;

@@ -1,6 +1,6 @@
 import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/controllers/socket/shared/useRowOrderChangedHandlers";
 import useSwitchSocketHandlers, { TSocketHandler } from "@/core/hooks/useSwitchSocketHandlers";
-import { TBaseModelInstance } from "@/core/models/Base";
+import { TPickedModel } from "@/core/models/ModelRegistry";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { useMemo } from "react";
 
@@ -9,17 +9,17 @@ export interface IRow {
     order: number;
 }
 
-export interface IUseRowReorderedProps<TRow extends TBaseModelInstance<IRow>> {
-    type: IUseRowOrderChangedHandlersProps["type"];
+export interface IUseRowReorderedProps<TRowModelName extends IUseRowOrderChangedHandlersProps["type"]> {
+    type: TRowModelName;
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
     topicId: string;
-    rows: TRow[];
+    rows: TPickedModel<TRowModelName>[];
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
     otherHandlers?: TSocketHandler[];
 }
 
-function useRowReordered<TRow extends TBaseModelInstance<IRow>>({
+function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps["type"]>({
     type,
     eventNameParams,
     topicId,
@@ -27,7 +27,7 @@ function useRowReordered<TRow extends TBaseModelInstance<IRow>>({
     socket,
     updater,
     otherHandlers,
-}: IUseRowReorderedProps<TRow>) {
+}: IUseRowReorderedProps<TRowModelName>) {
     const [updated, forceUpdate] = updater;
     const rows = useMemo(() => flatRows.sort((a, b) => a.order - b.order), [updated, flatRows]);
     const handlers = useMemo(

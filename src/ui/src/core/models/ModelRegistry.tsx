@@ -52,6 +52,14 @@ export interface IModelMap {
 
 export type TPickedModelClass<TModelName extends keyof IModelMap> = IModelMap[TModelName]["Model"];
 export type TPickedModel<TModelName extends keyof IModelMap> = InstanceType<TPickedModelClass<TModelName>>;
+export type TOrderableModelName = {
+    [TKey in keyof IModelMap]: TPickedModel<TKey> extends { order: number } ? TKey : never;
+}[keyof IModelMap];
+export type TOrderableModel<TModelName extends TOrderableModelName> = TPickedModel<TModelName>;
+export type TCreatedAtModelName = {
+    [TKey in keyof IModelMap]: TPickedModel<TKey> extends { created_at: Date } ? TKey : never;
+}[keyof IModelMap];
+export type TCreatedAtModel<TModelName extends TCreatedAtModelName> = TPickedModel<TModelName>;
 
 type TClass = abstract new (...args: any) => any;
 
@@ -73,7 +81,7 @@ interface IModelProviderProps<TModel extends TClass, TParams = any> {
     children: React.ReactNode;
 }
 
-export const ModelRegistry: IModelMap = {} as any;
+export const ModelRegistry: IModelMap = {} as IModelMap;
 export function registerModel<TModelName extends keyof IModelMap, TModel extends IModelMap[TModelName]["Model"]>(modelType: TModel) {
     const modelName = modelType.MODEL_NAME as TModelName;
     const ModelContext = createContext<IModelContext<TModel>>({

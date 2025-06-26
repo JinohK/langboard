@@ -45,7 +45,7 @@ function BoardSettingsLabelMoreMenuRename(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Label name changed successfully.");
+                return t("successes.Label name changed successfully.");
             },
             finally: () => {
                 endCallback(true);

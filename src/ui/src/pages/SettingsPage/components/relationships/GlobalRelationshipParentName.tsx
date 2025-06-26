@@ -1,4 +1,4 @@
-import { Box, Input, Table, Toast } from "@/components/base";
+import { Box, Flex, IconComponent, Input, Table, Toast } from "@/components/base";
 import useUpdateGlobalRelationship from "@/controllers/api/settings/relationships/useUpdateGlobalRelationship";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -41,7 +41,7 @@ function GlobalRelationshipParentName() {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("settings.successes.Parent name changed successfully.");
+                    return t("successes.Parent name changed successfully.");
                 },
                 finally: () => {
                     endCallback();
@@ -54,9 +54,16 @@ function GlobalRelationshipParentName() {
     return (
         <Table.Cell className={cn("w-1/6 max-w-0 truncate text-center", isEditing && "py-0")}>
             {!isEditing ? (
-                <Box cursor="text" className="truncate" onClick={() => changeMode("edit")}>
-                    {parentName}
-                </Box>
+                <Flex cursor="pointer" justify="center" items="center" gap="1" position="relative" onClick={() => changeMode("edit")}>
+                    <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
+                        {parentName}
+                    </Box>
+                    <Box position="relative">
+                        <Box position="absolute" left="2" className="top-1/2 -translate-y-1/2">
+                            <IconComponent icon="pencil" size="4" />
+                        </Box>
+                    </Box>
+                </Flex>
             ) : (
                 <Input
                     ref={valueRef}

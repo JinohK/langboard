@@ -45,7 +45,7 @@ function BoardSettingsLabelMoreChangeDescription(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Description changed successfully.");
+                return t("successes.Description changed successfully.");
             },
             finally: () => {
                 endCallback(true);

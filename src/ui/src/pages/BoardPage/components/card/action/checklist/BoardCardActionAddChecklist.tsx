@@ -54,7 +54,7 @@ const BoardCardActionAddChecklist = memo(({ buttonClassName }: IBoardCardActionA
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Checklist added successfully.");
+                return t("successes.Checklist added successfully.");
             },
             finally: () => {
                 setIsValidating(false);

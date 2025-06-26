@@ -50,7 +50,7 @@ const InternalBotApiURL = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot API URL changed successfully.");
+                return t("successes.Internal bot API URL changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

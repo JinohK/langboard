@@ -111,7 +111,7 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
                             </Button>
                         )}
                         <Button
-                            variant="destructiveGhost"
+                            variant="destructive-ghost"
                             size="icon-sm"
                             title={t("notification.Delete all notifications")}
                             titleAlign="end"
@@ -264,7 +264,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
                             </Button>
                         )}
                         <Button
-                            variant="destructiveGhost"
+                            variant="destructive-ghost"
                             size="icon-sm"
                             title={t("notification.Delete notification")}
                             titleAlign="end"

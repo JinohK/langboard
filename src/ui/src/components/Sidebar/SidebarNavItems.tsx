@@ -61,9 +61,9 @@ const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ it
             className={cn(
                 item.current ? "text-primary group-data-[collapsed=false]/sidebar:bg-muted" : "text-muted-foreground",
                 "select-none group-data-[fullscreen=false]/floating:justify-center",
-                "inline-flex w-full cursor-pointer items-center gap-3 rounded-lg py-2 text-base",
+                "inline-flex w-full cursor-pointer items-center gap-3 rounded-lg py-1 text-base",
                 "transition-all duration-100 hover:text-primary",
-                "group-data-[collapsed=false]/sidebar:px-3"
+                "group-data-[collapsed=false]/sidebar:px-3 group-data-[collapsed=false]/sidebar:py-2"
             )}
             ref={ref}
         >
@@ -71,10 +71,10 @@ const SidebarNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ it
                 icon={item.icon}
                 className={cn(
                     "max-h-5 min-h-5 min-w-5 max-w-5",
-                    "group-data-[collapsed=true]/sidebar:min-h-9 group-data-[collapsed=true]/sidebar:min-w-9",
-                    "group-data-[collapsed=true]/sidebar:max-h-9 group-data-[collapsed=true]/sidebar:max-w-9",
-                    "group-data-[fullscreen=false]/floating:min-h-9 group-data-[fullscreen=false]/floating:min-w-9",
-                    "group-data-[fullscreen=false]/floating:max-h-9 group-data-[fullscreen=false]/floating:max-w-9",
+                    "group-data-[collapsed=true]/sidebar:min-h-8 group-data-[collapsed=true]/sidebar:min-w-8",
+                    "group-data-[collapsed=true]/sidebar:max-h-8 group-data-[collapsed=true]/sidebar:max-w-8",
+                    "group-data-[fullscreen=false]/floating:min-h-8 group-data-[fullscreen=false]/floating:min-w-8",
+                    "group-data-[fullscreen=false]/floating:max-h-8 group-data-[fullscreen=false]/floating:max-w-8",
                     "stroke-2 transition-all duration-100 group-data-[collapsed=true]/sidebar:stroke-1"
                 )}
             />

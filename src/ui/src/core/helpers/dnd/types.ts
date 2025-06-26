@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { IBaseModel, TBaseModelInstance } from "@/core/models/Base";
+import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types";
 
 export type TColumnRowSymbolSet = {
@@ -25,34 +24,26 @@ export type TSingleRowSettings = {
     isOverflowScrollingEnabled: true;
 };
 
-interface ISortableData extends IBaseModel {
-    order: number;
-}
-
-export type TSortableData = ISortableData | TBaseModelInstance<ISortableData>;
-
-export type TRowModelWithKey<TRowModel extends TSortableData> = TRowModel & Record<keyof TRowModel, any>;
-
-export type TColumnData<TColumnModel extends TSortableData> = {
+export type TColumnData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    column: TColumnModel;
+    column: TModel;
     rect: DOMRect;
 };
 
-export type TColumnDroppableTargetData<TColumnModel extends TSortableData> = {
+export type TColumnDroppableTargetData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    column: TColumnModel;
+    column: TModel;
 };
 
-export type TRowData<TRowModel extends TSortableData, TRow extends TRowModelWithKey<TRowModel>> = {
+export type TRowData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    row: TRow;
+    row: TModel;
     rect: DOMRect;
 };
 
-export type TRowDroppableTargetData<TRowModel extends TSortableData, TRow extends TRowModelWithKey<TRowModel>> = {
+export type TRowDroppableTargetData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    row: TRow;
+    row: TModel;
 };
 
 export type TColumnState =
@@ -99,15 +90,15 @@ export type TSingleSymbolSet = {
     row: symbol;
 };
 
-export type TSingleRowData<TRowModel extends TSortableData> = {
+export type TSingleRowData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    row: TRowModelWithKey<TRowModel>;
+    row: TModel;
     rect: DOMRect;
 };
 
-export type TSingleRowDroppableTargetData<TRowModel extends TSortableData> = {
+export type TSingleRowDroppableTargetData<TModel extends TOrderableModel<TOrderableModelName>> = {
     [symbol: symbol]: bool;
-    row: TRowModelWithKey<TRowModel>;
+    row: TModel;
 };
 
 export type TSingleRowState =

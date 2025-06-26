@@ -3,11 +3,6 @@
   "Key": "Key",
   "Value": "Value",
   "Add a data": "Add a data",
-  "successes": {
-    "Metadata added successfully.": "Metadata added successfully.",
-    "Metadata saved successfully.": "Metadata saved successfully.",
-    "Metadata deleted successfully.": "Metadata deleted successfully."
-  },
   "errors": {
     "Key is required.": "Key is required.",
     "Invalid JSON format.": "Invalid JSON format."

@@ -111,8 +111,8 @@ const Root = memo((props: TUserAvatarProps): JSX.Element => {
             <Popover.Trigger onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} asChild>
                 <span>{trigger}</span>
             </Popover.Trigger>
-            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 xs:w-72" align={listAlign} {...hoverAttrs}>
-                <Card.Root className="relative">
+            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 shadow-none xs:w-72" align={listAlign} {...hoverAttrs}>
+                <Card.Root className="relative shadow-md shadow-black/30 dark:shadow-border/40">
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">
                         <Avatar.Root className="absolute top-10 border" size="2xl">

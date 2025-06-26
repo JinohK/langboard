@@ -96,7 +96,7 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("settings.successes.Internal bot created successfully."));
+                    Toast.Add.success(t("successes.Internal bot created successfully."));
                     if (dataTransferRef.current.items.length) {
                         dataTransferRef.current.items.clear();
                     }

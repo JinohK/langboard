@@ -14,9 +14,7 @@
   "Assign members": "Assign members",
   "invited": "invited",
   "Delete column": "Delete column",
-  "Are you sure you want to delete this column?": "Are you sure you want to delete this column?",
   "All cards in this column will be archived.": "All cards in this column will be archived.",
-  "This action cannot be undone.": "This action cannot be undone.",
   "invitations": {
     "You have been invited to join <highlight>{projectTitle}</highlight>": "You have been invited to join <highlight>{{projectTitle}}</highlight>",
     "Do you want to join this project?": "Do you want to join this project?",
@@ -26,11 +24,6 @@
   "types": {
     "SI": "SI",
     "SW": "SW"
-  },
-  "successes": {
-    "Assigned members updated and invited new users successfully.": "Assigned members updated and invited new users successfully.",
-    "Column name changed successfully.": "Column name changed successfully.",
-    "Column deleted successfully.": "Column deleted successfully."
   },
   "errors": {
     "Project closed.": "Project closed.",
@@ -84,44 +77,17 @@
       "Execute at": "Execute at",
       "Manage": "Manage"
     },
-    "Are you sure you want to unschedule this cron?": "Are you sure you want to unschedule this cron?",
     "Label": "Label",
     "Add a label": "Add a label",
     "Label name": "Label name",
     "Rename": "Rename",
     "Change description": "Change description",
     "Description": "Description",
-    "Are you sure you want to delete this label?": "Are you sure you want to delete this label?",
-    "This action cannot be undone.": "This action cannot be undone.",
-    "Other": "Other",
     "Delete project": "Delete project",
-    "Are you sure you want to delete this project?": "Are you sure you want to delete this project?",
-    "All data will be lost.": "All data will be lost.",
     "Chat templates": "Chat templates",
     "Add a template": "Add a template",
     "Template name": "Template name",
     "Template": "Template",
-    "Are you sure you want to delete this template?": "Are you sure you want to delete this template?",
-    "successes": {
-      "Assigned bots updated successfully.": "Assigned bots updated successfully.",
-      "Bot roles updated successfully.": "Bot roles updated successfully.",
-      "Member roles updated successfully.": "Member roles updated successfully.",
-      "Internal bot changed successfully.": "Internal bot changed successfully.",
-      "Bot scheduled successfully.": "Bot scheduled successfully.",
-      "Bot rescheduled successfully.": "Bot rescheduled successfully.",
-      "Bot unscheduled successfully.": "Bot unscheduled successfully.",
-      "Bot enabled successfully.": "Bot enabled successfully.",
-      "Bot disabled successfully.": "Bot disabled successfully.",
-      "Label added successfully.": "Label added successfully.",
-      "Label name changed successfully.": "Label name changed successfully.",
-      "Color changed successfully.": "Color changed successfully.",
-      "Description changed successfully.": "Description changed successfully.",
-      "Label deleted successfully.": "Label deleted successfully.",
-      "Chat template added successfully.": "Chat template added successfully.",
-      "Chat template updated successfully.": "Chat template updated successfully.",
-      "Chat template deleted successfully.": "Chat template deleted successfully.",
-      "Project deleted successfully.": "Project deleted successfully."
-    },
     "errors": {
       "You are not a member of this project.": "You are not a member of this project.",
       "Cron start time is required.": "Cron start time is required.",

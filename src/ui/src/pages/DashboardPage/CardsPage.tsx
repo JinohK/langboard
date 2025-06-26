@@ -54,28 +54,26 @@ function CardsPage(): JSX.Element {
     }, [mutateAsync, cards]);
 
     return (
-        <>
-            <InfiniteScroller.Table.Default
-                columns={[
-                    { name: t("dashboard.Title"), className: "w-1/3 text-center" },
-                    { name: t("dashboard.Column"), className: "w-1/3 text-center" },
-                    { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
-                    { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
-                ]}
-                scrollable={() => document.getElementById("main")}
-                loadMore={nextPage}
-                hasMore={!isLastPage}
-                loader={
-                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
-                        <Loading size="3" variant="secondary" />
-                    </Flex>
-                }
-            >
-                {cards.map((card) => (
-                    <CardRow card={card} key={`cards-list-${card.uid}`} />
-                ))}
-            </InfiniteScroller.Table.Default>
-        </>
+        <InfiniteScroller.Table.Default
+            columns={[
+                { name: t("dashboard.Title"), className: "w-1/3 text-center" },
+                { name: t("dashboard.Column"), className: "w-1/3 text-center" },
+                { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
+                { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
+            ]}
+            scrollable={() => document.getElementById("main")}
+            loadMore={nextPage}
+            hasMore={!isLastPage}
+            loader={
+                <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
+                    <Loading size="3" variant="secondary" />
+                </Flex>
+            }
+        >
+            {cards.map((card) => (
+                <CardRow card={card} key={`cards-list-${card.uid}`} />
+            ))}
+        </InfiniteScroller.Table.Default>
     );
 }
 

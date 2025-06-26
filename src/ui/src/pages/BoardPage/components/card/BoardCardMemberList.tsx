@@ -35,7 +35,7 @@ const BoardCardMemberList = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Assigned members updated successfully.");
+                return t("successes.Assigned members updated successfully.");
             },
         });
     };

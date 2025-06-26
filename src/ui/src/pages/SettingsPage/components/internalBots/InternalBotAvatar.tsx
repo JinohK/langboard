@@ -35,9 +35,9 @@ const InternalBotAvatar = memo(() => {
 
             showToast(promise, () => {
                 if (hasAvatar) {
-                    return t("settings.successes.Internal bot avatar changed successfully.");
+                    return t("successes.Internal bot avatar changed successfully.");
                 } else {
-                    return t("settings.successes.Internal bot avatar uploaded successfully.");
+                    return t("successes.Internal bot avatar uploaded successfully.");
                 }
             });
         },
@@ -56,7 +56,7 @@ const InternalBotAvatar = memo(() => {
         });
 
         showToast(promise, () => {
-            return t("settings.successes.Internal bot avatar deleted successfully.");
+            return t("successes.Internal bot avatar deleted successfully.");
         });
     };
 

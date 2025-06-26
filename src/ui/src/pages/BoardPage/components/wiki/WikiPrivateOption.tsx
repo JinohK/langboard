@@ -88,7 +88,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 return messageRef.message;
             },
             success: () => {
-                return t("wiki.successes.Public state changed successfully.");
+                return t("successes.Public state changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -126,7 +126,7 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                 return messageRef.message;
             },
             success: () => {
-                return t("wiki.successes.Assigned bots and members updated successfully.");
+                return t("successes.Assigned bots and members updated successfully.");
             },
             finally: () => {
                 setIsValidating(false);

@@ -9,12 +9,12 @@ import WebhookRow from "@/pages/SettingsPage/components/webhook/WebhookRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IWebhooksListProps {
+export interface IWebhookListProps {
     selectedWebhooks: string[];
     setSelectedWebhooks: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListProps) {
+function WebhookList({ selectedWebhooks, setSelectedWebhooks }: IWebhookListProps) {
     const [t] = useTranslation();
     const updater = useReducer((x) => x + 1, 0);
     const webhooks = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.WebhookUrl);
@@ -84,4 +84,4 @@ function WebhooksList({ selectedWebhooks, setSelectedWebhooks }: IWebhooksListPr
     );
 }
 
-export default WebhooksList;
+export default WebhookList;

@@ -47,9 +47,6 @@
       "assigned_to_card": "Assigned to card",
       "reacted_to_comment": "Reacted to comment",
       "notified_from_checklist": "Notified from checklist"
-    },
-    "successes": {
-      "Notification settings updated successfully.": "Notification settings updated successfully."
     }
   }
 }

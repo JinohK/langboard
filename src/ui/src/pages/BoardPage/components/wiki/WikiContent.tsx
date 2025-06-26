@@ -75,7 +75,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("wiki.successes.Content changed successfully.");
+                    return t("successes.Content changed successfully.");
                 },
                 finally: () => {
                     setCurrentEditor("");

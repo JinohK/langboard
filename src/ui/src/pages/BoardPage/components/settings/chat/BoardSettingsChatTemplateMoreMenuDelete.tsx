@@ -28,7 +28,7 @@ function BoardSettingsChatTemplateMoreMenuDelete(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Chat template deleted successfully.");
+                return t("successes.Chat template deleted successfully.");
             },
             finally: () => {
                 endCallback(true);
@@ -45,10 +45,10 @@ function BoardSettingsChatTemplateMoreMenuDelete(): JSX.Element {
             onSave={deleteAttachment}
         >
             <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold">
-                {t("project.settings.Are you sure you want to delete this template?")}
+                {t("ask.Are you sure you want to delete this template?")}
             </Box>
             <Box textSize="sm" weight="bold" className="text-center text-red-500">
-                {t("project.settings.This action cannot be undone.")}
+                {t("common.deleteDescriptions.This action cannot be undone.")}
             </Box>
         </MoreMenu.PopoverItem>
     );

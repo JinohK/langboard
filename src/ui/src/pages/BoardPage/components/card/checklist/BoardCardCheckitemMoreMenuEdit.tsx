@@ -52,7 +52,7 @@ function BoardCardCheckitemMoreMenuEdit(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Title changed successfully.");
+                return t("successes.Title changed successfully.");
             },
             finally: () => {
                 endCallback(true);

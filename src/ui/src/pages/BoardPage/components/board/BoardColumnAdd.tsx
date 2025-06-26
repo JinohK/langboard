@@ -36,7 +36,7 @@ const BoardColumnAdd = memo(() => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("board.successes.Column added successfully.");
+                    return t("successes.Column added successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);

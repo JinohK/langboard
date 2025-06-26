@@ -45,7 +45,7 @@ const BotIpWhitelist = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot IP whitelist changed successfully.");
+                return t("successes.Bot IP whitelist changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

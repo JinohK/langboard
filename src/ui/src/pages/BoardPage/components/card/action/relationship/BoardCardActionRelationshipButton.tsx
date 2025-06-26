@@ -52,7 +52,7 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.Relationships updated successfully.");
+                return t("successes.Relationships updated successfully.");
             },
             finally: () => {
                 setIsValidating(() => false);

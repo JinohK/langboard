@@ -44,7 +44,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
                 setTimeout(() => {
                     navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
                 }, 0);
-                return t("card.successes.Card deleted successfully.");
+                return t("successes.Card deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -72,13 +72,13 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
             </Popover.Trigger>
             <Popover.Content align="end">
                 <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                    {t("card.Are you sure you want to delete this card?")}
+                    {t("ask.Are you sure you want to delete this card?")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("card.All data will be lost.")}
+                    {t("common.deleteDescriptions.All data will be lost.")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("card.This action cannot be undone.")}
+                    {t("common.deleteDescriptions.This action cannot be undone.")}
                 </Box>
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>

@@ -13,7 +13,7 @@ interface IBaseDashboardStyledLayoutProps {
     headerTitle?: React.ReactNode;
     sidebarNavs?: ISidebarNavItem[];
     resizableSidebar?: Omit<IResizableSidebarProps, "main">;
-    noPadding?: bool;
+    className?: string;
     scrollAreaMutable?: React.ComponentPropsWithoutRef<typeof ScrollArea.Root>["mutable"];
 }
 
@@ -45,10 +45,10 @@ export type TDashboardStyledLayoutProps =
     | IBaseDashboardStyledLayoutProps;
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
-    ({ children, headerNavs, headerTitle, sidebarNavs, resizableSidebar, noPadding, scrollAreaMutable, ...props }, ref) => {
+    ({ children, headerNavs, headerTitle, sidebarNavs, resizableSidebar, className, scrollAreaMutable, ...props }, ref) => {
         const main = (
             <ScrollArea.Root viewportId="main" mutable={scrollAreaMutable} className="relative size-full overflow-y-auto">
-                <main className={cn("relative size-full overflow-y-auto", noPadding ? "" : "p-4 md:p-6 lg:p-8")}>{children}</main>
+                <main className={cn("relative size-full overflow-y-auto p-4 md:p-6 lg:p-8", className)}>{children}</main>
             </ScrollArea.Root>
         );
 

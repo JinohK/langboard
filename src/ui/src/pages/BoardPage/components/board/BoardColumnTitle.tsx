@@ -53,7 +53,7 @@ const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardCol
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("project.successes.Column name changed successfully.");
+                    return t("successes.Column name changed successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);

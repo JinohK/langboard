@@ -7,7 +7,7 @@ from ..routing import ApiErrorCode
 
 
 class OpenApiSchema:
-    def __init__(self, success_code: Literal[200, 201, 202] | None = 200) -> None:
+    def __init__(self, success_code: Literal[200, 201, 202, 204] | None = 200) -> None:
         self.__schema: dict[int | str, dict[str, Any]] = {}
         self.__errors: list[tuple[int, ApiErrorCode | str | tuple[str, dict]]] = [
             (
@@ -36,7 +36,7 @@ class OpenApiSchema:
                 "content": self.__empty_schema(),
             }
 
-    def suc(self, schema: dict[str, Any], status_code: Literal[200, 201, 202] = 200) -> Self:
+    def suc(self, schema: dict[str, Any], status_code: Literal[200, 201, 202, 204] = 200) -> Self:
         if status_code != 200:
             self.__schema.pop(status.HTTP_200_OK, None)
 

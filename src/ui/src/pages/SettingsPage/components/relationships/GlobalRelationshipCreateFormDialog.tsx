@@ -63,7 +63,7 @@ function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelati
             },
             {
                 onSuccess: () => {
-                    Toast.Add.success(t("settings.successes.Global relationship type created successfully."));
+                    Toast.Add.success(t("successes.Global relationship type created successfully."));
                     if (dataTransferRef.current.items.length) {
                         dataTransferRef.current.items.clear();
                     }

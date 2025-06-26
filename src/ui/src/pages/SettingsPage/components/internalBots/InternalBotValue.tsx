@@ -60,7 +60,7 @@ const InternalBotValue = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot value changed successfully.");
+                return t("successes.Internal bot value changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

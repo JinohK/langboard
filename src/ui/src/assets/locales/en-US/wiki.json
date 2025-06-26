@@ -6,13 +6,5 @@
   "New wiki page": "New wiki page",
   "Wiki page has been deleted.": "Wiki page has been deleted.",
   "No content": "No content",
-  "Select members and bots...": "Select members and bots...",
-  "successes": {
-    "Title changed successfully.": "Title changed successfully.",
-    "Content changed successfully.": "Content changed successfully.",
-    "New wiki page created successfully.": "New wiki page created successfully.",
-    "Wiki page deleted successfully.": "Wiki page deleted successfully.",
-    "Public state changed successfully.": "Public state changed successfully.",
-    "Assigned bots and members updated successfully.": "Assigned bots and members updated successfully."
-  }
+  "Select members and bots...": "Select members and bots..."
 }

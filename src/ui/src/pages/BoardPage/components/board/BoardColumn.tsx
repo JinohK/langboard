@@ -67,7 +67,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
         invariant(header);
         invariant(inner);
 
-        return columnRowDndHelpers.column<ProjectColumn.TModel>({
+        return columnRowDndHelpers.column({
             column,
             symbolSet: BOARD_DND_SYMBOL_SET,
             draggable: header,
@@ -92,7 +92,13 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
 
     return (
         <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={() => {}}>
-            <Card.Root ref={outerFullHeightRef} className={cn("my-1 w-72 flex-shrink-0 snap-center ring-primary sm:w-80", stateStyles[state.type])}>
+            <Card.Root
+                ref={outerFullHeightRef}
+                className={cn(
+                    "my-1 w-72 flex-shrink-0 snap-center shadow-md shadow-black/30 ring-primary dark:shadow-border/90 sm:w-80",
+                    stateStyles[state.type]
+                )}
+            >
                 <BoardColumnHeader isDragging={state.type !== "idle"} column={column} headerProps={{ ref: headerRef }} />
                 <ScrollArea.Root
                     viewportId={columnId}

@@ -48,7 +48,7 @@ const BotAppApiToken = memo(() => {
                     setRevealedToken(data.revealed_app_api_token);
                     setOpened(true);
                 }, 0);
-                return t("settings.successes.Bot App API token generated successfully.");
+                return t("successes.Bot App API token generated successfully.");
             },
             finally: () => {
                 setIsValidating(false);

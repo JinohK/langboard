@@ -7,6 +7,11 @@ from ...security import Auth
 from ...services import Service
 
 
+@AppRouter.api.get("/health", tags=["Global"], responses=OpenApiSchema().suc({}, 204).get())
+async def health_check() -> JsonResponse:
+    return JsonResponse(content={}, status_code=status.HTTP_204_NO_CONTENT)
+
+
 @AppRouter.api.get(
     "/global/internal-bot/{bot_uid}",
     tags=["Global"],

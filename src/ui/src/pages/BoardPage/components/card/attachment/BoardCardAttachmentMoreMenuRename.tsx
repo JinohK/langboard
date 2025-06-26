@@ -46,7 +46,7 @@ function BoardCardAttachmentMoreMenuRename(): JSX.Element {
                 return messageRef.message;
             },
             success: () => {
-                return t("card.successes.File name changed successfully.");
+                return t("successes.File name changed successfully.");
             },
             finally: () => {
                 endCallback(true);

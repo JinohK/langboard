@@ -1,5 +1,5 @@
 import { Box, Flex, Tooltip } from "@/components/base";
-import { IBaseModel, TBaseModelInstance } from "@/core/models/Base";
+import { IModelMap, TPickedModel } from "@/core/models/ModelRegistry";
 import { getTextColorFromHex } from "@/core/utils/ColorUtils";
 import { memo } from "react";
 
@@ -8,6 +8,11 @@ interface ILabelModel {
     color: string;
     description?: string;
 }
+
+export type TLabelModelName = {
+    [TKey in keyof IModelMap]: TPickedModel<TKey> extends ILabelModel ? TKey : never;
+}[keyof IModelMap];
+export type TLabelModel<TModelName extends TLabelModelName> = TPickedModel<TModelName>;
 
 export interface ILabelBadgeProps extends ILabelModel {
     textColor?: string;
@@ -62,7 +67,7 @@ export const LabelBadge = memo(({ name, color, textColor, description, noTooltip
 });
 
 export interface ILabelModelBadgeProps {
-    model: TBaseModelInstance<IBaseModel & ILabelModel>;
+    model: TLabelModel<TLabelModelName>;
 }
 
 export const LabelModelBadge = memo(({ model }: ILabelModelBadgeProps) => {

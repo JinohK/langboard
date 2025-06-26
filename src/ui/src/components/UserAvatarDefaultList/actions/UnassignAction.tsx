@@ -41,7 +41,7 @@ function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUser
             },
             success: () => {
                 setIsAssignee(() => false);
-                return t("board.successes.Unassigned successfully.");
+                return t("successes.Unassigned successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -56,13 +56,13 @@ function UserAvatarDefaultUnassignAction({ user, project, setIsAssignee }: IUser
             </Popover.Trigger>
             <Popover.Content className="z-[999999]" {...getAvatarHoverCardAttrs(user)}>
                 <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
-                    {t("board.Are you sure you want to unassign this assignee?")}
+                    {t("ask.Are you sure you want to unassign this assignee?")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("project.settings.All data will be lost.")}
+                    {t("common.deleteDescriptions.All data will be lost.")}
                 </Box>
                 <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
-                    {t("project.settings.This action cannot be undone.")}
+                    {t("common.deleteDescriptions.This action cannot be undone.")}
                 </Box>
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" onClick={() => setIsOpened(false)} size="sm" disabled={isValidating}>

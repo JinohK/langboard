@@ -73,7 +73,7 @@ function BoardCardAttachmentList(): JSX.Element {
             handle(error);
         };
 
-        return singleDndHelpers.root<ProjectCardAttachment.TModel>({
+        return singleDndHelpers.root({
             rowsMap: attachmentsMap,
             symbolSet: BOARD_CARD_ATTACHMENT_DND_SYMBOL_SET,
             settings: BOARD_CARD_ATTACHMENT_DND_SETTINGS,

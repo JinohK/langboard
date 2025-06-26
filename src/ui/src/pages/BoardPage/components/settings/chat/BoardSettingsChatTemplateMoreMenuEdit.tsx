@@ -55,7 +55,7 @@ function BoardSettingsChatTemplateMoreMenuEdit() {
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Chat template updated successfully.");
+                return t("successes.Chat template updated successfully.");
             },
             finally: () => {
                 endCallback(true);

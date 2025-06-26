@@ -16,7 +16,6 @@ import { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFil
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectCard, ProjectColumn } from "@/core/models";
 import useColumnReordered from "@/core/hooks/useColumnReordered";
 
 export function SkeletonBoard() {
@@ -104,7 +103,7 @@ export function Board() {
             handle(error);
         };
 
-        return columnRowDndHelpers.root<ProjectColumn.TModel, ProjectCard.TModel>({
+        return columnRowDndHelpers.root({
             columns,
             rowsMap: cardsMap,
             columnKeyInRow: "column_uid",

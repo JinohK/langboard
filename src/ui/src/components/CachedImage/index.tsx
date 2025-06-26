@@ -67,7 +67,17 @@ const CachedImage = memo(
         }, []);
 
         return <SuspenseComponent className={classNames}>{image}</SuspenseComponent>;
-    })
+    }),
+    (prev, next) => {
+        const checkableProps = ["src", "className", "size", "w", "h"] as const;
+        for (let i = 0; i < checkableProps.length; ++i) {
+            const key = checkableProps[i];
+            if (prev[key] !== next[key]) {
+                return false;
+            }
+        }
+        return true;
+    }
 );
 
 export default CachedImage;

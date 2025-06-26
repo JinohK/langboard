@@ -66,17 +66,19 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
     };
 
     return (
-        <Tabs.Root value={currentTab}>
-            <Tabs.List className="grid w-full grid-cols-4 gap-1">
-                {PROJECT_TABS.map((tab) => (
-                    <Tabs.Trigger value={tab} key={makeReactKey(`dashboard.tabs.${tab}`)} onClick={() => navigateToTab(tab)}>
-                        {t(`dashboard.tabs.${tab}`)}
-                    </Tabs.Trigger>
-                ))}
-            </Tabs.List>
+        <Tabs.Provider value={currentTab}>
+            <Box px="2">
+                <Tabs.List className="grid w-full grid-cols-4 gap-1">
+                    {PROJECT_TABS.map((tab) => (
+                        <Tabs.Trigger value={tab} key={makeReactKey(`dashboard.tabs.${tab}`)} onClick={() => navigateToTab(tab)}>
+                            {t(`dashboard.tabs.${tab}`)}
+                        </Tabs.Trigger>
+                    ))}
+                </Tabs.List>
+            </Box>
             <Tabs.Content value={currentTab}>
                 {currentProjects.length === 0 ? (
-                    <h2 className="pb-3 text-center text-lg text-accent-foreground">{t("dashboard.No projects found")}</h2>
+                    <h2 className="py-3 text-center text-lg text-accent-foreground">{t("dashboard.No projects found")}</h2>
                 ) : (
                     <ProjectList
                         projects={currentProjects}
@@ -88,7 +90,7 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
                     />
                 )}
             </Tabs.Content>
-        </Tabs.Root>
+        </Tabs.Provider>
     );
 });
 

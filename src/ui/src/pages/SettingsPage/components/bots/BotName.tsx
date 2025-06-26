@@ -42,7 +42,7 @@ const BotName = memo(() => {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("settings.successes.Bot name changed successfully.");
+                    return t("successes.Bot name changed successfully.");
                 },
                 finally: () => {
                     endCallback();

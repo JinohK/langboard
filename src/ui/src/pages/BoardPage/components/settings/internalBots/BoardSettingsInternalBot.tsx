@@ -38,7 +38,7 @@ const BoardSettingsInternalBot = memo(({ internalBot }: IBoardSettingsInternalBo
                 return messageRef.message;
             },
             success: () => {
-                return t("project.settings.successes.Internal bot changed successfully.");
+                return t("successes.Internal bot changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

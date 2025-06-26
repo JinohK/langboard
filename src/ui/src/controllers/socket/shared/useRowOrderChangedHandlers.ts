@@ -24,7 +24,7 @@ interface IMovedColumnRowOrderChangedResponse extends IBaseRowOrderChangedRespon
 export type TRowOrderChangedResponse = IInColumnRowOrderChangedResponse | IMovedColumnRowOrderChangedResponse;
 
 export interface IUseRowOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<TRowOrderChangedResponse> {
-    type: "ProjectCard" | "ProjectCardCheckitem";
+    type: "ProjectCard" | "ProjectCheckitem";
     params?: Record<string, string>;
     topicId: string;
 }
@@ -42,7 +42,7 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
             targetModelColumn = "column_uid";
             topic = ESocketTopic.Board;
             break;
-        case "ProjectCardCheckitem":
+        case "ProjectCheckitem":
             onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
             targetModel = ProjectCheckitem.Model;
             targetModelColumn = "checklist_uid";

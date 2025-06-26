@@ -40,7 +40,7 @@ const InternalBotDefault = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot default changed successfully.");
+                return t("successes.Internal bot default changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

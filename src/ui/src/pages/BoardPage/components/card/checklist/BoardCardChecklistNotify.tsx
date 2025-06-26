@@ -45,7 +45,7 @@ function BoardCardChecklistNotify() {
                     return messageRef.message;
                 },
                 success: () => {
-                    return t("card.successes.Notified members successfully.");
+                    return t("successes.Notified members successfully.");
                 },
                 finally: () => {
                     setIsValidating(false);

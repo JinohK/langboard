@@ -45,7 +45,7 @@ const InternalBotPlatformRunningType = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Internal bot platform running type changed successfully.");
+                return t("successes.Internal bot platform running type changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);

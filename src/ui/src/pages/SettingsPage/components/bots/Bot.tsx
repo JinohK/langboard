@@ -1,11 +1,11 @@
-import { Avatar, Box, Button, Flex, IconComponent, Toast } from "@/components/base";
+import { Avatar, Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteBot from "@/controllers/api/settings/bots/useDeleteBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBotProps {
@@ -16,6 +16,7 @@ const Bot = memo(({ bot }: IBotProps) => {
     const [t] = useTranslation();
     const { navigateRef, isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteBot(bot, { interceptToast: true });
+    const [isOpened, setIsOpened] = useState(false);
     const name = bot.useField("name");
     const uname = bot.useField("bot_uname");
     const avatar = bot.useField("avatar");
@@ -49,7 +50,7 @@ const Bot = memo(({ bot }: IBotProps) => {
                 return messageRef.message;
             },
             success: () => {
-                return t("settings.successes.Bot deleted successfully.");
+                return t("successes.Bot deleted successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -59,6 +60,14 @@ const Bot = memo(({ bot }: IBotProps) => {
 
     const toBotDetails = () => {
         navigateRef.current(ROUTES.SETTINGS.BOT_DETAILS(bot.uid));
+    };
+
+    const changeOpenState = (opened: boolean) => {
+        if (isValidating) {
+            return;
+        }
+
+        setIsOpened(opened);
     };
 
     return (
@@ -88,10 +97,38 @@ const Bot = memo(({ bot }: IBotProps) => {
                     </Box>
                 </Box>
             </Flex>
-            <Box>
-                <Button variant="destructive" size="icon-sm" disabled={isValidating} onClick={deleteBot}>
-                    <IconComponent icon="trash-2" size="5" />
-                </Button>
+            <Box
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }}
+            >
+                <Popover.Root open={isOpened} onOpenChange={changeOpenState}>
+                    <Popover.Trigger asChild>
+                        <Button variant="destructive" size="icon-sm" title={t("common.Delete")} titleSide="bottom" disabled={isValidating}>
+                            <IconComponent icon="trash-2" size="5" />
+                        </Button>
+                    </Popover.Trigger>
+                    <Popover.Content align="end">
+                        <Box mb="1" textSize={{ initial: "sm", sm: "base" }} weight="semibold" className="text-center">
+                            {t("ask.Are you sure you want to delete this bot?")}
+                        </Box>
+                        <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
+                            {t("common.deleteDescriptions.All data will be lost.")}
+                        </Box>
+                        <Box maxW="full" textSize="sm" weight="bold" className="text-center text-red-500">
+                            {t("common.deleteDescriptions.This action cannot be undone.")}
+                        </Box>
+                        <Flex items="center" justify="end" gap="1" mt="2">
+                            <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
+                                {t("common.Cancel")}
+                            </Button>
+                            <SubmitButton type="button" variant="destructive" size="sm" onClick={deleteBot} isValidating={isValidating}>
+                                {t("common.Delete")}
+                            </SubmitButton>
+                        </Flex>
+                    </Popover.Content>
+                </Popover.Root>
             </Box>
         </Flex>
     );
