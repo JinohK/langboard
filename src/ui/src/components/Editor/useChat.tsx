@@ -98,6 +98,10 @@ const createStream = ({ socket, eventKey, events, signal, key, send }: ICreateSt
                         callbacks: {
                             start: () => {},
                             buffer: (data: { message: string }) => {
+                                if (!data.message.length) {
+                                    return;
+                                }
+
                                 controller.enqueue(encoder.encode(`0:${JSON.stringify(data.message)}\n`));
                             },
                             end: (data: { message: string }) => {

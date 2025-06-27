@@ -13,10 +13,6 @@ export class ActivityModel extends BaseModel<TActivity> {
         return "ActivityModel" as const;
     }
 
-    constructor(model: Record<string, unknown>) {
-        super(model);
-    }
-
     public static convertModel(model: any): any {
         if (TypeUtils.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);

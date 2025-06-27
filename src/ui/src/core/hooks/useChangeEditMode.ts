@@ -30,6 +30,7 @@ export interface IUseChangeEditModeProps<TValue extends TValueType> {
     disableNewLine?: bool;
     canEmpty?: bool;
     isEditingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
+    onStopEditing?: () => void;
 }
 
 interface IUseChangeEditMode<TValue extends TValueType> {
@@ -53,6 +54,7 @@ const useChangeEditMode = <
     valueType,
     canEmpty = false,
     isEditingState,
+    onStopEditing,
 }: IUseChangeEditModeProps<TValue>): IUseChangeEditMode<TValue> => {
     const valueRef = useRef<TRef>((valueType === "editor" ? originalValue : undefined) as unknown as TRef);
     const [height, setHeight] = useState(0);
@@ -118,6 +120,7 @@ const useChangeEditMode = <
             }
 
             if ((!canEmpty && !value) || ((canEmpty || !!oldValue) && oldValue === value)) {
+                onStopEditing?.();
                 setIsEditing(() => false);
                 return;
             }
@@ -130,6 +133,7 @@ const useChangeEditMode = <
                 value = valueRef.current;
             }
 
+            onStopEditing?.();
             save(value as TValue extends "editor" ? IEditorContent : string, () => {
                 if (customStartEditing) {
                     return;

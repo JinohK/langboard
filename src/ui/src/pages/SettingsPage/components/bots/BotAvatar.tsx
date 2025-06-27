@@ -96,6 +96,7 @@ const BotAvatar = memo(() => {
                     initial: "lg",
                     md: "2xl",
                 }}
+                rootClassName="max-w-screen-xs"
                 onChange={onChange}
                 onDeleted={onDeleted}
             />

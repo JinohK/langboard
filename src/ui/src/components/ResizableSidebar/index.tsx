@@ -3,7 +3,7 @@ import { Box, Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ScreenMap } from "@/core/utils/VariantUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { createShortUUID, createUUID } from "@/core/utils/StringUtils";
 
 export interface IResizableSidebarProps {
     main: React.ReactNode;
@@ -159,11 +159,11 @@ function ResizableSidebar({
                 {main}
             </Box>
             <Floating.Button.Root fullScreen={floatingFullScreen} hidden={hidden}>
-                <Floating.Button.Content>
+                <Floating.Button.Content key={createUUID()}>
                     {floatingFullScreen && <Floating.Button.CloseButton />}
                     {isMobile && children}
                 </Floating.Button.Content>
-                <Floating.Button.Trigger icon={floatingIcon} title={floatingTitle} titleSide="right" />
+                <Floating.Button.Trigger key={createUUID()} icon={floatingIcon} title={floatingTitle} titleSide="right" />
             </Floating.Button.Root>
         </>
     );

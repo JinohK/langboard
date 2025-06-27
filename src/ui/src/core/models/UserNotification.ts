@@ -32,10 +32,6 @@ class UserNotification extends BaseModel<Interface> {
         return "UserNotification" as const;
     }
 
-    constructor(model: Record<string, unknown>) {
-        super(model);
-    }
-
     public static convertModel(model: Interface): Interface {
         if (TypeUtils.isString(model.read_at)) {
             model.read_at = new Date(model.read_at);

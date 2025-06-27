@@ -2,6 +2,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
+import * as InternalBotModel from "@/core/models/InternalBotModel";
 import { IBaseModel, BaseModel, TRoleAllGranted } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
@@ -32,7 +33,6 @@ import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDel
 import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 import useBoardChatTemplateCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatTemplateCreatedHandlers";
-import { InternalBotModel } from "@/core/models";
 
 export enum ERoleAction {
     Read = "read",

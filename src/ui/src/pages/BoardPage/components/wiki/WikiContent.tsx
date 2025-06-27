@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
-import { PlateEditor } from "@/components/Editor/plate-editor";
+import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -12,6 +12,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
+import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -45,6 +46,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
         [isPublic, assignedMembers, projectMembers, projectBots]
     );
     const content = wiki.useField("content");
+    const editorRef = useRef<TEditor>(null);
     const editorComponentRef = useRef<HTMLDivElement>(null);
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
@@ -83,6 +85,17 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
             });
         },
         originalValue: content,
+        onStopEditing: () => {
+            if (!editorRef.current) {
+                return;
+            }
+
+            const aiTransforms = editorRef.current.getTransforms(AIPlugin);
+            const aiChatApi = editorRef.current.getApi(AIChatPlugin);
+            aiChatApi.aiChat.stop();
+            aiTransforms.ai.undo();
+            aiChatApi.aiChat.hide();
+        },
     });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -131,6 +144,7 @@ const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
                     }}
                     placeholder={!isEditing ? t("wiki.No content") : undefined}
                     setValue={setValue}
+                    editorRef={editorRef}
                     editorComponentRef={editorComponentRef}
                 />
             </Box>

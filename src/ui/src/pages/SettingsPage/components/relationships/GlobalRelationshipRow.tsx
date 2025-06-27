@@ -1,4 +1,5 @@
 import { Checkbox, Table } from "@/components/base";
+import { IFlexProps } from "@/components/base/Flex";
 import { GlobalRelationshipType } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import GlobalRelationshipChildName from "@/pages/SettingsPage/components/relationships/GlobalRelationshipChildName";
@@ -6,14 +7,14 @@ import GlobalRelationshipDescription from "@/pages/SettingsPage/components/relat
 import GlobalRelationshipParentName from "@/pages/SettingsPage/components/relationships/GlobalRelationshipParentName";
 import { memo } from "react";
 
-export interface IGlobalRelationshipRowProps {
+export interface IGlobalRelationshipRowProps extends IFlexProps {
     globalRelationship: GlobalRelationshipType.TModel;
     selectedGlobalRelationships: string[];
     setSelectedGlobalRelationships: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const GlobalRelationshipRow = memo(
-    ({ globalRelationship, selectedGlobalRelationships, setSelectedGlobalRelationships }: IGlobalRelationshipRowProps) => {
+    ({ globalRelationship, selectedGlobalRelationships, setSelectedGlobalRelationships, ...props }: IGlobalRelationshipRowProps) => {
         const toggleSelect = () => {
             setSelectedGlobalRelationships((prev) => {
                 if (prev.some((value) => value === globalRelationship.uid)) {
@@ -25,16 +26,16 @@ const GlobalRelationshipRow = memo(
         };
 
         return (
-            <ModelRegistry.GlobalRelationshipType.Provider model={globalRelationship}>
-                <Table.Row>
-                    <Table.Cell className="w-12 text-center">
+            <Table.FlexRow {...props}>
+                <ModelRegistry.GlobalRelationshipType.Provider model={globalRelationship}>
+                    <Table.FlexCell className="w-12 text-center">
                         <Checkbox checked={selectedGlobalRelationships.some((value) => value === globalRelationship.uid)} onClick={toggleSelect} />
-                    </Table.Cell>
+                    </Table.FlexCell>
                     <GlobalRelationshipParentName />
                     <GlobalRelationshipChildName />
                     <GlobalRelationshipDescription />
-                </Table.Row>
-            </ModelRegistry.GlobalRelationshipType.Provider>
+                </ModelRegistry.GlobalRelationshipType.Provider>
+            </Table.FlexRow>
         );
     }
 );

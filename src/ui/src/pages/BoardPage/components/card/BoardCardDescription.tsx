@@ -1,5 +1,5 @@
 import { Box, Skeleton, Toast } from "@/components/base";
-import { PlateEditor } from "@/components/Editor/plate-editor";
+import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
@@ -8,6 +8,7 @@ import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
+import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
 import { memo, useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +27,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description", { interceptToast: true });
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+    const editorRef = useRef<TEditor>(null);
     const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const projectMembers = card.useForeignField("project_members");
     const projectBots = card.useForeignField("project_bots");
@@ -67,6 +69,17 @@ const BoardCardDescription = memo((): JSX.Element => {
             });
         },
         originalValue: description,
+        onStopEditing: () => {
+            if (!editorRef.current) {
+                return;
+            }
+
+            const aiTransforms = editorRef.current.getTransforms(AIPlugin);
+            const aiChatApi = editorRef.current.getApi(AIChatPlugin);
+            aiChatApi.aiChat.stop();
+            aiTransforms.ai.undo();
+            aiChatApi.aiChat.hide();
+        },
     });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -111,6 +124,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                 }}
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}
+                editorRef={editorRef}
                 editorComponentRef={editorComponentRef}
             />
         </Box>

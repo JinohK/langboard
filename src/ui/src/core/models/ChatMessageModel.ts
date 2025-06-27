@@ -20,10 +20,6 @@ class ChatMessageModel extends BaseModel<Interface> {
         return "ChatMessageModel" as const;
     }
 
-    constructor(model: Record<string, unknown>) {
-        super(model);
-    }
-
     public static convertModel(model: Interface): Interface {
         if (TypeUtils.isString(model.updated_at)) {
             model.updated_at = new Date(model.updated_at);

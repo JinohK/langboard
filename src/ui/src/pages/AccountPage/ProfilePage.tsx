@@ -64,9 +64,24 @@ function ProfilePage(): JSX.Element {
         <>
             <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight">{t("myAccount.Profile")}</h2>
             <Form.Root onSubmit={handleSubmit} ref={formRef}>
+                <Flex justify="center" mt="11">
+                    <AvatarUploader
+                        userInitials={createNameInitials(currentUser.firstname, currentUser.lastname)}
+                        initialAvatarUrl={currentUser.avatar}
+                        dataTransferRef={dataTransferRef}
+                        isDeletedRef={isAvatarDeletedRef}
+                        isValidating={isValidating}
+                        canRevertUrl
+                        rootClassName="max-w-screen-xs"
+                        avatarSize={{
+                            initial: "3xl",
+                            md: "4xl",
+                        }}
+                    />
+                </Flex>
                 <Flex
                     gap="10"
-                    mt="11"
+                    mt="6"
                     items={{
                         initial: "center",
                         md: "start",
@@ -79,18 +94,6 @@ function ProfilePage(): JSX.Element {
                         md: "center",
                     }}
                 >
-                    <AvatarUploader
-                        userInitials={createNameInitials(currentUser.firstname, currentUser.lastname)}
-                        initialAvatarUrl={currentUser.avatar}
-                        dataTransferRef={dataTransferRef}
-                        isDeletedRef={isAvatarDeletedRef}
-                        isValidating={isValidating}
-                        canRevertUrl
-                        avatarSize={{
-                            initial: "4xl",
-                            md: "5xl",
-                        }}
-                    />
                     <Flex direction="col" gap="4" w="full" className="max-w-sm">
                         <Label display="grid" w="full" items="center" gap="1.5">
                             <Box>{t("user.Username")}</Box>

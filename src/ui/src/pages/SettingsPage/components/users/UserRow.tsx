@@ -9,8 +9,9 @@ import UserActivation from "@/pages/SettingsPage/components/users/UserActivation
 import { memo } from "react";
 import UserMoreMenu from "@/pages/SettingsPage/components/users/UserMoreMenu";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { IFlexProps } from "@/components/base/Flex";
 
-export interface IUserRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+export interface IUserRowProps extends IFlexProps {
     user: User.TModel;
     selectedUsers: string[];
     setSelectedUsers: React.Dispatch<React.SetStateAction<string[]>>;

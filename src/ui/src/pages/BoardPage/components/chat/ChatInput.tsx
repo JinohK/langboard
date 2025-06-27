@@ -158,7 +158,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             w="full"
             py="1"
             position="relative"
-            className="min-h-[calc(theme(spacing.24)_-_1px)] border-t focus-within:ring-ring"
+            className="min-h-[calc(theme(spacing.24)_-_1px)] border-t bg-background focus-within:ring-ring"
         >
             <Flex
                 position="absolute"

@@ -22,6 +22,8 @@
   "Started": "Started",
   "Paused": "Paused",
   "Stopped": "Stopped",
+  "No cards": "No cards",
+  "No checkitems": "No checkitems",
   "Create New Project": "Create New Project",
   "My Activity": "My Activity"
 }

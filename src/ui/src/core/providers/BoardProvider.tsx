@@ -182,12 +182,12 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         }
 
         for (let i = 0; i < filters.members.length; ++i) {
-            const userUID = filters.members[i];
+            const userEmail = filters.members[i];
             let user;
-            if (userUID === "me") {
+            if (userEmail === "me") {
                 user = currentUser;
             } else {
-                user = project.all_members.find((member) => member.uid === userUID);
+                user = project.all_members.find((member) => member.email === userEmail);
             }
 
             if (!user) {

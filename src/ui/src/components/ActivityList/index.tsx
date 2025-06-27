@@ -79,8 +79,8 @@ function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, 
     return (
         <Box position="relative">
             {!activities.length && (
-                <Flex justify="center" items="center" h="full" key={createShortUUID()}>
-                    {t("activity.No Activities")}
+                <Flex justify="center" items="center" h="full">
+                    {t("activity.No activities")}
                 </Flex>
             )}
             <Box id={listIdRef.current} className={cn(infiniteScrollerClassName, "overflow-y-auto")} onScroll={checkOutdatedOnScroll}>

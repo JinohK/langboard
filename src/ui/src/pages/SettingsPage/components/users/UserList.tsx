@@ -1,7 +1,8 @@
-import { Box, Button, Checkbox, Flex, Loading } from "@/components/base";
+import { Box, Button, Checkbox, Flex, IconComponent, Loading } from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useSelectedUsersDeletedHandlers from "@/controllers/socket/settings/users/useSelectedUsersDeletedHandlers";
 import useUserCreatedHandlers from "@/controllers/socket/settings/users/useUserCreatedHandlers";
+import useScrollToTop from "@/core/hooks/useScrollToTop";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { User } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
@@ -40,6 +41,7 @@ function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
     const socket = useSocket();
     const { signOut } = useAuth();
     const { currentUser } = useAppSetting();
+    const { scrollableRef, isAtTop, scrollToTop } = useScrollToTop({});
     const {
         models: users,
         listIdRef,
@@ -52,7 +54,6 @@ function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
         checkOutdatedOnScroll,
     } = useRefreshableList<"User">();
     const virtualizerRef = useRef<ReturnType<typeof useVirtualizer>>(undefined);
-    const scrollableRef = useRef<HTMLDivElement>(null);
     const userCreatedHandlers = useMemo(
         () =>
             useUserCreatedHandlers({
@@ -102,9 +103,9 @@ function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
             <Box
                 id={listIdRef.current}
                 className={cn(
-                    "max-h-[calc(100vh_-_theme(spacing.44))]",
-                    "md:max-h-[calc(100vh_-_theme(spacing.48))]",
-                    "lg:max-h-[calc(100vh_-_theme(spacing.52))]",
+                    "max-h-[calc(100vh_-_theme(spacing.40))]",
+                    "md:max-h-[calc(100vh_-_theme(spacing.44))]",
+                    "lg:max-h-[calc(100vh_-_theme(spacing.48))]",
                     "overflow-y-auto"
                 )}
                 onScroll={checkOutdatedOnScroll}
@@ -150,9 +151,19 @@ function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
                     )}
                 </InfiniteScroller.Table.Default>
                 {!users.length && (
-                    <Flex justify="center" items="center" h="full" mt="2" key={createShortUUID()}>
-                        {t("settings.No Users")}
+                    <Flex justify="center" items="center" h="full" mt="2">
+                        {t("settings.No users")}
                     </Flex>
+                )}
+                {!isAtTop && (
+                    <Button
+                        onClick={scrollToTop}
+                        size="icon"
+                        variant="outline"
+                        className="absolute bottom-2 left-1/2 inline-flex -translate-x-1/2 transform rounded-full shadow-md"
+                    >
+                        <IconComponent icon="arrow-up" size="4" />
+                    </Button>
                 )}
             </Box>
         </Box>

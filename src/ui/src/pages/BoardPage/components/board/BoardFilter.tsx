@@ -56,14 +56,14 @@ function BoardFilter() {
                 <Flex items="center">
                     <Button
                         variant="ghost"
-                        className={cn("gap-1 px-2 text-xs xs:px-4 xs:text-sm", countAppliedFilters > 0 ? "rounded-e-none bg-accent/75 xs:pr-2" : "")}
+                        className={cn("gap-1 px-2 text-xs xs:px-4 xs:text-sm", countAppliedFilters > 0 ? "rounded-e-none bg-accent/55 xs:pr-2" : "")}
                     >
                         <IconComponent icon="filter" size={{ initial: "3", xs: "4" }} />
                         <span className="hidden xs:inline-block">{t("board.Filters")}</span>
                         {countAppliedFilters > 0 && <span className="pb-1 xs:pb-0.5">{` (${countAppliedFilters})`}</span>}
                     </Button>
                     {countAppliedFilters > 0 && (
-                        <Button variant="ghost" className="rounded-s-none bg-accent/75 px-2 py-1 text-xs xs:pr-4 xs:text-sm" onClick={clearFilters}>
+                        <Button variant="ghost" className="rounded-s-none bg-accent/55 px-2 py-1 text-xs xs:pr-4 xs:text-sm" onClick={clearFilters}>
                             <span className="pb-0.5 xs:pb-0">{t("board.filters.Clear")}</span>
                         </Button>
                     )}
@@ -191,7 +191,10 @@ function BoardExtendedFilter({ filterLangLabel, uncountableItems, filterName, cr
             <DropdownMenu.Trigger asChild>
                 <Button
                     variant="ghost"
-                    className={cn("group/extension mt-1 justify-between rounded-none p-3", countSelections > 0 ? "bg-accent/75" : "")}
+                    className={cn(
+                        "group/extension mt-1 justify-between rounded-none p-3 hover:bg-accent/80",
+                        countSelections > 0 ? "bg-accent/55" : ""
+                    )}
                 >
                     <span>
                         {t(`board.filters.${filterLangLabel}`)}
@@ -204,21 +207,28 @@ function BoardExtendedFilter({ filterLangLabel, uncountableItems, filterName, cr
                     />
                 </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="start" className="flex flex-col gap-2 p-0">
+            <DropdownMenu.Content align="start" className="flex flex-col p-0">
                 <ScrollArea.Root>
-                    <Flex direction="col" pr="2.5" position="relative" maxH="64" minW="56">
+                    <Flex
+                        direction="col"
+                        pr="2.5"
+                        position="relative"
+                        minW="56"
+                        className={cn(countSelections > 0 ? "max-h-[calc(theme(spacing.56)_-_theme(spacing.1))]" : "max-h-64")}
+                    >
                         {createFilterItems()}
-                        {countSelections > 0 && (
-                            <Button
-                                variant="ghost"
-                                className="sticky bottom-0 left-0 z-10 w-[calc(100%_+_theme(spacing.2))] rounded-none bg-background p-3"
-                                onClick={clearSelection}
-                            >
-                                {t("board.filters.Clear selections")}
-                            </Button>
-                        )}
                     </Flex>
                 </ScrollArea.Root>
+                {countSelections > 0 && (
+                    <Button
+                        variant="ghost"
+                        className="sticky bottom-0 left-0 z-10 gap-2 rounded-none bg-background p-3 pr-5 hover:bg-accent/80"
+                        onClick={clearSelection}
+                    >
+                        <IconComponent icon="x" size="4" />
+                        {t("board.filters.Clear selections")}
+                    </Button>
+                )}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     );
@@ -250,7 +260,7 @@ function BoardFilterItem({ name, value, children }: IBoardFilterItemProps) {
     };
 
     return (
-        <Label display="flex" cursor="pointer" items="center" gap="2" p="3" className="hover:bg-accent">
+        <Label display="flex" cursor="pointer" items="center" gap="2" p="3" className="hover:bg-accent/80">
             <Checkbox name={name as string} checked={checked} onCheckedChange={setFilterCards} />
             {children}
         </Label>

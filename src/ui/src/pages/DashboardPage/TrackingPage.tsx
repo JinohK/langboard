@@ -57,28 +57,35 @@ function TrackingPage(): JSX.Element {
     }, [mutateAsync, checkitems]);
 
     return (
-        <InfiniteScroller.Table.Default
-            columns={[
-                { name: t("dashboard.Checkitem"), className: "w-1/4 text-center" },
-                { name: t("dashboard.Card"), className: "w-1/4 text-center" },
-                { name: t("dashboard.Status"), className: "w-1/6 text-center" },
-                { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
-                { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
-            ]}
-            scrollable={() => document.getElementById("main")}
-            loadMore={nextPage}
-            hasMore={!isLastPage}
-            totalCount={checkitems.length}
-            loader={
-                <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
-                    <Loading size="3" variant="secondary" />
+        <>
+            <InfiniteScroller.Table.Default
+                columns={[
+                    { name: t("dashboard.Checkitem"), className: "w-1/4 text-center" },
+                    { name: t("dashboard.Card"), className: "w-1/4 text-center" },
+                    { name: t("dashboard.Status"), className: "w-1/6 text-center" },
+                    { name: t("dashboard.Started at"), className: "w-1/6 text-center" },
+                    { name: t("dashboard.Time taken"), className: "w-1/6 text-center" },
+                ]}
+                scrollable={() => document.getElementById("main")}
+                loadMore={nextPage}
+                hasMore={!isLastPage}
+                totalCount={checkitems.length}
+                loader={
+                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
+                        <Loading size="3" variant="secondary" />
+                    </Flex>
+                }
+            >
+                {checkitems.map((checkitem) => (
+                    <TrackingRow checkitem={checkitem} key={`tracking-list-${checkitem.uid}`} />
+                ))}
+            </InfiniteScroller.Table.Default>
+            {!checkitems.length && (
+                <Flex justify="center" items="center" h="full" mt="2">
+                    {t("dashboard.No checkitems")}
                 </Flex>
-            }
-        >
-            {checkitems.map((checkitem) => (
-                <TrackingRow checkitem={checkitem} key={`tracking-list-${checkitem.uid}`} />
-            ))}
-        </InfiniteScroller.Table.Default>
+            )}
+        </>
     );
 }
 

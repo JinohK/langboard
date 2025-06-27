@@ -1,4 +1,5 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
+import ComingSoon from "@/components/ComingSoon";
 import useDeleteSelectedSettings from "@/controllers/api/settings/useDeleteSelectedSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -77,5 +78,18 @@ function ApiKeysPage() {
         </>
     );
 }
+ApiKeysPage.displayName = "ApiKeysPage";
 
-export default ApiKeysPage;
+function CommingSoonApiKeysPage() {
+    const [t] = useTranslation();
+    return (
+        <>
+            <Flex justify="between" mb="4" pb="2" textSize="3xl" weight="semibold" className="scroll-m-20 tracking-tight">
+                <span className="w-36">{t("settings.API keys")}</span>
+            </Flex>
+            <ComingSoon />
+        </>
+    );
+}
+
+export default CommingSoonApiKeysPage;

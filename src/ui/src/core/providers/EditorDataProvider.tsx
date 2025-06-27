@@ -103,46 +103,18 @@ export const EditorDataProvider = ({
     uploadedCallback,
     children,
 }: TEditorDataProviderProps): React.ReactNode => {
-    const [baseSocketEvent, chatEventKey, copilotEventKey, commonSocketEventData] = useMemo(() => {
+    const [baseSocketEvent, chatEventKey, copilotEventKey] = useMemo(() => {
         switch (editorType) {
             case "card-description":
-                return [
-                    "board:card",
-                    `card-description-chat-${form.card_uid}`,
-                    `card-description-copilot-${form.card_uid}`,
-                    {
-                        project_uid: form.project_uid,
-                    },
-                ];
+                return ["board:card", `card-description-chat-${form.card_uid}`, `card-description-copilot-${form.card_uid}`];
             case "card-comment":
-                return [
-                    "board:card",
-                    `card-comment-chat-${form.comment_uid}`,
-                    `card-comment-copilot-${form.comment_uid}`,
-                    {
-                        project_uid: form.project_uid,
-                    },
-                ];
+                return ["board:card", `card-comment-chat-${form.comment_uid}`, `card-comment-copilot-${form.comment_uid}`];
             case "card-new-comment":
-                return [
-                    "board:card",
-                    `card-new-comment-chat-${form.card_uid}`,
-                    `card-new-comment-copilot-${form.card_uid}`,
-                    {
-                        project_uid: form.project_uid,
-                    },
-                ];
+                return ["board:card", `card-new-comment-chat-${form.card_uid}`, `card-new-comment-copilot-${form.card_uid}`];
             case "wiki-content":
-                return [
-                    "board:wiki",
-                    `wiki-content-chat-${form.wiki_uid}`,
-                    `wiki-content-copilot-${form.wiki_uid}`,
-                    {
-                        project_uid: form.project_uid,
-                    },
-                ];
+                return ["board:wiki", `wiki-content-chat-${form.wiki_uid}`, `wiki-content-copilot-${form.wiki_uid}`];
             default:
-                return [undefined, undefined, undefined, form];
+                return [undefined, undefined, undefined];
         }
     }, [editorType, form]);
     const socketEvents = useMemo(() => {
@@ -175,7 +147,7 @@ export const EditorDataProvider = ({
                 socketEvents,
                 chatEventKey,
                 copilotEventKey,
-                commonSocketEventData,
+                commonSocketEventData: form,
                 uploadPath,
                 uploadedCallback,
             }}

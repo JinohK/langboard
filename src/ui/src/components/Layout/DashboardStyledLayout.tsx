@@ -5,7 +5,8 @@ import ResizableSidebar, { IResizableSidebarProps } from "@/components/Resizable
 import Sidebar from "@/components/Sidebar";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
 import { cn } from "@/core/utils/ComponentUtils";
-import { Box, Flex, ScrollArea } from "@/components/base";
+import { Box, Button, Flex, IconComponent, ScrollArea } from "@/components/base";
+import useScrollToTop from "@/core/hooks/useScrollToTop";
 
 interface IBaseDashboardStyledLayoutProps {
     children: React.ReactNode;
@@ -46,9 +47,23 @@ export type TDashboardStyledLayoutProps =
 
 const DashboardStyledLayout = forwardRef<HTMLDivElement, TDashboardStyledLayoutProps>(
     ({ children, headerNavs, headerTitle, sidebarNavs, resizableSidebar, className, scrollAreaMutable, ...props }, ref) => {
+        const { scrollableRef, isAtTop, scrollToTop } = useScrollToTop({});
+
         const main = (
-            <ScrollArea.Root viewportId="main" mutable={scrollAreaMutable} className="relative size-full overflow-y-auto">
-                <main className={cn("relative size-full overflow-y-auto p-4 md:p-6 lg:p-8", className)}>{children}</main>
+            <ScrollArea.Root viewportId="main" mutable={scrollAreaMutable} className="relative size-full overflow-y-auto" viewportRef={scrollableRef}>
+                <main className={cn("relative size-full overflow-y-auto p-4 md:p-6 lg:p-8", className)}>
+                    {children}
+                    {!isAtTop && (
+                        <Button
+                            onClick={scrollToTop}
+                            size="icon"
+                            variant="outline"
+                            className="fixed bottom-2 left-1/2 inline-flex -translate-x-1/2 transform rounded-full shadow-md"
+                        >
+                            <IconComponent icon="arrow-up" size="4" />
+                        </Button>
+                    )}
+                </main>
             </ScrollArea.Root>
         );
 

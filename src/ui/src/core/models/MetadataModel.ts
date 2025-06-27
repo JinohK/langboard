@@ -13,10 +13,6 @@ class MetadataModel extends BaseModel<Interface> {
         return "MetadataModel" as const;
     }
 
-    constructor(model: Record<string, unknown>) {
-        super(model);
-    }
-
     public get type() {
         return this.getValue("type");
     }

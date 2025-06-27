@@ -32,9 +32,8 @@ const useInfiniteScrollerLoaderObserver = ({
     }, [hasMore, loadMore]);
     const setLoaderRef = useCallback(
         (node: HTMLDivElement | null) => {
-            if (observerRef.current) {
-                observerRef.current.disconnect();
-            }
+            observerRef.current?.disconnect();
+            observerRef.current = null;
 
             loaderRef.current = node;
             if (!node) {
@@ -73,6 +72,7 @@ const useInfiniteScrollerLoaderObserver = ({
 
         return () => {
             observerRef.current?.disconnect();
+            observerRef.current = null;
         };
     }, []);
 

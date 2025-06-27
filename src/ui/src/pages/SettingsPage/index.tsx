@@ -1,4 +1,3 @@
-import ComingSoon from "@/components/ComingSoon";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -19,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import UsersPage from "@/pages/SettingsPage/UsersPage";
+import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
 
 function SettingsProxy(): JSX.Element {
     const [t] = useTranslation();
@@ -126,7 +126,7 @@ function SettingsProxy(): JSX.Element {
     let skeletonContent;
     switch (pathname) {
         case ROUTES.SETTINGS.API_KEYS:
-            pageContent = <ComingSoon />;
+            pageContent = <ApiKeysPage />;
             skeletonContent = <></>;
             break;
         case ROUTES.SETTINGS.USERS:

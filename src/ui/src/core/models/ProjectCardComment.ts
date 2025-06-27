@@ -32,10 +32,6 @@ class ProjectCardComment extends BaseModel<IStore> {
         return "ProjectCardComment" as const;
     }
 
-    constructor(model: Record<string, unknown>) {
-        super(model);
-    }
-
     public static convertModel(model: Interface): Interface {
         if (TypeUtils.isString(model.commented_at)) {
             model.commented_at = new Date(model.commented_at);

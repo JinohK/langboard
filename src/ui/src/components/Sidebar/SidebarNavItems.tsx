@@ -1,6 +1,6 @@
 import { forwardRef, memo } from "react";
 import { ISidebarNavItem, TSidebarNavItemsProps } from "@/components/Sidebar/types";
-import { ButtonVariants, IconComponent, Tooltip } from "@/components/base";
+import { ButtonVariants, Floating, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
 
@@ -34,20 +34,22 @@ interface ISidebarNavItemProps {
 
 const FloatingNavItem = forwardRef<HTMLAnchorElement, ISidebarNavItemProps>(({ item, ...props }, ref): JSX.Element => {
     return (
-        <a
-            href={item.href}
-            onClick={item.onClick}
-            aria-current={item.current ? "page" : undefined}
-            className={ButtonVariants({
-                variant: "secondary",
-                size: "icon",
-                className: cn(item.current ? "bg-muted text-primary" : "", "size-12 cursor-pointer rounded-full opacity-50 sm:size-14"),
-            })}
-            ref={ref}
-            {...props}
-        >
-            <IconComponent icon={item.icon} size="6" strokeWidth="2" />
-        </a>
+        <Floating.Button.Item>
+            <a
+                href={item.href}
+                onClick={item.onClick}
+                aria-current={item.current ? "page" : undefined}
+                className={ButtonVariants({
+                    variant: "secondary",
+                    size: "icon",
+                    className: cn(item.current ? "bg-muted text-primary" : "", "size-14 cursor-pointer rounded-full opacity-70"),
+                })}
+                ref={ref}
+                {...props}
+            >
+                <IconComponent icon={item.icon} size="6" strokeWidth="2" />
+            </a>
+        </Floating.Button.Item>
     );
 });
 

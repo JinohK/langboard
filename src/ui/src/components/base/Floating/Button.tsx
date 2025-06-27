@@ -3,33 +3,42 @@ import Flex from "@/components/base/Flex";
 import IconComponent from "@/components/base/IconComponent";
 import { default as BaseButton, ButtonProps } from "@/components/base/Button";
 import { cn } from "@/core/utils/ComponentUtils";
+import { AnimatePresence, motion } from "framer-motion";
+import { FloatingButtonProvider, useFloatingButton } from "@/components/base/Floating/Provider";
 
 const Content = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className, ...props }, ref) => {
+    const { fullScreen, isOpened } = useFloatingButton();
+    const list = {
+        visible: {
+            opacity: 1,
+            display: "block",
+            transition: {
+                staggerChildren: 0.1,
+                staggerDirection: -1,
+            },
+        },
+        hidden: {
+            opacity: 0,
+            display: "none",
+            transition: {
+                when: "afterChildren",
+                staggerChildren: 0.1,
+            },
+        },
+    };
+
     return (
-        <Flex
-            direction="col"
-            items="center"
-            z="10"
-            className={cn(
-                "group-data-[fullscreen=false]/floating:absolute group-data-[fullscreen=false]/floating:bottom-16",
-                "group-data-[fullscreen=false]/floating:w-full group-data-[fullscreen=false]/floating:gap-1.5",
-                "sm:group-data-[fullscreen=false]/floating:mb-2",
-                "group-data-[fullscreen=true]/floating:fixed",
-                "group-data-[fullscreen=true]/floating:left-0 group-data-[fullscreen=true]/floating:top-0",
-                "group-data-[fullscreen=true]/floating:h-screen group-data-[fullscreen=true]/floating:w-screen",
-                "group-[:is([data-fullscreen='true'][data-expanded='true'])]/floating:translate-x-0",
-                "group-data-[fullscreen=true]/floating:-translate-x-full",
-                "group-data-[fullscreen=true]/floating:bg-background",
-                "group-data-[expanded=true]/floating:-translate-y-0 group-data-[expanded=true]/floating:scale-x-100",
-                "group-data-[expanded=true]/floating:opacity-90 [&>*]:group-data-[expanded=true]/floating:opacity-100",
-                "translate-y-full scale-x-0 opacity-0 transition-all duration-300 ease-out",
-                className
-            )}
-            {...props}
-            ref={ref}
+        <motion.ul
+            key="list"
+            className={cn("absolute bottom-16 z-10 flex flex-col items-center", fullScreen && "-bottom-2 -left-2")}
+            initial="hidden"
+            animate={isOpened ? "visible" : "hidden"}
+            variants={list}
         >
-            {children}
-        </Flex>
+            <Flex direction="col" items="center" gap="2" className={cn("bg-background/70", fullScreen && "h-screen w-screen")} {...props} ref={ref}>
+                {children}
+            </Flex>
+        </motion.ul>
     );
 });
 Content.displayName = "FloatingButton.Content";
@@ -38,54 +47,44 @@ interface IFloatingButtonTriggerProps extends ButtonProps {
     icon: string;
 }
 
-const setFloating = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const wrapper = event.currentTarget.closest(".floating-wrapper");
-    if (!wrapper) {
-        throw new Error("Floating button must be wrapped in a floating wrapper");
-    }
+const Trigger = forwardRef<HTMLButtonElement, IFloatingButtonTriggerProps>(({ icon, children, className, ...props }, ref) => {
+    const { isOpened, setIsOpened } = useFloatingButton();
+    const btn = {
+        visible: { rotate: "45deg" },
+        hidden: { rotate: 0 },
+    };
 
-    const isFloating = wrapper.getAttribute("data-expanded") === "true";
-
-    if (isFloating) {
-        wrapper.removeAttribute("data-expanded");
-    } else {
-        wrapper.setAttribute("data-expanded", "true");
-    }
-};
-
-const Trigger = forwardRef<HTMLButtonElement, IFloatingButtonTriggerProps>(({ icon, children, className, ...props }, ref) => (
-    <BaseButton
-        className={cn(
-            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:opacity-0",
-            "group-data-[expanded=true]/floating:rotate-45",
-            "h-14 w-14 rounded-full transition-transform duration-300 ease-in-out sm:h-16 sm:w-16",
-            className
-        )}
-        onClick={setFloating}
-        {...props}
-        ref={ref}
-    >
-        <IconComponent icon={icon} size="8" />
-    </BaseButton>
-));
+    return (
+        <BaseButton className={cn("size-14 rounded-full", className)} {...props} ref={ref}>
+            <motion.div
+                key="button"
+                variants={btn}
+                animate={isOpened ? "visible" : "hidden"}
+                onClick={() => setIsOpened(!isOpened)}
+                className="cursor-pointer"
+            >
+                <IconComponent icon={icon} size="8" />
+            </motion.div>
+        </BaseButton>
+    );
+});
 Trigger.displayName = "FloatingButton.Trigger";
 
-const CloseButton = forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, variant = "ghost", ...props }, ref) => (
-    <BaseButton
-        className={cn(
-            "absolute right-2 top-2 z-50 hidden h-8 w-8 p-0 opacity-0",
-            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:flex",
-            "group-[:is([data-fullscreen=true][data-expanded=true])]/floating:opacity-100",
-            className
-        )}
-        onClick={setFloating}
-        variant={variant}
-        {...props}
-        ref={ref}
-    >
-        <IconComponent icon="x" size="6" />
-    </BaseButton>
-));
+const CloseButton = forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, variant = "ghost", ...props }, ref) => {
+    const { setIsOpened } = useFloatingButton();
+    return (
+        <BaseButton
+            className={cn("absolute right-2 top-2 z-50", className)}
+            variant={variant}
+            size="icon-sm"
+            {...props}
+            onClick={() => setIsOpened(false)}
+            ref={ref}
+        >
+            <IconComponent icon="x" size="6" />
+        </BaseButton>
+    );
+});
 CloseButton.displayName = "FloatingButton.CloseButton";
 
 interface IFloatingRootProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -95,17 +94,27 @@ interface IFloatingRootProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Root = forwardRef<HTMLDivElement, IFloatingRootProps>(({ children, className, fullScreen = false, ...props }, ref) => {
     return (
-        <div
-            className={cn("floating-wrapper group/floating fixed bottom-2 left-2 z-50 inline-block md:hidden", className)}
-            data-fullscreen={fullScreen}
-            data-expanded={false}
-            {...props}
-            ref={ref}
-        >
-            {children}
-        </div>
+        <FloatingButtonProvider fullScreen={fullScreen}>
+            <div
+                className={cn("floating-wrapper group/floating fixed bottom-2 left-2 z-50 inline-block md:hidden", className)}
+                data-fullscreen={fullScreen}
+                data-expanded={false}
+                {...props}
+                ref={ref}
+            >
+                <AnimatePresence>{children}</AnimatePresence>
+            </div>
+        </FloatingButtonProvider>
     );
 });
 Root.displayName = "FloatingButton.Root";
 
-export { CloseButton, Content, Root, Trigger };
+function Item({ children }: { children: React.ReactNode }) {
+    const item = {
+        visible: { opacity: 1, y: 0 },
+        hidden: { opacity: 0, y: 5 },
+    };
+    return <motion.li variants={item}>{children}</motion.li>;
+}
+
+export { CloseButton, Content, Root, Trigger, Item };

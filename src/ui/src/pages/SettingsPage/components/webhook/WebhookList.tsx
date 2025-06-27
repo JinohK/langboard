@@ -1,6 +1,7 @@
-import { Checkbox, Flex, Loading, ScrollArea, Table } from "@/components/base";
+import { Box, Button, Checkbox, Flex, IconComponent, Loading } from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
+import useScrollToTop from "@/core/hooks/useScrollToTop";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -16,11 +17,11 @@ export interface IWebhookListProps {
 
 function WebhookList({ selectedWebhooks, setSelectedWebhooks }: IWebhookListProps) {
     const [t] = useTranslation();
+    const { scrollableRef, isAtTop, scrollToTop } = useScrollToTop({});
     const updater = useReducer((x) => x + 1, 0);
     const webhooks = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.WebhookUrl);
     const PAGE_SIZE = 30;
     const { items: urls, nextPage, hasMore } = useInfiniteScrollPager({ allItems: webhooks, size: PAGE_SIZE, updater });
-    const listId = "settings-webhook-url-list";
 
     const selectAll = () => {
         setSelectedWebhooks((prev) => {
@@ -33,54 +34,59 @@ function WebhookList({ selectedWebhooks, setSelectedWebhooks }: IWebhookListProp
     };
 
     return (
-        <>
-            <Table.Root>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.Head className="w-12 text-center">
-                            <Checkbox checked={!!urls.length && urls.length === selectedWebhooks.length} onClick={selectAll} />
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("settings.Name")}>
-                            {t("settings.Name")}
-                        </Table.Head>
-                        <Table.Head className="text-center" title={t("settings.URL")}>
-                            {t("settings.URL")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("settings.Created")}>
-                            {t("settings.Created")}
-                        </Table.Head>
-                        <Table.Head className="w-1/6 text-center" title={t("settings.Last Used")}>
-                            {t("settings.Last Used")}
-                        </Table.Head>
-                    </Table.Row>
-                </Table.Header>
-            </Table.Root>
-            <ScrollArea.Root viewportId={listId} mutable={urls}>
-                <InfiniteScroller.NoVirtual
-                    scrollable={() => document.getElementById(listId)}
+        <Box position="relative" h="full">
+            <Box
+                className={cn(
+                    "max-h-[calc(100vh_-_theme(spacing.40))]",
+                    "md:max-h-[calc(100vh_-_theme(spacing.44))]",
+                    "lg:max-h-[calc(100vh_-_theme(spacing.48))]",
+                    "overflow-y-auto"
+                )}
+                ref={scrollableRef}
+            >
+                <InfiniteScroller.Table.Default
+                    columns={[
+                        {
+                            name: <Checkbox checked={!!urls.length && urls.length === selectedWebhooks.length} onClick={selectAll} />,
+                            className: "w-12 text-center",
+                        },
+                        { name: t("settings.Name"), className: "w-1/6 text-center" },
+                        { name: t("settings.URL"), className: "w-[calc(calc(100%_/_6_*_3)_-_theme(spacing.12))] text-center" },
+                        { name: t("settings.Created"), className: "w-1/6 text-center" },
+                        { name: t("settings.Last Used"), className: "w-1/6 text-center" },
+                    ]}
+                    headerClassName="sticky top-0 z-50 bg-background"
+                    scrollable={() => scrollableRef.current}
                     loadMore={nextPage}
                     hasMore={hasMore}
+                    totalCount={urls.length}
                     loader={
                         <Flex justify="center" py="6" key={createShortUUID()}>
                             <Loading variant="secondary" />
                         </Flex>
                     }
-                    className={cn(
-                        "max-h-[calc(100vh_-_theme(spacing.52))]",
-                        "md:max-h-[calc(100vh_-_theme(spacing.56))]",
-                        "lg:max-h-[calc(100vh_-_theme(spacing.60))]"
-                    )}
                 >
-                    <Table.Root>
-                        <Table.Body>
-                            {urls.map((url) => (
-                                <WebhookRow key={url.uid} url={url} selectedWebhooks={selectedWebhooks} setSelectedWebhooks={setSelectedWebhooks} />
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
-                </InfiniteScroller.NoVirtual>
-            </ScrollArea.Root>
-        </>
+                    {urls.map((url) => (
+                        <WebhookRow key={url.uid} url={url} selectedWebhooks={selectedWebhooks} setSelectedWebhooks={setSelectedWebhooks} />
+                    ))}
+                </InfiniteScroller.Table.Default>
+                {!urls.length && (
+                    <Flex justify="center" items="center" h="full" mt="2">
+                        {t("settings.No global relationships")}
+                    </Flex>
+                )}
+                {!isAtTop && (
+                    <Button
+                        onClick={scrollToTop}
+                        size="icon"
+                        variant="outline"
+                        className="absolute bottom-2 left-1/2 inline-flex -translate-x-1/2 transform rounded-full shadow-md"
+                    >
+                        <IconComponent icon="arrow-up" size="4" />
+                    </Button>
+                )}
+            </Box>
+        </Box>
     );
 }
 

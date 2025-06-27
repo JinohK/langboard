@@ -52,7 +52,7 @@ function GlobalRelationshipChildName() {
     });
 
     return (
-        <Table.Cell className={cn("w-1/6 max-w-0 truncate text-center", isEditing && "py-0")}>
+        <Table.FlexCell className={cn("w-1/6 truncate text-center", isEditing && "pb-2.5 pt-[calc(theme(spacing.4)_-_2px)]")}>
             {!isEditing ? (
                 <Flex cursor="pointer" justify="center" items="center" gap="1" position="relative" onClick={() => changeMode("edit")}>
                     <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
@@ -87,7 +87,7 @@ function GlobalRelationshipChildName() {
                     }}
                 />
             )}
-        </Table.Cell>
+        </Table.FlexCell>
     );
 }
 

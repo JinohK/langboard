@@ -5,6 +5,8 @@ import { VariantProps } from "tailwind-variants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Avatar, Box, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
+import { ColorGenerator } from "@/core/utils/ColorUtils";
+import { cn } from "@/core/utils/ComponentUtils";
 
 interface IBaseAvatarUploaderProps {
     name?: string;
@@ -20,6 +22,7 @@ interface IBaseAvatarUploaderProps {
     avatarSize?: VariantProps<typeof AvatarVariants>["size"];
     hideDock?: bool;
     notInForm?: bool;
+    rootClassName?: string;
     onChange?: (files: File[] | FileList) => void;
     onDeleted?: () => void;
 }
@@ -50,6 +53,7 @@ function AvatarUploader({
     avatarSize = "2xl",
     hideDock = false,
     notInForm,
+    rootClassName,
     onChange,
     onDeleted,
 }: TAvatarUploaderProps): JSX.Element {
@@ -90,6 +94,12 @@ function AvatarUploader({
         onDrop: handleUpload,
         onFileDialogCancel: () => handleUpload([]),
     });
+    const [bgColor, textColor] = isBot ? ["", ""] : new ColorGenerator(userInitials).generateAvatarColor();
+
+    const styles: Record<string, string> = {
+        "--avatar-bg": bgColor,
+        "--avatar-text-color": textColor,
+    };
 
     const removeAvatar = () => {
         if (isValidating) {
@@ -127,23 +137,11 @@ function AvatarUploader({
     const avatar = (
         <>
             <Flex justify="center" position="relative" cursor="pointer" className="transition-all duration-200 hover:opacity-80">
-                {isDragActive && (
-                    <Flex
-                        items="center"
-                        justify="center"
-                        size="full"
-                        position="absolute"
-                        left="0"
-                        top="0"
-                        z="50"
-                        className="border-2 border-dashed border-primary bg-background"
-                    >
-                        {t("user.Drop avatar here")}
-                    </Flex>
-                )}
-                <Avatar.Root size={avatarSize} onClick={() => !isValidating && inputRef.current?.click()}>
+                <Avatar.Root size={avatarSize}>
                     <Avatar.Image src={avatarUrl} alt="" />
-                    <Avatar.Fallback className="text-4xl">{isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}</Avatar.Fallback>
+                    <Avatar.Fallback style={styles} className={cn("text-4xl", !isBot && "bg-[--avatar-bg] text-[--avatar-text-color]")}>
+                        {isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}
+                    </Avatar.Fallback>
                 </Avatar.Root>
                 {!notInForm ? <Form.Control asChild>{input}</Form.Control> : input}
             </Flex>
@@ -152,8 +150,22 @@ function AvatarUploader({
     );
 
     return (
-        <Box position="relative">
-            {!notInForm ? <Form.Field {...getRootProps({ name })}>{avatar}</Form.Field> : avatar}
+        <Box position="relative" w="full" className={rootClassName} {...getRootProps()}>
+            {isDragActive && (
+                <Flex
+                    items="center"
+                    justify="center"
+                    size="full"
+                    position="absolute"
+                    left="0"
+                    top="0"
+                    z="50"
+                    className="border-2 border-dashed border-primary bg-background/70"
+                >
+                    {t("user.Drop avatar here")}
+                </Flex>
+            )}
+            {!notInForm ? <Form.Field name={name}>{avatar}</Form.Field> : <Box>{avatar}</Box>}
             {!hideDock && (
                 <Dock.Root direction="middle" magnification={50} distance={100} size="sm">
                     <Dock.Button

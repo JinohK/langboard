@@ -20,6 +20,7 @@ class ProjectColumn extends BaseModel<IStore> {
 
     constructor(model: Record<string, unknown>) {
         super(model);
+
         this.subscribeSocketEvents([useBoardCardCreatedHandlers], {
             projectUID: this.project_uid,
             columnUID: this.uid,

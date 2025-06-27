@@ -10,6 +10,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { useNavigate } from "react-router-dom";
 import HeaderUserMenu from "@/components/Header/HeaderUserMenu";
 import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
+import UserPreferenceLanguageSwitcher from "@/components/LanguageSwitcher/UserPreference";
 
 function Header({ navs, title }: IHeaderProps) {
     const { currentUser } = useAuth();
@@ -24,6 +25,13 @@ function Header({ navs, title }: IHeaderProps) {
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6">
+            {!navs.length && (
+                <Flex className="flex md:hidden">
+                    <a onClick={toDashboard} className="flex size-6 cursor-pointer items-center gap-2 text-lg font-semibold md:text-base">
+                        <CachedImage src="/images/logo.png" alt="Logo" size="full" />
+                    </a>
+                </Flex>
+            )}
             <Flex
                 items="center"
                 gap={{
@@ -104,7 +112,11 @@ function Header({ navs, title }: IHeaderProps) {
                     md: "auto",
                 }}
             >
-                <LanguageSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
+                {currentUser ? (
+                    <UserPreferenceLanguageSwitcher currentUser={currentUser} variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
+                ) : (
+                    <LanguageSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
+                )}
                 {separator}
                 <ThemeSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
                 {currentUser ? (
