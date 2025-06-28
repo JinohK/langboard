@@ -25,8 +25,6 @@ export function TagElement(props: PlateElementProps<TTagElement> & TTagElementPr
         itemRemovedCallback?.(element);
     };
 
-    console.log(2, element);
-
     const badge = (
         <div
             className={cn(

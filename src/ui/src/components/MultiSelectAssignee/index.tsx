@@ -228,7 +228,7 @@ const Form = memo(
         }, [selectedValues, useEditorProps?.save]);
 
         return (
-            <Flex direction="col" py="4" gap="1">
+            <Flex direction="col" py="4" gap="2">
                 <Flex items="center" gap="1">
                     <SelectEditor
                         value={selectedValues}
