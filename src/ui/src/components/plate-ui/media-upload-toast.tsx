@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePluginOption } from "@udecode/plate/react";
-import { PlaceholderPlugin, UploadErrorCode } from "@udecode/plate-media/react";
+import * as React from "react";
+import { PlaceholderPlugin, UploadErrorCode } from "@platejs/media/react";
+import { usePluginOption } from "platejs/react";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 
-export const useUploadErrorToast = () => {
+export function MediaUploadToast() {
+    useUploadErrorToast();
+
+    return null;
+}
+
+const useUploadErrorToast = () => {
     const [t] = useTranslation();
 
     const uploadError = usePluginOption(PlaceholderPlugin, "error");
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (!uploadError) return;
 
         const { code, data } = uploadError;
@@ -67,10 +73,4 @@ export const useUploadErrorToast = () => {
             }
         }
     }, [uploadError]);
-};
-
-export const MediaUploadToast = () => {
-    useUploadErrorToast();
-
-    return null;
 };

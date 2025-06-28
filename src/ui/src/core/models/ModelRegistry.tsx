@@ -61,7 +61,8 @@ export type TCreatedAtModelName = {
 }[keyof IModelMap];
 export type TCreatedAtModel<TModelName extends TCreatedAtModelName> = TPickedModel<TModelName>;
 
-export type TUserLikeModel = TPickedModel<"AuthUser"> | TPickedModel<"User"> | TPickedModel<"BotModel">;
+export type TUserLikeModelName = "AuthUser" | "User" | "BotModel";
+export type TUserLikeModel = TPickedModel<TUserLikeModelName>;
 
 type TClass = abstract new (...args: any) => any;
 

@@ -67,7 +67,8 @@ function BoardCardChecklistNotify() {
                 className: cn(
                     "max-w-[calc(100vw_-_theme(spacing.20))]",
                     "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]",
+                    "min-w-[min(theme(spacing.20),100%)]"
                 ),
                 align: "start",
             }}
@@ -92,7 +93,9 @@ function BoardCardChecklistNotify() {
             addIconSize="5"
             saveText={t("card.Notify")}
             save={notify as TSaveHandler}
+            withUserGroups
             groups={groups}
+            filterGroupUser={(item: User.TModel) => item.isValidUser() && projectMembers.some((member) => member.uid === item.uid)}
             canEdit={canEdit}
         />
     );

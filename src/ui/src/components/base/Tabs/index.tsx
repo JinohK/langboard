@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { type VariantProps, tv } from "tailwind-variants";
 import { cn } from "@/core/utils/ComponentUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { composeRefs } from "@udecode/cn";
+import { composeRefs } from "@/core/utils/ComponentUtils";
 
 const TabsVariants = tv(
     {

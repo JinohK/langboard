@@ -1,6 +1,6 @@
 import { isValidURL } from "@/core/utils/StringUtils";
-import { convertNodesSerialize, MentionNode as IBaseMentionNode, MdLink, SerializeMdOptions } from "@udecode/plate-markdown";
-import { TMentionElement as IBaseMentionElement } from "@udecode/plate-mention";
+import { type TMentionElement } from "platejs";
+import { convertNodesSerialize, MentionNode as IBaseMentionNode, MdLink, SerializeMdOptions } from "@platejs/markdown";
 import type { Node, Parent, Link, RootContent } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
@@ -9,7 +9,7 @@ export interface IMentionNode extends IBaseMentionNode {
     uid: string;
 }
 
-export interface IMentionElement extends IBaseMentionElement {
+export interface IMentionElement extends TMentionElement {
     key: string;
 }
 
@@ -55,7 +55,7 @@ export const remark: Plugin = function () {
 
 export const rules = {
     mention: {
-        deserialize: (node: IMentionNode): IMentionElement => ({
+        deserialize: (node: IMentionNode): TMentionElement => ({
             children: [{ text: "" }],
             type: "mention",
             key: node.uid,

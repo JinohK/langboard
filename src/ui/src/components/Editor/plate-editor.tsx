@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { Plate } from "@udecode/plate/react";
+import { Plate } from "platejs/react";
 import { TUseCreateEditor, useCreateEditor } from "@/components/Editor/useCreateEditor";
 import { Editor, EditorContainer } from "@/components/plate-ui/editor";
 import { IEditorContent } from "@/core/models/Base";
@@ -68,25 +66,23 @@ function EditorWrapper({
 
     return (
         <FocusScope trapped={false} loop={false} className="w-full">
-            <DndProvider backend={HTML5Backend}>
-                <Plate
-                    editor={editor}
-                    readOnly={readOnly}
-                    onValueChange={(opts) => {
-                        if (readOnly) {
-                            return;
-                        }
+            <Plate
+                editor={editor}
+                readOnly={readOnly}
+                onValueChange={(opts) => {
+                    if (readOnly) {
+                        return;
+                    }
 
-                        setValue?.({
-                            content: opts.editor.api.markdown.serialize(),
-                        });
-                    }}
-                >
-                    <EditorContainer readOnly={readOnly}>
-                        <Editor variant={variant} className={className} placeholder={placeholder} ref={editorComponentRef} />
-                    </EditorContainer>
-                </Plate>
-            </DndProvider>
+                    setValue?.({
+                        content: opts.editor.api.markdown.serialize(),
+                    });
+                }}
+            >
+                <EditorContainer>
+                    <Editor variant={variant} className={className} placeholder={placeholder} readOnly={readOnly} ref={editorComponentRef} />
+                </EditorContainer>
+            </Plate>
         </FocusScope>
     );
 }

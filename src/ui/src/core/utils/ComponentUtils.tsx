@@ -1,12 +1,42 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringCase } from "@/core/utils/StringUtils";
 import TypeUtils from "@/core/utils/TypeUtils";
 import clsx, { ClassValue } from "clsx";
-import { cloneElement } from "react";
+import { cloneElement, forwardRef } from "react";
 import { createRoot } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
 
+type TPossibleRef<T> = React.Ref<T> | undefined;
+
 export function cn(...inputs: ClassValue[]): string {
     return twMerge(clsx(inputs.filter(Boolean).join(" ")));
+}
+
+function setRef<T>(ref: TPossibleRef<T>, value: T) {
+    if (TypeUtils.isFunction(ref)) {
+        ref(value);
+    } else if (!TypeUtils.isNullOrUndefined(ref)) {
+        ref.current = value;
+    }
+}
+
+export function composeRefs<T>(...refs: TPossibleRef<T>[]) {
+    return (node: T) => refs.forEach((ref) => setRef(ref, node));
+}
+
+export function withProps<T extends React.ElementType>(Component: T, defaultProps: Partial<React.ComponentPropsWithoutRef<T>>) {
+    const ComponentWithClassName = Component as React.FC<{ className?: string }>;
+
+    return forwardRef<React.ComponentRef<T>, React.ComponentPropsWithoutRef<T>>(function ExtendComponent(props, ref) {
+        const newProps: any = { ...defaultProps, ...props };
+        const className = cn((defaultProps as any).className, (props as any).className);
+
+        if (className) {
+            newProps.className = className;
+        }
+
+        return <ComponentWithClassName ref={ref} {...newProps} />;
+    });
 }
 
 export const measureComponentHeight = (element: React.ReactElement): Promise<number> =>

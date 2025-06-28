@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createSlatePlugin } from "@udecode/plate";
-import { type PlateLeafProps, PlateLeaf, toPlatePlugin } from "@udecode/plate/react";
-import { type DiffOperation, DiffUpdate, withGetFragmentExcludeDiff } from "@udecode/plate-diff";
-import { cn } from "@udecode/cn";
+import { createSlatePlugin } from "platejs";
+import { type PlateLeafProps, PlateLeaf, toPlatePlugin } from "platejs/react";
+import { type DiffOperation, DiffUpdate, withGetFragmentExcludeDiff } from "@platejs/diff";
+import { cn } from "@/core/utils/ComponentUtils";
 
 const diffOperationColors: Record<DiffOperation["type"], string> = {
     delete: "[&>*]:bg-destructive/70 [&_*]:line-through",

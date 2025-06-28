@@ -1,14 +1,13 @@
 "use client";
 
 import React from "react";
-import { type Value } from "@udecode/plate";
-import { type PlateProps, createPlateEditor, Plate, PlateContent, usePlateEditor } from "@udecode/plate/react";
-import { computeDiff } from "@udecode/plate-diff";
-import { getPlateComponents } from "@/components/Editor/useCreateEditor";
+import { type Value } from "platejs";
+import { type PlateProps, createPlateEditor, Plate, PlateContent, usePlateEditor } from "platejs/react";
+import { computeDiff } from "@platejs/diff";
 import { IEditorContent } from "@/core/models/Base";
 import { diffPlugins } from "@/components/Editor/plugins/diff-plugins";
-import { viewPlugins } from "@/components/Editor/plugins/editor-plugins";
-import { MarkdownPlugin } from "@udecode/plate-markdown";
+import { EditorKit } from "@/components/Editor/editor-kit";
+import { MarkdownPlugin } from "@platejs/markdown";
 import { cloneDeep } from "lodash";
 import { EditorDataProvider, TEditorDataProviderProps } from "@/core/providers/EditorDataProvider";
 import { Box, Collapsible } from "@/components/base";
@@ -18,7 +17,7 @@ import { useTranslation } from "react-i18next";
 function VersionHistory(props: Omit<PlateProps, "children">) {
     return (
         <Plate {...props}>
-            <PlateContent className="[&_table]:w-full [&_table]:max-w-full [&_table_td]:w-auto" />
+            <PlateContent className="[&_table]:ml-0 [&_table]:w-full [&_table]:max-w-full [&_table_td]:w-auto" />
         </Plate>
     );
 }
@@ -28,7 +27,7 @@ interface DiffProps {
     previous: Value;
 }
 
-const plugins = [...viewPlugins, ...diffPlugins];
+const plugins = [...EditorKit, ...diffPlugins];
 
 function Diff({ current, previous }: DiffProps) {
     const diffValue = React.useMemo(() => {
@@ -44,9 +43,6 @@ function Diff({ current, previous }: DiffProps) {
 
     const editor = usePlateEditor(
         {
-            override: {
-                components: getPlateComponents({ readOnly: true }),
-            },
             plugins,
             value: cloneDeep(diffValue),
         },
@@ -65,9 +61,6 @@ export interface IDefaultVersionHistoryPlateProps extends IBaseVersionHistoryPla
 
 export function VersionHistoryPlate({ oldValue, newValue, ...props }: IDefaultVersionHistoryPlateProps) {
     const revision = usePlateEditor({
-        override: {
-            components: getPlateComponents({ readOnly: true }),
-        },
         plugins,
     });
 
@@ -90,9 +83,6 @@ export const CollapsibleVersionHistoryPlate = ({ oldValue, newValue, maxShowLine
     const [t] = useTranslation();
     const revisionRef = React.useRef(
         usePlateEditor({
-            override: {
-                components: getPlateComponents({ readOnly: true }),
-            },
             plugins,
         })
     );

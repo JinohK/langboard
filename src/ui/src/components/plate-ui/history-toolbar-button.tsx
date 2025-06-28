@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEditorRef, useEditorSelector } from "@udecode/plate/react";
+import { useEditorRef, useEditorSelector } from "platejs/react";
 import { Redo2Icon, Undo2Icon } from "lucide-react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";

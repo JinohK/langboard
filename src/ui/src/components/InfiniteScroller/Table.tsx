@@ -5,7 +5,7 @@ import { Box, ScrollArea, Table } from "@/components/base";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
-import { composeRefs } from "@udecode/cn";
+import { composeRefs } from "@/core/utils/ComponentUtils";
 
 interface ITableColumn {
     name: React.ReactNode;

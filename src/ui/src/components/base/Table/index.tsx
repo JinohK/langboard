@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 import * as Tooltip from "@/components/base/Tooltip";
 import Flex, { IFlexProps } from "@/components/base/Flex";
-import { Box } from "@udecode/cn";
+import Box from "@/components/base/Box";
 
 const Root = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement> & { tableOnly?: bool }>(
     ({ className, tableOnly, ...props }, ref) => {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useIndentButton } from "@udecode/plate-indent/react";
-import { Indent } from "lucide-react";
+import * as React from "react";
+import { useIndentButton, useOutdentButton } from "@platejs/indent/react";
+import { IndentIcon, OutdentIcon } from "lucide-react";
 import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 
@@ -11,7 +12,18 @@ export function IndentToolbarButton(props: React.ComponentProps<typeof ToolbarBu
 
     return (
         <ToolbarButton {...props} {...buttonProps} tooltip={t("editor.Indent")}>
-            <Indent />
+            <IndentIcon />
+        </ToolbarButton>
+    );
+}
+
+export function OutdentToolbarButton(props: React.ComponentProps<typeof ToolbarButton>) {
+    const [t] = useTranslation();
+    const { props: buttonProps } = useOutdentButton();
+
+    return (
+        <ToolbarButton {...props} {...buttonProps} tooltip={t("editor.Outdent")}>
+            <OutdentIcon />
         </ToolbarButton>
     );
 }

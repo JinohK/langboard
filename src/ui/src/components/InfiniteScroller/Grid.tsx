@@ -2,7 +2,7 @@ import { cloneElement, forwardRef, isValidElement, useLayoutEffect, useRef, useS
 import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
-import { composeRefs } from "@udecode/cn";
+import { composeRefs } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import { Box } from "@/components/base";
 import TypeUtils from "@/core/utils/TypeUtils";

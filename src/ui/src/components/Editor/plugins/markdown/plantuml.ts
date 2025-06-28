@@ -1,7 +1,7 @@
 "use client";
 
 import type { Node, Parent } from "mdast";
-import { MdMath } from "@udecode/plate-markdown";
+import { MdMath } from "@platejs/markdown";
 import { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { TPlantUmlElement } from "@/components/Editor/plugins/plantuml-plugin";

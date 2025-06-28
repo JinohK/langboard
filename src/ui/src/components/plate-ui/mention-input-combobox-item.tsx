@@ -1,12 +1,12 @@
 "use client";
 
-import { getMentionOnSelectItem } from "@udecode/plate-mention";
+import { getMentionOnSelectItem } from "@platejs/mention";
 import { InlineComboboxItem } from "@/components/plate-ui/inline-combobox";
 import { BotModel, User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { PlateEditor } from "@udecode/plate/react";
-import { TMentionableUser } from "@/components/plate-ui/mention-input-element";
+import { PlateEditor } from "platejs/react";
+import type { TMentionableUser } from "@/components/plate-ui/mention-node";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { isModel } from "@/core/models/ModelRegistry";
 

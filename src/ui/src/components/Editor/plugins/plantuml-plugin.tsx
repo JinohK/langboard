@@ -1,8 +1,9 @@
 import TypeUtils from "@/core/utils/TypeUtils";
-import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, createSlatePlugin } from "@udecode/plate";
-import { toPlatePlugin } from "@udecode/plate/react";
+import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, createSlatePlugin } from "platejs";
+import { toPlatePlugin } from "platejs/react";
 import PlantUMLEncoder from "plantuml-encoder";
 import React from "react";
+import { PlantUmlElement } from "@/components/plate-ui/plantuml-element";
 
 export interface TPlantUmlElement extends TElement {
     umlCode: string;
@@ -22,13 +23,17 @@ export const insertPlantUML = (editor: SlateEditor, options?: InsertNodesOptions
         {
             children: [{ text: "" }],
             umlCode: "",
-            type: editor.getType(BasePlantUmlPlugin),
+            type: editor.getType(BasePlantUmlPlugin.key),
         },
         options
     );
 };
 
-export const PlantUmlPlugin = toPlatePlugin(BasePlantUmlPlugin);
+export const PlantUmlPlugin = toPlatePlugin(BasePlantUmlPlugin).configure({
+    node: {
+        component: PlantUmlElement,
+    },
+});
 
 export const usePlantUmlElement = ({ umlCode }: { umlCode?: string }) => {
     const [src, setSrc] = React.useState<string | null>(null);

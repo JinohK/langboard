@@ -17,11 +17,14 @@ import { useTranslation } from "react-i18next";
 import { IUserAvatarListProps, UserAvatarList } from "@/components/UserAvatarList";
 import { TIconProps } from "@/components/base/IconComponent";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { TUserLikeModel } from "@/core/models/ModelRegistry";
+import { ModelRegistry, TUserLikeModelName, TUserLikeModel, isModel } from "@/core/models/ModelRegistry";
 
-export type TAssigneeSelecItem = TSelectItem & {
-    assignee: TUserLikeModel;
+type TBaseAssigneeSelectItem = {
+    assigneeModelName: TUserLikeModelName;
+    assigneeUID: string;
 };
+
+export type TAssigneeSelecItem = TSelectItem & TBaseAssigneeSelectItem;
 
 export type TSaveHandler =
     | ((assignees: TUserLikeModel[]) => void)
@@ -34,7 +37,8 @@ const createAssigneeSelectItemCreator =
     (item: TUserLikeModel): TAssigneeSelecItem => ({
         value: createSearchText(item),
         label: createLabel(item),
-        assignee: item,
+        assigneeModelName: item.MODEL_NAME as TUserLikeModelName,
+        assigneeUID: item.uid,
     });
 
 export interface IPopoverProps
@@ -138,7 +142,7 @@ const PopoverInner = memo((props: IPopoverProps) => {
 });
 
 export interface IFormProps {
-    TagContent?: React.ComponentType<TAssigneeSelecItem & { assignee: TUserLikeModel; label?: string; readOnly: bool } & Record<string, unknown>>;
+    TagContent?: React.ComponentType<TAssigneeSelecItem & TBaseAssigneeSelectItem & { label?: string; readOnly: bool } & Record<string, unknown>>;
     tagContentProps?: Record<string, unknown>;
     allSelectables: TUserLikeModel[];
     originalAssignees: TUserLikeModel[];
@@ -172,21 +176,38 @@ const Form = memo(
     }: IFormProps) => {
         const [t] = useTranslation();
         const createAssigneeSelectItem = createAssigneeSelectItemCreator(createSearchText, createLabel);
-        const selectables = useMemo<TAssigneeSelecItem[]>(() => allSelectables.map(createAssigneeSelectItem), [allSelectables]);
+        const [selectables, selectablesMap] = useMemo(() => {
+            const list: TAssigneeSelecItem[] = [];
+            const map: Record<string, TUserLikeModel> = {};
+            for (let i = 0; i < allSelectables.length; ++i) {
+                const selectable = allSelectables[i];
+                list.push(createAssigneeSelectItem(selectable));
+                map[`${selectable.MODEL_NAME}_${selectable.uid}`] = selectable;
+            }
+            return [list, map];
+        }, [allSelectables]);
         const [selectedValues, setSelectedValues] = useState<TAssigneeSelecItem[]>(originalAssignees.map(createAssigneeSelectItem));
+        const getSelectable = useCallback(
+            (item: TAssigneeSelecItem) => {
+                return selectablesMap[`${item.assigneeModelName}_${item.assigneeUID}`];
+            },
+            [selectablesMap]
+        );
 
         useEffect(() => {
             const newSelectedAssignees = originalAssignees.map(createAssigneeSelectItem);
 
             setSelectedValues(newSelectedAssignees);
-            useEditorProps?.onValueChange?.(newSelectedAssignees.map((item) => item.assignee) as any);
+            useEditorProps?.onValueChange?.(originalAssignees as any);
         }, [originalAssignees, useEditorProps?.onValueChange]);
 
         const handleValueChange = useCallback(
             (items: TSelectItem[]) => {
                 if (useEditorProps) {
                     setSelectedValues(items as TAssigneeSelecItem[]);
-                    useEditorProps.onValueChange?.(items.map((item) => (item.isNew ? item.value : (item as TAssigneeSelecItem).assignee)) as any);
+                    useEditorProps.onValueChange?.(
+                        items.map((item) => (item.isNew ? item.value : getSelectable(item as TAssigneeSelecItem))).filter((item) => !!item) as any
+                    );
                 }
             },
             [setSelectedValues, useEditorProps?.onValueChange]
@@ -202,7 +223,7 @@ const Form = memo(
                 return;
             }
 
-            await useEditorProps.save(selectedValues.map((item) => (item.isNew ? item.value : item.assignee)) as any);
+            await useEditorProps.save(selectedValues.map((item) => (item.isNew ? item.value : getSelectable(item))).filter((item) => !!item) as any);
             useEditorProps.setReadOnly(true);
         }, [selectedValues, useEditorProps?.save]);
 
@@ -261,14 +282,32 @@ const Form = memo(
     }
 );
 
-function FormTagContent({ assignee, ...props }: TAssigneeSelecItem & { readOnly: bool; label?: string } & Record<string, unknown>) {
-    const Comp = assignee?.MODEL_NAME === BotModel.Model.MODEL_NAME ? MultiSelectBotTagContent : MultiSelectUserTagContent;
+function FormTagContent({
+    assigneeModelName,
+    assigneeUID,
+    ...props
+}: TAssigneeSelecItem & { readOnly: bool; label?: string } & Record<string, unknown>) {
+    if (!assigneeModelName || !assigneeUID) {
+        return props.value;
+    }
+
+    const model = ModelRegistry[assigneeModelName];
+    if (!model) {
+        return props.value;
+    }
+
+    const assignee = model.Model.getModel(assigneeUID);
+    if (!assignee) {
+        return props.value;
+    }
+
+    const Comp = isModel(model, "BotModel") ? MultiSelectBotTagContent : MultiSelectUserTagContent;
 
     if (props.isNew) {
         return props.value;
     }
 
-    return <Comp assignee={assignee as User.TModel & BotModel.TModel} {...props} />;
+    return <Comp assignee={assignee as any} {...props} />;
 }
 
 function MultiSelectBotTagContent({
@@ -276,7 +315,10 @@ function MultiSelectBotTagContent({
     label,
     readOnly,
     ...props
-}: TAssigneeSelecItem & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
+}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<
+        string,
+        unknown
+    >) {
     const name = assignee.useField("name");
     const botUname = assignee.useField("bot_uname");
 
@@ -292,7 +334,7 @@ function MultiSelectUserTagContent({
     label,
     readOnly,
     ...props
-}: TAssigneeSelecItem & { assignee: User.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
+}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { assignee: User.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
     const firstname = assignee.useField("firstname");
     const lastname = assignee.useField("lastname");
 
@@ -325,7 +367,7 @@ function UserGroupSelectDropdownMenu({
         for (let i = 0; i < groups.length; ++i) {
             const group = groups[i];
             const users = [...group.users].filter(
-                (user) => (filterGroupUser?.(user) ?? true) && !selectedValues.some((item) => item.assignee?.uid === user.uid)
+                (user) => (filterGroupUser?.(user) ?? true) && !selectedValues.some((item) => item.assigneeUID === user.uid)
             );
 
             if (users.length > 0) {

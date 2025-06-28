@@ -1,5 +1,5 @@
-import { SlateEditor } from "@udecode/plate";
-import { deserializeInlineMd, deserializeMd, DeserializeMdOptions } from "@udecode/plate-markdown";
+import { SlateEditor } from "platejs";
+import { deserializeInlineMd, deserializeMd, DeserializeMdOptions } from "@platejs/markdown";
 
 const escapeNonHtmlAngles = (str: string): string => {
     const htmlTagRegex = /^<\/?[a-zA-Z][\w:-]*(\s+[a-zA-Z_:][\w:.-]*(\s*=\s*(".*?"|'.*?'|[^'"<>\s]+))?)*\s*\/?>/;
@@ -48,9 +48,39 @@ const escapeNonHtmlAngles = (str: string): string => {
     return result;
 };
 
-export const deserialize = (isInline: bool) => (editor: SlateEditor, text: string, options?: DeserializeMdOptions) => {
-    // remove invalid html tags without valid html tags
+const splitMathBlocks = (text: string): { isMath: boolean; content: string }[] => {
+    const blocks: { isMath: boolean; content: string }[] = [];
+    const mathBlockRegex = /(```math[\s\S]*?```|\$\$[\s\S]*?\$\$)/g;
+    let lastIndex = 0;
+    let match;
 
+    while ((match = mathBlockRegex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            blocks.push({
+                isMath: false,
+                content: text.slice(lastIndex, match.index),
+            });
+        }
+
+        blocks.push({
+            isMath: true,
+            content: match[0],
+        });
+
+        lastIndex = mathBlockRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        blocks.push({
+            isMath: false,
+            content: text.slice(lastIndex),
+        });
+    }
+
+    return blocks;
+};
+
+export const deserialize = (isInline: boolean) => (editor: SlateEditor, text: string, options?: DeserializeMdOptions) => {
     const HTML_TAGS = new Set([
         "a",
         "abbr",
@@ -126,31 +156,38 @@ export const deserialize = (isInline: bool) => (editor: SlateEditor, text: strin
         "wbr",
     ]);
 
-    const tagLikeRegex = /(?<!\\)<[^>]+>/g;
-    let lastIndex = 0;
-    let match;
-    let newText = "";
+    const escapeNonMathContent = (text: string): string => {
+        const tagLikeRegex = /(?<!\\)<[^>]+>/g;
+        let lastIndex = 0;
+        let match;
+        let newText = "";
 
-    while ((match = tagLikeRegex.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-            newText += text.slice(lastIndex, match.index);
-        }
+        while ((match = tagLikeRegex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                newText += text.slice(lastIndex, match.index);
+            }
 
-        const tag = match[0];
-        const tagName = tag.replace(/<|\/|>/g, "").split(" ")[0];
+            const tag = match[0];
+            const tagName = tag.replace(/<|\/|>/g, "").split(" ")[0];
 
-        if (HTML_TAGS.has(tagName)) {
-            newText += tag;
+            if (HTML_TAGS.has(tagName)) {
+                newText += tag;
+                lastIndex = match.index + tag.length;
+                continue;
+            }
+
+            const newTag = tag.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            newText += newTag;
             lastIndex = match.index + tag.length;
-            continue;
         }
 
-        const newTag = tag.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        newText += newTag;
-        lastIndex = match.index + tag.length;
-    }
+        newText += text.slice(lastIndex);
+        return escapeNonHtmlAngles(newText);
+    };
 
-    newText = newText + text.slice(lastIndex);
-    newText = escapeNonHtmlAngles(newText);
-    return isInline ? deserializeInlineMd(editor, newText, options) : deserializeMd(editor, newText, options);
+    // math block 단위로 나눠서 처리
+    const segments = splitMathBlocks(text);
+    const processed = segments.map(({ isMath, content }) => (isMath ? content : escapeNonMathContent(content))).join("");
+
+    return isInline ? deserializeInlineMd(editor, processed, options) : deserializeMd(editor, processed, options);
 };

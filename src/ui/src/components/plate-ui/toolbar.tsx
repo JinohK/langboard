@@ -6,7 +6,7 @@ import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import { type VariantProps, cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import { DropdownMenu, Separator, Tooltip } from "@/components/base";
-import { cn } from "@udecode/cn";
+import { cn } from "@/core/utils/ComponentUtils";
 
 export function Toolbar({ className, ...props }: React.ComponentProps<typeof ToolbarPrimitive.Root>) {
     return <ToolbarPrimitive.Root className={cn("relative flex select-none items-center", className)} {...props} />;
@@ -70,8 +70,8 @@ const dropdownArrowVariants = cva(
 );
 
 type ToolbarButtonProps = {
-    isDropdown?: bool;
-    pressed?: bool;
+    isDropdown?: boolean;
+    pressed?: boolean;
 } & Omit<React.ComponentPropsWithoutRef<typeof ToolbarToggleItem>, "asChild" | "value"> &
     VariantProps<typeof toolbarButtonVariants>;
 
@@ -192,7 +192,7 @@ export function ToolbarGroup({ children, className }: React.ComponentProps<"div"
         <div className={cn("group/toolbar-group", "relative hidden has-[button]:flex", className)}>
             <div className="flex items-center">{children}</div>
 
-            <div className="group-last/toolbar-group:hidden! mx-1.5 py-0.5">
+            <div className="mx-1.5 py-0.5 group-last/toolbar-group:!hidden">
                 <Separator orientation="vertical" />
             </div>
         </div>

@@ -2,8 +2,9 @@ import { forwardRef, useEffect } from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
-import { Box, composeRefs } from "@udecode/cn";
+import { composeRefs } from "@/core/utils/ComponentUtils";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Box } from "@/components/base";
 
 export interface IDefaultInfiniteScrollerProps extends TSharedInfiniteScrollerProps<React.ReactElement> {
     as?: React.ElementType;
@@ -92,7 +93,7 @@ const DefaultInfiniteScroller = forwardRef<HTMLElement, IDefaultInfiniteScroller
                     style={{
                         transform: `translateY(${loaderY}px)`,
                     }}
-                    ref={composeRefs(setLoaderRef, virtualizer.measureElement)}
+                    ref={composeRefs<HTMLDivElement>(setLoaderRef, virtualizer.measureElement)}
                 >
                     {loader}
                 </Box>

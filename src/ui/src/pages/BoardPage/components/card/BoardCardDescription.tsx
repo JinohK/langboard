@@ -8,7 +8,7 @@ import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { AIChatPlugin, AIPlugin } from "@udecode/plate-ai/react";
+import { AIChatPlugin, AIPlugin } from "@platejs/ai/react";
 import { memo, useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 

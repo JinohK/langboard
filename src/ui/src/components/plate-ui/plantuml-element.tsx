@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@udecode/cn";
-import { PlateElement, PlateElementProps } from "@udecode/plate/react";
+import { cn } from "@/core/utils/ComponentUtils";
+import { PlateElement, PlateElementProps } from "platejs/react";
 import { Flex, IconComponent } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -10,17 +10,18 @@ import PlantUmlDialog from "@/components/plate-ui/plantuml-dialog";
 
 export function PlantUmlElement(props: PlateElementProps<TPlantUmlElement>) {
     const [t] = useTranslation();
-    const { element } = props;
+    const { editor, element } = props;
     const [isDialogOpened, setIsDialogOpened] = useState(false);
-    const [umlCode, setUmlCode] = useState(element.umlCode?.trim());
-    const { src } = usePlantUmlElement({ umlCode: umlCode });
+    const { src } = usePlantUmlElement({ umlCode: element.umlCode });
 
     const changeUmlCode = (value: string) => {
-        element.umlCode = value;
-        setUmlCode(value);
+        editor.tf.setNodes({ umlCode: value }, { at: element });
     };
 
-    const triggerClassNames = cn("cursor-pointer select-none transition-all hover:bg-primary/10", umlCode ? "px-2 py-1" : "bg-muted p-3 pr-9");
+    const triggerClassNames = cn(
+        "cursor-pointer select-none transition-all hover:bg-primary/10",
+        element.umlCode ? "px-2 py-1" : "bg-muted p-3 pr-9"
+    );
 
     return (
         <>

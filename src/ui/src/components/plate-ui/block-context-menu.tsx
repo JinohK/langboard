@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ParagraphPlugin, useEditorPlugin, useEditorSelector } from "@udecode/plate/react";
-import { AIChatPlugin } from "@udecode/plate-ai/react";
-import { BlockquotePlugin } from "@udecode/plate-block-quote/react";
-import { HEADING_KEYS } from "@udecode/plate-heading";
-import { IndentListPlugin } from "@udecode/plate-indent-list/react";
-import { BLOCK_CONTEXT_MENU_ID, BlockMenuPlugin, BlockSelectionPlugin, useBlockSelectionNodes } from "@udecode/plate-selection/react";
+import { useEditorPlugin, useEditorSelector } from "platejs/react";
+import { AIChatPlugin } from "@platejs/ai/react";
+import { KEYS } from "platejs";
+import { BLOCK_CONTEXT_MENU_ID, BlockMenuPlugin, BlockSelectionPlugin, useBlockSelectionNodes } from "@platejs/selection/react";
 import { useIsTouchDevice } from "@/core/hooks/useIsTouchDevice";
 import { ContextMenu } from "@/components/base";
-import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@udecode/plate-table/react";
+import { TableCellPlugin, TablePlugin, TableRowPlugin } from "@platejs/table/react";
 import { useTranslation } from "react-i18next";
 
 type Value = "askAI" | null;
@@ -30,8 +28,8 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                 .getApi(BlockSelectionPlugin)
                 .blockSelection.getNodes()
                 .forEach(([node, path]) => {
-                    if (node[IndentListPlugin.key]) {
-                        editor.tf.unsetNodes([IndentListPlugin.key, "indent"], {
+                    if (node[KEYS.listType]) {
+                        editor.tf.unsetNodes([KEYS.listType, "indent"], {
                             at: path,
                         });
                     }
@@ -115,12 +113,12 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                     <ContextMenu.Sub>
                         <ContextMenu.SubTrigger disabled={tableSelected}>{t("editor.Turn into")}</ContextMenu.SubTrigger>
                         <ContextMenu.SubContent className="w-48">
-                            <ContextMenu.Item onClick={() => handleTurnInto(ParagraphPlugin.key)}>{t("editor.Paragraph")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(KEYS.p)}>{t("editor.Paragraph")}</ContextMenu.Item>
 
-                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h1)}>{t("editor.Heading 1")}</ContextMenu.Item>
-                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h2)}>{t("editor.Heading 2")}</ContextMenu.Item>
-                            <ContextMenu.Item onClick={() => handleTurnInto(HEADING_KEYS.h3)}>{t("editor.Heading 3")}</ContextMenu.Item>
-                            <ContextMenu.Item onClick={() => handleTurnInto(BlockquotePlugin.key)}>{t("editor.Blockquote")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(KEYS.h1)}>{t("editor.Heading 1")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(KEYS.h2)}>{t("editor.Heading 2")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(KEYS.h3)}>{t("editor.Heading 3")}</ContextMenu.Item>
+                            <ContextMenu.Item onClick={() => handleTurnInto(KEYS.blockquote)}>{t("editor.Blockquote")}</ContextMenu.Item>
                         </ContextMenu.SubContent>
                     </ContextMenu.Sub>
                 </ContextMenu.Group>

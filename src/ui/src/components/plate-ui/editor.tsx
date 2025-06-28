@@ -2,9 +2,9 @@
 "use client";
 
 import React from "react";
-import { type PlateContentProps, PlateContent, useEditorContainerRef, useEditorRef } from "@udecode/plate/react";
+import { type PlateContentProps, PlateContainer, PlateContent } from "platejs/react";
 import type { VariantProps } from "class-variance-authority";
-import { cn } from "@udecode/cn";
+import { cn } from "@/core/utils/ComponentUtils";
 import { cva } from "class-variance-authority";
 
 const editorContainerVariants = cva(
@@ -16,7 +16,6 @@ const editorContainerVariants = cva(
         variants: {
             variant: {
                 default: "h-full",
-                demo: "h-[650px]",
                 select: cn(
                     "group rounded-md border border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
                     "has-data-readonly:w-fit has-data-readonly:cursor-default has-data-readonly:border-transparent has-data-readonly:focus-within:[box-shadow:none]"
@@ -26,53 +25,9 @@ const editorContainerVariants = cva(
     }
 );
 
-export const EditorContainer = ({
-    className,
-    variant,
-    readOnly,
-    ...props
-}: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof editorContainerVariants> & { readOnly?: bool }) => {
-    const editor = useEditorRef();
-    const containerRef = useEditorContainerRef();
-
-    let afterContainer: React.ReactNode = null;
-    let beforeContainer: React.ReactNode = null;
-
-    editor.pluginList.forEach((plugin) => {
-        const { render: { afterContainer: AfterContainer, beforeContainer: BeforeContainer } = {} } = plugin;
-
-        if (AfterContainer) {
-            afterContainer = (
-                <>
-                    {afterContainer}
-                    <AfterContainer {...props} />
-                </>
-            );
-        }
-        if (BeforeContainer) {
-            beforeContainer = (
-                <>
-                    {beforeContainer}
-                    <BeforeContainer {...props} />
-                </>
-            );
-        }
-    });
-
-    return (
-        <>
-            {beforeContainer}
-            <div
-                id={editor.uid}
-                ref={containerRef}
-                className={cn("ignore-click-outside/toolbar", editorContainerVariants({ variant }), className)}
-                data-readonly={readOnly}
-                {...props}
-            />
-            {afterContainer}
-        </>
-    );
-};
+export function EditorContainer({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof editorContainerVariants>) {
+    return <PlateContainer className={cn("ignore-click-outside/toolbar", editorContainerVariants({ variant }), className)} {...props} />;
+}
 
 EditorContainer.displayName = "EditorContainer";
 
@@ -81,7 +36,7 @@ const EditorVariants = cva(
         "group/editor",
         "relative w-full cursor-text overflow-x-hidden break-words whitespace-pre-wrap select-text",
         "rounded-md ring-offset-background focus-visible:outline-none",
-        "placeholder:text-muted-foreground/80 **:data-slate-placeholder:top-[auto_!important] **:data-slate-placeholder:text-muted-foreground/80 **:data-slate-placeholder:opacity-100!",
+        "placeholder:text-muted-foreground/80 **:data-slate-placeholder:top-[auto_!important] **:data-slate-placeholder:text-muted-foreground/80 **:data-slate-placeholder:!opacity-100",
         "[&_strong]:font-bold"
     ),
     {
@@ -99,7 +54,6 @@ const EditorVariants = cva(
                 ai: "w-full px-0 text-base md:text-sm",
                 aiChat: "max-h-[min(70vh,320px)] w-full max-w-[700px] overflow-y-auto px-3 py-2 text-base md:text-sm",
                 default: "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))]",
-                demo: "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))]",
                 fullWidth: "size-full px-16 pt-4 pb-72 text-base sm:px-24",
                 none: "",
                 select: "px-3 py-2 text-base data-readonly:w-fit",

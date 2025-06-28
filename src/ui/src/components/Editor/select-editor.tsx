@@ -4,18 +4,18 @@
 "use client";
 
 import * as React from "react";
+import { isEqualTags } from "@platejs/tag";
+import { MultiSelectPlugin, TagPlugin, useSelectableItems, useSelectEditorCombobox } from "@platejs/tag/react";
 import { Command as CommandPrimitive, useCommandActions } from "@udecode/cmdk";
-import { isHotkey } from "@udecode/plate";
-import { isEqualTags, TTagElement } from "@udecode/plate-tag";
-import { MultiSelectPlugin, TagPlugin, useSelectableItems, useSelectEditorCombobox } from "@udecode/plate-tag/react";
-import { Plate, useEditorContainerRef, useEditorRef, usePlateEditor } from "@udecode/plate/react";
 import { Fzf } from "fzf";
 import { PlusIcon } from "lucide-react";
+import { isHotkey, KEYS, TTagElement } from "platejs";
+import { Plate, useEditorContainerRef, useEditorRef, usePlateEditor } from "platejs/react";
 import { Popover } from "@/components/base";
-import { cn, withProps } from "@udecode/cn";
 import { Editor, EditorContainer } from "@/components/plate-ui/editor";
-import { TagElement } from "@/components/plate-ui/tag-element";
+import { TagElement } from "@/components/plate-ui/tag-node";
 import { Trans } from "react-i18next";
+import { cn, withProps } from "@/core/utils/ComponentUtils";
 
 export type TSelectItem = {
     value: string;
@@ -139,6 +139,12 @@ export const SelectEditorInput = React.forwardRef<HTMLDivElement, React.Componen
     const { setOpen } = useSelectEditorContext();
     const { selectCurrentItem, selectFirstItem } = useCommandActions();
 
+    React.useEffect(() => {
+        if (props.readOnly) {
+            setOpen(false);
+        }
+    }, [props.readOnly]);
+
     return (
         <Editor
             ref={ref}
@@ -244,7 +250,7 @@ const createEditorValue = (value?: TSelectItem[]) => [
             ...(value?.flatMap((item) => [
                 {
                     children: [{ text: "" }],
-                    type: TagPlugin.key,
+                    type: KEYS.tag,
                     ...item,
                 },
                 {
@@ -252,7 +258,7 @@ const createEditorValue = (value?: TSelectItem[]) => [
                 },
             ]) ?? []),
         ],
-        type: "p",
+        type: KEYS.p,
     },
 ];
 

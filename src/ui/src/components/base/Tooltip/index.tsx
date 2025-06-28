@@ -67,7 +67,9 @@ function withTooltip<T extends React.ElementType>(Component: T) {
                             {component}
                         </Trigger>
 
-                        <Content {...tooltipContentProps}>{tooltip}</Content>
+                        <Portal container={document.body}>
+                            <Content {...tooltipContentProps}>{tooltip}</Content>
+                        </Portal>
                     </Root>
                 </Provider>
             );

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { composeRefs } from "@udecode/cn";
+import { composeRefs } from "@/core/utils/ComponentUtils";
 
 interface IInternalBotValueInputProps {
     value: string;

@@ -51,7 +51,8 @@ const BoardCardMemberList = memo(() => {
                 className: cn(
                     "max-w-[calc(100vw_-_theme(spacing.20))]",
                     "sm:max-w-[calc(theme(screens.sm)_-_theme(spacing.60))]",
-                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]"
+                    "lg:max-w-[calc(theme(screens.md)_-_theme(spacing.60))]",
+                    "min-w-[min(theme(spacing.20),100%)]"
                 ),
                 align: "start",
             }}
@@ -77,7 +78,7 @@ const BoardCardMemberList = memo(() => {
             placeholder={t("card.Select members...")}
             withUserGroups
             groups={groups}
-            filterGroupUser={(item: User.TModel) => item.isValidUser() && !item.isBot() && projectMembers.some((member) => member.uid === item.uid)}
+            filterGroupUser={(item: User.TModel) => item.isValidUser() && projectMembers.some((member) => member.uid === item.uid)}
         />
     );
 });
